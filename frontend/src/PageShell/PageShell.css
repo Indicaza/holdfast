@@ -1,0 +1,177 @@
+.page-shell {
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(29, 69, 111, 0.28), transparent 32rem),
+    linear-gradient(180deg, var(--color-blue-900), var(--color-background) 28rem);
+  color: var(--color-text);
+}
+
+.page-shell__background {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(247, 245, 239, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 245, 239, 0.018) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  mask-image: linear-gradient(to bottom, black, transparent 70%);
+}
+
+.page-shell__frame {
+  position: relative;
+  width: min(100%, var(--layout-max-width));
+  min-height: 100svh;
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+
+.page-shell__main {
+  min-height: calc(100svh - var(--nav-height) - 7rem);
+  padding-block: clamp(var(--space-16), 10vw, var(--space-32));
+}
+
+.page-shell__header {
+  max-width: 52rem;
+}
+
+.page-shell__eyebrow {
+  margin-bottom: var(--space-4);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.page-shell__header h1 {
+  font-size: var(--font-size-2xl);
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: uppercase;
+}
+
+.page-shell__intro {
+  max-width: var(--layout-reading-width);
+  margin-top: var(--space-5);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+}
+
+.page-shell__body {
+  max-width: var(--layout-reading-width);
+  margin-top: var(--space-16);
+}
+
+.page-shell__body h2 {
+  margin-top: var(--space-12);
+  font-size: var(--font-size-fib-34);
+}
+
+.page-shell__body h2:first-child {
+  margin-top: 0;
+}
+
+.page-shell__body h3 {
+  margin-top: var(--space-8);
+  font-size: var(--font-size-fib-21);
+}
+
+.page-shell__body p,
+.page-shell__body li {
+  color: var(--color-text);
+}
+
+.page-shell__body p + p,
+.page-shell__body p + ul,
+.page-shell__body ul + p {
+  margin-top: var(--space-4);
+}
+
+.page-shell__body ul {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-6);
+}
+
+.page-shell__body li + li {
+  margin-top: var(--space-2);
+}
+
+.page-shell__body strong {
+  color: var(--color-text-strong);
+}
+
+.page-shell--centered .page-shell__header {
+  max-width: 64rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-shell--centered .page-shell__body {
+  max-width: 50rem;
+  margin-inline: auto;
+  text-align: left;
+}
+
+@media (max-width: 48rem) {
+  .page-shell__main {
+    padding-block: var(--space-16);
+  }
+
+  .page-shell__body {
+    margin-top: var(--space-12);
+  }
+}
+
+.page-shell--centered .page-shell__header {
+  max-width: 72rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-shell--centered .page-shell__header h1 {
+  font-size: clamp(var(--font-size-fib-34), 5vw, var(--font-size-fib-55));
+  white-space: nowrap;
+}
+
+.page-shell--centered .page-shell__body {
+  max-width: 66rem;
+  margin-inline: auto;
+  text-align: left;
+}
+
+@media (max-width: 48rem) {
+  .page-shell--centered .page-shell__header h1 {
+    white-space: normal;
+  }
+}
+
+.page-shell--centered .page-shell__header h1 {
+  max-width: none;
+  font-size: clamp(var(--font-size-fib-55), 6vw, var(--font-size-fib-89));
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  background:
+    linear-gradient(
+      105deg,
+      #a8741f 0%,
+      #d2a642 22%,
+      #f2d37b 44%,
+      #fff0b8 50%,
+      #d7aa45 58%,
+      #9d6b18 100%
+    );
+  background-size: 130% 100%;
+  background-position: 50% 50%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0.16em 0.7em rgba(196, 166, 103, 0.08);
+  animation: charter-gold-shimmer 14s ease-in-out infinite;
+}
+
+.page-shell--centered .page-shell__header h1 {
+  background-size: 120% 100%;
+  background-position: 50% 50%;
+  animation: charter-gold-shimmer-soft 18s ease-in-out infinite;
+}
+

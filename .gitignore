@@ -50,4 +50,7 @@ tmp/
 temp/
 *.tmp
 
+# ToDo files
+todo.md
+
 # Local database files

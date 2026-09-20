@@ -1,0 +1,28 @@
+# Holdfast
+
+> Holdfast is a player-run Alliance guild for WoW Forever, built around organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.
+
+Holdfast is designed as a lasting home for people who want to play seriously without turning the guild into a second job. The guild welcomes experienced players and new players, values service-based leadership, teaches people who want to improve, and supports raiding, PvP, crafting, gathering, and social play.
+
+The core principle is simple: leave the guild stronger than you found it.
+
+## Primary pages
+
+- [Home](/): Overview of Holdfast, its identity, activities, community, and recruitment.
+- [Charter](/charter): Holdfast's principles, leadership model, standards, shared prosperity model, conduct expectations, and long-term philosophy.
+- [Join Holdfast](/join): Information for players interested in joining the Alliance guild.
+
+## Additional pages
+
+- [GuildOS](/guildos): Information about the systems Holdfast uses to support coordination and administration.
+- [Privacy](/privacy): Privacy information.
+- [Holdfast source repository](https://github.com/Indicaza/holdfast): Public source code for the Holdfast website.
+
+## Key facts
+
+- Faction: Alliance.
+- Game: WoW Forever.
+- Guild name: Holdfast.
+- Focus: durable community, organized PvE, PvP, mentorship, crafting, gathering, and long-term progression.
+- New players: welcome.
+- Leadership philosophy: leadership is service; rank represents trust and responsibility.

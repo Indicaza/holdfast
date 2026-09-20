@@ -1,0 +1,163 @@
+.hero-content {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 40rem);
+  padding-block: 0;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.48);
+}
+
+.hero-content::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -2.75rem -4rem -2.75rem -3rem;
+  border-radius: 3rem;
+  background:
+    radial-gradient(
+      ellipse at 34% 54%,
+      rgba(3, 8, 15, 0.72) 0%,
+      rgba(3, 8, 15, 0.52) 42%,
+      rgba(3, 8, 15, 0.18) 66%,
+      transparent 78%
+    );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  mask-image: radial-gradient(ellipse at 34% 54%, black 0%, black 52%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 34% 54%, black 0%, black 52%, transparent 80%);
+  pointer-events: none;
+}
+
+.hero-content__eyebrow {
+  margin-bottom: var(--space-5);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.hero-content__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hero-content__title {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  text-shadow:
+    0 0.08em 0.12em rgba(0, 0, 0, 0.34),
+    0 0.25em 0.8em rgba(0, 0, 0, 0.28);
+  text-transform: uppercase;
+}
+
+.hero-content__motto {
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
+  font-style: italic;
+}
+
+.hero-content__maxim {
+  margin-top: var(--space-6);
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-34);
+  line-height: var(--line-height-heading);
+}
+
+.hero-content__description {
+  max-width: 34rem;
+  margin-top: var(--space-5);
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  text-wrap: pretty;
+}
+
+.hero-content__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+
+.hero-content__primary,
+.hero-content__secondary {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-6);
+  border: var(--border-accent);
+  box-shadow: 0 0.65rem 1.8rem rgba(0, 0, 0, 0.16);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-shadow: none;
+  text-transform: uppercase;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.hero-content__primary {
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  color: var(--color-background);
+}
+
+.hero-content__secondary {
+  background: rgba(3, 8, 15, 0.48);
+  color: var(--color-text-strong);
+  backdrop-filter: blur(var(--blur-panel));
+  -webkit-backdrop-filter: blur(var(--blur-panel));
+}
+
+.hero-content__primary:hover,
+.hero-content__primary:focus-visible,
+.hero-content__secondary:hover,
+.hero-content__secondary:focus-visible {
+  box-shadow: 0 0.8rem 2.2rem rgba(0, 0, 0, 0.24);
+  transform: translateY(-2px);
+}
+
+.hero-content__primary:hover,
+.hero-content__primary:focus-visible {
+  border-color: var(--color-accent-bright);
+  background: var(--color-accent-bright);
+}
+
+.hero-content__secondary:hover,
+.hero-content__secondary:focus-visible {
+  border-color: var(--color-accent-bright);
+  background: rgba(7, 17, 31, 0.72);
+  color: var(--color-accent-bright);
+}
+
+@media (max-width: 48rem) {
+  .hero-content {
+    padding-block: 0;
+  }
+
+  .hero-content::before {
+    inset: -2rem -1.5rem -2rem -1.5rem;
+    border-radius: 2rem;
+  }
+
+  .hero-content__description {
+    max-width: 32rem;
+  }
+
+  .hero-content__actions {
+    width: 100%;
+  }
+
+  .hero-content__primary,
+  .hero-content__secondary {
+    flex: 1 1 12rem;
+  }
+}

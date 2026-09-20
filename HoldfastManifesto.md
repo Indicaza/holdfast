@@ -1,9 +1,9 @@
 # Holdfast Manifesto
 
-> **Working guild name:** Holdfast  
+> **Guild:** Holdfast  
 > **Faction:** Alliance  
-> **Working motto:** *Servimus ut permaneat.* — “We serve so that it may endure.”  
-> **Plain-English maxim:** **Leave it stronger.**
+> **Motto:** *Servimus ut permaneat.* — “We serve so that it may endure.”  
+> **Maxim:** **Leave it stronger.**
 
 ---
 
@@ -17,7 +17,9 @@ The guild should feel like a good community first and an organization second.
 
 A normal member should be able to log in, see familiar names, find people to play with, get help when needed, contribute when they feel able, and log off without feeling like World of Warcraft became a second job.
 
-The systems underneath Holdfast may become sophisticated. The member experience should not.
+The systems underneath Holdfast may eventually become sophisticated.
+
+The member experience should not.
 
 ---
 
@@ -27,7 +29,9 @@ The systems underneath Holdfast may become sophisticated. The member experience 
 
 Members inherit a community built by other people.
 
-Nobody is expected to sacrifice constantly for the guild. The expectation is simply that, over time, people leave something better than they found it.
+Nobody is expected to sacrifice constantly for the guild.
+
+The expectation is simply that, over time, people leave something better than they found it.
 
 That might mean:
 
@@ -37,7 +41,7 @@ That might mean:
 - crafting useful gear;
 - gathering materials;
 - improving a raid strategy;
-- responding to a world-PvP problem;
+- helping defend guildmates;
 - maintaining useful tools;
 - building friendships;
 - developing another leader;
@@ -47,19 +51,21 @@ The highest form of competence is making competence reproducible.
 
 ### Leadership Is Service
 
-Rank is not meant to be a status prize.
+Rank is not a status prize.
 
 Leadership exists because work needs to be done and people need someone they can trust to do it well.
 
 Authority should follow responsibility.
 
-A leader who makes the guild more dependent on themselves has failed. A leader who teaches others, builds replacements, and leaves behind functioning systems has succeeded.
+A leader who makes the guild more dependent on themselves has failed.
+
+A leader who teaches others, builds replacements, and leaves behind functioning systems has succeeded.
 
 ### Skill Earns Recognition; Service Earns Trust
 
 Mechanical skill matters.
 
-Holdfast should celebrate excellent raiders, PvPers, tanks, healers, crafters, organizers, instructors, scouts, economists, and unusual achievements.
+Holdfast should celebrate excellent raiders, PvPers, tanks, healers, crafters, organizers, teachers, economists, and unusual achievements.
 
 But game skill and institutional authority are different things.
 
@@ -75,7 +81,7 @@ Inactivity is not betrayal.
 
 A strong guild should survive vacations, jobs, relationships, burnout, new games, family responsibilities, and changing interests.
 
-People who leave on good terms should be able to come back without ceremony or shame.
+People who leave on good terms should be able to return without ceremony or shame.
 
 ### Govern Conduct, Not Belief
 
@@ -85,7 +91,17 @@ Members are not expected to agree politically, religiously, culturally, or philo
 
 People may disagree, argue, joke, and speak normally.
 
-The guild governs behavior that materially affects the community: harassment, theft, sabotage, scams, deliberate abuse, cheating that endangers the guild, and repeated failure to honor responsibilities someone voluntarily accepted.
+The guild governs conduct that materially affects the community.
+
+Examples include:
+
+- harassment;
+- theft;
+- scams;
+- deliberate sabotage;
+- abuse of guild resources;
+- cheating that materially endangers the guild;
+- repeated failure to honor responsibilities someone freely accepted.
 
 ---
 
@@ -118,11 +134,13 @@ Most members should never need to understand the machinery underneath the guild.
 
 ### Keep the Guild Human-Sized
 
-Holdfast is not trying to become one enormous guild with layers of permanent internal bureaucracy.
+Holdfast is not trying to become one enormous guild with layers of permanent bureaucracy.
 
-A practical social target is roughly **150 members or fewer per guild unit**, treated as a guideline rather than a magical number.
+A practical social target is roughly **150 members or fewer per guild unit**.
 
-The real signals matter more than the number:
+That is a guideline, not a magical number.
+
+The real signals matter more:
 
 - Do people still recognize one another?
 - Is guild chat still useful?
@@ -130,15 +148,15 @@ The real signals matter more than the number:
 - Do leaders understand what is happening?
 - Do people feel like members of a community rather than entries in a database?
 
-If those answers begin turning into “no,” the solution should usually be **federation rather than more hierarchy**.
+If those answers begin turning into “no,” the solution should usually be to simplify or eventually federate rather than add more internal hierarchy.
 
-### Fluid Teams, Not Permanent Ownership
+### Fluid Groups, Not Permanent Ownership
 
-Members do not belong to a Sergeant, Squad Leader, or Company Commander.
+Members do not belong to a Sergeant, Captain, squad, company, or permanent social subdivision.
 
-There are no permanent squads or companies in the base design.
+Groups form around what people are doing.
 
-Groups form around what people are doing:
+Examples include:
 
 - dungeon parties;
 - leveling groups;
@@ -147,7 +165,6 @@ Groups form around what people are doing:
 - profession projects;
 - gathering runs;
 - training sessions;
-- world-PvP response groups;
 - temporary events.
 
 A raid may have a clear chain of command because raids need one.
@@ -160,11 +177,11 @@ Five people fishing together do not need an organizational chart.
 
 Rank represents accumulated institutional trust, judgment, responsibility, and leadership capability.
 
-It does **not** mean that lower-ranked members personally report to higher-ranked members during normal play.
+It does **not** mean lower-ranked members personally report to higher-ranked members during normal play.
 
 A Sergeant is someone Holdfast trusts to lead people.
 
-It does not mean that Holdfast assigns that Sergeant a permanent collection of Privates.
+It does not mean Holdfast assigns that Sergeant a permanent collection of Privates.
 
 ### Billets Represent Jobs
 
@@ -174,110 +191,172 @@ A billet is a job someone is currently performing.
 
 A member may step out of a billet without losing the trust represented by their rank.
 
-Billets should exist only when real recurring work exists.
+Billets exist to solve persistent work.
 
-Do not invent jobs to hand out titles.
+They are not created to distribute titles.
 
 ---
 
-## Working Rank Structure
+## Rank Structure
 
-The rank system should feel military enough to be immediately understandable while still fitting naturally into Warcraft.
+The rank system should feel military enough to be immediately understandable while fitting naturally into Warcraft.
 
-Current working ladder:
+Current ladder:
 
 1. **Recruit**
 2. **Private**
 3. **Corporal**
 4. **Sergeant**
-5. **Staff Sergeant**
-6. **Master Sergeant**
+5. **Master Sergeant**
+6. **Sergeant Major**
 7. **Lieutenant**
 8. **Captain**
-9. **Commander**
-10. **Senior guildmaster title — TBD**
+9. **Major**
+10. **Commander**
 
-The senior guildmaster title is intentionally unresolved.
+**Commander** is the unique guildmaster rank.
 
-“Commandant” felt too specifically Marine Corps.
+The enlisted structure intentionally mirrors familiar Alliance-style military ranks.
 
-“Castellan” was rejected as too roleplay-heavy.
+The officer progression is deliberately simplified into:
 
-The final title should sound natural beside Lieutenant, Captain, and Commander without turning Holdfast into either a modern military reenactment or fantasy-cosplay bureaucracy.
+**Lieutenant → Captain → Major → Commander**
 
-### Rank Intent
+The goal is a military structure that reads naturally without importing every awkward or overly theatrical title from Warcraft lore.
 
-**Recruit**  
+### Recruit
+
 Probationary member learning the guild and being evaluated for basic fit.
 
-**Private**  
-Full member. No leadership expectation.
+### Private
 
-**Corporal**  
-First level of demonstrated leadership trust. May lead small activities and hold junior billets.
+Full member.
 
-**Sergeant**  
+No leadership expectation.
+
+### Corporal
+
+First level of demonstrated leadership trust.
+
+May organize small activities, assist established leaders, and begin taking responsibility for others.
+
+### Sergeant
+
 Proven small-group leader and mentor.
 
-**Staff Sergeant**  
-Experienced organizer capable of running recurring activities and helping newer leaders.
+Trusted to organize people and handle ordinary problems without constant supervision.
 
-**Master Sergeant**  
-Senior enlisted member focused increasingly on standards, mentorship, continuity, and developing other leaders.
+### Master Sergeant
 
-**Lieutenant**  
-First commissioned rank. Trusted to exercise broader institutional authority.
+Experienced senior NCO capable of running recurring activities, developing junior leaders, and maintaining standards.
 
-**Captain**  
-Trusted to own a major operational function, program, or significant body of responsibility.
+### Sergeant Major
 
-**Commander**  
-Senior officer responsible for guild-wide coordination, major systems, or executive leadership.
+Highest ordinary enlisted rank.
 
-**Senior Guildmaster**  
-Guardian of Holdfast’s continuity and charter. Powerful in reserve, quiet in normal operation.
+Focused increasingly on mentorship, continuity, institutional knowledge, and advising officers.
+
+### Lieutenant
+
+First commissioned rank.
+
+Trusted to exercise broader institutional authority.
+
+### Captain
+
+Experienced officer trusted with significant programs, responsibilities, or recurring operations.
+
+### Major
+
+Highest ordinary officer rank.
+
+Trusted with broad institutional responsibility, cross-functional coordination, and major guild systems.
+
+### Commander
+
+Unique guildmaster rank.
+
+The Commander is the guardian of Holdfast’s continuity, charter, and long-term direction.
+
+The Commander holds ultimate reserve authority but should normally delegate day-to-day work.
+
+The success condition is not that everything requires the Commander.
+
+The success condition is that Holdfast continues functioning when the Commander steps away.
 
 ---
 
-## Working Billets
+## Active Billets
 
-Possible billets include:
+Holdfast currently recognizes only four standing billets.
 
-- Executive Officer
-- First Sergeant
-- Inspector General
-- Quartermaster
-- Treasurer
-- Operations Officer
-- Recruiting Officer
-- Training Lead
-- Raid Leader
-- Raid Instructor
-- PvP Lead
-- Watch Leader
-- Master Crafter
-- Market Officer
-- GuildOS Administrator
+That list should remain small unless real work proves another job is necessary.
 
-This list is not a promise to create every role.
+### Steward
 
-A billet should appear only when actual work justifies it.
+The Steward is the Commander’s trusted deputy.
 
-### First Sergeant
+The billet should normally be held by a Major.
 
-First Sergeant is a billet, not a permanent rank.
+The Steward is entrusted to run Holdfast during the Commander’s absence and may exercise broad day-to-day executive authority without becoming Commander.
 
-The role exists to represent ordinary members and the enlisted perspective, monitor morale and integration, help develop leaders, and surface ground truth to senior leadership.
+The Steward exists so the Commander can step away for weeks or months without the organization freezing.
 
-### Inspector General
+The Steward does not conceptually own Holdfast and should not have the authority to permanently displace the Commander merely because the Commander is absent.
 
-The Inspector General exists as independent oversight.
+Exact in-game permissions should be configured around whatever WoW Forever mechanically allows.
 
-The person managing money should not be the only person reviewing the money.
+### Quartermaster
 
-The person handling personnel issues should not have unchecked authority over complaints against themselves.
+The Quartermaster owns the practical economic infrastructure of Holdfast.
 
-Oversight should remain meaningfully independent.
+Responsibilities may include:
+
+- guild bank organization;
+- material reserves;
+- consumable stock;
+- profession coordination;
+- crafting logistics;
+- internal purchasing;
+- market activity;
+- economic reporting;
+- helping identify worthwhile member investments.
+
+The Quartermaster should pursue abundance rather than hoarding.
+
+### Raid Leader
+
+The Raid Leader owns the operation of an assigned raid team or raid program.
+
+Responsibilities may include:
+
+- scheduling;
+- roster formation;
+- encounter planning;
+- readiness standards;
+- raid communication;
+- progression strategy;
+- post-raid review.
+
+Raid authority applies to the raid.
+
+It does not make the Raid Leader the permanent boss of everyone on the roster.
+
+### PvP Lead
+
+The PvP Lead organizes serious guild PvP.
+
+Responsibilities may include:
+
+- premades;
+- organized world PvP;
+- response groups;
+- scouting;
+- PvP events;
+- tactical coordination;
+- PvP training where useful.
+
+PvP authority applies to the activity being led.
 
 ---
 
@@ -285,113 +364,30 @@ Oversight should remain meaningfully independent.
 
 Holdfast should make decisions at the lowest level capable of making them well.
 
-A raid leader should not ask senior leadership how to handle every pull.
+A Raid Leader should not ask the Commander how to handle every pull.
 
 A Quartermaster should not need a guild-wide vote to restock ordinary materials.
 
+A PvP Lead should not need permission for every normal event.
+
 Senior leadership should focus on:
 
-- cross-functional problems;
 - long-term direction;
 - major policy;
-- extraordinary spending;
-- serious discipline;
+- serious disciplinary matters;
+- major spending;
 - leadership appointments;
+- conflicts that cross responsibilities;
 - organizational health;
 - continuity.
 
-The senior guildmaster should not personally run the guild every day.
+The Commander should not personally run the guild every day.
 
-The long-term success condition is that the guild can function well even if its founder disappears for several months.
+The Steward and other trusted leaders should be able to handle ordinary operations during the Commander’s absence.
 
----
+Holdfast should avoid building a permanent committee for every category of decision.
 
-## Federated Growth
-
-If Holdfast becomes too large to remain socially coherent, the preferred solution is not to create layers of companies, platoons, squads, and middle managers.
-
-The preferred solution is to create another healthy guild unit.
-
-Over time, Holdfast may become part of a **confederation of allied guilds**.
-
-Each guild remains small enough to feel human.
-
-The federation may share:
-
-- Discord infrastructure;
-- GuildOS;
-- website and recruiting tools;
-- economic intelligence;
-- profession directories;
-- training resources;
-- major raids and events;
-- PvP coordination;
-- market systems;
-- shared standards;
-- diplomacy;
-- institutional knowledge;
-- selected treasury or material programs where practical.
-
-The goal is:
-
-> **Small communities with large capabilities.**
-
-Guild chat stays sane.
-
-People stay recognizable.
-
-The advantages of scale are shared without forcing everyone into one enormous social container.
-
-The exact shape of a future federation should emerge from real growth rather than being overdesigned in advance.
-
----
-
-## The Foundry
-
-The Foundry is Holdfast’s training and knowledge ecosystem.
-
-Its purpose is to turn inexperienced players into capable players, capable players into teachers, and good leaders into people who can develop other leaders.
-
-It may include:
-
-- class and spec mentorship;
-- dungeon teaching;
-- raid instruction;
-- PvP coaching;
-- profession knowledge;
-- written guides;
-- encounter strategies;
-- build and log review when requested;
-- leadership development.
-
-Education should feel helpful, not evaluative.
-
-The goal is not to manufacture identical players.
-
-The goal is to make useful knowledge easy to find and easy to pass forward.
-
----
-
-## The Watch
-
-The Watch is Holdfast’s world-PvP awareness and response capability.
-
-It may eventually support:
-
-- hostile Horde reports;
-- layer and location intelligence;
-- escort requests;
-- guild-member distress calls;
-- rally calls;
-- scouting;
-- safe-route information;
-- organized counterattacks.
-
-The purpose is not to police ordinary world PvP.
-
-World PvP is part of the game.
-
-The Watch exists so that when a problem becomes large enough to matter, Holdfast can respond together.
+If a problem can be solved by the person already responsible for it, let them solve it.
 
 ---
 
@@ -424,6 +420,8 @@ Those standards apply to the team, not automatically to every guild member.
 
 A weekend player and a top-end raider can both be valuable members of Holdfast.
 
+Elite performance does not automatically grant institutional authority.
+
 ---
 
 ## Economic Doctrine
@@ -443,7 +441,7 @@ Real guild wealth includes:
 - leadership depth;
 - social trust.
 
-A guild with less gold but strong professions, stocked consumables, multiple tanks, multiple raid leaders, and reliable people may be much stronger than a guild sitting on a giant pile of unused currency.
+A guild with less gold but strong professions, stocked consumables, multiple tanks, multiple raid leaders, and reliable people may be stronger than a guild sitting on a giant pile of unused currency.
 
 ### Economic Loop
 
@@ -467,50 +465,7 @@ Treasury resources may eventually support:
 
 The guild should reward productive behavior without turning contribution into a public score people obsess over.
 
----
-
-## GuildOS
-
-GuildOS is the administrative nervous system of Holdfast.
-
-Its job is to reduce coordination work, not replace human judgment.
-
-Core rule:
-
-> **AI does staff work. Humans govern.**
-
-GuildOS may eventually help:
-
-- aggregate member needs;
-- identify people who need the same dungeon;
-- suggest useful events;
-- build candidate rosters;
-- match mentors and learners;
-- track profession coverage;
-- identify shortages;
-- forecast resource needs;
-- summarize economic information;
-- surface single points of failure;
-- help audit systems;
-- maintain institutional knowledge.
-
-Example:
-
-Ten members need the same dungeon.
-
-Several need profession drops from it.
-
-A few tanks need upgrades there.
-
-GuildOS notices the overlap and tells the appropriate organizer:
-
-> “A dungeon night here would solve a lot of outstanding needs.”
-
-The ordinary member should mostly experience:
-
-> “Oh cool, there’s a group Thursday.”
-
-AI recommendations should remain explainable and reviewable.
+Economic systems should remain useful to ordinary members rather than becoming a game played only by leadership.
 
 ---
 
@@ -518,28 +473,29 @@ AI recommendations should remain explainable and reviewable.
 
 Leadership rank should not be Holdfast’s only prestige system.
 
-Recognition may include distinctions for:
+Holdfast should visibly recognize excellence wherever it appears.
+
+That may include:
 
 - exceptional raiding;
 - exceptional PvP;
-- tanking or healing;
+- excellent tanking or healing;
 - master crafting;
-- instruction;
-- mentorship;
+- teaching and mentorship;
 - founding service;
 - long service;
-- tournament wins;
 - first guild clears;
-- notable world-PvP actions;
-- economic contribution;
 - unusual achievements;
-- exceptional leadership service.
+- major economic contributions;
+- exceptional leadership.
 
 A Private may be one of the best players in the guild.
 
-A senior officer may be an average raider but an excellent organizer.
+A Major may be an average raider but an excellent organizer.
 
-Both kinds of excellence matter.
+Both forms of excellence matter.
+
+Recognition should celebrate contribution without automatically turning prestige into authority.
 
 ---
 
@@ -549,16 +505,11 @@ Holdfast removes people for harmful behavior, not weakness.
 
 Being new, casual, undergeared, inexperienced, inactive, or in need of help is not misconduct.
 
-Normal escalation should usually look something like:
+Most problems should begin with a private conversation and proportionate correction.
 
-1. private correction;
-2. formal warning;
-3. temporary restriction or probation where relevant;
-4. independent review;
-5. removal when continued membership is materially harmful;
-6. an appeal through uninvolved leadership where appropriate.
+Serious or repeated problems may justify restrictions, review by uninvolved leadership, or removal from the guild.
 
-Serious cases may justify immediate temporary suspension followed by review.
+Severe cases such as credible threats, doxxing, theft, scams, deliberate sabotage, or cheating that materially endangers Holdfast may justify immediate action.
 
 Inactive members should generally become dormant rather than being treated as offenders.
 
@@ -569,7 +520,7 @@ Inactive members should generally become dormant rather than being treated as of
 Current direction:
 
 - **Faction:** Alliance
-- **Guild color family:** deep blue, white, and restrained gold
+- **Guild colors:** deep blue, white, restrained gold
 - **Tabard:** blue field, white rook/castle emblem, gold trim
 - **Visual tone:** mature, clean, elegant, organized
 - **Fantasy influence:** present but restrained
@@ -585,24 +536,6 @@ The rook/castle symbol represents:
 - quiet strength.
 
 The website should feel like a modern, competent organization that happens to exist inside Warcraft.
-
----
-
-## Cultural Language
-
-Useful recurring terms include:
-
-- **Holdfast** — the enduring institution
-- **The Foundry** — training and knowledge transfer
-- **The Watch** — world-PvP awareness and response
-- **The Council** — senior governance
-- **The Treasury** — communal economic reserve
-- **The Muster** — formation of major raids, PvP groups, or events
-- **GuildOS** — administrative and analytical infrastructure
-
-These names should help members understand what something does.
-
-Do not add lore terminology merely because it sounds impressive.
 
 ---
 
@@ -624,8 +557,6 @@ Holdfast should generally prefer:
 
 **Abundance over treasury vanity.**
 
-**Federation over bureaucracy when growth demands it.**
-
 **AI assistance without AI authority.**
 
 **Systems that survive the absence of their creator.**
@@ -633,6 +564,147 @@ Holdfast should generally prefer:
 **Play the game first.**
 
 **Leave it stronger.**
+
+And one rule should govern organizational design:
+
+> **Do not build bureaucracy for problems we do not have.**
+
+---
+
+# Future Ideas
+
+Everything below this point is intentionally speculative.
+
+These are directions Holdfast may grow into if real needs appear.
+
+They are not launch requirements.
+
+---
+
+## The Crucible
+
+**The Crucible** is the working name for a future training and mentorship system.
+
+It would exist to make useful knowledge easy to find and easy to pass forward.
+
+Possible functions include:
+
+- class and spec mentorship;
+- dungeon teaching;
+- raid instruction;
+- PvP coaching;
+- profession knowledge;
+- written guides;
+- encounter strategies;
+- build and log review when requested;
+- leadership development.
+
+The Crucible should feel helpful rather than evaluative.
+
+The purpose is not to manufacture identical players.
+
+The purpose is to turn inexperienced players into capable players, capable players into teachers, and good leaders into people who can develop other leaders.
+
+No dedicated Crucible billet is needed unless the program eventually becomes large enough to require one.
+
+---
+
+## GuildOS
+
+GuildOS is a future administrative and analytical layer for Holdfast.
+
+Its purpose is to reduce coordination work, surface useful information, and preserve institutional knowledge.
+
+Core rule:
+
+> **AI does staff work. Humans govern.**
+
+Possible GuildOS functions include:
+
+- aggregating member needs;
+- identifying people who need the same dungeon;
+- suggesting useful events;
+- building candidate rosters;
+- matching mentors and learners;
+- tracking profession coverage;
+- identifying shortages;
+- forecasting resource needs;
+- summarizing economic information;
+- maintaining institutional records;
+- surfacing single points of failure;
+- helping leaders understand organizational health.
+
+A future GuildOS may also assist with PvP situational awareness.
+
+For example, if permitted game data, chat feeds, addons, APIs, or member-submitted reports expose relevant information, GuildOS could detect recurring place names, faction warnings, calls for help, or other patterns and surface them to human players.
+
+That should remain an information system, not an autonomous commander.
+
+The system may say:
+
+> “Several reports mention hostile activity near this location.”
+
+Humans decide what to do about it.
+
+### Example
+
+Ten members need the same dungeon.
+
+Several need profession drops from it.
+
+A few tanks need upgrades there.
+
+GuildOS notices the overlap and tells an appropriate organizer:
+
+> “A dungeon night here would resolve several outstanding needs.”
+
+The ordinary member should mostly experience:
+
+> “Oh cool, there’s a group Thursday.”
+
+AI recommendations should remain understandable and reviewable.
+
+GuildOS should grow only when it removes real friction.
+
+---
+
+## Federated Growth
+
+If Holdfast becomes too large to remain socially coherent, the preferred solution is not to create layers of companies, platoons, squads, and middle managers.
+
+The preferred solution is to create another healthy guild unit.
+
+Over time, Holdfast may become part of a confederation of allied guilds.
+
+Each guild should remain small enough to feel human.
+
+A future federation might share:
+
+- Discord infrastructure;
+- GuildOS;
+- website and recruiting tools;
+- economic intelligence;
+- profession directories;
+- training resources;
+- major raids and events;
+- PvP coordination;
+- market systems;
+- shared standards;
+- diplomacy;
+- institutional knowledge;
+- selected treasury or material programs where practical.
+
+The goal is:
+
+> **Small communities with large capabilities.**
+
+Guild chat stays sane.
+
+People stay recognizable.
+
+The advantages of scale are shared without forcing everyone into one enormous social container.
+
+The exact shape of a federation should emerge from real growth rather than being designed years in advance.
 
 ---
 
@@ -642,26 +714,24 @@ Holdfast is a working design, not scripture.
 
 Current open questions include:
 
-- the final senior guildmaster title;
-- exact officer responsibilities;
-- which billets are actually needed at launch;
 - exact promotion standards;
-- treasury percentages;
-- federation naming and governance;
+- exact permissions for each rank;
+- the final scope of the Steward;
+- treasury policies and spending thresholds;
 - how much economic coordination members actually want;
 - how GuildOS should evolve;
 - how large a guild unit feels healthy in practice;
+- whether the Crucible becomes a real program;
+- whether federation is ever necessary;
 - which systems solve real problems versus imagined ones.
 
-The answer to many of these should come from running the guild.
-
-Do not build bureaucracy in anticipation of problems that do not exist yet.
+The answer to most of these should come from running the guild.
 
 ---
 
 ## Launch Philosophy
 
-The first version of Holdfast should be much simpler than this document.
+The first version of Holdfast should be simpler than this document.
 
 Launch priorities:
 
@@ -670,8 +740,8 @@ Launch priorities:
 - recruit the founding group;
 - create a simple website;
 - establish the tabard and visual identity;
-- define the minimum viable rank structure;
-- assign only the billets that are immediately useful;
+- establish the rank structure;
+- appoint only the billets that are immediately useful;
 - begin playing together;
 - observe where friction actually appears;
 - build systems only when they solve real problems.
@@ -694,12 +764,23 @@ Rank represents trust.
 
 Billets represent work.
 
-If we outgrow one healthy guild, we federate instead of building a giant internal bureaucracy.
+The only standing billets currently planned are:
 
-GuildOS helps with the boring coordination.
+- Steward;
+- Quartermaster;
+- Raid Leader;
+- PvP Lead.
+
+If we eventually outgrow one healthy guild, we can federate instead of building a giant internal bureaucracy.
+
+The Crucible may become our training and mentorship system.
+
+GuildOS may eventually handle much of the boring coordination, analysis, and information gathering.
 
 Humans make the decisions.
 
 Real life comes first.
+
+Do not build bureaucracy for problems we do not have.
 
 And everyone should try, in whatever way suits them, to **leave it stronger**.

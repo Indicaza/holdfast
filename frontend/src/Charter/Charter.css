@@ -1,0 +1,530 @@
+/* ============================================================
+   HOLDFAST CHARTER
+   ============================================================ */
+
+/* ============================================================
+   EASY TUNING
+
+   Change these first when adjusting the page later.
+   ============================================================ */
+
+.page-shell:has(.charter) {
+  --charter-width: 80rem;
+  --charter-copy-width: 64rem;
+
+  --charter-gold: var(--color-accent-bright);
+  --charter-silver: #e7edf3;
+  --charter-copy: var(--color-white-300);
+
+  --charter-section-space: clamp(4rem, 6vw, 5.5rem);
+  --charter-heading-gap: 2.4rem;
+  --charter-paragraph-gap: var(--space-5);
+
+  --charter-side-sigil-size: 7.25rem;
+  --charter-side-sigil-offset: 9.5rem;
+
+  --charter-sigil-shadow: drop-shadow(0 1px 0 rgba(10, 18, 31, 0.95))
+    drop-shadow(1px 2px 0 rgba(10, 18, 31, 0.8));
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(29, 69, 111, 0.34),
+      transparent 38rem
+    ),
+    radial-gradient(
+      circle at 14% 32%,
+      rgba(16, 39, 66, 0.34),
+      transparent 34rem
+    ),
+    radial-gradient(
+      circle at 86% 62%,
+      rgba(16, 39, 66, 0.24),
+      transparent 38rem
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-blue-900) 0%,
+      var(--color-blue-950) 44%,
+      #040b14 100%
+    );
+}
+
+/* ============================================================
+   PAGE SHELL
+   ============================================================ */
+
+.page-shell:has(.charter) .page-shell__header {
+  display: none;
+}
+
+.page-shell:has(.charter) .page-shell__body {
+  width: 100%;
+  max-width: 88rem;
+  padding-top: 0;
+}
+
+.page-shell:has(.charter) .page-shell__background {
+  opacity: 0.16;
+  background:
+    linear-gradient(rgba(223, 229, 236, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(223, 229, 236, 0.018) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+}
+
+/* ============================================================
+   CHARTER LAYOUT
+   ============================================================ */
+
+.charter {
+  position: relative;
+  isolation: isolate;
+
+  width: min(100%, var(--charter-width));
+  margin-inline: auto;
+
+  padding: clamp(2rem, 3vw, 2.75rem) clamp(2rem, 6vw, 6rem) 0.75rem;
+}
+
+.charter > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================
+   MAIN TITLE
+   ============================================================ */
+
+.charter__title {
+  position: relative;
+
+  margin-bottom: clamp(3.25rem, 5vw, 4.75rem);
+  padding-bottom: 2rem;
+
+  text-align: center;
+}
+
+.charter__title h1 {
+  margin: 0;
+
+  color: var(--charter-gold);
+
+  font-family: var(--font-display);
+  font-size: clamp(3.25rem, 6vw, var(--font-size-fib-89));
+  font-weight: var(--font-weight-display);
+  line-height: 0.95;
+
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+/* Top centered sigil */
+
+.charter__title::before {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: -12rem;
+
+  width: 162px;
+  height: 162px;
+
+  background: url("../assets/06.png") center / contain no-repeat;
+
+  transform: translateX(-50%);
+  filter: var(--charter-sigil-shadow);
+
+  pointer-events: none;
+}
+
+/* Main title underline */
+
+.charter__title::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  width: min(36rem, 72%);
+  height: 4px;
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(221, 193, 125, 0.12) 8%,
+    rgba(221, 193, 125, 0.42) 26%,
+    var(--charter-gold) 50%,
+    rgba(221, 193, 125, 0.42) 74%,
+    rgba(221, 193, 125, 0.12) 92%,
+    transparent 100%
+  );
+
+  transform: translateX(-50%);
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.charter__section {
+  position: relative;
+
+  padding-top: var(--charter-section-space);
+
+  border-top: 1px solid rgba(223, 229, 236, 0.09);
+}
+
+/* First section does not need a separator */
+
+.charter__title + .charter__section {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Space between complete sections */
+
+.charter__section + .charter__section {
+  margin-top: var(--charter-section-space);
+}
+
+/* ============================================================
+   SECTION HEADINGS
+   ============================================================ */
+
+.charter__section h2 {
+  position: relative;
+
+  display: inline-block;
+
+  margin: 0 0 var(--charter-heading-gap);
+
+  padding-bottom: 1.15rem;
+
+  color: var(--charter-gold);
+
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-34);
+  font-weight: var(--font-weight-display);
+  line-height: 1.08;
+
+  letter-spacing: -0.015em;
+}
+
+/* Section heading underline */
+
+.charter__section h2::after {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  bottom: 0;
+
+  width: 17rem;
+  max-width: 130%;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    var(--charter-gold) 0%,
+    rgba(221, 193, 125, 0.68) 38%,
+    rgba(221, 193, 125, 0.28) 72%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   BODY COPY
+   ============================================================ */
+
+.charter__section p {
+  position: relative;
+
+  max-width: var(--charter-copy-width);
+
+  margin: 0;
+
+  color: var(--charter-copy);
+
+  font-size: var(--font-size-fib-21);
+  line-height: 1.7;
+
+  text-wrap: pretty;
+}
+
+/* Normal paragraph rhythm */
+
+.charter__section p + p {
+  margin-top: var(--charter-paragraph-gap);
+}
+
+/* Emphasis */
+
+.charter__section strong {
+  color: var(--charter-silver);
+
+  font-weight: var(--font-weight-semibold);
+
+  text-shadow: 0 0 0.75rem rgba(223, 229, 236, 0.05);
+}
+
+/* ============================================================
+   CALLOUTS
+
+   Callouts inside prose receive extra breathing room.
+
+   If a callout is the FIRST thing after a heading, it does NOT
+   receive extra top margin. The heading already supplies that.
+   ============================================================ */
+
+.charter__section p.charter__callout {
+  position: relative;
+
+  max-width: 62rem;
+
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-8);
+
+  padding: 1rem 1.4rem 1.05rem 1.5rem;
+
+  border-left: 2px solid var(--charter-gold);
+
+  background: linear-gradient(
+    90deg,
+    rgba(196, 166, 103, 0.085),
+    rgba(29, 69, 111, 0.07) 52%,
+    transparent 100%
+  );
+}
+
+/* Fixes inconsistent heading-to-body spacing */
+
+.charter__section h2 + p.charter__callout {
+  margin-top: 0;
+}
+
+/* Small top accent */
+
+.charter__callout::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 8rem;
+  height: 1px;
+
+  background: linear-gradient(90deg, rgba(221, 193, 125, 0.5), transparent);
+}
+
+.charter__callout strong {
+  color: #eef3f7;
+}
+
+/* ============================================================
+   DECORATIVE SIDE SIGILS
+
+   Intentionally sparse.
+
+   Section order:
+   1 Built to come back to
+   2 Leadership is service
+   3 Excellence matters
+   4 New players are welcome
+   5 Shared prosperity
+   6 GuildOS
+   7 Conduct over belief
+   8 Leave it stronger
+   ============================================================ */
+
+/* Excellence — left */
+
+.charter__section:nth-of-type(3)::before {
+  content: "";
+
+  position: absolute;
+  top: 12rem;
+  left: calc(-1 * var(--charter-side-sigil-offset));
+
+  width: var(--charter-side-sigil-size);
+  height: var(--charter-side-sigil-size);
+
+  background: url("../assets/03.png") center / contain no-repeat;
+
+  transform: rotate(-7deg);
+  filter: var(--charter-sigil-shadow);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Shared prosperity — left, slightly different position */
+
+.charter__section:nth-of-type(5)::before {
+  content: "";
+
+  position: absolute;
+  top: 8rem;
+  left: calc(-1 * (var(--charter-side-sigil-offset) - 0.35rem));
+
+  width: 7rem;
+  height: 7rem;
+
+  background: url("../assets/05.png") center / contain no-repeat;
+
+  transform: rotate(6deg);
+  filter: var(--charter-sigil-shadow);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Conduct over belief — right */
+
+.charter__section:nth-of-type(7)::after {
+  content: "";
+
+  position: absolute;
+  top: 10rem;
+  right: calc(-1 * (var(--charter-side-sigil-offset) - 0.25rem));
+
+  width: 7.6rem;
+  height: 7.6rem;
+
+  background: url("../assets/08.png") center / contain no-repeat;
+
+  transform: rotate(-8deg);
+  filter: var(--charter-sigil-shadow);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================
+   CLOSING SECTION
+   ============================================================ */
+
+.charter__section--closing {
+  margin-top: clamp(4.5rem, 7vw, 6rem);
+  padding-top: clamp(4.5rem, 7vw, 6rem);
+  padding-bottom: 10rem;
+}
+
+/* ============================================================
+   "LEAVE IT STRONGER."
+   ============================================================ */
+
+.charter__section p.charter__maxim {
+  position: relative;
+
+  max-width: none;
+
+  margin-top: clamp(4rem, 6vw, 5rem);
+  padding-bottom: 1.25rem;
+
+  color: var(--charter-gold);
+
+  text-align: center;
+
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-55);
+  line-height: 1.05;
+}
+
+.charter__maxim strong {
+  color: var(--charter-gold);
+  font-weight: var(--font-weight-display);
+}
+
+/* Closing underline */
+
+.charter__maxim::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  width: min(28rem, 56%);
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(221, 193, 125, 0.12) 8%,
+    rgba(221, 193, 125, 0.42) 26%,
+    var(--charter-gold) 50%,
+    rgba(221, 193, 125, 0.42) 74%,
+    rgba(221, 193, 125, 0.12) 92%,
+    transparent 100%
+  );
+
+  transform: translateX(-50%);
+}
+
+/* ============================================================
+   MOTTO
+   ============================================================ */
+
+.charter__section p.charter__motto {
+  position: relative;
+
+  max-width: none;
+
+  margin-top: 0.7rem;
+  padding-top: 0.35rem;
+
+  color: var(--charter-gold);
+
+  text-align: center;
+
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-34);
+  line-height: 1.35;
+}
+
+.charter__motto strong {
+  color: var(--charter-gold);
+  font-weight: var(--font-weight-display);
+}
+
+.charter__motto em {
+  display: inline-block;
+
+  margin-top: 0.35rem;
+
+  color: var(--color-text-muted);
+
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+
+  letter-spacing: 0.025em;
+}
+
+/* ============================================================
+   BOTTOM CENTER SIGIL
+   ============================================================ */
+
+.charter__section--closing::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  width: 160px;
+  height: 160px;
+
+  background: url("../assets/02.png") center / contain no-repeat;
+
+  transform: translateX(-50%);
+  filter: var(--charter-sigil-shadow);
+
+  pointer-events: none;
+  z-index: 0;
+}
