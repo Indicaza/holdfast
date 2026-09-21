@@ -4,13 +4,16 @@ import FoundingCallout from './FoundingCallout/FoundingCallout.jsx'
 import GuildIdentity from './GuildIdentity/GuildIdentity.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
 import HeroSlideshow from './HeroSlideshow/HeroSlideshow.jsx'
+import { useHeroStory } from './HeroStory/heroStory.js'
 import Navbar from './Navbar/Navbar.jsx'
 import './Home.css'
 
 function Home() {
+  const { activeIndex, previousIndex, activeSlide } = useHeroStory()
+
   return (
     <div className="home">
-      <HeroSlideshow />
+      <HeroSlideshow activeIndex={activeIndex} previousIndex={previousIndex} />
       <div className="home__overlay" aria-hidden="true" />
 
       <Navbar />
@@ -19,7 +22,7 @@ function Home() {
         <main className="home__content">
           <section className="home__hero-section">
             <div className="home__hero">
-              <HeroContent />
+              <HeroContent slide={activeSlide} />
             </div>
           </section>
 

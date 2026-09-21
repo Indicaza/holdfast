@@ -28,7 +28,7 @@
 }
 
 .hero-content__eyebrow {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-2);
   color: var(--color-accent-bright);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -39,13 +39,13 @@
 .hero-content__heading {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 0;
 }
 
 .hero-content__title {
   color: var(--color-text-strong);
   font-size: var(--font-size-2xl);
-  line-height: var(--line-height-tight);
+  line-height: 0.96;
   letter-spacing: var(--letter-spacing-tight);
   text-shadow:
     0 0.08em 0.12em rgba(0, 0, 0, 0.34),
@@ -54,33 +54,68 @@
 }
 
 .hero-content__motto {
+  margin-top: var(--space-1);
   color: var(--color-text-muted);
   font-family: var(--font-display);
   font-size: var(--font-size-fib-21);
   font-style: italic;
+  line-height: 1.1;
 }
 
-.hero-content__maxim {
+.hero-content__story-shell {
   margin-top: var(--space-6);
-  color: var(--color-text-strong);
+  overflow: hidden;
+  transition: height 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.hero-content__story {
+  width: 100%;
+}
+
+.hero-content__principle {
+  color: var(--color-accent-bright);
   font-family: var(--font-display);
   font-size: var(--font-size-fib-34);
   line-height: var(--line-height-heading);
+  min-height: 1.2em;
+  text-wrap: balance;
 }
 
 .hero-content__description {
-  max-width: 34rem;
-  margin-top: var(--space-5);
+  max-width: 38rem;
+  margin-top: var(--space-4);
   color: var(--color-text);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-fib-21);
+  line-height: 1.5;
   text-wrap: pretty;
+  opacity: 0;
+  filter: blur(0.25rem);
+  transform: translate3d(0, 0.2rem, 0);
+}
+
+.hero-content__description--visible {
+  animation: hero-description-in 680ms var(--ease-standard) both;
+}
+
+@keyframes hero-description-in {
+  from {
+    opacity: 0;
+    filter: blur(0.3rem);
+    transform: translate3d(0, 0.2rem, 0);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .hero-content__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-8);
+  margin-top: var(--space-4);
 }
 
 .hero-content__primary,
@@ -159,5 +194,19 @@
   .hero-content__primary,
   .hero-content__secondary {
     flex: 1 1 12rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-content__story-shell {
+    transition: none;
+  }
+
+  .hero-content__description,
+  .hero-content__description--visible {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
   }
 }
