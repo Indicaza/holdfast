@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSession } from '../../Auth/SessionProvider.jsx'
 import './Navbar.css'
 
 const links = [
@@ -6,9 +7,51 @@ const links = [
   { label: 'Charter', href: '/charter' },
 ]
 
+function displayName(user) {
+  return user?.guildNickname || user?.globalName || user?.username || 'Member'
+}
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  const { authenticated, user, hasPermission, signIn, signOut } = useSession()
+
+  useEffect(() => {
+    if (!accountOpen) {
+      return undefined
+    }
+
+    function handlePointerDown(event) {
+      if (!accountRef.current?.contains(event.target)) {
+        setAccountOpen(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setAccountOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [accountOpen])
+
+  async function handleSignOut() {
+    try {
+      await signOut()
+      setAccountOpen(false)
+    } catch {
+      return
+    }
+  }
 
   return (
     <header className="navbar">
@@ -39,13 +82,56 @@ function Navbar() {
           </nav>
 
           <div className="navbar__actions">
-            <a
-              className={`navbar__join ${pathname === '/join' ? 'navbar__join--active' : ''}`}
-              href="/join"
-              aria-current={pathname === '/join' ? 'page' : undefined}
-            >
-              Join Holdfast
-            </a>
+            {!authenticated ? (
+              <button
+                className="navbar__signin"
+                type="button"
+                onClick={() => signIn()}
+              >
+                Sign in
+              </button>
+            ) : (
+              <div className="navbar__account" ref={accountRef}>
+                <button
+                  className="navbar__account-button"
+                  type="button"
+                  aria-label={`Open account menu for ${displayName(user)}`}
+                  aria-expanded={accountOpen}
+                  onClick={() => setAccountOpen((open) => !open)}
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt=""
+                      width="36"
+                      height="36"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span aria-hidden="true">♜</span>
+                  )}
+                </button>
+
+                <div
+                  className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}
+                >
+                  <div className="navbar__account-identity">
+                    <strong>{displayName(user)}</strong>
+                    <span>@{user?.username}</span>
+                  </div>
+
+                  <div className="navbar__account-links">
+                    <a href="/guildos">GuildOS</a>
+                    {hasPermission('site.admin') ? (
+                      <a href="/admin">Control Room</a>
+                    ) : null}
+                    <button type="button" onClick={handleSignOut}>
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
               className="navbar__menu-button"
@@ -77,13 +163,23 @@ function Navbar() {
               {link.label}
             </a>
           ))}
-          <a
-            className="navbar__mobile-link navbar__mobile-link--join"
-            href="/join"
-            aria-current={pathname === '/join' ? 'page' : undefined}
-          >
-            Join Holdfast
-          </a>
+          {!authenticated ? (
+            <button
+              className="navbar__mobile-link navbar__mobile-signin"
+              type="button"
+              onClick={() => signIn()}
+            >
+              Sign in
+            </button>
+          ) : (
+            <a
+              className="navbar__mobile-link"
+              href="/guildos"
+              aria-current={pathname === '/guildos' ? 'page' : undefined}
+            >
+              GuildOS
+            </a>
+          )}
         </nav>
       </div>
     </header>

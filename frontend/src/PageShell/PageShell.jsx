@@ -2,9 +2,24 @@ import Footer from '../Home/Footer/Footer.jsx'
 import Navbar from '../Home/Navbar/Navbar.jsx'
 import './PageShell.css'
 
-function PageShell({ eyebrow, title, intro, centered = false, children }) {
+function PageShell({
+  eyebrow,
+  title,
+  intro,
+  centered = false,
+  className = '',
+  children,
+}) {
+  const shellClassName = [
+    'page-shell',
+    centered ? 'page-shell--centered' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div className={`page-shell ${centered ? 'page-shell--centered' : ''}`}>
+    <div className={shellClassName}>
       <div className="page-shell__background" aria-hidden="true" />
 
       <Navbar />

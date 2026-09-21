@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import Home from './Home/Home.jsx'
 import SEO from './SEO/SEO.jsx'
 
+const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildOS = lazy(() => import('./GuildOS/GuildOS.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
@@ -50,6 +51,13 @@ const routes = {
     title: 'Privacy | Holdfast',
     description: 'Holdfast privacy information.',
     robots: 'noindex,follow',
+  },
+  '/admin': {
+    component: Admin,
+    path: '/admin',
+    title: 'Guild Control Room',
+    description: 'Guild administrative control room.',
+    robots: 'noindex,nofollow',
   },
 }
 

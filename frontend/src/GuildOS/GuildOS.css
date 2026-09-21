@@ -1,0 +1,23 @@
+.guildos-auth {
+  display: flex;
+  justify-content: center;
+}
+
+.guildos-auth button {
+  min-height: 3rem;
+  padding-inline: var(--space-6);
+  border: var(--border-accent);
+  background: var(--color-accent);
+  color: var(--color-background);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.guildos-auth button:hover,
+.guildos-auth button:focus-visible {
+  border-color: var(--color-accent-bright);
+  background: var(--color-accent-bright);
+}

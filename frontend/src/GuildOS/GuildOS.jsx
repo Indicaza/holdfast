@@ -1,32 +1,64 @@
 import PageShell from '../PageShell/PageShell.jsx'
+import { useSession } from '../Auth/SessionProvider.jsx'
+import './GuildOS.css'
+
+function displayName(user) {
+  return user?.guildNickname || user?.globalName || user?.username || 'member'
+}
 
 function GuildOS() {
+  const session = useSession()
+
+  if (session.status === 'loading') {
+    return (
+      <PageShell
+        eyebrow="GuildOS"
+        title="Opening GuildOS."
+        intro="Checking your guild session."
+        centered
+      />
+    )
+  }
+
+  if (!session.authenticated) {
+    return (
+      <PageShell
+        eyebrow="GuildOS"
+        title="Members only."
+        intro="Sign in with Discord to open your guild workspace."
+        centered
+      >
+        <div className="guildos-auth">
+          <button type="button" onClick={() => session.signIn()}>
+            Sign in with Discord
+          </button>
+        </div>
+      </PageShell>
+    )
+  }
+
   return (
     <PageShell
       eyebrow="GuildOS"
-      title="Simple at the edge."
-      intro="GuildOS is the future administrative and analytical layer behind Holdfast. Its job is to remove coordination work without replacing human judgment."
+      title={`Welcome back, ${displayName(session.user)}.`}
+      intro="This is the member side of GuildOS. Your tools will appear here as they come online."
     >
-      <h2>AI does staff work. Humans govern.</h2>
+      <h2>Member systems are coming online.</h2>
       <p>
-        GuildOS may eventually connect Discord, guild rosters, professions,
-        bank records, market data, events, and other useful signals into one
-        coherent system.
+        Discord now establishes your identity and the guild resolves what you
+        are allowed to see and manage. This page will become your home for
+        missions, characters, professions, reputation, service marks, and
+        other guild tools.
       </p>
 
-      <h2>What matters now</h2>
-      <ul>
-        <li>Make joining Holdfast easy.</li>
-        <li>Keep useful guild information easy to find.</li>
-        <li>Automate chores only when they become real chores.</li>
-        <li>Preserve data that may become useful later.</li>
-      </ul>
-
-      <h2>Built in the open</h2>
-      <p>
-        Holdfast's software is being developed openly so members can understand
-        what the tools do and how the systems around the guild work.
-      </p>
+      {session.hasPermission('site.admin') ? (
+        <>
+          <h2>Management access</h2>
+          <p>
+            Your account can access the <a href="/admin">Control Room</a>.
+          </p>
+        </>
+      ) : null}
     </PageShell>
   )
 }
