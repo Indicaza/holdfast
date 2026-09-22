@@ -1,5 +1,6 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import QuestEditor from './QuestEditor.jsx'
 import './Admin.css'
 
 const authMessages = {
@@ -8,15 +9,6 @@ const authMessages = {
   'missing-code': 'Discord did not return an authorization code.',
   'not-member': 'This Discord account is not a member of the guild server.',
   failed: 'Discord sign-in failed. Please try again.',
-}
-
-const permissionLabels = {
-  'site.admin': 'Administrator',
-  'campaigns.edit': 'Campaign Editor',
-}
-
-function displayName(user) {
-  return user.guildNickname || user.globalName || user.username
 }
 
 function Admin() {
@@ -28,7 +20,7 @@ function Admin() {
     return (
       <PageShell
         eyebrow="Control Room"
-        title="Checking credentials."
+        title="Checking credentials"
         intro="The guild is verifying your session."
         centered
       />
@@ -39,7 +31,7 @@ function Admin() {
     return (
       <PageShell
         eyebrow="Control Room"
-        title="Backend unavailable."
+        title="Backend unavailable"
         intro="The guild API could not be reached."
         centered
       />
@@ -50,7 +42,7 @@ function Admin() {
     return (
       <PageShell
         eyebrow="Control Room"
-        title="Sign in with Discord."
+        title="Sign in with Discord"
         intro="Discord establishes your identity. Guild permissions decide what you can manage."
         centered
       >
@@ -68,55 +60,27 @@ function Admin() {
     )
   }
 
-  const hasAdminAccess = session.permissions?.length > 0
+  if (!session.hasPermission('quests.edit')) {
+    return (
+      <PageShell
+        eyebrow="Control Room"
+        title="No management access"
+        intro="You are signed in, but this account does not have permission to edit guild quests."
+        centered
+        className="admin-page"
+      />
+    )
+  }
 
   return (
     <PageShell
       eyebrow="Control Room"
-      title={hasAdminAccess ? 'Access confirmed' : 'Signed in'}
-      intro={
-        hasAdminAccess
-          ? 'Your guild identity and permissions are ready.'
-          : 'Your Discord identity is linked, but this account has no guild admin permissions.'
-      }
+      title="Guild Quests"
+      intro="Publish quests, feature one on the home page, and manage objectives, assignments, and rewards."
       centered
       className="admin-page"
     >
-      <section className="admin-profile" aria-labelledby="admin-profile-title">
-        <div className="admin-profile__identity">
-          {session.user.avatarUrl ? (
-            <img
-              src={session.user.avatarUrl}
-              alt=""
-              width="88"
-              height="88"
-              decoding="async"
-            />
-          ) : (
-            <span className="admin-profile__avatar-fallback" aria-hidden="true">
-              ♜
-            </span>
-          )}
-
-          <h2 id="admin-profile-title">{displayName(session.user)}</h2>
-          <p className="admin-profile__username">@{session.user.username}</p>
-        </div>
-
-        <div className="admin-profile__permissions">
-          <p className="admin-profile__label">Guild permissions</p>
-          {session.permissions?.length ? (
-            <ul>
-              {session.permissions.map((permission) => (
-                <li key={permission}>
-                  {permissionLabels[permission] ?? permission}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="admin-profile__empty">None assigned.</p>
-          )}
-        </div>
-      </section>
+      <QuestEditor />
     </PageShell>
   )
 }

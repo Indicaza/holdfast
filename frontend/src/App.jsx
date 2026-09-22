@@ -7,6 +7,7 @@ const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildOS = lazy(() => import('./GuildOS/GuildOS.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
+const Quests = lazy(() => import('./Quests/Quests.jsx'))
 
 const defaultRobots =
   'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
@@ -20,6 +21,14 @@ const routes = {
       'Holdfast is an Alliance guild for WoW Forever focused on organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.',
     robots: defaultRobots,
     home: true,
+  },
+  '/quests': {
+    component: Quests,
+    path: '/quests',
+    title: 'Holdfast Quests | Alliance WoW Forever Guild',
+    description:
+      'Browse Holdfast published guild quests, objectives, assignments, and rewards for WoW Forever.',
+    robots: defaultRobots,
   },
   '/charter': {
     component: Charter,

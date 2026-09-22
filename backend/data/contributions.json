@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "transactions": [
+    {
+      "id": "objective:objective-7d4d9a3c-bfe2-4f1a-949e-950762f73266:member:372578806763880458",
+      "type": "objective_reward",
+      "memberId": "372578806763880458",
+      "memberName": "Rook",
+      "questId": "quest-f80f9e02-9aec-4b1c-8dea-92826a5de36f",
+      "questTitle": "Test Mission",
+      "objectiveId": "objective-7d4d9a3c-bfe2-4f1a-949e-950762f73266",
+      "objectiveTitle": "Test Objective",
+      "rep": 100,
+      "marks": 100,
+      "items": [
+        {
+          "id": "reward-item-3dc7d414-0199-4871-a339-4d98883d7a91",
+          "name": "Gold",
+          "quantity": 100
+        }
+      ],
+      "createdAt": "2026-09-21T23:11:11.420Z",
+      "awardedBy": {
+        "memberId": "372578806763880458",
+        "username": "indicaza",
+        "displayName": "Rook"
+      }
+    }
+  ]
+}

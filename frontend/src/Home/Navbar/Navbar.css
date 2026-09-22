@@ -75,7 +75,7 @@
 }
 
 .navbar__link::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 0;
   bottom: 0;
@@ -174,7 +174,7 @@
 
 .navbar__account-button:hover,
 .navbar__account-button:focus-visible,
-.navbar__account-button[aria-expanded='true'] {
+.navbar__account-button[aria-expanded="true"] {
   border-color: var(--color-accent-bright);
   transform: translateY(-1px);
 }
@@ -265,7 +265,7 @@
   .navbar__brand-name,
   .navbar__links,
   .navbar__signin,
-.navbar__join {
+  .navbar__join {
     display: none;
   }
 
@@ -303,12 +303,12 @@
       translate var(--duration-normal) var(--ease-standard);
   }
 
-  .navbar__menu-button[aria-expanded='true'] span:first-child {
+  .navbar__menu-button[aria-expanded="true"] span:first-child {
     translate: 0 0.2rem;
     transform: rotate(45deg);
   }
 
-  .navbar__menu-button[aria-expanded='true'] span:last-child {
+  .navbar__menu-button[aria-expanded="true"] span:last-child {
     translate: 0 -0.2rem;
     transform: rotate(-45deg);
   }
@@ -354,7 +354,7 @@
     text-transform: uppercase;
   }
 
-  .navbar__mobile-link[aria-current='page'] {
+  .navbar__mobile-link[aria-current="page"] {
     color: var(--color-accent-bright);
   }
 

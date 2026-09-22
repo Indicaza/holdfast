@@ -13,23 +13,33 @@ export function resolvePermissions(userId, memberRoleIds = []) {
 
   const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
   const adminRoleIds = idSet(process.env.DISCORD_SITE_ADMIN_ROLE_IDS);
-  const campaignRoleIds = idSet(
-    process.env.DISCORD_CAMPAIGN_EDITOR_ROLE_IDS,
+  const questRoleIds = idSet(
+    process.env.DISCORD_QUEST_EDITOR_ROLE_IDS,
+  );
+  const rewardPolicyRoleIds = idSet(
+    process.env.DISCORD_REWARD_POLICY_ROLE_IDS,
   );
 
   const isOwner = ownerIds.has(userId);
   const isAdmin = [...adminRoleIds].some((id) => roleIds.has(id));
-  const canEditCampaigns = [...campaignRoleIds].some((id) =>
+  const canEditQuests = [...questRoleIds].some((id) =>
+    roleIds.has(id),
+  );
+  const canEditRewardPolicy = [...rewardPolicyRoleIds].some((id) =>
     roleIds.has(id),
   );
 
   if (isOwner || isAdmin) {
     permissions.add("site.admin");
-    permissions.add("campaigns.edit");
+    permissions.add("quests.edit");
   }
 
-  if (canEditCampaigns) {
-    permissions.add("campaigns.edit");
+  if (canEditQuests) {
+    permissions.add("quests.edit");
+  }
+
+  if (isOwner || canEditRewardPolicy) {
+    permissions.add("rewards.policy.edit");
   }
 
   return [...permissions];

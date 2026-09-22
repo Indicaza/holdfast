@@ -5,6 +5,9 @@ import express from "express";
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession } from "./Auth/session.js";
+import { createQuestRouter } from "./Quest/questRouter.js";
+import { upsertGuildMember } from "./Guild/memberRepository.js";
+import { createMemberRouter } from "./Guild/memberRouter.js";
 
 dotenv.config();
 
@@ -26,11 +29,19 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", createDiscordAuthRouter());
+app.use("/api/quests", createQuestRouter());
+app.use("/api/guild/members", createMemberRouter());
 
-app.get("/api/me", (req, res) => {
+app.get("/api/me", async (req, res) => {
   if (!req.auth) {
     res.json({ authenticated: false });
     return;
+  }
+
+  try {
+    await upsertGuildMember(req.auth.user, req.auth.permissions);
+  } catch (error) {
+    console.error("Unable to update guild member directory", error);
   }
 
   res.json({

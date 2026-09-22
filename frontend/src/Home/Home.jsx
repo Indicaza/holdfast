@@ -1,7 +1,7 @@
 import FeatureCardGrid from './FeatureCardGrid/FeatureCardGrid.jsx'
 import Footer from './Footer/Footer.jsx'
 import FoundingCallout from './FoundingCallout/FoundingCallout.jsx'
-import CurrentOperation from './CurrentOperation/CurrentOperation.jsx'
+import QuestBoard from './QuestBoard/QuestBoard.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
 import HeroSlideshow from './HeroSlideshow/HeroSlideshow.jsx'
 import { useHeroStory } from './HeroStory/heroStory.js'
@@ -27,7 +27,7 @@ function Home() {
           </section>
 
           <FeatureCardGrid />
-          <CurrentOperation />
+          <QuestBoard />
           <FoundingCallout />
         </main>
 

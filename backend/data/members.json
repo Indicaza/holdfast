@@ -1,0 +1,16 @@
+[
+  {
+    "id": "372578806763880458",
+    "username": "indicaza",
+    "displayName": "Rook",
+    "initials": "RO",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/372578806763880458/fdd11c1768cf7d450a42944aafe8c359.png?size=128",
+    "permissions": [
+      "site.admin",
+      "quests.edit",
+      "rewards.policy.edit"
+    ],
+    "firstSeenAt": "2026-09-21T19:45:13.919Z",
+    "updatedAt": "2026-09-22T02:57:56.221Z"
+  }
+]

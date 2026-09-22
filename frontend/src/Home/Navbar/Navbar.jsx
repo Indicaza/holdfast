@@ -4,6 +4,7 @@ import './Navbar.css'
 
 const links = [
   { label: 'Home', href: '/' },
+  { label: 'Quests', href: '/quests' },
   { label: 'Charter', href: '/charter' },
 ]
 
@@ -122,7 +123,7 @@ function Navbar() {
 
                   <div className="navbar__account-links">
                     <a href="/guildos">GuildOS</a>
-                    {hasPermission('site.admin') ? (
+                    {hasPermission('site.admin') || hasPermission('quests.edit') ? (
                       <a href="/admin">Control Room</a>
                     ) : null}
                     <button type="button" onClick={handleSignOut}>

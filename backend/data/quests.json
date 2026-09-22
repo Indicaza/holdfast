@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "focusedQuestId": "quest-16bb0048-3b64-4e75-8e10-d59a658e3ba4",
+  "rewardPolicy": "",
+  "rewardLimits": {
+    "rep": {
+      "min": 0,
+      "max": 1000
+    },
+    "marks": {
+      "min": 0,
+      "max": 1000
+    }
+  },
+  "quests": [
+    {
+      "id": "quest-16bb0048-3b64-4e75-8e10-d59a658e3ba4",
+      "publication": "published",
+      "mode": "rotating",
+      "title": "Test quest",
+      "summary": "Testing the questing!",
+      "objectives": [
+        {
+          "id": "objective-6a0bbca8-91d8-40b6-ac69-dae1d5691331",
+          "title": "Test objective",
+          "description": "asdf",
+          "priority": "Medium",
+          "completed": false,
+          "need": "asdf",
+          "reward": {
+            "rep": 100,
+            "marks": 100,
+            "items": []
+          },
+          "assignments": [
+            {
+              "memberId": "372578806763880458",
+              "name": "Rook",
+              "responsibility": "asdf",
+              "detail": "asdf",
+              "initials": "RO",
+              "avatar": "https://cdn.discordapp.com/avatars/372578806763880458/fdd11c1768cf7d450a42944aafe8c359.png?size=128"
+            },
+            {
+              "memberId": "372578806763880458",
+              "name": "Rook",
+              "responsibility": "",
+              "detail": "",
+              "initials": "RO",
+              "avatar": "https://cdn.discordapp.com/avatars/372578806763880458/fdd11c1768cf7d450a42944aafe8c359.png?size=128"
+            }
+          ]
+        }
+      ],
+      "completed": false
+    },
+    {
+      "id": "quest-6ab547fe-b377-426a-a933-3649f7381d2e",
+      "publication": "published",
+      "mode": "rotating",
+      "title": "Test quest 2",
+      "summary": "asfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasd",
+      "objectives": [
+        {
+          "id": "objective-6eb212f7-0bc7-42f0-8a05-e075c2998836",
+          "title": "New objective",
+          "description": "asfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasdasfasdfafdsasfasdfasd",
+          "priority": "Medium",
+          "completed": false,
+          "need": "asfasdfafdsasfasdfasd",
+          "reward": {
+            "rep": 0,
+            "marks": 0,
+            "items": []
+          },
+          "assignments": [
+            {
+              "memberId": "",
+              "name": "Open",
+              "responsibility": "",
+              "detail": "",
+              "initials": "+"
+            }
+          ]
+        },
+        {
+          "id": "objective-a4788590-7923-4b9b-ab29-c4351b81c6d3",
+          "title": "New objective",
+          "description": "",
+          "priority": "Medium",
+          "completed": false,
+          "need": "",
+          "reward": {
+            "rep": 0,
+            "marks": 0,
+            "items": []
+          },
+          "assignments": []
+        }
+      ],
+      "completed": false
+    }
+  ]
+}
