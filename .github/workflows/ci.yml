@@ -49,7 +49,7 @@ jobs:
         with:
           script: |
             const fs = require('fs')
-            const log = fs.readFileSync('frontend/lint.log', 'utf8').slice(-12000)
+            const log = fs.readFileSync('frontend/lint.log', 'utf8').slice(-60000)
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
