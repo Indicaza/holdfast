@@ -517,16 +517,21 @@ function MemberProfile({ memberId }) {
                   </span>
                 </div>
 
-                {assignment.responsibility ? (
-                  <p className="member-profile__responsibility">
-                    <strong>Responsibility</strong>
-                    <span>{assignment.responsibility}</span>
-                  </p>
-                ) : null}
+                <div className="member-profile__assignment-details">
+                  {assignment.responsibility ? (
+                    <p className="member-profile__responsibility">
+                      <strong>Responsibility</strong>
+                      <span>{assignment.responsibility}</span>
+                    </p>
+                  ) : null}
 
-                {assignment.detail ? (
-                  <p className="member-profile__detail">{assignment.detail}</p>
-                ) : null}
+                  {assignment.detail ? (
+                    <p className="member-profile__detail">
+                      <strong>Notes</strong>
+                      <span>{assignment.detail}</span>
+                    </p>
+                  ) : null}
+                </div>
 
                 <Reward reward={assignment.reward} />
               </article>
@@ -563,21 +568,17 @@ function MemberProfile({ memberId }) {
         </div>
 
         {activity.length ? (
-          <div className="member-profile__timeline">
+          <div className="member-profile__service-list">
             {activity.map((entry) => (
               <article className="member-profile__activity" key={entry.id}>
-                <div className="member-profile__activity-marker" aria-hidden="true" />
-
-                <div className="member-profile__activity-copy">
-                  <div>
-                    <p>{entry.questTitle}</p>
-                    <h3>{entry.objectiveTitle}</h3>
-                  </div>
-
-                  <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
-
+                <div className="member-profile__activity-main">
+                  <p>{entry.questTitle}</p>
+                  <h3>{entry.objectiveTitle}</h3>
                   <Reward reward={entry} />
+                </div>
 
+                <div className="member-profile__activity-meta">
+                  <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
                   {entry.awardedBy?.displayName ? (
                     <small>Awarded by {entry.awardedBy.displayName}</small>
                   ) : null}
