@@ -232,12 +232,14 @@ function MemberProfile({ memberId }) {
         </div>
 
         <div className="member-profile__identity">
-          <div className="member-profile__badges">
-            {isSelf ? <span>You</span> : null}
-            {member.role && member.role !== 'Member' ? (
-              <span>{member.role}</span>
-            ) : null}
-          </div>
+          {isSelf || (member.role && member.role !== 'Member') ? (
+            <div className="member-profile__badges">
+              {isSelf ? <span>You</span> : null}
+              {member.role && member.role !== 'Member' ? (
+                <span>{member.role}</span>
+              ) : null}
+            </div>
+          ) : null}
 
           <h1 id="member-profile-name">{displayName(member)}</h1>
           <p className="member-profile__username">@{member.username}</p>
