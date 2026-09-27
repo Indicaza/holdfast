@@ -1,29 +1,23 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
+import {
+  ensureRuntimeDataFile,
+  runtimeDataFile,
+} from "../Data/runtimeData.js";
 import { normalizeQuestDocument } from "./questSchema.js";
 
-const DEFAULT_DATA_FILE = fileURLToPath(
-  new URL("../../data/quests.json", import.meta.url),
-);
-
-function dataFile() {
-  if (!process.env.GUILD_DATA_DIR) {
-    return DEFAULT_DATA_FILE;
-  }
-
-  return path.join(path.resolve(process.env.GUILD_DATA_DIR), "quests.json");
-}
+const QUESTS_FILE = "quests.json";
 
 export async function readQuests() {
-  const raw = await readFile(dataFile(), "utf8");
+  const target = await ensureRuntimeDataFile(QUESTS_FILE);
+  const raw = await readFile(target, "utf8");
   return normalizeQuestDocument(JSON.parse(raw));
 }
 
 export async function writeQuests(document) {
   const normalized = normalizeQuestDocument(document);
-  const target = dataFile();
+  const target = runtimeDataFile(QUESTS_FILE);
   const directory = path.dirname(target);
   const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
 
