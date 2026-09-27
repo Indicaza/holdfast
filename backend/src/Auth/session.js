@@ -42,6 +42,15 @@ function sessionSecret() {
     throw new Error("SESSION_SECRET is required");
   }
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    Buffer.byteLength(secret, "utf8") < 32
+  ) {
+    throw new Error(
+      "SESSION_SECRET must be at least 32 bytes in production",
+    );
+  }
+
   return secret;
 }
 

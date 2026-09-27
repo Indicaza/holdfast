@@ -6,6 +6,7 @@ import {
   readMemberContributionHistory,
 } from "../Contribution/contributionRepository.js";
 import { readQuests } from "../Quest/questRepository.js";
+import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   readGuildMembers,
   updateDetectedTimezone,
@@ -178,6 +179,11 @@ async function profileFor(memberId) {
 
 export function createMemberRouter() {
   const router = Router();
+  const profileWriteRateLimit = createRateLimiter({
+    name: "member-profile-write",
+    windowMs: 10 * 60 * 1000,
+    max: 60,
+  });
 
   router.get("/", requireAuthenticated, async (req, res) => {
     try {
@@ -220,7 +226,11 @@ export function createMemberRouter() {
     }
   });
 
-  router.patch("/me/timezone", requireAuthenticated, async (req, res) => {
+  router.patch(
+    "/me/timezone",
+    requireAuthenticated,
+    profileWriteRateLimit,
+    async (req, res) => {
     try {
       const result = await updateDetectedTimezone(
         req.auth.user.id,
@@ -247,9 +257,14 @@ export function createMemberRouter() {
       console.error("Unable to update detected timezone", error);
       res.status(500).json({ error: "timezone_update_failed" });
     }
-  });
+  },
+  );
 
-  router.patch("/me", requireAuthenticated, async (req, res) => {
+  router.patch(
+    "/me",
+    requireAuthenticated,
+    profileWriteRateLimit,
+    async (req, res) => {
     try {
       const updated = await updateGuildMemberProfile(
         req.auth.user.id,
@@ -269,7 +284,8 @@ export function createMemberRouter() {
       console.error("Unable to update member profile", error);
       res.status(500).json({ error: "member_profile_update_failed" });
     }
-  });
+  },
+  );
 
   router.get("/:memberId", requireAuthenticated, async (req, res) => {
     try {

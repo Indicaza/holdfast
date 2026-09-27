@@ -3,6 +3,7 @@ import { Router } from "express";
 import { requirePermission } from "../Auth/permissions.js";
 import { awardObjective } from "../Contribution/contributionRepository.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
+import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   QuestStorageError,
   readQuests,
@@ -84,6 +85,11 @@ function hasReward(objective) {
 
 export function createQuestRouter() {
   const router = Router();
+  const adminWriteRateLimit = createRateLimiter({
+    name: "quest-admin-write",
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+  });
 
   router.get("/", async (req, res) => {
     try {
@@ -116,7 +122,11 @@ export function createQuestRouter() {
     }
   });
 
-  router.put("/manage", requirePermission("quests.edit"), async (req, res) => {
+  router.put(
+    "/manage",
+    requirePermission("quests.edit"),
+    adminWriteRateLimit,
+    async (req, res) => {
     try {
       const current = await readQuests();
       let document = normalizeQuestDocument(req.body);
@@ -141,11 +151,13 @@ export function createQuestRouter() {
       console.error("Unable to save quest workspace", error);
       res.status(500).json({ error: "quests_save_failed" });
     }
-  });
+  },
+  );
 
   router.post(
     "/manage/complete-objective",
     requirePermission("quests.edit"),
+    adminWriteRateLimit,
     async (req, res) => {
       try {
         const current = await readQuests();

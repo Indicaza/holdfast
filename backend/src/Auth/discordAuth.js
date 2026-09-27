@@ -100,19 +100,20 @@ function onboardingUrl(frontendUrl, auth) {
 }
 
 async function responseError(response, prefix) {
-  let details = "";
-
+  // Consume the body so the connection can be reused, but never copy an
+  // upstream Discord response body into application errors or client output.
   try {
-    details = await response.text();
+    await response.text();
   } catch {
-    details = "";
+    // Best-effort drain only.
   }
 
-  const error = new Error(
-    `${prefix} with ${response.status}${details ? `: ${details}` : ""}`,
-  );
+  const error = new Error(`${prefix} with ${response.status}`);
   error.status = response.status;
-  error.details = details;
+  error.discordRequestId =
+    response.headers.get("x-ratelimit-bucket") ||
+    response.headers.get("x-request-id") ||
+    null;
   return error;
 }
 
