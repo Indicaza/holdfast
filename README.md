@@ -173,6 +173,27 @@ The backend intentionally refuses to start in production without an explicit dat
 
 Back up the contents of `GUILD_DATA_DIR` as application data. The current JSON store is a launch-stage persistence layer and is planned to move to SQLite.
 
+## Production Security
+
+Production should run behind HTTPS. Holdfast sets secure session cookies and baseline browser security headers when `NODE_ENV=production`.
+
+Configure:
+
+- `FRONTEND_URL` as the canonical website origin.
+- `TRUSTED_ORIGINS` only when additional browser origins legitimately need GuildOS access.
+- `SESSION_SECRET` with at least 32 bytes of random secret material. For example, generate a deployment secret with `openssl rand -hex 32`.
+- `TRUST_PROXY` only when the hosting platform places Holdfast behind a known reverse proxy. `TRUST_PROXY=1` means one trusted proxy hop; do not enable broad proxy trust casually.
+
+Cookie-authenticated POST/PUT/PATCH/DELETE requests are origin-checked. In production, mutation requests without a trusted Origin or Referer are rejected.
+
+Current abuse-sensitive routes are rate limited in memory:
+
+- Discord authentication
+- member profile/timezone writes
+- quest administration and objective completion
+
+The current limiter is appropriate for a single Holdfast Node process. If the application is later scaled across multiple backend instances, move rate-limit state to shared infrastructure.
+
 ## AI-Assisted Development
 
 Holdfast includes a lightweight workflow for working with AI across development sessions.
