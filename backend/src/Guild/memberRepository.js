@@ -51,6 +51,10 @@ function sameStringArray(left, right) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
+function memberStatus(value) {
+  return value === "departed" ? "departed" : "active";
+}
+
 function sameMemberIdentity(existing, next) {
   if (!existing) {
     return false;
@@ -63,6 +67,8 @@ function sameMemberIdentity(existing, next) {
     (existing.avatarUrl || "") === next.avatarUrl &&
     (existing.guildJoinedAt || null) === next.guildJoinedAt &&
     normalizeGuildRank(existing.rank) === next.rank &&
+    memberStatus(existing.status) === next.status &&
+    (existing.departedAt || null) === next.departedAt &&
     sameStringArray(existing.permissions, next.permissions)
   );
 }
@@ -106,19 +112,61 @@ async function writeMembers(members) {
   await rename(temporary, target);
 }
 
-export async function readGuildMembers() {
+export async function readGuildMembers({ includeDeparted = false } = {}) {
   const members = await readRawMembers();
 
   return members
     .map((member) => ({
       ...member,
+      status: memberStatus(member.status),
+      departedAt: member.departedAt || null,
       profile: normalizeMemberProfile(member.profile || emptyMemberProfile()),
     }))
+    .filter((member) => includeDeparted || member.status === "active")
     .sort((left, right) =>
       left.displayName.localeCompare(right.displayName, undefined, {
         sensitivity: "base",
       }),
     );
+}
+
+export async function markGuildMemberDeparted(memberId) {
+  const members = await readRawMembers();
+  const index = members.findIndex((member) => member.id === memberId);
+
+  if (index < 0) {
+    return null;
+  }
+
+  if (memberStatus(members[index].status) === "departed") {
+    return {
+      ...members[index],
+      status: "departed",
+      departedAt: members[index].departedAt || null,
+      profile: normalizeMemberProfile(
+        members[index].profile || emptyMemberProfile(),
+      ),
+    };
+  }
+
+  const now = new Date().toISOString();
+
+  members[index] = {
+    ...members[index],
+    status: "departed",
+    departedAt: now,
+    permissions: [],
+    updatedAt: now,
+  };
+
+  await writeMembers(members);
+
+  return {
+    ...members[index],
+    profile: normalizeMemberProfile(
+      members[index].profile || emptyMemberProfile(),
+    ),
+  };
 }
 
 export async function updateDetectedTimezone(memberId, timezone) {
@@ -232,6 +280,8 @@ export async function upsertGuildMember(user, permissions = []) {
     avatarUrl: user.avatarUrl || "",
     guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
     rank: memberRank(user.id, existing?.rank),
+    status: "active",
+    departedAt: null,
     permissions: Array.isArray(permissions) ? permissions : [],
   };
 
