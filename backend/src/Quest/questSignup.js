@@ -39,18 +39,25 @@ function memberAssignment(member) {
   };
 }
 
-function existingQuestAssignment(quest, memberId) {
-  for (const objective of quest.objectives) {
-    const assignment = objective.assignments.find(
-      (item) => item.memberId === memberId,
-    );
+function signupTarget(document, questId, objectiveId) {
+  const quest = document.quests.find((item) => item.id === questId);
+  const objective = quest?.objectives.find((item) => item.id === objectiveId);
 
-    if (assignment) {
-      return { objective, assignment };
-    }
+  if (!quest || !objective) {
+    throw new QuestSignupError(
+      "objective_not_found",
+      "That objective is no longer available.",
+      404,
+    );
   }
 
-  return null;
+  return { quest, objective };
+}
+
+function selfAssignment(objective, memberId) {
+  return objective.assignments.find(
+    (assignment) => assignment.memberId === memberId,
+  );
 }
 
 export function signupForObjective(document, member, questId, objectiveId) {
@@ -62,16 +69,11 @@ export function signupForObjective(document, member, questId, objectiveId) {
     );
   }
 
-  const quest = document.quests.find((item) => item.id === questId);
-  const objective = quest?.objectives.find((item) => item.id === objectiveId);
-
-  if (!quest || !objective) {
-    throw new QuestSignupError(
-      "objective_not_found",
-      "That objective is no longer available.",
-      404,
-    );
-  }
+  const { quest, objective } = signupTarget(
+    document,
+    questId,
+    objectiveId,
+  );
 
   if (quest.publication !== "published") {
     throw new QuestSignupError(
@@ -89,19 +91,15 @@ export function signupForObjective(document, member, questId, objectiveId) {
     );
   }
 
-  const existing = existingQuestAssignment(quest, member.id);
-
-  if (existing) {
+  if (selfAssignment(objective, member.id)) {
     throw new QuestSignupError(
-      "already_assigned_to_quest",
-      existing.objective.id === objective.id
-        ? `You're already signed up for “${existing.objective.title}”.`
-        : `You're already signed up for “${existing.objective.title}” in this quest.`,
+      "already_assigned_to_objective",
+      `You're already signed up for “${objective.title}”.`,
       409,
       {
         questId: quest.id,
-        objectiveId: existing.objective.id,
-        objectiveTitle: existing.objective.title,
+        objectiveId: objective.id,
+        objectiveTitle: objective.title,
       },
     );
   }
@@ -130,6 +128,70 @@ export function signupForObjective(document, member, questId, objectiveId) {
                       ...objectiveItem.assignments,
                       memberAssignment(member),
                     ],
+                  },
+            ),
+          },
+    ),
+  };
+
+  return {
+    document: normalizeQuestDocument(next),
+    quest,
+    objective,
+  };
+}
+
+export function leaveObjective(document, memberId, questId, objectiveId) {
+  if (!memberId) {
+    throw new QuestSignupError(
+      "member_not_found",
+      "Your Holdfast member profile could not be found.",
+      403,
+    );
+  }
+
+  const { quest, objective } = signupTarget(
+    document,
+    questId,
+    objectiveId,
+  );
+
+  if (objective.completed) {
+    throw new QuestSignupError(
+      "objective_completed",
+      "Completed objectives cannot be left.",
+      409,
+    );
+  }
+
+  if (!selfAssignment(objective, memberId)) {
+    throw new QuestSignupError(
+      "not_assigned_to_objective",
+      `You're not signed up for “${objective.title}”.`,
+      409,
+      {
+        questId: quest.id,
+        objectiveId: objective.id,
+        objectiveTitle: objective.title,
+      },
+    );
+  }
+
+  const next = {
+    ...document,
+    quests: document.quests.map((questItem) =>
+      questItem.id !== quest.id
+        ? questItem
+        : {
+            ...questItem,
+            objectives: questItem.objectives.map((objectiveItem) =>
+              objectiveItem.id !== objective.id
+                ? objectiveItem
+                : {
+                    ...objectiveItem,
+                    assignments: objectiveItem.assignments.filter(
+                      (assignment) => assignment.memberId !== memberId,
+                    ),
                   },
             ),
           },

@@ -146,11 +146,11 @@
   display: grid;
   grid-template-columns:
     3rem
-    minmax(0, 1.65fr)
-    minmax(6.5rem, 0.3fr)
-    minmax(12.5rem, 0.62fr)
-    minmax(10rem, 0.5fr);
-  gap: clamp(var(--space-4), 1.7vw, var(--space-6));
+    minmax(0, 1.55fr)
+    minmax(6.25rem, 0.28fr)
+    minmax(16.5rem, 0.72fr)
+    minmax(9rem, 0.46fr);
+  gap: clamp(var(--space-4), 1.45vw, var(--space-5));
 }
 
 .quest-board__columns {
@@ -332,15 +332,12 @@
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
+  gap: 0.25rem;
   isolation: isolate;
 }
 
 .quest-board__assignment-row > * {
   flex: 0 0 auto;
-}
-
-.quest-board__assignment-row > * + * {
-  margin-left: -0.75rem;
 }
 
 .quest-board__assignment-row > *:hover,
@@ -351,8 +348,6 @@
 .quest-board__signup-slot {
   position: relative;
   display: inline-flex;
-  width: 2.5rem;
-  height: 2.5rem;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -399,8 +394,24 @@
   position: relative;
   z-index: 1;
   display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   cursor: default;
+}
+
+.quest-board__assignee--action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.quest-board__assignee--action:hover .quest-board__avatar,
+.quest-board__assignee--action:focus-visible .quest-board__avatar {
+  border-color: var(--color-accent-bright);
+  background-color: rgba(196, 166, 103, 0.08);
 }
 
 .quest-board__avatar {

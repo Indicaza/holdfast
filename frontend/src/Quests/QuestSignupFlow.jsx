@@ -36,25 +36,15 @@ function announceQuestsChanged() {
   window.dispatchEvent(new Event(QUESTS_CHANGED_KEY))
 }
 
-export function questSelfAssignment(quest) {
-  for (const objective of quest?.objectives ?? []) {
-    const assignment = (objective.assignments ?? []).find(
-      (item) => item.isSelf,
-    )
-
-    if (assignment) {
-      return { objective, assignment }
-    }
-  }
-
-  return null
+export function objectiveSelfAssignment(objective) {
+  return (objective?.assignments ?? []).find((item) => item.isSelf) ?? null
 }
 
-function dialogForExisting(quest, existing) {
+function duplicateDialog(quest, objective) {
   return {
     kind: 'duplicate',
     quest,
-    objective: existing.objective,
+    objective,
   }
 }
 
@@ -99,10 +89,9 @@ export function useQuestSignup({ catalog, setCatalog }) {
     }
 
     pendingHandledRef.current = key
-    const existing = questSelfAssignment(quest)
 
-    if (existing) {
-      setDialog(dialogForExisting(quest, existing))
+    if (objectiveSelfAssignment(objective)) {
+      setDialog(duplicateDialog(quest, objective))
       return
     }
 
@@ -128,10 +117,8 @@ export function useQuestSignup({ catalog, setCatalog }) {
       return
     }
 
-    const existing = questSelfAssignment(quest)
-
-    if (existing) {
-      setDialog(dialogForExisting(quest, existing))
+    if (objectiveSelfAssignment(objective)) {
+      setDialog(duplicateDialog(quest, objective))
       return
     }
 
@@ -144,6 +131,14 @@ export function useQuestSignup({ catalog, setCatalog }) {
     }
 
     setDialog({ kind: 'confirm', quest, objective })
+  }
+
+  function requestLeave(quest, objective) {
+    if (!objectiveSelfAssignment(objective)) {
+      return
+    }
+
+    setDialog({ kind: 'leave-confirm', quest, objective })
   }
 
   async function confirmSignup() {
@@ -171,15 +166,8 @@ export function useQuestSignup({ catalog, setCatalog }) {
       announceQuestsChanged()
       setDialog({ kind: 'success', quest, objective })
     } catch (error) {
-      if (error?.code === 'already_assigned_to_quest') {
-        setDialog({
-          kind: 'duplicate',
-          quest,
-          objective: {
-            id: error.objectiveId || '',
-            title: error.objectiveTitle || 'another objective',
-          },
-        })
+      if (error?.code === 'already_assigned_to_objective') {
+        setDialog(duplicateDialog(quest, objective))
         return
       }
 
@@ -189,6 +177,42 @@ export function useQuestSignup({ catalog, setCatalog }) {
         message:
           error?.message ||
           'Holdfast could not save that assignment. Give it another try.',
+      })
+    }
+  }
+
+  async function confirmLeave() {
+    if (!dialog?.quest || !dialog?.objective) {
+      return
+    }
+
+    const { quest, objective } = dialog
+    setDialog({ kind: 'leaving', quest, objective })
+
+    try {
+      const result = await apiJson('/api/quests/member/unassign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questId: quest.id,
+          objectiveId: objective.id,
+        }),
+      })
+
+      if (result?.catalog?.quests) {
+        setCatalog(result.catalog)
+      }
+
+      announceQuestsChanged()
+      cleanSignupQuery()
+      setDialog(null)
+    } catch (error) {
+      setDialog({
+        kind: 'error',
+        title: 'Could not leave the objective.',
+        message:
+          error?.message ||
+          'Holdfast could not remove that assignment. Give it another try.',
       })
     }
   }
@@ -211,10 +235,10 @@ export function useQuestSignup({ catalog, setCatalog }) {
         onClose={saving ? undefined : closeDialog}
       >
         <div className="quest-signup__note">
-          <strong>One objective per quest.</strong>
+          <strong>Put your name on it.</strong>
           <span>
-            Signing up puts your name on this objective so everyone knows
-            what you are taking responsibility for.
+            You can take more than one objective in a quest. GuildOS only
+            prevents you from signing up for this same objective twice.
           </span>
         </div>
 
@@ -244,15 +268,15 @@ export function useQuestSignup({ catalog, setCatalog }) {
     modal = (
       <Modal
         eyebrow="Already assigned"
-        title="You are already on this quest."
-        intro={`You signed up for “${dialog.objective.title}”.`}
+        title="You are already on this objective."
+        intro={`You already signed up for “${dialog.objective.title}”.`}
         onClose={closeDialog}
       >
         <div className="quest-signup__note">
-          <strong>One objective at a time keeps ownership clear.</strong>
+          <strong>No duplicate signups needed.</strong>
           <span>
-            You can still help wherever you want in game; GuildOS just keeps
-            one official objective per member on each quest.
+            Your name is already on this objective. Click your portrait on the
+            quest board if you want to leave it.
           </span>
         </div>
 
@@ -263,6 +287,46 @@ export function useQuestSignup({ catalog, setCatalog }) {
         >
           Got it
         </button>
+      </Modal>
+    )
+  }
+
+  if (dialog?.kind === 'leave-confirm' || dialog?.kind === 'leaving') {
+    const leaving = dialog.kind === 'leaving'
+
+    modal = (
+      <Modal
+        eyebrow="Leave objective"
+        title={dialog.objective.title}
+        intro={`Remove yourself from this objective in “${dialog.quest.title}”?`}
+        onClose={leaving ? undefined : closeDialog}
+      >
+        <div className="quest-signup__note">
+          <strong>Your slot will open back up.</strong>
+          <span>
+            This only removes your assignment. It does not change the quest or
+            anyone else signed up for it.
+          </span>
+        </div>
+
+        <div className="quest-signup__actions">
+          <button
+            className="quest-signup__danger"
+            type="button"
+            disabled={leaving}
+            onClick={confirmLeave}
+          >
+            {leaving ? 'Leaving…' : 'Leave objective'}
+          </button>
+          <button
+            className="quest-signup__secondary"
+            type="button"
+            disabled={leaving}
+            onClick={closeDialog}
+          >
+            Stay on it
+          </button>
+        </div>
       </Modal>
     )
   }
@@ -307,6 +371,7 @@ export function useQuestSignup({ catalog, setCatalog }) {
 
   return {
     requestSignup,
+    requestLeave,
     modal,
   }
 }
