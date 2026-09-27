@@ -1,0 +1,51 @@
+.rank-insignia {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rank-insignia__stroke,
+.rank-insignia__leaf,
+.rank-insignia__commander-lines {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rank-insignia__swords {
+  stroke-width: 3.6;
+}
+
+.rank-insignia__fill,
+.rank-insignia__officer-fill {
+  fill: currentColor;
+}
+
+.rank-insignia__ghost {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.3;
+}
+
+.rank-insignia__recruit {
+  stroke-width: 3.4;
+  opacity: 0.62;
+}
+
+.rank-insignia__leaf {
+  stroke-width: 4;
+}
+
+.rank-insignia__commander {
+  fill: currentColor;
+  opacity: 0.96;
+}
+
+.rank-insignia__commander-lines {
+  stroke: var(--color-blue-950);
+  stroke-width: 3.5;
+}
