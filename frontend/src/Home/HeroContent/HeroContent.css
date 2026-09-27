@@ -136,8 +136,7 @@
     background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
+    color var(--duration-fast) var(--ease-standard);
 }
 
 .hero-content__primary {
@@ -156,8 +155,9 @@
 .hero-content__primary:focus-visible,
 .hero-content__secondary:hover,
 .hero-content__secondary:focus-visible {
-  box-shadow: 0 0.8rem 2.2rem rgba(0, 0, 0, 0.24);
-  transform: translateY(-2px);
+  box-shadow:
+    0 0.8rem 2.2rem rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .hero-content__primary:hover,
