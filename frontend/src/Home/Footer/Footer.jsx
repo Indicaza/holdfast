@@ -2,7 +2,6 @@ import './Footer.css'
 
 const links = [
   { label: 'GitHub', href: 'https://github.com/Indicaza/holdfast', external: true },
-  { label: 'GuildOS', href: '/guildos' },
   { label: 'Privacy', href: '/privacy' },
 ]
 

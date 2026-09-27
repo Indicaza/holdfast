@@ -65,12 +65,12 @@ function JoinModal({ onClose }) {
       <Modal
         eyebrow="Holdfast"
         title="You are already in."
-        intro="Your member profile is active and GuildOS is ready."
+        intro="Your Discord identity is connected and your Holdfast member profile is active."
         onClose={onClose}
       >
         <div className="join-actions join-actions--centered">
-          <a className="join-action join-action--primary" href="/guildos">
-            Open GuildOS
+          <a className="join-action join-action--primary" href="/members/me">
+            My Profile
           </a>
           <button
             className="join-action join-action--secondary"
@@ -123,7 +123,7 @@ function JoinModal({ onClose }) {
           <h2>Connect once.</h2>
           <p>
             Continuing with Discord joins the Holdfast server and creates
-            your GuildOS member profile.
+            your Holdfast member profile.
           </p>
         </article>
       </div>
@@ -132,7 +132,7 @@ function JoinModal({ onClose }) {
         <button
           className="join-action join-action--primary"
           type="button"
-          onClick={() => session.signIn('/guildos', 'recruit')}
+          onClick={() => session.signIn('/', 'recruit')}
         >
           Continue with Discord
         </button>
@@ -145,9 +145,9 @@ function JoinModal({ onClose }) {
         <span>Already a member?</span>
         <button
           type="button"
-          onClick={() => session.signIn('/guildos', 'member')}
+          onClick={() => session.signIn('/', 'member')}
         >
-          Sign in to GuildOS
+          Sign in
         </button>
       </div>
     </Modal>

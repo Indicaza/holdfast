@@ -1,10 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import SEO from './SEO/SEO.jsx'
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
-const GuildOS = lazy(() => import('./GuildOS/GuildOS.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
@@ -52,15 +52,7 @@ const routes = {
     path: '/join',
     title: 'Join Holdfast | Alliance WoW Forever Guild',
     description:
-      'Join Holdfast through Discord and create your GuildOS member profile.',
-    robots: defaultRobots,
-  },
-  '/guildos': {
-    component: GuildOS,
-    path: '/guildos',
-    title: 'GuildOS | Holdfast',
-    description:
-      'GuildOS is Holdfast’s supporting system for coordination, administration, and long-term guild operations in WoW Forever.',
+      'Join Holdfast through Discord and create your Holdfast member profile.',
     robots: defaultRobots,
   },
   '/privacy': {
@@ -105,9 +97,23 @@ function memberProfileRoute(pathname) {
 }
 
 function App() {
-  const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  const requestedPathname =
+    window.location.pathname.replace(/\/+$/, '') || '/'
+  const pathname = requestedPathname === '/guildos' ? '/' : requestedPathname
   const route = memberProfileRoute(pathname) ?? routes[pathname] ?? routes['/']
   const Page = route.component
+
+  useEffect(() => {
+    if (requestedPathname === '/guildos') {
+      const url = new URL(window.location.href)
+      url.pathname = '/'
+      window.history.replaceState(
+        null,
+        '',
+        `${url.pathname}${url.search}${url.hash}`,
+      )
+    }
+  }, [requestedPathname])
 
   return (
     <>
@@ -122,6 +128,8 @@ function App() {
       <Suspense fallback={null}>
         <Page {...(route.props || {})} />
       </Suspense>
+
+      <AuthResultModal />
     </>
   )
 }

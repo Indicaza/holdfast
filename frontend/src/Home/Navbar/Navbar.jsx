@@ -102,7 +102,7 @@ function Navbar() {
                 className="navbar__account-button navbar__account-button--empty"
                 type="button"
                 aria-label="Sign in with Discord"
-                onClick={() => signIn('/guildos', 'member')}
+                onClick={() => signIn()}
               >
                 <span className="navbar__account-placeholder" aria-hidden="true">
                   <span />
@@ -141,7 +141,6 @@ function Navbar() {
                   <div className="navbar__account-links">
                     <a href="/members/me">My Profile</a>
                     <a href="/members">Members</a>
-                    <a href="/guildos">GuildOS</a>
                     {hasPermission('site.admin') || hasPermission('quests.edit') ? (
                       <a href="/admin">Control Room</a>
                     ) : null}
@@ -191,13 +190,6 @@ function Navbar() {
                 aria-current={pathname === '/members/me' ? 'page' : undefined}
               >
                 My Profile
-              </a>
-              <a
-                className="navbar__mobile-link"
-                href="/guildos"
-                aria-current={pathname === '/guildos' ? 'page' : undefined}
-              >
-                GuildOS
               </a>
             </>
           ) : null}
