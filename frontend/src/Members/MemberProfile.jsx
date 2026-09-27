@@ -298,16 +298,6 @@ function ProfileMessage({ title, body }) {
         <a href="/members">Back to Members</a>
       </section>
 
-      {editing ? (
-        <MemberProfileEditor
-          member={member}
-          onClose={() => setEditing(false)}
-          onSaved={(updatedMember) => {
-            setMember(updatedMember)
-            setEditing(false)
-          }}
-        />
-      ) : null}
     </PageShell>
   )
 }
