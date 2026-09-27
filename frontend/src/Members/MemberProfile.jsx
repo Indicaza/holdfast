@@ -21,6 +21,14 @@ function formatDate(value, includeDay = true) {
   }).format(date)
 }
 
+function tenureText(member) {
+  if (member.guildJoinedAt) {
+    return `In Holdfast since ${formatDate(member.guildJoinedAt, false)}`
+  }
+
+  return `GuildOS member since ${formatDate(member.firstSeenAt, false)}`
+}
+
 function MemberAvatar({ member }) {
   if (member.avatarUrl) {
     return (
@@ -42,7 +50,7 @@ function Reward({ reward }) {
   const hasReward = reward?.rep > 0 || reward?.marks > 0 || items.length > 0
 
   if (!hasReward) {
-    return <span className="member-profile__reward-empty">No reward</span>
+    return null
   }
 
   return (
@@ -228,32 +236,30 @@ function MemberProfile({ memberId }) {
             {isSelf ? <span>You</span> : null}
             <span>{member.role || 'Member'}</span>
           </div>
+
           <h1 id="member-profile-name">{displayName(member)}</h1>
-          <p>@{member.username}</p>
-          <div className="member-profile__meta">
-            <span>Member since {formatDate(member.guildJoinedAt || member.firstSeenAt, false)}</span>
-            <span>Last activity {formatDate(member.lastActivityAt)}</span>
-          </div>
+          <p className="member-profile__username">@{member.username}</p>
+          <p className="member-profile__tenure">{tenureText(member)}</p>
         </div>
 
         <div className="member-profile__hero-actions">
           {isSelf ? <a href="/guildos">Open GuildOS</a> : null}
           <button type="button" onClick={copyProfile}>
-            {copied ? 'Copied' : 'Copy profile link'}
+            {copied ? 'Profile link copied' : 'Copy profile link'}
           </button>
         </div>
       </section>
 
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>
-          <span>Reputation</span>
+          <span>Rep earned</span>
           <strong>{Number(contribution.rep) || 0}</strong>
-          <small>Guild Rep earned</small>
+          <small>Guild reputation</small>
         </article>
         <article>
-          <span>Service Marks</span>
+          <span>Marks earned</span>
           <strong>{Number(contribution.marks) || 0}</strong>
-          <small>Service Marks earned</small>
+          <small>Service Marks</small>
         </article>
         <article>
           <span>Objectives</span>
@@ -261,97 +267,86 @@ function MemberProfile({ memberId }) {
           <small>Completed and rewarded</small>
         </article>
         <article>
-          <span>On assignment</span>
+          <span>Assignments</span>
           <strong>{assignments.length}</strong>
-          <small>Current objectives</small>
+          <small>Open right now</small>
         </article>
       </section>
 
-      <div className="member-profile__grid">
-        <section className="member-profile__section" aria-labelledby="member-assignments-title">
-          <div className="member-profile__section-heading">
-            <div>
-              <p>Current work</p>
-              <h2 id="member-assignments-title">On Assignment</h2>
-            </div>
-            <a href="/quests">Quest board →</a>
-          </div>
-
-          {assignments.length ? (
-            <div className="member-profile__assignments">
-              {assignments.map((assignment) => (
-                <article
-                  className="member-profile__assignment"
-                  key={assignment.objectiveId}
-                >
-                  <div className="member-profile__assignment-top">
-                    <div>
-                      <p>{assignment.questTitle}</p>
-                      <h3>{assignment.objectiveTitle}</h3>
-                    </div>
-                    <span
-                      className={`member-profile__priority member-profile__priority--${String(
-                        assignment.priority || 'medium',
-                      ).toLowerCase()}`}
-                    >
-                      {assignment.priority || 'Medium'}
-                    </span>
-                  </div>
-
-                  {assignment.responsibility ? (
-                    <p className="member-profile__responsibility">
-                      <strong>Role</strong>
-                      {assignment.responsibility}
-                    </p>
-                  ) : null}
-
-                  {assignment.detail ? (
-                    <p className="member-profile__detail">{assignment.detail}</p>
-                  ) : null}
-
-                  <Reward reward={assignment.reward} />
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="member-profile__empty">
-              <strong>No active assignments.</strong>
-              <span>This member is not assigned to an open guild objective right now.</span>
-            </div>
-          )}
-        </section>
-
-        <aside className="member-profile__details" aria-labelledby="member-details-title">
-          <p>Profile</p>
-          <h2 id="member-details-title">Member Details</h2>
-          <dl>
-            <div>
-              <dt>Discord</dt>
-              <dd>@{member.username}</dd>
-            </div>
-            <div>
-              <dt>Standing</dt>
-              <dd>{member.role || 'Member'}</dd>
-            </div>
-            <div>
-              <dt>Joined Holdfast</dt>
-              <dd>{formatDate(member.guildJoinedAt || member.firstSeenAt)}</dd>
-            </div>
-            <div>
-              <dt>Last activity</dt>
-              <dd>{formatDate(member.lastActivityAt)}</dd>
-            </div>
-          </dl>
-        </aside>
-      </div>
-
-      <section className="member-profile__section member-profile__service" aria-labelledby="member-service-title">
+      <section
+        className="member-profile__section member-profile__assignments-section"
+        aria-labelledby="member-assignments-title"
+      >
         <div className="member-profile__section-heading">
-          <div>
-            <p>History</p>
-            <h2 id="member-service-title">Service Record</h2>
+          <p>Current work</p>
+          <h2 id="member-assignments-title">On Assignment</h2>
+          <span>
+            {assignments.length
+              ? `${assignments.length} active ${assignments.length === 1 ? 'objective' : 'objectives'}`
+              : 'No active objectives'}
+          </span>
+          <a href="/quests">Open Quest Board</a>
+        </div>
+
+        {assignments.length ? (
+          <div className="member-profile__assignments">
+            {assignments.map((assignment) => (
+              <article
+                className="member-profile__assignment"
+                key={assignment.objectiveId}
+              >
+                <div className="member-profile__assignment-top">
+                  <div>
+                    <p>{assignment.questTitle}</p>
+                    <h3>{assignment.objectiveTitle}</h3>
+                  </div>
+                  <span
+                    className={`member-profile__priority member-profile__priority--${String(
+                      assignment.priority || 'medium',
+                    ).toLowerCase()}`}
+                  >
+                    {assignment.priority || 'Medium'}
+                  </span>
+                </div>
+
+                {assignment.responsibility ? (
+                  <p className="member-profile__responsibility">
+                    <strong>Responsibility</strong>
+                    <span>{assignment.responsibility}</span>
+                  </p>
+                ) : null}
+
+                {assignment.detail ? (
+                  <p className="member-profile__detail">{assignment.detail}</p>
+                ) : null}
+
+                <Reward reward={assignment.reward} />
+              </article>
+            ))}
           </div>
-          <span>{activity.length} recorded {activity.length === 1 ? 'entry' : 'entries'}</span>
+        ) : (
+          <div className="member-profile__empty">
+            <strong>Nothing assigned right now.</strong>
+            <span>
+              This member is free of active GuildOS objectives. Check the quest
+              board for open work.
+            </span>
+          </div>
+        )}
+      </section>
+
+      <section
+        className="member-profile__section member-profile__service"
+        aria-labelledby="member-service-title"
+      >
+        <div className="member-profile__section-heading">
+          <p>Completed work</p>
+          <h2 id="member-service-title">Service Record</h2>
+          <span>
+            {activity.length
+              ? `${activity.length} recorded ${activity.length === 1 ? 'entry' : 'entries'}`
+              : 'No recorded entries yet'}
+          </span>
         </div>
 
         {activity.length ? (
@@ -359,13 +354,17 @@ function MemberProfile({ memberId }) {
             {activity.map((entry) => (
               <article className="member-profile__activity" key={entry.id}>
                 <div className="member-profile__activity-marker" aria-hidden="true" />
+
                 <div className="member-profile__activity-copy">
                   <div>
                     <p>{entry.questTitle}</p>
                     <h3>{entry.objectiveTitle}</h3>
                   </div>
-                  <span>{formatDate(entry.createdAt)}</span>
+
+                  <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
+
                   <Reward reward={entry} />
+
                   {entry.awardedBy?.displayName ? (
                     <small>Awarded by {entry.awardedBy.displayName}</small>
                   ) : null}
@@ -375,8 +374,10 @@ function MemberProfile({ memberId }) {
           </div>
         ) : (
           <div className="member-profile__empty">
-            <strong>No service entries yet.</strong>
-            <span>Completed guild objectives will build this record over time.</span>
+            <strong>The record starts with the work.</strong>
+            <span>
+              Completed and rewarded guild objectives will appear here over time.
+            </span>
           </div>
         )}
       </section>
