@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -11,7 +11,9 @@ import {
 import {
   QuestStorageError,
   readQuests,
+  writeQuests,
 } from "../src/Quest/questRepository.js";
+import { withGuildDatabase } from "../src/Data/database.js";
 
 function validDocument() {
   return {
@@ -158,7 +160,7 @@ test("the same member may be assigned to different objectives", () => {
   assert.doesNotThrow(() => normalizeQuestDocument(document));
 });
 
-test("persisted quest corruption reports an actionable storage error", async () => {
+test("invalid quest state read from SQLite reports an actionable storage error", async () => {
   const previousDataDir = process.env.GUILD_DATA_DIR;
   const previousNodeEnv = process.env.NODE_ENV;
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-integrity-"));
@@ -167,60 +169,20 @@ test("persisted quest corruption reports an actionable storage error", async () 
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    const document = validDocument();
-    document.quests[0].objectives[0].assignments.push({
-      memberId: "member-one",
-      name: "Rook",
-      responsibility: "Duplicate",
-      detail: "",
-      initials: "RO",
+    await writeQuests(validDocument());
+
+    withGuildDatabase((db) => {
+      db.prepare(
+        "UPDATE objectives SET reward_rep = 5000 WHERE id = 'objective-one'",
+      ).run();
     });
 
-    const target = path.join(directory, "quests.json");
-    await writeFile(target, JSON.stringify(document, null, 2), "utf8");
-
     await assert.rejects(
       () => readQuests(),
       (error) =>
         error instanceof QuestStorageError &&
-        error.message.includes(target) &&
-        /assigned more than once/.test(error.message),
-    );
-  } finally {
-    if (previousDataDir === undefined) {
-      delete process.env.GUILD_DATA_DIR;
-    } else {
-      process.env.GUILD_DATA_DIR = previousDataDir;
-    }
-
-    if (previousNodeEnv === undefined) {
-      delete process.env.NODE_ENV;
-    } else {
-      process.env.NODE_ENV = previousNodeEnv;
-    }
-
-    await rm(directory, { recursive: true, force: true });
-  }
-});
-
-test("malformed persisted JSON reports the runtime file path", async () => {
-  const previousDataDir = process.env.GUILD_DATA_DIR;
-  const previousNodeEnv = process.env.NODE_ENV;
-  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-integrity-"));
-
-  try {
-    process.env.NODE_ENV = "test";
-    process.env.GUILD_DATA_DIR = directory;
-
-    const target = path.join(directory, "quests.json");
-    await writeFile(target, "{ definitely not json", "utf8");
-
-    await assert.rejects(
-      () => readQuests(),
-      (error) =>
-        error instanceof QuestStorageError &&
-        error.message.includes(target) &&
-        /not valid JSON/.test(error.message),
+        error.message.includes("holdfast.sqlite") &&
+        /reward.rep must be 0 or between 0 and 1000/.test(error.message),
     );
   } finally {
     if (previousDataDir === undefined) {

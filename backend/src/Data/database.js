@@ -1,0 +1,323 @@
+import { mkdirSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+
+import { runtimeDataDirectory, runtimeDataFile } from "./runtimeData.js";
+
+const DATABASE_FILE = "holdfast.sqlite";
+
+const migrations = [
+  {
+    version: 1,
+    name: "core_guildos_schema",
+    up(db) {
+      db.exec(`
+        CREATE TABLE app_meta (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE members (
+          id TEXT PRIMARY KEY,
+          username TEXT NOT NULL,
+          display_name TEXT NOT NULL,
+          initials TEXT NOT NULL,
+          avatar_url TEXT NOT NULL DEFAULT '',
+          guild_joined_at TEXT,
+          rank TEXT NOT NULL,
+          status TEXT NOT NULL CHECK (status IN ('active', 'departed')),
+          departed_at TEXT,
+          permissions_json TEXT NOT NULL DEFAULT '[]',
+          profile_updated_at TEXT,
+          first_seen_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE INDEX members_status_display_name_idx
+          ON members(status, display_name COLLATE NOCASE);
+
+        CREATE TABLE member_profiles (
+          member_id TEXT PRIMARY KEY
+            REFERENCES members(id) ON DELETE CASCADE,
+          battle_tag TEXT NOT NULL DEFAULT '',
+          timezone TEXT NOT NULL DEFAULT '',
+          timezone_source TEXT NOT NULL DEFAULT 'detected'
+            CHECK (timezone_source IN ('detected', 'manual')),
+          availability TEXT NOT NULL DEFAULT '',
+          bio TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE TABLE characters (
+          id TEXT PRIMARY KEY,
+          member_id TEXT NOT NULL
+            REFERENCES members(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          race TEXT NOT NULL DEFAULT '',
+          class_name TEXT NOT NULL DEFAULT '',
+          spec TEXT NOT NULL DEFAULT '',
+          professions_json TEXT NOT NULL DEFAULT '[]',
+          is_main INTEGER NOT NULL DEFAULT 0 CHECK (is_main IN (0, 1)),
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX characters_member_idx
+          ON characters(member_id, sort_order);
+
+        CREATE INDEX characters_name_idx
+          ON characters(name COLLATE NOCASE);
+
+        CREATE UNIQUE INDEX characters_one_main_per_member_idx
+          ON characters(member_id)
+          WHERE is_main = 1;
+
+        CREATE TABLE quest_settings (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          focused_quest_id TEXT NOT NULL DEFAULT '',
+          reward_policy TEXT NOT NULL DEFAULT '',
+          rep_min INTEGER NOT NULL DEFAULT 0,
+          rep_max INTEGER NOT NULL DEFAULT 1000,
+          marks_min INTEGER NOT NULL DEFAULT 0,
+          marks_max INTEGER NOT NULL DEFAULT 1000
+        );
+
+        INSERT INTO quest_settings (
+          id,
+          focused_quest_id,
+          reward_policy,
+          rep_min,
+          rep_max,
+          marks_min,
+          marks_max
+        ) VALUES (1, '', '', 0, 1000, 0, 1000);
+
+        CREATE TABLE quests (
+          id TEXT PRIMARY KEY,
+          publication TEXT NOT NULL
+            CHECK (publication IN ('draft', 'published', 'archived')),
+          mode TEXT NOT NULL
+            CHECK (mode IN ('rotating', 'permanent')),
+          title TEXT NOT NULL,
+          summary TEXT NOT NULL DEFAULT '',
+          completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX quests_publication_order_idx
+          ON quests(publication, sort_order);
+
+        CREATE TABLE objectives (
+          id TEXT PRIMARY KEY,
+          quest_id TEXT NOT NULL
+            REFERENCES quests(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          priority TEXT NOT NULL
+            CHECK (priority IN ('Main', 'High', 'Medium', 'Low')),
+          completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+          need TEXT NOT NULL DEFAULT '',
+          reward_rep INTEGER NOT NULL DEFAULT 0,
+          reward_marks INTEGER NOT NULL DEFAULT 0,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX objectives_quest_order_idx
+          ON objectives(quest_id, sort_order);
+
+        CREATE TABLE reward_items (
+          id TEXT PRIMARY KEY,
+          objective_id TEXT NOT NULL
+            REFERENCES objectives(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          quantity INTEGER NOT NULL CHECK (quantity >= 1),
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX reward_items_objective_order_idx
+          ON reward_items(objective_id, sort_order);
+
+        CREATE TABLE assignments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          objective_id TEXT NOT NULL
+            REFERENCES objectives(id) ON DELETE CASCADE,
+          member_id TEXT,
+          name TEXT NOT NULL,
+          responsibility TEXT NOT NULL DEFAULT '',
+          detail TEXT NOT NULL DEFAULT '',
+          initials TEXT NOT NULL,
+          avatar TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX assignments_objective_order_idx
+          ON assignments(objective_id, sort_order);
+
+        CREATE INDEX assignments_member_idx
+          ON assignments(member_id)
+          WHERE member_id IS NOT NULL;
+
+        CREATE UNIQUE INDEX assignments_objective_member_unique_idx
+          ON assignments(objective_id, member_id)
+          WHERE member_id IS NOT NULL;
+
+        CREATE TABLE contribution_transactions (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL,
+          member_id TEXT NOT NULL,
+          member_name TEXT NOT NULL,
+          quest_id TEXT NOT NULL,
+          quest_title TEXT NOT NULL,
+          objective_id TEXT NOT NULL,
+          objective_title TEXT NOT NULL,
+          rep INTEGER NOT NULL DEFAULT 0,
+          marks INTEGER NOT NULL DEFAULT 0,
+          items_json TEXT NOT NULL DEFAULT '[]',
+          created_at TEXT NOT NULL,
+          awarded_by_member_id TEXT,
+          awarded_by_username TEXT NOT NULL DEFAULT '',
+          awarded_by_display_name TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE INDEX contributions_member_created_idx
+          ON contribution_transactions(member_id, created_at DESC);
+
+        CREATE INDEX contributions_objective_idx
+          ON contribution_transactions(objective_id);
+
+        CREATE TABLE character_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          character_id TEXT NOT NULL,
+          source TEXT NOT NULL,
+          captured_at TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX character_snapshots_character_time_idx
+          ON character_snapshots(character_id, captured_at DESC);
+
+        CREATE TABLE guild_bank_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source TEXT NOT NULL,
+          captured_at TEXT NOT NULL,
+          payload_json TEXT NOT NULL
+        );
+
+        CREATE INDEX guild_bank_snapshots_time_idx
+          ON guild_bank_snapshots(captured_at DESC);
+
+        CREATE TABLE audit_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          actor_member_id TEXT,
+          event_type TEXT NOT NULL,
+          entity_type TEXT NOT NULL,
+          entity_id TEXT,
+          created_at TEXT NOT NULL,
+          payload_json TEXT NOT NULL DEFAULT '{}'
+        );
+
+        CREATE INDEX audit_events_entity_time_idx
+          ON audit_events(entity_type, entity_id, created_at DESC);
+
+        CREATE INDEX audit_events_actor_time_idx
+          ON audit_events(actor_member_id, created_at DESC);
+      `);
+    },
+  },
+];
+
+function configureDatabase(db) {
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec("PRAGMA busy_timeout = 5000");
+  db.exec("PRAGMA journal_mode = WAL");
+  db.exec("PRAGMA synchronous = NORMAL");
+}
+
+function runMigrations(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TEXT NOT NULL
+    )
+  `);
+
+  const applied = new Set(
+    db
+      .prepare("SELECT version FROM schema_migrations ORDER BY version")
+      .all()
+      .map((row) => Number(row.version)),
+  );
+
+  for (const migration of migrations) {
+    if (applied.has(migration.version)) {
+      continue;
+    }
+
+    db.exec("BEGIN IMMEDIATE");
+
+    try {
+      migration.up(db);
+      db
+        .prepare(
+          "INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)",
+        )
+        .run(migration.version, migration.name, new Date().toISOString());
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+}
+
+export function guildDatabaseFile() {
+  return runtimeDataFile(DATABASE_FILE);
+}
+
+export function openGuildDatabase() {
+  mkdirSync(runtimeDataDirectory(), { recursive: true });
+
+  const db = new DatabaseSync(guildDatabaseFile());
+  configureDatabase(db);
+  runMigrations(db);
+  return db;
+}
+
+export function withGuildDatabase(callback) {
+  const db = openGuildDatabase();
+
+  try {
+    return callback(db);
+  } finally {
+    db.close();
+  }
+}
+
+export function withGuildTransaction(callback) {
+  return withGuildDatabase((db) => {
+    db.exec("BEGIN IMMEDIATE");
+
+    try {
+      const result = callback(db);
+
+      if (result && typeof result.then === "function") {
+        throw new Error("Guild database transactions must be synchronous");
+      }
+
+      db.exec("COMMIT");
+      return result;
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+export function appliedMigrationVersions() {
+  return withGuildDatabase((db) =>
+    db
+      .prepare("SELECT version FROM schema_migrations ORDER BY version")
+      .all()
+      .map((row) => Number(row.version)),
+  );
+}

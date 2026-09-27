@@ -11,6 +11,8 @@ import {
   ensureRuntimeDataDirectory,
   runtimeDataDirectory,
 } from "./Data/runtimeData.js";
+import { guildDatabaseFile } from "./Data/database.js";
+import { initializeGuildData } from "./Data/initializeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import {
@@ -29,6 +31,11 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
 
 await ensureRuntimeDataDirectory();
+const dataInitialization = initializeGuildData();
+
+if (dataInitialization.status === "imported") {
+  console.log("Imported legacy GuildOS JSON into SQLite", dataInitialization.imported);
+}
 
 if (TRUST_PROXY !== false) {
   app.set("trust proxy", TRUST_PROXY);
@@ -108,4 +115,5 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Guild backend running on port ${PORT}`);
   console.log(`Guild runtime data: ${runtimeDataDirectory()}`);
+  console.log(`Guild database: ${guildDatabaseFile()}`);
 });
