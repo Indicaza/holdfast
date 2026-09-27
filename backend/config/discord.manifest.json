@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "guild": {
+    "name": "Holdfast",
+    "verificationLevel": 1,
+    "defaultMessageNotifications": 1,
+    "explicitContentFilter": 2
+  },
+  "roles": [
+    { "key": "commander", "name": "Commander", "color": 14532989, "hoist": true },
+    { "key": "major", "name": "Major", "color": 12887655, "hoist": true },
+    { "key": "captain", "name": "Captain", "color": 12887655, "hoist": true },
+    { "key": "lieutenant", "name": "Lieutenant", "color": 12887655, "hoist": true },
+    { "key": "sergeant_major", "name": "Sergeant Major", "color": 1927117, "hoist": true },
+    { "key": "master_sergeant", "name": "Master Sergeant", "color": 1927117, "hoist": true },
+    { "key": "sergeant", "name": "Sergeant", "color": 1927117, "hoist": true },
+    { "key": "corporal", "name": "Corporal", "color": 1927117, "hoist": true },
+    { "key": "private", "name": "Private", "color": 14607852, "hoist": false },
+    { "key": "recruit", "name": "Recruit", "color": 10398906, "hoist": false }
+  ],
+  "categories": [
+    {
+      "key": "information",
+      "name": "INFORMATION",
+      "access": "public",
+      "channels": [
+        { "key": "welcome", "name": "welcome", "type": "text", "topic": "Welcome to Holdfast. Start here.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant"] },
+        { "key": "charter", "name": "charter", "type": "text", "topic": "Leave it stronger.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant"] },
+        { "key": "announcements", "name": "announcements", "type": "text", "topic": "Guild news and official notices.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant"] }
+      ]
+    },
+    {
+      "key": "recruitment",
+      "name": "RECRUITMENT",
+      "accessRoles": ["recruit", "private", "corporal", "sergeant", "master_sergeant", "sergeant_major", "lieutenant", "captain", "major", "commander"],
+      "channels": [
+        { "key": "start_here", "name": "start-here", "type": "text", "topic": "Introduce yourself and learn how Holdfast works.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant", "sergeant_major", "master_sergeant", "sergeant", "corporal"] },
+        { "key": "introductions", "name": "introductions", "type": "text", "topic": "Tell us who you are and what you want to play." },
+        { "key": "recruit_chat", "name": "recruit-chat", "type": "text", "topic": "Questions, early grouping, and getting settled." },
+        { "key": "recruit_lounge", "name": "Recruit Lounge", "type": "voice", "userLimit": 12 }
+      ]
+    },
+    {
+      "key": "great_hall",
+      "name": "THE GREAT HALL",
+      "accessRoles": ["private", "corporal", "sergeant", "master_sergeant", "sergeant_major", "lieutenant", "captain", "major", "commander"],
+      "channels": [
+        { "key": "general", "name": "general", "type": "text", "topic": "The guild's main room." },
+        { "key": "looking_for_group", "name": "looking-for-group", "type": "text", "topic": "Find people for quests, dungeons, PvP, and trouble." },
+        { "key": "screenshots_stories", "name": "screenshots-and-stories", "type": "text", "topic": "Victories, disasters, discoveries, and guild memories." },
+        { "key": "trade_crafting", "name": "trade-and-crafting", "type": "text", "topic": "Professions, materials, requests, and guild commerce." },
+        { "key": "great_hall_voice", "name": "Great Hall", "type": "voice", "userLimit": 0 },
+        { "key": "adventure_one", "name": "Adventure I", "type": "voice", "userLimit": 5 },
+        { "key": "adventure_two", "name": "Adventure II", "type": "voice", "userLimit": 5 }
+      ]
+    },
+    {
+      "key": "operations",
+      "name": "OPERATIONS",
+      "accessRoles": ["private", "corporal", "sergeant", "master_sergeant", "sergeant_major", "lieutenant", "captain", "major", "commander"],
+      "channels": [
+        { "key": "quests", "name": "quests", "type": "text", "topic": "Guild objectives, volunteers, and progress." },
+        { "key": "events", "name": "events", "type": "text", "topic": "Scheduled guild activities and signups." },
+        { "key": "raids_dungeons", "name": "raids-and-dungeons", "type": "text", "topic": "Group planning, strategy, rosters, and results." },
+        { "key": "pvp", "name": "pvp", "type": "text", "topic": "Battlegrounds, world PvP, and organized war." },
+        { "key": "operations_voice", "name": "Operations", "type": "voice", "userLimit": 0 }
+      ]
+    },
+    {
+      "key": "leadership",
+      "name": "LEADERSHIP",
+      "accessRoles": ["corporal", "sergeant", "master_sergeant", "sergeant_major", "lieutenant", "captain", "major", "commander"],
+      "channels": [
+        { "key": "leadership_chat", "name": "leadership", "type": "text", "topic": "Coordination for members trusted to lead." },
+        { "key": "member_care", "name": "member-care", "type": "text", "topic": "Mentorship, support, and issues requiring discretion." },
+        { "key": "war_room", "name": "War Room", "type": "voice", "userLimit": 0 }
+      ]
+    },
+    {
+      "key": "officer_council",
+      "name": "OFFICER COUNCIL",
+      "accessRoles": ["lieutenant", "captain", "major", "commander"],
+      "channels": [
+        { "key": "officer_council_chat", "name": "officer-council", "type": "text", "topic": "Officer decisions, policy, and continuity." },
+        { "key": "guild_admin", "name": "guild-admin", "type": "text", "topic": "Operational administration and automation notices." },
+        { "key": "council_chamber", "name": "Council Chamber", "type": "voice", "userLimit": 0 }
+      ]
+    }
+  ]
+}

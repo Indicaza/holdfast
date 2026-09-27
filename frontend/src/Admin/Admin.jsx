@@ -1,6 +1,7 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import QuestEditor from './QuestEditor.jsx'
+import AuditLog from './AuditLog.jsx'
 import './Admin.css'
 
 const authMessages = {
@@ -94,6 +95,7 @@ function Admin() {
       className="admin-page"
     >
       <QuestEditor />
+      {session.hasPermission('site.admin') ? <AuditLog /> : null}
     </PageShell>
   )
 }

@@ -7,7 +7,11 @@
     "test": "node --test",
     "dev": "nodemon --config nodemon.json src/index.js",
     "start": "node src/index.js",
-    "lint": "node scripts/checkSyntax.js"
+    "lint": "node scripts/checkSyntax.js",
+    "backup": "node scripts/backupData.js",
+    "discord:validate": "node scripts/provisionDiscord.js validate",
+    "discord:plan": "node scripts/provisionDiscord.js plan",
+    "discord:apply": "node scripts/provisionDiscord.js apply"
   },
   "keywords": [],
   "author": "",

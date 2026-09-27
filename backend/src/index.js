@@ -3,15 +3,17 @@ import dotenv from "dotenv";
 import express from "express";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
+import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
+import { assertProductionEnvironment } from "./Config/environment.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import {
   ensureRuntimeDataDirectory,
   runtimeDataDirectory,
 } from "./Data/runtimeData.js";
-import { guildDatabaseFile } from "./Data/database.js";
+import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
@@ -22,8 +24,10 @@ import {
   requireTrustedMutationOrigin,
   securityHeaders,
 } from "./Security/httpSecurity.js";
+import { mountProductionFrontend } from "./Production/frontend.js";
 
 dotenv.config();
+assertProductionEnvironment();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,9 +57,24 @@ app.use(express.json({ limit: "256kb" }));
 app.use(attachSession);
 app.use("/api", requireTrustedMutationOrigin);
 
-app.get("/api/health", (req, res) => {
+function readiness(req, res) {
+  res.set("Cache-Control", "no-store");
+
+  try {
+    withGuildDatabase((db) => db.prepare("SELECT 1").get());
+    res.json({ status: "ok" });
+  } catch (error) {
+    console.error("Readiness check failed", error);
+    res.status(503).json({ status: "unavailable" });
+  }
+}
+
+app.get("/api/health", readiness);
+app.get("/api/health/live", (req, res) => {
+  res.set("Cache-Control", "no-store");
   res.json({ status: "ok" });
 });
+app.get("/api/health/ready", readiness);
 
 app.use(
   "/api/auth",
@@ -68,6 +87,7 @@ app.use(
 );
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
+app.use("/api/admin/audit", createAuditRouter());
 
 app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
   res.set("Cache-Control", "no-store");
@@ -103,17 +123,59 @@ app.get("/api/admin/ping", requirePermission("site.admin"), (req, res) => {
   });
 });
 
+app.use("/api", (req, res) => {
+  res.status(404).json({ error: "not_found" });
+});
+
+mountProductionFrontend(app);
+
 app.use((error, req, res, next) => {
   if (error?.code === "cors_origin_rejected") {
     res.status(403).json({ error: "origin_not_allowed" });
     return;
   }
 
-  next(error);
+  if (error?.type === "entity.parse.failed") {
+    res.status(400).json({ error: "invalid_json" });
+    return;
+  }
+
+  console.error("Unhandled request error", error);
+
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
+  res.status(500).json({ error: "internal_server_error" });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Guild backend running on port ${PORT}`);
   console.log(`Guild runtime data: ${runtimeDataDirectory()}`);
   console.log(`Guild database: ${guildDatabaseFile()}`);
 });
+
+function shutdown(signal) {
+  console.log(`${signal} received; shutting down`);
+
+  const forceExit = setTimeout(() => {
+    console.error("Graceful shutdown timed out");
+    process.exit(1);
+  }, 10_000);
+
+  forceExit.unref();
+  server.close((error) => {
+    clearTimeout(forceExit);
+
+    if (error) {
+      console.error("HTTP server shutdown failed", error);
+      process.exit(1);
+    }
+
+    process.exit(0);
+  });
+}
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));

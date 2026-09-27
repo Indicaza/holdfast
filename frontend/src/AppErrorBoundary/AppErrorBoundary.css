@@ -1,0 +1,48 @@
+.app-error {
+  display: grid;
+  min-height: 100svh;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-4);
+  padding: var(--layout-gutter);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(29, 69, 111, 0.34), transparent 30rem),
+    var(--color-background);
+  text-align: center;
+}
+
+.app-error__mark {
+  color: var(--color-accent-bright);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-89);
+  line-height: 0.8;
+}
+
+.app-error__eyebrow {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.app-error h1 {
+  font-size: clamp(var(--font-size-fib-34), 7vw, var(--font-size-fib-55));
+}
+
+.app-error > p:not(.app-error__eyebrow) {
+  max-width: 34rem;
+  color: var(--color-text);
+}
+
+.app-error button {
+  min-height: 3rem;
+  margin-top: var(--space-3);
+  padding: 0 var(--space-6);
+  border: var(--border-accent);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-background);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}

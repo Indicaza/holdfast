@@ -1192,12 +1192,24 @@ function QuestEditor() {
       )
       announceQuestsChanged()
     } catch (error) {
-      setStatus('error')
-      setMessage(error.message)
+      if (error?.code === 'quest_revision_conflict') {
+        setStatus('conflict')
+        setMessage(
+          'Someone changed the quest board after you opened it. Your draft is still here. Reload the latest version before making another save.',
+        )
+      } else {
+        setStatus('error')
+        setMessage(error.message)
+      }
     }
   }
 
   function reset() {
+    if (status === 'conflict') {
+      void loadWorkspace()
+      return
+    }
+
     setDraft(saved)
     setStatus('ready')
     setMessage('Changes discarded.')
@@ -1227,8 +1239,15 @@ function QuestEditor() {
       )
       announceQuestsChanged()
     } catch (error) {
-      setStatus('error')
-      setMessage(error.message)
+      if (error?.code === 'quest_revision_conflict') {
+        setStatus('conflict')
+        setMessage(
+          'Someone changed the quest board after you opened it. Your draft is still here. Reload the latest version before making another save.',
+        )
+      } else {
+        setStatus('error')
+        setMessage(error.message)
+      }
     }
   }
 
@@ -1270,7 +1289,9 @@ function QuestEditor() {
         <div>
           <p
             className={`quest-editor__status${
-              status === 'error' ? ' quest-editor__status--error' : ''
+              status === 'error' || status === 'conflict'
+                ? ' quest-editor__status--error'
+                : ''
             }`}
             aria-live="polite"
           >
@@ -1292,15 +1313,17 @@ function QuestEditor() {
           <button
             className="quest-editor__secondary"
             type="button"
-            disabled={!dirty || status === 'saving'}
+            disabled={
+              (status !== 'conflict' && !dirty) || status === 'saving'
+            }
             onClick={reset}
           >
-            Reset
+            {status === 'conflict' ? 'Reload latest' : 'Reset'}
           </button>
           <button
             className="quest-editor__primary"
             type="submit"
-            disabled={!dirty || status === 'saving'}
+            disabled={!dirty || status === 'saving' || status === 'conflict'}
           >
             {status === 'saving' ? 'Saving…' : 'Save changes'}
           </button>
@@ -1448,7 +1471,7 @@ function QuestEditor() {
         <button
           className="quest-editor__primary"
           type="submit"
-          disabled={!dirty || status === 'saving'}
+          disabled={!dirty || status === 'saving' || status === 'conflict'}
         >
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </button>

@@ -3,6 +3,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
 import {
   QuestValidationError,
   normalizeQuestDocument,
@@ -13,6 +14,55 @@ export class QuestStorageError extends Error {
     super(message, { cause });
     this.name = "QuestStorageError";
   }
+}
+
+export class QuestRevisionConflict extends Error {
+  constructor(expectedRevision, currentRevision) {
+    super("Quest data changed after this workspace was loaded.");
+    this.name = "QuestRevisionConflict";
+    this.code = "quest_revision_conflict";
+    this.status = 409;
+    this.expectedRevision = expectedRevision;
+    this.currentRevision = currentRevision;
+  }
+}
+
+export function questRevisionFromDatabase(db) {
+  const row = db
+    .prepare("SELECT value FROM app_meta WHERE key = 'quest_revision'")
+    .get();
+  const revision = Number(row?.value || 0);
+  return Number.isInteger(revision) && revision >= 0 ? revision : 0;
+}
+
+function advanceQuestRevision(db) {
+  const revision = questRevisionFromDatabase(db) + 1;
+
+  db.prepare(
+    `
+      INSERT INTO app_meta (key, value, updated_at)
+      VALUES ('quest_revision', ?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        value = excluded.value,
+        updated_at = excluded.updated_at
+    `,
+  ).run(String(revision), new Date().toISOString());
+
+  return revision;
+}
+
+export function assertQuestRevision(db, expectedRevision) {
+  const currentRevision = questRevisionFromDatabase(db);
+
+  if (
+    !Number.isInteger(expectedRevision) ||
+    expectedRevision < 0 ||
+    expectedRevision !== currentRevision
+  ) {
+    throw new QuestRevisionConflict(expectedRevision, currentRevision);
+  }
+
+  return currentRevision;
 }
 
 function storedQuestError(error) {
@@ -278,6 +328,8 @@ export function writeQuestsToDatabase(db, document) {
     });
   });
 
+  advanceQuestRevision(db);
+
   return normalized;
 }
 
@@ -289,21 +341,54 @@ export async function readQuests() {
   return withGuildDatabase((db) => readQuestsFromDatabase(db));
 }
 
+export async function readQuestWorkspace() {
+  return withGuildDatabase((db) => ({
+    ...readQuestsFromDatabase(db),
+    revision: questRevisionFromDatabase(db),
+  }));
+}
+
 export async function writeQuests(document) {
   return withGuildTransaction((db) =>
     writeQuestsToDatabase(db, document),
   );
 }
 
-export async function updateQuests(mutator) {
+export async function updateQuests(mutator, options = {}) {
   return withGuildTransaction((db) => {
     const current = readQuestsFromDatabase(db);
+    const revisionBefore = questRevisionFromDatabase(db);
+
+    if (options.expectedRevision !== undefined) {
+      assertQuestRevision(db, options.expectedRevision);
+    }
+
     const next = mutator(current);
 
     if (next && typeof next.then === "function") {
       throw new Error("Quest mutations must be synchronous");
     }
 
-    return writeQuestsToDatabase(db, next);
+    const saved = writeQuestsToDatabase(db, next);
+    const revisionAfter = questRevisionFromDatabase(db);
+
+    if (options.audit) {
+      recordAuditEventInDatabase({
+        db,
+        ...options.audit,
+        payload: {
+          ...(options.audit.payload || {}),
+          revisionBefore,
+          revisionAfter,
+          ...(options.audit.includeDocuments
+            ? { before: current, after: saved }
+            : {}),
+        },
+      });
+    }
+
+    return options.includeRevision
+      ? { ...saved, revision: revisionAfter }
+      : saved;
   });
 }

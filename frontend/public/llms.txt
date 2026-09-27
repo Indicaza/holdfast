@@ -14,8 +14,7 @@ The core principle is simple: leave the guild stronger than you found it.
 
 ## Additional pages
 
-- [GuildOS](/guildos): Information about the systems Holdfast uses to support coordination and administration.
-- [Privacy](/privacy): Privacy information.
+- [Privacy](/privacy): Privacy and analytics information.
 - [Holdfast source repository](https://github.com/Indicaza/holdfast): Public source code for the Holdfast website.
 
 ## Key facts

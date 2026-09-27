@@ -1,0 +1,20 @@
+.privacy__analytics-settings {
+  min-height: 2.75rem;
+  margin-top: var(--space-5);
+  padding: 0 var(--space-5);
+  border: var(--border-accent);
+  border-radius: var(--radius-pill);
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.privacy__analytics-settings:hover,
+.privacy__analytics-settings:focus-visible {
+  background: var(--color-accent);
+  color: var(--color-background);
+}
