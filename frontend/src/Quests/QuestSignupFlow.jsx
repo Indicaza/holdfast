@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import Modal from '../Modal/Modal.jsx'
 import './QuestSignupFlow.css'
 
