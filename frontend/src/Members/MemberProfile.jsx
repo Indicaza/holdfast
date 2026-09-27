@@ -213,7 +213,6 @@ function RankProgress({ member }) {
         <div>
           <span>Guild rank</span>
           <h2 id="member-rank-title">{member.rank || 'Recruit'}</h2>
-          {!member.rankMeta?.isOfficer ? <small>Enlisted</small> : null}
         </div>
       </div>
 
@@ -258,6 +257,7 @@ function RankProgress({ member }) {
         >
           <span
             className="member-profile__progress-fill"
+            data-has-progress={lifetimeRep > 0}
             style={{ width: `${percent}%` }}
           />
         </div>
