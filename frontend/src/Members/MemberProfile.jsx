@@ -29,7 +29,7 @@ function tenureText(member) {
     return `In Holdfast since ${formatDate(member.guildJoinedAt, false)}`
   }
 
-  return `GuildOS member since ${formatDate(member.firstSeenAt, false)}`
+  return `Profile active since ${formatDate(member.firstSeenAt, false)}`
 }
 
 function formatNumber(value) {
@@ -129,18 +129,61 @@ function fallbackRepProgression(rank, lifetimeRep) {
   }
 }
 
+
+function officerRepMilestone(lifetimeRep) {
+  const rep = Math.max(0, Number(lifetimeRep) || 0)
+  const milestones = [3000, 9000, 21000, 42000]
+  const next = milestones.find((value) => rep < value)
+
+  if (!next) {
+    return {
+      mode: 'lifetime',
+      lifetimeRep: rep,
+      segmentStart: 0,
+      segmentEnd: 42000,
+      segmentSize: 42000,
+      remaining: null,
+      progress: 1,
+      thresholdMet: true,
+      nextRank: null,
+      label: 'Lifetime Rep',
+      detail: 'Officer rank is by appointment. Rep continues recording contribution independently.',
+    }
+  }
+
+  const previous = milestones.filter((value) => value < next).at(-1) || 0
+  const segmentSize = next - previous
+  const segmentEarned = Math.max(0, rep - previous)
+
+  return {
+    mode: 'milestone',
+    lifetimeRep: rep,
+    segmentStart: previous,
+    segmentEnd: next,
+    segmentSize,
+    remaining: next - rep,
+    progress: segmentEarned / segmentSize,
+    thresholdMet: false,
+    nextRank: null,
+    label: `${formatNumber(next)} Rep milestone`,
+    detail: 'Officer rank is by appointment. Rep continues recording contribution independently.',
+  }
+}
+
 function RankProgress({ member }) {
   const lifetimeRep = Number(member.contribution?.rep) || 0
-  const progression =
-    member.repProgression ||
-    fallbackRepProgression(member.rank || 'Recruit', lifetimeRep)
+  const isOfficer = Boolean(member.rankMeta?.isOfficer)
+  const progression = isOfficer
+    ? officerRepMilestone(lifetimeRep)
+    : member.repProgression ||
+      fallbackRepProgression(member.rank || 'Recruit', lifetimeRep)
 
   const percent = Math.min(
     100,
     Math.max(0, (Number(progression.progress) || 0) * 100),
   )
   const segmentCurrent =
-    progression.mode === 'eligibility'
+    progression.mode === 'eligibility' || progression.mode === 'milestone'
       ? Math.min(
           Math.max(lifetimeRep - Number(progression.segmentStart || 0), 0),
           Number(progression.segmentSize || 0),
@@ -170,9 +213,7 @@ function RankProgress({ member }) {
         <div>
           <span>Guild rank</span>
           <h2 id="member-rank-title">{member.rank || 'Recruit'}</h2>
-          <small>
-            {member.rankMeta?.isOfficer ? 'Officer' : 'Enlisted'}
-          </small>
+          {!member.rankMeta?.isOfficer ? <small>Enlisted</small> : null}
         </div>
       </div>
 
@@ -187,14 +228,18 @@ function RankProgress({ member }) {
             <span>
               {progression.nextRank
                 ? `Next: ${progression.nextRank}`
-                : progression.label}
+                : isOfficer && progression.mode === 'milestone'
+                  ? 'Next Rep milestone'
+                  : progression.label}
             </span>
             <strong>
               {progression.mode === 'eligibility'
                 ? progression.thresholdMet
                   ? 'Rep floor met'
                   : `${formatNumber(progression.remaining)} to go`
-                : 'Lifetime service'}
+                : progression.mode === 'milestone'
+                  ? `${formatNumber(progression.remaining)} to go`
+                  : 'Lifetime service'}
             </strong>
           </div>
         </div>
@@ -222,7 +267,9 @@ function RankProgress({ member }) {
           <strong>
             {progression.mode === 'eligibility'
               ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this tier`
-              : `${formatNumber(lifetimeRep)} lifetime`}
+              : progression.mode === 'milestone'
+                ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this milestone`
+                : `${formatNumber(lifetimeRep)} lifetime`}
           </strong>
           <span>{formatNumber(progression.segmentEnd || 42000)}</span>
         </div>
@@ -418,8 +465,12 @@ function MemberProfile({ memberId }) {
         </div>
 
         <div className="member-profile__hero-actions">
-          <button type="button" onClick={copyProfile}>
-            {copied ? 'Profile link copied' : 'Copy profile link'}
+          <button
+            className="member-profile__share"
+            type="button"
+            onClick={copyProfile}
+          >
+            {copied ? 'Copied' : 'Share profile'}
           </button>
         </div>
       </section>
