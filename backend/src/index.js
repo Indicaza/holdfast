@@ -28,12 +28,6 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.get("/api/config", (req, res) => {
-  res.json({
-    discordInviteUrl: process.env.DISCORD_INVITE_URL || null,
-  });
-});
-
 app.use("/api/auth", createDiscordAuthRouter());
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
