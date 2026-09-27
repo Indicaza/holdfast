@@ -78,6 +78,10 @@ jobs:
         working-directory: backend
         run: npm test
 
+      - name: Enforce authentication coverage
+        working-directory: backend
+        run: npm run test:auth
+
   production-image:
     name: Production image
     runs-on: ubuntu-latest

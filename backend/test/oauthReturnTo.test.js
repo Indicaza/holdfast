@@ -13,5 +13,17 @@ test("OAuth return path preserves safe local routes", () => {
 test("OAuth return path rejects external and protocol-relative redirects", () => {
   assert.equal(safeReturnTo("https://evil.example"), "/");
   assert.equal(safeReturnTo("//evil.example/path"), "/");
+  assert.equal(safeReturnTo("/\\evil.example/path"), "/");
+  assert.equal(safeReturnTo("///evil.example/path"), "/");
   assert.equal(safeReturnTo("not-a-route"), "/");
+});
+
+test("OAuth return path rejects malformed and unreasonably large values", () => {
+  assert.equal(safeReturnTo(null), "/");
+  assert.equal(safeReturnTo("/".repeat(3000)), "/");
+  assert.equal(safeReturnTo("/\u0000broken"), "/");
+});
+
+test("OAuth return path canonicalizes same-origin traversal", () => {
+  assert.equal(safeReturnTo("/quests/../members?tab=active#list"), "/members?tab=active#list");
 });
