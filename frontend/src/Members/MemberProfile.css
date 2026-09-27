@@ -131,42 +131,6 @@
   min-width: 0;
 }
 
-.member-profile__rank {
-  display: inline-grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  color: var(--color-accent-bright);
-}
-
-.member-profile__rank-icon {
-  width: 4.25rem;
-  height: 4.25rem;
-  padding: 0.2rem;
-}
-
-.member-profile__rank > div:last-child {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.member-profile__rank span {
-  color: var(--color-text-muted);
-  font-size: 0.68rem;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
-}
-
-.member-profile__rank strong {
-  color: var(--color-accent-bright);
-  font-family: var(--font-display);
-  font-size: clamp(var(--font-size-fib-21), 2.8vw, var(--font-size-fib-34));
-  font-weight: var(--font-weight-display);
-  line-height: 1;
-}
-
 .member-profile__name-line {
   display: flex;
   min-width: 0;
@@ -219,21 +183,18 @@
 .member-profile__hero-actions {
   position: relative;
   z-index: 1;
-  display: grid;
-  gap: var(--space-2);
-  min-width: 11rem;
+  justify-self: end;
 }
 
-.member-profile__hero-actions a,
 .member-profile__hero-actions button {
   display: inline-flex;
-  min-height: 2.8rem;
+  min-height: 2.7rem;
   align-items: center;
   justify-content: center;
   padding-inline: var(--space-4);
   border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.42);
-  color: var(--color-text-strong);
+  background: rgba(3, 8, 15, 0.36);
+  color: var(--color-text-muted);
   font: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -246,8 +207,6 @@
     color var(--duration-fast) var(--ease-standard);
 }
 
-.member-profile__hero-actions a:hover,
-.member-profile__hero-actions a:focus-visible,
 .member-profile__hero-actions button:hover,
 .member-profile__hero-actions button:focus-visible {
   border-color: var(--color-accent-bright);
@@ -255,96 +214,131 @@
   color: var(--color-accent-bright);
 }
 
-.member-profile__rep {
-  margin-top: var(--space-5);
-  padding: clamp(var(--space-5), 3vw, var(--space-7, 1.75rem));
+.member-profile__progress {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.72fr) minmax(0, 2.28fr);
+  margin-top: var(--space-4);
+  overflow: hidden;
   border: var(--border-subtle);
   border-top: var(--border-accent);
   background:
-    linear-gradient(90deg, rgba(29, 69, 111, 0.1), transparent 50%),
-    rgba(3, 8, 15, 0.38);
+    linear-gradient(105deg, rgba(29, 69, 111, 0.1), transparent 42%),
+    rgba(3, 8, 15, 0.4);
   box-shadow: var(--shadow-soft);
 }
 
-.member-profile__rep-heading {
+.member-profile__progress-rank {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-right: var(--border-subtle);
+  background: rgba(196, 166, 103, 0.025);
+}
+
+.member-profile__progress-insignia {
+  width: 5.25rem;
+  height: 5.25rem;
+  color: var(--color-accent-bright);
+}
+
+.member-profile__progress-rank > div:last-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.member-profile__progress-rank span,
+.member-profile__progress-heading span {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.member-profile__progress-rank h2 {
+  margin: 0;
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-fib-34);
+  line-height: 0.95;
+}
+
+.member-profile__progress-rank small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+}
+
+.member-profile__progress-rep {
+  min-width: 0;
+  padding: var(--space-5) var(--space-6);
+}
+
+.member-profile__progress-heading {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: var(--space-6);
 }
 
-.member-profile__rep-heading p,
-.member-profile__section-heading p,
-.member-profile__stats span {
-  color: var(--color-accent-bright);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-}
-
-.member-profile__rep-heading h2 {
-  margin-top: var(--space-1);
-  color: var(--color-text-strong);
-  font-size: var(--font-size-fib-34);
-}
-
-.member-profile__rep-target {
+.member-profile__progress-heading > div {
   display: grid;
-  justify-items: end;
   gap: var(--space-1);
+}
+
+.member-profile__progress-heading strong {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-21);
+}
+
+.member-profile__progress-target {
+  justify-items: end;
   text-align: right;
 }
 
-.member-profile__rep-target span {
-  color: var(--color-text-muted);
+.member-profile__progress-target strong {
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
 }
 
-.member-profile__rep-target strong {
-  color: var(--color-text-strong);
-  font-size: var(--font-size-sm);
-}
-
-.member-profile__rep-bar {
+.member-profile__progress-bar {
   position: relative;
-  height: 1rem;
+  height: 1.15rem;
   overflow: hidden;
-  margin-top: var(--space-5);
-  border: 1px solid rgba(196, 166, 103, 0.38);
+  margin-top: var(--space-4);
+  border: 1px solid rgba(196, 166, 103, 0.42);
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.022) 0,
-      rgba(255, 255, 255, 0.022) 1px,
+      rgba(255, 255, 255, 0.024) 0,
+      rgba(255, 255, 255, 0.024) 1px,
       transparent 1px,
       transparent 10%
     ),
-    rgba(3, 8, 15, 0.78);
-  box-shadow: inset 0 0.2rem 0.6rem rgba(0, 0, 0, 0.32);
+    rgba(3, 8, 15, 0.82);
+  box-shadow: inset 0 0.2rem 0.7rem rgba(0, 0, 0, 0.36);
 }
 
-.member-profile__rep-fill {
+.member-profile__progress-fill {
   display: block;
   width: 0;
   height: 100%;
-  min-width: 0;
   background:
     linear-gradient(
       90deg,
-      rgba(196, 166, 103, 0.78),
-      var(--color-accent-bright)
+      rgba(168, 116, 31, 0.88),
+      #d2a642 48%,
+      #f2d37b
     );
   box-shadow:
-    0 0 1.1rem rgba(221, 193, 125, 0.3),
+    0 0 1.15rem rgba(221, 193, 125, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition: width var(--duration-slow) var(--ease-standard);
 }
 
-.member-profile__rep-scale {
+.member-profile__progress-scale {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -355,18 +349,18 @@
   font-size: 0.68rem;
 }
 
-.member-profile__rep-scale strong {
+.member-profile__progress-scale strong {
   color: var(--color-text);
   font-weight: var(--font-weight-regular);
   text-align: center;
 }
 
-.member-profile__rep-note {
-  max-width: 58rem;
-  margin-top: var(--space-4);
+.member-profile__progress-note {
+  max-width: 52rem;
+  margin-top: var(--space-3);
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .member-profile__stats {
@@ -648,8 +642,8 @@
   }
 
   .member-profile__hero-actions {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 2;
+    justify-self: start;
   }
 
   .member-profile__timeline {
@@ -671,18 +665,22 @@
     width: 6.5rem;
   }
 
-  .member-profile__rank-icon {
-    width: 3.5rem;
-    height: 3.5rem;
+  .member-profile__progress {
+    grid-template-columns: 1fr;
   }
 
-  .member-profile__rep-heading,
+  .member-profile__progress-rank {
+    border-right: 0;
+    border-bottom: var(--border-subtle);
+  }
+
+  .member-profile__progress-heading,
   .member-profile__section-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .member-profile__rep-target,
+  .member-profile__progress-target,
   .member-profile__section-meta {
     justify-items: start;
     text-align: left;
@@ -720,10 +718,6 @@
     width: 6rem;
   }
 
-  .member-profile__rank {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
   .member-profile__name-line h1 {
     font-size: var(--font-size-fib-34);
   }
@@ -731,20 +725,33 @@
   .member-profile__hero-actions {
     width: 100%;
     grid-column: auto;
-    grid-template-columns: 1fr;
+    justify-self: stretch;
   }
 
-  .member-profile__rep-scale {
+  .member-profile__hero-actions button {
+    width: 100%;
+  }
+
+  .member-profile__progress-rank {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .member-profile__progress-insignia {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .member-profile__progress-scale {
     grid-template-columns: auto auto;
   }
 
-  .member-profile__rep-scale strong {
+  .member-profile__progress-scale strong {
     grid-column: 1 / -1;
     grid-row: 2;
     text-align: left;
   }
 
-  .member-profile__rep-scale > span:last-child {
+  .member-profile__progress-scale > span:last-child {
     text-align: right;
   }
 
