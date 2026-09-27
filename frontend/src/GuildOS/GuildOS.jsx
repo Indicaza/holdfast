@@ -7,31 +7,23 @@ function displayName(user) {
 }
 
 function authMessage(code) {
-  if (code === 'not-member') {
-    return {
-      title: 'Join Discord first.',
-      intro:
-        'GuildOS uses your Holdfast Discord membership as your guild identity. Join the server, then connect your profile.',
-    }
-  }
-
   if (code === 'cancelled') {
     return {
-      title: 'Connection cancelled.',
-      intro: 'Nothing changed. You can connect your Discord account whenever you are ready.',
+      title: 'Sign in cancelled.',
+      intro: 'Nothing changed. Sign in with Discord whenever you are ready.',
     }
   }
 
   if (code) {
     return {
-      title: 'Discord connection failed.',
-      intro: 'Try connecting again. If it keeps failing, let us know in Discord.',
+      title: 'Discord sign in failed.',
+      intro: 'Try again. If it keeps failing, the Discord integration needs attention.',
     }
   }
 
   return {
-    title: 'Members only.',
-    intro: 'Connect the Discord account you use in Holdfast to open your guild workspace.',
+    title: 'Sign in to GuildOS.',
+    intro: 'One Discord sign in joins Holdfast and creates your member profile.',
   }
 }
 
@@ -39,7 +31,6 @@ function GuildOS() {
   const session = useSession()
   const authCode = new URLSearchParams(window.location.search).get('auth')
   const signedOutCopy = authMessage(authCode)
-  const joinHref = session.discordInviteUrl || '/#join-holdfast'
 
   if (session.status === 'loading') {
     return (
@@ -61,19 +52,8 @@ function GuildOS() {
         centered
       >
         <div className="guildos-auth">
-          {authCode === 'not-member' ? (
-            <a
-              className="guildos-auth__join"
-              href={joinHref}
-              {...(session.discordInviteUrl
-                ? { target: '_blank', rel: 'noreferrer' }
-                : {})}
-            >
-              Join Discord
-            </a>
-          ) : null}
           <button type="button" onClick={() => session.signIn('/guildos')}>
-            Connect Discord
+            Sign in with Discord
           </button>
         </div>
       </PageShell>
