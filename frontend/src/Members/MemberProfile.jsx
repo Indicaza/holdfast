@@ -351,8 +351,6 @@ function MemberProfile({ memberId }) {
     }
   }, [endpoint, session.authenticated])
 
-  const isSelf = member?.id === session.user?.id
-
   const profileUrl = useMemo(() => {
     if (!member?.id) return ''
 
@@ -442,7 +440,6 @@ function MemberProfile({ memberId }) {
         <div className="member-profile__identity">
           <div className="member-profile__name-line">
             <h1 id="member-profile-name">{displayName(member)}</h1>
-            {isSelf ? <span>You</span> : null}
           </div>
 
           <div className="member-profile__meta-row">

@@ -151,20 +151,6 @@
   text-wrap: balance;
 }
 
-.member-profile__name-line > span {
-  display: inline-flex;
-  min-height: 1.55rem;
-  align-items: center;
-  padding-inline: var(--space-3);
-  border: var(--border-subtle);
-  border-radius: var(--radius-pill);
-  color: var(--color-accent-bright);
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-}
-
 .member-profile__meta-row {
   display: flex;
   align-items: center;
