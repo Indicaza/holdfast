@@ -105,17 +105,17 @@ function availableReward(quest, currency) {
   )
 }
 
-function Assignment({ assignment }) {
+function Assignment({ assignment, objectiveTitle, onSelfClick }) {
   const isOpen = assignment.name === 'Open'
+  const className = `quest-board__assignee${
+    isOpen ? ' quest-board__assignee--open' : ''
+  }${assignment.isSelf ? ' quest-board__assignee--self' : ''}`
+  const label = assignment.isSelf
+    ? `Leave ${objectiveTitle}`
+    : `${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`
 
-  return (
-    <span
-      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}${
-        assignment.isSelf ? ' quest-board__assignee--self' : ''
-      }`}
-      tabIndex="0"
-      aria-label={`${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`}
-    >
+  const content = (
+    <>
       {assignment.avatar ? (
         <img
           className="quest-board__avatar quest-board__avatar--image"
@@ -134,8 +134,31 @@ function Assignment({ assignment }) {
       <span className="quest-board__tooltip" role="tooltip">
         <strong>{assignment.name}</strong>
         <span>{assignment.responsibility}</span>
-        <small>{assignment.detail}</small>
+        <small>
+          {assignment.isSelf
+            ? 'Click your portrait to leave this objective'
+            : assignment.detail}
+        </small>
       </span>
+    </>
+  )
+
+  if (assignment.isSelf && onSelfClick) {
+    return (
+      <button
+        className={`${className} quest-board__assignee--action`}
+        type="button"
+        aria-label={label}
+        onClick={onSelfClick}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <span className={className} tabIndex="0" aria-label={label}>
+      {content}
     </span>
   )
 }
@@ -200,7 +223,7 @@ function Reward({ reward }) {
   )
 }
 
-function QuestObjectives({ quest, objectives, onSignup }) {
+function QuestObjectives({ quest, objectives, onSignup, onLeave }) {
   return (
     <>
       <div className="quest-board__columns" aria-hidden="true">
@@ -268,6 +291,12 @@ function QuestObjectives({ quest, objectives, onSignup }) {
                       {visibleAssignments.map((assignment, assignmentIndex) => (
                         <Assignment
                           assignment={assignment}
+                          objectiveTitle={objective.title}
+                          onSelfClick={
+                            assignment.isSelf
+                              ? () => onLeave(quest, objective)
+                              : undefined
+                          }
                           key={`${objective.id || objective.title}-${
                             assignment.name
                           }-${assignmentIndex}`}
@@ -310,6 +339,7 @@ function QuestCard({
   visibleObjectives,
   searchActive,
   onSignup,
+  onLeave,
 }) {
   const { completed, total } = questProgress(quest)
 
@@ -353,6 +383,7 @@ function QuestCard({
           quest={quest}
           objectives={visibleObjectives}
           onSignup={onSignup}
+          onLeave={onLeave}
         />
       ) : (
         <p className="quests-page__empty">No objectives have been added yet.</p>
@@ -583,6 +614,7 @@ function Quests() {
                   visibleObjectives={visibleObjectives}
                   searchActive={searchActive}
                   onSignup={signup.requestSignup}
+                  onLeave={signup.requestLeave}
                 />
               ))}
             </section>
