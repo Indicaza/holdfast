@@ -331,7 +331,7 @@ function QuestBoard() {
                           assignment={assignment}
                           objectiveTitle={objective.title}
                           onSelfClick={
-                            assignment.isSelf
+                            assignment.isSelf && !objective.completed
                               ? () =>
                                   signup.requestLeave(featuredQuest, objective)
                               : undefined
