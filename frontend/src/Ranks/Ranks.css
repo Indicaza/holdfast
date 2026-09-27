@@ -325,3 +325,18 @@
     width: 100%;
   }
 }
+@media (max-width: 36rem) {
+  .ranks-page__rank-card {
+    justify-items: center;
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .ranks-page__rank-copy {
+    justify-items: center;
+  }
+
+  .ranks-page__rank-copy p {
+    max-width: 28rem;
+  }
+}
