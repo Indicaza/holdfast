@@ -227,7 +227,7 @@ Build the image:
 
 ```bash
 docker build \
-  --build-arg VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX \
+  --build-arg VITE_GA_MEASUREMENT_ID=G-HFK0GNKKJ7 \
   -t holdfast:latest .
 ```
 
@@ -266,7 +266,7 @@ Set the Discord application's OAuth redirect URL to:
 https://YOUR_DOMAIN/api/auth/discord/callback
 ```
 
-Set `VITE_GA_MEASUREMENT_ID` while building the image to enable consent-gated Google Analytics. Leave it unset to omit analytics and its consent prompt.
+Holdfast defaults to the public GA4 measurement ID `G-HFK0GNKKJ7`. Analytics remains consent-gated and does not load until a visitor opts in. Override `VITE_GA_MEASUREMENT_ID` at build time only when deploying the same code for another property.
 
 ### Launch checklist
 
