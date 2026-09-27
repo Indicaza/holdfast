@@ -39,7 +39,9 @@ jobs:
         id: frontend-lint
         continue-on-error: true
         working-directory: frontend
-        run: npm run lint 2>&1 | tee lint.log
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee lint.log
 
       - name: Report lint failure
         if: steps.frontend-lint.outcome == 'failure' && github.event_name == 'pull_request'
