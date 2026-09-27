@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import Modal from '../Modal/Modal.jsx'
 import './MemberProfileEditor.css'
 
@@ -161,9 +162,8 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
     setError('')
 
     try {
-      const response = await fetch('/api/guild/members/me', {
+      const result = await apiJson('/api/guild/members/me', {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -188,12 +188,6 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
           },
         }),
       })
-
-      if (!response.ok) {
-        throw new Error('Profile update failed')
-      }
-
-      const result = await response.json()
       setStatus('saved')
       onSaved?.(result.member)
     } catch {

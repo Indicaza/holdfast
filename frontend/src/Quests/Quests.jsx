@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import PageShell from '../PageShell/PageShell.jsx'
 import '../Home/QuestBoard/QuestBoard.css'
 import './Quests.css'
@@ -336,34 +337,31 @@ function Quests() {
 
   useEffect(() => {
     let active = true
+    let hasLoaded = false
 
-    function loadQuests() {
-      fetch('/api/quests', { cache: 'no-store' })
-        .then((response) => {
-          if (!response.ok) throw new Error('Quests unavailable')
-          return response.json()
-        })
-        .then((result) => {
-          if (!active) return
-          setCatalog(result?.quests ? result : EMPTY_CATALOG)
-          setStatus('ready')
-        })
-        .catch(() => {
-          if (!active) return
-          setCatalog(EMPTY_CATALOG)
-          setStatus('error')
-        })
+    async function loadQuests() {
+      try {
+        const result = await apiJson('/api/quests')
+
+        if (!active) return
+        setCatalog(result?.quests ? result : EMPTY_CATALOG)
+        setStatus('ready')
+        hasLoaded = true
+      } catch {
+        if (!active || hasLoaded) return
+        setStatus('error')
+      }
     }
 
     function handleStorage(event) {
-      if (event.key === QUESTS_CHANGED_KEY) loadQuests()
+      if (event.key === QUESTS_CHANGED_KEY) void loadQuests()
     }
 
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') loadQuests()
+      if (document.visibilityState === 'visible') void loadQuests()
     }
 
-    loadQuests()
+    void loadQuests()
     window.addEventListener('focus', loadQuests)
     window.addEventListener('storage', handleStorage)
     window.addEventListener(QUESTS_CHANGED_KEY, loadQuests)

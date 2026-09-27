@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
@@ -476,38 +477,30 @@ function MemberProfile({ memberId }) {
       return undefined
     }
 
+    const controller = new AbortController()
     let active = true
     setStatus('loading')
 
-    fetch(endpoint, {
-      credentials: 'include',
-      cache: 'no-store',
-    })
-      .then((response) => {
-        if (response.status === 404) {
-          const error = new Error('Member not found')
-          error.code = 'not-found'
-          throw error
-        }
+    async function loadProfile() {
+      try {
+        const result = await apiJson(endpoint, {
+          signal: controller.signal,
+        })
 
-        if (!response.ok) {
-          throw new Error('Member profile unavailable')
-        }
-
-        return response.json()
-      })
-      .then((result) => {
         if (!active) return
         setMember(result?.member || null)
         setStatus(result?.member ? 'ready' : 'not-found')
-      })
-      .catch((error) => {
-        if (!active) return
-        setStatus(error.code === 'not-found' ? 'not-found' : 'error')
-      })
+      } catch (error) {
+        if (!active || error?.name === 'AbortError') return
+        setStatus(error?.status === 404 ? 'not-found' : 'error')
+      }
+    }
+
+    void loadProfile()
 
     return () => {
       active = false
+      controller.abort()
     }
   }, [endpoint, session.authenticated])
 

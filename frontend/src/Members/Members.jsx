@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
@@ -143,31 +144,35 @@ function Members() {
       return undefined
     }
 
+    const controller = new AbortController()
     let active = true
 
-    fetch('/api/guild/members', {
-      credentials: 'include',
-      cache: 'no-store',
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error('Member directory unavailable')
-        return response.json()
-      })
-      .then((result) => {
+    async function loadDirectory() {
+      setStatus('loading')
+
+      try {
+        const result = await apiJson('/api/guild/members', {
+          signal: controller.signal,
+        })
+
         if (!active) return
+
         setDirectory({
           members: Array.isArray(result?.members) ? result.members : [],
           summary: result?.summary || EMPTY_DIRECTORY.summary,
         })
         setStatus('ready')
-      })
-      .catch(() => {
-        if (!active) return
+      } catch (error) {
+        if (!active || error?.name === 'AbortError') return
         setStatus('error')
-      })
+      }
+    }
+
+    void loadDirectory()
 
     return () => {
       active = false
+      controller.abort()
     }
   }, [session.authenticated])
 
