@@ -4,13 +4,16 @@ import {
   requireAuthenticated,
   requirePermission,
 } from "../Auth/permissions.js";
-import { awardObjective } from "../Contribution/contributionRepository.js";
+import { awardObjectiveInDatabase } from "../Contribution/contributionRepository.js";
+import { withGuildTransaction } from "../Data/database.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   QuestStorageError,
   readQuests,
-  writeQuests,
+  readQuestsFromDatabase,
+  updateQuests,
+  writeQuestsToDatabase,
 } from "./questRepository.js";
 import {
   QuestValidationError,
@@ -154,14 +157,14 @@ export function createQuestRouter() {
           return;
         }
 
-        const current = await readQuests();
-        const result = signupForObjective(
-          current,
-          member,
-          questId,
-          objectiveId,
+        const saved = await updateQuests((current) =>
+          signupForObjective(
+            current,
+            member,
+            questId,
+            objectiveId,
+          ).document,
         );
-        const saved = await writeQuests(result.document);
 
         res.set("Cache-Control", "no-store");
         res.status(201).json({
@@ -222,15 +225,17 @@ export function createQuestRouter() {
     adminWriteRateLimit,
     async (req, res) => {
     try {
-      const current = await readQuests();
-      let document = normalizeQuestDocument(req.body);
-      document = preserveObjectiveCompletion(document, current);
+      const saved = await updateQuests((current) => {
+        let document = normalizeQuestDocument(req.body);
+        document = preserveObjectiveCompletion(document, current);
 
-      if (!req.auth.permissions.includes("rewards.policy.edit")) {
-        document = preserveRestrictedEconomy(document, current);
-      }
+        if (!req.auth.permissions.includes("rewards.policy.edit")) {
+          document = preserveRestrictedEconomy(document, current);
+        }
 
-      const saved = await writeQuests(document);
+        return document;
+      });
+
       res.set("Cache-Control", "no-store");
       res.json(saved);
     } catch (error) {
@@ -254,22 +259,16 @@ export function createQuestRouter() {
     adminWriteRateLimit,
     async (req, res) => {
       try {
-        const current = await readQuests();
-        let document = normalizeQuestDocument(req.body.document);
-        document = preserveObjectiveCompletion(document, current);
-
-        if (!req.auth.permissions.includes("rewards.policy.edit")) {
-          document = preserveRestrictedEconomy(document, current);
-        }
-
-        document = normalizeQuestDocument(document);
-
         const questId = String(req.body.questId || "");
         const objectiveId = String(req.body.objectiveId || "");
-        const target = findObjective(document, questId, objectiveId);
-        const currentTarget = findObjective(current, questId, objectiveId);
+        const submitted = normalizeQuestDocument(req.body.document);
+        const submittedTarget = findObjective(
+          submitted,
+          questId,
+          objectiveId,
+        );
 
-        if (!target.quest || !target.objective) {
+        if (!submittedTarget.quest || !submittedTarget.objective) {
           res.status(404).json({
             error: "objective_not_found",
             message: "That objective no longer exists.",
@@ -277,67 +276,129 @@ export function createQuestRouter() {
           return;
         }
 
-        if (target.quest.publication !== "published") {
-          res.status(400).json({
-            error: "quest_not_published",
-            message: "Publish the quest before completing objectives.",
-          });
-          return;
-        }
-
-        if (currentTarget.objective?.completed) {
-          res.status(409).json({
-            error: "objective_already_completed",
-            message: "That objective has already been completed and rewarded.",
-          });
-          return;
-        }
-
-        const memberIds = [
+        const requestedMemberIds = [
           ...new Set(
-            target.objective.assignments
+            submittedTarget.objective.assignments
               .map((assignment) => assignment.memberId)
               .filter(Boolean),
           ),
         ];
-
-        if (hasReward(target.objective) && !memberIds.length) {
-          res.status(400).json({
-            error: "objective_unassigned",
-            message: "Assign at least one guild member before issuing this reward.",
-          });
-          return;
-        }
-
         const guildMembers = await readGuildMembers();
-        const memberById = new Map(guildMembers.map((member) => [member.id, member]));
-        const assignedMembers = memberIds.map((id) => memberById.get(id)).filter(Boolean);
+        const memberById = new Map(
+          guildMembers.map((member) => [member.id, member]),
+        );
+        const requestedMembers = requestedMemberIds
+          .map((id) => memberById.get(id))
+          .filter(Boolean);
 
-        if (assignedMembers.length !== memberIds.length) {
+        if (requestedMembers.length !== requestedMemberIds.length) {
           res.status(400).json({
             error: "unknown_assignee",
-            message: "One or more assigned members are no longer in the GuildOS member directory.",
+            message:
+              "One or more assigned members are no longer in the GuildOS member directory.",
           });
           return;
         }
 
-        const awards = await awardObjective({
-          quest: target.quest,
-          objective: target.objective,
-          members: assignedMembers,
-          awardedBy: req.auth.user,
+        const result = withGuildTransaction((db) => {
+          const current = readQuestsFromDatabase(db);
+          let document = normalizeQuestDocument(req.body.document);
+          document = preserveObjectiveCompletion(document, current);
+
+          if (!req.auth.permissions.includes("rewards.policy.edit")) {
+            document = preserveRestrictedEconomy(document, current);
+          }
+
+          document = normalizeQuestDocument(document);
+
+          const target = findObjective(document, questId, objectiveId);
+          const currentTarget = findObjective(current, questId, objectiveId);
+
+          if (!target.quest || !target.objective) {
+            const error = new Error("That objective no longer exists.");
+            error.code = "objective_not_found";
+            error.status = 404;
+            throw error;
+          }
+
+          if (target.quest.publication !== "published") {
+            const error = new Error(
+              "Publish the quest before completing objectives.",
+            );
+            error.code = "quest_not_published";
+            error.status = 400;
+            throw error;
+          }
+
+          if (currentTarget.objective?.completed) {
+            const error = new Error(
+              "That objective has already been completed and rewarded.",
+            );
+            error.code = "objective_already_completed";
+            error.status = 409;
+            throw error;
+          }
+
+          const memberIds = [
+            ...new Set(
+              target.objective.assignments
+                .map((assignment) => assignment.memberId)
+                .filter(Boolean),
+            ),
+          ];
+
+          if (hasReward(target.objective) && !memberIds.length) {
+            const error = new Error(
+              "Assign at least one guild member before issuing this reward.",
+            );
+            error.code = "objective_unassigned";
+            error.status = 400;
+            throw error;
+          }
+
+          const assignedMembers = memberIds
+            .map((id) => memberById.get(id))
+            .filter(Boolean);
+
+          if (assignedMembers.length !== memberIds.length) {
+            const error = new Error(
+              "One or more assigned members are no longer in the GuildOS member directory.",
+            );
+            error.code = "unknown_assignee";
+            error.status = 400;
+            throw error;
+          }
+
+          const awards = awardObjectiveInDatabase({
+            db,
+            quest: target.quest,
+            objective: target.objective,
+            members: assignedMembers,
+            awardedBy: req.auth.user,
+          });
+
+          const saved = writeQuestsToDatabase(
+            db,
+            completeObjective(document, questId, objectiveId),
+          );
+
+          return { document: saved, awards };
         });
 
-        const saved = await writeQuests(
-          completeObjective(document, questId, objectiveId),
-        );
-
         res.set("Cache-Control", "no-store");
-        res.json({ document: saved, awards });
+        res.json(result);
       } catch (error) {
         if (error instanceof QuestValidationError) {
           res.status(400).json({
             error: "invalid_quest_document",
+            message: error.message,
+          });
+          return;
+        }
+
+        if (error?.status && error?.code) {
+          res.status(error.status).json({
+            error: error.code,
             message: error.message,
           });
           return;
