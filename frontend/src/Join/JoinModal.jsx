@@ -38,9 +38,19 @@ function noticeFor(code) {
   return null
 }
 
+function safeReturnTo(value) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return '/'
+  }
+
+  return value
+}
+
 function JoinModal({ onClose }) {
   const session = useSession()
-  const authCode = new URLSearchParams(window.location.search).get('auth')
+  const searchParams = new URLSearchParams(window.location.search)
+  const authCode = searchParams.get('auth')
+  const returnTo = safeReturnTo(searchParams.get('returnTo'))
   const notice = noticeFor(authCode)
 
   if (session.status === 'loading') {
@@ -132,7 +142,7 @@ function JoinModal({ onClose }) {
         <button
           className="join-action join-action--primary"
           type="button"
-          onClick={() => session.signIn('/', 'recruit')}
+          onClick={() => session.signIn(returnTo, 'recruit')}
         >
           Continue with Discord
         </button>
@@ -145,7 +155,7 @@ function JoinModal({ onClose }) {
         <span>Already a member?</span>
         <button
           type="button"
-          onClick={() => session.signIn('/', 'member')}
+          onClick={() => session.signIn(returnTo, 'member')}
         >
           Sign in
         </button>
