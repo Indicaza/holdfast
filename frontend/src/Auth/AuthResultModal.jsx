@@ -25,6 +25,15 @@ function AuthResultModal() {
     return null
   }
 
+  const currentParams = new URLSearchParams(window.location.search)
+
+  if (
+    currentParams.get('signupQuest') &&
+    currentParams.get('signupObjective')
+  ) {
+    return null
+  }
+
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
 
   // The join flow owns its own modal and auth messaging.
