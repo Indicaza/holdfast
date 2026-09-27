@@ -1,3 +1,6 @@
+import { useCallback } from 'react'
+import Home from '../Home/Home.jsx'
+import Modal from '../Modal/Modal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import './GuildOS.css'
@@ -9,21 +12,24 @@ function displayName(user) {
 function authMessage(code) {
   if (code === 'cancelled') {
     return {
+      eyebrow: 'GuildOS',
       title: 'Sign in cancelled.',
-      intro: 'Nothing changed. Sign in whenever you are ready.',
+      intro: 'Use your Holdfast Discord account whenever you are ready.',
     }
   }
 
   if (code) {
     return {
-      title: 'Discord sign in failed.',
-      intro: 'Try again. If it keeps failing, check the backend console for the Discord API error.',
+      eyebrow: 'GuildOS',
+      title: 'Could not sign in.',
+      intro: 'Try Discord again. If it keeps failing, an officer can help.',
     }
   }
 
   return {
-    title: 'Member sign in.',
-    intro: 'Already in Holdfast? Sign in with Discord to open GuildOS.',
+    eyebrow: 'GuildOS',
+    title: 'Member sign in',
+    intro: 'Already in Holdfast? Use your Discord account to open GuildOS.',
   }
 }
 
@@ -31,35 +37,59 @@ function GuildOS() {
   const session = useSession()
   const authCode = new URLSearchParams(window.location.search).get('auth')
   const signedOutCopy = authMessage(authCode)
+  const close = useCallback(() => {
+    window.location.assign('/')
+  }, [])
 
   if (session.status === 'loading') {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title="Opening GuildOS."
-        intro="Checking your guild session."
-        centered
+      <Home
+        overlay={
+          <Modal
+            eyebrow="GuildOS"
+            title="Opening GuildOS."
+            intro="Checking your member session."
+            onClose={close}
+          >
+            <div className="guildos-modal-status" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+          </Modal>
+        }
       />
     )
   }
 
   if (!session.authenticated) {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title={signedOutCopy.title}
-        intro={signedOutCopy.intro}
-        centered
-      >
-        <div className="guildos-auth">
-          <button
-            type="button"
-            onClick={() => session.signIn('/guildos', 'member')}
+      <Home
+        overlay={
+          <Modal
+            eyebrow={signedOutCopy.eyebrow}
+            title={signedOutCopy.title}
+            intro={signedOutCopy.intro}
+            onClose={close}
           >
-            Sign in with Discord
-          </button>
-        </div>
-      </PageShell>
+            <div className="guildos-modal-actions">
+              <button
+                className="guildos-modal-action guildos-modal-action--primary"
+                type="button"
+                onClick={() => session.signIn('/guildos', 'member')}
+              >
+                Sign in with Discord
+              </button>
+              <a
+                className="guildos-modal-action guildos-modal-action--secondary"
+                href="/join"
+              >
+                New here? Join Holdfast
+              </a>
+            </div>
+          </Modal>
+        }
+      />
     )
   }
 

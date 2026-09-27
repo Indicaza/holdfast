@@ -1,7 +1,7 @@
 import { useSession } from '../../Auth/SessionProvider.jsx'
 import './FoundingCallout.css'
 
-function FoundingCallout() {
+function FoundingCallout({ onJoin }) {
   const { authenticated } = useSession()
 
   return (
@@ -14,17 +14,24 @@ function FoundingCallout() {
         <p className="founding-callout__eyebrow">Join Holdfast</p>
         <h2 id="founding-callout-title">Come play with us.</h2>
         <p>
-          No application gauntlet. See what joining means, connect Discord,
-          and get into the guild.
+          No application gauntlet. Meet the guild, find your place, and get
+          into the game.
         </p>
       </div>
 
-      <a
-        className="founding-callout__action"
-        href={authenticated ? '/guildos' : '/join'}
-      >
-        {authenticated ? 'Open GuildOS' : 'Join Holdfast'}
-      </a>
+      {authenticated ? (
+        <a className="founding-callout__action" href="/guildos">
+          Open GuildOS
+        </a>
+      ) : (
+        <button
+          className="founding-callout__action"
+          type="button"
+          onClick={onJoin}
+        >
+          Join Holdfast
+        </button>
+      )}
 
       <div className="founding-callout__mark" aria-hidden="true">
         ♜

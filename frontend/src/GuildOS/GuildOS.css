@@ -1,24 +1,22 @@
-.guildos-auth {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+.guildos-modal-actions {
+  display: grid;
   gap: var(--space-3);
+  max-width: 24rem;
+  margin-inline: auto;
 }
 
-.guildos-auth button,
-.guildos-auth__join {
+.guildos-modal-action {
   display: inline-flex;
-  min-height: 3rem;
+  min-height: 3.2rem;
   align-items: center;
   justify-content: center;
   padding-inline: var(--space-6);
   border: var(--border-accent);
-  background: var(--color-accent);
-  color: var(--color-background);
   font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-caps);
+  text-align: center;
   text-transform: uppercase;
   cursor: pointer;
   transition:
@@ -28,30 +26,63 @@
     color var(--duration-fast) var(--ease-standard);
 }
 
-.guildos-auth__join {
-  background: rgba(7, 17, 31, 0.48);
+.guildos-modal-action--primary {
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  color: var(--color-background);
+}
+
+.guildos-modal-action--secondary {
+  background: rgba(7, 17, 31, 0.46);
   color: var(--color-text-strong);
 }
 
-.guildos-auth button:hover,
-.guildos-auth button:focus-visible,
-.guildos-auth__join:hover,
-.guildos-auth__join:focus-visible {
+.guildos-modal-action:hover,
+.guildos-modal-action:focus-visible {
   border-color: var(--color-accent-bright);
   box-shadow:
     0 0.8rem 2rem rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
-.guildos-auth button:hover,
-.guildos-auth button:focus-visible {
+.guildos-modal-action--primary:hover,
+.guildos-modal-action--primary:focus-visible {
   background: var(--color-accent-bright);
 }
 
-.guildos-auth__join:hover,
-.guildos-auth__join:focus-visible {
+.guildos-modal-action--secondary:hover,
+.guildos-modal-action--secondary:focus-visible {
   background: rgba(11, 27, 48, 0.72);
   color: var(--color-accent-bright);
+}
+
+.guildos-modal-status {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+}
+
+.guildos-modal-status span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-accent-bright);
+  opacity: 0.35;
+  animation: guildos-loading 900ms ease-in-out infinite alternate;
+}
+
+.guildos-modal-status span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.guildos-modal-status span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes guildos-loading {
+  to {
+    opacity: 1;
+  }
 }
 
 .guildos-profile {
@@ -159,5 +190,12 @@
 @media (max-width: 32rem) {
   .guildos-profile {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guildos-modal-status span {
+    animation: none;
+    opacity: 0.7;
   }
 }
