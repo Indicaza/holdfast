@@ -1,7 +1,6 @@
 import './RankInsignia.css'
 
 const ENLISTED = {
-  Private: { chevrons: 1, rockers: 0, center: null },
   Corporal: { chevrons: 2, rockers: 0, center: 'swords' },
   Sergeant: { chevrons: 3, rockers: 0, center: 'swords' },
   'Master Sergeant': { chevrons: 3, rockers: 3, center: 'star' },
@@ -9,22 +8,22 @@ const ENLISTED = {
 }
 
 function Chevron({ index }) {
-  const y = 17 + index * 12
+  const y = 14 + index * 11
 
   return (
     <polyline
-      points={`25,${y} 60,${y + 17} 95,${y}`}
+      points={`30,${y} 60,${y + 15} 90,${y}`}
       className="rank-insignia__stroke"
     />
   )
 }
 
 function Rocker({ index, count }) {
-  const y = 88 + index * 8 - Math.max(0, count - 3) * 4
+  const y = 84 + index * 8 - Math.max(0, count - 3) * 4
 
   return (
     <path
-      d={`M 28 ${y} Q 60 ${y + 17} 92 ${y}`}
+      d={`M 32 ${y} Q 60 ${y + 14} 88 ${y}`}
       className="rank-insignia__stroke"
     />
   )
@@ -33,12 +32,12 @@ function Rocker({ index, count }) {
 function CrossedSwords() {
   return (
     <g className="rank-insignia__stroke rank-insignia__swords">
-      <path d="M 43 61 L 78 89" />
-      <path d="M 77 61 L 42 89" />
-      <path d="M 39 86 L 47 94" />
-      <path d="M 81 86 L 73 94" />
-      <path d="M 38 90 L 46 82" />
-      <path d="M 82 90 L 74 82" />
+      <path d="M 45 58 L 76 84" />
+      <path d="M 75 58 L 44 84" />
+      <path d="M 41 82 L 48 89" />
+      <path d="M 79 82 L 72 89" />
+      <path d="M 40 86 L 47 79" />
+      <path d="M 80 86 L 73 79" />
     </g>
   )
 }
@@ -47,30 +46,17 @@ function Star() {
   return (
     <polygon
       className="rank-insignia__fill"
-      points="60,55 65,68 79,68 68,76 72,90 60,82 48,90 52,76 41,68 55,68"
+      points="60,52 64,64 77,64 67,71 71,84 60,77 49,84 53,71 43,64 56,64"
     />
   )
 }
 
 function EnlistedInsignia({ rank }) {
-  if (rank === 'Recruit') {
-    return (
-      <g>
-        <circle
-          cx="60"
-          cy="58"
-          r="21"
-          className="rank-insignia__ghost"
-        />
-        <path
-          d="M 48 64 L 60 48 L 72 64"
-          className="rank-insignia__stroke rank-insignia__recruit"
-        />
-      </g>
-    )
-  }
+  const config = ENLISTED[rank]
 
-  const config = ENLISTED[rank] || ENLISTED.Private
+  if (!config) {
+    return null
+  }
 
   return (
     <>
@@ -154,7 +140,18 @@ function OfficerInsignia({ rank }) {
 
 function RankInsignia({ rank = 'Recruit', className = '' }) {
   const officerRanks = new Set(['Lieutenant', 'Captain', 'Major', 'Commander'])
-  const officer = officerRanks.has(rank)
+  const noInsignia = rank === 'Recruit' || rank === 'Private'
+
+  if (noInsignia) {
+    return (
+      <span
+        className={`rank-insignia rank-insignia--none ${className}`}
+        aria-hidden="true"
+      >
+        <span>No insignia</span>
+      </span>
+    )
+  }
 
   return (
     <svg
@@ -163,7 +160,7 @@ function RankInsignia({ rank = 'Recruit', className = '' }) {
       aria-hidden="true"
       focusable="false"
     >
-      {officer ? (
+      {officerRanks.has(rank) ? (
         <OfficerInsignia rank={rank} />
       ) : (
         <EnlistedInsignia rank={rank} />
