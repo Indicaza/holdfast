@@ -269,9 +269,13 @@ function QuestBoard() {
         {featuredQuest.objectives.map((objective, index) => {
           const priority = priorityOf(objective)
           const assignments = objective.assignments ?? []
+          const visibleAssignmentLimit =
+            assignments.length > MAX_VISIBLE_ASSIGNMENTS
+              ? MAX_VISIBLE_ASSIGNMENTS - 1
+              : MAX_VISIBLE_ASSIGNMENTS
           const visibleAssignments = assignments.slice(
             0,
-            MAX_VISIBLE_ASSIGNMENTS,
+            visibleAssignmentLimit,
           )
           const hiddenAssignmentCount = Math.max(
             0,
