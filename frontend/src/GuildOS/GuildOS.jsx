@@ -10,15 +10,7 @@ function authMessage(code) {
   if (code === 'cancelled') {
     return {
       title: 'Sign in cancelled.',
-      intro: 'Nothing changed. Sign in with Discord whenever you are ready.',
-    }
-  }
-
-  if (code === 'join-failed') {
-    return {
-      title: 'Discord server join failed.',
-      intro:
-        'Your Discord login worked, but the Holdfast bot could not add you to the server. Check that the bot is installed and has Create Invite permission.',
+      intro: 'Nothing changed. Sign in whenever you are ready.',
     }
   }
 
@@ -30,8 +22,8 @@ function authMessage(code) {
   }
 
   return {
-    title: 'Sign in to GuildOS.',
-    intro: 'One Discord sign in joins Holdfast and creates your member profile.',
+    title: 'Member sign in.',
+    intro: 'Already in Holdfast? Sign in with Discord to open GuildOS.',
   }
 }
 
@@ -60,7 +52,10 @@ function GuildOS() {
         centered
       >
         <div className="guildos-auth">
-          <button type="button" onClick={() => session.signIn('/guildos')}>
+          <button
+            type="button"
+            onClick={() => session.signIn('/guildos', 'member')}
+          >
             Sign in with Discord
           </button>
         </div>

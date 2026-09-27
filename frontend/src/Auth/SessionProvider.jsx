@@ -53,8 +53,8 @@ export function SessionProvider({ children }) {
     refresh()
   }, [refresh])
 
-  const signIn = useCallback((returnTo = currentReturnTo()) => {
-    const params = new URLSearchParams({ returnTo })
+  const signIn = useCallback((returnTo = currentReturnTo(), mode = 'member') => {
+    const params = new URLSearchParams({ returnTo, mode })
     window.location.assign(`/api/auth/discord?${params.toString()}`)
   }, [])
 

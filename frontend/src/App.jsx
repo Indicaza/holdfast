@@ -5,6 +5,7 @@ import SEO from './SEO/SEO.jsx'
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildOS = lazy(() => import('./GuildOS/GuildOS.jsx'))
+const Join = lazy(() => import('./Join/Join.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
 const Quests = lazy(() => import('./Quests/Quests.jsx'))
 
@@ -35,6 +36,14 @@ const routes = {
     title: 'Holdfast Charter | Alliance WoW Forever Guild',
     description:
       'Read the Holdfast charter: service-based leadership, high standards without elitism, shared prosperity, mentorship, and a guild built to endure.',
+    robots: defaultRobots,
+  },
+  '/join': {
+    component: Join,
+    path: '/join',
+    title: 'Join Holdfast | Alliance WoW Forever Guild',
+    description:
+      'Join Holdfast through Discord and create your GuildOS member profile.',
     robots: defaultRobots,
   },
   '/guildos': {

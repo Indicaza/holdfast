@@ -15,6 +15,8 @@ const DISCORD_API = "https://discord.com/api/v10";
 const DISCORD_AUTHORIZE = "https://discord.com/oauth2/authorize";
 const DISCORD_TOKEN = `${DISCORD_API}/oauth2/token`;
 const DEFAULT_RETURN_TO = "/guildos";
+const MEMBER_MODE = "member";
+const RECRUIT_MODE = "recruit";
 
 function config() {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -31,14 +33,14 @@ function config() {
   };
 }
 
-function requireConfig() {
+function requireConfig({ needsBot = false } = {}) {
   const current = config();
   const missing = [];
 
   if (!current.clientId) missing.push("DISCORD_CLIENT_ID");
   if (!current.clientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (!current.guildId) missing.push("DISCORD_GUILD_ID");
-  if (!current.botToken) missing.push("DISCORD_BOT_TOKEN");
+  if (needsBot && !current.botToken) missing.push("DISCORD_BOT_TOKEN");
   if (!process.env.SESSION_SECRET) missing.push("SESSION_SECRET");
 
   if (missing.length) {
@@ -61,9 +63,17 @@ function safeReturnTo(value) {
   }
 }
 
-function encodeState(nonce, returnTo) {
+function safeMode(value) {
+  return value === RECRUIT_MODE ? RECRUIT_MODE : MEMBER_MODE;
+}
+
+function encodeState(nonce, returnTo, mode) {
   return Buffer.from(
-    JSON.stringify({ nonce, returnTo: safeReturnTo(returnTo) }),
+    JSON.stringify({
+      nonce,
+      returnTo: safeReturnTo(returnTo),
+      mode: safeMode(mode),
+    }),
   ).toString("base64url");
 }
 
@@ -83,6 +93,10 @@ function destinationUrl(frontendUrl, returnTo, auth) {
   }
 
   return url.toString();
+}
+
+function onboardingUrl(frontendUrl, auth) {
+  return destinationUrl(frontendUrl, "/join", auth);
 }
 
 async function responseError(response, prefix) {
@@ -173,40 +187,21 @@ async function currentGuildMember(guildId, accessToken) {
   );
 }
 
-async function ensureGuildMember(userId, accessToken, current) {
-  const existingMember = await currentGuildMember(current.guildId, accessToken);
+async function addGuildMember(userId, accessToken, current) {
+  const addedMember = await discordBotRequest(
+    `/guilds/${current.guildId}/members/${userId}`,
+    current.botToken,
+    {
+      method: "PUT",
+      body: JSON.stringify({ access_token: accessToken }),
+    },
+  );
 
-  if (existingMember) {
-    return existingMember;
+  if (addedMember) {
+    return addedMember;
   }
 
-  try {
-    const addedMember = await discordBotRequest(
-      `/guilds/${current.guildId}/members/${userId}`,
-      current.botToken,
-      {
-        method: "PUT",
-        body: JSON.stringify({ access_token: accessToken }),
-      },
-    );
-
-    if (addedMember) {
-      return addedMember;
-    }
-  } catch (error) {
-    error.authCode = "join-failed";
-    throw error;
-  }
-
-  const joinedMember = await currentGuildMember(current.guildId, accessToken);
-
-  if (!joinedMember) {
-    const error = new Error("Discord member join succeeded but member lookup failed");
-    error.authCode = "join-failed";
-    throw error;
-  }
-
-  return joinedMember;
+  return currentGuildMember(current.guildId, accessToken);
 }
 
 function avatarUrl(user) {
@@ -221,10 +216,11 @@ export function createDiscordAuthRouter() {
   const router = Router();
 
   router.get("/discord", (req, res) => {
+    const mode = safeMode(req.query.mode);
     let current;
 
     try {
-      current = requireConfig();
+      current = requireConfig({ needsBot: mode === RECRUIT_MODE });
     } catch (error) {
       console.error(error.message);
       res.status(503).json({ error: "auth_not_configured" });
@@ -232,12 +228,16 @@ export function createDiscordAuthRouter() {
     }
 
     const nonce = crypto.randomBytes(32).toString("base64url");
-    const state = encodeState(nonce, req.query.returnTo);
+    const state = encodeState(nonce, req.query.returnTo, mode);
+    const scopes =
+      mode === RECRUIT_MODE
+        ? "identify guilds.members.read guilds.join"
+        : "identify guilds.members.read";
     const params = new URLSearchParams({
       client_id: current.clientId,
       response_type: "code",
       redirect_uri: current.redirectUri,
-      scope: "identify guilds.join guilds.members.read",
+      scope: scopes,
       state,
     });
 
@@ -251,12 +251,17 @@ export function createDiscordAuthRouter() {
     const state = typeof req.query.state === "string" ? req.query.state : "";
     const parsedState = decodeState(state);
     const returnTo = safeReturnTo(parsedState?.returnTo);
+    const mode = safeMode(parsedState?.mode);
     const code = typeof req.query.code === "string" ? req.query.code : "";
 
     clearOAuthState(res);
 
     if (req.query.error) {
-      res.redirect(destinationUrl(current.frontendUrl, returnTo, "cancelled"));
+      const destination =
+        mode === RECRUIT_MODE
+          ? onboardingUrl(current.frontendUrl, "cancelled")
+          : destinationUrl(current.frontendUrl, returnTo, "cancelled");
+      res.redirect(destination);
       return;
     }
 
@@ -273,10 +278,31 @@ export function createDiscordAuthRouter() {
     }
 
     try {
-      const ready = requireConfig();
+      const ready = requireConfig({ needsBot: mode === RECRUIT_MODE });
       const token = await exchangeCode(code, ready);
       const user = await discordUserRequest("/users/@me", token.access_token);
-      const member = await ensureGuildMember(user.id, token.access_token, ready);
+      let member = await currentGuildMember(ready.guildId, token.access_token);
+
+      if (!member && mode === MEMBER_MODE) {
+        res.redirect(onboardingUrl(ready.frontendUrl, "not-member"));
+        return;
+      }
+
+      if (!member) {
+        try {
+          member = await addGuildMember(user.id, token.access_token, ready);
+        } catch (error) {
+          error.authCode = "join-failed";
+          throw error;
+        }
+      }
+
+      if (!member) {
+        const error = new Error("Discord member join completed but member lookup failed");
+        error.authCode = "join-failed";
+        throw error;
+      }
+
       const permissions = resolvePermissions(user.id, member.roles || []);
       const sessionUser = {
         id: user.id,
@@ -296,13 +322,12 @@ export function createDiscordAuthRouter() {
       res.redirect(destinationUrl(ready.frontendUrl, returnTo));
     } catch (error) {
       console.error("Discord authentication failed", error);
-      res.redirect(
-        destinationUrl(
-          current.frontendUrl,
-          returnTo,
-          error.authCode || "failed",
-        ),
-      );
+      const authCode = error.authCode || "failed";
+      const destination =
+        mode === RECRUIT_MODE
+          ? onboardingUrl(current.frontendUrl, authCode)
+          : destinationUrl(current.frontendUrl, returnTo, authCode);
+      res.redirect(destination);
     }
   });
 

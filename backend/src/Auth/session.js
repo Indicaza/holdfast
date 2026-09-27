@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 const SESSION_COOKIE = "guild_session";
 const OAUTH_STATE_COOKIE = "guild_oauth_state";
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const OAUTH_STATE_MAX_AGE_SECONDS = 60 * 10;
 
 function parseCookies(header = "") {

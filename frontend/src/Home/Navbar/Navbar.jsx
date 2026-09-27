@@ -88,7 +88,7 @@ function Navbar() {
                 className="navbar__account-button navbar__account-button--empty"
                 type="button"
                 aria-label="Sign in with Discord"
-                onClick={() => signIn('/guildos')}
+                onClick={() => signIn('/guildos', 'member')}
               >
                 <span className="navbar__account-placeholder" aria-hidden="true">
                   <span />

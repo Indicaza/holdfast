@@ -45,7 +45,7 @@ function useSpelledTitle(text, resetKey) {
 }
 
 function HeroContent({ slide }) {
-  const { authenticated, signIn } = useSession()
+  const { authenticated } = useSession()
   const { typedTitle, isComplete } = useSpelledTitle(slide.title, slide.id)
   const storyRef = useRef(null)
   const hasMeasuredStory = useRef(false)
@@ -112,19 +112,12 @@ function HeroContent({ slide }) {
       </div>
 
       <div className="hero-content__actions">
-        {authenticated ? (
-          <a className="hero-content__primary" href="/guildos">
-            Open GuildOS
-          </a>
-        ) : (
-          <button
-            className="hero-content__primary"
-            type="button"
-            onClick={() => signIn('/guildos')}
-          >
-            Join Holdfast
-          </button>
-        )}
+        <a
+          className="hero-content__primary"
+          href={authenticated ? '/guildos' : '/join'}
+        >
+          {authenticated ? 'Open GuildOS' : 'Join Holdfast'}
+        </a>
         <a className="hero-content__secondary" href="/charter">
           Read the Charter
         </a>
