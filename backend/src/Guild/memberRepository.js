@@ -44,6 +44,29 @@ function memberRank(userId, existingRank) {
   return normalizeGuildRank(existingRank || "Recruit");
 }
 
+function sameStringArray(left, right) {
+  const a = Array.isArray(left) ? left : [];
+  const b = Array.isArray(right) ? right : [];
+
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+function sameMemberIdentity(existing, next) {
+  if (!existing) {
+    return false;
+  }
+
+  return (
+    existing.username === next.username &&
+    existing.displayName === next.displayName &&
+    existing.initials === next.initials &&
+    (existing.avatarUrl || "") === next.avatarUrl &&
+    (existing.guildJoinedAt || null) === next.guildJoinedAt &&
+    normalizeGuildRank(existing.rank) === next.rank &&
+    sameStringArray(existing.permissions, next.permissions)
+  );
+}
+
 function initials(value) {
   const words = String(value || "")
     .trim()
@@ -201,7 +224,7 @@ export async function upsertGuildMember(user, permissions = []) {
   const existing = existingIndex >= 0 ? members[existingIndex] : null;
   const now = new Date().toISOString();
   const name = displayName(user);
-  const member = {
+  const identity = {
     id: user.id,
     username: user.username,
     displayName: name,
@@ -209,11 +232,24 @@ export async function upsertGuildMember(user, permissions = []) {
     avatarUrl: user.avatarUrl || "",
     guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
     rank: memberRank(user.id, existing?.rank),
+    permissions: Array.isArray(permissions) ? permissions : [],
+  };
+
+  if (sameMemberIdentity(existing, identity)) {
+    return {
+      ...existing,
+      profile: normalizeMemberProfile(
+        existing.profile || emptyMemberProfile(),
+      ),
+    };
+  }
+
+  const member = {
+    ...identity,
     profile: normalizeMemberProfile(
       existing?.profile || emptyMemberProfile(),
     ),
     profileUpdatedAt: existing?.profileUpdatedAt || null,
-    permissions: Array.isArray(permissions) ? permissions : [],
     firstSeenAt: existing?.firstSeenAt || now,
     updatedAt: now,
   };
