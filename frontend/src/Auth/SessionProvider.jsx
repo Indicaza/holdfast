@@ -1,14 +1,11 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
 import { apiFetch, apiJson } from '../Api/apiClient.js'
-
-const SessionContext = createContext(null)
+import { SessionContext } from './sessionContext.js'
 
 function detectedTimezone() {
   try {
@@ -116,12 +113,3 @@ export function SessionProvider({ children }) {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
 
-export function useSession() {
-  const session = useContext(SessionContext)
-
-  if (!session) {
-    throw new Error('useSession must be used inside SessionProvider')
-  }
-
-  return session
-}
