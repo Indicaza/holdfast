@@ -127,11 +127,13 @@
   padding-inline: var(--space-6);
   border: var(--border-accent);
   box-shadow: 0 0.65rem 1.8rem rgba(0, 0, 0, 0.16);
+  font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-caps);
   text-shadow: none;
   text-transform: uppercase;
+  cursor: pointer;
   transition:
     background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
