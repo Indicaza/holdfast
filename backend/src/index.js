@@ -13,29 +13,52 @@ import {
 } from "./Data/runtimeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
+import {
+  corsOrigin,
+  createRateLimiter,
+  parseTrustProxy,
+  requireTrustedMutationOrigin,
+  securityHeaders,
+} from "./Security/httpSecurity.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
 
 await ensureRuntimeDataDirectory();
 
+if (TRUST_PROXY !== false) {
+  app.set("trust proxy", TRUST_PROXY);
+}
+
+app.disable("x-powered-by");
+app.use(securityHeaders);
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: corsOrigin,
     credentials: true,
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "256kb" }));
 app.use(attachSession);
+app.use("/api", requireTrustedMutationOrigin);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/api/auth", createDiscordAuthRouter());
+app.use(
+  "/api/auth",
+  createRateLimiter({
+    name: "auth",
+    windowMs: 10 * 60 * 1000,
+    max: 60,
+  }),
+  createDiscordAuthRouter(),
+);
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
 
