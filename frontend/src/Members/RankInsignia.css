@@ -13,6 +13,7 @@
 }
 
 .rank-insignia__entry-mark {
+  display: block;
   width: 2.15rem;
   height: 2.15rem;
   border: 1px solid rgba(196, 166, 103, 0.62);
