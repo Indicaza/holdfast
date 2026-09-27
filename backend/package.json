@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "dev": "nodemon --config nodemon.json src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "lint": "node scripts/checkSyntax.js"
   },
   "keywords": [],
   "author": "",
