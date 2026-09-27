@@ -282,7 +282,6 @@
   white-space: nowrap;
 }
 
-.members-page__you,
 .members-page__role {
   display: inline-flex;
   min-height: 1.4rem;
@@ -295,11 +294,6 @@
   font-size: 0.62rem;
   letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
-}
-
-.members-page__you {
-  border-color: rgba(196, 166, 103, 0.45);
-  color: var(--color-accent-bright);
 }
 
 .members-page__identity > p {
