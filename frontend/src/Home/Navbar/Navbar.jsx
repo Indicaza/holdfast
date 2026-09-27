@@ -4,6 +4,7 @@ import './Navbar.css'
 
 const publicLinks = [
   { label: 'Charter', href: '/charter' },
+  { label: 'Ranks', href: '/ranks' },
 ]
 
 function displayName(user) {

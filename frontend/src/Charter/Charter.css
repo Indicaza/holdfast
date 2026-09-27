@@ -335,9 +335,8 @@
    3 Excellence matters
    4 New players are welcome
    5 Shared prosperity
-   6 GuildOS
-   7 Conduct over belief
-   8 Leave it stronger
+   6 Conduct over belief
+   7 Leave it stronger
    ============================================================ */
 
 /* Excellence — left */
@@ -384,7 +383,7 @@
 
 /* Conduct over belief — right */
 
-.charter__section:nth-of-type(7)::after {
+.charter__section:nth-of-type(6)::after {
   content: "";
 
   position: absolute;
@@ -401,6 +400,23 @@
 
   pointer-events: none;
   z-index: 0;
+}
+
+.charter__callout--link a {
+  color: var(--charter-gold);
+  text-decoration: underline;
+  text-decoration-color: rgba(221, 193, 125, 0.48);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+.charter__callout--link a:hover,
+.charter__callout--link a:focus-visible {
+  color: var(--charter-silver);
+  text-decoration-color: currentColor;
 }
 
 /* ============================================================

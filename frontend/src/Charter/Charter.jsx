@@ -66,6 +66,13 @@ function Charter() {
 
           <p>You can leave a billet without losing the trust you earned.</p>
 
+          <p className="charter__callout charter__callout--link">
+            <strong>
+              See <a href="/ranks">Ranks &amp; Roles</a> for the plain version
+              of how Rep, promotion, and billets work.
+            </strong>
+          </p>
+
           <p>
             When Holdfast becomes profitable enough to support it, demanding
             billets may also share in those profits. If someone is putting real
@@ -191,66 +198,6 @@ function Charter() {
             When members strengthen the guild, the guild should become more
             capable of strengthening its members.
           </p>
-        </section>
-
-        <section className="charter__section">
-          <h2>GuildOS</h2>
-
-          <p>A lot of what makes guilds difficult is not playing the game.</p>
-
-          <p>It is administration.</p>
-
-          <p>
-            Who needs the same dungeon? Who has that recipe? What professions
-            are missing? What materials are sitting unused? Where is the guild
-            short? Where is there an opportunity?
-          </p>
-
-          <p>
-            We are building <strong>GuildOS</strong> to help answer those
-            questions.
-          </p>
-
-          <p>
-            The long-term goal is to connect our website, Discord, custom
-            addons, guild resources, profession data, and economic information
-            into a shared knowledge network.
-          </p>
-
-          <p className="charter__callout">
-            <strong>AI does staff work. Humans make decisions.</strong>
-          </p>
-
-          <p>
-            GuildOS can help connect members who need the same content, surface
-            shortages and economic opportunities, track profession coverage,
-            and make quiet contributions easier to see.
-          </p>
-
-          <p>
-            Some opportunities may become <strong>Writs</strong>.
-          </p>
-
-          <p>
-            A Writ is useful work tied to an actual need or opportunity. GuildOS
-            can identify the work, find a trusted member with the right skills,
-            and help put guild resources in their hands. The member completes
-            the Writ for a share of the value created, while the guild reinvests
-            its share.
-          </p>
-
-          <p>None of this is meant to become a social-credit system.</p>
-
-          <p>
-            <strong>A mountain of Peacebloom does not make somebody a Major.</strong>
-          </p>
-
-          <p>
-            Gold, gathering, attendance, or any other metric does not purchase
-            authority. GuildOS gives us context.
-          </p>
-
-          <p>People still provide judgment.</p>
         </section>
 
         <section className="charter__section">
