@@ -8,7 +8,7 @@ import { useHeroStory } from './HeroStory/heroStory.js'
 import Navbar from './Navbar/Navbar.jsx'
 import './Home.css'
 
-function Home() {
+function Home({ overlay = null }) {
   const { activeIndex, previousIndex, activeSlide } = useHeroStory()
 
   return (
@@ -33,6 +33,8 @@ function Home() {
 
         <Footer />
       </div>
+
+      {overlay}
     </div>
   )
 }
