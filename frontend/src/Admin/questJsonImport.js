@@ -64,8 +64,10 @@ function text(value, path, { required = false, max = 5000 } = {}) {
 function wholeNumber(value, path) {
   const number = Number(value ?? 0)
 
-  if (!Number.isInteger(number) || number < 0) {
-    throw new QuestImportError(`${path} must be a non-negative whole number.`)
+  if (!Number.isInteger(number) || number < 0 || number > 1000000) {
+    throw new QuestImportError(
+      `${path} must be a whole number between 0 and 1000000.`,
+    )
   }
 
   return number
@@ -88,11 +90,16 @@ function currency(value, path, range) {
 
 function rewardItem(value, path) {
   const item = object(value, path)
+  const quantity = wholeNumber(item.quantity ?? 1, `${path}.quantity`)
+
+  if (quantity < 1) {
+    throw new QuestImportError(`${path}.quantity must be at least 1.`)
+  }
 
   return {
     id: createId('reward-item'),
     name: text(item.name, `${path}.name`, { required: true, max: 160 }),
-    quantity: Math.max(1, wholeNumber(item.quantity ?? 1, `${path}.quantity`)),
+    quantity,
   }
 }
 
@@ -280,6 +287,11 @@ export function importQuestJson(raw, currentDocument) {
 }
 
 export function buildQuestImportPrompt(rewardLimits) {
+  const exampleRep =
+    rewardLimits.rep.min > 0
+      ? rewardLimits.rep.min
+      : Math.min(100, rewardLimits.rep.max)
+
   const example = {
     quests: [
       {
@@ -295,7 +307,7 @@ export function buildQuestImportPrompt(rewardLimits) {
             priority: 'High',
             need: 'Copper Ore',
             reward: {
-              rep: Math.min(100, rewardLimits.rep.max),
+              rep: exampleRep,
               marks: 0,
               items: [],
             },
