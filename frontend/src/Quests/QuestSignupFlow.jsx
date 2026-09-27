@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
 import Modal from '../Modal/Modal.jsx'
 import './QuestSignupFlow.css'
@@ -159,38 +160,24 @@ export function useQuestSignup({ catalog, setCatalog }) {
   }
 
   async function runMemberMutation(url, body, action) {
-    async function request() {
-      return apiJson(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-    }
-
-    try {
-      return await request()
-    } catch (error) {
-      if (error?.status !== 401) {
-        throw error
-      }
-
-      const refreshed = await session.refresh()
-
-      if (refreshed?.authenticated) {
-        return request()
-      }
-
-      session.signIn(
-        pendingQuestActionReturnTo(
-          body.questId,
-          body.objectiveId,
-          action,
+    return runAuthenticatedMutation({
+      request: () =>
+        apiJson(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      refresh: session.refresh,
+      reauthenticate: () =>
+        session.signIn(
+          pendingQuestActionReturnTo(
+            body.questId,
+            body.objectiveId,
+            action,
+          ),
+          'member',
         ),
-        'member',
-      )
-
-      return null
-    }
+    })
   }
 
   async function confirmSignup() {
