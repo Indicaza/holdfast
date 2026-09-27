@@ -2,6 +2,8 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { normalizeGuildRank } from "./rankSystem.js";
+
 const DEFAULT_DATA_FILE = fileURLToPath(
   new URL("../../data/members.json", import.meta.url),
 );
@@ -16,6 +18,25 @@ function dataFile() {
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
+}
+
+function idSet(value) {
+  return new Set(
+    String(value || "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean),
+  );
+}
+
+function memberRank(userId, existingRank) {
+  const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
+
+  if (ownerIds.has(userId)) {
+    return "Commander";
+  }
+
+  return normalizeGuildRank(existingRank || "Recruit");
 }
 
 function initials(value) {
@@ -84,6 +105,7 @@ export async function upsertGuildMember(user, permissions = []) {
     initials: initials(name),
     avatarUrl: user.avatarUrl || "",
     guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
+    rank: memberRank(user.id, existing?.rank),
     permissions: Array.isArray(permissions) ? permissions : [],
     firstSeenAt: existing?.firstSeenAt || now,
     updatedAt: now,
