@@ -449,6 +449,11 @@ function Quests() {
   }
 
   const closeGate = () => window.location.assign('/')
+  const authCode = new URLSearchParams(window.location.search).get('auth')
+
+  if (session.status === 'loading' && authCode === 'connected') {
+    return <Home />
+  }
 
   if (
     session.status === 'loading' ||
