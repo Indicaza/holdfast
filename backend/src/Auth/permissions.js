@@ -45,6 +45,15 @@ export function resolvePermissions(userId, memberRoleIds = []) {
   return [...permissions];
 }
 
+export function requireAuthenticated(req, res, next) {
+  if (!req.auth) {
+    res.status(401).json({ error: "authentication_required" });
+    return;
+  }
+
+  next();
+}
+
 export function requirePermission(permission) {
   return (req, res, next) => {
     if (!req.auth) {
