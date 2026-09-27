@@ -1,26 +1,29 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  mkdir,
+  open,
+  readFile,
+  rename,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import dotenv from "dotenv";
 
-import { ensureRuntimeDataDirectory } from "../src/Data/runtimeData.js";
+import { runtimeDataDirectory } from "../src/Data/runtimeData.js";
+import {
+  DiscordApiClient,
+  exportDiscordSnapshot,
+  normalizeProvisioningState,
+  pruneDiscordArchives,
+  runDiscordProvisioning,
+  validateDiscordManifest,
+} from "../src/Discord/provisioning.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
-const API = "https://discord.com/api/v10";
-const ROLE = 0;
-const CHANNEL_TYPES = { text: 0, voice: 2, category: 4 };
-const VIEW_CHANNEL = 1n << 10n;
-const SEND_MESSAGES = 1n << 11n;
-const CREATE_PUBLIC_THREADS = 1n << 35n;
-const CREATE_PRIVATE_THREADS = 1n << 36n;
-const SEND_MESSAGES_IN_THREADS = 1n << 38n;
-const READ_ONLY_DENY =
-  SEND_MESSAGES |
-  CREATE_PUBLIC_THREADS |
-  CREATE_PRIVATE_THREADS |
-  SEND_MESSAGES_IN_THREADS;
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const manifestFile = path.resolve(
   process.env.DISCORD_MANIFEST_FILE ||
@@ -29,110 +32,37 @@ const manifestFile = path.resolve(
 
 function required(name) {
   const value = String(process.env[name] || "").trim();
-
-  if (!value) {
-    throw new Error(`${name} is required`);
-  }
-
+  if (!value) throw new Error(`${name} is required`);
   return value;
 }
 
-function sleep(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+function optionValue(args, name) {
+  const index = args.indexOf(name);
+  if (index === -1) return null;
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${name} requires a value`);
+  }
+  return value;
 }
 
-class DiscordClient {
-  constructor(token) {
-    this.token = token;
-  }
-
-  async request(endpoint, options = {}, attempt = 0) {
-    const response = await fetch(`${API}${endpoint}`, {
-      ...options,
-      headers: {
-        Authorization: `Bot ${this.token}`,
-        "Content-Type": "application/json",
-        "X-Audit-Log-Reason": encodeURIComponent("Holdfast manifest sync"),
-        ...(options.headers || {}),
-      },
-    });
-    const raw = await response.text();
-    let body = null;
-
-    if (raw) {
-      try {
-        body = JSON.parse(raw);
-      } catch {
-        body = raw;
+function validateOptions(command, args) {
+  const seen = new Set();
+  for (let index = 0; index < args.length; index += 1) {
+    const option = args[index];
+    if (seen.has(option)) throw new Error(`Duplicate option: ${option}`);
+    seen.add(option);
+    if (option === "--json") continue;
+    if (command === "prune" && option === "--apply") continue;
+    if (command === "prune" && option === "--confirm") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("--confirm requires a value");
       }
+      index += 1;
+      continue;
     }
-
-    if (response.status === 429 && attempt < 5) {
-      const retrySeconds = Math.max(0.25, Number(body?.retry_after) || 1);
-      await sleep(retrySeconds * 1000);
-      return this.request(endpoint, options, attempt + 1);
-    }
-
-    if (!response.ok) {
-      const detail =
-        typeof body === "string"
-          ? body.slice(0, 300)
-          : body?.message || "Unknown Discord API error";
-      throw new Error(
-        `Discord ${options.method || "GET"} ${endpoint} failed (${response.status}): ${detail}`,
-      );
-    }
-
-    return body;
-  }
-}
-
-function validateManifest(manifest) {
-  if (manifest.version !== 1) {
-    throw new Error("Discord manifest version must be 1");
-  }
-
-  const keys = new Set();
-  const roleKeys = new Set();
-
-  for (const role of manifest.roles || []) {
-    if (!role.key || !role.name || roleKeys.has(role.key)) {
-      throw new Error(`Invalid or duplicate Discord role key: ${role.key}`);
-    }
-
-    roleKeys.add(role.key);
-  }
-
-  for (const category of manifest.categories || []) {
-    if (!category.key || !category.name || keys.has(category.key)) {
-      throw new Error(`Invalid or duplicate Discord channel key: ${category.key}`);
-    }
-
-    keys.add(category.key);
-
-    for (const roleKey of category.accessRoles || []) {
-      if (!roleKeys.has(roleKey)) {
-        throw new Error(`Unknown role ${roleKey} in category ${category.key}`);
-      }
-    }
-
-    for (const channel of category.channels || []) {
-      if (!channel.key || !channel.name || keys.has(channel.key)) {
-        throw new Error(`Invalid or duplicate Discord channel key: ${channel.key}`);
-      }
-
-      if (!(channel.type in CHANNEL_TYPES) || channel.type === "category") {
-        throw new Error(`Invalid channel type for ${channel.key}`);
-      }
-
-      for (const roleKey of channel.writerRoles || []) {
-        if (!roleKeys.has(roleKey)) {
-          throw new Error(`Unknown writer role ${roleKey} in ${channel.key}`);
-        }
-      }
-
-      keys.add(channel.key);
-    }
+    throw new Error(`Unsupported option for ${command}: ${option}`);
   }
 }
 
@@ -140,465 +70,223 @@ async function loadJson(file, fallback) {
   try {
     return JSON.parse(await readFile(file, "utf8"));
   } catch (error) {
-    if (error.code === "ENOENT") {
-      return fallback;
-    }
-
+    if (error.code === "ENOENT") return fallback;
     throw error;
   }
 }
 
-async function saveState(file, state) {
-  const temporary = `${file}.tmp`;
+async function writeJsonAtomic(file, value) {
+  const temporary = `${file}.${process.pid}.tmp`;
   await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
   await rename(temporary, file);
 }
 
-function sameValue(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function roleBody(role) {
-  return {
-    name: role.name,
-    color: Number(role.color) || 0,
-    hoist: role.hoist === true,
-    mentionable: role.mentionable === true,
-    permissions: "0",
-  };
-}
-
-function roleNeedsUpdate(current, desired) {
-  return (
-    current.name !== desired.name ||
-    Number(current.color) !== desired.color ||
-    current.hoist !== desired.hoist ||
-    current.mentionable !== desired.mentionable ||
-    String(current.permissions) !== desired.permissions
+async function recordAudit(runtimeDirectory, report) {
+  const auditFile = path.resolve(
+    process.env.DISCORD_PROVISION_AUDIT_FILE ||
+      path.join(runtimeDirectory, "discord-provisioning-audit.jsonl"),
   );
-}
-
-function channelOverwrites(guildId, accessRoles, writerRoles, roleIds, readOnly) {
-  const overwrites = [];
-  let everyoneDeny = 0n;
-
-  if (accessRoles.length) {
-    everyoneDeny |= VIEW_CHANNEL;
-  }
-
-  if (readOnly) {
-    everyoneDeny |= READ_ONLY_DENY;
-  }
-
-  if (everyoneDeny) {
-    overwrites.push({
-      id: guildId,
-      type: ROLE,
-      allow: "0",
-      deny: String(everyoneDeny),
-    });
-  }
-
-  for (const key of accessRoles) {
-    overwrites.push({
-      id: roleIds.get(key),
-      type: ROLE,
-      allow: String(VIEW_CHANNEL),
-      deny: "0",
-    });
-  }
-
-  for (const key of writerRoles) {
-    const id = roleIds.get(key);
-    const existing = overwrites.find((entry) => entry.id === id);
-
-    if (existing) {
-      existing.allow = String(BigInt(existing.allow) | SEND_MESSAGES);
-      existing.deny = String(BigInt(existing.deny) & ~READ_ONLY_DENY);
-    } else {
-      overwrites.push({
-        id,
-        type: ROLE,
-        allow: String(VIEW_CHANNEL | SEND_MESSAGES),
-        deny: "0",
-      });
-    }
-  }
-
-  return overwrites.sort((left, right) => left.id.localeCompare(right.id));
-}
-
-function channelBody({
-  item,
-  type,
-  parentId,
-  position,
-  overwrites,
-}) {
-  const body = {
-    name: item.name,
-    type,
-    position,
-    permission_overwrites: overwrites,
-  };
-
-  if (parentId) body.parent_id = parentId;
-  if (type === CHANNEL_TYPES.text) {
-    body.topic = item.topic || null;
-    body.nsfw = false;
-    body.rate_limit_per_user = Number(item.slowmodeSeconds) || 0;
-  }
-  if (type === CHANNEL_TYPES.voice) {
-    body.bitrate = Number(item.bitrate) || 64000;
-    body.user_limit = Number(item.userLimit) || 0;
-  }
-
-  return body;
-}
-
-function channelNeedsUpdate(current, desired) {
-  const keys = [
-    "name",
-    "type",
-    "position",
-    "parent_id",
-    "topic",
-    "nsfw",
-    "rate_limit_per_user",
-    "bitrate",
-    "user_limit",
-    "permission_overwrites",
-  ];
-
-  return keys.some((key) => {
-    if (!(key in desired)) return false;
-    const currentValue =
-      key === "permission_overwrites"
-        ? [...(current[key] || [])].sort((left, right) =>
-            left.id.localeCompare(right.id),
-          )
-        : current[key];
-    return !sameValue(currentValue, desired[key]);
-  });
-}
-
-function findManaged(existing, stateId, predicate) {
-  return existing.find((item) => item.id === stateId) || existing.find(predicate);
-}
-
-async function syncRoles({ client, guildId, manifest, state, apply, changes }) {
-  let existing = await client.request(`/guilds/${guildId}/roles`);
-  const roleIds = new Map();
-  const managedRoles = new Map();
-
-  for (const role of manifest.roles) {
-    const desired = roleBody(role);
-    let current = findManaged(
-      existing,
-      state.roles[role.key],
-      (item) => item.name === role.name && !item.managed,
-    );
-
-    if (!current) {
-      changes.push(`Create role: ${role.name}`);
-
-      if (apply) {
-        current = await client.request(`/guilds/${guildId}/roles`, {
-          method: "POST",
-          body: JSON.stringify(desired),
-        });
-        existing.push(current);
-      }
-    } else if (roleNeedsUpdate(current, desired)) {
-      changes.push(`Update role: ${role.name}`);
-
-      if (apply) {
-        current = await client.request(
-          `/guilds/${guildId}/roles/${current.id}`,
-          { method: "PATCH", body: JSON.stringify(desired) },
-        );
-      }
-    }
-
-    if (current) {
-      roleIds.set(role.key, current.id);
-      state.roles[role.key] = current.id;
-      managedRoles.set(role.key, current);
-    } else {
-      roleIds.set(role.key, `pending:${role.key}`);
-    }
-  }
-
-  const needsOrdering = manifest.roles.some((role, index) => {
-    const current = managedRoles.get(role.key);
-    return !current || current.position !== manifest.roles.length - index;
-  });
-
-  if (needsOrdering) {
-    changes.push("Order managed roles");
-  }
-
-  if (apply && needsOrdering) {
-    const positions = manifest.roles.map((role, index) => ({
-      id: roleIds.get(role.key),
-      position: manifest.roles.length - index,
-    }));
-    await client.request(`/guilds/${guildId}/roles`, {
-      method: "PATCH",
-      body: JSON.stringify(positions),
-    });
-  }
-
-  return roleIds;
-}
-
-async function syncChannel({
-  client,
-  guildId,
-  existing,
-  state,
-  key,
-  desired,
-  apply,
-  changes,
-}) {
-  let current = findManaged(
-    existing,
-    state.channels[key],
-    (item) =>
-      item.name === desired.name &&
-      item.type === desired.type &&
-      (desired.parent_id === undefined || item.parent_id === desired.parent_id),
+  const lastReportFile = path.resolve(
+    process.env.DISCORD_PROVISION_REPORT_FILE ||
+      path.join(runtimeDirectory, "discord-provisioning-last-report.json"),
   );
-
-  if (!current) {
-    changes.push(`Create channel: ${desired.name}`);
-
-    if (apply) {
-      current = await client.request(`/guilds/${guildId}/channels`, {
-        method: "POST",
-        body: JSON.stringify(desired),
-      });
-      existing.push(current);
-    }
-  } else if (channelNeedsUpdate(current, desired)) {
-    changes.push(`Update channel: ${desired.name}`);
-
-    if (apply) {
-      current = await client.request(`/channels/${current.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(desired),
-      });
-    }
-  }
-
-  if (current) {
-    state.channels[key] = current.id;
-  }
-
-  return current;
+  await mkdir(path.dirname(auditFile), { recursive: true });
+  await appendFile(auditFile, `${JSON.stringify(report)}\n`, "utf8");
+  await writeJsonAtomic(lastReportFile, report);
 }
 
-async function syncChannels({
-  client,
-  guildId,
-  manifest,
-  state,
-  roleIds,
-  apply,
-  changes,
-}) {
-  const existing = await client.request(`/guilds/${guildId}/channels`);
-
-  for (const [categoryIndex, category] of manifest.categories.entries()) {
-    const accessRoles = category.accessRoles || [];
-    const categoryOverwrites = channelOverwrites(
-      guildId,
-      accessRoles,
-      [],
-      roleIds,
-      false,
-    );
-    const categoryBody = channelBody({
-      item: category,
-      type: CHANNEL_TYPES.category,
-      position: categoryIndex,
-      overwrites: categoryOverwrites,
-    });
-    const currentCategory = await syncChannel({
-      client,
-      guildId,
-      existing,
-      state,
-      key: category.key,
-      desired: categoryBody,
-      apply,
-      changes,
-    });
-    const parentId = currentCategory?.id || state.channels[category.key];
-
-    for (const [channelIndex, channel] of category.channels.entries()) {
-      const channelBodyValue = channelBody({
-        item: channel,
-        type: CHANNEL_TYPES[channel.type],
-        parentId,
-        position: channelIndex,
-        overwrites: channelOverwrites(
-          guildId,
-          accessRoles,
-          channel.writerRoles || [],
-          roleIds,
-          channel.readOnly === true,
-        ),
-      });
-
-      if (!parentId && !apply) {
-        changes.push(`Create channel after category: ${channel.name}`);
-        continue;
-      }
-
-      await syncChannel({
-        client,
-        guildId,
-        existing,
-        state,
-        key: channel.key,
-        desired: channelBodyValue,
-        apply,
-        changes,
-      });
+async function withProvisioningLock(file, metadata, callback) {
+  await mkdir(path.dirname(file), { recursive: true });
+  let handle;
+  try {
+    handle = await open(file, "wx", 0o600);
+  } catch (error) {
+    if (error.code === "EEXIST") {
+      throw new Error(
+        `Another Discord provisioning mutation is running (${file}). Remove the lock only after confirming that process has stopped.`,
+      );
     }
+    throw error;
+  }
+
+  try {
+    await handle.writeFile(`${JSON.stringify(metadata, null, 2)}\n`, "utf8");
+    return await callback();
+  } finally {
+    await handle.close();
+    await unlink(file).catch((error) => {
+      if (error.code !== "ENOENT") throw error;
+    });
+  }
+}
+
+function printReport(report) {
+  const heading = report.dryRun ? "Planned" : "Completed";
+  console.log(
+    `${heading} Discord ${report.command} as ${report.bot.username} (${report.bot.id})`,
+  );
+  if (!report.changes.length) {
+    console.log("No changes required");
+    return;
+  }
+  for (const change of report.changes) {
+    const id = change.id ? ` [${change.id}]` : "";
+    console.log(`- ${change.type}: ${change.name} (${change.key})${id}`);
   }
 }
 
 async function main() {
-  const mode = process.argv[2] || "plan";
-
-  if (!new Set(["validate", "plan", "apply"]).has(mode)) {
-    throw new Error("Usage: provisionDiscord.js validate|plan|apply");
+  const [command = "plan", ...args] = process.argv.slice(2);
+  const supported = new Set([
+    "validate",
+    "plan",
+    "apply",
+    "restore",
+    "export",
+    "prune",
+  ]);
+  if (!supported.has(command)) {
+    throw new Error(
+      "Usage: provisionDiscord.js validate|plan|apply|restore|export|prune [--json] [--apply --confirm GUILD_ID]",
+    );
   }
 
-  const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
-  validateManifest(manifest);
-
-  if (mode === "validate") {
+  validateOptions(command, args);
+  const jsonOutput = args.includes("--json");
+  let manifest = null;
+  if (!new Set(["export", "prune"]).has(command)) {
+    manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+    validateDiscordManifest(manifest);
+  }
+  if (command === "validate") {
     const channelCount = manifest.categories.reduce(
       (total, category) => total + category.channels.length,
       0,
     );
+    const result = {
+      valid: true,
+      roles: manifest.roles.length,
+      categories: manifest.categories.length,
+      channels: channelCount,
+    };
     console.log(
-      `Discord manifest valid: ${manifest.roles.length} roles, ${manifest.categories.length} categories, ${channelCount} channels`,
+      jsonOutput
+        ? JSON.stringify(result, null, 2)
+        : `Discord manifest valid: ${result.roles} roles, ${result.categories} categories, ${result.channels} channels`,
     );
     return;
   }
 
-  const apply = mode === "apply";
   const guildId = required("DISCORD_GUILD_ID");
   const token = required("DISCORD_BOT_TOKEN");
+  const runtimeDirectory = runtimeDataDirectory();
+  const client = new DiscordApiClient(token);
 
-  const runtimeDirectory = await ensureRuntimeDataDirectory();
+  if (command === "export") {
+    const snapshot = await exportDiscordSnapshot({ client, guildId });
+    const exportFile = path.resolve(
+      process.env.DISCORD_EXPORT_FILE ||
+        path.join(runtimeDirectory, "discord-live-export.json"),
+    );
+    await writeJsonAtomic(exportFile, snapshot);
+    console.log(
+      jsonOutput
+        ? JSON.stringify({ exportFile, snapshot }, null, 2)
+        : `Exported live Discord configuration to ${exportFile}`,
+    );
+    return;
+  }
+
   const stateFile = path.resolve(
     process.env.DISCORD_PROVISION_STATE_FILE ||
       path.join(runtimeDirectory, "discord-provisioning-state.json"),
   );
-  const state = await loadJson(stateFile, {
-    version: 1,
-    guildId,
-    roles: {},
-    channels: {},
-  });
-
-  if (state.guildId !== guildId) {
-    throw new Error("Discord provisioning state belongs to a different guild");
-  }
-
-  const client = new DiscordClient(token);
-  const bot = await client.request("/users/@me");
-  const guild = await client.request(`/guilds/${guildId}`);
-  const changes = [];
-  const guildPatch = {
-    name: manifest.guild.name,
-    verification_level: manifest.guild.verificationLevel,
-    default_message_notifications: manifest.guild.defaultMessageNotifications,
-    explicit_content_filter: manifest.guild.explicitContentFilter,
-  };
-
-  if (
-    guild.name !== guildPatch.name ||
-    guild.verification_level !== guildPatch.verification_level ||
-    guild.default_message_notifications !==
-      guildPatch.default_message_notifications ||
-    guild.explicit_content_filter !== guildPatch.explicit_content_filter
-  ) {
-    changes.push(`Update server settings: ${guild.name}`);
-    if (apply) {
-      await client.request(`/guilds/${guildId}`, {
-        method: "PATCH",
-        body: JSON.stringify(guildPatch),
+  const pruneApply = command === "prune" && args.includes("--apply");
+  const mutating =
+    command === "apply" || command === "restore" || pruneApply;
+  const persistState = (nextState) => writeJsonAtomic(stateFile, nextState);
+  const execute = async () => {
+    const state = normalizeProvisioningState(
+      await loadJson(stateFile, null),
+      guildId,
+    );
+    let executionResult;
+    if (command === "prune") {
+      executionResult = await pruneDiscordArchives({
+        client,
+        guildId,
+        state,
+        apply: pruneApply,
+        confirmation: optionValue(args, "--confirm"),
+        minimumAgeDays: Number(
+          process.env.DISCORD_PRUNE_MIN_AGE_DAYS || "7",
+        ),
+        onStateChange: pruneApply ? persistState : undefined,
+      });
+    } else {
+      executionResult = await runDiscordProvisioning({
+        client,
+        guildId,
+        manifest,
+        state,
+        command,
+        onStateChange: mutating ? persistState : undefined,
       });
     }
-  }
 
-  const roleIds = await syncRoles({
-    client,
-    guildId,
-    manifest,
-    state,
-    apply,
-    changes,
-  });
-
-  if (apply) {
-    await saveState(stateFile, state);
-  }
-
-  await syncChannels({
-    client,
-    guildId,
-    manifest,
-    state,
-    roleIds,
-    apply,
-    changes,
-  });
-
-  if (apply) {
-    await saveState(stateFile, state);
-  }
-
-  console.log(`${apply ? "Applied" : "Planned"} Discord manifest as ${bot.username}`);
-
-  if (!changes.length) {
-    console.log("No changes required");
-  } else {
-    for (const change of changes) {
-      console.log(`- ${change}`);
+    if (mutating) {
+      await persistState(executionResult.state);
+      await recordAudit(runtimeDirectory, executionResult.report);
     }
-  }
+    return executionResult;
+  };
 
-  if (apply) {
-    const officerRoles = ["lieutenant", "captain", "major", "commander"]
-      .map((key) => roleIds.get(key))
-      .join(",");
-    const questRoles = [
-      "corporal",
-      "sergeant",
-      "master_sergeant",
-      "sergeant_major",
-      "lieutenant",
-      "captain",
-      "major",
-      "commander",
-    ]
-      .map((key) => roleIds.get(key))
-      .join(",");
+  const lockFile = path.resolve(
+    process.env.DISCORD_PROVISION_LOCK_FILE || `${stateFile}.lock`,
+  );
+  const result = mutating
+    ? await withProvisioningLock(
+        lockFile,
+        {
+          pid: process.pid,
+          command,
+          guildId,
+          startedAt: new Date().toISOString(),
+        },
+        execute,
+      )
+    : await execute();
 
-    console.log("\nAdd these values to the production environment:");
-    console.log(`DISCORD_RECRUIT_ROLE_ID=${roleIds.get("recruit")}`);
-    console.log(`DISCORD_SITE_ADMIN_ROLE_IDS=${officerRoles}`);
-    console.log(`DISCORD_QUEST_EDITOR_ROLE_IDS=${questRoles}`);
-    console.log(`DISCORD_REWARD_POLICY_ROLE_IDS=${officerRoles}`);
+  if (jsonOutput) {
+    console.log(JSON.stringify(result.report, null, 2));
+  } else {
+    printReport(result.report);
+    if (mutating && result.roleIds) {
+      const roleIds = result.roleIds;
+      const officerRoles = ["lieutenant", "captain", "major", "commander"]
+        .map((key) => roleIds[key])
+        .filter(Boolean)
+        .join(",");
+      const questRoles = [
+        "corporal",
+        "sergeant",
+        "master_sergeant",
+        "sergeant_major",
+        "lieutenant",
+        "captain",
+        "major",
+        "commander",
+      ]
+        .map((key) => roleIds[key])
+        .filter(Boolean)
+        .join(",");
+      console.log("\nAdd these values to the production environment:");
+      console.log(`DISCORD_RECRUIT_ROLE_ID=${roleIds.recruit || ""}`);
+      console.log(`DISCORD_SITE_ADMIN_ROLE_IDS=${officerRoles}`);
+      console.log(`DISCORD_QUEST_EDITOR_ROLE_IDS=${questRoles}`);
+      console.log(`DISCORD_REWARD_POLICY_ROLE_IDS=${officerRoles}`);
+    }
   }
 }
 

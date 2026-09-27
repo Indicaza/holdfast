@@ -6,13 +6,17 @@
   "scripts": {
     "test": "node --test",
     "test:auth": "node --test --experimental-test-coverage --test-coverage-include=src/Auth/*.js --test-coverage-lines=95 --test-coverage-branches=85 --test-coverage-functions=93 test/discordAuthConfig.test.js test/discordAuthFlow.test.js test/discordSession.test.js test/oauthReturnTo.test.js test/permissions.test.js test/session.test.js",
+    "test:discord": "node --test --experimental-test-coverage --test-coverage-include=src/Discord/provisioning.js --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=90 test/discordProvisioning.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",
     "backup": "node scripts/backupData.js",
     "discord:validate": "node scripts/provisionDiscord.js validate",
     "discord:plan": "node scripts/provisionDiscord.js plan",
-    "discord:apply": "node scripts/provisionDiscord.js apply"
+    "discord:apply": "node scripts/provisionDiscord.js apply",
+    "discord:restore": "node scripts/provisionDiscord.js restore",
+    "discord:export": "node scripts/provisionDiscord.js export",
+    "discord:prune": "node scripts/provisionDiscord.js prune"
   },
   "keywords": [],
   "author": "",

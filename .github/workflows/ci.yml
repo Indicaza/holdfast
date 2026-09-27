@@ -82,6 +82,10 @@ jobs:
         working-directory: backend
         run: npm run test:auth
 
+      - name: Enforce Discord provisioning coverage
+        working-directory: backend
+        run: npm run test:discord
+
   production-image:
     name: Production image
     runs-on: ubuntu-latest
