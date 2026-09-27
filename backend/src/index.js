@@ -96,6 +96,15 @@ app.get("/api/admin/ping", requirePermission("site.admin"), (req, res) => {
   });
 });
 
+app.use((error, req, res, next) => {
+  if (error?.code === "cors_origin_rejected") {
+    res.status(403).json({ error: "origin_not_allowed" });
+    return;
+  }
+
+  next(error);
+});
+
 app.listen(PORT, () => {
   console.log(`Guild backend running on port ${PORT}`);
   console.log(`Guild runtime data: ${runtimeDataDirectory()}`);
