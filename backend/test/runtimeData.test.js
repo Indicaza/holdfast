@@ -1,13 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import {
-  ensureRuntimeDataFile,
-  runtimeDataDirectory,
-} from "../src/Data/runtimeData.js";
+  appliedMigrationVersions,
+  guildDatabaseFile,
+  openGuildDatabase,
+} from "../src/Data/database.js";
+import { runtimeDataDirectory } from "../src/Data/runtimeData.js";
 
 function preserveEnvironment() {
   return {
@@ -30,7 +32,7 @@ function restoreEnvironment(previous) {
   }
 }
 
-test("runtime files initialize from committed clean seeds", async () => {
+test("SQLite initializes inside the configured runtime directory", async () => {
   const previous = preserveEnvironment();
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-data-"));
 
@@ -38,21 +40,17 @@ test("runtime files initialize from committed clean seeds", async () => {
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    const questPath = await ensureRuntimeDataFile("quests.json");
-    const memberPath = await ensureRuntimeDataFile("members.json");
-    const contributionPath = await ensureRuntimeDataFile("contributions.json");
+    const db = openGuildDatabase();
+    const settings = db
+      .prepare("SELECT * FROM quest_settings WHERE id = 1")
+      .get();
+    db.close();
 
-    assert.equal(path.dirname(questPath), directory);
-    assert.deepEqual(JSON.parse(await readFile(memberPath, "utf8")), []);
-    assert.deepEqual(
-      JSON.parse(await readFile(contributionPath, "utf8")),
-      { version: 1, transactions: [] },
-    );
-
-    const quests = JSON.parse(await readFile(questPath, "utf8"));
-    assert.equal(quests.version, 1);
-    assert.equal(quests.focusedQuestId, "");
-    assert.deepEqual(quests.quests, []);
+    assert.equal(path.dirname(guildDatabaseFile()), directory);
+    await access(guildDatabaseFile());
+    assert.equal(settings.rep_max, 1000);
+    assert.deepEqual(appliedMigrationVersions(), [1]);
+    assert.deepEqual(appliedMigrationVersions(), [1]);
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });
