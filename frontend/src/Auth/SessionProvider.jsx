@@ -21,6 +21,7 @@ export function SessionProvider({ children }) {
     authenticated: false,
     user: null,
     permissions: [],
+    discordInviteUrl: null,
   })
 
   const refresh = useCallback(async () => {
@@ -33,25 +34,58 @@ export function SessionProvider({ children }) {
 
       const data = await response.json()
 
-      setSession({
+      setSession((current) => ({
+        ...current,
         status: 'ready',
         authenticated: Boolean(data.authenticated),
         user: data.user ?? null,
         permissions: data.permissions ?? [],
-      })
+      }))
     } catch {
-      setSession({
+      setSession((current) => ({
+        ...current,
         status: 'error',
         authenticated: false,
         user: null,
         permissions: [],
-      })
+      }))
     }
   }, [])
 
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/config')
+
+        if (!response.ok) {
+          return
+        }
+
+        const data = await response.json()
+
+        if (active) {
+          setSession((current) => ({
+            ...current,
+            discordInviteUrl: data.discordInviteUrl ?? null,
+          }))
+        }
+      } catch {
+        return
+      }
+    }
+
+    loadConfig()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const signIn = useCallback((returnTo = currentReturnTo()) => {
     const params = new URLSearchParams({ returnTo })
@@ -68,12 +102,13 @@ export function SessionProvider({ children }) {
       throw new Error('Sign out failed')
     }
 
-    setSession({
+    setSession((current) => ({
+      ...current,
       status: 'ready',
       authenticated: false,
       user: null,
       permissions: [],
-    })
+    }))
   }, [])
 
   const value = useMemo(
