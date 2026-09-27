@@ -44,17 +44,17 @@ function questProgress(quest) {
   return { completed, total }
 }
 
-function Assignment({ assignment }) {
+function Assignment({ assignment, objectiveTitle, onSelfClick }) {
   const isOpen = assignment.name === 'Open'
+  const className = `quest-board__assignee${
+    isOpen ? ' quest-board__assignee--open' : ''
+  }${assignment.isSelf ? ' quest-board__assignee--self' : ''}`
+  const label = assignment.isSelf
+    ? `Leave ${objectiveTitle}`
+    : `${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`
 
-  return (
-    <span
-      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}${
-        assignment.isSelf ? ' quest-board__assignee--self' : ''
-      }`}
-      tabIndex="0"
-      aria-label={`${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`}
-    >
+  const content = (
+    <>
       {assignment.avatar ? (
         <img
           className="quest-board__avatar quest-board__avatar--image"
@@ -73,8 +73,31 @@ function Assignment({ assignment }) {
       <span className="quest-board__tooltip" role="tooltip">
         <strong>{assignment.name}</strong>
         <span>{assignment.responsibility}</span>
-        <small>{assignment.detail}</small>
+        <small>
+          {assignment.isSelf
+            ? 'Click your portrait to leave this objective'
+            : assignment.detail}
+        </small>
       </span>
+    </>
+  )
+
+  if (assignment.isSelf && onSelfClick) {
+    return (
+      <button
+        className={`${className} quest-board__assignee--action`}
+        type="button"
+        aria-label={label}
+        onClick={onSelfClick}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <span className={className} tabIndex="0" aria-label={label}>
+      {content}
     </span>
   )
 }
@@ -302,6 +325,13 @@ function QuestBoard() {
                       {visibleAssignments.map((assignment, assignmentIndex) => (
                         <Assignment
                           assignment={assignment}
+                          objectiveTitle={objective.title}
+                          onSelfClick={
+                            assignment.isSelf
+                              ? () =>
+                                  signup.requestLeave(featuredQuest, objective)
+                              : undefined
+                          }
                           key={`${objective.id || objective.title}-${
                             assignment.name
                           }-${assignmentIndex}`}
