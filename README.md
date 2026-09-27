@@ -256,9 +256,10 @@ The process validates production configuration before listening. At minimum, con
 - `DISCORD_CLIENT_SECRET`
 - `DISCORD_GUILD_ID`
 - `DISCORD_BOT_TOKEN`
-- `DISCORD_RECRUIT_ROLE_ID`
 - `GUILD_OWNER_DISCORD_IDS`
 - `TRUST_PROXY=1` when the platform uses one trusted proxy hop
+
+Set optional `DISCORD_RECRUIT_ROLE_ID` to automatically assign the Recruit role when Holdfast adds a new Discord member. Existing-member login and Discord joining remain available when it is unset.
 
 Set the Discord application's OAuth redirect URL to:
 

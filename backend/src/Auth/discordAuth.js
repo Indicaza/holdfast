@@ -18,32 +18,38 @@ const DEFAULT_RETURN_TO = "/";
 const MEMBER_MODE = "member";
 const RECRUIT_MODE = "recruit";
 
-function config() {
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+function config(env = process.env) {
+  const frontendUrl = env.FRONTEND_URL || "http://localhost:5173";
 
   return {
-    clientId: process.env.DISCORD_CLIENT_ID,
-    clientSecret: process.env.DISCORD_CLIENT_SECRET,
-    guildId: process.env.DISCORD_GUILD_ID,
-    botToken: process.env.DISCORD_BOT_TOKEN,
-    recruitRoleId: String(process.env.DISCORD_RECRUIT_ROLE_ID || "").trim(),
+    clientId: env.DISCORD_CLIENT_ID,
+    clientSecret: env.DISCORD_CLIENT_SECRET,
+    guildId: env.DISCORD_GUILD_ID,
+    botToken: env.DISCORD_BOT_TOKEN,
+    recruitRoleId: String(env.DISCORD_RECRUIT_ROLE_ID || "").trim(),
     frontendUrl,
     redirectUri:
-      process.env.DISCORD_REDIRECT_URI ||
+      env.DISCORD_REDIRECT_URI ||
       `${frontendUrl}/api/auth/discord/callback`,
   };
 }
 
-function requireConfig() {
-  const current = config();
+export function discordAuthConfigurationProblems(env = process.env) {
+  const current = config(env);
   const missing = [];
 
   if (!current.clientId) missing.push("DISCORD_CLIENT_ID");
   if (!current.clientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (!current.guildId) missing.push("DISCORD_GUILD_ID");
   if (!current.botToken) missing.push("DISCORD_BOT_TOKEN");
-  if (!current.recruitRoleId) missing.push("DISCORD_RECRUIT_ROLE_ID");
-  if (!process.env.SESSION_SECRET) missing.push("SESSION_SECRET");
+  if (!env.SESSION_SECRET) missing.push("SESSION_SECRET");
+
+  return missing;
+}
+
+function requireConfig() {
+  const current = config();
+  const missing = discordAuthConfigurationProblems();
 
   if (missing.length) {
     throw new Error(`Missing auth configuration: ${missing.join(", ")}`);

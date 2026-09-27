@@ -29,7 +29,6 @@ export function productionEnvironmentProblems(env = process.env) {
     "DISCORD_CLIENT_SECRET",
     "DISCORD_GUILD_ID",
     "DISCORD_BOT_TOKEN",
-    "DISCORD_RECRUIT_ROLE_ID",
     "GUILD_OWNER_DISCORD_IDS",
   ];
 
