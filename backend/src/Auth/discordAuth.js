@@ -50,7 +50,7 @@ function requireConfig() {
   return current;
 }
 
-function safeReturnTo(value) {
+export function safeReturnTo(value) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
     return DEFAULT_RETURN_TO;
   }
