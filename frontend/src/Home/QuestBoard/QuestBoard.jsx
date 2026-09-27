@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
+import { useSession } from '../../Auth/SessionProvider.jsx'
 import './QuestBoard.css'
 
 const MAX_VISIBLE_ASSIGNMENTS = 8
@@ -114,6 +115,7 @@ function Reward({ reward }) {
 }
 
 function QuestBoard() {
+  const session = useSession()
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
 
   useEffect(() => {
@@ -190,10 +192,12 @@ function QuestBoard() {
             <strong>{completedObjectives}/{objectiveCount}</strong>
             <small>objectives complete</small>
           </div>
-          <a className="quest-board__all-link" href="/quests">
-            View all quests
-            <span aria-hidden="true">→</span>
-          </a>
+          {session.authenticated ? (
+            <a className="quest-board__all-link" href="/quests">
+              View all quests
+              <span aria-hidden="true">→</span>
+            </a>
+          ) : null}
         </div>
 
         <div className="quest-board__insignia" aria-hidden="true">
