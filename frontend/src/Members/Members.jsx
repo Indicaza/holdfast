@@ -3,7 +3,6 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import MemberAccessModal from './MemberAccessModal.jsx'
-import RankInsignia from './RankInsignia.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -49,6 +48,7 @@ function MemberAvatar({ member }) {
 
 function MemberCard({ member, isSelf }) {
   const contribution = member.contribution || {}
+  const activeAssignments = Number(member.activeAssignmentCount) || 0
 
   return (
     <a className="members-page__card" href={`/members/${member.id}`}>
@@ -68,34 +68,18 @@ function MemberCard({ member, isSelf }) {
         <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
       </div>
 
-      {member.rank && !['Recruit', 'Private'].includes(member.rank) ? (
-        <div className="members-page__rank" aria-hidden="true">
-          <RankInsignia rank={member.rank} />
-        </div>
-      ) : (
-        <div className="members-page__rank members-page__rank--empty" aria-hidden="true" />
-      )}
+      <div className="members-page__service">
+        <span>Rep</span>
+        <strong>{Number(contribution.rep) || 0}</strong>
+      </div>
 
-      <dl className="members-page__stats">
-        <div>
-          <dt>Rep</dt>
-          <dd>{Number(contribution.rep) || 0}</dd>
-        </div>
-        <div>
-          <dt>Marks</dt>
-          <dd>{Number(contribution.marks) || 0}</dd>
-        </div>
-        <div>
-          <dt>Objectives</dt>
-          <dd>{Number(contribution.completedObjectives) || 0}</dd>
-        </div>
-      </dl>
-
-      <div className="members-page__assignment">
-        <strong>{member.activeAssignmentCount || 0}</strong>
-        <span>
-          active {member.activeAssignmentCount === 1 ? 'assignment' : 'assignments'}
-        </span>
+      <div
+        className={`members-page__assignment ${
+          activeAssignments ? 'members-page__assignment--active' : ''
+        }`}
+      >
+        <strong>{activeAssignments}</strong>
+        <span>{activeAssignments === 1 ? 'active assignment' : 'active assignments'}</span>
       </div>
 
       <span className="members-page__open" aria-hidden="true">›</span>
@@ -230,21 +214,6 @@ function Members() {
         <p className="members-page__state">Opening the member directory…</p>
       ) : (
         <>
-          <section className="members-page__overview" aria-label="Guild member summary">
-            <div>
-              <strong>{directory.summary.memberCount}</strong>
-              <span>Members</span>
-            </div>
-            <div>
-              <strong>{directory.summary.activeAssignmentCount}</strong>
-              <span>Active assignments</span>
-            </div>
-            <a href="/members/me">
-              <span>My profile</span>
-              <strong>Open →</strong>
-            </a>
-          </section>
-
           <section className="members-page__tools" aria-label="Member directory tools">
             <div className="members-page__search">
               <label htmlFor="member-search">Find a member</label>
@@ -288,8 +257,14 @@ function Members() {
             </div>
 
             <p className="members-page__result-count" aria-live="polite">
-              Showing <strong>{visibleMembers.length}</strong>{' '}
-              {visibleMembers.length === 1 ? 'member' : 'members'}
+              <span>
+                Showing <strong>{visibleMembers.length}</strong>{' '}
+                {visibleMembers.length === 1 ? 'member' : 'members'}
+              </span>
+              <span>
+                <strong>{directory.summary.activeAssignmentCount}</strong>{' '}
+                active {directory.summary.activeAssignmentCount === 1 ? 'assignment' : 'assignments'}
+              </span>
             </p>
           </section>
 
