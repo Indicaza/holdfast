@@ -318,10 +318,12 @@ function QuestCard({ quest, featured, visibleObjectives, searchActive }) {
 }
 
 function Quests() {
+  const initialSearch =
+    new URLSearchParams(window.location.search).get('q') || ''
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
   const [status, setStatus] = useState('loading')
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [searchInput, setSearchInput] = useState(initialSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [sortBy, setSortBy] = useState('featured')
 
   useEffect(() => {
