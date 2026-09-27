@@ -1,18 +1,13 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import {
-  ensureRuntimeDataFile,
-  runtimeDataFile,
-} from "../Data/runtimeData.js";
+  withGuildDatabase,
+  withGuildTransaction,
+} from "../Data/database.js";
 import {
   emptyMemberProfile,
   isValidTimeZone,
   normalizeMemberProfile,
 } from "./memberProfile.js";
 import { normalizeGuildRank } from "./rankSystem.js";
-
-const MEMBERS_FILE = "members.json";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -74,6 +69,7 @@ function initials(value) {
 
   if (!words.length) return "?";
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+
   return words
     .slice(0, 2)
     .map((word) => word[0])
@@ -81,86 +77,278 @@ function initials(value) {
     .toUpperCase();
 }
 
-async function readRawMembers() {
+function jsonArray(value) {
   try {
-    const target = await ensureRuntimeDataFile(MEMBERS_FILE);
-    const raw = await readFile(target, "utf8");
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(value || "[]");
     return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      return [];
-    }
-
-    throw error;
+  } catch {
+    return [];
   }
 }
 
-async function writeMembers(members) {
-  const target = runtimeDataFile(MEMBERS_FILE);
-  const directory = path.dirname(target);
-  const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
-
-  await mkdir(directory, { recursive: true });
-  await writeFile(temporary, `${JSON.stringify(members, null, 2)}\n`, "utf8");
-  await rename(temporary, target);
+function profileFromRows(profileRow, characterRows) {
+  return normalizeMemberProfile({
+    battleTag: profileRow?.battle_tag || "",
+    timezone: profileRow?.timezone || "",
+    timezoneSource: profileRow?.timezone_source || "detected",
+    availability: profileRow?.availability || "",
+    bio: profileRow?.bio || "",
+    characters: characterRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      race: row.race,
+      className: row.class_name,
+      spec: row.spec,
+      professions: jsonArray(row.professions_json),
+      isMain: Boolean(row.is_main),
+    })),
+  });
 }
 
-export async function readGuildMembers({ includeDeparted = false } = {}) {
-  const members = await readRawMembers();
-
-  return members
-    .map((member) => ({
-      ...member,
-      status: memberStatus(member.status),
-      departedAt: member.departedAt || null,
-      profile: normalizeMemberProfile(member.profile || emptyMemberProfile()),
-    }))
-    .filter((member) => includeDeparted || member.status === "active")
-    .sort((left, right) =>
-      left.displayName.localeCompare(right.displayName, undefined, {
-        sensitivity: "base",
-      }),
-    );
-}
-
-export async function markGuildMemberDeparted(memberId) {
-  const members = await readRawMembers();
-  const index = members.findIndex((member) => member.id === memberId);
-
-  if (index < 0) {
+function memberFromRow(db, row) {
+  if (!row) {
     return null;
   }
 
-  if (memberStatus(members[index].status) === "departed") {
-    return {
-      ...members[index],
-      status: "departed",
-      departedAt: members[index].departedAt || null,
-      profile: normalizeMemberProfile(
-        members[index].profile || emptyMemberProfile(),
-      ),
-    };
-  }
-
-  const now = new Date().toISOString();
-
-  members[index] = {
-    ...members[index],
-    status: "departed",
-    departedAt: now,
-    permissions: [],
-    updatedAt: now,
-  };
-
-  await writeMembers(members);
+  const profileRow = db
+    .prepare("SELECT * FROM member_profiles WHERE member_id = ?")
+    .get(row.id);
+  const characterRows = db
+    .prepare(
+      "SELECT * FROM characters WHERE member_id = ? ORDER BY sort_order, id",
+    )
+    .all(row.id);
 
   return {
-    ...members[index],
-    profile: normalizeMemberProfile(
-      members[index].profile || emptyMemberProfile(),
-    ),
+    id: row.id,
+    username: row.username,
+    displayName: row.display_name,
+    initials: row.initials,
+    avatarUrl: row.avatar_url || "",
+    guildJoinedAt: row.guild_joined_at || null,
+    rank: normalizeGuildRank(row.rank),
+    status: memberStatus(row.status),
+    departedAt: row.departed_at || null,
+    permissions: jsonArray(row.permissions_json),
+    profile: profileFromRows(profileRow, characterRows),
+    profileUpdatedAt: row.profile_updated_at || null,
+    firstSeenAt: row.first_seen_at,
+    updatedAt: row.updated_at,
   };
+}
+
+function readMemberById(db, memberId) {
+  const row = db.prepare("SELECT * FROM members WHERE id = ?").get(memberId);
+  return memberFromRow(db, row);
+}
+
+export function readGuildMembersFromDatabase(
+  db,
+  { includeDeparted = false } = {},
+) {
+  const rows = includeDeparted
+    ? db
+        .prepare("SELECT * FROM members ORDER BY display_name COLLATE NOCASE")
+        .all()
+    : db
+        .prepare(
+          "SELECT * FROM members WHERE status = 'active' ORDER BY display_name COLLATE NOCASE",
+        )
+        .all();
+
+  return rows.map((row) => memberFromRow(db, row));
+}
+
+function writeProfile(db, memberId, profile) {
+  const normalized = normalizeMemberProfile(profile);
+
+  db.prepare(
+    `
+      INSERT INTO member_profiles (
+        member_id,
+        battle_tag,
+        timezone,
+        timezone_source,
+        availability,
+        bio
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(member_id) DO UPDATE SET
+        battle_tag = excluded.battle_tag,
+        timezone = excluded.timezone,
+        timezone_source = excluded.timezone_source,
+        availability = excluded.availability,
+        bio = excluded.bio
+    `,
+  ).run(
+    memberId,
+    normalized.battleTag,
+    normalized.timezone,
+    normalized.timezoneSource,
+    normalized.availability,
+    normalized.bio,
+  );
+
+  db.prepare("DELETE FROM characters WHERE member_id = ?").run(memberId);
+
+  const insertCharacter = db.prepare(
+    `
+      INSERT INTO characters (
+        id,
+        member_id,
+        name,
+        race,
+        class_name,
+        spec,
+        professions_json,
+        is_main,
+        sort_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+  );
+
+  normalized.characters.forEach((character, index) => {
+    insertCharacter.run(
+      character.id,
+      memberId,
+      character.name,
+      character.race,
+      character.className,
+      character.spec,
+      JSON.stringify(character.professions),
+      character.isMain ? 1 : 0,
+      index,
+    );
+  });
+
+  return normalized;
+}
+
+function writeMemberRow(db, member) {
+  db.prepare(
+    `
+      INSERT INTO members (
+        id,
+        username,
+        display_name,
+        initials,
+        avatar_url,
+        guild_joined_at,
+        rank,
+        status,
+        departed_at,
+        permissions_json,
+        profile_updated_at,
+        first_seen_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        username = excluded.username,
+        display_name = excluded.display_name,
+        initials = excluded.initials,
+        avatar_url = excluded.avatar_url,
+        guild_joined_at = excluded.guild_joined_at,
+        rank = excluded.rank,
+        status = excluded.status,
+        departed_at = excluded.departed_at,
+        permissions_json = excluded.permissions_json,
+        profile_updated_at = excluded.profile_updated_at,
+        first_seen_at = excluded.first_seen_at,
+        updated_at = excluded.updated_at
+    `,
+  ).run(
+    member.id,
+    member.username,
+    member.displayName,
+    member.initials,
+    member.avatarUrl || "",
+    member.guildJoinedAt || null,
+    normalizeGuildRank(member.rank),
+    memberStatus(member.status),
+    member.departedAt || null,
+    JSON.stringify(Array.isArray(member.permissions) ? member.permissions : []),
+    member.profileUpdatedAt || null,
+    member.firstSeenAt,
+    member.updatedAt,
+  );
+}
+
+export function importMembersIntoDatabase(db, members) {
+  if (!Array.isArray(members)) {
+    return 0;
+  }
+
+  let imported = 0;
+
+  for (const rawMember of members) {
+    if (!rawMember?.id || !rawMember?.username) {
+      continue;
+    }
+
+    const now = new Date().toISOString();
+    const name = rawMember.displayName || rawMember.username;
+    const member = {
+      id: String(rawMember.id),
+      username: String(rawMember.username),
+      displayName: String(name),
+      initials: rawMember.initials || initials(name),
+      avatarUrl: rawMember.avatarUrl || "",
+      guildJoinedAt: rawMember.guildJoinedAt || null,
+      rank: normalizeGuildRank(rawMember.rank || "Recruit"),
+      status: memberStatus(rawMember.status),
+      departedAt: rawMember.departedAt || null,
+      permissions: Array.isArray(rawMember.permissions)
+        ? rawMember.permissions
+        : [],
+      profile: normalizeMemberProfile(
+        rawMember.profile || emptyMemberProfile(),
+      ),
+      profileUpdatedAt: rawMember.profileUpdatedAt || null,
+      firstSeenAt: rawMember.firstSeenAt || now,
+      updatedAt: rawMember.updatedAt || now,
+    };
+
+    writeMemberRow(db, member);
+    writeProfile(db, member.id, member.profile);
+    imported += 1;
+  }
+
+  return imported;
+}
+
+export async function readGuildMembers(options = {}) {
+  return withGuildDatabase((db) =>
+    readGuildMembersFromDatabase(db, options),
+  );
+}
+
+export async function markGuildMemberDeparted(memberId) {
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, memberId);
+
+    if (!existing) {
+      return null;
+    }
+
+    if (existing.status === "departed") {
+      return existing;
+    }
+
+    const now = new Date().toISOString();
+
+    db.prepare(
+      `
+        UPDATE members
+        SET
+          status = 'departed',
+          departed_at = ?,
+          permissions_json = '[]',
+          updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(now, now, memberId);
+
+    return readMemberById(db, memberId);
+  });
 }
 
 export async function updateDetectedTimezone(memberId, timezone) {
@@ -168,92 +356,80 @@ export async function updateDetectedTimezone(memberId, timezone) {
     return { status: "invalid", member: null };
   }
 
-  const members = await readRawMembers();
-  const index = members.findIndex((member) => member.id === memberId);
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, memberId);
 
-  if (index < 0) {
-    return { status: "not-found", member: null };
-  }
+    if (!existing) {
+      return { status: "not-found", member: null };
+    }
 
-  const currentProfile = normalizeMemberProfile(
-    members[index].profile || emptyMemberProfile(),
-  );
+    const currentProfile = normalizeMemberProfile(
+      existing.profile || emptyMemberProfile(),
+    );
 
-  if (
-    currentProfile.timezoneSource === "manual" &&
-    currentProfile.timezone
-  ) {
+    if (
+      currentProfile.timezoneSource === "manual" &&
+      currentProfile.timezone
+    ) {
+      return {
+        status: "manual",
+        member: existing,
+      };
+    }
+
+    if (
+      currentProfile.timezone === timezone &&
+      currentProfile.timezoneSource === "detected"
+    ) {
+      return {
+        status: "unchanged",
+        member: existing,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const nextProfile = normalizeMemberProfile({
+      ...currentProfile,
+      timezone,
+      timezoneSource: "detected",
+    });
+
+    writeProfile(db, memberId, nextProfile);
+    db.prepare(
+      `
+        UPDATE members
+        SET profile_updated_at = ?, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(now, now, memberId);
+
     return {
-      status: "manual",
-      member: {
-        ...members[index],
-        profile: currentProfile,
-      },
+      status: "updated",
+      member: readMemberById(db, memberId),
     };
-  }
-
-  if (
-    currentProfile.timezone === timezone &&
-    currentProfile.timezoneSource === "detected"
-  ) {
-    return {
-      status: "unchanged",
-      member: {
-        ...members[index],
-        profile: currentProfile,
-      },
-    };
-  }
-
-  const now = new Date().toISOString();
-  const nextProfile = normalizeMemberProfile({
-    ...currentProfile,
-    timezone,
-    timezoneSource: "detected",
   });
-
-  members[index] = {
-    ...members[index],
-    profile: nextProfile,
-    profileUpdatedAt: now,
-    updatedAt: now,
-  };
-
-  await writeMembers(members);
-
-  return {
-    status: "updated",
-    member: {
-      ...members[index],
-      profile: nextProfile,
-    },
-  };
 }
 
 export async function updateGuildMemberProfile(memberId, profile) {
-  const members = await readRawMembers();
-  const index = members.findIndex((member) => member.id === memberId);
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, memberId);
 
-  if (index < 0) {
-    return null;
-  }
+    if (!existing) {
+      return null;
+    }
 
-  const now = new Date().toISOString();
-  const nextProfile = normalizeMemberProfile(profile);
+    const now = new Date().toISOString();
+    writeProfile(db, memberId, profile);
+    db.prepare(
+      `
+        UPDATE members
+        SET profile_updated_at = ?, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(now, now, memberId);
 
-  members[index] = {
-    ...members[index],
-    profile: nextProfile,
-    profileUpdatedAt: now,
-    updatedAt: now,
-  };
-
-  await writeMembers(members);
-
-  return {
-    ...members[index],
-    profile: nextProfile,
-  };
+    return readMemberById(db, memberId);
+  });
 }
 
 export async function upsertGuildMember(user, permissions = []) {
@@ -261,49 +437,43 @@ export async function upsertGuildMember(user, permissions = []) {
     return null;
   }
 
-  const members = await readRawMembers();
-  const existingIndex = members.findIndex((member) => member.id === user.id);
-  const existing = existingIndex >= 0 ? members[existingIndex] : null;
-  const now = new Date().toISOString();
-  const name = displayName(user);
-  const identity = {
-    id: user.id,
-    username: user.username,
-    displayName: name,
-    initials: initials(name),
-    avatarUrl: user.avatarUrl || "",
-    guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
-    rank: memberRank(user.id, existing?.rank),
-    status: "active",
-    departedAt: null,
-    permissions: Array.isArray(permissions) ? permissions : [],
-  };
-
-  if (sameMemberIdentity(existing, identity)) {
-    return {
-      ...existing,
-      profile: normalizeMemberProfile(
-        existing.profile || emptyMemberProfile(),
-      ),
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, user.id);
+    const now = new Date().toISOString();
+    const name = displayName(user);
+    const identity = {
+      id: user.id,
+      username: user.username,
+      displayName: name,
+      initials: initials(name),
+      avatarUrl: user.avatarUrl || "",
+      guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
+      rank: memberRank(user.id, existing?.rank),
+      status: "active",
+      departedAt: null,
+      permissions: Array.isArray(permissions) ? permissions : [],
     };
-  }
 
-  const member = {
-    ...identity,
-    profile: normalizeMemberProfile(
-      existing?.profile || emptyMemberProfile(),
-    ),
-    profileUpdatedAt: existing?.profileUpdatedAt || null,
-    firstSeenAt: existing?.firstSeenAt || now,
-    updatedAt: now,
-  };
+    if (sameMemberIdentity(existing, identity)) {
+      return existing;
+    }
 
-  if (existingIndex >= 0) {
-    members[existingIndex] = member;
-  } else {
-    members.push(member);
-  }
+    const member = {
+      ...identity,
+      profile: normalizeMemberProfile(
+        existing?.profile || emptyMemberProfile(),
+      ),
+      profileUpdatedAt: existing?.profileUpdatedAt || null,
+      firstSeenAt: existing?.firstSeenAt || now,
+      updatedAt: now,
+    };
 
-  await writeMembers(members);
-  return member;
+    writeMemberRow(db, member);
+
+    if (!existing) {
+      writeProfile(db, member.id, member.profile);
+    }
+
+    return readMemberById(db, member.id);
+  });
 }
