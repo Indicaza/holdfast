@@ -23,6 +23,7 @@ function Admin() {
         title="Checking credentials"
         intro="The guild is verifying your session."
         centered
+        className="admin-page admin-page--gate"
       />
     )
   }
@@ -34,6 +35,7 @@ function Admin() {
         title="Backend unavailable"
         intro="The guild API could not be reached."
         centered
+        className="admin-page admin-page--gate"
       >
         <div className="admin-auth">
           <button
@@ -55,6 +57,7 @@ function Admin() {
         title="Sign in with Discord"
         intro="Discord establishes your identity. Guild permissions decide what you can manage."
         centered
+        className="admin-page admin-page--gate"
       >
         <div className="admin-auth">
           {authMessage ? <p className="admin-auth__message">{authMessage}</p> : null}
@@ -77,7 +80,7 @@ function Admin() {
         title="No management access"
         intro="You are signed in, but this account does not have permission to edit guild quests."
         centered
-        className="admin-page"
+        className="admin-page admin-page--gate"
       />
     )
   }
