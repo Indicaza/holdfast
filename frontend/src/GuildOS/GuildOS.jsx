@@ -126,9 +126,13 @@ function GuildOS() {
         <div className="guildos-profile__note">
           <strong>Member profile active</strong>
           <span>
-            Rep, Service Marks, assignments, contributions, and requests will
-            live here as those systems come online.
+            Your service record now tracks Rep, Service Marks, completed
+            objectives, and current assignments.
           </span>
+          <div className="guildos-profile__links">
+            <a href="/members/me">My Profile</a>
+            <a href="/members">Member Directory</a>
+          </div>
         </div>
       </section>
 

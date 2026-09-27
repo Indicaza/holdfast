@@ -74,6 +74,7 @@ export async function upsertGuildMember(user, permissions = []) {
 
   const members = await readRawMembers();
   const existingIndex = members.findIndex((member) => member.id === user.id);
+  const existing = existingIndex >= 0 ? members[existingIndex] : null;
   const now = new Date().toISOString();
   const name = displayName(user);
   const member = {
@@ -82,9 +83,9 @@ export async function upsertGuildMember(user, permissions = []) {
     displayName: name,
     initials: initials(name),
     avatarUrl: user.avatarUrl || "",
+    guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
     permissions: Array.isArray(permissions) ? permissions : [],
-    firstSeenAt:
-      existingIndex >= 0 ? members[existingIndex].firstSeenAt || now : now,
+    firstSeenAt: existing?.firstSeenAt || now,
     updatedAt: now,
   };
 

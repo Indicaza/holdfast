@@ -310,6 +310,7 @@ export function createDiscordAuthRouter() {
         globalName: user.global_name || null,
         avatarUrl: avatarUrl(user),
         guildNickname: member.nick || null,
+        guildJoinedAt: member.joined_at || null,
       };
 
       await upsertGuildMember(sessionUser, permissions);

@@ -115,3 +115,15 @@ export async function readContributionTotals() {
 
   return totals;
 }
+
+export async function readMemberContributionHistory(memberId) {
+  const document = await readDocument();
+
+  return document.transactions
+    .filter((transaction) => transaction.memberId === memberId)
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt || 0).getTime() -
+        new Date(left.createdAt || 0).getTime(),
+    );
+}

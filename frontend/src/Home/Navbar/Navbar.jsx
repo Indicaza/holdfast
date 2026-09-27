@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/SessionProvider.jsx'
 import './Navbar.css'
 
-const links = [
+const publicLinks = [
   { label: 'Home', href: '/' },
   { label: 'Quests', href: '/quests' },
   { label: 'Charter', href: '/charter' },
@@ -12,12 +12,28 @@ function displayName(user) {
   return user?.guildNickname || user?.globalName || user?.username || 'Member'
 }
 
+function isActiveLink(pathname, href) {
+  if (href === '/members') {
+    return pathname === '/members' || pathname.startsWith('/members/')
+  }
+
+  return pathname === href
+}
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   const { authenticated, user, hasPermission, signIn, signOut } = useSession()
+  const links = authenticated
+    ? [
+        publicLinks[0],
+        publicLinks[1],
+        { label: 'Members', href: '/members' },
+        publicLinks[2],
+      ]
+    : publicLinks
 
   useEffect(() => {
     if (!accountOpen) {
@@ -67,7 +83,7 @@ function Navbar() {
         <div className="navbar__controls">
           <nav className="navbar__links" aria-label="Primary navigation">
             {links.map((link) => {
-              const active = pathname === link.href
+              const active = isActiveLink(pathname, link.href)
 
               return (
                 <a
@@ -125,6 +141,8 @@ function Navbar() {
                   </div>
 
                   <div className="navbar__account-links">
+                    <a href="/members/me">My Profile</a>
+                    <a href="/members">Members</a>
                     <a href="/guildos">GuildOS</a>
                     {hasPermission('site.admin') || hasPermission('quests.edit') ? (
                       <a href="/admin">Control Room</a>
@@ -161,20 +179,29 @@ function Navbar() {
               key={link.href}
               className="navbar__mobile-link"
               href={link.href}
-              aria-current={pathname === link.href ? 'page' : undefined}
+              aria-current={isActiveLink(pathname, link.href) ? 'page' : undefined}
               onClick={() => setMenuOpen(false)}
             >
               {link.label}
             </a>
           ))}
           {authenticated ? (
-            <a
-              className="navbar__mobile-link"
-              href="/guildos"
-              aria-current={pathname === '/guildos' ? 'page' : undefined}
-            >
-              GuildOS
-            </a>
+            <>
+              <a
+                className="navbar__mobile-link"
+                href="/members/me"
+                aria-current={pathname === '/members/me' ? 'page' : undefined}
+              >
+                My Profile
+              </a>
+              <a
+                className="navbar__mobile-link"
+                href="/guildos"
+                aria-current={pathname === '/guildos' ? 'page' : undefined}
+              >
+                GuildOS
+              </a>
+            </>
           ) : null}
         </nav>
       </div>

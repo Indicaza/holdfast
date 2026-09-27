@@ -6,6 +6,8 @@ const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildOS = lazy(() => import('./GuildOS/GuildOS.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
+const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
+const Members = lazy(() => import('./Members/Members.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
 const Quests = lazy(() => import('./Quests/Quests.jsx'))
 
@@ -29,6 +31,13 @@ const routes = {
     description:
       'Browse Holdfast published guild quests, objectives, assignments, and rewards for WoW Forever.',
     robots: defaultRobots,
+  },
+  '/members': {
+    component: Members,
+    path: '/members',
+    title: 'Members | Holdfast',
+    description: 'Browse the Holdfast member directory.',
+    robots: 'noindex,nofollow',
   },
   '/charter': {
     component: Charter,
@@ -70,9 +79,34 @@ const routes = {
   },
 }
 
+function memberProfileRoute(pathname) {
+  const match = pathname.match(/^\/members\/([^/]+)$/)
+
+  if (!match) {
+    return null
+  }
+
+  let memberId = match[1]
+
+  try {
+    memberId = decodeURIComponent(memberId)
+  } catch {
+    memberId = match[1]
+  }
+
+  return {
+    component: MemberProfile,
+    path: pathname,
+    title: 'Member Profile | Holdfast',
+    description: 'View a Holdfast member profile and service record.',
+    robots: 'noindex,nofollow',
+    props: { memberId },
+  }
+}
+
 function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const route = routes[pathname] ?? routes['/']
+  const route = memberProfileRoute(pathname) ?? routes[pathname] ?? routes['/']
   const Page = route.component
 
   return (
@@ -86,7 +120,7 @@ function App() {
       />
 
       <Suspense fallback={null}>
-        <Page />
+        <Page {...(route.props || {})} />
       </Suspense>
     </>
   )
