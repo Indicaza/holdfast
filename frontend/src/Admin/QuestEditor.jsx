@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import QuestJsonImport from './QuestJsonImport.jsx'
 import './QuestEditor.css'
 
 const PRIORITIES = ['Main', 'High', 'Medium', 'Low']
@@ -1047,6 +1048,16 @@ function QuestEditor() {
     )
   }
 
+  function importQuestDocument(nextDocument, result) {
+    setDocument(nextDocument)
+    setStatus('ready')
+    setMessage(
+      result.featuredTitle
+        ? `Imported ${result.importedCount} quest${result.importedCount === 1 ? '' : 's'}. “${result.featuredTitle}” will be featured when you save.`
+        : `Imported ${result.importedCount} quest${result.importedCount === 1 ? '' : 's'}. Save changes to make them live.`,
+    )
+  }
+
   function updateQuest(id, nextQuest) {
     setDocument((current) => ({
       ...current,
@@ -1423,6 +1434,11 @@ function QuestEditor() {
           </details>
         </section>
       ) : null}
+
+      <QuestJsonImport
+        questDocument={draft}
+        onImport={importQuestDocument}
+      />
 
       <EconomySettings
         document={draft}
