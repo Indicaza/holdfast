@@ -127,17 +127,25 @@ function OfficerInsignia({ rank }) {
   return (
     <g className="rank-insignia__eagle">
       <path
-        d="M60 28 C52 21 42 18 31 20 L18 31 L36 35 L24 45 L44 43 L38 55 L54 48 L54 76 L47 84 L57 82 L60 99 L63 82 L73 84 L66 76 L66 48 L82 55 L76 43 L96 45 L84 35 L102 31 L89 20 C78 18 68 21 60 28 Z"
+        d="M58 42 C47 28 31 22 14 26 L29 34 L12 41 L37 43 L21 54 L47 50 L57 60 Z"
+        className="rank-insignia__commander"
+      />
+      <path
+        d="M62 42 C73 28 89 22 106 26 L91 34 L108 41 L83 43 L99 54 L73 50 L63 60 Z"
+        className="rank-insignia__commander"
+      />
+      <path
+        d="M54 42 C52 55 52 73 56 87 L47 98 L58 94 L60 104 L62 94 L73 98 L64 87 C68 73 68 55 66 42 Z"
         className="rank-insignia__commander"
       />
       <circle
-        cx="67"
-        cy="31"
-        r="5"
+        cx="64"
+        cy="34"
+        r="6"
         className="rank-insignia__commander-head"
       />
       <path
-        d="M71 31 L80 34 L71 36"
+        d="M69 33 L81 36 L69 39"
         className="rank-insignia__commander-beak"
       />
     </g>
