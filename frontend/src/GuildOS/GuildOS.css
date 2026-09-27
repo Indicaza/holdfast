@@ -165,6 +165,34 @@
   font-size: var(--font-size-sm);
 }
 
+
+.guildos-profile__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.guildos-profile__links a {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  padding-inline: var(--space-3);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.3);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.guildos-profile__links a:hover,
+.guildos-profile__links a:focus-visible {
+  border-color: var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.06);
+}
+
 .guildos-management {
   margin-top: var(--space-8);
 }
