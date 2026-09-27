@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { requirePermission } from "../Auth/permissions.js";
+import {
+  requireAuthenticated,
+  requirePermission,
+} from "../Auth/permissions.js";
 import { awardObjective } from "../Contribution/contributionRepository.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
@@ -12,6 +15,7 @@ import {
 import {
   QuestValidationError,
   normalizeQuestDocument,
+  projectFeaturedQuest,
   projectQuests,
 } from "./questSchema.js";
 
@@ -95,9 +99,20 @@ export function createQuestRouter() {
     try {
       const document = await readQuests();
       res.set("Cache-Control", "no-store");
+      res.json(projectFeaturedQuest(document));
+    } catch (error) {
+      console.error("Unable to read featured quest", error);
+      res.status(500).json({ error: "quests_unavailable" });
+    }
+  });
+
+  router.get("/member", requireAuthenticated, async (req, res) => {
+    try {
+      const document = await readQuests();
+      res.set("Cache-Control", "no-store");
       res.json(projectQuests(document));
     } catch (error) {
-      console.error("Unable to read quests", error);
+      console.error("Unable to read member quest board", error);
       res.status(500).json({ error: "quests_unavailable" });
     }
   });
