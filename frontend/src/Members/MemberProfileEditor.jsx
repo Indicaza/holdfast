@@ -33,6 +33,7 @@ function blankCharacter() {
     className: '',
     spec: '',
     professions: [],
+    professionInput: '',
     isMain: false,
   }
 }
@@ -45,6 +46,9 @@ function normalizeDraft(member) {
         professions: Array.isArray(character.professions)
           ? character.professions
           : [],
+        professionInput: Array.isArray(character.professions)
+          ? character.professions.join(', ')
+          : '',
       }))
     : []
 
@@ -93,16 +97,6 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
           : character,
       ),
     }))
-  }
-
-  function updateProfessions(id, value) {
-    const professions = value
-      .split(',')
-      .map((profession) => profession.trim())
-      .filter(Boolean)
-      .slice(0, 6)
-
-    updateCharacter(id, 'professions', professions)
   }
 
   function addCharacter() {
@@ -159,7 +153,26 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ profile: draft }),
+        body: JSON.stringify({
+          profile: {
+            ...draft,
+            characters: draft.characters.map((character) => {
+              const {
+                professionInput = '',
+                ...rest
+              } = character
+
+              return {
+                ...rest,
+                professions: professionInput
+                  .split(',')
+                  .map((profession) => profession.trim())
+                  .filter(Boolean)
+                  .slice(0, 6),
+              }
+            }),
+          },
+        }),
       })
 
       if (!response.ok) {
@@ -354,9 +367,13 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
                         type="text"
                         maxLength="180"
                         placeholder="Mining, Blacksmithing"
-                        value={professionText(character)}
+                        value={character.professionInput || ''}
                         onChange={(event) =>
-                          updateProfessions(character.id, event.target.value)
+                          updateCharacter(
+                            character.id,
+                            'professionInput',
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
