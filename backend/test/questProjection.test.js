@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   normalizeQuestDocument,
+  projectFeaturedQuest,
   projectQuests,
 } from "../src/Quest/questSchema.js";
 
@@ -54,6 +55,14 @@ const document = {
       ],
     },
     {
+      id: "quest-secondary",
+      publication: "published",
+      mode: "rotating",
+      title: "Member-only Published Quest",
+      summary: "Visible on the signed-in quest board.",
+      objectives: [],
+    },
+    {
       id: "quest-draft",
       publication: "draft",
       mode: "rotating",
@@ -78,8 +87,9 @@ test("public quest projection strips private/internal assignment identifiers", (
 
   const projected = projectQuests(document);
 
-  assert.equal(projected.quests.length, 1);
+  assert.equal(projected.quests.length, 2);
   assert.equal(projected.quests[0].id, "quest-public");
+  assert.equal(projected.quests[1].id, "quest-secondary");
 
   const objective = projected.quests[0].objectives[0];
   const assignment = objective.assignments[0];
@@ -102,4 +112,38 @@ test("public quest projection strips private/internal assignment identifiers", (
 
   assert.equal("publication" in projected.quests[0], false);
   assert.equal("rewardPolicy" in projected, false);
+});
+
+
+test("public featured projection exposes only the focused published quest", () => {
+  const projected = projectFeaturedQuest(document);
+
+  assert.equal(projected.focusedQuestId, "quest-public");
+  assert.equal(projected.quests.length, 1);
+  assert.equal(projected.quests[0].id, "quest-public");
+  assert.equal(
+    projected.quests.some((quest) => quest.id === "quest-secondary"),
+    false,
+  );
+  assert.equal(
+    projected.quests.some((quest) => quest.id === "quest-draft"),
+    false,
+  );
+});
+
+test("public featured projection is empty when nothing is featured", () => {
+  const projected = projectFeaturedQuest({
+    ...document,
+    focusedQuestId: "",
+    quests: document.quests.map((quest) => ({
+      ...quest,
+      publication:
+        quest.id === "quest-public" || quest.id === "quest-secondary"
+          ? "draft"
+          : quest.publication,
+    })),
+  });
+
+  assert.equal(projected.focusedQuestId, "");
+  assert.deepEqual(projected.quests, []);
 });

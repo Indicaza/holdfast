@@ -51,10 +51,12 @@ function Privacy() {
         makes available to members.
       </p>
       <p>
-        Published quests are public. If you are assigned to a published quest,
-        the public quest board may show your display name, avatar,
-        responsibility, and assignment detail. Internal Discord/member IDs are
-        not included in the public quest payload.
+        The public website may show the single quest currently featured on the
+        Holdfast home page. If you are assigned to that featured quest, the
+        public quest card may show your display name, avatar, responsibility,
+        and assignment detail. The full published quest board is available only
+        to signed-in Holdfast members. Internal Discord/member IDs are not
+        included in the public featured-quest payload.
       </p>
       <p>
         Guild leadership and authorized editors can access the information

@@ -3,7 +3,6 @@ import { useSession } from '../../Auth/SessionProvider.jsx'
 import './Navbar.css'
 
 const publicLinks = [
-  { label: 'Quests', href: '/quests' },
   { label: 'Charter', href: '/charter' },
 ]
 
@@ -27,9 +26,9 @@ function Navbar() {
   const { authenticated, user, hasPermission, signIn, signOut } = useSession()
   const links = authenticated
     ? [
-        publicLinks[0],
+        { label: 'Quests', href: '/quests' },
         { label: 'Members', href: '/members' },
-        publicLinks[1],
+        ...publicLinks,
       ]
     : publicLinks
 

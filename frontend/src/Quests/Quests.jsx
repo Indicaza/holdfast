@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { useSession } from '../Auth/SessionProvider.jsx'
+import Home from '../Home/Home.jsx'
+import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import '../Home/QuestBoard/QuestBoard.css'
 import './Quests.css'
@@ -318,6 +321,7 @@ function QuestCard({ quest, featured, visibleObjectives, searchActive }) {
 }
 
 function Quests() {
+  const session = useSession()
   const initialSearch =
     new URLSearchParams(window.location.search).get('q') || ''
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
@@ -335,12 +339,17 @@ function Quests() {
   }, [searchInput])
 
   useEffect(() => {
+    if (!session.authenticated) {
+      setStatus('ready')
+      return undefined
+    }
+
     let active = true
     let hasLoaded = false
 
     async function loadQuests() {
       try {
-        const result = await apiJson('/api/quests')
+        const result = await apiJson('/api/quests/member')
 
         if (!active) return
         setCatalog(result?.quests ? result : EMPTY_CATALOG)
@@ -373,7 +382,7 @@ function Quests() {
       window.removeEventListener(QUESTS_CHANGED_KEY, loadQuests)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [session.authenticated])
 
   const queryTerms = useMemo(() => searchTerms(debouncedSearch), [debouncedSearch])
   const searchActive = queryTerms.length > 0
@@ -437,6 +446,30 @@ function Quests() {
   function clearSearch() {
     setSearchInput('')
     setDebouncedSearch('')
+  }
+
+  const closeGate = () => window.location.assign('/')
+  const authCode = new URLSearchParams(window.location.search).get('auth')
+
+  if (session.status === 'loading' && authCode === 'connected') {
+    return <Home />
+  }
+
+  if (
+    session.status === 'loading' ||
+    session.status === 'error' ||
+    !session.authenticated
+  ) {
+    return (
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo="/quests"
+            onClose={closeGate}
+          />
+        }
+      />
+    )
   }
 
   return (

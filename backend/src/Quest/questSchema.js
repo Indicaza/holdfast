@@ -340,6 +340,21 @@ function projectPublicObjective(objectiveItem) {
   };
 }
 
+function projectPublishedQuest(questItem) {
+  return {
+    id: questItem.id,
+    mode: questItem.mode,
+    title: questItem.title,
+    summary: questItem.summary,
+    completed: questItem.completed,
+    completedObjectives: questItem.objectives.filter(
+      (objectiveItem) => objectiveItem.completed,
+    ).length,
+    objectiveCount: questItem.objectives.length,
+    objectives: questItem.objectives.map(projectPublicObjective),
+  };
+}
+
 export function projectQuests(value) {
   const document = normalizeQuestDocument(value);
 
@@ -347,18 +362,21 @@ export function projectQuests(value) {
     focusedQuestId: document.focusedQuestId,
     quests: document.quests
       .filter((questItem) => questItem.publication === "published")
-      .map((questItem) => ({
-        id: questItem.id,
-        mode: questItem.mode,
-        title: questItem.title,
-        summary: questItem.summary,
-        completed: questItem.completed,
-        completedObjectives: questItem.objectives.filter(
-          (objectiveItem) => objectiveItem.completed,
-        ).length,
-        objectiveCount: questItem.objectives.length,
-        objectives: questItem.objectives.map(projectPublicObjective),
-      })),
+      .map(projectPublishedQuest),
+  };
+}
+
+export function projectFeaturedQuest(value) {
+  const document = normalizeQuestDocument(value);
+  const focusedQuest = document.quests.find(
+    (questItem) =>
+      questItem.id === document.focusedQuestId &&
+      questItem.publication === "published",
+  );
+
+  return {
+    focusedQuestId: focusedQuest?.id || "",
+    quests: focusedQuest ? [projectPublishedQuest(focusedQuest)] : [],
   };
 }
 
