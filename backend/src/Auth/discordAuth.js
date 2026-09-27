@@ -23,6 +23,7 @@ function config() {
     clientId: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     guildId: process.env.DISCORD_GUILD_ID,
+    botToken: process.env.DISCORD_BOT_TOKEN,
     frontendUrl,
     redirectUri:
       process.env.DISCORD_REDIRECT_URI ||
@@ -37,6 +38,7 @@ function requireConfig() {
   if (!current.clientId) missing.push("DISCORD_CLIENT_ID");
   if (!current.clientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (!current.guildId) missing.push("DISCORD_GUILD_ID");
+  if (!current.botToken) missing.push("DISCORD_BOT_TOKEN");
   if (!process.env.SESSION_SECRET) missing.push("SESSION_SECRET");
 
   if (missing.length) {
@@ -83,7 +85,7 @@ function destinationUrl(frontendUrl, returnTo, auth) {
   return url.toString();
 }
 
-async function discordRequest(path, accessToken) {
+async function discordUserRequest(path, accessToken) {
   const response = await fetch(`${DISCORD_API}${path}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -91,9 +93,30 @@ async function discordRequest(path, accessToken) {
   });
 
   if (!response.ok) {
-    const error = new Error(`Discord request failed with ${response.status}`);
+    throw new Error(`Discord user request failed with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function discordBotRequest(path, botToken, options = {}) {
+  const response = await fetch(`${DISCORD_API}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bot ${botToken}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error(`Discord bot request failed with ${response.status}`);
     error.status = response.status;
     throw error;
+  }
+
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();
@@ -121,6 +144,22 @@ async function exchangeCode(code, current) {
   }
 
   return response.json();
+}
+
+async function ensureGuildMember(userId, accessToken, current) {
+  await discordBotRequest(
+    `/guilds/${current.guildId}/members/${userId}`,
+    current.botToken,
+    {
+      method: "PUT",
+      body: JSON.stringify({ access_token: accessToken }),
+    },
+  );
+
+  return discordBotRequest(
+    `/guilds/${current.guildId}/members/${userId}`,
+    current.botToken,
+  );
 }
 
 function avatarUrl(user) {
@@ -151,7 +190,7 @@ export function createDiscordAuthRouter() {
       client_id: current.clientId,
       response_type: "code",
       redirect_uri: current.redirectUri,
-      scope: "identify guilds.members.read",
+      scope: "identify guilds.join",
       state,
     });
 
@@ -189,31 +228,15 @@ export function createDiscordAuthRouter() {
     try {
       const ready = requireConfig();
       const token = await exchangeCode(code, ready);
-      const user = await discordRequest("/users/@me", token.access_token);
-
-      let member;
-
-      try {
-        member = await discordRequest(
-          `/users/@me/guilds/${ready.guildId}/member`,
-          token.access_token,
-        );
-      } catch (error) {
-        if (error.status === 404) {
-          res.redirect(destinationUrl(ready.frontendUrl, returnTo, "not-member"));
-          return;
-        }
-
-        throw error;
-      }
-
-      const permissions = resolvePermissions(user.id, member.roles || []);
+      const user = await discordUserRequest("/users/@me", token.access_token);
+      const member = await ensureGuildMember(user.id, token.access_token, ready);
+      const permissions = resolvePermissions(user.id, member?.roles || []);
       const sessionUser = {
         id: user.id,
         username: user.username,
         globalName: user.global_name || null,
         avatarUrl: avatarUrl(user),
-        guildNickname: member.nick || null,
+        guildNickname: member?.nick || null,
       };
 
       await upsertGuildMember(sessionUser, permissions);
