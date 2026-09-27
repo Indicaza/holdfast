@@ -174,22 +174,6 @@ function MemberProfile({ memberId }) {
     )
   }
 
-  if (status === 'not-found' || !member) {
-    return (
-      <PageShell
-        eyebrow="Members"
-        title="Member not found"
-        intro="That profile is not in the Holdfast member directory."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__back">
-          <a href="/members">Back to Members</a>
-        </div>
-      </PageShell>
-    )
-  }
-
   if (status === 'error') {
     return (
       <PageShell
@@ -206,12 +190,28 @@ function MemberProfile({ memberId }) {
     )
   }
 
+  if (status === 'not-found' || !member) {
+    return (
+      <PageShell
+        eyebrow="Members"
+        title="Member not found"
+        intro="That profile is not in the Holdfast member directory."
+        centered
+        className="member-profile"
+      >
+        <div className="member-profile__back">
+          <a href="/members">Back to Members</a>
+        </div>
+      </PageShell>
+    )
+  }
+
   const contribution = member.contribution || {}
   const assignments = member.assignments || []
   const activity = member.activity || []
 
   return (
-    <PageShell className="member-profile">
+    <PageShell className="member-profile member-profile--loaded">
       <nav className="member-profile__crumbs" aria-label="Member profile navigation">
         <a href="/members">Members</a>
         <span aria-hidden="true">/</span>
@@ -231,7 +231,7 @@ function MemberProfile({ memberId }) {
           <h1 id="member-profile-name">{displayName(member)}</h1>
           <p>@{member.username}</p>
           <div className="member-profile__meta">
-            <span>Member since {formatDate(member.firstSeenAt, false)}</span>
+            <span>Member since {formatDate(member.guildJoinedAt || member.firstSeenAt, false)}</span>
             <span>Last activity {formatDate(member.lastActivityAt)}</span>
           </div>
         </div>
@@ -253,7 +253,7 @@ function MemberProfile({ memberId }) {
         <article>
           <span>Service Marks</span>
           <strong>{Number(contribution.marks) || 0}</strong>
-          <small>Available service record</small>
+          <small>Service Marks earned</small>
         </article>
         <article>
           <span>Objectives</span>
@@ -334,8 +334,8 @@ function MemberProfile({ memberId }) {
               <dd>{member.role || 'Member'}</dd>
             </div>
             <div>
-              <dt>Joined GuildOS</dt>
-              <dd>{formatDate(member.firstSeenAt)}</dd>
+              <dt>Joined Holdfast</dt>
+              <dd>{formatDate(member.guildJoinedAt || member.firstSeenAt)}</dd>
             </div>
             <div>
               <dt>Last activity</dt>
