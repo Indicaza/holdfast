@@ -1,0 +1,79 @@
+.quest-signup__note {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.32);
+}
+
+.quest-signup__note strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
+}
+
+.quest-signup__note span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+}
+
+.quest-signup__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+}
+
+.quest-signup__primary,
+.quest-signup__secondary {
+  min-height: 3rem;
+  padding-inline: var(--space-5);
+  border: var(--border-subtle);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.quest-signup__primary {
+  width: 100%;
+  border-color: rgba(196, 166, 103, 0.64);
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-bright),
+    var(--color-accent)
+  );
+  color: var(--color-background);
+}
+
+.quest-signup__secondary {
+  background: rgba(3, 8, 15, 0.34);
+  color: var(--color-text-muted);
+}
+
+.quest-signup__primary:hover:not(:disabled),
+.quest-signup__primary:focus-visible:not(:disabled),
+.quest-signup__secondary:hover:not(:disabled),
+.quest-signup__secondary:focus-visible:not(:disabled) {
+  border-color: var(--color-accent-bright);
+}
+
+.quest-signup__secondary:hover:not(:disabled),
+.quest-signup__secondary:focus-visible:not(:disabled) {
+  color: var(--color-text-strong);
+}
+
+.quest-signup__primary:disabled,
+.quest-signup__secondary:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+@media (max-width: 36rem) {
+  .quest-signup__actions {
+    grid-template-columns: 1fr;
+  }
+}
