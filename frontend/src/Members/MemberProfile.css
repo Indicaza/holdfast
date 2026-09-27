@@ -600,10 +600,6 @@
   .member-profile__hero {
     grid-template-columns: auto minmax(0, 1fr);
   }
-
-  .member-profile__timeline {
-    width: 100%;
-  }
 }
 
 @media (max-width: 48rem) {
