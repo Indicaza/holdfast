@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { Router } from "express";
 
 import { upsertGuildMember } from "../Guild/memberRepository.js";
-import { resolvePermissions } from "./permissions.js";
+import { resolvePermissions } from "./permissionResolver.js";
 import {
   clearOAuthState,
   clearSession,
@@ -33,14 +33,14 @@ function config() {
   };
 }
 
-function requireConfig({ needsBot = false } = {}) {
+function requireConfig() {
   const current = config();
   const missing = [];
 
   if (!current.clientId) missing.push("DISCORD_CLIENT_ID");
   if (!current.clientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (!current.guildId) missing.push("DISCORD_GUILD_ID");
-  if (needsBot && !current.botToken) missing.push("DISCORD_BOT_TOKEN");
+  if (!current.botToken) missing.push("DISCORD_BOT_TOKEN");
   if (!process.env.SESSION_SECRET) missing.push("SESSION_SECRET");
 
   if (missing.length) {
@@ -220,7 +220,7 @@ export function createDiscordAuthRouter() {
     let current;
 
     try {
-      current = requireConfig({ needsBot: mode === RECRUIT_MODE });
+      current = requireConfig();
     } catch (error) {
       console.error(error.message);
       res.status(503).json({ error: "auth_not_configured" });
@@ -278,7 +278,7 @@ export function createDiscordAuthRouter() {
     }
 
     try {
-      const ready = requireConfig({ needsBot: mode === RECRUIT_MODE });
+      const ready = requireConfig();
       const token = await exchangeCode(code, ready);
       const user = await discordUserRequest("/users/@me", token.access_token);
       let member = await currentGuildMember(ready.guildId, token.access_token);
@@ -318,6 +318,7 @@ export function createDiscordAuthRouter() {
       setSession(res, {
         user: sessionUser,
         permissions,
+        verifiedAt: Date.now(),
       });
 
       res.redirect(destinationUrl(ready.frontendUrl, returnTo));
