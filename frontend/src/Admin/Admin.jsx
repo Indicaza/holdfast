@@ -34,7 +34,17 @@ function Admin() {
         title="Backend unavailable"
         intro="The guild API could not be reached."
         centered
-      />
+      >
+        <div className="admin-auth">
+          <button
+            className="admin-auth__primary"
+            type="button"
+            onClick={() => session.refresh()}
+          >
+            Retry connection
+          </button>
+        </div>
+      </PageShell>
     )
   }
 
