@@ -429,6 +429,13 @@
   background: var(--color-surface-strong);
 }
 
+.quest-board__assignee--self .quest-board__avatar {
+  border-color: var(--color-accent-bright);
+  box-shadow:
+    0 0 0 3px rgba(7, 17, 31, 0.72),
+    0 0 0 4px rgba(196, 166, 103, 0.24);
+}
+
 .quest-board__assignee--open .quest-board__avatar {
   border-style: dashed;
   border-color: var(--color-border);
