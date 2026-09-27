@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
 import { useSession } from '../../Auth/SessionProvider.jsx'
-import {
-  useQuestSignup,
-} from '../../Quests/QuestSignupFlow.jsx'
+import { useQuestSignup } from '../../Quests/QuestSignupFlow.jsx'
 import './QuestBoard.css'
 
 const MAX_VISIBLE_ASSIGNMENTS = 5
@@ -51,7 +49,9 @@ function Assignment({ assignment }) {
 
   return (
     <span
-      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}`}
+      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}${
+        assignment.isSelf ? ' quest-board__assignee--self' : ''
+      }`}
       tabIndex="0"
       aria-label={`${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`}
     >
