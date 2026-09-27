@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { apiJson } from '../../Api/apiClient.js'
 import './QuestBoard.css'
 
 const MAX_VISIBLE_ASSIGNMENTS = 8
@@ -118,24 +119,18 @@ function QuestBoard() {
   useEffect(() => {
     let active = true
 
-    function clearCatalog() {
-      if (!active) return
-      setCatalog(EMPTY_CATALOG)
-    }
-
     function applyCatalog(nextCatalog) {
       if (!active) return
       setCatalog(nextCatalog?.quests ? nextCatalog : EMPTY_CATALOG)
     }
 
-    function loadCatalog() {
-      fetch('/api/quests', { cache: 'no-store' })
-        .then((response) => {
-          if (!response.ok) throw new Error('Quests unavailable')
-          return response.json()
-        })
-        .then(applyCatalog)
-        .catch(clearCatalog)
+    async function loadCatalog() {
+      try {
+        const result = await apiJson('/api/quests')
+        applyCatalog(result)
+      } catch {
+        // Keep the last good catalog on transient failures.
+      }
     }
 
     function handleStorage(event) {
