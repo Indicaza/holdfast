@@ -238,7 +238,14 @@ function QuestObjectives({ quest, objectives, onSignup, onLeave }) {
         {objectives.map((objective, index) => {
           const priority = priorityOf(objective)
           const assignments = objective.assignments ?? []
-          const visibleAssignments = assignments.slice(0, MAX_VISIBLE_ASSIGNMENTS)
+          const visibleAssignmentLimit =
+            assignments.length > MAX_VISIBLE_ASSIGNMENTS
+              ? MAX_VISIBLE_ASSIGNMENTS - 1
+              : MAX_VISIBLE_ASSIGNMENTS
+          const visibleAssignments = assignments.slice(
+            0,
+            visibleAssignmentLimit,
+          )
           const hiddenAssignmentCount = Math.max(
             0,
             assignments.length - visibleAssignments.length,
