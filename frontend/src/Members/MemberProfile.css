@@ -165,21 +165,6 @@
   text-transform: uppercase;
 }
 
-.member-profile__username {
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-md);
-}
-
-.member-profile__tenure {
-  margin-top: var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-}
-
 .member-profile__meta-row {
   display: flex;
   align-items: center;
@@ -662,8 +647,8 @@
   }
 
   .member-profile__progress-rank {
-    border-right: 0;
     border-bottom: var(--border-subtle);
+    box-shadow: none;
   }
 
   .member-profile__section-heading {
