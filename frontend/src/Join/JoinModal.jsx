@@ -1,5 +1,5 @@
 import Modal from '../Modal/Modal.jsx'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import './Join.css'
 
 function noticeFor(code) {
