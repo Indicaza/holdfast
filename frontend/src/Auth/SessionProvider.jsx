@@ -6,12 +6,9 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { apiFetch, apiJson } from '../Api/apiClient.js'
 
 const SessionContext = createContext(null)
-
-function wait(milliseconds) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
-}
 
 function detectedTimezone() {
   try {
@@ -29,9 +26,8 @@ async function syncDetectedTimezone() {
   }
 
   try {
-    await fetch('/api/guild/members/me/timezone', {
+    await apiFetch('/api/guild/members/me/timezone', {
       method: 'PATCH',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -57,44 +53,27 @@ export function SessionProvider({ children }) {
   })
 
   const refresh = useCallback(async () => {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      try {
-        const response = await fetch('/api/me', {
-          credentials: 'include',
-          cache: 'no-store',
-        })
+    try {
+      const data = await apiJson('/api/me')
 
-        if (!response.ok) {
-          throw new Error('Session request failed')
-        }
+      setSession({
+        status: 'ready',
+        authenticated: Boolean(data?.authenticated),
+        user: data?.user ?? null,
+        permissions: data?.permissions ?? [],
+      })
 
-        const data = await response.json()
-
-        setSession({
-          status: 'ready',
-          authenticated: Boolean(data.authenticated),
-          user: data.user ?? null,
-          permissions: data.permissions ?? [],
-        })
-
-        if (data.authenticated) {
-          void syncDetectedTimezone()
-        }
-
-        return
-      } catch {
-        if (attempt < 2) {
-          await wait(attempt === 0 ? 120 : 350)
-        }
+      if (data?.authenticated) {
+        void syncDetectedTimezone()
       }
+    } catch {
+      setSession({
+        status: 'error',
+        authenticated: false,
+        user: null,
+        permissions: [],
+      })
     }
-
-    setSession({
-      status: 'error',
-      authenticated: false,
-      user: null,
-      permissions: [],
-    })
   }, [])
 
   useEffect(() => {
@@ -107,9 +86,8 @@ export function SessionProvider({ children }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    const response = await fetch('/api/auth/logout', {
+    const response = await apiFetch('/api/auth/logout', {
       method: 'POST',
-      credentials: 'include',
     })
 
     if (!response.ok) {
