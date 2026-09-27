@@ -54,3 +54,4 @@ temp/
 todo.md
 
 # Local database files
+backend/data/members.json
