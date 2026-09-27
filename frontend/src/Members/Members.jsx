@@ -68,18 +68,20 @@ function MemberCard({ member, isSelf }) {
         <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
       </div>
 
-      <div className="members-page__service">
-        <span>Rep</span>
-        <strong>{Number(contribution.rep) || 0}</strong>
-      </div>
+      <div className="members-page__member-meta">
+        <div className="members-page__service">
+          <span>Rep</span>
+          <strong>{Number(contribution.rep) || 0}</strong>
+        </div>
 
-      <div
-        className={`members-page__assignment ${
-          activeAssignments ? 'members-page__assignment--active' : ''
-        }`}
-      >
-        <strong>{activeAssignments}</strong>
-        <span>{activeAssignments === 1 ? 'active assignment' : 'active assignments'}</span>
+        <div
+          className={`members-page__assignment ${
+            activeAssignments ? 'members-page__assignment--active' : ''
+          }`}
+        >
+          <strong>{activeAssignments}</strong>
+          <span>{activeAssignments === 1 ? 'active assignment' : 'active assignments'}</span>
+        </div>
       </div>
 
       <span className="members-page__open" aria-hidden="true">›</span>
