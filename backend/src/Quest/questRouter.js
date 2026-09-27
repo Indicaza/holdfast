@@ -18,6 +18,10 @@ import {
   projectFeaturedQuest,
   projectQuests,
 } from "./questSchema.js";
+import {
+  QuestSignupError,
+  signupForObjective,
+} from "./questSignup.js";
 
 function preserveRestrictedEconomy(next, current) {
   return {
@@ -94,6 +98,11 @@ export function createQuestRouter() {
     windowMs: 10 * 60 * 1000,
     max: 120,
   });
+  const memberSignupRateLimit = createRateLimiter({
+    name: "quest-member-signup",
+    windowMs: 10 * 60 * 1000,
+    max: 60,
+  });
 
   router.get("/", async (req, res) => {
     try {
@@ -110,12 +119,82 @@ export function createQuestRouter() {
     try {
       const document = await readQuests();
       res.set("Cache-Control", "no-store");
-      res.json(projectQuests(document));
+      res.json(projectQuests(document, req.auth.user.id));
     } catch (error) {
       console.error("Unable to read member quest board", error);
       res.status(500).json({ error: "quests_unavailable" });
     }
   });
+
+  router.post(
+    "/member/signup",
+    requireAuthenticated,
+    memberSignupRateLimit,
+    async (req, res) => {
+      try {
+        const questId = String(req.body?.questId || "");
+        const objectiveId = String(req.body?.objectiveId || "");
+
+        if (!questId || !objectiveId) {
+          res.status(400).json({
+            error: "signup_target_required",
+            message: "Choose an objective before signing up.",
+          });
+          return;
+        }
+
+        const members = await readGuildMembers();
+        const member = members.find((item) => item.id === req.auth.user.id);
+
+        if (!member) {
+          res.status(403).json({
+            error: "member_not_found",
+            message: "Your Holdfast member profile could not be found.",
+          });
+          return;
+        }
+
+        const current = await readQuests();
+        const result = signupForObjective(
+          current,
+          member,
+          questId,
+          objectiveId,
+        );
+        const saved = await writeQuests(result.document);
+
+        res.set("Cache-Control", "no-store");
+        res.status(201).json({
+          catalog: projectQuests(saved, member.id),
+          questId,
+          objectiveId,
+        });
+      } catch (error) {
+        if (error instanceof QuestSignupError) {
+          res.status(error.status).json({
+            error: error.code,
+            message: error.message,
+            ...error.details,
+          });
+          return;
+        }
+
+        if (error instanceof QuestValidationError) {
+          res.status(400).json({
+            error: "invalid_quest_document",
+            message: error.message,
+          });
+          return;
+        }
+
+        console.error("Unable to sign member up for objective", error);
+        res.status(500).json({
+          error: "quest_signup_failed",
+          message: "Holdfast could not save that signup. Try again.",
+        });
+      }
+    },
+  );
 
   router.get("/manage", requirePermission("quests.edit"), async (req, res) => {
     try {
