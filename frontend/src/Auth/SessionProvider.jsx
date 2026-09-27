@@ -9,6 +9,39 @@ import {
 
 const SessionContext = createContext(null)
 
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
+}
+
+function detectedTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+  } catch {
+    return ''
+  }
+}
+
+async function syncDetectedTimezone() {
+  const timezone = detectedTimezone()
+
+  if (!timezone) {
+    return
+  }
+
+  try {
+    await fetch('/api/guild/members/me/timezone', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ timezone }),
+    })
+  } catch {
+    // Timezone sync is best-effort and should never block sign-in.
+  }
+}
+
 function currentReturnTo() {
   const url = new URL(window.location.href)
   url.searchParams.delete('auth')
@@ -24,29 +57,44 @@ export function SessionProvider({ children }) {
   })
 
   const refresh = useCallback(async () => {
-    try {
-      const response = await fetch('/api/me', { credentials: 'include' })
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await fetch('/api/me', {
+          credentials: 'include',
+          cache: 'no-store',
+        })
 
-      if (!response.ok) {
-        throw new Error('Session request failed')
+        if (!response.ok) {
+          throw new Error('Session request failed')
+        }
+
+        const data = await response.json()
+
+        setSession({
+          status: 'ready',
+          authenticated: Boolean(data.authenticated),
+          user: data.user ?? null,
+          permissions: data.permissions ?? [],
+        })
+
+        if (data.authenticated) {
+          void syncDetectedTimezone()
+        }
+
+        return
+      } catch {
+        if (attempt < 2) {
+          await wait(attempt === 0 ? 120 : 350)
+        }
       }
-
-      const data = await response.json()
-
-      setSession({
-        status: 'ready',
-        authenticated: Boolean(data.authenticated),
-        user: data.user ?? null,
-        permissions: data.permissions ?? [],
-      })
-    } catch {
-      setSession({
-        status: 'error',
-        authenticated: false,
-        user: null,
-        permissions: [],
-      })
     }
+
+    setSession({
+      status: 'error',
+      authenticated: false,
+      user: null,
+      permissions: [],
+    })
   }, [])
 
   useEffect(() => {

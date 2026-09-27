@@ -2,7 +2,11 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { emptyMemberProfile, normalizeMemberProfile } from "./memberProfile.js";
+import {
+  emptyMemberProfile,
+  isValidTimeZone,
+  normalizeMemberProfile,
+} from "./memberProfile.js";
 import { normalizeGuildRank } from "./rankSystem.js";
 
 const DEFAULT_DATA_FILE = fileURLToPath(
@@ -92,6 +96,73 @@ export async function readGuildMembers() {
         sensitivity: "base",
       }),
     );
+}
+
+export async function updateDetectedTimezone(memberId, timezone) {
+  if (!isValidTimeZone(timezone)) {
+    return { status: "invalid", member: null };
+  }
+
+  const members = await readRawMembers();
+  const index = members.findIndex((member) => member.id === memberId);
+
+  if (index < 0) {
+    return { status: "not-found", member: null };
+  }
+
+  const currentProfile = normalizeMemberProfile(
+    members[index].profile || emptyMemberProfile(),
+  );
+
+  if (
+    currentProfile.timezoneSource === "manual" &&
+    currentProfile.timezone
+  ) {
+    return {
+      status: "manual",
+      member: {
+        ...members[index],
+        profile: currentProfile,
+      },
+    };
+  }
+
+  if (
+    currentProfile.timezone === timezone &&
+    currentProfile.timezoneSource === "detected"
+  ) {
+    return {
+      status: "unchanged",
+      member: {
+        ...members[index],
+        profile: currentProfile,
+      },
+    };
+  }
+
+  const now = new Date().toISOString();
+  const nextProfile = normalizeMemberProfile({
+    ...currentProfile,
+    timezone,
+    timezoneSource: "detected",
+  });
+
+  members[index] = {
+    ...members[index],
+    profile: nextProfile,
+    profileUpdatedAt: now,
+    updatedAt: now,
+  };
+
+  await writeMembers(members);
+
+  return {
+    status: "updated",
+    member: {
+      ...members[index],
+      profile: nextProfile,
+    },
+  };
 }
 
 export async function updateGuildMemberProfile(memberId, profile) {

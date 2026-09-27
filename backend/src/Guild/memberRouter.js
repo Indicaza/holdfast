@@ -8,6 +8,7 @@ import {
 import { readQuests } from "../Quest/questRepository.js";
 import {
   readGuildMembers,
+  updateDetectedTimezone,
   updateGuildMemberProfile,
 } from "./memberRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
@@ -216,6 +217,35 @@ export function createMemberRouter() {
     } catch (error) {
       console.error("Unable to read current member profile", error);
       res.status(500).json({ error: "member_unavailable" });
+    }
+  });
+
+  router.patch("/me/timezone", requireAuthenticated, async (req, res) => {
+    try {
+      const result = await updateDetectedTimezone(
+        req.auth.user.id,
+        req.body?.timezone,
+      );
+
+      if (result.status === "invalid") {
+        res.status(400).json({ error: "invalid_timezone" });
+        return;
+      }
+
+      if (result.status === "not-found") {
+        res.status(404).json({ error: "member_not_found" });
+        return;
+      }
+
+      res.set("Cache-Control", "no-store");
+      res.json({
+        timezone: result.member.profile.timezone,
+        source: result.member.profile.timezoneSource,
+        status: result.status,
+      });
+    } catch (error) {
+      console.error("Unable to update detected timezone", error);
+      res.status(500).json({ error: "timezone_update_failed" });
     }
   });
 

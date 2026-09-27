@@ -69,18 +69,42 @@ export function emptyMemberProfile() {
   return {
     battleTag: "",
     timezone: "",
+    timezoneSource: "detected",
     availability: "",
     bio: "",
     characters: [],
   };
 }
 
+export function isValidTimeZone(value) {
+  const timezone = text(value, 64);
+
+  if (!timezone) {
+    return false;
+  }
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeMemberProfile(value) {
   const input = value && typeof value === "object" ? value : {};
+  const timezone = text(input.timezone, 64);
+  const timezoneSource =
+    input.timezoneSource === "manual" || input.timezoneSource === "detected"
+      ? input.timezoneSource
+      : timezone
+        ? "manual"
+        : "detected";
 
   return {
     battleTag: text(input.battleTag, 64),
-    timezone: text(input.timezone, 64),
+    timezone,
+    timezoneSource,
     availability: text(input.availability, 160),
     bio: text(input.bio, 500),
     characters: normalizeCharacters(input.characters),
