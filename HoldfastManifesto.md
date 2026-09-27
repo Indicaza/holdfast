@@ -1,4 +1,4 @@
-# Holdfast Manifesto
+# Holdfast Charter
 
 > **Guild:** Holdfast  
 > **Faction:** Alliance  
@@ -16,10 +16,6 @@ Holdfast is an Alliance guild built around a simple idea:
 The guild should feel like a good community first and an organization second.
 
 A normal member should be able to log in, see familiar names, find people to play with, get help when needed, contribute when they feel able, and log off without feeling like World of Warcraft became a second job.
-
-The systems underneath Holdfast may eventually become sophisticated.
-
-The member experience should not.
 
 ---
 
@@ -148,7 +144,7 @@ The real signals matter more:
 - Do leaders understand what is happening?
 - Do people feel like members of a community rather than entries in a database?
 
-If those answers begin turning into “no,” the solution should usually be to simplify or eventually federate rather than add more internal hierarchy.
+If those answers begin turning into “no,” the solution should usually be to simplify rather than add more internal hierarchy.
 
 ### Fluid Groups, Not Permanent Ownership
 
@@ -197,166 +193,13 @@ They are not created to distribute titles.
 
 ---
 
-## Rank Structure
+## How Holdfast Works
 
-The rank system should feel military enough to be immediately understandable while fitting naturally into Warcraft.
+Rank represents trust. Billets represent responsibility.
 
-Current ladder:
+Reputation records useful service. Service Marks let members ask something back. Rep can make someone eligible for greater responsibility, but it never purchases rank. Billets are current jobs, not permanent ownership of people.
 
-1. **Recruit**
-2. **Private**
-3. **Corporal**
-4. **Sergeant**
-5. **Master Sergeant**
-6. **Sergeant Major**
-7. **Lieutenant**
-8. **Captain**
-9. **Major**
-10. **Commander**
-
-**Commander** is the unique guildmaster rank.
-
-The enlisted structure intentionally mirrors familiar Alliance-style military ranks.
-
-The officer progression is deliberately simplified into:
-
-**Lieutenant → Captain → Major → Commander**
-
-The goal is a military structure that reads naturally without importing every awkward or overly theatrical title from Warcraft lore.
-
-### Recruit
-
-Probationary member learning the guild and being evaluated for basic fit.
-
-### Private
-
-Full member.
-
-No leadership expectation.
-
-### Corporal
-
-First level of demonstrated leadership trust.
-
-May organize small activities, assist established leaders, and begin taking responsibility for others.
-
-### Sergeant
-
-Proven small-group leader and mentor.
-
-Trusted to organize people and handle ordinary problems without constant supervision.
-
-### Master Sergeant
-
-Experienced senior NCO capable of running recurring activities, developing junior leaders, and maintaining standards.
-
-### Sergeant Major
-
-Highest ordinary enlisted rank.
-
-Focused increasingly on mentorship, continuity, institutional knowledge, and advising officers.
-
-### Lieutenant
-
-First commissioned rank.
-
-Trusted to exercise broader institutional authority.
-
-### Captain
-
-Experienced officer trusted with significant programs, responsibilities, or recurring operations.
-
-### Major
-
-Highest ordinary officer rank.
-
-Trusted with broad institutional responsibility, cross-functional coordination, and major guild systems.
-
-### Commander
-
-Unique guildmaster rank.
-
-The Commander is the guardian of Holdfast’s continuity, charter, and long-term direction.
-
-The Commander holds ultimate reserve authority but should normally delegate day-to-day work.
-
-The success condition is not that everything requires the Commander.
-
-The success condition is that Holdfast continues functioning when the Commander steps away.
-
----
-
-## Active Billets
-
-Holdfast currently recognizes only four standing billets.
-
-That list should remain small unless real work proves another job is necessary.
-
-### Steward
-
-The Steward is the Commander’s trusted deputy.
-
-The billet should normally be held by a Major.
-
-The Steward is entrusted to run Holdfast during the Commander’s absence and may exercise broad day-to-day executive authority without becoming Commander.
-
-The Steward exists so the Commander can step away for weeks or months without the organization freezing.
-
-The Steward does not conceptually own Holdfast and should not have the authority to permanently displace the Commander merely because the Commander is absent.
-
-Exact in-game permissions should be configured around whatever WoW Forever mechanically allows.
-
-### Quartermaster
-
-The Quartermaster owns the practical economic infrastructure of Holdfast.
-
-Responsibilities may include:
-
-- guild bank organization;
-- material reserves;
-- consumable stock;
-- profession coordination;
-- crafting logistics;
-- internal purchasing;
-- market activity;
-- economic reporting;
-- helping identify worthwhile member investments.
-
-The Quartermaster should pursue abundance rather than hoarding.
-
-### Raid Leader
-
-The Raid Leader owns the operation of an assigned raid team or raid program.
-
-Responsibilities may include:
-
-- scheduling;
-- roster formation;
-- encounter planning;
-- readiness standards;
-- raid communication;
-- progression strategy;
-- post-raid review.
-
-Raid authority applies to the raid.
-
-It does not make the Raid Leader the permanent boss of everyone on the roster.
-
-### PvP Lead
-
-The PvP Lead organizes serious guild PvP.
-
-Responsibilities may include:
-
-- premades;
-- organized world PvP;
-- response groups;
-- scouting;
-- PvP events;
-- tactical coordination;
-- PvP training where useful.
-
-PvP authority applies to the activity being led.
+The rank ladder, promotion floors, and current billets are explained on the [Ranks & Roles](/ranks) page.
 
 ---
 
@@ -557,8 +400,6 @@ Holdfast should generally prefer:
 
 **Abundance over treasury vanity.**
 
-**AI assistance without AI authority.**
-
 **Systems that survive the absence of their creator.**
 
 **Play the game first.**
@@ -571,167 +412,7 @@ And one rule should govern organizational design:
 
 ---
 
-# Future Ideas
-
-Everything below this point is intentionally speculative.
-
-These are directions Holdfast may grow into if real needs appear.
-
-They are not launch requirements.
-
----
-
-## The Crucible
-
-**The Crucible** is the working name for a future training and mentorship system.
-
-It would exist to make useful knowledge easy to find and easy to pass forward.
-
-Possible functions include:
-
-- class and spec mentorship;
-- dungeon teaching;
-- raid instruction;
-- PvP coaching;
-- profession knowledge;
-- written guides;
-- encounter strategies;
-- build and log review when requested;
-- leadership development.
-
-The Crucible should feel helpful rather than evaluative.
-
-The purpose is not to manufacture identical players.
-
-The purpose is to turn inexperienced players into capable players, capable players into teachers, and good leaders into people who can develop other leaders.
-
-No dedicated Crucible billet is needed unless the program eventually becomes large enough to require one.
-
----
-
-## GuildOS
-
-GuildOS is a future administrative and analytical layer for Holdfast.
-
-Its purpose is to reduce coordination work, surface useful information, and preserve institutional knowledge.
-
-Core rule:
-
-> **AI does staff work. Humans govern.**
-
-Possible GuildOS functions include:
-
-- aggregating member needs;
-- identifying people who need the same dungeon;
-- suggesting useful events;
-- building candidate rosters;
-- matching mentors and learners;
-- tracking profession coverage;
-- identifying shortages;
-- forecasting resource needs;
-- summarizing economic information;
-- maintaining institutional records;
-- surfacing single points of failure;
-- helping leaders understand organizational health.
-
-A future GuildOS may also assist with PvP situational awareness.
-
-For example, if permitted game data, chat feeds, addons, APIs, or member-submitted reports expose relevant information, GuildOS could detect recurring place names, faction warnings, calls for help, or other patterns and surface them to human players.
-
-That should remain an information system, not an autonomous commander.
-
-The system may say:
-
-> “Several reports mention hostile activity near this location.”
-
-Humans decide what to do about it.
-
-### Example
-
-Ten members need the same dungeon.
-
-Several need profession drops from it.
-
-A few tanks need upgrades there.
-
-GuildOS notices the overlap and tells an appropriate organizer:
-
-> “A dungeon night here would resolve several outstanding needs.”
-
-The ordinary member should mostly experience:
-
-> “Oh cool, there’s a group Thursday.”
-
-AI recommendations should remain understandable and reviewable.
-
-GuildOS should grow only when it removes real friction.
-
----
-
-## Federated Growth
-
-If Holdfast becomes too large to remain socially coherent, the preferred solution is not to create layers of companies, platoons, squads, and middle managers.
-
-The preferred solution is to create another healthy guild unit.
-
-Over time, Holdfast may become part of a confederation of allied guilds.
-
-Each guild should remain small enough to feel human.
-
-A future federation might share:
-
-- Discord infrastructure;
-- GuildOS;
-- website and recruiting tools;
-- economic intelligence;
-- profession directories;
-- training resources;
-- major raids and events;
-- PvP coordination;
-- market systems;
-- shared standards;
-- diplomacy;
-- institutional knowledge;
-- selected treasury or material programs where practical.
-
-The goal is:
-
-> **Small communities with large capabilities.**
-
-Guild chat stays sane.
-
-People stay recognizable.
-
-The advantages of scale are shared without forcing everyone into one enormous social container.
-
-The exact shape of a federation should emerge from real growth rather than being designed years in advance.
-
----
-
-## What Is Intentionally Unresolved
-
-Holdfast is a working design, not scripture.
-
-Current open questions include:
-
-- exact promotion standards;
-- exact permissions for each rank;
-- the final scope of the Steward;
-- treasury policies and spending thresholds;
-- how much economic coordination members actually want;
-- how GuildOS should evolve;
-- how large a guild unit feels healthy in practice;
-- whether the Crucible becomes a real program;
-- whether federation is ever necessary;
-- which systems solve real problems versus imagined ones.
-
-The answer to most of these should come from running the guild.
-
----
-
 ## Launch Philosophy
-
-The first version of Holdfast should be simpler than this document.
 
 Launch priorities:
 
@@ -744,7 +425,7 @@ Launch priorities:
 - appoint only the billets that are immediately useful;
 - begin playing together;
 - observe where friction actually appears;
-- build systems only when they solve real problems.
+- keep the structure simple enough that people can actually use it.
 
 The institution should evolve through use rather than theory alone.
 
@@ -770,14 +451,6 @@ The only standing billets currently planned are:
 - Quartermaster;
 - Raid Leader;
 - PvP Lead.
-
-If we eventually outgrow one healthy guild, we can federate instead of building a giant internal bureaucracy.
-
-The Crucible may become our training and mentorship system.
-
-GuildOS may eventually handle much of the boring coordination, analysis, and information gathering.
-
-Humans make the decisions.
 
 Real life comes first.
 

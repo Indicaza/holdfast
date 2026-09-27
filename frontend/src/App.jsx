@@ -12,6 +12,7 @@ const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
 const Quests = lazy(() => import('./Quests/Quests.jsx'))
+const Ranks = lazy(() => import('./Ranks/Ranks.jsx'))
 
 const defaultRobots =
   'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
@@ -47,6 +48,14 @@ const routes = {
     title: 'Holdfast Charter | Alliance WoW Forever Guild',
     description:
       'Read the Holdfast charter: service-based leadership, high standards without elitism, shared prosperity, mentorship, and a guild built to endure.',
+    robots: defaultRobots,
+  },
+  '/ranks': {
+    component: Ranks,
+    path: '/ranks',
+    title: 'Ranks & Roles | Holdfast',
+    description:
+      'Learn how Holdfast ranks, Reputation, promotion, and guild roles work.',
     robots: defaultRobots,
   },
   '/join': {

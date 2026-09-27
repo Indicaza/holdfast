@@ -1,0 +1,294 @@
+.page-shell:has(.ranks-page) {
+  background:
+    radial-gradient(circle at 82% 10%, rgba(29, 69, 111, 0.32), transparent 34rem),
+    linear-gradient(180deg, var(--color-blue-900), var(--color-background) 32rem);
+}
+
+.page-shell:has(.ranks-page) .page-shell__body {
+  width: min(100%, 76rem);
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.ranks-page {
+  display: grid;
+  gap: clamp(var(--space-16), 8vw, var(--space-24));
+}
+
+.ranks-page__principles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.ranks-page__principle,
+.ranks-page__rule,
+.ranks-page__billet-card,
+.ranks-page__service-card {
+  border: var(--border-subtle);
+  border-top: var(--border-accent);
+  background:
+    linear-gradient(145deg, rgba(16, 39, 66, 0.8), rgba(7, 17, 31, 0.9));
+  box-shadow: var(--shadow-soft);
+}
+
+.ranks-page__principle {
+  min-height: 15rem;
+  padding: var(--space-6);
+}
+
+.ranks-page__label,
+.ranks-page__rank-group,
+.ranks-page__rank-marker {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.ranks-page__principle h2,
+.ranks-page__section-heading h2,
+.ranks-page__service-card h2 {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-fib-34);
+  line-height: 1.05;
+}
+
+.ranks-page__principle p,
+.ranks-page__section-heading > p,
+.ranks-page__rule p,
+.ranks-page__billet-card p,
+.ranks-page__service-card p,
+.ranks-page__rep-note p {
+  margin-top: var(--space-4);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.ranks-page__section {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.ranks-page__section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.85fr);
+  align-items: end;
+  gap: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: var(--border-subtle);
+}
+
+.ranks-page__section-heading > p {
+  margin-top: 0;
+  color: var(--color-text-muted);
+}
+
+.ranks-page__rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.ranks-page__rule {
+  min-height: 13rem;
+  padding: var(--space-5);
+}
+
+.ranks-page__rule > span {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.ranks-page__rule h3,
+.ranks-page__billet-card h3 {
+  margin-top: var(--space-4);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-21);
+}
+
+.ranks-page__rep-note {
+  padding: var(--space-5) var(--space-6);
+  border-left: 2px solid var(--color-accent-bright);
+  background: linear-gradient(90deg, rgba(196, 166, 103, 0.09), transparent 72%);
+}
+
+.ranks-page__rep-note strong {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-md);
+}
+
+.ranks-page__rep-note p {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+}
+
+.ranks-page__rank-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.ranks-page__rank-card {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-5);
+  min-height: 12.5rem;
+  padding: var(--space-5);
+  border: var(--border-subtle);
+  background:
+    linear-gradient(135deg, rgba(29, 69, 111, 0.2), rgba(7, 17, 31, 0.86));
+  box-shadow: var(--shadow-soft);
+}
+
+.ranks-page__rank-insignia {
+  display: grid;
+  width: 5.5rem;
+  height: 5.5rem;
+  place-items: center;
+  align-self: start;
+  padding: var(--space-2);
+  border: 1px solid rgba(196, 166, 103, 0.24);
+  background: rgba(3, 8, 15, 0.38);
+  color: var(--color-accent-bright);
+}
+
+.ranks-page__rank-copy {
+  min-width: 0;
+}
+
+.ranks-page__rank-copy h3 {
+  margin-top: var(--space-2);
+  color: var(--color-text-strong);
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+}
+
+.ranks-page__rank-marker {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.ranks-page__rank-copy p {
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.ranks-page__billet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.ranks-page__billet-card {
+  min-height: 12rem;
+  padding: var(--space-6);
+}
+
+.ranks-page__billet-card p {
+  margin-top: var(--space-3);
+}
+
+.ranks-page__section--closing {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: var(--border-subtle);
+}
+
+.ranks-page__service-card {
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+}
+
+.ranks-page__service-card h2 {
+  max-width: 28rem;
+}
+
+.ranks-page__service-card p {
+  max-width: 48rem;
+}
+
+.ranks-page__service-card p + p {
+  margin-top: var(--space-3);
+}
+
+.ranks-page__charter-link {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-5);
+  border: var(--border-accent);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.ranks-page__charter-link:hover,
+.ranks-page__charter-link:focus-visible {
+  background: var(--color-accent-bright);
+  color: var(--color-background);
+}
+
+@media (max-width: 62rem) {
+  .ranks-page__section-heading {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .ranks-page__section-heading > p {
+    max-width: 46rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .ranks-page__principles,
+  .ranks-page__rules,
+  .ranks-page__rank-grid,
+  .ranks-page__billet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ranks-page__principle,
+  .ranks-page__rule,
+  .ranks-page__rank-card,
+  .ranks-page__billet-card {
+    min-height: 0;
+  }
+
+  .ranks-page__rank-card {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .ranks-page__rank-insignia {
+    width: 4.75rem;
+    height: 4.75rem;
+  }
+
+  .ranks-page__section--closing {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .ranks-page__charter-link {
+    width: 100%;
+  }
+}
