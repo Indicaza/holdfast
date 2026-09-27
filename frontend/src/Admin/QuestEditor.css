@@ -890,3 +890,183 @@
     flex: 1;
   }
 }
+
+
+.quest-editor__import-panel {
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.04), transparent 34rem),
+    rgba(3, 8, 15, 0.3);
+}
+
+.quest-editor__import-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  list-style: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.quest-editor__import-summary::-webkit-details-marker {
+  display: none;
+}
+
+.quest-editor__import-summary:hover,
+.quest-editor__import-summary:focus-visible {
+  background: rgba(29, 69, 111, 0.08);
+}
+
+.quest-editor__import-summary > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-editor__import-summary strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.quest-editor__import-summary > span {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.quest-editor__import-body {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-top: var(--border-subtle);
+}
+
+.quest-editor__import-copy,
+.quest-editor__import-actions,
+.quest-editor__import-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
+.quest-editor__import-copy > div {
+  min-width: 0;
+}
+
+.quest-editor__import-copy strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.page-shell__body .quest-editor__import-copy p {
+  max-width: 42rem;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.quest-editor__import-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.quest-editor__import-actions > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-editor__import-actions code {
+  color: var(--color-accent-bright);
+  font-family: var(--font-mono);
+}
+
+.quest-editor__file-button {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.quest-editor__file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.quest-editor__import-json {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.quest-editor__import-json > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-editor__import-json textarea {
+  min-height: 15rem;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.quest-editor__import-notice {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.quest-editor__import-notice--success {
+  color: #b8d9ba;
+}
+
+.quest-editor__import-notice--error {
+  color: #e8a7a7;
+}
+
+.quest-editor__prompt-preview {
+  border-top: var(--border-subtle);
+  padding-top: var(--space-4);
+}
+
+.quest-editor__prompt-preview > summary {
+  width: fit-content;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.quest-editor__prompt-preview pre {
+  overflow-x: auto;
+  max-height: 26rem;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(1, 4, 8, 0.48);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 48rem) {
+  .quest-editor__import-summary,
+  .quest-editor__import-copy,
+  .quest-editor__import-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quest-editor__import-copy > button,
+  .quest-editor__import-footer > button {
+    width: 100%;
+  }
+}
