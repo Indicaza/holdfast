@@ -62,7 +62,7 @@ function MemberCard({ member, isSelf }) {
           ) : null}
         </div>
         <p>@{member.username}</p>
-        <span>{joinedLabel(member.firstSeenAt)}</span>
+        <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
       </div>
 
       <dl className="members-page__stats">
