@@ -5,6 +5,7 @@ import {
   requirePermission,
 } from "../Auth/permissions.js";
 import { awardObjectiveInDatabase } from "../Contribution/contributionRepository.js";
+import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
 import { withGuildTransaction } from "../Data/database.js";
 import {
   readGuildMembers,
@@ -13,8 +14,12 @@ import {
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   QuestStorageError,
+  QuestRevisionConflict,
+  assertQuestRevision,
   readQuests,
   readQuestsFromDatabase,
+  readQuestWorkspace,
+  questRevisionFromDatabase,
   updateQuests,
   writeQuestsToDatabase,
 } from "./questRepository.js";
@@ -161,13 +166,23 @@ export function createQuestRouter() {
           return;
         }
 
-        const saved = await updateQuests((current) =>
-          signupForObjective(
-            current,
-            member,
-            questId,
-            objectiveId,
-          ).document,
+        const saved = await updateQuests(
+          (current) =>
+            signupForObjective(
+              current,
+              member,
+              questId,
+              objectiveId,
+            ).document,
+          {
+            audit: {
+              actorMemberId: member.id,
+              eventType: "quest.objective_joined",
+              entityType: "objective",
+              entityId: objectiveId,
+              payload: { questId, objectiveId },
+            },
+          },
         );
 
         res.set("Cache-Control", "no-store");
@@ -221,13 +236,23 @@ export function createQuestRouter() {
         }
 
         const memberId = req.auth.user.id;
-        const saved = await updateQuests((current) =>
-          leaveObjective(
-            current,
-            memberId,
-            questId,
-            objectiveId,
-          ).document,
+        const saved = await updateQuests(
+          (current) =>
+            leaveObjective(
+              current,
+              memberId,
+              questId,
+              objectiveId,
+            ).document,
+          {
+            audit: {
+              actorMemberId: memberId,
+              eventType: "quest.objective_left",
+              entityType: "objective",
+              entityId: objectiveId,
+              payload: { questId, objectiveId },
+            },
+          },
         );
 
         res.set("Cache-Control", "no-store");
@@ -265,7 +290,7 @@ export function createQuestRouter() {
 
   router.get("/manage", requirePermission("quests.edit"), async (req, res) => {
     try {
-      const document = await readQuests();
+      const document = await readQuestWorkspace();
       res.set("Cache-Control", "no-store");
       res.json(document);
     } catch (error) {
@@ -289,20 +314,42 @@ export function createQuestRouter() {
     adminWriteRateLimit,
     async (req, res) => {
     try {
-      const saved = await updateQuests((current) => {
-        let document = normalizeQuestDocument(req.body);
-        document = preserveObjectiveCompletion(document, current);
+      const saved = await updateQuests(
+        (current) => {
+          let document = normalizeQuestDocument(req.body);
+          document = preserveObjectiveCompletion(document, current);
 
-        if (!req.auth.permissions.includes("rewards.policy.edit")) {
-          document = preserveRestrictedEconomy(document, current);
-        }
+          if (!req.auth.permissions.includes("rewards.policy.edit")) {
+            document = preserveRestrictedEconomy(document, current);
+          }
 
-        return document;
-      });
+          return document;
+        },
+        {
+          expectedRevision: Number(req.body?.revision),
+          includeRevision: true,
+          audit: {
+            actorMemberId: req.auth.user.id,
+            eventType: "quest.workspace_saved",
+            entityType: "quest_workspace",
+            entityId: "primary",
+            includeDocuments: true,
+          },
+        },
+      );
 
       res.set("Cache-Control", "no-store");
       res.json(saved);
     } catch (error) {
+      if (error instanceof QuestRevisionConflict) {
+        res.status(409).json({
+          error: error.code,
+          message: error.message,
+          currentRevision: error.currentRevision,
+        });
+        return;
+      }
+
       if (error instanceof QuestValidationError) {
         res.status(400).json({
           error: "invalid_quest_document",
@@ -328,6 +375,10 @@ export function createQuestRouter() {
 
         const result = withGuildTransaction((db) => {
           const current = readQuestsFromDatabase(db);
+          const revisionBefore = assertQuestRevision(
+            db,
+            Number(req.body.document?.revision),
+          );
           let document = normalizeQuestDocument(req.body.document);
           document = preserveObjectiveCompletion(document, current);
 
@@ -412,12 +463,43 @@ export function createQuestRouter() {
             completeObjective(document, questId, objectiveId),
           );
 
-          return { document: saved, awards };
+          const revisionAfter = questRevisionFromDatabase(db);
+
+          recordAuditEventInDatabase({
+            db,
+            actorMemberId: req.auth.user.id,
+            eventType: "quest.objective_completed",
+            entityType: "objective",
+            entityId: objectiveId,
+            payload: {
+              questId,
+              objectiveId,
+              revisionBefore,
+              revisionAfter,
+              awards,
+              before: current,
+              after: saved,
+            },
+          });
+
+          return {
+            document: { ...saved, revision: revisionAfter },
+            awards,
+          };
         });
 
         res.set("Cache-Control", "no-store");
         res.json(result);
       } catch (error) {
+        if (error instanceof QuestRevisionConflict) {
+          res.status(409).json({
+            error: error.code,
+            message: error.message,
+            currentRevision: error.currentRevision,
+          });
+          return;
+        }
+
         if (error instanceof QuestValidationError) {
           res.status(400).json({
             error: "invalid_quest_document",

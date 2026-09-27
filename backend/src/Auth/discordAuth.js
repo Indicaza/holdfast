@@ -26,6 +26,7 @@ function config() {
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     guildId: process.env.DISCORD_GUILD_ID,
     botToken: process.env.DISCORD_BOT_TOKEN,
+    recruitRoleId: String(process.env.DISCORD_RECRUIT_ROLE_ID || "").trim(),
     frontendUrl,
     redirectUri:
       process.env.DISCORD_REDIRECT_URI ||
@@ -41,6 +42,7 @@ function requireConfig() {
   if (!current.clientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (!current.guildId) missing.push("DISCORD_GUILD_ID");
   if (!current.botToken) missing.push("DISCORD_BOT_TOKEN");
+  if (!current.recruitRoleId) missing.push("DISCORD_RECRUIT_ROLE_ID");
   if (!process.env.SESSION_SECRET) missing.push("SESSION_SECRET");
 
   if (missing.length) {
@@ -205,7 +207,12 @@ async function addGuildMember(userId, accessToken, current) {
     current.botToken,
     {
       method: "PUT",
-      body: JSON.stringify({ access_token: accessToken }),
+      body: JSON.stringify({
+        access_token: accessToken,
+        ...(current.recruitRoleId
+          ? { roles: [current.recruitRoleId] }
+          : {}),
+      }),
     },
   );
 

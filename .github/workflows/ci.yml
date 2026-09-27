@@ -70,6 +70,22 @@ jobs:
         working-directory: backend
         run: npm run lint
 
+      - name: Validate Discord manifest
+        working-directory: backend
+        run: npm run discord:validate
+
       - name: Test
         working-directory: backend
         run: npm test
+
+  production-image:
+    name: Production image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build production image
+        run: docker build --build-arg VITE_GA_MEASUREMENT_ID=G-CI123456 .

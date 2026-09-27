@@ -68,7 +68,7 @@ These are future directions rather than requirements for the initial release.
 - Discord OAuth and bot integration
 - SQLite relational persistence for guild and member data
 - GitHub Actions CI
-- cloud deployment remains future work
+- portable Docker deployment
 
 ## Repository Structure
 
@@ -218,6 +218,97 @@ Current abuse-sensitive routes are rate limited in memory:
 - quest administration and objective completion
 
 The current limiter is appropriate for a single Holdfast Node process. If the application is later scaled across multiple backend instances, move rate-limit state to shared infrastructure.
+
+## Production Deployment
+
+Holdfast ships as one Docker image. The image builds the Vite frontend, serves it from Express, and runs the API on the same origin. Mount `/data` on durable storage so the SQLite database survives deploys.
+
+Build the image:
+
+```bash
+docker build \
+  --build-arg VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX \
+  -t holdfast:latest .
+```
+
+Run it locally with production settings:
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -v holdfast-data:/data \
+  --env-file backend/.env.production \
+  holdfast:latest
+```
+
+The host should terminate HTTPS and forward traffic to port `3000`. Configure its health check to request:
+
+```text
+/api/health/ready
+```
+
+The process validates production configuration before listening. At minimum, configure:
+
+- `FRONTEND_URL`, using the canonical HTTPS origin with no trailing path
+- `GUILD_DATA_DIR=/data`
+- `SESSION_SECRET`, containing at least 32 bytes of random material
+- `DISCORD_CLIENT_ID`
+- `DISCORD_CLIENT_SECRET`
+- `DISCORD_GUILD_ID`
+- `DISCORD_BOT_TOKEN`
+- `DISCORD_RECRUIT_ROLE_ID`
+- `GUILD_OWNER_DISCORD_IDS`
+- `TRUST_PROXY=1` when the platform uses one trusted proxy hop
+
+Set the Discord application's OAuth redirect URL to:
+
+```text
+https://YOUR_DOMAIN/api/auth/discord/callback
+```
+
+Set `VITE_GA_MEASUREMENT_ID` while building the image to enable consent-gated Google Analytics. Leave it unset to omit analytics and its consent prompt.
+
+### Launch checklist
+
+- Point `FRONTEND_URL` and the Discord redirect URL at the final domain.
+- Generate a fresh production `SESSION_SECRET`.
+- Attach durable storage at `/data` and confirm backups cover the whole directory.
+- Confirm the bot is in the configured Discord server and its role is above roles it manages.
+- Confirm `/api/health/ready` returns HTTP 200.
+- Complete recruit login, existing-member login, logout, profile editing, quest signup, and quest leave on the live domain.
+- Verify a non-officer cannot access the control room and an owner can.
+- Accept analytics once and confirm the GA4 Realtime report receives a page view.
+- Restart or redeploy once and confirm guild data remains intact.
+
+Create a consistent on-demand SQLite backup to storage outside the live data volume:
+
+```bash
+cd backend
+BACKUP_DIR=/path/to/backup-storage npm run backup
+```
+
+Schedule that command with the host or use the platform's volume snapshots. A successful backup contains the SQLite database, metadata, and Discord provisioning state when present.
+
+## Discord Provisioning
+
+Discord no longer supports applications creating a new server through the API. Create an empty Holdfast server in Discord, add the bot with Manage Server, Manage Roles, and Manage Channels permissions, and then apply the committed Holdfast manifest.
+
+Preview the changes without writing anything:
+
+```bash
+cd backend
+npm run discord:plan
+```
+
+Create or update the managed roles and channels:
+
+```bash
+npm run discord:apply
+```
+
+The provisioner is additive and idempotent. It does not delete unmanaged roles or channels. It stores Discord resource IDs in `discord-provisioning-state.json` inside `GUILD_DATA_DIR`, so keep that file with the rest of the persistent deployment data.
+
+After applying, the command prints the role IDs required by the production environment. New members who use the website recruitment flow receive the generated Recruit role automatically.
 
 ## AI-Assisted Development
 

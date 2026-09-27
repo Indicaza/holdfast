@@ -47,19 +47,26 @@
   gap: clamp(var(--space-4), 2vw, var(--space-8));
 }
 
-.footer__links a {
+.footer__links a,
+.footer__links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
+  cursor: pointer;
   transition:
     color var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
 }
 
 .footer__links a:hover,
-.footer__links a:focus-visible {
+.footer__links a:focus-visible,
+.footer__links button:hover,
+.footer__links button:focus-visible {
   color: var(--color-accent-bright);
   transform: translateY(-1px);
 }
