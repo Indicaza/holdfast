@@ -25,6 +25,14 @@ const RACE_SUGGESTIONS = [
   'Skyborne',
 ]
 
+function detectedTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+  } catch {
+    return ''
+  }
+}
+
 function blankCharacter() {
   return {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -54,7 +62,8 @@ function normalizeDraft(member) {
 
   return {
     battleTag: profile.battleTag || '',
-    timezone: profile.timezone || '',
+    timezone: profile.timezone || detectedTimezone(),
+    timezoneSource: profile.timezoneSource || (profile.timezone ? 'manual' : 'detected'),
     availability: profile.availability || '',
     bio: profile.bio || '',
     characters,
@@ -73,6 +82,20 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
     setDraft((current) => ({
       ...current,
       [field]: value,
+    }))
+  }
+
+  function useDetectedTimezone() {
+    const timezone = detectedTimezone()
+
+    if (!timezone) {
+      return
+    }
+
+    setDraft((current) => ({
+      ...current,
+      timezone,
+      timezoneSource: 'detected',
     }))
   }
 
@@ -211,13 +234,29 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
 
             <label>
               <span>Timezone</span>
-              <input
-                type="text"
-                maxLength="64"
-                placeholder="ET / UTC-4 / whatever is useful"
-                value={draft.timezone}
-                onChange={(event) => updateField('timezone', event.target.value)}
-              />
+              <div className="member-editor__timezone">
+                <input
+                  type="text"
+                  maxLength="64"
+                  placeholder="America/Detroit"
+                  value={draft.timezone}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      timezone: event.target.value,
+                      timezoneSource: 'manual',
+                    }))
+                  }
+                />
+                <button type="button" onClick={useDetectedTimezone}>
+                  Auto
+                </button>
+              </div>
+              <small>
+                {draft.timezoneSource === 'manual'
+                  ? 'Manual override'
+                  : 'Detected automatically from this browser'}
+              </small>
             </label>
           </div>
 
