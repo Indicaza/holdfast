@@ -1,23 +1,163 @@
 .guildos-auth {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: var(--space-3);
 }
 
-.guildos-auth button {
+.guildos-auth button,
+.guildos-auth__join {
+  display: inline-flex;
   min-height: 3rem;
+  align-items: center;
+  justify-content: center;
   padding-inline: var(--space-6);
   border: var(--border-accent);
   background: var(--color-accent);
   color: var(--color-background);
+  font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.guildos-auth__join {
+  background: rgba(7, 17, 31, 0.48);
+  color: var(--color-text-strong);
+}
+
+.guildos-auth button:hover,
+.guildos-auth button:focus-visible,
+.guildos-auth__join:hover,
+.guildos-auth__join:focus-visible {
+  border-color: var(--color-accent-bright);
+  box-shadow:
+    0 0.8rem 2rem rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .guildos-auth button:hover,
 .guildos-auth button:focus-visible {
-  border-color: var(--color-accent-bright);
   background: var(--color-accent-bright);
+}
+
+.guildos-auth__join:hover,
+.guildos-auth__join:focus-visible {
+  background: rgba(11, 27, 48, 0.72);
+  color: var(--color-accent-bright);
+}
+
+.guildos-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(16rem, 0.8fr);
+  align-items: center;
+  gap: var(--space-6);
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+  border: var(--border-accent);
+  background:
+    linear-gradient(135deg, rgba(29, 69, 111, 0.18), rgba(7, 17, 31, 0.76)),
+    var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.guildos-profile__avatar {
+  display: grid;
+  width: 6rem;
+  height: 6rem;
+  place-items: center;
+  overflow: hidden;
+  border: var(--border-accent);
+  border-radius: 50%;
+  background: rgba(3, 8, 15, 0.42);
+  color: var(--color-accent-bright);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-34);
+}
+
+.guildos-profile__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guildos-profile__identity h2 {
+  margin-top: var(--space-2);
+  color: var(--color-text-strong);
+}
+
+.guildos-profile__identity > p:last-child {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.guildos-profile__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.guildos-profile__status span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-accent-bright);
+  box-shadow: 0 0 0.75rem rgba(196, 166, 103, 0.55);
+}
+
+.guildos-profile__note {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-6);
+  border-left: var(--border-subtle);
+}
+
+.guildos-profile__note strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
+}
+
+.guildos-profile__note span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.guildos-management {
+  margin-top: var(--space-8);
+}
+
+.guildos-management p {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 48rem) {
+  .guildos-profile {
+    grid-template-columns: auto 1fr;
+  }
+
+  .guildos-profile__note {
+    grid-column: 1 / -1;
+    padding-top: var(--space-5);
+    padding-left: 0;
+    border-top: var(--border-subtle);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 32rem) {
+  .guildos-profile {
+    grid-template-columns: 1fr;
+  }
 }
