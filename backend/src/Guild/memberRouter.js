@@ -141,6 +141,7 @@ async function profileFor(memberId) {
     ...projected,
     lastActivityAt: latestActivityAt(member, history),
     assignments: workspace.assignments.get(member.id) || [],
+    activityCount: history.length,
     activity: history.slice(0, 40).map((transaction) => ({
       id: transaction.id,
       type: transaction.type,
