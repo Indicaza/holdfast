@@ -82,6 +82,7 @@ function projectMember(member, totals, assignments) {
     displayName: member.displayName,
     initials: member.initials,
     avatarUrl: member.avatarUrl,
+    guildJoinedAt: member.guildJoinedAt || null,
     firstSeenAt: member.firstSeenAt,
     updatedAt: member.updatedAt,
     role: memberRole(member),
@@ -91,8 +92,20 @@ function projectMember(member, totals, assignments) {
 }
 
 function latestActivityAt(member, history) {
-  const contributionTime = history[0]?.createdAt;
-  return contributionTime || member.updatedAt || member.firstSeenAt || null;
+  const candidates = [
+    history[0]?.createdAt,
+    member.updatedAt,
+    member.firstSeenAt,
+  ]
+    .filter(Boolean)
+    .map((value) => new Date(value).getTime())
+    .filter((value) => Number.isFinite(value));
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  return new Date(Math.max(...candidates)).toISOString();
 }
 
 async function memberWorkspace() {
