@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import QuestJsonImport from './QuestJsonImport.jsx'
 import './QuestEditor.css'
 
