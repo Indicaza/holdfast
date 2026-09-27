@@ -233,12 +233,36 @@ function quest(value, path, index, limits) {
   };
 }
 
+function assertUniqueAssignees(quests) {
+  for (const questItem of quests) {
+    for (const objectiveItem of questItem.objectives) {
+      const seen = new Set();
+
+      for (const assignmentItem of objectiveItem.assignments) {
+        if (!assignmentItem.memberId) {
+          continue;
+        }
+
+        if (seen.has(assignmentItem.memberId)) {
+          throw new QuestValidationError(
+            `“${assignmentItem.name}” is assigned more than once to “${objectiveItem.title}”.`,
+          );
+        }
+
+        seen.add(assignmentItem.memberId);
+      }
+    }
+  }
+}
+
 export function normalizeQuestDocument(value) {
   const input = object(value, "questDocument");
   const limits = rewardLimits(input.rewardLimits, "questDocument.rewardLimits");
   const quests = list(input.quests ?? [], "questDocument.quests", 60).map(
     (item, index) => quest(item, `questDocument.quests[${index}]`, index, limits),
   );
+
+  assertUniqueAssignees(quests);
 
   const questIds = new Set();
   const objectiveIds = new Set();
