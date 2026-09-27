@@ -3,6 +3,7 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import MemberAccessModal from './MemberAccessModal.jsx'
+import MemberProfileEditor from './MemberProfileEditor.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import './MemberProfile.css'
 
@@ -295,7 +296,165 @@ function ProfileMessage({ title, body }) {
         <span>{body}</span>
         <a href="/members">Back to Members</a>
       </section>
+
+      {editing ? (
+        <MemberProfileEditor
+          member={member}
+          onClose={() => setEditing(false)}
+          onSaved={(updatedMember) => {
+            setMember(updatedMember)
+            setEditing(false)
+          }}
+        />
+      ) : null}
     </PageShell>
+  )
+}
+
+function characterDescriptor(character) {
+  return [character?.race, character?.className, character?.spec]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function CharacterCard({ character, main = false }) {
+  if (!character) {
+    return null
+  }
+
+  return (
+    <article
+      className={`member-profile__character ${
+        main ? 'member-profile__character--main' : ''
+      }`}
+    >
+      <div>
+        <span>{main ? 'Main character' : 'Alt'}</span>
+        <h3>{character.name}</h3>
+        {characterDescriptor(character) ? (
+          <p>{characterDescriptor(character)}</p>
+        ) : null}
+      </div>
+
+      {character.professions?.length ? (
+        <div className="member-profile__professions">
+          {character.professions.map((profession) => (
+            <span key={profession}>{profession}</span>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
+function PlayerIdentity({ member, editable, onEdit }) {
+  const profile = member.profile || {}
+  const characters = Array.isArray(profile.characters)
+    ? profile.characters
+    : []
+  const mainCharacter =
+    member.mainCharacter ||
+    characters.find((character) => character.isMain) ||
+    characters[0] ||
+    null
+  const alts = characters.filter(
+    (character) => !mainCharacter || character.id !== mainCharacter.id,
+  )
+  const hasContact =
+    profile.timezone || profile.availability || profile.bio
+  const hasIdentity = mainCharacter || alts.length || hasContact
+
+  if (!hasIdentity && !editable) {
+    return null
+  }
+
+  return (
+    <section
+      className="member-profile__section member-profile__player"
+      aria-labelledby="member-player-title"
+    >
+      <div className="member-profile__section-heading">
+        <div>
+          <p>Player</p>
+          <h2 id="member-player-title">In Azeroth</h2>
+        </div>
+
+        {editable ? (
+          <button
+            className="member-profile__edit"
+            type="button"
+            onClick={onEdit}
+          >
+            Edit profile
+          </button>
+        ) : null}
+      </div>
+
+      {hasIdentity ? (
+        <div
+          className={`member-profile__player-body ${
+            hasContact ? '' : 'member-profile__player-body--characters-only'
+          }`}
+        >
+          <div className="member-profile__characters">
+            {mainCharacter ? (
+              <CharacterCard character={mainCharacter} main />
+            ) : (
+              <div className="member-profile__player-empty">
+                <strong>No main character listed.</strong>
+                <span>Add your main so guildmates know who to look for in game.</span>
+              </div>
+            )}
+
+            {alts.length ? (
+              <div className="member-profile__alts">
+                {alts.map((character) => (
+                  <CharacterCard key={character.id} character={character} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {hasContact ? (
+            <aside className="member-profile__contact">
+              <dl>
+                {profile.timezone ? (
+                  <div>
+                    <dt>Timezone</dt>
+                    <dd>{profile.timezone}</dd>
+                  </div>
+                ) : null}
+                {profile.availability ? (
+                  <div>
+                    <dt>Usually around</dt>
+                    <dd>{profile.availability}</dd>
+                  </div>
+                ) : null}
+              </dl>
+
+              {profile.bio ? (
+                <div className="member-profile__bio">
+                  <span>About</span>
+                  <p>{profile.bio}</p>
+                </div>
+              ) : null}
+            </aside>
+          ) : null}
+        </div>
+      ) : (
+        <button
+          className="member-profile__identity-empty"
+          type="button"
+          onClick={onEdit}
+        >
+          <strong>Build your guild card</strong>
+          <span>
+            Add your BattleTag, main character, class, spec, professions, and
+            when you usually play.
+          </span>
+        </button>
+      )}
+    </section>
   )
 }
 
@@ -304,6 +463,7 @@ function MemberProfile({ memberId }) {
   const [member, setMember] = useState(null)
   const [status, setStatus] = useState('loading')
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const isSelfRoute = memberId === 'me'
   const endpoint = isSelfRoute
@@ -423,6 +583,7 @@ function MemberProfile({ memberId }) {
   const contribution = member.contribution || {}
   const assignments = member.assignments || []
   const activity = member.activity || []
+  const isSelf = member.id === session.user?.id
 
   return (
     <PageShell className="member-profile member-profile--loaded">
@@ -444,6 +605,11 @@ function MemberProfile({ memberId }) {
 
           <div className="member-profile__meta-row">
             <p className="member-profile__username">@{member.username}</p>
+            {member.profile?.battleTag ? (
+              <span className="member-profile__battletag">
+                {member.profile.battleTag}
+              </span>
+            ) : null}
             <button
               className="member-profile__share"
               type="button"
@@ -451,6 +617,15 @@ function MemberProfile({ memberId }) {
             >
               {copied ? 'Copied' : 'Share profile'}
             </button>
+            {isSelf ? (
+              <button
+                className="member-profile__share"
+                type="button"
+                onClick={() => setEditing(true)}
+              >
+                Edit profile
+              </button>
+            ) : null}
           </div>
           <p className="member-profile__tenure">{tenureText(member)}</p>
         </div>
@@ -472,6 +647,12 @@ function MemberProfile({ memberId }) {
           <strong>{formatNumber(assignments.length)}</strong>
         </article>
       </section>
+
+      <PlayerIdentity
+        member={member}
+        editable={isSelf}
+        onEdit={() => setEditing(true)}
+      />
 
       <section
         className="member-profile__section"
@@ -530,7 +711,14 @@ function MemberProfile({ memberId }) {
                   ) : null}
                 </div>
 
-                <Reward reward={assignment.reward} />
+                <div className="member-profile__assignment-footer">
+                  <Reward reward={assignment.reward} />
+                  <a
+                    href={`/quests?q=${encodeURIComponent(assignment.questTitle)}`}
+                  >
+                    View quest →
+                  </a>
+                </div>
               </article>
             ))}
           </div>
@@ -592,6 +780,17 @@ function MemberProfile({ memberId }) {
           </div>
         )}
       </section>
+
+      {editing ? (
+        <MemberProfileEditor
+          member={member}
+          onClose={() => setEditing(false)}
+          onSaved={(updatedMember) => {
+            setMember(updatedMember)
+            setEditing(false)
+          }}
+        />
+      ) : null}
     </PageShell>
   )
 }

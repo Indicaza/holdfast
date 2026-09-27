@@ -6,7 +6,11 @@ import {
   readMemberContributionHistory,
 } from "../Contribution/contributionRepository.js";
 import { readQuests } from "../Quest/questRepository.js";
-import { readGuildMembers } from "./memberRepository.js";
+import {
+  readGuildMembers,
+  updateGuildMemberProfile,
+} from "./memberRepository.js";
+import { primaryCharacter } from "./memberProfile.js";
 import {
   guildRankMetadata,
   normalizeGuildRank,
@@ -91,6 +95,8 @@ function projectMember(member, totals, assignments) {
     rank,
     rankMeta,
     role: rankMeta.isLeadership ? "Leadership" : "Member",
+    profile: member.profile,
+    mainCharacter: primaryCharacter(member.profile),
     contribution,
     repProgression: repProgressionForRank(rank, contribution.rep),
     activeAssignmentCount: activeAssignments.length,
@@ -210,6 +216,28 @@ export function createMemberRouter() {
     } catch (error) {
       console.error("Unable to read current member profile", error);
       res.status(500).json({ error: "member_unavailable" });
+    }
+  });
+
+  router.patch("/me", requireAuthenticated, async (req, res) => {
+    try {
+      const updated = await updateGuildMemberProfile(
+        req.auth.user.id,
+        req.body?.profile ?? req.body,
+      );
+
+      if (!updated) {
+        res.status(404).json({ error: "member_not_found" });
+        return;
+      }
+
+      const profile = await profileFor(req.auth.user.id);
+
+      res.set("Cache-Control", "no-store");
+      res.json({ member: profile });
+    } catch (error) {
+      console.error("Unable to update member profile", error);
+      res.status(500).json({ error: "member_profile_update_failed" });
     }
   });
 
