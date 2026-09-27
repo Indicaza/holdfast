@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
 import Modal from '../Modal/Modal.jsx'
 import './QuestSignupFlow.css'
@@ -10,6 +11,7 @@ function cleanSignupQuery() {
   const url = new URL(window.location.href)
   url.searchParams.delete('signupQuest')
   url.searchParams.delete('signupObjective')
+  url.searchParams.delete('questAction')
   url.searchParams.delete('auth')
   window.history.replaceState(
     null,
@@ -18,11 +20,12 @@ function cleanSignupQuery() {
   )
 }
 
-function pendingSignupReturnTo(questId, objectiveId) {
+function pendingQuestActionReturnTo(questId, objectiveId, action = 'signup') {
   const url = new URL(window.location.href)
   url.searchParams.delete('auth')
   url.searchParams.set('signupQuest', questId)
   url.searchParams.set('signupObjective', objectiveId)
+  url.searchParams.set('questAction', action)
   return `${url.pathname}${url.search}${url.hash}`
 }
 
@@ -61,12 +64,13 @@ export function useQuestSignup({ catalog, setCatalog }) {
     const params = new URLSearchParams(window.location.search)
     const questId = params.get('signupQuest')
     const objectiveId = params.get('signupObjective')
+    const action = params.get('questAction') || 'signup'
 
     if (!questId || !objectiveId) {
       return
     }
 
-    const key = `${questId}:${objectiveId}`
+    const key = `${action}:${questId}:${objectiveId}`
 
     if (pendingHandledRef.current === key) {
       return
@@ -89,6 +93,20 @@ export function useQuestSignup({ catalog, setCatalog }) {
     }
 
     pendingHandledRef.current = key
+
+    if (action === 'leave') {
+      if (objectiveSelfAssignment(objective)) {
+        setDialog({ kind: 'leave-confirm', quest, objective })
+      } else {
+        setDialog({
+          kind: 'error',
+          title: 'You are no longer assigned here.',
+          message:
+            'Your assignment changed while you were signing in. There is nothing to remove.',
+        })
+      }
+      return
+    }
 
     if (objectiveSelfAssignment(objective)) {
       setDialog(duplicateDialog(quest, objective))
@@ -124,7 +142,7 @@ export function useQuestSignup({ catalog, setCatalog }) {
 
     if (!session.authenticated) {
       session.signIn(
-        pendingSignupReturnTo(quest.id, objective.id),
+        pendingQuestActionReturnTo(quest.id, objective.id, 'signup'),
         'member',
       )
       return
@@ -141,6 +159,27 @@ export function useQuestSignup({ catalog, setCatalog }) {
     setDialog({ kind: 'leave-confirm', quest, objective })
   }
 
+  async function runMemberMutation(url, body, action) {
+    return runAuthenticatedMutation({
+      request: () =>
+        apiJson(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      refresh: session.refresh,
+      reauthenticate: () =>
+        session.signIn(
+          pendingQuestActionReturnTo(
+            body.questId,
+            body.objectiveId,
+            action,
+          ),
+          'member',
+        ),
+    })
+  }
+
   async function confirmSignup() {
     if (!dialog?.quest || !dialog?.objective) {
       return
@@ -150,14 +189,18 @@ export function useQuestSignup({ catalog, setCatalog }) {
     setDialog({ kind: 'saving', quest, objective })
 
     try {
-      const result = await apiJson('/api/quests/member/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const result = await runMemberMutation(
+        '/api/quests/member/signup',
+        {
           questId: quest.id,
           objectiveId: objective.id,
-        }),
-      })
+        },
+        'signup',
+      )
+
+      if (!result) {
+        return
+      }
 
       if (result?.catalog?.quests) {
         setCatalog(result.catalog)
@@ -190,14 +233,18 @@ export function useQuestSignup({ catalog, setCatalog }) {
     setDialog({ kind: 'leaving', quest, objective })
 
     try {
-      const result = await apiJson('/api/quests/member/unassign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const result = await runMemberMutation(
+        '/api/quests/member/unassign',
+        {
           questId: quest.id,
           objectiveId: objective.id,
-        }),
-      })
+        },
+        'leave',
+      )
+
+      if (!result) {
+        return
+      }
 
       if (result?.catalog?.quests) {
         setCatalog(result.catalog)

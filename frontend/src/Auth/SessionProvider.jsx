@@ -52,24 +52,30 @@ export function SessionProvider({ children }) {
   const refresh = useCallback(async () => {
     try {
       const data = await apiJson('/api/me')
-
-      setSession({
+      const nextSession = {
         status: 'ready',
         authenticated: Boolean(data?.authenticated),
         user: data?.user ?? null,
         permissions: data?.permissions ?? [],
-      })
+      }
+
+      setSession(nextSession)
 
       if (data?.authenticated) {
         void syncDetectedTimezone()
       }
+
+      return nextSession
     } catch {
-      setSession({
+      const nextSession = {
         status: 'error',
         authenticated: false,
         user: null,
         permissions: [],
-      })
+      }
+
+      setSession(nextSession)
+      return nextSession
     }
   }, [])
 
