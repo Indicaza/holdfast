@@ -29,8 +29,8 @@ const routes = {
     path: '/quests',
     title: 'Holdfast Quests | Alliance WoW Forever Guild',
     description:
-      'Browse Holdfast published guild quests, objectives, assignments, and rewards for WoW Forever.',
-    robots: defaultRobots,
+      'Holdfast member quest board for guild objectives, assignments, and rewards.',
+    robots: 'noindex,nofollow',
   },
   '/members': {
     component: Members,
