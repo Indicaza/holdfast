@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import MemberAccessModal from './MemberAccessModal.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import './MemberProfile.css'
 
@@ -153,6 +155,41 @@ function RepProgress({ member }) {
   )
 }
 
+
+function ProfileLoading() {
+  return (
+    <PageShell className="member-profile member-profile--loaded">
+      <div className="member-profile__skeleton" aria-label="Loading member profile">
+        <div className="member-profile__skeleton-avatar" />
+        <div className="member-profile__skeleton-copy">
+          <span />
+          <strong />
+          <span />
+        </div>
+      </div>
+    </PageShell>
+  )
+}
+
+function ProfileMessage({ title, body }) {
+  return (
+    <PageShell className="member-profile member-profile--loaded">
+      <nav className="member-profile__crumbs" aria-label="Member profile navigation">
+        <a href="/members">Members</a>
+        <span aria-hidden="true">/</span>
+        <span>Profile</span>
+      </nav>
+
+      <section className="member-profile__message">
+        <p>GuildOS</p>
+        <h1>{title}</h1>
+        <span>{body}</span>
+        <a href="/members">Back to Members</a>
+      </section>
+    </PageShell>
+  )
+}
+
 function MemberProfile({ memberId }) {
   const session = useSession()
   const [member, setMember] = useState(null)
@@ -225,78 +262,54 @@ function MemberProfile({ memberId }) {
     }
   }
 
-  if (session.status === 'loading') {
+  const returnTo = isSelfRoute ? '/members/me' : `/members/${memberId}`
+  const closeGate = () => window.location.assign('/')
+
+  if (session.status === 'loading' || session.status === 'error') {
     return (
-      <PageShell title="Member" centered className="member-profile">
-        <p className="member-profile__state">Opening member profile…</p>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo={returnTo}
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (!session.authenticated) {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title="Member profile"
-        intro="Member profiles are available to Holdfast members."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__signin">
-          <button
-            type="button"
-            onClick={() =>
-              session.signIn(
-                isSelfRoute ? '/members/me' : `/members/${memberId}`,
-                'member',
-              )
-            }
-          >
-            Sign in with Discord
-          </button>
-          <a href="/join">New here? Join Holdfast</a>
-        </div>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo={returnTo}
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (status === 'loading') {
-    return (
-      <PageShell title="Member" centered className="member-profile">
-        <p className="member-profile__state">Opening member profile…</p>
-      </PageShell>
-    )
+    return <ProfileLoading />
   }
 
   if (status === 'error') {
     return (
-      <PageShell
-        eyebrow="Members"
+      <ProfileMessage
         title="Profile unavailable"
-        intro="GuildOS could not load this member right now."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__back">
-          <a href="/members">Back to Members</a>
-        </div>
-      </PageShell>
+        body="GuildOS could not load this member right now."
+      />
     )
   }
 
   if (status === 'not-found' || !member) {
     return (
-      <PageShell
-        eyebrow="Members"
+      <ProfileMessage
         title="Member not found"
-        intro="That profile is not in the Holdfast member directory."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__back">
-          <a href="/members">Back to Members</a>
-        </div>
-      </PageShell>
+        body="That profile is not in the Holdfast member directory."
+      />
     )
   }
 
