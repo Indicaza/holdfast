@@ -14,7 +14,7 @@ import {
 const DISCORD_API = "https://discord.com/api/v10";
 const DISCORD_AUTHORIZE = "https://discord.com/oauth2/authorize";
 const DISCORD_TOKEN = `${DISCORD_API}/oauth2/token`;
-const DEFAULT_RETURN_TO = "/guildos";
+const DEFAULT_RETURN_TO = "/";
 const MEMBER_MODE = "member";
 const RECRUIT_MODE = "recruit";
 
@@ -322,7 +322,7 @@ export function createDiscordAuthRouter() {
         verifiedAt: Date.now(),
       });
 
-      res.redirect(destinationUrl(ready.frontendUrl, returnTo));
+      res.redirect(destinationUrl(ready.frontendUrl, returnTo, "connected"));
     } catch (error) {
       console.error("Discord authentication failed", error);
       const authCode = error.authCode || "failed";
