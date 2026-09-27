@@ -1,22 +1,17 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const DEFAULT_DATA_FILE = fileURLToPath(
-  new URL("../../data/contributions.json", import.meta.url),
-);
+import {
+  ensureRuntimeDataFile,
+  runtimeDataFile,
+} from "../Data/runtimeData.js";
 
-function dataFile() {
-  if (!process.env.GUILD_DATA_DIR) {
-    return DEFAULT_DATA_FILE;
-  }
-
-  return path.join(path.resolve(process.env.GUILD_DATA_DIR), "contributions.json");
-}
+const CONTRIBUTIONS_FILE = "contributions.json";
 
 async function readDocument() {
   try {
-    const raw = await readFile(dataFile(), "utf8");
+    const target = await ensureRuntimeDataFile(CONTRIBUTIONS_FILE);
+    const raw = await readFile(target, "utf8");
     const parsed = JSON.parse(raw);
 
     return {
@@ -33,7 +28,7 @@ async function readDocument() {
 }
 
 async function writeDocument(document) {
-  const target = dataFile();
+  const target = runtimeDataFile(CONTRIBUTIONS_FILE);
   const directory = path.dirname(target);
   const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
 
