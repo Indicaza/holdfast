@@ -61,10 +61,6 @@ function normalizeDraft(member) {
   }
 }
 
-function professionText(character) {
-  return (character.professions || []).join(', ')
-}
-
 function MemberProfileEditor({ member, onClose, onSaved }) {
   const [draft, setDraft] = useState(() => normalizeDraft(member))
   const [status, setStatus] = useState('idle')
