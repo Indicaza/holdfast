@@ -5,25 +5,25 @@ import './MemberAccessModal.css'
 function copyFor(status, authCode) {
   if (status === 'loading') {
     return {
-      eyebrow: 'GuildOS',
+      eyebrow: 'Holdfast',
       title: 'Checking your session',
-      intro: 'One moment while GuildOS checks your member access.',
+      intro: 'One moment while Holdfast checks your member access.',
       action: null,
     }
   }
 
   if (status === 'error') {
     return {
-      eyebrow: 'GuildOS',
+      eyebrow: 'Holdfast',
       title: 'Connection problem',
-      intro: 'GuildOS could not verify your member session. Try the connection again.',
+      intro: 'Holdfast could not verify your member session. Try the connection again.',
       action: 'retry',
     }
   }
 
   if (authCode === 'cancelled') {
     return {
-      eyebrow: 'GuildOS',
+      eyebrow: 'Holdfast',
       title: 'Sign-in cancelled',
       intro: 'Nothing changed. Sign in when you are ready.',
       action: 'signin',
@@ -32,7 +32,7 @@ function copyFor(status, authCode) {
 
   if (authCode) {
     return {
-      eyebrow: 'GuildOS',
+      eyebrow: 'Holdfast',
       title: 'Discord sign-in failed',
       intro: 'We could not finish the Discord sign-in. Try again.',
       action: 'signin',
@@ -40,7 +40,7 @@ function copyFor(status, authCode) {
   }
 
   return {
-    eyebrow: 'GuildOS',
+    eyebrow: 'Holdfast',
     title: 'Member sign in',
     intro: 'Use the Discord account that is already in Holdfast.',
     action: 'signin',
