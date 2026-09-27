@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import MemberAccessModal from './MemberAccessModal.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import './Members.css'
 
@@ -182,41 +184,38 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id])
 
-  if (session.status === 'loading') {
+  const closeGate = () => window.location.assign('/')
+
+  if (session.status === 'loading' || session.status === 'error') {
     return (
-      <PageShell title="Members" centered className="members-page">
-        <p className="members-page__state">Opening the member directory…</p>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo="/members"
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (!session.authenticated) {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title="Members"
-        intro="The member directory is available to Holdfast members."
-        centered
-        className="members-page"
-      >
-        <div className="members-page__signin">
-          <button
-            type="button"
-            onClick={() => session.signIn('/members', 'member')}
-          >
-            Sign in with Discord
-          </button>
-          <a href="/join">New here? Join Holdfast</a>
-        </div>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo="/members"
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   return (
     <PageShell
       title="Members"
-      intro="Find the people behind Holdfast, see what they are working on, and open their service record."
-      centered
+      intro="Find people, see what they are working on, and open their service record."
       className="members-page"
     >
       {status === 'error' ? (
