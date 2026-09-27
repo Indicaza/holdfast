@@ -361,7 +361,7 @@ function PlayerIdentity({ member, editable, onEdit }) {
     (character) => !mainCharacter || character.id !== mainCharacter.id,
   )
   const hasContact =
-    profile.battleTag || profile.timezone || profile.availability || profile.bio
+    profile.timezone || profile.availability || profile.bio
   const hasIdentity = mainCharacter || alts.length || hasContact
 
   if (!hasIdentity && !editable) {
@@ -413,12 +413,6 @@ function PlayerIdentity({ member, editable, onEdit }) {
 
           <aside className="member-profile__contact">
             <dl>
-              {profile.battleTag ? (
-                <div>
-                  <dt>BattleTag</dt>
-                  <dd>{profile.battleTag}</dd>
-                </div>
-              ) : null}
               {profile.timezone ? (
                 <div>
                   <dt>Timezone</dt>
