@@ -151,3 +151,18 @@
     animation: none;
   }
 }
+
+
+.modal__panel--left .modal__header {
+  justify-items: start;
+  text-align: left;
+}
+
+.modal__panel--left .modal__header h1 {
+  max-width: 18ch;
+}
+
+.modal__panel--left .modal__intro {
+  max-width: 34rem;
+  text-align: left;
+}
