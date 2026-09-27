@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
@@ -64,7 +64,16 @@ function MemberCard({ member }) {
           ) : null}
         </div>
         <p>@{member.username}</p>
-        <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
+        {member.mainCharacter ? (
+          <span className="members-page__character">
+            {member.mainCharacter.name}
+            {member.mainCharacter.className
+              ? ` · ${member.mainCharacter.className}`
+              : ''}
+          </span>
+        ) : (
+          <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
+        )}
       </div>
 
       <div className="members-page__member-meta">
@@ -95,6 +104,8 @@ function Members() {
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
+  const [sort, setSort] = useState('name')
+  const searchRef = useRef(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -103,6 +114,28 @@ function Members() {
 
     return () => window.clearTimeout(timer)
   }, [searchInput])
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) {
+        return
+      }
+
+      const tagName = document.activeElement?.tagName?.toLowerCase()
+
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+        return
+      }
+
+      event.preventDefault()
+      searchRef.current?.focus()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
 
   useEffect(() => {
     if (!session.authenticated) {
@@ -148,10 +181,26 @@ function Members() {
       if (!matchesFilter) return false
       if (!query) return true
 
+      const profile = member.profile || {}
+      const characters = Array.isArray(profile.characters)
+        ? profile.characters
+        : []
+      const characterSearch = characters.flatMap((character) => [
+        character.name,
+        character.race,
+        character.className,
+        character.spec,
+        ...(character.professions || []),
+      ])
+
       return [
         member.displayName,
         member.username,
         member.rank,
+        profile.battleTag,
+        profile.timezone,
+        profile.availability,
+        ...characterSearch,
       ]
         .filter(Boolean)
         .join(' ')
@@ -167,11 +216,26 @@ function Members() {
         return leftSelf ? -1 : 1
       }
 
+      if (sort === 'rank') {
+        const rankDelta =
+          Number(right.rankMeta?.order || 0) - Number(left.rankMeta?.order || 0)
+
+        if (rankDelta) return rankDelta
+      }
+
+      if (sort === 'rep') {
+        const repDelta =
+          Number(right.contribution?.rep || 0) -
+          Number(left.contribution?.rep || 0)
+
+        if (repDelta) return repDelta
+      }
+
       return memberName(left).localeCompare(memberName(right), undefined, {
         sensitivity: 'base',
       })
     })
-  }, [directory.members, filter, query, session.user?.id])
+  }, [directory.members, filter, query, session.user?.id, sort])
 
   const closeGate = () => window.location.assign('/')
 
@@ -221,10 +285,11 @@ function Members() {
               <div>
                 <input
                   id="member-search"
+                  ref={searchRef}
                   type="search"
                   autoComplete="off"
                   value={searchInput}
-                  placeholder="Name or Discord username…"
+                  placeholder="Member, character, class, profession, BattleTag…"
                   onChange={(event) => setSearchInput(event.target.value)}
                 />
                 {searchInput ? (
@@ -256,6 +321,18 @@ function Members() {
                 </button>
               ))}
             </div>
+
+            <label className="members-page__sort">
+              <span>Sort</span>
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="name">Name</option>
+                <option value="rank">Rank</option>
+                <option value="rep">Rep</option>
+              </select>
+            </label>
 
             <p className="members-page__result-count" aria-live="polite">
               <span>
