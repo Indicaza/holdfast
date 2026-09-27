@@ -4,7 +4,7 @@ import express from "express";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { requirePermission } from "./Auth/permissions.js";
-import { attachSession } from "./Auth/session.js";
+import { attachSession, setSession } from "./Auth/session.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
@@ -33,6 +33,8 @@ app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
 
 app.get("/api/me", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
   if (!req.auth) {
     res.json({ authenticated: false });
     return;
@@ -43,6 +45,11 @@ app.get("/api/me", async (req, res) => {
   } catch (error) {
     console.error("Unable to update guild member directory", error);
   }
+
+  setSession(res, {
+    user: req.auth.user,
+    permissions: req.auth.permissions,
+  });
 
   res.json({
     authenticated: true,

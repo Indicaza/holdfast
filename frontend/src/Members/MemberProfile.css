@@ -766,3 +766,103 @@
     grid-column: auto;
   }
 }
+
+
+.member-profile__skeleton {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 15rem;
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+  border: var(--border-subtle);
+  border-top: var(--border-accent);
+  background: rgba(7, 17, 31, 0.42);
+  box-shadow: var(--shadow-soft);
+}
+
+.member-profile__skeleton-avatar {
+  width: 8rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(247, 245, 239, 0.06);
+}
+
+.member-profile__skeleton-copy {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 28rem;
+}
+
+.member-profile__skeleton-copy span,
+.member-profile__skeleton-copy strong {
+  display: block;
+  height: 0.9rem;
+  background: rgba(247, 245, 239, 0.06);
+}
+
+.member-profile__skeleton-copy strong {
+  width: 70%;
+  height: 2.6rem;
+}
+
+.member-profile__skeleton-copy span:first-child {
+  width: 30%;
+}
+
+.member-profile__skeleton-copy span:last-child {
+  width: 46%;
+}
+
+.member-profile__message {
+  max-width: 42rem;
+  padding: clamp(var(--space-6), 4vw, var(--space-9, 2.25rem));
+  border: var(--border-subtle);
+  border-top: var(--border-accent);
+  background:
+    linear-gradient(135deg, rgba(29, 69, 111, 0.1), transparent 70%),
+    rgba(7, 17, 31, 0.46);
+  box-shadow: var(--shadow-soft);
+}
+
+.member-profile__message > p {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.member-profile__message h1 {
+  margin-top: var(--space-2);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-34);
+  line-height: 1;
+  text-transform: none;
+}
+
+.member-profile__message > span {
+  display: block;
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.member-profile__message > a {
+  display: inline-block;
+  margin-top: var(--space-5);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+@media (max-width: 36rem) {
+  .member-profile__skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .member-profile__skeleton-avatar {
+    width: 6rem;
+  }
+}

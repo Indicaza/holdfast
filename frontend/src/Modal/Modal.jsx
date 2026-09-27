@@ -6,6 +6,7 @@ function Modal({
   title,
   intro,
   size = 'default',
+  align = 'center',
   onClose,
   children,
 }) {
@@ -40,7 +41,7 @@ function Modal({
     <div className="modal" role="presentation" onMouseDown={handleBackdrop}>
       <section
         ref={panelRef}
-        className={`modal__panel modal__panel--${size}`}
+        className={`modal__panel modal__panel--${size} modal__panel--${align}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

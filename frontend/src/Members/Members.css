@@ -15,9 +15,24 @@
   animation: none;
 }
 
-.members-page .page-shell__intro {
+.members-page .page-shell__header {
+  box-sizing: border-box;
+  width: min(100%, 76rem);
+  max-width: 76rem;
   margin-inline: auto;
-  text-align: center;
+}
+
+.members-page .page-shell__header h1 {
+  color: var(--color-accent-bright);
+  font-size: clamp(var(--font-size-fib-34), 5vw, var(--font-size-fib-55));
+  line-height: 0.95;
+  text-transform: none;
+}
+
+.members-page .page-shell__intro {
+  max-width: 42rem;
+  margin-inline: 0;
+  text-align: left;
 }
 
 .members-page .page-shell__body {

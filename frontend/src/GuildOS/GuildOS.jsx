@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import Home from '../Home/Home.jsx'
-import Modal from '../Modal/Modal.jsx'
+import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import './GuildOS.css'
@@ -9,85 +9,24 @@ function displayName(user) {
   return user?.guildNickname || user?.globalName || user?.username || 'member'
 }
 
-function authMessage(code) {
-  if (code === 'cancelled') {
-    return {
-      eyebrow: 'GuildOS',
-      title: 'Sign in cancelled.',
-      intro: 'Use your Holdfast Discord account whenever you are ready.',
-    }
-  }
-
-  if (code) {
-    return {
-      eyebrow: 'GuildOS',
-      title: 'Could not sign in.',
-      intro: 'Try Discord again. If it keeps failing, an officer can help.',
-    }
-  }
-
-  return {
-    eyebrow: 'GuildOS',
-    title: 'Member sign in',
-    intro: 'Already in Holdfast? Use your Discord account to open GuildOS.',
-  }
-}
-
 function GuildOS() {
   const session = useSession()
-  const authCode = new URLSearchParams(window.location.search).get('auth')
-  const signedOutCopy = authMessage(authCode)
   const close = useCallback(() => {
     window.location.assign('/')
   }, [])
 
-  if (session.status === 'loading') {
+  if (
+    session.status === 'loading' ||
+    session.status === 'error' ||
+    !session.authenticated
+  ) {
     return (
       <Home
         overlay={
-          <Modal
-            eyebrow="GuildOS"
-            title="Opening GuildOS."
-            intro="Checking your member session."
+          <MemberAccessModal
+            returnTo="/guildos"
             onClose={close}
-          >
-            <div className="guildos-modal-status" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-          </Modal>
-        }
-      />
-    )
-  }
-
-  if (!session.authenticated) {
-    return (
-      <Home
-        overlay={
-          <Modal
-            eyebrow={signedOutCopy.eyebrow}
-            title={signedOutCopy.title}
-            intro={signedOutCopy.intro}
-            onClose={close}
-          >
-            <div className="guildos-modal-actions">
-              <button
-                className="guildos-modal-action guildos-modal-action--primary"
-                type="button"
-                onClick={() => session.signIn('/guildos', 'member')}
-              >
-                Sign in with Discord
-              </button>
-              <a
-                className="guildos-modal-action guildos-modal-action--secondary"
-                href="/join"
-              >
-                New here? Join Holdfast
-              </a>
-            </div>
-          </Modal>
+          />
         }
       />
     )
