@@ -1,29 +1,33 @@
 import './RankInsignia.css'
 
 const ENLISTED = {
-  Corporal: { chevrons: 2, rockers: 0, center: 'swords' },
-  Sergeant: { chevrons: 3, rockers: 0, center: 'swords' },
-  'Master Sergeant': { chevrons: 3, rockers: 3, center: 'star' },
-  'Sergeant Major': { chevrons: 3, rockers: 4, center: 'star' },
+  Corporal: { chevronYs: [16, 35], center: 'swords', rockerYs: [] },
+  Sergeant: { chevronYs: [8, 24, 40], center: 'swords', rockerYs: [] },
+  'Master Sergeant': {
+    chevronYs: [6, 22, 38],
+    center: 'star',
+    rockerYs: [81, 91, 101],
+  },
+  'Sergeant Major': {
+    chevronYs: [6, 22, 38],
+    center: 'star',
+    rockerYs: [78, 87, 96, 105],
+  },
 }
 
-function Chevron({ index }) {
-  const y = 14 + index * 11
-
+function Chevron({ y }) {
   return (
     <polyline
-      points={`30,${y} 60,${y + 15} 90,${y}`}
+      points={`28,${y} 60,${y + 14} 92,${y}`}
       className="rank-insignia__stroke"
     />
   )
 }
 
-function Rocker({ index, count }) {
-  const y = 84 + index * 8 - Math.max(0, count - 3) * 4
-
+function Rocker({ y }) {
   return (
     <path
-      d={`M 32 ${y} Q 60 ${y + 14} 88 ${y}`}
+      d={`M 30 ${y} Q 60 ${y + 13} 90 ${y}`}
       className="rank-insignia__stroke"
     />
   )
@@ -32,12 +36,12 @@ function Rocker({ index, count }) {
 function CrossedSwords() {
   return (
     <g className="rank-insignia__stroke rank-insignia__swords">
-      <path d="M 45 58 L 76 84" />
-      <path d="M 75 58 L 44 84" />
-      <path d="M 41 82 L 48 89" />
-      <path d="M 79 82 L 72 89" />
-      <path d="M 40 86 L 47 79" />
-      <path d="M 80 86 L 73 79" />
+      <path d="M 43 57 L 77 91" />
+      <path d="M 77 57 L 43 91" />
+      <path d="M 70 84 L 82 96" />
+      <path d="M 50 84 L 38 96" />
+      <path d="M 70 84 L 81 73" />
+      <path d="M 50 84 L 39 73" />
     </g>
   )
 }
@@ -46,7 +50,7 @@ function Star() {
   return (
     <polygon
       className="rank-insignia__fill"
-      points="60,52 64,64 77,64 67,71 71,84 60,77 49,84 53,71 43,64 56,64"
+      points="60,54 63,62 72,62 65,67 68,76 60,71 52,76 55,67 48,62 57,62"
     />
   )
 }
@@ -60,19 +64,15 @@ function EnlistedInsignia({ rank }) {
 
   return (
     <>
-      {Array.from({ length: config.chevrons }, (_, index) => (
-        <Chevron key={`chevron-${index}`} index={index} />
+      {config.chevronYs.map((y, index) => (
+        <Chevron key={`chevron-${index}`} y={y} />
       ))}
 
       {config.center === 'swords' ? <CrossedSwords /> : null}
       {config.center === 'star' ? <Star /> : null}
 
-      {Array.from({ length: config.rockers }, (_, index) => (
-        <Rocker
-          key={`rocker-${index}`}
-          index={index}
-          count={config.rockers}
-        />
+      {config.rockerYs.map((y, index) => (
+        <Rocker key={`rocker-${index}`} y={y} />
       ))}
     </>
   )
@@ -159,10 +159,13 @@ function RankInsignia({ rank = 'Recruit', className = '' }) {
   if (noInsignia) {
     return (
       <span
-        className={`rank-insignia rank-insignia--none ${className}`}
+        className={`rank-insignia rank-insignia--entry rank-insignia--${rank.toLowerCase()} ${className}`}
         aria-hidden="true"
       >
-        <span>No insignia</span>
+        <span className="rank-insignia__entry-mark" />
+        <span className="rank-insignia__entry-label">
+          {rank === 'Recruit' ? 'Joining' : 'Enlisted'}
+        </span>
       </span>
     )
   }
