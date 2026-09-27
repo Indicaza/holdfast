@@ -234,7 +234,9 @@ function MemberProfile({ memberId }) {
         <div className="member-profile__identity">
           <div className="member-profile__badges">
             {isSelf ? <span>You</span> : null}
-            <span>{member.role || 'Member'}</span>
+            {member.role && member.role !== 'Member' ? (
+              <span>{member.role}</span>
+            ) : null}
           </div>
 
           <h1 id="member-profile-name">{displayName(member)}</h1>
@@ -254,22 +256,18 @@ function MemberProfile({ memberId }) {
         <article>
           <span>Rep earned</span>
           <strong>{Number(contribution.rep) || 0}</strong>
-          <small>Guild reputation</small>
         </article>
         <article>
           <span>Marks earned</span>
           <strong>{Number(contribution.marks) || 0}</strong>
-          <small>Service Marks</small>
         </article>
         <article>
-          <span>Objectives</span>
+          <span>Objectives complete</span>
           <strong>{Number(contribution.completedObjectives) || 0}</strong>
-          <small>Completed and rewarded</small>
         </article>
         <article>
-          <span>Assignments</span>
+          <span>Active assignments</span>
           <strong>{assignments.length}</strong>
-          <small>Open right now</small>
         </article>
       </section>
 
@@ -343,8 +341,8 @@ function MemberProfile({ memberId }) {
           <p>Completed work</p>
           <h2 id="member-service-title">Service Record</h2>
           <span>
-            {activity.length
-              ? `${activity.length} recorded ${activity.length === 1 ? 'entry' : 'entries'}`
+            {member.activityCount
+              ? `${member.activityCount} recorded ${member.activityCount === 1 ? 'entry' : 'entries'}`
               : 'No recorded entries yet'}
           </span>
         </div>
