@@ -10,9 +10,23 @@
   margin-inline: auto;
 }
 
+.page-shell:has(.ranks-page) .page-shell__header {
+  width: min(100%, 76rem);
+  max-width: 76rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-shell:has(.ranks-page) .page-shell__intro {
+  max-width: 48rem;
+  margin-inline: auto;
+  color: var(--color-text-muted);
+  text-wrap: balance;
+}
+
 .ranks-page {
   display: grid;
-  gap: clamp(var(--space-16), 8vw, var(--space-24));
+  gap: clamp(var(--space-16), 7vw, var(--space-24));
 }
 
 .ranks-page__principles {
@@ -33,7 +47,9 @@
 }
 
 .ranks-page__principle {
-  min-height: 15rem;
+  display: grid;
+  min-height: 14rem;
+  grid-template-rows: auto auto 1fr;
   padding: var(--space-6);
 }
 
@@ -68,6 +84,10 @@
   text-wrap: pretty;
 }
 
+.ranks-page__principle p {
+  margin-top: var(--space-3);
+}
+
 .ranks-page__section {
   display: grid;
   gap: var(--space-8);
@@ -75,14 +95,20 @@
 
 .ranks-page__section-heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.85fr);
-  align-items: end;
-  gap: var(--space-8);
+  justify-items: center;
+  gap: var(--space-4);
   padding-bottom: var(--space-6);
   border-bottom: var(--border-subtle);
+  text-align: center;
+}
+
+.ranks-page__section-heading > div {
+  display: grid;
+  justify-items: center;
 }
 
 .ranks-page__section-heading > p {
+  max-width: 44rem;
   margin-top: 0;
   color: var(--color-text-muted);
 }
@@ -94,7 +120,9 @@
 }
 
 .ranks-page__rule {
-  min-height: 13rem;
+  display: grid;
+  min-height: 12.5rem;
+  grid-template-rows: auto auto 1fr;
   padding: var(--space-5);
 }
 
@@ -107,7 +135,7 @@
 
 .ranks-page__rule h3,
 .ranks-page__billet-card h3 {
-  margin-top: var(--space-4);
+  margin-top: var(--space-3);
   color: var(--color-text-strong);
   font-size: var(--font-size-fib-21);
 }
@@ -137,10 +165,11 @@
 
 .ranks-page__rank-card {
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  gap: var(--space-5);
-  min-height: 12.5rem;
-  padding: var(--space-5);
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+  min-height: 13rem;
+  padding: var(--space-6);
   border: var(--border-subtle);
   background:
     linear-gradient(135deg, rgba(29, 69, 111, 0.2), rgba(7, 17, 31, 0.86));
@@ -149,17 +178,20 @@
 
 .ranks-page__rank-insignia {
   display: grid;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 6.75rem;
+  height: 6.75rem;
   place-items: center;
   align-self: start;
-  padding: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid rgba(196, 166, 103, 0.24);
-  background: rgba(3, 8, 15, 0.38);
+  background:
+    linear-gradient(145deg, rgba(3, 8, 15, 0.56), rgba(16, 39, 66, 0.16));
   color: var(--color-accent-bright);
 }
 
 .ranks-page__rank-copy {
+  display: grid;
+  align-content: start;
   min-width: 0;
 }
 
@@ -178,9 +210,9 @@
 }
 
 .ranks-page__rank-copy p {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
   color: var(--color-text);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-body);
   line-height: 1.55;
   text-wrap: pretty;
 }
@@ -192,7 +224,9 @@
 }
 
 .ranks-page__billet-card {
-  min-height: 12rem;
+  display: grid;
+  min-height: 11.5rem;
+  grid-template-rows: auto auto 1fr;
   padding: var(--space-6);
 }
 
@@ -249,7 +283,6 @@
 
 @media (max-width: 62rem) {
   .ranks-page__section-heading {
-    grid-template-columns: 1fr;
     gap: var(--space-4);
   }
 
@@ -274,13 +307,13 @@
   }
 
   .ranks-page__rank-card {
-    grid-template-columns: 4.75rem minmax(0, 1fr);
+    grid-template-columns: 5.75rem minmax(0, 1fr);
     gap: var(--space-4);
   }
 
   .ranks-page__rank-insignia {
-    width: 4.75rem;
-    height: 4.75rem;
+    width: 5.75rem;
+    height: 5.75rem;
   }
 
   .ranks-page__section--closing {
@@ -290,5 +323,20 @@
 
   .ranks-page__charter-link {
     width: 100%;
+  }
+}
+@media (max-width: 36rem) {
+  .ranks-page__rank-card {
+    justify-items: center;
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .ranks-page__rank-copy {
+    justify-items: center;
+  }
+
+  .ranks-page__rank-copy p {
+    max-width: 28rem;
   }
 }

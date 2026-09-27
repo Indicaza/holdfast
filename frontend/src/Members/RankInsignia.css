@@ -5,17 +5,37 @@
   overflow: visible;
 }
 
-.rank-insignia--none {
+.rank-insignia--entry {
+  position: relative;
   display: grid;
   place-items: center;
-  border: 1px dashed rgba(196, 166, 103, 0.26);
-  border-radius: 0.35rem;
   color: var(--color-text-muted);
 }
 
-.rank-insignia--none span {
+.rank-insignia__entry-mark {
+  display: block;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid rgba(196, 166, 103, 0.62);
+  border-radius: 50%;
+  opacity: 0.86;
+}
+
+.rank-insignia__entry-mark::after {
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin: 0.8rem auto 0;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
+.rank-insignia__entry-label {
+  position: absolute;
+  bottom: 0.65rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   letter-spacing: var(--letter-spacing-wide);
   text-align: center;
   text-transform: uppercase;
@@ -25,13 +45,13 @@
 .rank-insignia__leaf {
   fill: none;
   stroke: currentColor;
-  stroke-width: 5;
+  stroke-width: 4.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .rank-insignia__swords {
-  stroke-width: 3.4;
+  stroke-width: 3.2;
 }
 
 .rank-insignia__fill,
