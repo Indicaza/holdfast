@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import './QuestEditor.css'
 
@@ -16,10 +17,6 @@ const DEFAULT_LIMITS = {
   marks: { min: 0, max: 1000 },
 }
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
-
-function wait(milliseconds) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
-}
 
 function announceQuestsChanged() {
   try {
@@ -121,15 +118,16 @@ function progress(count, total, singular) {
 }
 
 async function fetchGuildMembers(signal) {
-  const response = await fetch('/api/guild/members', {
-    credentials: 'include',
-    cache: 'no-store',
-    signal,
-  })
+  try {
+    const result = await apiJson('/api/guild/members', { signal })
+    return result?.members ?? []
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw error
+    }
 
-  if (!response.ok) return []
-  const result = await response.json()
-  return result.members ?? []
+    return []
+  }
 }
 
 function RewardFields({ value, limits, onChange }) {
@@ -967,60 +965,48 @@ function QuestEditor() {
       setStatus('loading')
       setMessage('Loading quests…')
 
-      let lastError = new Error('Quests could not be loaded.')
+      try {
+        let document
 
-      for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const response = await fetch('/api/quests/manage', {
-            credentials: 'include',
-            cache: 'no-store',
-            signal,
-          })
-
-          if (signal?.aborted) return
-
+          document = await apiJson('/api/quests/manage', { signal })
+        } catch (error) {
           if (
-            (response.status === 401 || response.status === 403) &&
-            attempt === 0
+            error?.name !== 'AbortError' &&
+            (error?.status === 401 || error?.status === 403)
           ) {
             await session.refresh()
-            await wait(120)
-            continue
-          }
-
-          if (!response.ok) {
-            throw new Error('Quests could not be loaded.')
-          }
-
-          const [document, guildMembers] = await Promise.all([
-            response.json(),
-            fetchGuildMembers(signal),
-          ])
-
-          if (signal?.aborted) return
-
-          setDraft(document)
-          setSaved(document)
-          setMembers(guildMembers)
-          setStatus('ready')
-          setMessage('Quests loaded.')
-          return
-        } catch (error) {
-          if (error?.name === 'AbortError' || signal?.aborted) {
-            return
-          }
-
-          lastError = error
-
-          if (attempt < 2) {
-            await wait(attempt === 0 ? 180 : 450)
+            document = await apiJson('/api/quests/manage', { signal })
+          } else {
+            throw error
           }
         }
-      }
 
-      if (signal?.aborted) return
-      setStatus('error')
-      setMessage(lastError.message || 'Quests could not be loaded.')
+        const guildMembers = await fetchGuildMembers(signal)
+
+        if (signal?.aborted) return
+
+        setDraft(document)
+        setSaved(document)
+        setMembers(guildMembers)
+        setStatus('ready')
+        setMessage(
+          guildMembers.length
+            ? 'Quests loaded.'
+            : 'Quests loaded. Member directory is temporarily unavailable.',
+        )
+      } catch (error) {
+        if (error?.name === 'AbortError' || signal?.aborted) {
+          return
+        }
+
+        setStatus('error')
+        setMessage(
+          error?.status === 403
+            ? 'Your quest-editing permission could not be verified.'
+            : 'Quests could not be loaded.',
+        )
+      }
     },
     [session.refresh],
   )
@@ -1165,9 +1151,8 @@ function QuestEditor() {
     setMessage('Completing objective and issuing rewards…')
 
     try {
-      const response = await fetch('/api/quests/manage/complete-objective', {
+      const result = await apiJson('/api/quests/manage/complete-objective', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: draft,
@@ -1175,10 +1160,6 @@ function QuestEditor() {
           objectiveId,
         }),
       })
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(result.message || 'Objective could not be completed.')
-      }
 
       setDraft(result.document)
       setSaved(result.document)
@@ -1218,16 +1199,11 @@ function QuestEditor() {
     setMessage('Saving…')
 
     try {
-      const response = await fetch('/api/quests/manage', {
+      const result = await apiJson('/api/quests/manage', {
         method: 'PUT',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
       })
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(result.message || 'Quests could not be saved.')
-      }
 
       setDraft(result)
       setSaved(result)
