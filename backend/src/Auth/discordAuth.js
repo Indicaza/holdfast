@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Router } from "express";
 
+import { upsertGuildMember } from "../Guild/memberRepository.js";
 import { resolvePermissions } from "./permissions.js";
 import {
   clearOAuthState,
@@ -207,15 +208,18 @@ export function createDiscordAuthRouter() {
       }
 
       const permissions = resolvePermissions(user.id, member.roles || []);
+      const sessionUser = {
+        id: user.id,
+        username: user.username,
+        globalName: user.global_name || null,
+        avatarUrl: avatarUrl(user),
+        guildNickname: member.nick || null,
+      };
+
+      await upsertGuildMember(sessionUser, permissions);
 
       setSession(res, {
-        user: {
-          id: user.id,
-          username: user.username,
-          globalName: user.global_name || null,
-          avatarUrl: avatarUrl(user),
-          guildNickname: member.nick || null,
-        },
+        user: sessionUser,
         permissions,
       });
 
