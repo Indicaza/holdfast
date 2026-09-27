@@ -306,13 +306,16 @@ export function normalizeQuestDocument(value) {
   };
 }
 
-function projectPublicAssignment(assignmentItem) {
+function projectPublicAssignment(assignmentItem, viewerMemberId = "") {
   return {
     name: assignmentItem.name,
     responsibility: assignmentItem.responsibility,
     detail: assignmentItem.detail,
     initials: assignmentItem.initials,
     ...(assignmentItem.avatar ? { avatar: assignmentItem.avatar } : {}),
+    ...(viewerMemberId && assignmentItem.memberId === viewerMemberId
+      ? { isSelf: true }
+      : {}),
   };
 }
 
@@ -327,7 +330,7 @@ function projectPublicReward(rewardValue) {
   };
 }
 
-function projectPublicObjective(objectiveItem) {
+function projectPublicObjective(objectiveItem, viewerMemberId = "") {
   return {
     id: objectiveItem.id,
     title: objectiveItem.title,
@@ -336,11 +339,13 @@ function projectPublicObjective(objectiveItem) {
     completed: objectiveItem.completed,
     need: objectiveItem.need,
     reward: projectPublicReward(objectiveItem.reward),
-    assignments: objectiveItem.assignments.map(projectPublicAssignment),
+    assignments: objectiveItem.assignments.map((assignmentItem) =>
+      projectPublicAssignment(assignmentItem, viewerMemberId),
+    ),
   };
 }
 
-function projectPublishedQuest(questItem) {
+function projectPublishedQuest(questItem, viewerMemberId = "") {
   return {
     id: questItem.id,
     mode: questItem.mode,
@@ -351,22 +356,24 @@ function projectPublishedQuest(questItem) {
       (objectiveItem) => objectiveItem.completed,
     ).length,
     objectiveCount: questItem.objectives.length,
-    objectives: questItem.objectives.map(projectPublicObjective),
+    objectives: questItem.objectives.map((objectiveItem) =>
+      projectPublicObjective(objectiveItem, viewerMemberId),
+    ),
   };
 }
 
-export function projectQuests(value) {
+export function projectQuests(value, viewerMemberId = "") {
   const document = normalizeQuestDocument(value);
 
   return {
     focusedQuestId: document.focusedQuestId,
     quests: document.quests
       .filter((questItem) => questItem.publication === "published")
-      .map(projectPublishedQuest),
+      .map((questItem) => projectPublishedQuest(questItem, viewerMemberId)),
   };
 }
 
-export function projectFeaturedQuest(value) {
+export function projectFeaturedQuest(value, viewerMemberId = "") {
   const document = normalizeQuestDocument(value);
   const focusedQuest = document.quests.find(
     (questItem) =>
@@ -376,7 +383,9 @@ export function projectFeaturedQuest(value) {
 
   return {
     focusedQuestId: focusedQuest?.id || "",
-    quests: focusedQuest ? [projectPublishedQuest(focusedQuest)] : [],
+    quests: focusedQuest
+      ? [projectPublishedQuest(focusedQuest, viewerMemberId)]
+      : [],
   };
 }
 
