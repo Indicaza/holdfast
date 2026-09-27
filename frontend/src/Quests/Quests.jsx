@@ -4,6 +4,10 @@ import { useSession } from '../Auth/SessionProvider.jsx'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
+import {
+  questSelfAssignment,
+  useQuestSignup,
+} from './QuestSignupFlow.jsx'
 import '../Home/QuestBoard/QuestBoard.css'
 import './Quests.css'
 
@@ -175,7 +179,9 @@ function Reward({ reward }) {
   )
 }
 
-function QuestObjectives({ objectives }) {
+function QuestObjectives({ quest, objectives, onSignup }) {
+  const currentAssignment = questSelfAssignment(quest)
+
   return (
     <>
       <div className="quest-board__columns" aria-hidden="true">
@@ -262,6 +268,31 @@ function QuestObjectives({ objectives }) {
                     </>
                   ) : null}
                 </div>
+
+                {!objective.completed ? (
+                  assignments.some((assignment) => assignment.isSelf) ? (
+                    <span className="quest-board__signup-status">
+                      You&apos;re on this
+                    </span>
+                  ) : currentAssignment ? (
+                    <button
+                      className="quest-board__signup"
+                      type="button"
+                      disabled
+                      title={`Already signed up for ${currentAssignment.objective.title}`}
+                    >
+                      On another objective
+                    </button>
+                  ) : (
+                    <button
+                      className="quest-board__signup"
+                      type="button"
+                      onClick={() => onSignup(quest, objective)}
+                    >
+                      Sign up
+                    </button>
+                  )
+                ) : null}
               </div>
 
               <Reward reward={objective.reward} />
@@ -273,7 +304,13 @@ function QuestObjectives({ objectives }) {
   )
 }
 
-function QuestCard({ quest, featured, visibleObjectives, searchActive }) {
+function QuestCard({
+  quest,
+  featured,
+  visibleObjectives,
+  searchActive,
+  onSignup,
+}) {
   const { completed, total } = questProgress(quest)
 
   return (
@@ -312,7 +349,11 @@ function QuestCard({ quest, featured, visibleObjectives, searchActive }) {
       </summary>
 
       {visibleObjectives.length ? (
-        <QuestObjectives objectives={visibleObjectives} />
+        <QuestObjectives
+          quest={quest}
+          objectives={visibleObjectives}
+          onSignup={onSignup}
+        />
       ) : (
         <p className="quests-page__empty">No objectives have been added yet.</p>
       )}
@@ -329,6 +370,7 @@ function Quests() {
   const [searchInput, setSearchInput] = useState(initialSearch)
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [sortBy, setSortBy] = useState('featured')
+  const signup = useQuestSignup({ catalog, setCatalog })
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -473,6 +515,7 @@ function Quests() {
   }
 
   return (
+    <>
     <PageShell
       title="Quests"
       centered
@@ -539,6 +582,7 @@ function Quests() {
                   featured={featured}
                   visibleObjectives={visibleObjectives}
                   searchActive={searchActive}
+                  onSignup={signup.requestSignup}
                 />
               ))}
             </section>
@@ -557,6 +601,8 @@ function Quests() {
         </section>
       )}
     </PageShell>
+    {signup.modal}
+    </>
   )
 }
 

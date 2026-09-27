@@ -95,8 +95,19 @@ function destinationUrl(frontendUrl, returnTo, auth) {
   return url.toString();
 }
 
-function onboardingUrl(frontendUrl, auth) {
-  return destinationUrl(frontendUrl, "/join", auth);
+function onboardingUrl(frontendUrl, auth, returnTo = DEFAULT_RETURN_TO) {
+  const url = new URL("/join", frontendUrl);
+  const safeDestination = safeReturnTo(returnTo);
+
+  if (safeDestination !== DEFAULT_RETURN_TO) {
+    url.searchParams.set("returnTo", safeDestination);
+  }
+
+  if (auth) {
+    url.searchParams.set("auth", auth);
+  }
+
+  return url.toString();
 }
 
 async function responseError(response, prefix) {
@@ -260,7 +271,7 @@ export function createDiscordAuthRouter() {
     if (req.query.error) {
       const destination =
         mode === RECRUIT_MODE
-          ? onboardingUrl(current.frontendUrl, "cancelled")
+          ? onboardingUrl(current.frontendUrl, "cancelled", returnTo)
           : destinationUrl(current.frontendUrl, returnTo, "cancelled");
       res.redirect(destination);
       return;
@@ -285,7 +296,7 @@ export function createDiscordAuthRouter() {
       let member = await currentGuildMember(ready.guildId, token.access_token);
 
       if (!member && mode === MEMBER_MODE) {
-        res.redirect(onboardingUrl(ready.frontendUrl, "not-member"));
+        res.redirect(onboardingUrl(ready.frontendUrl, "not-member", returnTo));
         return;
       }
 
@@ -328,7 +339,7 @@ export function createDiscordAuthRouter() {
       const authCode = error.authCode || "failed";
       const destination =
         mode === RECRUIT_MODE
-          ? onboardingUrl(current.frontendUrl, authCode)
+          ? onboardingUrl(current.frontendUrl, authCode, returnTo)
           : destinationUrl(current.frontendUrl, returnTo, authCode);
       res.redirect(destination);
     }
