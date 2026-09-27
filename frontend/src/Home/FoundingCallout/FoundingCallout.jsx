@@ -1,4 +1,4 @@
-import { useSession } from '../../Auth/SessionProvider.jsx'
+import { useSession } from '../../Auth/sessionContext.js'
 import './FoundingCallout.css'
 
 function FoundingCallout({ onJoin }) {
