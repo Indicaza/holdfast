@@ -32,6 +32,14 @@ test("valid production configuration passes", () => {
   assert.doesNotThrow(() => assertProductionEnvironment(validEnvironment()));
 });
 
+test("production configuration allows an optional recruit role", () => {
+  const env = validEnvironment();
+  delete env.DISCORD_RECRUIT_ROLE_ID;
+
+  assert.deepEqual(productionEnvironmentProblems(env), []);
+  assert.doesNotThrow(() => assertProductionEnvironment(env));
+});
+
 test("production configuration reports all actionable problems", () => {
   const problems = productionEnvironmentProblems(
     validEnvironment({
