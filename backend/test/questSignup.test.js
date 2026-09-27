@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   QuestSignupError,
+  leaveObjective,
   signupForObjective,
 } from "../src/Quest/questSignup.js";
 
@@ -78,27 +79,27 @@ test("member can sign themselves up for a published objective", () => {
   });
 });
 
-test("member cannot sign up twice for the same quest", () => {
+test("member can sign up for multiple different objectives in one quest", () => {
   const first = signupForObjective(
     document(),
     member,
     "quest-one",
     "objective-one",
   );
+  const second = signupForObjective(
+    first.document,
+    member,
+    "quest-one",
+    "objective-two",
+  );
 
-  assert.throws(
-    () =>
-      signupForObjective(
-        first.document,
-        member,
-        "quest-one",
-        "objective-two",
-      ),
-    (error) =>
-      error instanceof QuestSignupError &&
-      error.code === "already_assigned_to_quest" &&
-      error.status === 409 &&
-      error.details.objectiveId === "objective-one",
+  assert.equal(
+    second.document.quests[0].objectives[0].assignments[0].memberId,
+    "member-one",
+  );
+  assert.equal(
+    second.document.quests[0].objectives[1].assignments[0].memberId,
+    "member-one",
   );
 });
 
@@ -120,7 +121,9 @@ test("member cannot sign up twice for the same objective", () => {
       ),
     (error) =>
       error instanceof QuestSignupError &&
-      error.code === "already_assigned_to_quest" &&
+      error.code === "already_assigned_to_objective" &&
+      error.status === 409 &&
+      error.details.objectiveId === "objective-one" &&
       /already signed up/.test(error.message),
   );
 });
@@ -158,5 +161,97 @@ test("draft quests cannot be claimed", () => {
     (error) =>
       error instanceof QuestSignupError &&
       error.code === "quest_not_published",
+  );
+});
+
+
+test("member can leave an incomplete objective they joined", () => {
+  const signedUp = signupForObjective(
+    document(),
+    member,
+    "quest-one",
+    "objective-one",
+  );
+
+  const left = leaveObjective(
+    signedUp.document,
+    member.id,
+    "quest-one",
+    "objective-one",
+  );
+
+  assert.deepEqual(
+    left.document.quests[0].objectives[0].assignments,
+    [],
+  );
+});
+
+test("leaving one objective does not remove other objective assignments", () => {
+  const first = signupForObjective(
+    document(),
+    member,
+    "quest-one",
+    "objective-one",
+  );
+  const second = signupForObjective(
+    first.document,
+    member,
+    "quest-one",
+    "objective-two",
+  );
+
+  const left = leaveObjective(
+    second.document,
+    member.id,
+    "quest-one",
+    "objective-one",
+  );
+
+  assert.deepEqual(
+    left.document.quests[0].objectives[0].assignments,
+    [],
+  );
+  assert.equal(
+    left.document.quests[0].objectives[1].assignments[0].memberId,
+    "member-one",
+  );
+});
+
+test("member cannot leave an objective they are not assigned to", () => {
+  assert.throws(
+    () =>
+      leaveObjective(
+        document(),
+        member.id,
+        "quest-one",
+        "objective-one",
+      ),
+    (error) =>
+      error instanceof QuestSignupError &&
+      error.code === "not_assigned_to_objective" &&
+      error.status === 409,
+  );
+});
+
+test("completed objectives cannot be left", () => {
+  const signedUp = signupForObjective(
+    document(),
+    member,
+    "quest-one",
+    "objective-one",
+  );
+  signedUp.document.quests[0].objectives[0].completed = true;
+
+  assert.throws(
+    () =>
+      leaveObjective(
+        signedUp.document,
+        member.id,
+        "quest-one",
+        "objective-one",
+      ),
+    (error) =>
+      error instanceof QuestSignupError &&
+      error.code === "objective_completed",
   );
 });
