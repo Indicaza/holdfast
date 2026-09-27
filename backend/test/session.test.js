@@ -80,7 +80,8 @@ test("tampered session cookies are rejected", () => {
 
     const token = cookieValue(res.headers[0][1]);
     const [payload, signature] = token.split(".");
-    const tampered = `${payload.slice(0, -1)}A.${signature}`;
+    const tamperedSignature = `${signature[0] === "A" ? "B" : "A"}${signature.slice(1)}`;
+    const tampered = `${payload}.${tamperedSignature}`;
     const req = requestFor(tampered);
 
     attachSession(req, {}, () => {});
