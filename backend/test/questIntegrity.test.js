@@ -77,6 +77,59 @@ test("quest validation rejects the same member twice on one objective", () => {
   );
 });
 
+test("quest validation rejects duplicate quest ids", () => {
+  const document = validDocument();
+  document.quests.push({
+    ...document.quests[0],
+    title: "Second quest",
+    objectives: [],
+  });
+
+  assert.throws(
+    () => normalizeQuestDocument(document),
+    (error) =>
+      error instanceof QuestValidationError &&
+      /Duplicate quest id: quest-one/.test(error.message),
+  );
+});
+
+test("quest validation rejects duplicate objective ids across quests", () => {
+  const document = validDocument();
+  document.quests.push({
+    id: "quest-two",
+    publication: "draft",
+    mode: "rotating",
+    title: "Second quest",
+    summary: "",
+    objectives: [
+      {
+        ...document.quests[0].objectives[0],
+        assignments: [],
+      },
+    ],
+  });
+
+  assert.throws(
+    () => normalizeQuestDocument(document),
+    (error) =>
+      error instanceof QuestValidationError &&
+      /Duplicate objective id: objective-one/.test(error.message),
+  );
+});
+
+test("quest rewards must stay inside configured limits", () => {
+  const document = validDocument();
+  document.rewardLimits.rep.max = 200;
+  document.quests[0].objectives[0].reward.rep = 201;
+
+  assert.throws(
+    () => normalizeQuestDocument(document),
+    (error) =>
+      error instanceof QuestValidationError &&
+      /reward.rep must be 0 or between 0 and 200/.test(error.message),
+  );
+});
+
 test("the same member may be assigned to different objectives", () => {
   const document = validDocument();
   document.quests[0].objectives.push({

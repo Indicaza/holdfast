@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSession } from '../../Auth/SessionProvider.jsx'
+import { useSession } from '../../Auth/sessionContext.js'
 import './Navbar.css'
 
 const publicLinks = [

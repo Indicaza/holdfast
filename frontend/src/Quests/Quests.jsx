@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'

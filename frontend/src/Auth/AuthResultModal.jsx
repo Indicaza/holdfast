@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Modal from '../Modal/Modal.jsx'
-import { useSession } from './SessionProvider.jsx'
+import { useSession } from './sessionContext.js'
 import './AuthResultModal.css'
 
 function displayName(user) {

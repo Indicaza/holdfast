@@ -1,5 +1,5 @@
 import PageShell from '../PageShell/PageShell.jsx'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import QuestEditor from './QuestEditor.jsx'
 import './Admin.css'
 

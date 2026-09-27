@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import MemberProfileEditor from './MemberProfileEditor.jsx'
 import RankInsignia from './RankInsignia.jsx'
@@ -298,16 +298,6 @@ function ProfileMessage({ title, body }) {
         <a href="/members">Back to Members</a>
       </section>
 
-      {editing ? (
-        <MemberProfileEditor
-          member={member}
-          onClose={() => setEditing(false)}
-          onSaved={(updatedMember) => {
-            setMember(updatedMember)
-            setEditing(false)
-          }}
-        />
-      ) : null}
     </PageShell>
   )
 }

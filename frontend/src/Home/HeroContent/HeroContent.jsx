@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSession } from '../../Auth/SessionProvider.jsx'
+import { useSession } from '../../Auth/sessionContext.js'
 import './HeroContent.css'
 
 const titleStartDelay = 160
@@ -113,8 +113,8 @@ function HeroContent({ slide, onJoin }) {
 
       <div className="hero-content__actions">
         {authenticated ? (
-          <a className="hero-content__primary" href="/guildos">
-            Open GuildOS
+          <a className="hero-content__primary" href="/quests">
+            View Quests
           </a>
         ) : (
           <button className="hero-content__primary" type="button" onClick={onJoin}>

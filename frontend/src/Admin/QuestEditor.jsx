@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useSession } from '../Auth/SessionProvider.jsx'
+import { useSession } from '../Auth/sessionContext.js'
 import QuestJsonImport from './QuestJsonImport.jsx'
 import './QuestEditor.css'
 
@@ -13,10 +13,6 @@ const QUEST_MODES = [
   ['rotating', 'Rotating'],
   ['permanent', 'Permanent'],
 ]
-const DEFAULT_LIMITS = {
-  rep: { min: 0, max: 1000 },
-  marks: { min: 0, max: 1000 },
-}
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
 
 function announceQuestsChanged() {
@@ -953,6 +949,7 @@ function QuestCard({
 
 function QuestEditor() {
   const session = useSession()
+  const refreshSession = session.refresh
   const canEditRewardPolicy = session.hasPermission('rewards.policy.edit')
   const [draft, setDraft] = useState(null)
   const [saved, setSaved] = useState(null)
@@ -976,7 +973,7 @@ function QuestEditor() {
             error?.name !== 'AbortError' &&
             (error?.status === 401 || error?.status === 403)
           ) {
-            await session.refresh()
+            await refreshSession()
             document = await apiJson('/api/quests/manage', { signal })
           } else {
             throw error
@@ -1011,7 +1008,7 @@ function QuestEditor() {
         )
       }
     },
-    [session.refresh],
+    [refreshSession],
   )
 
   useEffect(() => {
