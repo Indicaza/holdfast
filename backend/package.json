@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
+    "test:auth": "node --test --experimental-test-coverage --test-coverage-include=src/Auth/*.js --test-coverage-lines=95 --test-coverage-branches=85 --test-coverage-functions=93 test/discordAuthConfig.test.js test/discordAuthFlow.test.js test/discordSession.test.js test/oauthReturnTo.test.js test/permissions.test.js test/session.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",

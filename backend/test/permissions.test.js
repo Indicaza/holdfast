@@ -2,6 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { resolvePermissions } from "../src/Auth/permissionResolver.js";
+import {
+  requireAuthenticated,
+  requirePermission,
+} from "../src/Auth/permissions.js";
+
+function response() {
+  return {
+    body: null,
+    statusCode: 200,
+    status(value) {
+      this.statusCode = value;
+      return this;
+    },
+    json(value) {
+      this.body = value;
+      return this;
+    },
+  };
+}
 
 function preserve() {
   return {
@@ -89,4 +108,107 @@ test("unrelated Discord roles grant no GuildOS permissions", () => {
   } finally {
     restore(previous);
   }
+});
+
+test("permission resolution normalizes IDs and ignores malformed role collections", () => {
+  const env = {
+    GUILD_OWNER_DISCORD_IDS: " 123456789012345678,123456789012345678 ",
+    DISCORD_SITE_ADMIN_ROLE_IDS: "223456789012345678",
+    DISCORD_QUEST_EDITOR_ROLE_IDS: "323456789012345678",
+    DISCORD_REWARD_POLICY_ROLE_IDS: "423456789012345678",
+  };
+
+  assert.deepEqual(
+    new Set(resolvePermissions(123456789012345678n, [], env)),
+    new Set(["site.admin", "quests.edit", "rewards.policy.edit"]),
+  );
+  assert.deepEqual(
+    resolvePermissions("member", "223456789012345678", env),
+    [],
+  );
+  assert.deepEqual(
+    resolvePermissions(
+      "member",
+      [" 323456789012345678 ", "323456789012345678", null],
+      env,
+    ),
+    ["quests.edit"],
+  );
+});
+
+test("authentication middleware returns a stable 401 response", async () => {
+  for (const auth of [null, {}, { user: {} }, { user: { id: " " } }]) {
+    const req = { auth };
+    const res = response();
+    let nextCalls = 0;
+
+    await requireAuthenticated(req, res, () => {
+      nextCalls += 1;
+    });
+
+    assert.equal(nextCalls, 0);
+    assert.equal(res.statusCode, 401);
+    assert.deepEqual(res.body, { error: "authentication_required" });
+  }
+});
+
+test("permission middleware rejects permission-shaped data without a user", async () => {
+  const req = {
+    auth: {
+      permissions: ["site.admin"],
+      verifiedAt: Date.now(),
+    },
+  };
+  const res = response();
+
+  await requirePermission("site.admin")(req, res, () => {
+    throw new Error("request should not continue");
+  });
+
+  assert.equal(res.statusCode, 401);
+  assert.deepEqual(res.body, { error: "authentication_required" });
+});
+
+test("permission middleware fails closed for malformed session permissions", async () => {
+  const req = {
+    auth: {
+      user: { id: "323456789012345678" },
+      permissions: null,
+      verifiedAt: Date.now(),
+    },
+  };
+  const res = response();
+  let nextCalls = 0;
+
+  await requirePermission("site.admin")(req, res, () => {
+    nextCalls += 1;
+  });
+
+  assert.equal(nextCalls, 0);
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.body, { error: "permission_required" });
+});
+
+test("permission middleware admits only the exact granted permission", async () => {
+  const req = {
+    auth: {
+      user: { id: "323456789012345678" },
+      permissions: ["quests.edit"],
+      verifiedAt: Date.now(),
+    },
+  };
+  const allowed = response();
+  let nextCalls = 0;
+
+  await requirePermission("quests.edit")(req, allowed, () => {
+    nextCalls += 1;
+  });
+
+  assert.equal(nextCalls, 1);
+
+  const denied = response();
+  await requirePermission("site.admin")(req, denied, () => {
+    throw new Error("request should not continue");
+  });
+  assert.equal(denied.statusCode, 403);
 });

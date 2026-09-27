@@ -57,6 +57,10 @@ export function productionEnvironmentProblems(env = process.env) {
     if (frontendUrl.pathname !== "/" || frontendUrl.search || frontendUrl.hash) {
       problems.push("FRONTEND_URL must be an origin without a path, query, or hash");
     }
+
+    if (frontendUrl.username || frontendUrl.password) {
+      problems.push("FRONTEND_URL must not contain credentials");
+    }
   }
 
   const redirectUrl = env.DISCORD_REDIRECT_URI
@@ -72,6 +76,20 @@ export function productionEnvironmentProblems(env = process.env) {
 
     if (frontendUrl && redirectUrl.origin !== frontendUrl.origin) {
       problems.push("DISCORD_REDIRECT_URI must use the FRONTEND_URL origin");
+    }
+
+    if (
+      redirectUrl.pathname !== "/api/auth/discord/callback" ||
+      redirectUrl.search ||
+      redirectUrl.hash
+    ) {
+      problems.push(
+        "DISCORD_REDIRECT_URI must use the /api/auth/discord/callback path without a query or hash",
+      );
+    }
+
+    if (redirectUrl.username || redirectUrl.password) {
+      problems.push("DISCORD_REDIRECT_URI must not contain credentials");
     }
   }
 
@@ -104,6 +122,16 @@ export function productionEnvironmentProblems(env = process.env) {
 
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     problems.push("PORT must be an integer between 1 and 65535");
+  }
+
+  if (env.DISCORD_SESSION_REVERIFY_SECONDS) {
+    const seconds = Number(env.DISCORD_SESSION_REVERIFY_SECONDS);
+
+    if (!Number.isInteger(seconds) || seconds < 60 || seconds > 86400) {
+      problems.push(
+        "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 86400",
+      );
+    }
   }
 
   return problems;

@@ -154,6 +154,16 @@ cd backend
 npm install
 npm run dev
 
+Backend authentication changes carry a dedicated coverage gate. Run the full backend suite and the focused auth gate before opening a pull request:
+
+```bash
+cd backend
+npm test
+npm run test:auth
+```
+
+The auth gate exercises signed sessions, OAuth state integrity, redirect safety, member-versus-recruit behavior, Discord failure handling, permission checks, and session revalidation. CI requires at least 95% line coverage, 85% branch coverage, and 93% function coverage across `backend/src/Auth/`.
+
 ## Runtime Guild Data
 
 Mutable GuildOS state is not committed to Git.
