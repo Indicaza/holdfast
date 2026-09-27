@@ -80,7 +80,10 @@ function RepProgress({ member }) {
     return null
   }
 
-  const percent = Math.round((Number(progression.progress) || 0) * 100)
+  const percent = Math.min(
+    100,
+    Math.max(0, (Number(progression.progress) || 0) * 100),
+  )
   const segmentCurrent =
     progression.mode === 'eligibility'
       ? Math.min(
