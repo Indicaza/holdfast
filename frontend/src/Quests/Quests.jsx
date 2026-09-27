@@ -4,14 +4,11 @@ import { useSession } from '../Auth/SessionProvider.jsx'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
-import {
-  questSelfAssignment,
-  useQuestSignup,
-} from './QuestSignupFlow.jsx'
+import { useQuestSignup } from './QuestSignupFlow.jsx'
 import '../Home/QuestBoard/QuestBoard.css'
 import './Quests.css'
 
-const MAX_VISIBLE_ASSIGNMENTS = 8
+const MAX_VISIBLE_ASSIGNMENTS = 5
 const MAX_VISIBLE_REWARD_ITEMS = 3
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
 const EMPTY_CATALOG = { focusedQuestId: '', quests: [] }
@@ -113,7 +110,9 @@ function Assignment({ assignment }) {
 
   return (
     <span
-      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}`}
+      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}${
+        assignment.isSelf ? ' quest-board__assignee--self' : ''
+      }`}
       tabIndex="0"
       aria-label={`${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`}
     >
@@ -138,6 +137,28 @@ function Assignment({ assignment }) {
         <small>{assignment.detail}</small>
       </span>
     </span>
+  )
+}
+
+function SignupSlot({ objectiveTitle, onClick }) {
+  return (
+    <button
+      className="quest-board__assignee quest-board__assignee--open quest-board__signup-slot"
+      type="button"
+      aria-label={`Sign up for ${objectiveTitle}`}
+      onClick={onClick}
+    >
+      <span
+        className="quest-board__avatar quest-board__avatar--signup"
+        aria-hidden="true"
+      >
+        +
+      </span>
+      <span className="quest-board__tooltip" role="tooltip">
+        <strong>Sign up</strong>
+        <span>Claim this objective</span>
+      </span>
+    </button>
   )
 }
 
@@ -180,8 +201,6 @@ function Reward({ reward }) {
 }
 
 function QuestObjectives({ quest, objectives, onSignup }) {
-  const currentAssignment = questSelfAssignment(quest)
-
   return (
     <>
       <div className="quest-board__columns" aria-hidden="true">
@@ -267,32 +286,13 @@ function QuestObjectives({ quest, objectives, onSignup }) {
                       ) : null}
                     </>
                   ) : null}
-                </div>
-
-                {!objective.completed ? (
-                  assignments.some((assignment) => assignment.isSelf) ? (
-                    <span className="quest-board__signup-status">
-                      You&apos;re on this
-                    </span>
-                  ) : currentAssignment ? (
-                    <button
-                      className="quest-board__signup"
-                      type="button"
-                      disabled
-                      title={`Already signed up for ${currentAssignment.objective.title}`}
-                    >
-                      On another objective
-                    </button>
-                  ) : (
-                    <button
-                      className="quest-board__signup"
-                      type="button"
+                  {!objective.completed ? (
+                    <SignupSlot
+                      objectiveTitle={objective.title}
                       onClick={() => onSignup(quest, objective)}
-                    >
-                      Sign up
-                    </button>
-                  )
-                ) : null}
+                    />
+                  ) : null}
+                </div>
               </div>
 
               <Reward reward={objective.reward} />

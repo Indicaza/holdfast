@@ -146,11 +146,11 @@
   display: grid;
   grid-template-columns:
     3rem
-    minmax(0, 1.7fr)
-    minmax(6.5rem, 0.28fr)
-    minmax(10rem, 0.5fr)
-    minmax(10rem, 0.52fr);
-  gap: clamp(var(--space-4), 2vw, var(--space-7, 1.75rem));
+    minmax(0, 1.65fr)
+    minmax(6.5rem, 0.3fr)
+    minmax(12.5rem, 0.62fr)
+    minmax(10rem, 0.5fr);
+  gap: clamp(var(--space-4), 1.7vw, var(--space-6));
 }
 
 .quest-board__columns {
@@ -325,70 +325,63 @@
   color: #a8d9b2 !important;
 }
 
-.quest-board__coverage {
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 .quest-board__assignment-row {
   display: flex;
   min-width: 0;
   min-height: 2.5rem;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-wrap: nowrap;
+  isolation: isolate;
 }
 
-.quest-board__signup,
-.quest-board__signup-status {
+.quest-board__assignment-row > * {
+  flex: 0 0 auto;
+}
+
+.quest-board__assignment-row > * + * {
+  margin-left: -0.75rem;
+}
+
+.quest-board__assignment-row > *:hover,
+.quest-board__assignment-row > *:focus-visible {
+  z-index: 3;
+}
+
+.quest-board__signup-slot {
+  position: relative;
   display: inline-flex;
-  min-height: 2rem;
-  align-items: center;
-  justify-content: center;
-  padding-inline: var(--space-3);
-  border: var(--border-subtle);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.quest-board__signup {
-  background: rgba(196, 166, 103, 0.08);
-  color: var(--color-accent-bright);
-  font: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    background var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+  appearance: none;
 }
 
-.quest-board__signup:hover:not(:disabled),
-.quest-board__signup:focus-visible:not(:disabled) {
+.quest-board__signup-slot .quest-board__avatar {
+  border-style: dashed;
+  border-color: rgba(196, 166, 103, 0.58);
+  background: rgba(7, 17, 31, 0.72);
+  color: var(--color-accent-bright);
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+
+.quest-board__signup-slot:hover .quest-board__avatar,
+.quest-board__signup-slot:focus-visible .quest-board__avatar {
   border-color: var(--color-accent-bright);
-  background: rgba(196, 166, 103, 0.16);
+  background: rgba(196, 166, 103, 0.12);
   color: var(--color-text-strong);
 }
 
-.quest-board__signup:disabled {
-  cursor: default;
-  opacity: 0.46;
-}
-
-.quest-board__signup-status {
-  border-color: rgba(154, 190, 157, 0.42);
-  background: rgba(48, 102, 62, 0.08);
-  color: #b8d9ba;
-}
-
 .quest-board__assignment-overflow {
+  position: relative;
+  z-index: 1;
   display: grid;
   width: 2.5rem;
   height: 2.5rem;
@@ -404,6 +397,7 @@
 
 .quest-board__assignee {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   border-radius: 50%;
   cursor: default;
@@ -433,6 +427,13 @@
 
 .quest-board__avatar--image {
   background: var(--color-surface-strong);
+}
+
+.quest-board__assignee--self .quest-board__avatar {
+  border-color: var(--color-accent-bright);
+  box-shadow:
+    0 0 0 3px rgba(7, 17, 31, 0.72),
+    0 0 0 4px rgba(196, 166, 103, 0.24);
 }
 
 .quest-board__assignee--open .quest-board__avatar {
@@ -607,6 +608,10 @@
   .quest-board__coverage {
     grid-area: coverage;
     padding-top: var(--space-4);
+  }
+
+  .quest-board__assignment-row {
+    justify-content: flex-start;
   }
 
   .quest-board__objective > .quest-board__reward {
