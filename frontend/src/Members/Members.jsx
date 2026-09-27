@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import RankInsignia from './RankInsignia.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -57,12 +58,16 @@ function MemberCard({ member, isSelf }) {
         <div className="members-page__name-line">
           <h2>{memberName(member)}</h2>
           {isSelf ? <span className="members-page__you">You</span> : null}
-          {member.role === 'Leadership' ? (
-            <span className="members-page__role">Leadership</span>
+          {member.rank ? (
+            <span className="members-page__role">{member.rank}</span>
           ) : null}
         </div>
         <p>@{member.username}</p>
         <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
+      </div>
+
+      <div className="members-page__rank" aria-hidden="true">
+        <RankInsignia rank={member.rank} />
       </div>
 
       <dl className="members-page__stats">
@@ -147,7 +152,7 @@ function Members() {
       const matchesFilter =
         filter === 'all' ||
         (filter === 'active' && member.activeAssignmentCount > 0) ||
-        (filter === 'leadership' && member.role === 'Leadership')
+        (filter === 'leadership' && member.rankMeta?.isLeadership)
 
       if (!matchesFilter) return false
       if (!query) return true
@@ -155,7 +160,7 @@ function Members() {
       return [
         member.displayName,
         member.username,
-        member.role,
+        member.rank,
       ]
         .filter(Boolean)
         .join(' ')
