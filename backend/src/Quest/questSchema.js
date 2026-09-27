@@ -282,6 +282,40 @@ export function normalizeQuestDocument(value) {
   };
 }
 
+function projectPublicAssignment(assignmentItem) {
+  return {
+    name: assignmentItem.name,
+    responsibility: assignmentItem.responsibility,
+    detail: assignmentItem.detail,
+    initials: assignmentItem.initials,
+    ...(assignmentItem.avatar ? { avatar: assignmentItem.avatar } : {}),
+  };
+}
+
+function projectPublicReward(rewardValue) {
+  return {
+    rep: rewardValue.rep,
+    marks: rewardValue.marks,
+    items: rewardValue.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+    })),
+  };
+}
+
+function projectPublicObjective(objectiveItem) {
+  return {
+    id: objectiveItem.id,
+    title: objectiveItem.title,
+    description: objectiveItem.description,
+    priority: objectiveItem.priority,
+    completed: objectiveItem.completed,
+    need: objectiveItem.need,
+    reward: projectPublicReward(objectiveItem.reward),
+    assignments: objectiveItem.assignments.map(projectPublicAssignment),
+  };
+}
+
 export function projectQuests(value) {
   const document = normalizeQuestDocument(value);
 
@@ -299,7 +333,7 @@ export function projectQuests(value) {
           (objectiveItem) => objectiveItem.completed,
         ).length,
         objectiveCount: questItem.objectives.length,
-        objectives: questItem.objectives,
+        objectives: questItem.objectives.map(projectPublicObjective),
       })),
   };
 }

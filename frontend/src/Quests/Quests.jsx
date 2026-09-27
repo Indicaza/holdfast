@@ -78,7 +78,6 @@ function objectiveSearchText(objective) {
       assignment.name,
       assignment.responsibility,
       assignment.detail,
-      assignment.memberId,
     ]),
   ]
     .map(searchableValue)
@@ -151,7 +150,7 @@ function Reward({ reward }) {
         {reward.marks > 0 ? <span><strong>{reward.marks}</strong> Marks</span> : null}
         {visibleItems.map((item) => (
           <span
-            key={item.id || `${item.name}-${item.quantity}`}
+            key={`${item.name}-${item.quantity}`}
             title={`${item.quantity}× ${item.name}`}
           >
             <strong>{item.quantity}×</strong> {item.name}
@@ -242,7 +241,7 @@ function QuestObjectives({ objectives }) {
                         <Assignment
                           assignment={assignment}
                           key={`${objective.id || objective.title}-${
-                            assignment.memberId || assignment.name
+                            assignment.name
                           }-${assignmentIndex}`}
                         />
                       ))}
