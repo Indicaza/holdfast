@@ -39,6 +39,7 @@ function QuestJsonImport({ questDocument, onImport }) {
     try {
       const result = importQuestJson(raw, questDocument)
       onImport(result.document, result)
+      setJsonText('')
       setNoticeTone('success')
       setNotice(
         `Imported ${result.importedCount} quest${result.importedCount === 1 ? '' : 's'} into the unsaved draft.${
@@ -144,6 +145,7 @@ function QuestJsonImport({ questDocument, onImport }) {
               onChange={(event) => {
                 setJsonText(event.target.value)
                 setNotice('')
+                setNoticeTone('normal')
               }}
             />
           </label>
