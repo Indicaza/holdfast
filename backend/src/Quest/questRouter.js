@@ -6,7 +6,10 @@ import {
 } from "../Auth/permissions.js";
 import { awardObjectiveInDatabase } from "../Contribution/contributionRepository.js";
 import { withGuildTransaction } from "../Data/database.js";
-import { readGuildMembers } from "../Guild/memberRepository.js";
+import {
+  readGuildMembers,
+  readGuildMembersFromDatabase,
+} from "../Guild/memberRepository.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   QuestStorageError,
@@ -261,44 +264,6 @@ export function createQuestRouter() {
       try {
         const questId = String(req.body.questId || "");
         const objectiveId = String(req.body.objectiveId || "");
-        const submitted = normalizeQuestDocument(req.body.document);
-        const submittedTarget = findObjective(
-          submitted,
-          questId,
-          objectiveId,
-        );
-
-        if (!submittedTarget.quest || !submittedTarget.objective) {
-          res.status(404).json({
-            error: "objective_not_found",
-            message: "That objective no longer exists.",
-          });
-          return;
-        }
-
-        const requestedMemberIds = [
-          ...new Set(
-            submittedTarget.objective.assignments
-              .map((assignment) => assignment.memberId)
-              .filter(Boolean),
-          ),
-        ];
-        const guildMembers = await readGuildMembers();
-        const memberById = new Map(
-          guildMembers.map((member) => [member.id, member]),
-        );
-        const requestedMembers = requestedMemberIds
-          .map((id) => memberById.get(id))
-          .filter(Boolean);
-
-        if (requestedMembers.length !== requestedMemberIds.length) {
-          res.status(400).json({
-            error: "unknown_assignee",
-            message:
-              "One or more assigned members are no longer in the GuildOS member directory.",
-          });
-          return;
-        }
 
         const result = withGuildTransaction((db) => {
           const current = readQuestsFromDatabase(db);
@@ -356,6 +321,10 @@ export function createQuestRouter() {
             throw error;
           }
 
+          const guildMembers = readGuildMembersFromDatabase(db);
+          const memberById = new Map(
+            guildMembers.map((member) => [member.id, member]),
+          );
           const assignedMembers = memberIds
             .map((id) => memberById.get(id))
             .filter(Boolean);
