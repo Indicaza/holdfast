@@ -45,14 +45,16 @@
 }
 
 .member-access__join {
-  display: inline-block;
+  display: block;
   margin-top: var(--space-5);
   color: var(--color-accent-bright);
   font-size: var(--font-size-sm);
+  text-align: center;
 }
 
 .member-access__loading {
   display: flex;
+  justify-content: center;
   gap: var(--space-2);
   padding-block: var(--space-2);
 }

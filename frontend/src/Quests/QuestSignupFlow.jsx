@@ -208,7 +208,6 @@ export function useQuestSignup({ catalog, setCatalog }) {
         eyebrow="Quest signup"
         title={dialog.objective.title}
         intro={`Take this objective in “${dialog.quest.title}”?`}
-        align="left"
         onClose={saving ? undefined : closeDialog}
       >
         <div className="quest-signup__note">
@@ -247,7 +246,6 @@ export function useQuestSignup({ catalog, setCatalog }) {
         eyebrow="Already assigned"
         title="You are already on this quest."
         intro={`You signed up for “${dialog.objective.title}”.`}
-        align="left"
         onClose={closeDialog}
       >
         <div className="quest-signup__note">
@@ -275,7 +273,6 @@ export function useQuestSignup({ catalog, setCatalog }) {
         eyebrow="Assignment confirmed"
         title="You are on it."
         intro={`“${dialog.objective.title}” is now yours on “${dialog.quest.title}”.`}
-        align="left"
         onClose={closeDialog}
       >
         <button
@@ -295,7 +292,6 @@ export function useQuestSignup({ catalog, setCatalog }) {
         eyebrow="Quest signup"
         title={dialog.title}
         intro={dialog.message}
-        align="left"
         onClose={closeDialog}
       >
         <button

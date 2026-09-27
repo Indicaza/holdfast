@@ -57,7 +57,6 @@ function MemberAccessModal({ returnTo, onClose }) {
       eyebrow={copy.eyebrow}
       title={copy.title}
       intro={copy.intro}
-      align="left"
       onClose={onClose}
     >
       {session.status === 'loading' ? (
