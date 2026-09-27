@@ -1004,7 +1004,9 @@ function QuestEditor() {
         setMessage(
           error?.status === 403
             ? 'Your quest-editing permission could not be verified.'
-            : 'Quests could not be loaded.',
+            : error?.code === 'quest_data_invalid'
+              ? error.message
+              : 'Quests could not be loaded.',
         )
       }
     },

@@ -5,14 +5,47 @@ import {
   ensureRuntimeDataFile,
   runtimeDataFile,
 } from "../Data/runtimeData.js";
-import { normalizeQuestDocument } from "./questSchema.js";
+import {
+  QuestValidationError,
+  normalizeQuestDocument,
+} from "./questSchema.js";
 
 const QUESTS_FILE = "quests.json";
 
+export class QuestStorageError extends Error {
+  constructor(message, cause) {
+    super(message, { cause });
+    this.name = "QuestStorageError";
+  }
+}
+
+function storedQuestError(target, error) {
+  const detail =
+    error instanceof SyntaxError
+      ? "The file is not valid JSON."
+      : error instanceof QuestValidationError
+        ? error.message
+        : error.message || "Unknown quest data error.";
+
+  return new QuestStorageError(
+    `Stored quest data is invalid at ${target}: ${detail}`,
+    error,
+  );
+}
+
 export async function readQuests() {
   const target = await ensureRuntimeDataFile(QUESTS_FILE);
-  const raw = await readFile(target, "utf8");
-  return normalizeQuestDocument(JSON.parse(raw));
+
+  try {
+    const raw = await readFile(target, "utf8");
+    return normalizeQuestDocument(JSON.parse(raw));
+  } catch (error) {
+    if (error instanceof QuestStorageError) {
+      throw error;
+    }
+
+    throw storedQuestError(target, error);
+  }
 }
 
 export async function writeQuests(document) {

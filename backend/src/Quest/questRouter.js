@@ -3,7 +3,11 @@ import { Router } from "express";
 import { requirePermission } from "../Auth/permissions.js";
 import { awardObjective } from "../Contribution/contributionRepository.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
-import { readQuests, writeQuests } from "./questRepository.js";
+import {
+  QuestStorageError,
+  readQuests,
+  writeQuests,
+} from "./questRepository.js";
 import {
   QuestValidationError,
   normalizeQuestDocument,
@@ -78,26 +82,6 @@ function hasReward(objective) {
   );
 }
 
-function assertUniqueAssignees(document) {
-  for (const quest of document.quests) {
-    for (const objective of quest.objectives) {
-      const seen = new Set();
-
-      for (const assignment of objective.assignments) {
-        if (!assignment.memberId) continue;
-
-        if (seen.has(assignment.memberId)) {
-          throw new QuestValidationError(
-            `“${assignment.name}” is assigned more than once to “${objective.title}”.`,
-          );
-        }
-
-        seen.add(assignment.memberId);
-      }
-    }
-  }
-}
-
 export function createQuestRouter() {
   const router = Router();
 
@@ -119,6 +103,15 @@ export function createQuestRouter() {
       res.json(document);
     } catch (error) {
       console.error("Unable to read quest workspace", error);
+
+      if (error instanceof QuestStorageError) {
+        res.status(500).json({
+          error: "quest_data_invalid",
+          message: error.message,
+        });
+        return;
+      }
+
       res.status(500).json({ error: "quests_unavailable" });
     }
   });
@@ -127,7 +120,6 @@ export function createQuestRouter() {
     try {
       const current = await readQuests();
       let document = normalizeQuestDocument(req.body);
-      assertUniqueAssignees(document);
       document = preserveObjectiveCompletion(document, current);
 
       if (!req.auth.permissions.includes("rewards.policy.edit")) {
@@ -158,7 +150,6 @@ export function createQuestRouter() {
       try {
         const current = await readQuests();
         let document = normalizeQuestDocument(req.body.document);
-        assertUniqueAssignees(document);
         document = preserveObjectiveCompletion(document, current);
 
         if (!req.auth.permissions.includes("rewards.policy.edit")) {
