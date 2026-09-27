@@ -22,7 +22,6 @@
     {
       "key": "information",
       "name": "INFORMATION",
-      "access": "public",
       "channels": [
         { "key": "welcome", "name": "welcome", "type": "text", "topic": "Welcome to Holdfast. Start here.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant"] },
         { "key": "charter", "name": "charter", "type": "text", "topic": "Leave it stronger.", "readOnly": true, "writerRoles": ["commander", "major", "captain", "lieutenant"] },

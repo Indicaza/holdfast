@@ -302,22 +302,53 @@ Schedule that command with the host or use the platform's volume snapshots. A su
 
 ## Discord Provisioning
 
-Discord no longer supports applications creating a new server through the API. Create an empty Holdfast server in Discord, add the bot with Manage Server, Manage Roles, and Manage Channels permissions, and then apply the committed Holdfast manifest.
+The committed manifest in `backend/config/discord.manifest.json` is the source of truth for Holdfast-managed Discord roles, categories, and channels. Add the bot to the existing server with Manage Server, Manage Roles, and Manage Channels permissions, then move the bot role above every role the manifest manages.
 
-Preview the changes without writing anything:
+Always start with a read-only plan. Existing roles and channels are adopted only when their name, type, and parent make the match unambiguous; an ambiguous match stops the run before any write.
 
 ```bash
 cd backend
 npm run discord:plan
 ```
 
-Create or update the managed roles and channels:
+For a machine-readable review:
+
+```bash
+npm run --silent discord:plan -- --json
+```
+
+Apply the reviewed plan:
 
 ```bash
 npm run discord:apply
 ```
 
-The provisioner is additive and idempotent. It does not delete unmanaged roles or channels. It stores Discord resource IDs in `discord-provisioning-state.json` inside `GUILD_DATA_DIR`, so keep that file with the rest of the persistent deployment data.
+Before writing, the provisioner verifies the bot's effective permissions and role hierarchy. Apply is idempotent, never targets an unmanaged resource, and refuses category changes that would alter synced unmanaged children. It never immediately deletes a managed resource removed from the manifest; removed resources are disabled and moved into a private archive instead.
+
+To undo a manifest change, restore the earlier manifest in Git, review its plan, and reconcile it. Archived resources return with their original Discord IDs, memberships, and channel history:
+
+```bash
+npm run discord:plan
+npm run discord:restore
+```
+
+Export a normalized snapshot of the live server before a major change:
+
+```bash
+npm run discord:export
+```
+
+Pruning is a separate, guarded operation. The default command is read-only. It only considers resources previously archived by this provisioner, requires a minimum archive age (seven days by default), refuses renamed resources, refuses roles that still have members, and will not remove a category with untracked children.
+
+```bash
+# Preview only
+npm run discord:prune
+
+# Deliberate deletion after reviewing the preview
+npm run discord:prune -- --apply --confirm "$DISCORD_GUILD_ID"
+```
+
+The state file, append-only JSONL audit log, latest report, and live export default to `GUILD_DATA_DIR`. Keep them with persistent deployment data and backups. Their default names are `discord-provisioning-state.json`, `discord-provisioning-audit.jsonl`, `discord-provisioning-last-report.json`, and `discord-live-export.json`. Mutating commands also hold an exclusive lock so two operators cannot reconcile the server concurrently; a lock left by a terminated process must be removed only after confirming that no provisioning command is still running.
 
 After applying, the command prints the role IDs required by the production environment. New members who use the website recruitment flow receive the generated Recruit role automatically.
 
