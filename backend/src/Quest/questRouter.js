@@ -26,6 +26,7 @@ import {
 } from "./questSchema.js";
 import {
   QuestSignupError,
+  leaveObjective,
   signupForObjective,
 } from "./questSignup.js";
 
@@ -197,6 +198,66 @@ export function createQuestRouter() {
         res.status(500).json({
           error: "quest_signup_failed",
           message: "Holdfast could not save that signup. Try again.",
+        });
+      }
+    },
+  );
+
+  router.post(
+    "/member/unassign",
+    requireAuthenticated,
+    memberSignupRateLimit,
+    async (req, res) => {
+      try {
+        const questId = String(req.body?.questId || "");
+        const objectiveId = String(req.body?.objectiveId || "");
+
+        if (!questId || !objectiveId) {
+          res.status(400).json({
+            error: "signup_target_required",
+            message: "Choose an objective before leaving it.",
+          });
+          return;
+        }
+
+        const memberId = req.auth.user.id;
+        const saved = await updateQuests((current) =>
+          leaveObjective(
+            current,
+            memberId,
+            questId,
+            objectiveId,
+          ).document,
+        );
+
+        res.set("Cache-Control", "no-store");
+        res.json({
+          catalog: projectQuests(saved, memberId),
+          questId,
+          objectiveId,
+        });
+      } catch (error) {
+        if (error instanceof QuestSignupError) {
+          res.status(error.status).json({
+            error: error.code,
+            message: error.message,
+            ...error.details,
+          });
+          return;
+        }
+
+        if (error instanceof QuestValidationError) {
+          res.status(400).json({
+            error: "invalid_quest_document",
+            message: error.message,
+          });
+          return;
+        }
+
+        console.error("Unable to remove member from objective", error);
+        res.status(500).json({
+          error: "quest_unassign_failed",
+          message: "Holdfast could not remove that assignment. Try again.",
         });
       }
     },
