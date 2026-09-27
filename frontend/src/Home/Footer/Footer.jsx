@@ -1,19 +1,12 @@
-import { useSession } from '../../Auth/SessionProvider.jsx'
 import './Footer.css'
 
-function Footer() {
-  const { discordInviteUrl } = useSession()
-  const links = [
-    {
-      label: 'Discord',
-      href: discordInviteUrl || '/#join-holdfast',
-      external: Boolean(discordInviteUrl),
-    },
-    { label: 'GitHub', href: 'https://github.com/Indicaza/holdfast', external: true },
-    { label: 'GuildOS', href: '/guildos' },
-    { label: 'Privacy', href: '/privacy' },
-  ]
+const links = [
+  { label: 'GitHub', href: 'https://github.com/Indicaza/holdfast', external: true },
+  { label: 'GuildOS', href: '/guildos' },
+  { label: 'Privacy', href: '/privacy' },
+]
 
+function Footer() {
   return (
     <footer className="footer">
       <div className="footer__brand">
