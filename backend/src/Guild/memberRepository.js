@@ -1,7 +1,10 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
+import {
+  ensureRuntimeDataFile,
+  runtimeDataFile,
+} from "../Data/runtimeData.js";
 import {
   emptyMemberProfile,
   isValidTimeZone,
@@ -9,17 +12,7 @@ import {
 } from "./memberProfile.js";
 import { normalizeGuildRank } from "./rankSystem.js";
 
-const DEFAULT_DATA_FILE = fileURLToPath(
-  new URL("../../data/members.json", import.meta.url),
-);
-
-function dataFile() {
-  if (!process.env.GUILD_DATA_DIR) {
-    return DEFAULT_DATA_FILE;
-  }
-
-  return path.join(path.resolve(process.env.GUILD_DATA_DIR), "members.json");
-}
+const MEMBERS_FILE = "members.json";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -90,7 +83,8 @@ function initials(value) {
 
 async function readRawMembers() {
   try {
-    const raw = await readFile(dataFile(), "utf8");
+    const target = await ensureRuntimeDataFile(MEMBERS_FILE);
+    const raw = await readFile(target, "utf8");
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
@@ -103,7 +97,7 @@ async function readRawMembers() {
 }
 
 async function writeMembers(members) {
-  const target = dataFile();
+  const target = runtimeDataFile(MEMBERS_FILE);
   const directory = path.dirname(target);
   const temporary = `${target}.${process.pid}.${Date.now()}.tmp`;
 
