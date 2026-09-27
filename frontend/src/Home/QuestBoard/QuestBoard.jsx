@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
 import { useSession } from '../../Auth/SessionProvider.jsx'
+import {
+  questSelfAssignment,
+  useQuestSignup,
+} from '../../Quests/QuestSignupFlow.jsx'
 import './QuestBoard.css'
 
 const MAX_VISIBLE_ASSIGNMENTS = 8
@@ -117,6 +121,7 @@ function Reward({ reward }) {
 function QuestBoard() {
   const session = useSession()
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
+  const signup = useQuestSignup({ catalog, setCatalog })
 
   useEffect(() => {
     let active = true
@@ -128,7 +133,9 @@ function QuestBoard() {
 
     async function loadCatalog() {
       try {
-        const result = await apiJson('/api/quests')
+        const result = await apiJson(
+          session.authenticated ? '/api/quests/member' : '/api/quests',
+        )
         applyCatalog(result)
       } catch {
         // Keep the last good catalog on transient failures.
@@ -156,7 +163,7 @@ function QuestBoard() {
       window.removeEventListener(QUESTS_CHANGED_KEY, loadCatalog)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [session.authenticated])
 
   const featuredQuest = useMemo(() => {
     if (!catalog.focusedQuestId) return null
@@ -169,8 +176,10 @@ function QuestBoard() {
 
   const { completed: completedObjectives, total: objectiveCount } =
     questProgress(featuredQuest)
+  const currentAssignment = questSelfAssignment(featuredQuest)
 
   return (
+    <>
     <section className="quest-board" aria-labelledby="quest-board-title">
       <header className="quest-board__header">
         <div className="quest-board__heading">
@@ -292,6 +301,33 @@ function QuestBoard() {
                     </>
                   ) : null}
                 </div>
+
+                {!objective.completed ? (
+                  assignments.some((assignment) => assignment.isSelf) ? (
+                    <span className="quest-board__signup-status">
+                      You&apos;re on this
+                    </span>
+                  ) : currentAssignment ? (
+                    <button
+                      className="quest-board__signup"
+                      type="button"
+                      disabled
+                      title={`Already signed up for ${currentAssignment.objective.title}`}
+                    >
+                      On another objective
+                    </button>
+                  ) : (
+                    <button
+                      className="quest-board__signup"
+                      type="button"
+                      onClick={() =>
+                        signup.requestSignup(featuredQuest, objective)
+                      }
+                    >
+                      Sign up
+                    </button>
+                  )
+                ) : null}
               </div>
 
               <Reward reward={objective.reward} />
@@ -301,6 +337,8 @@ function QuestBoard() {
       </div>
 
     </section>
+    {signup.modal}
+    </>
   )
 }
 
