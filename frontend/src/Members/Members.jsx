@@ -46,7 +46,7 @@ function MemberAvatar({ member }) {
   return <span aria-hidden="true">{member.initials || '?'}</span>
 }
 
-function MemberCard({ member, isSelf }) {
+function MemberCard({ member }) {
   const contribution = member.contribution || {}
   const activeAssignments = Number(member.activeAssignmentCount) || 0
 
@@ -59,7 +59,6 @@ function MemberCard({ member, isSelf }) {
       <div className="members-page__identity">
         <div className="members-page__name-line">
           <h2>{memberName(member)}</h2>
-          {isSelf ? <span className="members-page__you">You</span> : null}
           {member.rank ? (
             <span className="members-page__role">{member.rank}</span>
           ) : null}
@@ -276,7 +275,6 @@ function Members() {
                 <MemberCard
                   key={member.id}
                   member={member}
-                  isSelf={member.id === session.user?.id}
                 />
               ))}
             </section>
