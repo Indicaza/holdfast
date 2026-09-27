@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { emptyMemberProfile, normalizeMemberProfile } from "./memberProfile.js";
 import { normalizeGuildRank } from "./rankSystem.js";
 
 const DEFAULT_DATA_FILE = fileURLToPath(
@@ -81,11 +82,42 @@ async function writeMembers(members) {
 export async function readGuildMembers() {
   const members = await readRawMembers();
 
-  return members.sort((left, right) =>
-    left.displayName.localeCompare(right.displayName, undefined, {
-      sensitivity: "base",
-    }),
-  );
+  return members
+    .map((member) => ({
+      ...member,
+      profile: normalizeMemberProfile(member.profile || emptyMemberProfile()),
+    }))
+    .sort((left, right) =>
+      left.displayName.localeCompare(right.displayName, undefined, {
+        sensitivity: "base",
+      }),
+    );
+}
+
+export async function updateGuildMemberProfile(memberId, profile) {
+  const members = await readRawMembers();
+  const index = members.findIndex((member) => member.id === memberId);
+
+  if (index < 0) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  const nextProfile = normalizeMemberProfile(profile);
+
+  members[index] = {
+    ...members[index],
+    profile: nextProfile,
+    profileUpdatedAt: now,
+    updatedAt: now,
+  };
+
+  await writeMembers(members);
+
+  return {
+    ...members[index],
+    profile: nextProfile,
+  };
 }
 
 export async function upsertGuildMember(user, permissions = []) {
@@ -106,6 +138,10 @@ export async function upsertGuildMember(user, permissions = []) {
     avatarUrl: user.avatarUrl || "",
     guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
     rank: memberRank(user.id, existing?.rank),
+    profile: normalizeMemberProfile(
+      existing?.profile || emptyMemberProfile(),
+    ),
+    profileUpdatedAt: existing?.profileUpdatedAt || null,
     permissions: Array.isArray(permissions) ? permissions : [],
     firstSeenAt: existing?.firstSeenAt || now,
     updatedAt: now,
