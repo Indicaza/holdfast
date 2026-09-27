@@ -53,5 +53,5 @@ temp/
 # ToDo files
 todo.md
 
-# Local database files
-backend/data/members.json
+# Runtime guild data
+backend/data/

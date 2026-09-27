@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "focusedQuestId": "",
+  "rewardPolicy": "",
+  "rewardLimits": {
+    "rep": {
+      "min": 0,
+      "max": 1000
+    },
+    "marks": {
+      "min": 0,
+      "max": 1000
+    }
+  },
+  "quests": []
+}

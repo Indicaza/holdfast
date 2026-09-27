@@ -153,6 +153,26 @@ cd backend
 npm install
 npm run dev
 
+## Runtime Guild Data
+
+Mutable GuildOS state is not committed to Git.
+
+- `backend/seed/` contains clean defaults used only to initialize a new data directory.
+- `backend/data/` is the ignored default runtime directory for local development.
+- `GUILD_DATA_DIR` overrides the runtime location.
+
+On first use, missing runtime files are copied from the corresponding seed files.
+
+In production, `GUILD_DATA_DIR` is required and should point to a persistent mounted directory, for example:
+
+```text
+GUILD_DATA_DIR=/var/lib/holdfast
+```
+
+The backend intentionally refuses to start in production without an explicit data directory. This prevents guild state from being written into an ephemeral application filesystem and disappearing on redeploy.
+
+Back up the contents of `GUILD_DATA_DIR` as application data. The current JSON store is a launch-stage persistence layer and is planned to move to SQLite.
+
 ## AI-Assisted Development
 
 Holdfast includes a lightweight workflow for working with AI across development sessions.
