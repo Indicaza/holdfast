@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import MemberAccessModal from './MemberAccessModal.jsx'
+import RankInsignia from './RankInsignia.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -57,12 +60,16 @@ function MemberCard({ member, isSelf }) {
         <div className="members-page__name-line">
           <h2>{memberName(member)}</h2>
           {isSelf ? <span className="members-page__you">You</span> : null}
-          {member.role === 'Leadership' ? (
-            <span className="members-page__role">Leadership</span>
+          {member.rank ? (
+            <span className="members-page__role">{member.rank}</span>
           ) : null}
         </div>
         <p>@{member.username}</p>
         <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
+      </div>
+
+      <div className="members-page__rank" aria-hidden="true">
+        <RankInsignia rank={member.rank} />
       </div>
 
       <dl className="members-page__stats">
@@ -147,7 +154,7 @@ function Members() {
       const matchesFilter =
         filter === 'all' ||
         (filter === 'active' && member.activeAssignmentCount > 0) ||
-        (filter === 'leadership' && member.role === 'Leadership')
+        (filter === 'leadership' && member.rankMeta?.isLeadership)
 
       if (!matchesFilter) return false
       if (!query) return true
@@ -155,7 +162,7 @@ function Members() {
       return [
         member.displayName,
         member.username,
-        member.role,
+        member.rank,
       ]
         .filter(Boolean)
         .join(' ')
@@ -177,41 +184,38 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id])
 
-  if (session.status === 'loading') {
+  const closeGate = () => window.location.assign('/')
+
+  if (session.status === 'loading' || session.status === 'error') {
     return (
-      <PageShell title="Members" centered className="members-page">
-        <p className="members-page__state">Opening the member directory…</p>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo="/members"
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (!session.authenticated) {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title="Members"
-        intro="The member directory is available to Holdfast members."
-        centered
-        className="members-page"
-      >
-        <div className="members-page__signin">
-          <button
-            type="button"
-            onClick={() => session.signIn('/members', 'member')}
-          >
-            Sign in with Discord
-          </button>
-          <a href="/join">New here? Join Holdfast</a>
-        </div>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo="/members"
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   return (
     <PageShell
       title="Members"
-      intro="Find the people behind Holdfast, see what they are working on, and open their service record."
-      centered
+      intro="Find people, see what they are working on, and open their service record."
       className="members-page"
     >
       {status === 'error' ? (

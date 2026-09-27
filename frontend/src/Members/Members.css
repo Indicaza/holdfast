@@ -15,9 +15,24 @@
   animation: none;
 }
 
-.members-page .page-shell__intro {
+.members-page .page-shell__header {
+  box-sizing: border-box;
+  width: min(100%, 76rem);
+  max-width: 76rem;
   margin-inline: auto;
-  text-align: center;
+}
+
+.members-page .page-shell__header h1 {
+  color: var(--color-accent-bright);
+  font-size: clamp(var(--font-size-fib-34), 5vw, var(--font-size-fib-55));
+  line-height: 0.95;
+  text-transform: none;
+}
+
+.members-page .page-shell__intro {
+  max-width: 42rem;
+  margin-inline: 0;
+  text-align: left;
 }
 
 .members-page .page-shell__body {
@@ -256,7 +271,7 @@
 .members-page__card {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(11rem, 1fr) minmax(18rem, 0.9fr) minmax(7rem, auto) auto;
+  grid-template-columns: auto minmax(11rem, 1fr) 3.25rem minmax(18rem, 0.9fr) minmax(7rem, auto) auto;
   align-items: center;
   gap: var(--space-5);
   min-width: 0;
@@ -303,6 +318,13 @@
 
 .members-page__identity {
   min-width: 0;
+}
+
+.members-page__rank {
+  width: 3.25rem;
+  height: 3.25rem;
+  color: var(--color-accent-bright);
+  opacity: 0.9;
 }
 
 .members-page__name-line {
@@ -424,6 +446,10 @@
 @media (max-width: 64rem) {
   .members-page__card {
     grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .members-page__rank {
+    display: none;
   }
 
   .members-page__stats {

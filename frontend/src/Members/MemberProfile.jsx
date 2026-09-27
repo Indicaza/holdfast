@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/SessionProvider.jsx'
+import MemberAccessModal from './MemberAccessModal.jsx'
+import RankInsignia from './RankInsignia.jsx'
 import './MemberProfile.css'
 
 function displayName(member) {
@@ -29,6 +32,10 @@ function tenureText(member) {
   return `GuildOS member since ${formatDate(member.firstSeenAt, false)}`
 }
 
+function formatNumber(value) {
+  return (Number(value) || 0).toLocaleString()
+}
+
 function MemberAvatar({ member }) {
   if (member.avatarUrl) {
     return (
@@ -55,8 +62,8 @@ function Reward({ reward }) {
 
   return (
     <div className="member-profile__rewards">
-      {reward.rep > 0 ? <span>+{reward.rep} Rep</span> : null}
-      {reward.marks > 0 ? <span>+{reward.marks} Marks</span> : null}
+      {reward.rep > 0 ? <span>+{formatNumber(reward.rep)} Rep</span> : null}
+      {reward.marks > 0 ? <span>+{formatNumber(reward.marks)} Marks</span> : null}
       {items.map((item) => (
         <span key={item.id || item.name}>
           {item.quantity > 1 ? `${item.quantity}× ` : ''}
@@ -64,6 +71,122 @@ function Reward({ reward }) {
         </span>
       ))}
     </div>
+  )
+}
+
+function RepProgress({ member }) {
+  const progression = member.repProgression
+  const lifetimeRep = Number(member.contribution?.rep) || 0
+
+  if (!progression) {
+    return null
+  }
+
+  const percent = Math.min(
+    100,
+    Math.max(0, (Number(progression.progress) || 0) * 100),
+  )
+  const segmentCurrent =
+    progression.mode === 'eligibility'
+      ? Math.min(
+          Math.max(lifetimeRep - Number(progression.segmentStart || 0), 0),
+          Number(progression.segmentSize || 0),
+        )
+      : Math.min(lifetimeRep, Number(progression.segmentEnd || 42000))
+
+  let note = progression.detail
+
+  if (member.rank === 'Recruit') {
+    note =
+      'Private promotion is onboarding-based. Rep still accumulates toward the Corporal contribution breakpoint.'
+  } else if (progression.mode === 'eligibility' && progression.thresholdMet) {
+    note =
+      'Rep requirement met. Promotion still depends on trust, recommendation, qualification, and guild need.'
+  }
+
+  return (
+    <section className="member-profile__rep" aria-labelledby="member-rep-title">
+      <div className="member-profile__rep-heading">
+        <div>
+          <p>Guild Reputation</p>
+          <h2 id="member-rep-title">{formatNumber(lifetimeRep)} Rep</h2>
+        </div>
+
+        <div className="member-profile__rep-target">
+          <span>{progression.label}</span>
+          {progression.mode === 'eligibility' ? (
+            <strong>
+              {progression.thresholdMet
+                ? 'Rep floor met'
+                : `${formatNumber(progression.remaining)} to go`}
+            </strong>
+          ) : (
+            <strong>Lifetime service</strong>
+          )}
+        </div>
+      </div>
+
+      <div
+        className="member-profile__rep-bar"
+        role="progressbar"
+        aria-label={progression.label}
+        aria-valuemin="0"
+        aria-valuemax={Number(progression.segmentSize) || Number(progression.segmentEnd) || 42000}
+        aria-valuenow={segmentCurrent}
+      >
+        <span
+          className="member-profile__rep-fill"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+
+      <div className="member-profile__rep-scale">
+        <span>{formatNumber(progression.segmentStart || 0)}</span>
+        <strong>
+          {progression.mode === 'eligibility'
+            ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this tier`
+            : `${formatNumber(lifetimeRep)} lifetime`}
+        </strong>
+        <span>{formatNumber(progression.segmentEnd || 42000)}</span>
+      </div>
+
+      <p className="member-profile__rep-note">{note}</p>
+    </section>
+  )
+}
+
+
+function ProfileLoading() {
+  return (
+    <PageShell className="member-profile member-profile--loaded">
+      <div className="member-profile__skeleton" aria-label="Loading member profile">
+        <div className="member-profile__skeleton-avatar" />
+        <div className="member-profile__skeleton-copy">
+          <span />
+          <strong />
+          <span />
+        </div>
+      </div>
+    </PageShell>
+  )
+}
+
+function ProfileMessage({ title, body }) {
+  return (
+    <PageShell className="member-profile member-profile--loaded">
+      <nav className="member-profile__crumbs" aria-label="Member profile navigation">
+        <a href="/members">Members</a>
+        <span aria-hidden="true">/</span>
+        <span>Profile</span>
+      </nav>
+
+      <section className="member-profile__message">
+        <p>GuildOS</p>
+        <h1>{title}</h1>
+        <span>{body}</span>
+        <a href="/members">Back to Members</a>
+      </section>
+    </PageShell>
   )
 }
 
@@ -139,78 +262,54 @@ function MemberProfile({ memberId }) {
     }
   }
 
-  if (session.status === 'loading') {
+  const returnTo = isSelfRoute ? '/members/me' : `/members/${memberId}`
+  const closeGate = () => window.location.assign('/')
+
+  if (session.status === 'loading' || session.status === 'error') {
     return (
-      <PageShell title="Member" centered className="member-profile">
-        <p className="member-profile__state">Opening member profile…</p>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo={returnTo}
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (!session.authenticated) {
     return (
-      <PageShell
-        eyebrow="GuildOS"
-        title="Member profile"
-        intro="Member profiles are available to Holdfast members."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__signin">
-          <button
-            type="button"
-            onClick={() =>
-              session.signIn(
-                isSelfRoute ? '/members/me' : `/members/${memberId}`,
-                'member',
-              )
-            }
-          >
-            Sign in with Discord
-          </button>
-          <a href="/join">New here? Join Holdfast</a>
-        </div>
-      </PageShell>
+      <Home
+        overlay={
+          <MemberAccessModal
+            returnTo={returnTo}
+            onClose={closeGate}
+          />
+        }
+      />
     )
   }
 
   if (status === 'loading') {
-    return (
-      <PageShell title="Member" centered className="member-profile">
-        <p className="member-profile__state">Opening member profile…</p>
-      </PageShell>
-    )
+    return <ProfileLoading />
   }
 
   if (status === 'error') {
     return (
-      <PageShell
-        eyebrow="Members"
+      <ProfileMessage
         title="Profile unavailable"
-        intro="GuildOS could not load this member right now."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__back">
-          <a href="/members">Back to Members</a>
-        </div>
-      </PageShell>
+        body="GuildOS could not load this member right now."
+      />
     )
   }
 
   if (status === 'not-found' || !member) {
     return (
-      <PageShell
-        eyebrow="Members"
+      <ProfileMessage
         title="Member not found"
-        intro="That profile is not in the Holdfast member directory."
-        centered
-        className="member-profile"
-      >
-        <div className="member-profile__back">
-          <a href="/members">Back to Members</a>
-        </div>
-      </PageShell>
+        body="That profile is not in the Holdfast member directory."
+      />
     )
   }
 
@@ -232,16 +331,21 @@ function MemberProfile({ memberId }) {
         </div>
 
         <div className="member-profile__identity">
-          {isSelf || (member.role && member.role !== 'Member') ? (
-            <div className="member-profile__badges">
-              {isSelf ? <span>You</span> : null}
-              {member.role && member.role !== 'Member' ? (
-                <span>{member.role}</span>
-              ) : null}
+          <div className="member-profile__rank">
+            <div className="member-profile__rank-icon">
+              <RankInsignia rank={member.rank} />
             </div>
-          ) : null}
+            <div>
+              <span>Guild Rank</span>
+              <strong>{member.rank || 'Recruit'}</strong>
+            </div>
+          </div>
 
-          <h1 id="member-profile-name">{displayName(member)}</h1>
+          <div className="member-profile__name-line">
+            <h1 id="member-profile-name">{displayName(member)}</h1>
+            {isSelf ? <span>You</span> : null}
+          </div>
+
           <p className="member-profile__username">@{member.username}</p>
           <p className="member-profile__tenure">{tenureText(member)}</p>
         </div>
@@ -254,38 +358,41 @@ function MemberProfile({ memberId }) {
         </div>
       </section>
 
+      <RepProgress member={member} />
+
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>
-          <span>Rep earned</span>
-          <strong>{Number(contribution.rep) || 0}</strong>
-        </article>
-        <article>
           <span>Marks earned</span>
-          <strong>{Number(contribution.marks) || 0}</strong>
+          <strong>{formatNumber(contribution.marks)}</strong>
         </article>
         <article>
           <span>Objectives complete</span>
-          <strong>{Number(contribution.completedObjectives) || 0}</strong>
+          <strong>{formatNumber(contribution.completedObjectives)}</strong>
         </article>
         <article>
           <span>Active assignments</span>
-          <strong>{assignments.length}</strong>
+          <strong>{formatNumber(assignments.length)}</strong>
         </article>
       </section>
 
       <section
-        className="member-profile__section member-profile__assignments-section"
+        className="member-profile__section"
         aria-labelledby="member-assignments-title"
       >
         <div className="member-profile__section-heading">
-          <p>Current work</p>
-          <h2 id="member-assignments-title">On Assignment</h2>
-          <span>
-            {assignments.length
-              ? `${assignments.length} active ${assignments.length === 1 ? 'objective' : 'objectives'}`
-              : 'No active objectives'}
-          </span>
-          <a href="/quests">Open Quest Board</a>
+          <div>
+            <p>Current work</p>
+            <h2 id="member-assignments-title">On Assignment</h2>
+          </div>
+
+          <div className="member-profile__section-meta">
+            <span>
+              {assignments.length
+                ? `${assignments.length} active ${assignments.length === 1 ? 'objective' : 'objectives'}`
+                : 'No active objectives'}
+            </span>
+            <a href="/quests">Open Quest Board</a>
+          </div>
         </div>
 
         {assignments.length ? (
@@ -340,13 +447,18 @@ function MemberProfile({ memberId }) {
         aria-labelledby="member-service-title"
       >
         <div className="member-profile__section-heading">
-          <p>Completed work</p>
-          <h2 id="member-service-title">Service Record</h2>
-          <span>
-            {member.activityCount
-              ? `${member.activityCount} recorded ${member.activityCount === 1 ? 'entry' : 'entries'}`
-              : 'No recorded entries yet'}
-          </span>
+          <div>
+            <p>Completed work</p>
+            <h2 id="member-service-title">Service Record</h2>
+          </div>
+
+          <div className="member-profile__section-meta">
+            <span>
+              {member.activityCount
+                ? `${member.activityCount} recorded ${member.activityCount === 1 ? 'entry' : 'entries'}`
+                : 'No recorded entries yet'}
+            </span>
+          </div>
         </div>
 
         {activity.length ? (

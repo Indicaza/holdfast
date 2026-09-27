@@ -7,6 +7,11 @@ import {
 } from "../Contribution/contributionRepository.js";
 import { readQuests } from "../Quest/questRepository.js";
 import { readGuildMembers } from "./memberRepository.js";
+import {
+  guildRankMetadata,
+  normalizeGuildRank,
+  repProgressionForRank,
+} from "./rankSystem.js";
 
 function emptyContribution() {
   return {
@@ -14,10 +19,6 @@ function emptyContribution() {
     marks: 0,
     completedObjectives: 0,
   };
-}
-
-function memberRole(member) {
-  return member.permissions?.includes("site.admin") ? "Leadership" : "Member";
 }
 
 function activeAssignmentsByMember(document) {
@@ -75,6 +76,8 @@ function activeAssignmentsByMember(document) {
 function projectMember(member, totals, assignments) {
   const contribution = totals.get(member.id) || emptyContribution();
   const activeAssignments = assignments.get(member.id) || [];
+  const rank = normalizeGuildRank(member.rank);
+  const rankMeta = guildRankMetadata(rank);
 
   return {
     id: member.id,
@@ -85,8 +88,11 @@ function projectMember(member, totals, assignments) {
     guildJoinedAt: member.guildJoinedAt || null,
     firstSeenAt: member.firstSeenAt,
     updatedAt: member.updatedAt,
-    role: memberRole(member),
+    rank,
+    rankMeta,
+    role: rankMeta.isLeadership ? "Leadership" : "Member",
     contribution,
+    repProgression: repProgressionForRank(rank, contribution.rep),
     activeAssignmentCount: activeAssignments.length,
   };
 }
