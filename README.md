@@ -250,3 +250,29 @@ The current priority is:
 **Website → Discord → Guild**
 
 Everything beyond that will be added only when it provides real value.
+
+
+## Continuous Integration
+
+GitHub Actions runs on every pull request and every push to `main`.
+
+Frontend checks:
+
+```bash
+cd frontend
+npm ci
+npm run lint
+npm test
+npm run build
+```
+
+Backend checks:
+
+```bash
+cd backend
+npm ci
+npm run lint
+npm test
+```
+
+CI uses Node 24 and read-only repository permissions.
