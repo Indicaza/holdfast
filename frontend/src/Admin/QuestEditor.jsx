@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from '../Auth/SessionProvider.jsx'
 import './QuestEditor.css'
 
@@ -16,6 +16,10 @@ const DEFAULT_LIMITS = {
   marks: { min: 0, max: 1000 },
 }
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
+}
 
 function announceQuestsChanged() {
   try {
@@ -116,10 +120,11 @@ function progress(count, total, singular) {
   return `${count}/${total} ${singular}${total === 1 ? '' : 's'}`
 }
 
-async function fetchGuildMembers() {
+async function fetchGuildMembers(signal) {
   const response = await fetch('/api/guild/members', {
     credentials: 'include',
     cache: 'no-store',
+    signal,
   })
 
   if (!response.ok) return []
@@ -957,37 +962,75 @@ function QuestEditor() {
   const [message, setMessage] = useState('Loading quests…')
   const [confirmation, setConfirmation] = useState(null)
 
+  const loadWorkspace = useCallback(
+    async (signal) => {
+      setStatus('loading')
+      setMessage('Loading quests…')
+
+      let lastError = new Error('Quests could not be loaded.')
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch('/api/quests/manage', {
+            credentials: 'include',
+            cache: 'no-store',
+            signal,
+          })
+
+          if (signal?.aborted) return
+
+          if (
+            (response.status === 401 || response.status === 403) &&
+            attempt === 0
+          ) {
+            await session.refresh()
+            await wait(120)
+            continue
+          }
+
+          if (!response.ok) {
+            throw new Error('Quests could not be loaded.')
+          }
+
+          const [document, guildMembers] = await Promise.all([
+            response.json(),
+            fetchGuildMembers(signal),
+          ])
+
+          if (signal?.aborted) return
+
+          setDraft(document)
+          setSaved(document)
+          setMembers(guildMembers)
+          setStatus('ready')
+          setMessage('Quests loaded.')
+          return
+        } catch (error) {
+          if (error?.name === 'AbortError' || signal?.aborted) {
+            return
+          }
+
+          lastError = error
+
+          if (attempt < 2) {
+            await wait(attempt === 0 ? 180 : 450)
+          }
+        }
+      }
+
+      if (signal?.aborted) return
+      setStatus('error')
+      setMessage(lastError.message || 'Quests could not be loaded.')
+    },
+    [session.refresh],
+  )
+
   useEffect(() => {
-    let active = true
+    const controller = new AbortController()
+    void loadWorkspace(controller.signal)
 
-    Promise.all([
-      fetch('/api/quests/manage', {
-        credentials: 'include',
-        cache: 'no-store',
-      }).then(async (response) => {
-        if (!response.ok) throw new Error('Quests could not be loaded.')
-        return response.json()
-      }),
-      fetchGuildMembers(),
-    ])
-      .then(([document, guildMembers]) => {
-        if (!active) return
-        setDraft(document)
-        setSaved(document)
-        setMembers(guildMembers)
-        setStatus('ready')
-        setMessage('Quests loaded.')
-      })
-      .catch((error) => {
-        if (!active) return
-        setStatus('error')
-        setMessage(error.message)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+    return () => controller.abort()
+  }, [loadWorkspace])
 
   const dirty = useMemo(() => {
     if (!draft || !saved) return false
@@ -1209,9 +1252,18 @@ function QuestEditor() {
 
   if (!draft) {
     return (
-      <p className="quest-editor__state quest-editor__state--error">
-        {message}
-      </p>
+      <div className="quest-editor__load-error">
+        <p className="quest-editor__state quest-editor__state--error">
+          {message}
+        </p>
+        <button
+          className="quest-editor__secondary"
+          type="button"
+          onClick={() => void loadWorkspace()}
+        >
+          Retry
+        </button>
+      </div>
     )
   }
 
