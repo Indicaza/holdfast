@@ -147,3 +147,18 @@ test("public featured projection is empty when nothing is featured", () => {
   assert.equal(projected.focusedQuestId, "");
   assert.deepEqual(projected.quests, []);
 });
+
+
+test("member quest projection marks only the viewer's own assignment", () => {
+  const projected = projectQuests(document, "372578806763880458");
+  const assignment = projected.quests[0].objectives[0].assignments[0];
+
+  assert.equal(assignment.isSelf, true);
+  assert.equal("memberId" in assignment, false);
+
+  const otherViewer = projectQuests(document, "different-member");
+  assert.equal(
+    "isSelf" in otherViewer.quests[0].objectives[0].assignments[0],
+    false,
+  );
+});
