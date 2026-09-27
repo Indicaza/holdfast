@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
+import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
@@ -32,7 +33,7 @@ app.use("/api/auth", createDiscordAuthRouter());
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
 
-app.get("/api/me", async (req, res) => {
+app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
   res.set("Cache-Control", "no-store");
 
   if (!req.auth) {
@@ -49,6 +50,7 @@ app.get("/api/me", async (req, res) => {
   setSession(res, {
     user: req.auth.user,
     permissions: req.auth.permissions,
+    verifiedAt: req.auth.verifiedAt,
   });
 
   res.json({
