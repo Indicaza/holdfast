@@ -45,12 +45,11 @@ function useSpelledTitle(text, resetKey) {
 }
 
 function HeroContent({ slide }) {
-  const { discordInviteUrl } = useSession()
+  const { authenticated, signIn } = useSession()
   const { typedTitle, isComplete } = useSpelledTitle(slide.title, slide.id)
   const storyRef = useRef(null)
   const hasMeasuredStory = useRef(false)
   const [storyHeight, setStoryHeight] = useState(null)
-  const joinHref = discordInviteUrl || '#join-holdfast'
 
   useEffect(() => {
     const story = storyRef.current
@@ -113,13 +112,19 @@ function HeroContent({ slide }) {
       </div>
 
       <div className="hero-content__actions">
-        <a
-          className="hero-content__primary"
-          href={joinHref}
-          {...(discordInviteUrl ? { target: '_blank', rel: 'noreferrer' } : {})}
-        >
-          Join Holdfast
-        </a>
+        {authenticated ? (
+          <a className="hero-content__primary" href="/guildos">
+            Open GuildOS
+          </a>
+        ) : (
+          <button
+            className="hero-content__primary"
+            type="button"
+            onClick={() => signIn('/guildos')}
+          >
+            Join Holdfast
+          </button>
+        )}
         <a className="hero-content__secondary" href="/charter">
           Read the Charter
         </a>
