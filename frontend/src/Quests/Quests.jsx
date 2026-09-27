@@ -4,9 +4,7 @@ import { useSession } from '../Auth/SessionProvider.jsx'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
-import {
-  useQuestSignup,
-} from './QuestSignupFlow.jsx'
+import { useQuestSignup } from './QuestSignupFlow.jsx'
 import '../Home/QuestBoard/QuestBoard.css'
 import './Quests.css'
 
@@ -112,7 +110,9 @@ function Assignment({ assignment }) {
 
   return (
     <span
-      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}`}
+      className={`quest-board__assignee${isOpen ? ' quest-board__assignee--open' : ''}${
+        assignment.isSelf ? ' quest-board__assignee--self' : ''
+      }`}
       tabIndex="0"
       aria-label={`${assignment.name}: ${assignment.responsibility}. ${assignment.detail}`}
     >
@@ -201,7 +201,6 @@ function Reward({ reward }) {
 }
 
 function QuestObjectives({ quest, objectives, onSignup }) {
-
   return (
     <>
       <div className="quest-board__columns" aria-hidden="true">
