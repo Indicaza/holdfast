@@ -391,7 +391,11 @@ function PlayerIdentity({ member, editable, onEdit }) {
       </div>
 
       {hasIdentity ? (
-        <div className="member-profile__player-body">
+        <div
+          className={`member-profile__player-body ${
+            hasContact ? '' : 'member-profile__player-body--characters-only'
+          }`}
+        >
           <div className="member-profile__characters">
             {mainCharacter ? (
               <CharacterCard character={mainCharacter} main />
@@ -411,29 +415,31 @@ function PlayerIdentity({ member, editable, onEdit }) {
             ) : null}
           </div>
 
-          <aside className="member-profile__contact">
-            <dl>
-              {profile.timezone ? (
-                <div>
-                  <dt>Timezone</dt>
-                  <dd>{profile.timezone}</dd>
-                </div>
-              ) : null}
-              {profile.availability ? (
-                <div>
-                  <dt>Usually around</dt>
-                  <dd>{profile.availability}</dd>
-                </div>
-              ) : null}
-            </dl>
+          {hasContact ? (
+            <aside className="member-profile__contact">
+              <dl>
+                {profile.timezone ? (
+                  <div>
+                    <dt>Timezone</dt>
+                    <dd>{profile.timezone}</dd>
+                  </div>
+                ) : null}
+                {profile.availability ? (
+                  <div>
+                    <dt>Usually around</dt>
+                    <dd>{profile.availability}</dd>
+                  </div>
+                ) : null}
+              </dl>
 
-            {profile.bio ? (
-              <div className="member-profile__bio">
-                <span>About</span>
-                <p>{profile.bio}</p>
-              </div>
-            ) : null}
-          </aside>
+              {profile.bio ? (
+                <div className="member-profile__bio">
+                  <span>About</span>
+                  <p>{profile.bio}</p>
+                </div>
+              ) : null}
+            </aside>
+          ) : null}
         </div>
       ) : (
         <button
