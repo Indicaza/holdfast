@@ -300,7 +300,7 @@ function QuestObjectives({ quest, objectives, onSignup, onLeave }) {
                           assignment={assignment}
                           objectiveTitle={objective.title}
                           onSelfClick={
-                            assignment.isSelf
+                            assignment.isSelf && !objective.completed
                               ? () => onLeave(quest, objective)
                               : undefined
                           }
