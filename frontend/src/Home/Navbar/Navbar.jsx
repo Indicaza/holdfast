@@ -17,18 +17,7 @@ function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const {
-    authenticated,
-    user,
-    hasPermission,
-    signIn,
-    signOut,
-    discordInviteUrl,
-  } = useSession()
-  const joinHref = discordInviteUrl || '/#join-holdfast'
-  const externalJoinProps = discordInviteUrl
-    ? { target: '_blank', rel: 'noreferrer' }
-    : {}
+  const { authenticated, user, hasPermission, signIn, signOut } = useSession()
 
   useEffect(() => {
     if (!accountOpen) {
@@ -94,17 +83,16 @@ function Navbar() {
           </nav>
 
           <div className="navbar__actions">
-            <a className="navbar__join" href={joinHref} {...externalJoinProps}>
-              Join Holdfast
-            </a>
-
             {!authenticated ? (
               <button
-                className="navbar__signin"
+                className="navbar__account-button navbar__account-button--empty"
                 type="button"
-                onClick={() => signIn()}
+                aria-label="Sign in with Discord"
+                onClick={() => signIn('/guildos')}
               >
-                Sign in
+                <span className="navbar__account-placeholder" aria-hidden="true">
+                  <span />
+                </span>
               </button>
             ) : (
               <div className="navbar__account" ref={accountRef}>
@@ -179,23 +167,7 @@ function Navbar() {
               {link.label}
             </a>
           ))}
-          <a
-            className="navbar__mobile-link navbar__mobile-link--join"
-            href={joinHref}
-            {...externalJoinProps}
-            onClick={() => setMenuOpen(false)}
-          >
-            Join Holdfast
-          </a>
-          {!authenticated ? (
-            <button
-              className="navbar__mobile-link navbar__mobile-signin"
-              type="button"
-              onClick={() => signIn()}
-            >
-              Sign in
-            </button>
-          ) : (
+          {authenticated ? (
             <a
               className="navbar__mobile-link"
               href="/guildos"
@@ -203,7 +175,7 @@ function Navbar() {
             >
               GuildOS
             </a>
-          )}
+          ) : null}
         </nav>
       </div>
     </header>
