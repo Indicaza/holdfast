@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Modal from '../Modal/Modal.jsx'
 import './MemberProfileEditor.css'
 
@@ -68,11 +68,6 @@ function MemberProfileEditor({ member, onClose, onSaved }) {
 
   const hasCharacters = draft.characters.length > 0
   const canSave = status !== 'saving'
-
-  const mainId = useMemo(
-    () => draft.characters.find((character) => character.isMain)?.id || null,
-    [draft.characters],
-  )
 
   function updateField(field, value) {
     setDraft((current) => ({
