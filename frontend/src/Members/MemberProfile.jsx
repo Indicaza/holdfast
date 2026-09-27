@@ -767,6 +767,17 @@ function MemberProfile({ memberId }) {
           </div>
         )}
       </section>
+
+      {editing ? (
+        <MemberProfileEditor
+          member={member}
+          onClose={() => setEditing(false)}
+          onSaved={(updatedMember) => {
+            setMember(updatedMember)
+            setEditing(false)
+          }}
+        />
+      ) : null}
     </PageShell>
   )
 }
