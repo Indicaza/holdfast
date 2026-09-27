@@ -22,8 +22,7 @@
 }
 
 .rank-insignia__stroke,
-.rank-insignia__leaf,
-.rank-insignia__commander-lines {
+.rank-insignia__leaf {
   fill: none;
   stroke: currentColor;
   stroke-width: 5;
@@ -49,7 +48,14 @@
   opacity: 0.96;
 }
 
-.rank-insignia__commander-lines {
-  stroke: var(--color-blue-950);
-  stroke-width: 3.5;
+.rank-insignia__commander-head {
+  fill: currentColor;
+}
+
+.rank-insignia__commander-beak {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
