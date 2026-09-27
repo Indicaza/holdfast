@@ -194,10 +194,16 @@ function RankProgress({ member }) {
 
   if (member.rank === 'Recruit') {
     note =
-      'Private is an onboarding promotion. Rep counts toward the 3,000 Rep Corporal breakpoint.'
+      `${formatNumber(progression.remaining)} Rep to the Corporal contribution breakpoint. Private is an onboarding promotion.`
   } else if (progression.mode === 'eligibility' && progression.thresholdMet) {
     note =
       'Rep floor met. Promotion still depends on trust, recommendation, qualification, and guild need.'
+  } else if (progression.mode === 'eligibility') {
+    note =
+      `${formatNumber(progression.remaining)} Rep to ${progression.nextRank || progression.label} eligibility.`
+  } else if (progression.mode === 'milestone') {
+    note =
+      `${formatNumber(progression.remaining)} Rep to the next service milestone. Officer rank is by appointment.`
   }
 
   return (
@@ -218,29 +224,8 @@ function RankProgress({ member }) {
 
       <div className="member-profile__progress-rep">
         <div className="member-profile__progress-heading">
-          <div>
-            <span>Reputation</span>
-            <strong>{formatNumber(lifetimeRep)} Rep</strong>
-          </div>
-
-          <div className="member-profile__progress-target">
-            <span>
-              {progression.nextRank
-                ? `Next: ${progression.nextRank}`
-                : isOfficer && progression.mode === 'milestone'
-                  ? 'Next Rep milestone'
-                  : progression.label}
-            </span>
-            <strong>
-              {progression.mode === 'eligibility'
-                ? progression.thresholdMet
-                  ? 'Rep floor met'
-                  : `${formatNumber(progression.remaining)} to go`
-                : progression.mode === 'milestone'
-                  ? `${formatNumber(progression.remaining)} to go`
-                  : 'Lifetime service'}
-            </strong>
-          </div>
+          <span>Reputation</span>
+          <strong>{formatNumber(lifetimeRep)} Rep</strong>
         </div>
 
         <div
@@ -460,18 +445,17 @@ function MemberProfile({ memberId }) {
             {isSelf ? <span>You</span> : null}
           </div>
 
-          <p className="member-profile__username">@{member.username}</p>
+          <div className="member-profile__meta-row">
+            <p className="member-profile__username">@{member.username}</p>
+            <button
+              className="member-profile__share"
+              type="button"
+              onClick={copyProfile}
+            >
+              {copied ? 'Copied' : 'Share profile'}
+            </button>
+          </div>
           <p className="member-profile__tenure">{tenureText(member)}</p>
-        </div>
-
-        <div className="member-profile__hero-actions">
-          <button
-            className="member-profile__share"
-            type="button"
-            onClick={copyProfile}
-          >
-            {copied ? 'Copied' : 'Share profile'}
-          </button>
         </div>
       </section>
 
