@@ -27,8 +27,8 @@ function AuthResultModal() {
 
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
 
-  // The join flow owns its own failure/not-member messaging.
-  if (pathname === '/join' && authCode !== 'connected') {
+  // The join flow owns its own modal and auth messaging.
+  if (pathname === '/join') {
     return null
   }
 
