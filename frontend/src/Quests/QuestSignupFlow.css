@@ -26,7 +26,8 @@
 }
 
 .quest-signup__primary,
-.quest-signup__secondary {
+.quest-signup__secondary,
+.quest-signup__danger {
   min-height: 3rem;
   padding-inline: var(--space-5);
   border: var(--border-subtle);
@@ -54,11 +55,24 @@
   color: var(--color-text-muted);
 }
 
+.quest-signup__danger {
+  width: 100%;
+  border-color: rgba(190, 78, 78, 0.56);
+  background: rgba(190, 78, 78, 0.12);
+  color: #e8a7a7;
+}
+
 .quest-signup__primary:hover:not(:disabled),
 .quest-signup__primary:focus-visible:not(:disabled),
 .quest-signup__secondary:hover:not(:disabled),
 .quest-signup__secondary:focus-visible:not(:disabled) {
   border-color: var(--color-accent-bright);
+}
+
+.quest-signup__danger:hover:not(:disabled),
+.quest-signup__danger:focus-visible:not(:disabled) {
+  border-color: #e8a7a7;
+  background: rgba(190, 78, 78, 0.2);
 }
 
 .quest-signup__secondary:hover:not(:disabled),
@@ -67,7 +81,8 @@
 }
 
 .quest-signup__primary:disabled,
-.quest-signup__secondary:disabled {
+.quest-signup__secondary:disabled,
+.quest-signup__danger:disabled {
   cursor: wait;
   opacity: 0.62;
 }
