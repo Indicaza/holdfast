@@ -63,11 +63,12 @@ These are future directions rather than requirements for the initial release.
 - Node.js
 - Express
 
-### Planned Infrastructure
+### Infrastructure
 
 - Discord OAuth and bot integration
-- relational persistence for guild and member data
-- cloud deployment with simple CI/CD
+- SQLite relational persistence for guild and member data
+- GitHub Actions CI
+- cloud deployment remains future work
 
 ## Repository Structure
 
@@ -157,21 +158,45 @@ npm run dev
 
 Mutable GuildOS state is not committed to Git.
 
-- `backend/seed/` contains clean defaults used only to initialize a new data directory.
+GuildOS stores runtime state in SQLite:
+
+```text
+<GUILD_DATA_DIR>/holdfast.sqlite
+```
+
 - `backend/data/` is the ignored default runtime directory for local development.
 - `GUILD_DATA_DIR` overrides the runtime location.
+- production requires `GUILD_DATA_DIR` to point at persistent storage.
 
-On first use, missing runtime files are copied from the corresponding seed files.
-
-In production, `GUILD_DATA_DIR` is required and should point to a persistent mounted directory, for example:
+For example:
 
 ```text
 GUILD_DATA_DIR=/var/lib/holdfast
 ```
 
-The backend intentionally refuses to start in production without an explicit data directory. This prevents guild state from being written into an ephemeral application filesystem and disappearing on redeploy.
+The backend intentionally refuses to start in production without an explicit data directory. Back up the entire runtime directory, including SQLite WAL/SHM files when present.
 
-Back up the contents of `GUILD_DATA_DIR` as application data. The current JSON store is a launch-stage persistence layer and is planned to move to SQLite.
+### Migrating existing JSON data
+
+Older Holdfast builds stored mutable state in:
+
+- `members.json`
+- `quests.json`
+- `contributions.json`
+
+On the first startup with a fresh SQLite database, Holdfast looks for those files inside `GUILD_DATA_DIR` and imports them in one database transaction.
+
+The import:
+
+- preserves member/profile/character records
+- preserves quests, objectives, assignments, and reward settings
+- preserves contribution history and transaction IDs
+- runs once and records its result in SQLite
+- leaves the old JSON files untouched as a safety copy
+
+Malformed legacy JSON aborts the import rather than partially migrating data.
+
+The committed files under `backend/seed/` are retained as clean legacy/example JSON fixtures; new runtime state initializes directly from SQLite migrations.
 
 ## Production Security
 
