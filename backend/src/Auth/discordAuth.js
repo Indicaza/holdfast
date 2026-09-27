@@ -85,15 +85,36 @@ function destinationUrl(frontendUrl, returnTo, auth) {
   return url.toString();
 }
 
-async function discordUserRequest(path, accessToken) {
+async function responseError(response, prefix) {
+  let details = "";
+
+  try {
+    details = await response.text();
+  } catch {
+    details = "";
+  }
+
+  const error = new Error(
+    `${prefix} with ${response.status}${details ? `: ${details}` : ""}`,
+  );
+  error.status = response.status;
+  error.details = details;
+  return error;
+}
+
+async function discordUserRequest(path, accessToken, { allowNotFound = false } = {}) {
   const response = await fetch(`${DISCORD_API}${path}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
+  if (allowNotFound && response.status === 404) {
+    return null;
+  }
+
   if (!response.ok) {
-    throw new Error(`Discord user request failed with ${response.status}`);
+    throw await responseError(response, "Discord user request failed");
   }
 
   return response.json();
@@ -110,9 +131,7 @@ async function discordBotRequest(path, botToken, options = {}) {
   });
 
   if (!response.ok) {
-    const error = new Error(`Discord bot request failed with ${response.status}`);
-    error.status = response.status;
-    throw error;
+    throw await responseError(response, "Discord bot request failed");
   }
 
   if (response.status === 204) {
@@ -140,26 +159,54 @@ async function exchangeCode(code, current) {
   });
 
   if (!response.ok) {
-    throw new Error(`Discord token exchange failed with ${response.status}`);
+    throw await responseError(response, "Discord token exchange failed");
   }
 
   return response.json();
 }
 
-async function ensureGuildMember(userId, accessToken, current) {
-  await discordBotRequest(
-    `/guilds/${current.guildId}/members/${userId}`,
-    current.botToken,
-    {
-      method: "PUT",
-      body: JSON.stringify({ access_token: accessToken }),
-    },
+async function currentGuildMember(guildId, accessToken) {
+  return discordUserRequest(
+    `/users/@me/guilds/${guildId}/member`,
+    accessToken,
+    { allowNotFound: true },
   );
+}
 
-  return discordBotRequest(
-    `/guilds/${current.guildId}/members/${userId}`,
-    current.botToken,
-  );
+async function ensureGuildMember(userId, accessToken, current) {
+  const existingMember = await currentGuildMember(current.guildId, accessToken);
+
+  if (existingMember) {
+    return existingMember;
+  }
+
+  try {
+    const addedMember = await discordBotRequest(
+      `/guilds/${current.guildId}/members/${userId}`,
+      current.botToken,
+      {
+        method: "PUT",
+        body: JSON.stringify({ access_token: accessToken }),
+      },
+    );
+
+    if (addedMember) {
+      return addedMember;
+    }
+  } catch (error) {
+    error.authCode = "join-failed";
+    throw error;
+  }
+
+  const joinedMember = await currentGuildMember(current.guildId, accessToken);
+
+  if (!joinedMember) {
+    const error = new Error("Discord member join succeeded but member lookup failed");
+    error.authCode = "join-failed";
+    throw error;
+  }
+
+  return joinedMember;
 }
 
 function avatarUrl(user) {
@@ -190,7 +237,7 @@ export function createDiscordAuthRouter() {
       client_id: current.clientId,
       response_type: "code",
       redirect_uri: current.redirectUri,
-      scope: "identify guilds.join",
+      scope: "identify guilds.join guilds.members.read",
       state,
     });
 
@@ -230,13 +277,13 @@ export function createDiscordAuthRouter() {
       const token = await exchangeCode(code, ready);
       const user = await discordUserRequest("/users/@me", token.access_token);
       const member = await ensureGuildMember(user.id, token.access_token, ready);
-      const permissions = resolvePermissions(user.id, member?.roles || []);
+      const permissions = resolvePermissions(user.id, member.roles || []);
       const sessionUser = {
         id: user.id,
         username: user.username,
         globalName: user.global_name || null,
         avatarUrl: avatarUrl(user),
-        guildNickname: member?.nick || null,
+        guildNickname: member.nick || null,
       };
 
       await upsertGuildMember(sessionUser, permissions);
@@ -249,7 +296,13 @@ export function createDiscordAuthRouter() {
       res.redirect(destinationUrl(ready.frontendUrl, returnTo));
     } catch (error) {
       console.error("Discord authentication failed", error);
-      res.redirect(destinationUrl(current.frontendUrl, returnTo, "failed"));
+      res.redirect(
+        destinationUrl(
+          current.frontendUrl,
+          returnTo,
+          error.authCode || "failed",
+        ),
+      );
     }
   });
 

@@ -14,10 +14,18 @@ function authMessage(code) {
     }
   }
 
+  if (code === 'join-failed') {
+    return {
+      title: 'Discord server join failed.',
+      intro:
+        'Your Discord login worked, but the Holdfast bot could not add you to the server. Check that the bot is installed and has Create Invite permission.',
+    }
+  }
+
   if (code) {
     return {
       title: 'Discord sign in failed.',
-      intro: 'Try again. If it keeps failing, the Discord integration needs attention.',
+      intro: 'Try again. If it keeps failing, check the backend console for the Discord API error.',
     }
   }
 
