@@ -9,6 +9,35 @@ import {
 
 const SessionContext = createContext(null)
 
+function detectedTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+  } catch {
+    return ''
+  }
+}
+
+async function syncDetectedTimezone() {
+  const timezone = detectedTimezone()
+
+  if (!timezone) {
+    return
+  }
+
+  try {
+    await fetch('/api/guild/members/me/timezone', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ timezone }),
+    })
+  } catch {
+    // Timezone sync is best-effort and should never block sign-in.
+  }
+}
+
 function currentReturnTo() {
   const url = new URL(window.location.href)
   url.searchParams.delete('auth')
@@ -39,6 +68,10 @@ export function SessionProvider({ children }) {
         user: data.user ?? null,
         permissions: data.permissions ?? [],
       })
+
+      if (data.authenticated) {
+        void syncDetectedTimezone()
+      }
     } catch {
       setSession({
         status: 'error',
