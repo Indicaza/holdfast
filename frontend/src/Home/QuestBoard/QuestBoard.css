@@ -325,6 +325,11 @@
   color: #a8d9b2 !important;
 }
 
+.quest-board__coverage {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .quest-board__assignment-row {
   display: flex;
   min-width: 0;
@@ -333,6 +338,54 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.quest-board__signup,
+.quest-board__signup-status {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.quest-board__signup {
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.quest-board__signup:hover:not(:disabled),
+.quest-board__signup:focus-visible:not(:disabled) {
+  border-color: var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.16);
+  color: var(--color-text-strong);
+}
+
+.quest-board__signup:disabled {
+  cursor: default;
+  opacity: 0.46;
+}
+
+.quest-board__signup-status {
+  border-color: rgba(154, 190, 157, 0.42);
+  background: rgba(48, 102, 62, 0.08);
+  color: #b8d9ba;
 }
 
 .quest-board__assignment-overflow {
