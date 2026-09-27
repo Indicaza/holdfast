@@ -42,6 +42,16 @@
   color: #e8a7a7;
 }
 
+.quest-editor__load-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.quest-editor__load-error .quest-editor__state {
+  margin: 0;
+}
+
 .quest-editor__balance {
   display: flex;
   flex-wrap: wrap;
