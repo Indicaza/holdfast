@@ -1053,3 +1053,12 @@
     flex-direction: column;
   }
 }
+
+
+.member-profile__player-body--characters-only {
+  grid-template-columns: 1fr;
+}
+
+.member-profile__player-body--characters-only .member-profile__characters {
+  border-right: 0;
+}
