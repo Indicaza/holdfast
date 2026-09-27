@@ -7,6 +7,10 @@ import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
+import {
+  ensureRuntimeDataDirectory,
+  runtimeDataDirectory,
+} from "./Data/runtimeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 
@@ -15,6 +19,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+await ensureRuntimeDataDirectory();
 
 app.use(
   cors({
@@ -69,4 +75,5 @@ app.get("/api/admin/ping", requirePermission("site.admin"), (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Guild backend running on port ${PORT}`);
+  console.log(`Guild runtime data: ${runtimeDataDirectory()}`);
 });
