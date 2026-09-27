@@ -1,8 +1,8 @@
 .member-profile .page-shell__main {
-  padding-block: clamp(var(--space-8), 5vw, var(--space-14));
+  padding-block: clamp(var(--space-8), 5vw, var(--space-16));
 }
 
-.member-profile .page-shell__header {
+.member-profile--loaded .page-shell__header {
   display: none;
 }
 
