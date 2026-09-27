@@ -5,6 +5,22 @@
   overflow: visible;
 }
 
+.rank-insignia--none {
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(196, 166, 103, 0.26);
+  border-radius: 0.35rem;
+  color: var(--color-text-muted);
+}
+
+.rank-insignia--none span {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: var(--letter-spacing-wide);
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .rank-insignia__stroke,
 .rank-insignia__leaf,
 .rank-insignia__commander-lines {
@@ -16,24 +32,12 @@
 }
 
 .rank-insignia__swords {
-  stroke-width: 3.6;
+  stroke-width: 3.4;
 }
 
 .rank-insignia__fill,
 .rank-insignia__officer-fill {
   fill: currentColor;
-}
-
-.rank-insignia__ghost {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  opacity: 0.3;
-}
-
-.rank-insignia__recruit {
-  stroke-width: 3.4;
-  opacity: 0.62;
 }
 
 .rank-insignia__leaf {

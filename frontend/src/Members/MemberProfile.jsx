@@ -74,13 +74,66 @@ function Reward({ reward }) {
   )
 }
 
-function RepProgress({ member }) {
-  const progression = member.repProgression
-  const lifetimeRep = Number(member.contribution?.rep) || 0
-
-  if (!progression) {
-    return null
+function fallbackRepProgression(rank, lifetimeRep) {
+  const rep = Math.max(0, Number(lifetimeRep) || 0)
+  const floors = {
+    Recruit: { start: 0, end: 3000, nextRank: 'Corporal', label: 'Corporal breakpoint' },
+    Private: { start: 0, end: 3000, nextRank: 'Corporal', label: 'Corporal breakpoint' },
+    Corporal: { start: 3000, end: 9000, nextRank: 'Sergeant', label: 'Sergeant Rep floor' },
+    Sergeant: { start: 9000, end: 21000, nextRank: 'Master Sergeant', label: 'Master Sergeant Rep floor' },
+    'Master Sergeant': { start: 21000, end: 42000, nextRank: 'Sergeant Major', label: 'Sergeant Major Rep floor' },
   }
+
+  const target = floors[rank]
+
+  if (!target) {
+    return {
+      mode: 'lifetime',
+      lifetimeRep: rep,
+      segmentStart: 0,
+      segmentEnd: 42000,
+      segmentSize: 42000,
+      remaining: null,
+      progress: Math.min(1, rep / 42000),
+      thresholdMet: rep >= 42000,
+      nextRank: null,
+      label: 'Lifetime Rep',
+      detail:
+        rank === 'Sergeant Major'
+          ? 'All enlisted Rep floors are met. Rep continues accumulating.'
+          : 'Officer progression is separate from Rep.',
+    }
+  }
+
+  const segmentSize = target.end - target.start
+  const segmentEarned = Math.min(
+    segmentSize,
+    Math.max(0, rep - target.start),
+  )
+
+  return {
+    mode: 'eligibility',
+    lifetimeRep: rep,
+    segmentStart: target.start,
+    segmentEnd: target.end,
+    segmentSize,
+    remaining: Math.max(0, target.end - rep),
+    progress: segmentEarned / segmentSize,
+    thresholdMet: rep >= target.end,
+    nextRank: target.nextRank,
+    label: target.label,
+    detail:
+      rep >= target.end
+        ? 'Rep requirement met. Promotion is still a leadership decision.'
+        : `${formatNumber(target.end - rep)} Rep remaining.`,
+  }
+}
+
+function RankProgress({ member }) {
+  const lifetimeRep = Number(member.contribution?.rep) || 0
+  const progression =
+    member.repProgression ||
+    fallbackRepProgression(member.rank || 'Recruit', lifetimeRep)
 
   const percent = Math.min(
     100,
@@ -98,63 +151,87 @@ function RepProgress({ member }) {
 
   if (member.rank === 'Recruit') {
     note =
-      'Private promotion is onboarding-based. Rep still accumulates toward the Corporal contribution breakpoint.'
+      'Private is an onboarding promotion. Rep counts toward the 3,000 Rep Corporal breakpoint.'
   } else if (progression.mode === 'eligibility' && progression.thresholdMet) {
     note =
-      'Rep requirement met. Promotion still depends on trust, recommendation, qualification, and guild need.'
+      'Rep floor met. Promotion still depends on trust, recommendation, qualification, and guild need.'
   }
 
   return (
-    <section className="member-profile__rep" aria-labelledby="member-rep-title">
-      <div className="member-profile__rep-heading">
+    <section
+      className="member-profile__progress"
+      aria-labelledby="member-rank-title"
+    >
+      <div className="member-profile__progress-rank">
+        <div className="member-profile__progress-insignia">
+          <RankInsignia rank={member.rank} />
+        </div>
+
         <div>
-          <p>Guild Reputation</p>
-          <h2 id="member-rep-title">{formatNumber(lifetimeRep)} Rep</h2>
+          <span>Guild rank</span>
+          <h2 id="member-rank-title">{member.rank || 'Recruit'}</h2>
+          <small>
+            {member.rankMeta?.isOfficer ? 'Officer' : 'Enlisted'}
+          </small>
         </div>
+      </div>
 
-        <div className="member-profile__rep-target">
-          <span>{progression.label}</span>
-          {progression.mode === 'eligibility' ? (
+      <div className="member-profile__progress-rep">
+        <div className="member-profile__progress-heading">
+          <div>
+            <span>Reputation</span>
+            <strong>{formatNumber(lifetimeRep)} Rep</strong>
+          </div>
+
+          <div className="member-profile__progress-target">
+            <span>
+              {progression.nextRank
+                ? `Next: ${progression.nextRank}`
+                : progression.label}
+            </span>
             <strong>
-              {progression.thresholdMet
-                ? 'Rep floor met'
-                : `${formatNumber(progression.remaining)} to go`}
+              {progression.mode === 'eligibility'
+                ? progression.thresholdMet
+                  ? 'Rep floor met'
+                  : `${formatNumber(progression.remaining)} to go`
+                : 'Lifetime service'}
             </strong>
-          ) : (
-            <strong>Lifetime service</strong>
-          )}
+          </div>
         </div>
-      </div>
 
-      <div
-        className="member-profile__rep-bar"
-        role="progressbar"
-        aria-label={progression.label}
-        aria-valuemin="0"
-        aria-valuemax={Number(progression.segmentSize) || Number(progression.segmentEnd) || 42000}
-        aria-valuenow={segmentCurrent}
-      >
-        <span
-          className="member-profile__rep-fill"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
+        <div
+          className="member-profile__progress-bar"
+          role="progressbar"
+          aria-label={progression.label}
+          aria-valuemin="0"
+          aria-valuemax={
+            Number(progression.segmentSize) ||
+            Number(progression.segmentEnd) ||
+            42000
+          }
+          aria-valuenow={segmentCurrent}
+        >
+          <span
+            className="member-profile__progress-fill"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
 
-      <div className="member-profile__rep-scale">
-        <span>{formatNumber(progression.segmentStart || 0)}</span>
-        <strong>
-          {progression.mode === 'eligibility'
-            ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this tier`
-            : `${formatNumber(lifetimeRep)} lifetime`}
-        </strong>
-        <span>{formatNumber(progression.segmentEnd || 42000)}</span>
-      </div>
+        <div className="member-profile__progress-scale">
+          <span>{formatNumber(progression.segmentStart || 0)}</span>
+          <strong>
+            {progression.mode === 'eligibility'
+              ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this tier`
+              : `${formatNumber(lifetimeRep)} lifetime`}
+          </strong>
+          <span>{formatNumber(progression.segmentEnd || 42000)}</span>
+        </div>
 
-      <p className="member-profile__rep-note">{note}</p>
+        <p className="member-profile__progress-note">{note}</p>
+      </div>
     </section>
   )
 }
-
 
 function ProfileLoading() {
   return (
@@ -331,16 +408,6 @@ function MemberProfile({ memberId }) {
         </div>
 
         <div className="member-profile__identity">
-          <div className="member-profile__rank">
-            <div className="member-profile__rank-icon">
-              <RankInsignia rank={member.rank} />
-            </div>
-            <div>
-              <span>Guild Rank</span>
-              <strong>{member.rank || 'Recruit'}</strong>
-            </div>
-          </div>
-
           <div className="member-profile__name-line">
             <h1 id="member-profile-name">{displayName(member)}</h1>
             {isSelf ? <span>You</span> : null}
@@ -351,14 +418,13 @@ function MemberProfile({ memberId }) {
         </div>
 
         <div className="member-profile__hero-actions">
-          {isSelf ? <a href="/guildos">Open GuildOS</a> : null}
           <button type="button" onClick={copyProfile}>
             {copied ? 'Profile link copied' : 'Copy profile link'}
           </button>
         </div>
       </section>
 
-      <RepProgress member={member} />
+      <RankProgress member={member} />
 
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>

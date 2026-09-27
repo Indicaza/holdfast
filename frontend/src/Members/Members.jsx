@@ -68,9 +68,13 @@ function MemberCard({ member, isSelf }) {
         <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
       </div>
 
-      <div className="members-page__rank" aria-hidden="true">
-        <RankInsignia rank={member.rank} />
-      </div>
+      {member.rank && !['Recruit', 'Private'].includes(member.rank) ? (
+        <div className="members-page__rank" aria-hidden="true">
+          <RankInsignia rank={member.rank} />
+        </div>
+      ) : (
+        <div className="members-page__rank members-page__rank--empty" aria-hidden="true" />
+      )}
 
       <dl className="members-page__stats">
         <div>
