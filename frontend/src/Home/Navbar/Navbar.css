@@ -102,6 +102,7 @@
 .navbar__actions {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
 }
 
 .navbar__signin,
@@ -112,8 +113,6 @@
   justify-content: center;
   padding-inline: var(--space-4);
   border: var(--border-accent);
-  background: rgba(11, 27, 48, 0.36);
-  color: var(--color-text-strong);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-caps);
@@ -121,17 +120,24 @@
   transition:
     border-color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard);
 }
 
-.navbar__signin:hover,
-.navbar__signin:focus-visible,
+.navbar__join {
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  color: var(--color-background);
+  box-shadow: 0 0.45rem 1.2rem rgba(0, 0, 0, 0.14);
+}
+
 .navbar__join:hover,
-.navbar__join:focus-visible,
-.navbar__join--active {
+.navbar__join:focus-visible {
   border-color: var(--color-accent-bright);
-  background: var(--color-surface);
-  color: var(--color-accent-bright);
+  background: var(--color-accent-bright);
+  box-shadow:
+    0 0.6rem 1.5rem rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--color-background);
 }
 
 .navbar__signin {
@@ -145,10 +151,6 @@
 .navbar__signin:focus-visible {
   background: transparent;
   color: var(--color-text-strong);
-}
-
-.navbar__actions {
-  gap: var(--space-3);
 }
 
 .navbar__account {

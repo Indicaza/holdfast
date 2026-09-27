@@ -17,7 +17,18 @@ function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const { authenticated, user, hasPermission, signIn, signOut } = useSession()
+  const {
+    authenticated,
+    user,
+    hasPermission,
+    signIn,
+    signOut,
+    discordInviteUrl,
+  } = useSession()
+  const joinHref = discordInviteUrl || '/#join-holdfast'
+  const externalJoinProps = discordInviteUrl
+    ? { target: '_blank', rel: 'noreferrer' }
+    : {}
 
   useEffect(() => {
     if (!accountOpen) {
@@ -83,6 +94,10 @@ function Navbar() {
           </nav>
 
           <div className="navbar__actions">
+            <a className="navbar__join" href={joinHref} {...externalJoinProps}>
+              Join Holdfast
+            </a>
+
             {!authenticated ? (
               <button
                 className="navbar__signin"
@@ -164,6 +179,14 @@ function Navbar() {
               {link.label}
             </a>
           ))}
+          <a
+            className="navbar__mobile-link navbar__mobile-link--join"
+            href={joinHref}
+            {...externalJoinProps}
+            onClick={() => setMenuOpen(false)}
+          >
+            Join Holdfast
+          </a>
           {!authenticated ? (
             <button
               className="navbar__mobile-link navbar__mobile-signin"
