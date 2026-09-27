@@ -2,7 +2,7 @@ import {
   markGuildMemberDeparted,
   upsertGuildMember,
 } from "../Guild/memberRepository.js";
-import { resolvePermissions } from "./permissions.js";
+import { resolvePermissions } from "./permissionResolver.js";
 import { clearSession, setSession } from "./session.js";
 
 const DISCORD_API = "https://discord.com/api/v10";
