@@ -705,7 +705,14 @@ function MemberProfile({ memberId }) {
                   ) : null}
                 </div>
 
-                <Reward reward={assignment.reward} />
+                <div className="member-profile__assignment-footer">
+                  <Reward reward={assignment.reward} />
+                  <a
+                    href={`/quests?q=${encodeURIComponent(assignment.questTitle)}`}
+                  >
+                    View quest →
+                  </a>
+                </div>
               </article>
             ))}
           </div>
