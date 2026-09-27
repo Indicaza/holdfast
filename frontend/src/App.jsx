@@ -52,7 +52,7 @@ const routes = {
     path: '/join',
     title: 'Join Holdfast | Alliance WoW Forever Guild',
     description:
-      'Join Holdfast through Discord and create your GuildOS member profile.',
+      'Join Holdfast through Discord and create your Holdfast member profile.',
     robots: defaultRobots,
   },
   '/privacy': {
