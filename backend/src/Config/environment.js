@@ -15,6 +15,18 @@ function commaSeparatedValues(value) {
     .filter(Boolean);
 }
 
+function configuredValue(value) {
+  return String(value || "").trim();
+}
+
+export function publicWebsiteUrl(env = process.env) {
+  return (
+    configuredValue(env.FRONTEND_URL) ||
+    configuredValue(env.RENDER_EXTERNAL_URL) ||
+    "http://localhost:5173"
+  );
+}
+
 export function productionEnvironmentProblems(env = process.env) {
   if (env.NODE_ENV !== "production") {
     return [];
@@ -22,7 +34,6 @@ export function productionEnvironmentProblems(env = process.env) {
 
   const problems = [];
   const required = [
-    "FRONTEND_URL",
     "GUILD_DATA_DIR",
     "SESSION_SECRET",
     "DISCORD_CLIENT_ID",
@@ -33,9 +44,20 @@ export function productionEnvironmentProblems(env = process.env) {
   ];
 
   for (const name of required) {
-    if (!String(env[name] || "").trim()) {
+    if (!configuredValue(env[name])) {
       problems.push(`${name} is required`);
     }
+  }
+
+  const configuredFrontendUrl =
+    configuredValue(env.FRONTEND_URL) ||
+    configuredValue(env.RENDER_EXTERNAL_URL);
+  const frontendUrlName = configuredValue(env.FRONTEND_URL)
+    ? "FRONTEND_URL"
+    : "RENDER_EXTERNAL_URL";
+
+  if (!configuredFrontendUrl) {
+    problems.push("FRONTEND_URL or RENDER_EXTERNAL_URL is required");
   }
 
   if (
@@ -45,21 +67,23 @@ export function productionEnvironmentProblems(env = process.env) {
     problems.push("SESSION_SECRET must be at least 32 bytes");
   }
 
-  const frontendUrl = parsedUrl(env.FRONTEND_URL);
+  const frontendUrl = parsedUrl(configuredFrontendUrl);
 
-  if (env.FRONTEND_URL && !frontendUrl) {
-    problems.push("FRONTEND_URL must be a valid URL");
+  if (configuredFrontendUrl && !frontendUrl) {
+    problems.push(`${frontendUrlName} must be a valid URL`);
   } else if (frontendUrl) {
     if (frontendUrl.protocol !== "https:") {
-      problems.push("FRONTEND_URL must use HTTPS");
+      problems.push(`${frontendUrlName} must use HTTPS`);
     }
 
     if (frontendUrl.pathname !== "/" || frontendUrl.search || frontendUrl.hash) {
-      problems.push("FRONTEND_URL must be an origin without a path, query, or hash");
+      problems.push(
+        `${frontendUrlName} must be an origin without a path, query, or hash`,
+      );
     }
 
     if (frontendUrl.username || frontendUrl.password) {
-      problems.push("FRONTEND_URL must not contain credentials");
+      problems.push(`${frontendUrlName} must not contain credentials`);
     }
   }
 
@@ -75,7 +99,9 @@ export function productionEnvironmentProblems(env = process.env) {
     }
 
     if (frontendUrl && redirectUrl.origin !== frontendUrl.origin) {
-      problems.push("DISCORD_REDIRECT_URI must use the FRONTEND_URL origin");
+      problems.push(
+        `DISCORD_REDIRECT_URI must use the ${frontendUrlName} origin`,
+      );
     }
 
     if (

@@ -11,6 +11,7 @@
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",
     "backup": "node scripts/backupData.js",
+    "render:validate": "node scripts/validateRenderBlueprint.js",
     "discord:validate": "node scripts/provisionDiscord.js validate",
     "discord:plan": "node scripts/provisionDiscord.js plan",
     "discord:apply": "node scripts/provisionDiscord.js apply",
@@ -28,6 +29,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "yaml": "^2.9.1"
   }
 }

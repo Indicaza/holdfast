@@ -1,3 +1,5 @@
+import { publicWebsiteUrl } from "../Config/environment.js";
+
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 const rateBuckets = new Map();
@@ -16,9 +18,7 @@ function normalizeOrigin(value) {
 
 export function trustedOrigins() {
   const origins = new Set();
-  const frontend = normalizeOrigin(
-    process.env.FRONTEND_URL || "http://localhost:5173",
-  );
+  const frontend = normalizeOrigin(publicWebsiteUrl());
 
   if (frontend) {
     origins.add(frontend);

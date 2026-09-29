@@ -32,6 +32,26 @@ test("valid production configuration passes", () => {
   assert.doesNotThrow(() => assertProductionEnvironment(validEnvironment()));
 });
 
+test("Render's external URL supplies the production website origin", () => {
+  const env = validEnvironment({
+    FRONTEND_URL: "",
+    RENDER_EXTERNAL_URL: "https://holdfast.onrender.com",
+  });
+
+  assert.deepEqual(productionEnvironmentProblems(env), []);
+  assert.doesNotThrow(() => assertProductionEnvironment(env));
+});
+
+test("production requires an explicit or platform-provided website origin", () => {
+  const env = validEnvironment({ FRONTEND_URL: "", RENDER_EXTERNAL_URL: "" });
+
+  assert.ok(
+    productionEnvironmentProblems(env).includes(
+      "FRONTEND_URL or RENDER_EXTERNAL_URL is required",
+    ),
+  );
+});
+
 test("production configuration allows an optional recruit role", () => {
   const env = validEnvironment();
   delete env.DISCORD_RECRUIT_ROLE_ID;

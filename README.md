@@ -68,6 +68,7 @@ These are future directions rather than requirements for the initial release.
 - Discord OAuth and bot integration
 - SQLite relational persistence for guild and member data
 - GitHub Actions CI
+- Render Blueprint infrastructure as code
 - portable Docker deployment
 
 ## Repository Structure
@@ -231,7 +232,9 @@ The current limiter is appropriate for a single Holdfast Node process. If the ap
 
 ## Production Deployment
 
-Holdfast ships as one Docker image. The image builds the Vite frontend, serves it from Express, and runs the API on the same origin. Mount `/data` on durable storage so the SQLite database survives deploys.
+The recommended production path is the committed Render Blueprint. Follow the [Render deployment runbook](docs/deployment/render.md) for the one-time dashboard setup, required secrets, Discord callback, custom domain, launch checks, and rollback procedure.
+
+Holdfast also ships as one portable Docker image. The image builds the Vite frontend, serves it from Express, and runs the API on the same origin. Mount `/data` on durable storage so the SQLite database survives deploys.
 
 Build the image:
 

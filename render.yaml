@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: holdfast
+    runtime: docker
+    branch: main
+    region: ohio
+    plan: 0.5c-512mb
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health/ready
+    maxShutdownDelaySeconds: 30
+    disk:
+      name: holdfast-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: GUILD_DATA_DIR
+        value: /data
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DISCORD_SESSION_REVERIFY_SECONDS
+        value: "900"
+      - key: DISCORD_PRUNE_MIN_AGE_DAYS
+        value: "7"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: GUILD_OWNER_DISCORD_IDS
+        sync: false
