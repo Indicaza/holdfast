@@ -74,6 +74,10 @@ jobs:
         working-directory: backend
         run: npm run discord:validate
 
+      - name: Validate Render Blueprint
+        working-directory: backend
+        run: npm run render:validate
+
       - name: Test
         working-directory: backend
         run: npm test

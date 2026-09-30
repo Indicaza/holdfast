@@ -214,6 +214,26 @@ test("authorization start uses least-privilege scopes and signed state", async (
   );
 });
 
+test("authorization uses Render's generated URL on the first deploy", async () => {
+  await withAuthServer(
+    {
+      env: authEnvironment({
+        FRONTEND_URL: "",
+        RENDER_EXTERNAL_URL: "https://holdfast.onrender.com",
+      }),
+      logger: silentLogger,
+    },
+    async (baseUrl) => {
+      const authorization = await beginAuthorization(baseUrl);
+
+      assert.equal(
+        authorization.authorizeUrl.searchParams.get("redirect_uri"),
+        "https://holdfast.onrender.com/api/auth/discord/callback",
+      );
+    },
+  );
+});
+
 test("authorization start fails closed without exposing missing configuration", async () => {
   await withAuthServer(
     {

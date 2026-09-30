@@ -31,7 +31,6 @@ assertProductionEnvironment();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
 
 await ensureRuntimeDataDirectory();

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Router } from "express";
 
+import { publicWebsiteUrl } from "../Config/environment.js";
 import { upsertGuildMember } from "../Guild/memberRepository.js";
 import { resolvePermissions } from "./permissionResolver.js";
 import {
@@ -32,8 +33,7 @@ function configuredValue(value) {
 }
 
 function config(env = process.env) {
-  const frontendUrl =
-    configuredValue(env.FRONTEND_URL) || "http://localhost:5173";
+  const frontendUrl = publicWebsiteUrl(env);
 
   return {
     clientId: configuredValue(env.DISCORD_CLIENT_ID),

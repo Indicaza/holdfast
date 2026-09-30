@@ -55,6 +55,7 @@ function preserveEnvironment() {
   return {
     nodeEnv: process.env.NODE_ENV,
     frontendUrl: process.env.FRONTEND_URL,
+    renderExternalUrl: process.env.RENDER_EXTERNAL_URL,
     trustedOrigins: process.env.TRUSTED_ORIGINS,
   };
 }
@@ -63,6 +64,7 @@ function restoreEnvironment(previous) {
   for (const [key, value] of [
     ["NODE_ENV", previous.nodeEnv],
     ["FRONTEND_URL", previous.frontendUrl],
+    ["RENDER_EXTERNAL_URL", previous.renderExternalUrl],
     ["TRUSTED_ORIGINS", previous.trustedOrigins],
   ]) {
     if (value === undefined) {
@@ -122,6 +124,20 @@ test("trusted origins include canonical and explicitly allowed browser origins",
         "https://holdfast.example",
       ].sort(),
     );
+  } finally {
+    restoreEnvironment(previous);
+  }
+});
+
+test("trusted origins use Render's generated website URL by default", () => {
+  const previous = preserveEnvironment();
+
+  try {
+    delete process.env.FRONTEND_URL;
+    process.env.RENDER_EXTERNAL_URL = "https://holdfast.onrender.com";
+    delete process.env.TRUSTED_ORIGINS;
+
+    assert.deepEqual([...trustedOrigins()], ["https://holdfast.onrender.com"]);
   } finally {
     restoreEnvironment(previous);
   }
