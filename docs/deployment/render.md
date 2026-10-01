@@ -41,6 +41,8 @@ Optional Discord role settings can be added after the first deployment:
 
 These Discord IDs are safe to commit once known. Add them to `render.yaml` in a follow-up pull request to keep the complete non-secret configuration in code.
 
+Holdfast sessions last 30 days. Production keeps Discord membership revalidation on the same 30-day window so normal browsing and long-running Control Room edits are not interrupted by a short inactivity timer. Signing out still clears the session immediately, and membership and permissions are refreshed on the next sign-in.
+
 ## Custom domain
 
 The generated Render domain is enough to launch. When the final domain is ready:
