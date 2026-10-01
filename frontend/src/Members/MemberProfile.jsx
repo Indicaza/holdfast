@@ -292,7 +292,7 @@ function ProfileMessage({ title, body }) {
       </nav>
 
       <section className="member-profile__message">
-        <p>GuildOS</p>
+        <p>Holdfast</p>
         <h1>{title}</h1>
         <span>{body}</span>
         <a href="/members">Back to Members</a>
@@ -549,7 +549,7 @@ function MemberProfile({ memberId }) {
     return (
       <ProfileMessage
         title="Profile unavailable"
-        body="GuildOS could not load this member right now."
+        body="Holdfast could not load this member right now."
       />
     )
   }
@@ -709,8 +709,8 @@ function MemberProfile({ memberId }) {
           <div className="member-profile__empty">
             <strong>Nothing assigned right now.</strong>
             <span>
-              This member is free of active GuildOS objectives. Check the quest
-              board for open work.
+              This member has no active quest objectives. Check the quest board
+              for open work.
             </span>
           </div>
         )}

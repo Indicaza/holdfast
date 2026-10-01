@@ -130,4 +130,5 @@ test('seed prompt reflects current reward limits and forbids member assignment',
   assert.match(prompt, /Marks rewards must be 0 or between 0 and 500/)
   assert.match(prompt, /DO NOT assign guild members/)
   assert.match(prompt, /"featured": true/)
+  assert.doesNotMatch(prompt, /GuildOS/i)
 })

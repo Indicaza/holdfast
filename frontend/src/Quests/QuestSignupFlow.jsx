@@ -284,8 +284,8 @@ export function useQuestSignup({ catalog, setCatalog }) {
         <div className="quest-signup__note">
           <strong>Put your name on it.</strong>
           <span>
-            You can take more than one objective in a quest. GuildOS only
-            prevents you from signing up for this same objective twice.
+            You can take more than one objective in a quest. You just cannot
+            sign up for this same objective twice.
           </span>
         </div>
 

@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react'
 import FeatureCardGrid from './FeatureCardGrid/FeatureCardGrid.jsx'
 import Footer from './Footer/Footer.jsx'
-import FoundingCallout from './FoundingCallout/FoundingCallout.jsx'
 import QuestBoard from './QuestBoard/QuestBoard.jsx'
 import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
@@ -48,7 +47,6 @@ function Home({ overlay = null, initialJoinOpen = false }) {
           <RecruitmentSnapshot />
           <FeatureCardGrid />
           <QuestBoard onJoin={openJoin} />
-          <FoundingCallout onJoin={openJoin} />
         </main>
 
         <Footer />

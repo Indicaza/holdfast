@@ -443,7 +443,7 @@ export function createQuestRouter() {
 
           if (assignedMembers.length !== memberIds.length) {
             const error = new Error(
-              "One or more assigned members are no longer in the GuildOS member directory.",
+              "One or more assigned members are no longer in the Holdfast member directory.",
             );
             error.code = "unknown_assignee";
             error.status = 400;
