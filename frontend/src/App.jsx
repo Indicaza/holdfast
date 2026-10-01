@@ -3,7 +3,11 @@ import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
 import SEO from './SEO/SEO.jsx'
-import { normalizePathname, resolvePathname } from './routing.js'
+import {
+  isLegacyHomePath,
+  normalizePathname,
+  resolvePathname,
+} from './routing.js'
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
@@ -123,7 +127,7 @@ function App() {
   const Page = route.component
 
   useEffect(() => {
-    if (requestedPathname === '/guildos') {
+    if (isLegacyHomePath(requestedPathname)) {
       const url = new URL(window.location.href)
       url.pathname = '/'
       window.history.replaceState(

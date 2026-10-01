@@ -317,7 +317,7 @@ export function buildQuestImportPrompt(rewardLimits) {
     ],
   }
 
-  return `Create Holdfast GuildOS quest JSON from my instructions.
+  return `Create Holdfast quest JSON from my instructions.
 
 Return ONLY valid JSON. Do not use markdown fences, commentary, or prose outside the JSON.
 
@@ -336,7 +336,7 @@ Rules:
 - DO NOT assign guild members. Omit assignments entirely or use "assignments": [].
 - Do not invent member IDs, Discord IDs, names, avatars, or responsibilities.
 - Do not mark objectives complete. Imported objectives always begin incomplete.
-- IDs are optional; GuildOS generates fresh IDs during import.
+- IDs are optional; Holdfast generates fresh IDs during import.
 - Keep quest/objective copy concise and useful in the Holdfast tone.
 
 Now create the JSON for this request:

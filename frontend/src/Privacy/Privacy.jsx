@@ -5,24 +5,24 @@ function Privacy() {
     <PageShell
       eyebrow="Privacy"
       title="What Holdfast records"
-      intro="Holdfast collects the information it needs to run the guild website and GuildOS. This page describes what is stored today, who can see it, and what is still only planned."
+      intro="Holdfast collects the information it needs to run the guild website and member tools. This page describes what is stored today and who can see it."
     >
       <h2>What we store today</h2>
       <p>
-        When you connect Discord, GuildOS stores enough Discord identity and
-        guild information to recognize you as a Holdfast member and apply the
-        right permissions.
+        When you connect Discord, the site stores enough Discord identity and
+        guild information to recognize you as a Holdfast member and give you
+        the right access.
       </p>
       <ul>
         <li>
           <strong>Discord identity:</strong> Discord user ID, username/display
           name, avatar, guild nickname, guild join date, and role-derived
-          GuildOS permissions.
+          website permissions.
         </li>
         <li>
           <strong>Member profile:</strong> BattleTag if you provide one,
           timezone, availability, bio, and any character information currently
-          entered in GuildOS.
+          entered on the site.
         </li>
         <li>
           <strong>Guild activity:</strong> rank, Rep, Service Marks, quest
@@ -40,15 +40,15 @@ function Privacy() {
         Discord identity and guild membership come from Discord OAuth and the
         Holdfast Discord bot. Profile fields come from you or, for timezone,
         may be detected from your browser. Rep, Marks, assignments, and service
-        records are created by activity inside GuildOS.
+        records are created by activity on the site.
       </p>
 
       <h2>Who can see it</h2>
       <p>
         The public website does not expose the full member directory or member
         profiles. Signed-in Holdfast members can see member profiles and the
-        guild directory, including the profile and service information GuildOS
-        makes available to members.
+        guild directory, including profile and service information shared with
+        other members.
       </p>
       <p>
         The public website may show the single quest currently featured on the
@@ -65,8 +65,8 @@ function Privacy() {
 
       <h2>If you leave Holdfast</h2>
       <p>
-        GuildOS periodically verifies Discord membership. If Discord reports
-        that you have left the Holdfast server, your GuildOS access is removed
+        The site periodically verifies Discord membership. If Discord reports
+        that you have left the Holdfast server, your website access is removed
         and you are hidden from the active member directory.
       </p>
       <p>
@@ -79,23 +79,16 @@ function Privacy() {
 
       <h2>Where the data lives</h2>
       <p>
-        Mutable member, quest, and contribution records are application data.
-        They are stored in GuildOS runtime storage and are not intended to be
-        committed as live member data to the public Holdfast source repository.
-      </p>
-
-      <h2>What is not active yet</h2>
-      <p>
-        The planned WoW Forever addon, local sync companion, automatic
-        character snapshots, and guild-bank synchronization are not active
-        data sources yet. This page will be updated before or alongside those
-        systems when they begin collecting game data automatically.
+        Member, quest, and contribution records are stored in Holdfast's
+        private application database. Live member data is not committed to the
+        public Holdfast source repository.
       </p>
 
       <h2>Principle</h2>
       <p>
-        Collect useful guild data on purpose, make its source and visibility
-        understandable, and do not pretend planned integrations already exist.
+        Collect only useful guild data, make its source and visibility clear,
+        and give members a straightforward way to request corrections or
+        removal through guild leadership.
       </p>
     </PageShell>
   )
