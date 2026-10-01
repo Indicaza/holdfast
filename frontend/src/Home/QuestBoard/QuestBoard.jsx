@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
 import { useSession } from '../../Auth/sessionContext.js'
 import { useQuestSignup } from '../../Quests/QuestSignupFlow.jsx'
+import FoundingMission from '../FoundingMission/FoundingMission.jsx'
 import './QuestBoard.css'
 
 const MAX_VISIBLE_ASSIGNMENTS = 5
@@ -162,9 +163,10 @@ function Reward({ reward }) {
   )
 }
 
-function QuestBoard() {
+function QuestBoard({ onJoin }) {
   const session = useSession()
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
+  const [loaded, setLoaded] = useState(false)
   const signup = useQuestSignup({ catalog, setCatalog })
 
   useEffect(() => {
@@ -173,6 +175,7 @@ function QuestBoard() {
     function applyCatalog(nextCatalog) {
       if (!active) return
       setCatalog(nextCatalog?.quests ? nextCatalog : EMPTY_CATALOG)
+      setLoaded(true)
     }
 
     async function loadCatalog() {
@@ -182,7 +185,7 @@ function QuestBoard() {
         )
         applyCatalog(result)
       } catch {
-        // Keep the last good catalog on transient failures.
+        if (active) setLoaded(true)
       }
     }
 
@@ -216,7 +219,8 @@ function QuestBoard() {
     )
   }, [catalog])
 
-  if (!featuredQuest) return null
+  if (!loaded) return null
+  if (!featuredQuest) return <FoundingMission onJoin={onJoin} />
 
   const { completed: completedObjectives, total: objectiveCount } =
     questProgress(featuredQuest)

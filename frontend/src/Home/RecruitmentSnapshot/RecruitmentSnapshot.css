@@ -1,0 +1,104 @@
+.recruitment-snapshot {
+  padding-block: var(--space-12) var(--space-20);
+}
+
+.recruitment-snapshot__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 34rem);
+  align-items: end;
+  gap: clamp(var(--space-6), 6vw, var(--space-16));
+  margin-bottom: var(--space-8);
+}
+
+.recruitment-snapshot__eyebrow,
+.recruitment-snapshot__fact > span {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.recruitment-snapshot__header h2 {
+  max-width: 38rem;
+  margin-top: var(--space-3);
+  font-size: var(--font-size-fib-55);
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.recruitment-snapshot__header > p {
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.recruitment-snapshot__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: var(--border-accent);
+  border-left: var(--border-subtle);
+}
+
+.recruitment-snapshot__fact {
+  min-height: 13rem;
+  padding: var(--space-6);
+  border-right: var(--border-subtle);
+  border-bottom: var(--border-subtle);
+  background:
+    linear-gradient(145deg, rgba(16, 39, 66, 0.62), rgba(7, 17, 31, 0.78));
+}
+
+.recruitment-snapshot__fact h3 {
+  margin-top: var(--space-3);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-21);
+}
+
+.recruitment-snapshot__fact p {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.recruitment-snapshot__network {
+  margin-top: var(--space-6);
+  padding-left: var(--space-5);
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+}
+
+@media (max-width: 64rem) {
+  .recruitment-snapshot__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .recruitment-snapshot {
+    padding-block: var(--space-10) var(--space-12);
+  }
+
+  .recruitment-snapshot__header {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--space-4);
+  }
+
+  .recruitment-snapshot__header h2 {
+    font-size: var(--font-size-fib-34);
+  }
+
+  .recruitment-snapshot__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .recruitment-snapshot__fact {
+    min-height: 0;
+  }
+}

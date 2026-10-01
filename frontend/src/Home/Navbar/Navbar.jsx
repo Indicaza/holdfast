@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
-import { primaryNavigationLinks } from '../../navigation.js'
+import {
+  primaryNavigationLinks,
+  signInNavigationLabel,
+} from '../../navigation.js'
 import './Navbar.css'
 
 function displayName(user) {
@@ -89,11 +92,11 @@ function Navbar() {
           <div className="navbar__actions">
             {!authenticated ? (
               <button
-                className="navbar__join-button"
+                className="navbar__sign-in-button"
                 type="button"
                 onClick={() => signIn()}
               >
-                Join Holdfast
+                {signInNavigationLabel}
               </button>
             ) : (
               <div className="navbar__account" ref={accountRef}>
