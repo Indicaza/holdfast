@@ -139,39 +139,31 @@
 }
 
 
-.navbar__account-button--empty {
-  background: transparent;
-  color: var(--color-text-muted);
+.navbar__join-button {
+  display: inline-flex;
+  min-height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-4);
+  border: var(--border-accent);
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
-.navbar__account-placeholder {
-  position: relative;
-  display: block;
-  width: 1rem;
-  height: 1rem;
-}
-
-.navbar__account-placeholder::before {
-  content: '';
-  position: absolute;
-  top: 0.05rem;
-  left: 50%;
-  width: 0.34rem;
-  height: 0.34rem;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  transform: translateX(-50%);
-}
-
-.navbar__account-placeholder span {
-  position: absolute;
-  right: 0.08rem;
-  bottom: 0.02rem;
-  left: 0.08rem;
-  height: 0.42rem;
-  border: 1px solid currentColor;
-  border-radius: 0.6rem 0.6rem 0 0;
-  border-bottom: 0;
+.navbar__join-button:hover,
+.navbar__join-button:focus-visible {
+  background: var(--color-accent-bright);
+  color: var(--color-background);
+  transform: translateY(-1px);
 }
 
 .navbar__account-menu {
@@ -262,6 +254,12 @@
 
   .navbar__actions {
     gap: var(--space-2);
+  }
+
+  .navbar__join-button {
+    min-height: 2.25rem;
+    padding-inline: var(--space-3);
+    font-size: 0.65rem;
   }
 
   .navbar__account-menu {

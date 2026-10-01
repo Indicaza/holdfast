@@ -1,9 +1,5 @@
 import './Footer.css'
-
-const links = [
-  { label: 'GitHub', href: 'https://github.com/Indicaza/holdfast', external: true },
-  { label: 'Privacy', href: '/privacy' },
-]
+import { footerNavigationLinks } from '../../navigation.js'
 
 function Footer() {
   return (
@@ -20,14 +16,8 @@ function Footer() {
       </div>
 
       <nav className="footer__links" aria-label="Footer navigation">
-        {links.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            {...(link.external
-              ? { target: '_blank', rel: 'noreferrer' }
-              : {})}
-          >
+        {footerNavigationLinks.map((link) => (
+          <a key={link.label} href={link.href}>
             {link.label}
           </a>
         ))}

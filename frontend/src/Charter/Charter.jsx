@@ -1,4 +1,5 @@
 import PageShell from '../PageShell/PageShell.jsx'
+import PublicJoinCallout from '../PublicJoinCallout/PublicJoinCallout.jsx'
 import './Charter.css'
 
 function Charter() {
@@ -273,6 +274,11 @@ function Charter() {
             <em>We serve so that it may endure.</em>
           </p>
         </section>
+
+        <PublicJoinCallout
+          title="Ready to help build it?"
+          description="Meet the guild, find your place, and help us leave Azeroth a little stronger than we found it."
+        />
       </article>
     </PageShell>
   )
