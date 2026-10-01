@@ -3,15 +3,12 @@
 }
 
 .recruitment-snapshot__header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 34rem);
-  align-items: end;
-  gap: clamp(var(--space-6), 6vw, var(--space-16));
+  max-width: 46rem;
   margin-bottom: var(--space-8);
 }
 
 .recruitment-snapshot__eyebrow,
-.recruitment-snapshot__fact > span {
+.recruitment-snapshot__fact-label {
   color: var(--color-accent-bright);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -20,74 +17,158 @@
 }
 
 .recruitment-snapshot__header h2 {
-  max-width: 38rem;
   margin-top: var(--space-3);
   font-size: var(--font-size-fib-55);
   line-height: 1.02;
   text-wrap: balance;
 }
 
-.recruitment-snapshot__header > p {
-  color: var(--color-text);
-  font-size: var(--font-size-md);
-  line-height: 1.65;
-  text-wrap: pretty;
-}
-
 .recruitment-snapshot__facts {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: var(--border-accent);
-  border-left: var(--border-subtle);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 .recruitment-snapshot__fact {
+  position: relative;
+  grid-column: span 5;
   min-height: 13rem;
   padding: var(--space-6);
-  border-right: var(--border-subtle);
-  border-bottom: var(--border-subtle);
+  overflow: hidden;
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg, 1rem);
   background:
-    linear-gradient(145deg, rgba(16, 39, 66, 0.62), rgba(7, 17, 31, 0.78));
+    linear-gradient(145deg, rgba(16, 39, 66, 0.72), rgba(7, 17, 31, 0.88));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+  isolation: isolate;
+}
+
+.recruitment-snapshot__fact:nth-child(1),
+.recruitment-snapshot__fact:nth-child(4) {
+  grid-column: span 7;
+}
+
+.recruitment-snapshot__fact::before {
+  position: absolute;
+  inset: -35% auto auto -15%;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(216, 177, 92, 0.15),
+    rgba(216, 177, 92, 0) 68%
+  );
+  content: '';
+  pointer-events: none;
+  transform: translate3d(-10%, -10%, 0);
+  transition:
+    opacity 220ms ease,
+    transform 320ms ease;
+  opacity: 0.5;
+  z-index: -1;
+}
+
+.recruitment-snapshot__fact::after {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 4.5rem;
+  height: 2px;
+  background: var(--color-accent-bright);
+  content: '';
+  transition: width 240ms ease;
+}
+
+.recruitment-snapshot__fact-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.recruitment-snapshot__fact-number {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.14em;
 }
 
 .recruitment-snapshot__fact h3 {
-  margin-top: var(--space-3);
+  max-width: 22rem;
+  margin-top: var(--space-5);
   color: var(--color-text-strong);
   font-size: var(--font-size-fib-21);
+  line-height: 1.1;
+  text-wrap: balance;
 }
 
 .recruitment-snapshot__fact p {
+  max-width: 34rem;
   margin-top: var(--space-3);
   color: var(--color-text-muted);
   font-size: var(--font-size-body);
-  line-height: 1.6;
+  line-height: 1.55;
   text-wrap: pretty;
 }
 
-.recruitment-snapshot__network {
-  margin-top: var(--space-6);
-  padding-left: var(--space-5);
-  border-left: 2px solid var(--color-accent);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-md);
-  line-height: 1.6;
+.recruitment-snapshot__fact-mark {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-4);
+  color: rgba(255, 255, 255, 0.07);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1;
+  pointer-events: none;
+  transform: rotate(-4deg);
+  transition:
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recruitment-snapshot__fact:hover {
+    transform: translateY(-6px);
+    border-color: rgba(216, 177, 92, 0.48);
+    background:
+      linear-gradient(145deg, rgba(19, 47, 79, 0.82), rgba(7, 17, 31, 0.92));
+    box-shadow: 0 24px 58px rgba(0, 0, 0, 0.26);
+  }
+
+  .recruitment-snapshot__fact:hover::before {
+    opacity: 1;
+    transform: translate3d(8%, 2%, 0);
+  }
+
+  .recruitment-snapshot__fact:hover::after {
+    width: 8rem;
+  }
+
+  .recruitment-snapshot__fact:hover .recruitment-snapshot__fact-mark {
+    color: rgba(216, 177, 92, 0.14);
+    transform: rotate(0deg) scale(1.05);
+  }
 }
 
 @media (max-width: 64rem) {
   .recruitment-snapshot__facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .recruitment-snapshot__fact,
+  .recruitment-snapshot__fact:nth-child(1),
+  .recruitment-snapshot__fact:nth-child(4) {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 48rem) {
   .recruitment-snapshot {
     padding-block: var(--space-10) var(--space-12);
-  }
-
-  .recruitment-snapshot__header {
-    grid-template-columns: 1fr;
-    align-items: start;
-    gap: var(--space-4);
   }
 
   .recruitment-snapshot__header h2 {
@@ -100,5 +181,14 @@
 
   .recruitment-snapshot__fact {
     min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recruitment-snapshot__fact,
+  .recruitment-snapshot__fact::before,
+  .recruitment-snapshot__fact::after,
+  .recruitment-snapshot__fact-mark {
+    transition: none;
   }
 }
