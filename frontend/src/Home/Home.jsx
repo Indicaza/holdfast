@@ -3,6 +3,7 @@ import FeatureCardGrid from './FeatureCardGrid/FeatureCardGrid.jsx'
 import Footer from './Footer/Footer.jsx'
 import FoundingCallout from './FoundingCallout/FoundingCallout.jsx'
 import QuestBoard from './QuestBoard/QuestBoard.jsx'
+import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
 import HeroSlideshow from './HeroSlideshow/HeroSlideshow.jsx'
 import { useHeroStory } from './HeroStory/heroStory.js'
@@ -44,8 +45,9 @@ function Home({ overlay = null, initialJoinOpen = false }) {
             </div>
           </section>
 
+          <RecruitmentSnapshot />
           <FeatureCardGrid />
-          <QuestBoard />
+          <QuestBoard onJoin={openJoin} />
           <FoundingCallout onJoin={openJoin} />
         </main>
 

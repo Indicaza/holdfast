@@ -139,7 +139,7 @@
 }
 
 
-.navbar__join-button {
+.navbar__sign-in-button {
   display: inline-flex;
   min-height: 2.4rem;
   align-items: center;
@@ -159,8 +159,8 @@
     transform var(--duration-fast) var(--ease-standard);
 }
 
-.navbar__join-button:hover,
-.navbar__join-button:focus-visible {
+.navbar__sign-in-button:hover,
+.navbar__sign-in-button:focus-visible {
   background: var(--color-accent-bright);
   color: var(--color-background);
   transform: translateY(-1px);
@@ -256,7 +256,7 @@
     gap: var(--space-2);
   }
 
-  .navbar__join-button {
+  .navbar__sign-in-button {
     min-height: 2.25rem;
     padding-inline: var(--space-3);
     font-size: 0.65rem;

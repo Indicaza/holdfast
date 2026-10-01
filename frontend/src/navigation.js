@@ -3,6 +3,8 @@ export const publicNavigationLinks = [
   { label: 'Ranks', href: '/ranks' },
 ]
 
+export const signInNavigationLabel = 'Sign In'
+
 export const footerNavigationLinks = [
   { label: 'Join Holdfast', href: '/join' },
   ...publicNavigationLinks,

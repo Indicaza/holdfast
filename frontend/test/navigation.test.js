@@ -5,6 +5,7 @@ import {
   footerNavigationLinks,
   primaryNavigationLinks,
   publicNavigationLinks,
+  signInNavigationLabel,
 } from '../src/navigation.js'
 
 test('signed-out navigation keeps public information easy to reach', () => {
@@ -13,6 +14,10 @@ test('signed-out navigation keeps public information easy to reach', () => {
     publicNavigationLinks.map((link) => link.href),
     ['/charter', '/ranks'],
   )
+})
+
+test('the account action is labeled as sign in rather than recruitment', () => {
+  assert.equal(signInNavigationLabel, 'Sign In')
 })
 
 test('signed-in navigation adds member destinations before public pages', () => {
