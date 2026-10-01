@@ -36,7 +36,7 @@ assert.equal(service.dockerfilePath, "./Dockerfile");
 assert.equal(service.dockerContext, ".");
 assert.equal(service.autoDeployTrigger, "checksPass");
 assert.equal(service.healthCheckPath, "/api/health/ready");
-assert.equal(service.maxShutdownDelaySeconds, 30);
+assert.equal("maxShutdownDelaySeconds" in service, false);
 assert.deepEqual(service.disk, {
   name: "holdfast-data",
   mountPath: "/data",
