@@ -153,9 +153,9 @@ export function productionEnvironmentProblems(env = process.env) {
   if (env.DISCORD_SESSION_REVERIFY_SECONDS) {
     const seconds = Number(env.DISCORD_SESSION_REVERIFY_SECONDS);
 
-    if (!Number.isInteger(seconds) || seconds < 60 || seconds > 86400) {
+    if (!Number.isInteger(seconds) || seconds < 60 || seconds > 2592000) {
       problems.push(
-        "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 86400",
+        "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 2592000",
       );
     }
   }
