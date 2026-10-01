@@ -1,0 +1,54 @@
+.page-shell:has(.not-found__actions) .page-shell__main {
+  min-height: calc(100vh - var(--nav-height) - 8rem);
+}
+
+.not-found__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.not-found__primary,
+.not-found__secondary {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-6);
+  border: var(--border-accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.not-found__primary {
+  background: var(--color-accent-bright);
+  color: var(--color-background);
+}
+
+.not-found__secondary {
+  color: var(--color-accent-bright);
+}
+
+.not-found__primary:hover,
+.not-found__primary:focus-visible {
+  background: transparent;
+  color: var(--color-accent-bright);
+}
+
+.not-found__secondary:hover,
+.not-found__secondary:focus-visible {
+  background: rgba(196, 166, 103, 0.1);
+}
+
+@media (max-width: 32rem) {
+  .not-found__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

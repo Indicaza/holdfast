@@ -1,5 +1,6 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import RankInsignia from '../Members/RankInsignia.jsx'
+import PublicJoinCallout from '../PublicJoinCallout/PublicJoinCallout.jsx'
 import './Ranks.css'
 
 const rankDefinitions = [
@@ -256,6 +257,11 @@ function Ranks() {
             Read the Holdfast Charter
           </a>
         </section>
+
+        <PublicJoinCallout
+          title="You do not need a rank to belong here."
+          description="Join Holdfast, play at your own pace, and contribute in whatever way fits you."
+        />
       </article>
     </PageShell>
   )

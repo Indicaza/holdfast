@@ -1,0 +1,76 @@
+.public-join-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(var(--space-6), 5vw, var(--space-12));
+  width: min(100%, 64rem);
+  margin: clamp(var(--space-16), 8vw, var(--space-24)) auto 0;
+  padding: clamp(var(--space-6), 5vw, var(--space-10));
+  border: var(--border-accent);
+  background:
+    linear-gradient(120deg, rgba(29, 69, 111, 0.48), rgba(7, 17, 31, 0.9));
+  box-shadow: var(--shadow-panel);
+}
+
+.public-join-callout__eyebrow {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.public-join-callout h2 {
+  margin-top: var(--space-3);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-34);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.public-join-callout__description {
+  max-width: 42rem;
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.public-join-callout__action {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-6);
+  border: 1px solid var(--color-accent-bright);
+  background: var(--color-accent-bright);
+  color: var(--color-background);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-align: center;
+  text-transform: uppercase;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.public-join-callout__action:hover,
+.public-join-callout__action:focus-visible {
+  background: transparent;
+  color: var(--color-accent-bright);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 48rem) {
+  .public-join-callout {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .public-join-callout__action {
+    width: 100%;
+  }
+}

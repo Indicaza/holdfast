@@ -1,8 +1,10 @@
 import { useSession } from '../../Auth/sessionContext.js'
+import { foundingCalloutContent } from './foundingCalloutContent.js'
 import './FoundingCallout.css'
 
 function FoundingCallout({ onJoin }) {
   const { authenticated } = useSession()
+  const content = foundingCalloutContent(authenticated)
 
   return (
     <section
@@ -11,17 +13,14 @@ function FoundingCallout({ onJoin }) {
       aria-labelledby="founding-callout-title"
     >
       <div className="founding-callout__copy">
-        <p className="founding-callout__eyebrow">Join Holdfast</p>
-        <h2 id="founding-callout-title">Come play with us.</h2>
-        <p>
-          No application gauntlet. Meet the guild, find your place, and get
-          into the game.
-        </p>
+        <p className="founding-callout__eyebrow">{content.eyebrow}</p>
+        <h2 id="founding-callout-title">{content.title}</h2>
+        <p>{content.description}</p>
       </div>
 
       {authenticated ? (
-        <a className="founding-callout__action" href="/guildos">
-          Open GuildOS
+        <a className="founding-callout__action" href={content.href}>
+          {content.action}
         </a>
       ) : (
         <button
@@ -29,7 +28,7 @@ function FoundingCallout({ onJoin }) {
           type="button"
           onClick={onJoin}
         >
-          Join Holdfast
+          {content.action}
         </button>
       )}
 

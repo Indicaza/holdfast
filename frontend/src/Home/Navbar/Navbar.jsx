@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
+import { primaryNavigationLinks } from '../../navigation.js'
 import './Navbar.css'
-
-const publicLinks = [
-  { label: 'Charter', href: '/charter' },
-  { label: 'Ranks', href: '/ranks' },
-]
 
 function displayName(user) {
   return user?.guildNickname || user?.globalName || user?.username || 'Member'
@@ -25,13 +21,7 @@ function Navbar() {
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   const { authenticated, user, hasPermission, signIn, signOut } = useSession()
-  const links = authenticated
-    ? [
-        { label: 'Quests', href: '/quests' },
-        { label: 'Members', href: '/members' },
-        ...publicLinks,
-      ]
-    : publicLinks
+  const links = primaryNavigationLinks(authenticated)
 
   useEffect(() => {
     if (!accountOpen) {
@@ -99,14 +89,11 @@ function Navbar() {
           <div className="navbar__actions">
             {!authenticated ? (
               <button
-                className="navbar__account-button navbar__account-button--empty"
+                className="navbar__join-button"
                 type="button"
-                aria-label="Sign in with Discord"
                 onClick={() => signIn()}
               >
-                <span className="navbar__account-placeholder" aria-hidden="true">
-                  <span />
-                </span>
+                Join Holdfast
               </button>
             ) : (
               <div className="navbar__account" ref={accountRef}>

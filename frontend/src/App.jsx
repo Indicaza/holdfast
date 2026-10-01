@@ -3,12 +3,14 @@ import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
 import SEO from './SEO/SEO.jsx'
+import { normalizePathname, resolvePathname } from './routing.js'
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
+const NotFound = lazy(() => import('./NotFound/NotFound.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
 const Quests = lazy(() => import('./Quests/Quests.jsx'))
 const Ranks = lazy(() => import('./Ranks/Ranks.jsx'))
@@ -107,10 +109,17 @@ function memberProfileRoute(pathname) {
 }
 
 function App() {
-  const requestedPathname =
-    window.location.pathname.replace(/\/+$/, '') || '/'
-  const pathname = requestedPathname === '/guildos' ? '/' : requestedPathname
-  const route = memberProfileRoute(pathname) ?? routes[pathname] ?? routes['/']
+  const requestedPathname = normalizePathname(window.location.pathname)
+  const pathname = resolvePathname(requestedPathname, Object.keys(routes))
+  const route = pathname
+    ? memberProfileRoute(pathname) ?? routes[pathname]
+    : {
+        component: NotFound,
+        path: requestedPathname,
+        title: 'Page Not Found | Holdfast',
+        description: 'The requested Holdfast page could not be found.',
+        robots: 'noindex,nofollow',
+      }
   const Page = route.component
 
   useEffect(() => {
