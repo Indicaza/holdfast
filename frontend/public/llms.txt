@@ -14,7 +14,7 @@ The core principle is simple: leave the guild stronger than you found it.
 
 ## Additional pages
 
-- [Privacy](/privacy): Privacy and analytics information.
+- [Privacy](/privacy): Privacy information.
 - [Holdfast source repository](https://github.com/Indicaza/holdfast): Public source code for the Holdfast website.
 
 ## Key facts

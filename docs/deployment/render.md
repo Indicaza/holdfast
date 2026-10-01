@@ -66,8 +66,7 @@ After the first deployment:
 6. Join and leave a quest objective.
 7. Confirm a normal member cannot access the control room.
 8. Confirm a configured owner can access the control room.
-9. Accept analytics and confirm a visit appears in GA4 Realtime.
-10. Redeploy the current commit and confirm member and quest data remain present.
+9. Redeploy the current commit and confirm member and quest data remain present.
 
 ## Deployments and rollback
 

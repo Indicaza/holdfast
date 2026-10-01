@@ -239,9 +239,7 @@ Holdfast also ships as one portable Docker image. The image builds the Vite fron
 Build the image:
 
 ```bash
-docker build \
-  --build-arg VITE_GA_MEASUREMENT_ID=G-HFK0GNKKJ7 \
-  -t holdfast:latest .
+docker build -t holdfast:latest .
 ```
 
 Run it locally with production settings:
@@ -280,8 +278,6 @@ Set the Discord application's OAuth redirect URL to:
 https://YOUR_DOMAIN/api/auth/discord/callback
 ```
 
-Holdfast defaults to the public GA4 measurement ID `G-HFK0GNKKJ7`. Analytics remains consent-gated and does not load until a visitor opts in. Override `VITE_GA_MEASUREMENT_ID` at build time only when deploying the same code for another property.
-
 ### Launch checklist
 
 - Point `FRONTEND_URL` and the Discord redirect URL at the final domain.
@@ -291,7 +287,6 @@ Holdfast defaults to the public GA4 measurement ID `G-HFK0GNKKJ7`. Analytics rem
 - Confirm `/api/health/ready` returns HTTP 200.
 - Complete recruit login, existing-member login, logout, profile editing, quest signup, and quest leave on the live domain.
 - Verify a non-officer cannot access the control room and an owner can.
-- Accept analytics once and confirm the GA4 Realtime report receives a page view.
 - Restart or redeploy once and confirm guild data remains intact.
 
 Create a consistent on-demand SQLite backup to storage outside the live data volume:

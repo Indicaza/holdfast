@@ -1,8 +1,4 @@
 import './Footer.css'
-import {
-  ANALYTICS_ENABLED,
-  openAnalyticsSettings,
-} from '../../Analytics/analyticsSettings.js'
 
 const links = [
   { label: 'GitHub', href: 'https://github.com/Indicaza/holdfast', external: true },
@@ -35,11 +31,6 @@ function Footer() {
             {link.label}
           </a>
         ))}
-        {ANALYTICS_ENABLED ? (
-          <button type="button" onClick={openAnalyticsSettings}>
-            Analytics
-          </button>
-        ) : null}
       </nav>
     </footer>
   )

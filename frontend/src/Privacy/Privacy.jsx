@@ -1,9 +1,4 @@
 import PageShell from '../PageShell/PageShell.jsx'
-import {
-  ANALYTICS_ENABLED,
-  openAnalyticsSettings,
-} from '../Analytics/analyticsSettings.js'
-import './Privacy.css'
 
 function Privacy() {
   return (
@@ -88,28 +83,6 @@ function Privacy() {
         They are stored in GuildOS runtime storage and are not intended to be
         committed as live member data to the public Holdfast source repository.
       </p>
-
-      <h2>Website analytics</h2>
-      <p>
-        If you allow analytics, Holdfast uses Google Analytics to understand
-        public page visits and general site usage. It may process the page URL,
-        referring page, browser and device information, and approximate
-        location. Holdfast does not intentionally send your Discord identity,
-        member profile, quest assignments, or GuildOS records to analytics.
-      </p>
-      <p>
-        Analytics does not load until you opt in. Your choice is stored in your
-        browser and can be changed at any time.
-      </p>
-      {ANALYTICS_ENABLED ? (
-        <button
-          className="privacy__analytics-settings"
-          type="button"
-          onClick={openAnalyticsSettings}
-        >
-          Change analytics preference
-        </button>
-      ) : null}
 
       <h2>What is not active yet</h2>
       <p>
