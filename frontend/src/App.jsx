@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
-import Analytics from './Analytics/Analytics.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
 import SEO from './SEO/SEO.jsx'
@@ -141,7 +140,6 @@ function App() {
       </Suspense>
 
       <AuthResultModal />
-      <Analytics />
     </>
   )
 }

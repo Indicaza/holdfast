@@ -90,10 +90,12 @@ test("security headers include baseline browser protections", () => {
     });
 
     assert.equal(continued, true);
-    assert.match(
-      res.headers.get("Content-Security-Policy"),
-      /frame-ancestors 'none'/,
-    );
+    const contentSecurityPolicy = res.headers.get("Content-Security-Policy");
+
+    assert.match(contentSecurityPolicy, /frame-ancestors 'none'/);
+    assert.match(contentSecurityPolicy, /script-src 'self'/);
+    assert.match(contentSecurityPolicy, /connect-src 'self'/);
+    assert.doesNotMatch(contentSecurityPolicy, /google(tagmanager|-analytics)/);
     assert.equal(res.headers.get("X-Content-Type-Options"), "nosniff");
     assert.equal(res.headers.get("X-Frame-Options"), "DENY");
     assert.equal(

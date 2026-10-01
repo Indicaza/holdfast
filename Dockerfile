@@ -4,8 +4,6 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-ARG VITE_GA_MEASUREMENT_ID=G-HFK0GNKKJ7
-ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
 RUN npm run build
 
 FROM node:24-alpine AS production
