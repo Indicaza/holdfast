@@ -101,7 +101,7 @@ test("production configuration reports all actionable problems", () => {
   assert.ok(problems.includes("PORT must be an integer between 1 and 65535"));
   assert.ok(
     problems.includes(
-      "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 86400",
+      "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 2592000",
     ),
   );
 });
@@ -125,7 +125,7 @@ test("production configuration accepts bounded Discord revalidation intervals", 
   );
   assert.deepEqual(
     productionEnvironmentProblems(
-      validEnvironment({ DISCORD_SESSION_REVERIFY_SECONDS: "86400" }),
+      validEnvironment({ DISCORD_SESSION_REVERIFY_SECONDS: "2592000" }),
     ),
     [],
   );

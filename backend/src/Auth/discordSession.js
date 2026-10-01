@@ -6,9 +6,9 @@ import { resolvePermissions } from "./permissionResolver.js";
 import { clearSession, setSession } from "./session.js";
 
 const DISCORD_API = "https://discord.com/api/v10";
-const DEFAULT_REVERIFY_SECONDS = 15 * 60;
+const DEFAULT_REVERIFY_SECONDS = 30 * 24 * 60 * 60;
 const MIN_REVERIFY_SECONDS = 60;
-const MAX_REVERIFY_SECONDS = 24 * 60 * 60;
+const MAX_REVERIFY_SECONDS = DEFAULT_REVERIFY_SECONDS;
 const DISCORD_REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_CACHE_MAX_ENTRIES = 1000;
 

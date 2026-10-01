@@ -130,6 +130,35 @@ test("fresh Discord sessions bypass network revalidation", async () => {
   assert.equal(events.sessions.length, 0);
 });
 
+test("default revalidation stays quiet for the 30 day session lifetime", async () => {
+  let fetches = 0;
+  const env = environment({ DISCORD_SESSION_REVERIFY_SECONDS: "" });
+  const { middleware } = harness({
+    env,
+    fetchImpl: async () => {
+      fetches += 1;
+      return jsonResponse(guildMember());
+    },
+  });
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+  const fresh = await run(
+    middleware,
+    request(USER_ONE, { verifiedAt: FIXED_NOW - thirtyDaysMs + 1000 }),
+  );
+
+  assert.equal(fresh.nextCalls, 1);
+  assert.equal(fetches, 0);
+
+  const stale = await run(
+    middleware,
+    request(USER_ONE, { verifiedAt: FIXED_NOW - thirtyDaysMs }),
+  );
+
+  assert.equal(stale.nextCalls, 1);
+  assert.equal(fetches, 1);
+});
+
 test("future verification timestamps do not bypass Discord", async () => {
   const { events, middleware } = harness();
   const result = await run(
