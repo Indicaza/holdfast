@@ -24,7 +24,7 @@ services:
       - key: TRUST_PROXY
         value: "1"
       - key: DISCORD_SESSION_REVERIFY_SECONDS
-        value: "900"
+        value: "2592000"
       - key: DISCORD_PRUNE_MIN_AGE_DAYS
         value: "7"
       - key: SESSION_SECRET
