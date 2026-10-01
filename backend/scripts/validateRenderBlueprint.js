@@ -55,7 +55,7 @@ for (const [key, value] of Object.entries({
   PORT: "3000",
   GUILD_DATA_DIR: "/data",
   TRUST_PROXY: "1",
-  DISCORD_SESSION_REVERIFY_SECONDS: "900",
+  DISCORD_SESSION_REVERIFY_SECONDS: "2592000",
   DISCORD_PRUNE_MIN_AGE_DAYS: "7",
 })) {
   assert.deepEqual(environment.get(key), { key, value });
