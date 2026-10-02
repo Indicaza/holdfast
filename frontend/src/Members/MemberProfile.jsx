@@ -672,7 +672,7 @@ function MemberProfile({ memberId }) {
       <RankProgress
         member={member}
         management={
-          session.hasPermission('site.admin') ? (
+          session.hasPermission('members.rank.manage') ? (
             <MemberRankControl
               member={member}
               onUpdated={(updatedMember) => {
@@ -686,7 +686,7 @@ function MemberProfile({ memberId }) {
       <BilletPanel
         member={member}
         billets={billets}
-        canManage={session.hasPermission('site.admin')}
+        canManage={session.hasPermission('members.billet.assign')}
         onUpdated={(updatedMember) => {
           setMember(updatedMember)
         }}
