@@ -375,6 +375,271 @@ const migrations = [
         );
       }
     },
+  {
+    version: 5,
+    name: "quest_governance_and_economy",
+    up(db) {
+      db.exec(`
+        ALTER TABLE rank_authority
+          ADD COLUMN quest_scope TEXT NOT NULL DEFAULT 'own'
+          CHECK (quest_scope IN ('own', 'all'));
+        ALTER TABLE rank_authority
+          ADD COLUMN reward_rep_max INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE rank_authority
+          ADD COLUMN reward_marks_max INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE rank_authority
+          ADD COLUMN reward_marks_quest_max INTEGER NOT NULL DEFAULT 0;
+
+        ALTER TABLE billets
+          ADD COLUMN quest_scope TEXT NOT NULL DEFAULT 'own'
+          CHECK (quest_scope IN ('own', 'all'));
+        ALTER TABLE billets
+          ADD COLUMN reward_rep_max INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE billets
+          ADD COLUMN reward_marks_max INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE billets
+          ADD COLUMN reward_marks_quest_max INTEGER NOT NULL DEFAULT 0;
+
+        ALTER TABLE quests
+          ADD COLUMN created_by_member_id TEXT;
+        ALTER TABLE quests
+          ADD COLUMN created_at TEXT NOT NULL DEFAULT '';
+
+        ALTER TABLE objectives
+          ADD COLUMN reward_approved_by_member_id TEXT;
+        ALTER TABLE objectives
+          ADD COLUMN reward_approved_by_name TEXT NOT NULL DEFAULT '';
+        ALTER TABLE objectives
+          ADD COLUMN reward_approved_at TEXT NOT NULL DEFAULT '';
+        ALTER TABLE objectives
+          ADD COLUMN reward_approved_fingerprint TEXT NOT NULL DEFAULT '';
+
+        ALTER TABLE quest_settings
+          ADD COLUMN marks_quest_max INTEGER NOT NULL DEFAULT 1000;
+      `);
+
+      const legacyRankPermissions = {
+        Corporal: ["quests.edit", "rewards.issue"],
+        Sergeant: ["quests.edit", "rewards.issue"],
+        "Master Sergeant": ["quests.edit", "rewards.issue"],
+        "Sergeant Major": ["quests.edit", "rewards.issue"],
+        Lieutenant: [
+          "site.admin",
+          "quests.edit",
+          "rewards.issue",
+          "rewards.policy.edit",
+          "members.rank.manage",
+          "members.billet.assign",
+          "audit.view",
+        ],
+        Captain: [
+          "site.admin",
+          "quests.edit",
+          "rewards.issue",
+          "rewards.policy.edit",
+          "members.rank.manage",
+          "members.billet.assign",
+          "audit.view",
+        ],
+        Major: [
+          "site.admin",
+          "quests.edit",
+          "rewards.issue",
+          "rewards.policy.edit",
+          "members.rank.manage",
+          "members.billet.assign",
+          "audit.view",
+        ],
+      };
+
+      const samePermissionSet = (left, right) => {
+        const a = [...new Set(left)].sort();
+        const b = [...new Set(right)].sort();
+        return (
+          a.length === b.length &&
+          a.every((permission, index) => permission === b[index])
+        );
+      };
+
+      const readPermissions = (value) => {
+        try {
+          const parsed = JSON.parse(value || "[]");
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      };
+
+      const writeAuthority = db.prepare(
+        `
+          UPDATE rank_authority
+          SET
+            permissions_json = ?,
+            quest_scope = ?,
+            reward_rep_max = ?,
+            reward_marks_max = ?,
+            reward_marks_quest_max = ?
+          WHERE rank = ?
+        `,
+      );
+
+      for (const [rank, defaults] of Object.entries(DEFAULT_RANK_AUTHORITY)) {
+        const row = db
+          .prepare("SELECT permissions_json FROM rank_authority WHERE rank = ?")
+          .get(rank);
+
+        if (!row) continue;
+
+        const currentPermissions = readPermissions(row.permissions_json);
+        const legacyPermissions = legacyRankPermissions[rank];
+
+        if (
+          legacyPermissions &&
+          samePermissionSet(currentPermissions, legacyPermissions)
+        ) {
+          writeAuthority.run(
+            JSON.stringify(defaults.permissions || []),
+            defaults.questScope || "own",
+            defaults.rewardLimits?.repPerObjective || 0,
+            defaults.rewardLimits?.marksPerObjective || 0,
+            defaults.rewardLimits?.marksPerQuest || 0,
+            rank,
+          );
+          continue;
+        }
+
+        const upgraded = new Set(currentPermissions);
+        if (upgraded.has("quests.edit")) upgraded.add("quests.create");
+
+        writeAuthority.run(
+          JSON.stringify([...upgraded]),
+          defaults.questScope || "own",
+          0,
+          0,
+          0,
+          rank,
+        );
+      }
+
+      const legacyBilletPermissions = {
+        Steward: [
+          "site.admin",
+          "quests.edit",
+          "rewards.issue",
+          "rewards.policy.edit",
+          "members.rank.manage",
+          "members.billet.assign",
+          "audit.view",
+          "discord.manage",
+        ],
+        Quartermaster: ["rewards.policy.edit"],
+        "Raid Leader": ["quests.edit", "rewards.issue"],
+        "PvP Lead": ["quests.edit", "rewards.issue"],
+      };
+
+      const writeBilletAuthority = db.prepare(
+        `
+          UPDATE billets
+          SET
+            permissions_json = ?,
+            quest_scope = ?,
+            reward_rep_max = ?,
+            reward_marks_max = ?,
+            reward_marks_quest_max = ?,
+            updated_at = ?
+          WHERE name = ?
+        `,
+      );
+
+      for (const row of db
+        .prepare("SELECT name, permissions_json FROM billets")
+        .all()) {
+        const defaults = DEFAULT_BILLET_AUTHORITY[row.name];
+        const currentPermissions = readPermissions(row.permissions_json);
+        const legacyPermissions = legacyBilletPermissions[row.name];
+        const now = new Date().toISOString();
+
+        if (
+          defaults &&
+          legacyPermissions &&
+          samePermissionSet(currentPermissions, legacyPermissions)
+        ) {
+          writeBilletAuthority.run(
+            JSON.stringify(defaults.permissions || []),
+            defaults.questScope || "own",
+            defaults.rewardLimits?.repPerObjective || 0,
+            defaults.rewardLimits?.marksPerObjective || 0,
+            defaults.rewardLimits?.marksPerQuest || 0,
+            now,
+            row.name,
+          );
+          continue;
+        }
+
+        const upgraded = new Set(currentPermissions);
+        if (upgraded.has("quests.edit")) upgraded.add("quests.create");
+
+        writeBilletAuthority.run(
+          JSON.stringify([...upgraded]),
+          defaults?.questScope || "own",
+          0,
+          0,
+          0,
+          now,
+          row.name,
+        );
+      }
+
+      const rewardItems = db.prepare(
+        `
+          SELECT name, quantity
+          FROM reward_items
+          WHERE objective_id = ?
+          ORDER BY sort_order, id
+        `,
+      );
+      const approveLegacyObjective = db.prepare(
+        `
+          UPDATE objectives
+          SET
+            reward_approved_by_name = 'Pre-governance reward',
+            reward_approved_at = ?,
+            reward_approved_fingerprint = ?
+          WHERE id = ?
+        `,
+      );
+      const migratedAt = new Date().toISOString();
+
+      for (const objective of db
+        .prepare(
+          "SELECT id, reward_rep, reward_marks FROM objectives",
+        )
+        .all()) {
+        const items = rewardItems.all(objective.id).map((item) => ({
+          name: item.name,
+          quantity: Number(item.quantity),
+        }));
+        const hasReward =
+          Number(objective.reward_rep) > 0 ||
+          Number(objective.reward_marks) > 0 ||
+          items.length > 0;
+
+        if (!hasReward) continue;
+
+        const fingerprint = JSON.stringify({
+          rep: Number(objective.reward_rep) || 0,
+          marks: Number(objective.reward_marks) || 0,
+          items,
+        });
+
+        approveLegacyObjective.run(
+          migratedAt,
+          fingerprint,
+          objective.id,
+        );
+      }
+    },
+  },
   },
 ];
 
