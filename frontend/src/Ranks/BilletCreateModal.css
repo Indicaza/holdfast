@@ -1,0 +1,129 @@
+.billet-create {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.billet-create__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.billet-create__field > span,
+.billet-create__note > span {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.billet-create__field input,
+.billet-create__field textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(196, 166, 103, 0.3);
+  border-radius: 0;
+  background: rgba(3, 8, 15, 0.66);
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.billet-create__field input {
+  min-height: 3rem;
+}
+
+.billet-create__field textarea {
+  min-height: 8.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.billet-create__field input:focus-visible,
+.billet-create__field textarea:focus-visible {
+  border-color: var(--color-accent-bright);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(196, 166, 103, 0.12);
+}
+
+.billet-create__field small,
+.billet-create__actions > div {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.billet-create__note {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-left: 2px solid var(--color-accent-bright);
+  background:
+    linear-gradient(90deg, rgba(196, 166, 103, 0.07), transparent 78%),
+    rgba(3, 8, 15, 0.28);
+}
+
+.billet-create__note p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.billet-create__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: var(--border-subtle);
+}
+
+.billet-create__message {
+  color: var(--color-accent-bright);
+}
+
+.billet-create__cancel,
+.billet-create__submit {
+  min-height: 3rem;
+  padding-inline: var(--space-5);
+  border: var(--border-subtle);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.billet-create__cancel {
+  background: rgba(3, 8, 15, 0.34);
+  color: var(--color-text-muted);
+}
+
+.billet-create__submit {
+  border-color: rgba(196, 166, 103, 0.6);
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-bright),
+    var(--color-accent)
+  );
+  color: var(--color-background);
+}
+
+.billet-create__cancel:hover,
+.billet-create__cancel:focus-visible,
+.billet-create__submit:hover,
+.billet-create__submit:focus-visible {
+  border-color: var(--color-accent-bright);
+}
+
+.billet-create__submit:disabled,
+.billet-create__cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 36rem) {
+  .billet-create__actions {
+    grid-template-columns: 1fr;
+  }
+}
