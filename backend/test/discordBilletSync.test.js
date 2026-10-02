@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  deleteDiscordBilletRole,
   ensureDiscordBilletRoles,
   reconcileDiscordBillets,
   syncDiscordMemberBillets,
@@ -62,6 +63,20 @@ class FakeDiscordClient {
       Object.assign(role, body);
       this.writes.push({ method, endpoint, body });
       return { ...role };
+    }
+
+    if (method === "DELETE" && rolePatch) {
+      const index = this.roles.findIndex(
+        (candidate) => candidate.id === rolePatch[1],
+      );
+      if (index < 0) {
+        const error = new Error("missing role");
+        error.status = 404;
+        throw error;
+      }
+      this.roles.splice(index, 1);
+      this.writes.push({ method, endpoint });
+      return null;
     }
 
     const memberMatch = endpoint.match(
@@ -168,6 +183,38 @@ test("new billets create a zero-permission Discord role", async () => {
   assert.equal(client.writes[0].method, "POST");
   assert.equal(client.writes[0].body.permissions, "0");
   assert.deepEqual(persisted, [["billet-recruiter", role.id]]);
+});
+
+test("custom billet Discord roles can be deleted explicitly", async () => {
+  const billet = {
+    id: "billet-dungeon-master",
+    name: "Dungeon Master",
+    discordRoleId: "500000000000000003",
+  };
+  const client = new FakeDiscordClient({
+    roles: [
+      {
+        id: billet.discordRoleId,
+        name: billet.name,
+        managed: false,
+      },
+    ],
+  });
+
+  const result = await deleteDiscordBilletRole(billet, {
+    env: environment(),
+    client,
+  });
+
+  assert.equal(result.status, "deleted");
+  assert.deepEqual(client.roles, []);
+  assert.ok(
+    client.writes.some(
+      (write) =>
+        write.method === "DELETE" &&
+        write.endpoint.endsWith("/roles/" + billet.discordRoleId),
+    ),
+  );
 });
 
 test("member billet sync adds desired billets, removes stale billets, and preserves unrelated roles", async () => {
