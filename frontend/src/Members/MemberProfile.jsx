@@ -376,7 +376,7 @@ function BilletPanel({ member, billets, canManage, onUpdated }) {
           member={member}
           billets={billets}
           onUpdated={onUpdated}
-          triggerLabel="Manage"
+          triggerLabel="Manage billets"
           showCount={false}
         />
       ) : null}
