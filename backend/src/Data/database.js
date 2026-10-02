@@ -2,6 +2,10 @@ import { mkdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
 import { runtimeDataDirectory, runtimeDataFile } from "./runtimeData.js";
+import {
+  DEFAULT_BILLET_AUTHORITY,
+  DEFAULT_RANK_AUTHORITY,
+} from "../Guild/authorityPolicy.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
 
@@ -318,6 +322,59 @@ const migrations = [
         insertBillet.run(id, name, responsibility, now, now);
       }
     },
+  {
+    version: 4,
+    name: "authority_scopes",
+    up(db) {
+      db.exec(`
+        CREATE TABLE rank_authority (
+          rank TEXT PRIMARY KEY,
+          permissions_json TEXT NOT NULL DEFAULT '[]',
+          max_managed_rank TEXT
+        );
+
+        ALTER TABLE billets
+          ADD COLUMN permissions_json TEXT NOT NULL DEFAULT '[]';
+
+        ALTER TABLE billets
+          ADD COLUMN max_managed_rank TEXT;
+      `);
+
+      const insertRankAuthority = db.prepare(
+        `
+          INSERT INTO rank_authority (
+            rank,
+            permissions_json,
+            max_managed_rank
+          ) VALUES (?, ?, ?)
+        `,
+      );
+
+      for (const [rank, scope] of Object.entries(DEFAULT_RANK_AUTHORITY)) {
+        insertRankAuthority.run(
+          rank,
+          JSON.stringify(scope.permissions || []),
+          scope.maxManagedRank || null,
+        );
+      }
+
+      const updateBilletAuthority = db.prepare(
+        `
+          UPDATE billets
+          SET permissions_json = ?, max_managed_rank = ?
+          WHERE name = ?
+        `,
+      );
+
+      for (const [name, scope] of Object.entries(DEFAULT_BILLET_AUTHORITY)) {
+        updateBilletAuthority.run(
+          JSON.stringify(scope.permissions || []),
+          scope.maxManagedRank || null,
+          name,
+        );
+      }
+    },
+  },
   },
 ];
 
