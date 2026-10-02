@@ -165,13 +165,6 @@ function Charter() {
         <section className="charter__section charter__section--closing">
           <h2>What we ask</h2>
 
-          <p className="charter__callout">
-            <strong>
-              Blue for trust. White for fairness. Gold for excellence. The
-              castle for something built to hold.
-            </strong>
-          </p>
-
           <ul className="charter__closing-list">
             <li>Bring what you can.</li>
             <li>Learn what you can.</li>
