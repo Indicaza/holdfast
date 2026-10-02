@@ -86,6 +86,9 @@ test("rank and billet scopes merge into effective website authority", async () =
     assert.equal(owner.maxManagedRank, "Commander");
     assert.ok(owner.permissions.includes("authority.manage"));
     assert.ok(owner.permissions.includes("discord.manage"));
+    assert.ok(owner.permissions.includes("billets.create"));
+    assert.ok(owner.permissions.includes("billets.edit"));
+    assert.ok(owner.permissions.includes("billets.delete"));
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });
