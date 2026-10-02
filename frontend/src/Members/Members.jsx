@@ -280,6 +280,35 @@ function Members() {
     }))
   }
 
+  function updateBilletDefinition(updatedBillet) {
+    if (!updatedBillet?.id) return
+
+    setBillets((current) => {
+      const exists = current.some((billet) => billet.id === updatedBillet.id)
+      const next = exists
+        ? current.map((billet) =>
+            billet.id === updatedBillet.id ? updatedBillet : billet,
+          )
+        : [...current, updatedBillet]
+
+      return next.sort((left, right) =>
+        left.name.localeCompare(right.name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+    })
+
+    setDirectory((current) => ({
+      ...current,
+      members: current.members.map((member) => ({
+        ...member,
+        billets: (member.billets || []).map((billet) =>
+          billet.id === updatedBillet.id ? updatedBillet : billet,
+        ),
+      })),
+    }))
+  }
+
   async function reconcileDiscordRanks() {
     if (reconciling) return
 
@@ -439,7 +468,7 @@ function Members() {
           {session.hasPermission('site.admin') ? (
             <BilletDefinitionManager
               billets={billets}
-              onChanged={setBillets}
+              onChanged={updateBilletDefinition}
             />
           ) : null}
 
