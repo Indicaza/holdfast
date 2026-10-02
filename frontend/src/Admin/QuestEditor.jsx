@@ -885,6 +885,13 @@ function QuestCard({
   members,
   rewardLimits,
   focused,
+  creatorName,
+  canEdit,
+  canPublish,
+  canApprove,
+  canIssue,
+  canReorder,
+  workspaceDirty,
   onChange,
   onPublicationChange,
   onMove,
@@ -892,6 +899,7 @@ function QuestCard({
   onRestore,
   onDelete,
   onConfirm,
+  onApproveReward,
   onCompleteObjective,
 }) {
   const completedCount = quest.objectives.filter(
@@ -945,7 +953,7 @@ function QuestCard({
     onConfirm({
       kicker: 'Complete objective',
       title: `Complete “${objective.title}”?`,
-      message: `This saves current changes and awards ${
+      message: `This awards ${
         rewards.length ? rewards.join(', ') : 'no currency reward'
       } to each of ${assignees.size} assigned member${
         assignees.size === 1 ? '' : 's'
@@ -968,10 +976,14 @@ function QuestCard({
             {questCompleted(quest) ? (
               <span className="quest-editor__badge--complete">Complete</span>
             ) : null}
+            {!canEdit && (canApprove || canIssue) ? (
+              <span className="quest-editor__badge--review">Review only</span>
+            ) : null}
           </div>
           <strong>{quest.title || 'Untitled quest'}</strong>
           <small>
             {progress(completedCount, quest.objectives.length, 'objective')} complete
+            {creatorName ? ` · created by ${creatorName}` : ''}
           </small>
         </div>
         <span className="quest-editor__toggle" aria-hidden="true">+</span>
@@ -984,18 +996,31 @@ function QuestCard({
             length={count}
             label="quest"
             onMove={onMove}
+            disabled={!canReorder}
           />
           <div className="quest-editor__lifecycle-actions">
             {quest.publication !== 'archived' ? (
-              <ActionButton tone="archive" onClick={onArchive}>
+              <ActionButton
+                tone="archive"
+                disabled={!canPublish}
+                onClick={onArchive}
+              >
                 Archive
               </ActionButton>
             ) : (
-              <ActionButton tone="restore" onClick={onRestore}>
+              <ActionButton
+                tone="restore"
+                disabled={!canPublish}
+                onClick={onRestore}
+              >
                 Restore to draft
               </ActionButton>
             )}
-            <ActionButton tone="danger" onClick={onDelete}>
+            <ActionButton
+              tone="danger"
+              disabled={!canEdit}
+              onClick={onDelete}
+            >
               Delete
             </ActionButton>
           </div>
@@ -1006,6 +1031,7 @@ function QuestCard({
             <span>Quest title</span>
             <input
               value={quest.title}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, title: event.target.value })
               }
@@ -1018,7 +1044,7 @@ function QuestCard({
               value={
                 quest.publication === 'archived' ? 'draft' : quest.publication
               }
-              disabled={quest.publication === 'archived'}
+              disabled={!canPublish || quest.publication === 'archived'}
               onChange={(event) => onPublicationChange(event.target.value)}
             >
               {PUBLICATION_OPTIONS.map(([value, label]) => (
@@ -1031,6 +1057,7 @@ function QuestCard({
             <span>Quest type</span>
             <select
               value={quest.mode}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, mode: event.target.value })
               }
@@ -1046,6 +1073,7 @@ function QuestCard({
             <textarea
               rows="3"
               value={quest.summary}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, summary: event.target.value })
               }
@@ -1058,6 +1086,7 @@ function QuestCard({
           <button
             className="quest-editor__secondary"
             type="button"
+            disabled={!canEdit}
             onClick={() =>
               onChange({
                 ...quest,
@@ -1079,7 +1108,11 @@ function QuestCard({
                 count={quest.objectives.length}
                 members={members}
                 rewardLimits={rewardLimits}
-                canComplete={quest.publication === 'published'}
+                canEdit={canEdit}
+                canApprove={canApprove}
+                canIssue={canIssue}
+                questPublished={quest.publication === 'published'}
+                workspaceDirty={workspaceDirty}
                 onChange={(nextObjective) =>
                   updateObjective(objectiveIndex, nextObjective)
                 }
@@ -1094,6 +1127,7 @@ function QuestCard({
                   })
                 }
                 onDelete={() => confirmDeleteObjective(objective)}
+                onApprove={() => onApproveReward(quest.id, objective.id)}
                 onComplete={() => confirmCompleteObjective(objective)}
               />
             ))
@@ -1103,6 +1137,12 @@ function QuestCard({
             </p>
           )}
         </div>
+
+        {!canEdit ? (
+          <p className="quest-editor__scope-note quest-editor__scope-note--quest">
+            You can see this quest, but its content is outside your edit scope.
+          </p>
+        ) : null}
       </div>
     </details>
   )
