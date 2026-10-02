@@ -18,7 +18,7 @@ function billetErrorResponse(res, status) {
     return true;
   }
 
-  if (status === "duplicate_name") {
+  if (status === "duplicate_name" || status === "name_locked") {
     res.status(409).json({ error: status });
     return true;
   }
