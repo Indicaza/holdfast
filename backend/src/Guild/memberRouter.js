@@ -13,7 +13,10 @@ import {
   updateGuildMemberProfile,
   updateGuildMemberRank,
 } from "./memberRepository.js";
-import { setMemberBilletAssignment } from "./billetRepository.js";
+import {
+  claimMemberBilletAuthority,
+  setMemberBilletAssignment,
+} from "./billetRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
 import {
   GUILD_RANKS,
@@ -104,6 +107,7 @@ function projectMember(member, totals, assignments) {
     updatedAt: member.updatedAt,
     rank,
     rankManaged: Boolean(member.rankManaged),
+    billetsManaged: Boolean(member.billetsManaged),
     rankMeta,
     role: rankMeta.isLeadership ? "Leadership" : "Member",
     billets: Array.isArray(member.billets) ? member.billets : [],
@@ -451,6 +455,56 @@ export function createMemberRouter() {
       res.status(500).json({ error: "member_billet_update_failed" });
     }
   }
+
+  router.post(
+    "/manage/:memberId/billets/claim",
+    requirePermission("site.admin"),
+    rankWriteRateLimit,
+    async (req, res) => {
+      try {
+        const result = await claimMemberBilletAuthority(
+          req.params.memberId,
+          { actorMemberId: req.auth.user.id },
+        );
+
+        if (result.status === "member-not-found") {
+          res.status(404).json({ error: "member_not_found" });
+          return;
+        }
+
+        const members = await readGuildMembers();
+        const member = members.find(
+          (candidate) => candidate.id === req.params.memberId,
+        );
+
+        let discordSync = { status: "pending" };
+
+        if (member) {
+          try {
+            discordSync = await syncDiscordMemberBillets(member);
+          } catch (error) {
+            console.error(
+              `Unable to claim Discord billet authority for member ${req.params.memberId}`,
+              error,
+            );
+          }
+        }
+
+        const projectedMember =
+          (await profileFor(req.params.memberId)) || member;
+
+        res.set("Cache-Control", "no-store");
+        res.json({
+          member: projectedMember,
+          status: result.status,
+          discordSync,
+        });
+      } catch (error) {
+        console.error("Unable to claim member billet authority", error);
+        res.status(500).json({ error: "member_billet_claim_failed" });
+      }
+    },
+  );
 
   router.put(
     "/manage/:memberId/billets/:billetId",
