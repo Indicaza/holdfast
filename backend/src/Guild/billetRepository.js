@@ -5,6 +5,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { normalizeCapabilityList, normalizeManagedRank } from "./authorityPolicy.js";
 import { GUILD_RANKS } from "./rankSystem.js";
 
 const RESERVED_BILLET_NAMES = new Set(
@@ -13,6 +14,14 @@ const RESERVED_BILLET_NAMES = new Set(
 
 function normalizeText(value) {
   return String(value || "").trim();
+}
+
+function parsePermissions(value) {
+  try {
+    return normalizeCapabilityList(JSON.parse(value || "[]"));
+  } catch {
+    return [];
+  }
 }
 
 function billetFromRow(row) {
@@ -24,6 +33,8 @@ function billetFromRow(row) {
     responsibility: row.responsibility || "",
     discordRoleId: row.discord_role_id || null,
     discordManaged: Boolean(row.discord_managed),
+    permissions: parsePermissions(row.permissions_json),
+    maxManagedRank: normalizeManagedRank(row.max_managed_rank),
     active: Boolean(row.active),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
