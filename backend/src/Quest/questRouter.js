@@ -367,6 +367,7 @@ export function createQuestRouter() {
   router.post(
     "/manage/complete-objective",
     requirePermission("quests.edit"),
+    requirePermission("rewards.issue"),
     adminWriteRateLimit,
     async (req, res) => {
       try {
