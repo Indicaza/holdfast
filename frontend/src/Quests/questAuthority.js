@@ -136,6 +136,7 @@ export function withSelfAssignments(quest, memberId) {
 
   return {
     ...quest,
+    publication: quest.publication || 'published',
     objectives: (quest.objectives || []).map((objective) => ({
       ...objective,
       assignments: (objective.assignments || []).map((assignment) => ({
