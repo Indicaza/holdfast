@@ -1,11 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 import { resolvePermissions } from "../src/Auth/permissionResolver.js";
 import {
   requireAuthenticated,
   requirePermission,
 } from "../src/Auth/permissions.js";
+import {
+  updateGuildMemberRank,
+  upsertGuildMember,
+} from "../src/Guild/memberRepository.js";
 
 function response() {
   return {
@@ -28,6 +35,8 @@ function preserve() {
     admins: process.env.DISCORD_SITE_ADMIN_ROLE_IDS,
     questEditors: process.env.DISCORD_QUEST_EDITOR_ROLE_IDS,
     rewardEditors: process.env.DISCORD_REWARD_POLICY_ROLE_IDS,
+    dataDir: process.env.GUILD_DATA_DIR,
+    nodeEnv: process.env.NODE_ENV,
   };
 }
 
@@ -37,6 +46,8 @@ function restore(previous) {
     ["DISCORD_SITE_ADMIN_ROLE_IDS", previous.admins],
     ["DISCORD_QUEST_EDITOR_ROLE_IDS", previous.questEditors],
     ["DISCORD_REWARD_POLICY_ROLE_IDS", previous.rewardEditors],
+    ["GUILD_DATA_DIR", previous.dataDir],
+    ["NODE_ENV", previous.nodeEnv],
   ];
 
   for (const [key, value] of values) {
@@ -169,46 +180,89 @@ test("permission middleware rejects permission-shaped data without a user", asyn
   assert.deepEqual(res.body, { error: "authentication_required" });
 });
 
-test("permission middleware fails closed for malformed session permissions", async () => {
-  const req = {
-    auth: {
-      user: { id: "323456789012345678" },
-      permissions: null,
-      verifiedAt: Date.now(),
-    },
-  };
-  const res = response();
-  let nextCalls = 0;
+test("permission middleware ignores stale session permissions and fails closed from database authority", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
 
-  await requirePermission("site.admin")(req, res, () => {
-    nextCalls += 1;
-  });
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "";
 
-  assert.equal(nextCalls, 0);
-  assert.equal(res.statusCode, 403);
-  assert.deepEqual(res.body, { error: "permission_required" });
+    await upsertGuildMember({
+      id: "323456789012345678",
+      username: "recruit",
+    });
+
+    const req = {
+      auth: {
+        user: { id: "323456789012345678" },
+        permissions: ["site.admin"],
+        verifiedAt: Date.now(),
+      },
+    };
+    const res = response();
+    let nextCalls = 0;
+
+    await requirePermission("site.admin")(req, res, () => {
+      nextCalls += 1;
+    });
+
+    assert.equal(nextCalls, 0);
+    assert.equal(res.statusCode, 403);
+    assert.deepEqual(res.body, { error: "permission_required" });
+    assert.deepEqual(req.auth.permissions, []);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
-test("permission middleware admits only the exact granted permission", async () => {
-  const req = {
-    auth: {
-      user: { id: "323456789012345678" },
-      permissions: ["quests.edit"],
-      verifiedAt: Date.now(),
-    },
-  };
-  const allowed = response();
-  let nextCalls = 0;
+test("permission middleware admits only authority granted by rank and billets", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
 
-  await requirePermission("quests.edit")(req, allowed, () => {
-    nextCalls += 1;
-  });
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
 
-  assert.equal(nextCalls, 1);
+    await upsertGuildMember({ id: "owner-one", username: "owner" });
+    await upsertGuildMember({
+      id: "323456789012345678",
+      username: "corporal",
+    });
+    await updateGuildMemberRank(
+      "323456789012345678",
+      "Corporal",
+      { actorMemberId: "owner-one" },
+    );
 
-  const denied = response();
-  await requirePermission("site.admin")(req, denied, () => {
-    throw new Error("request should not continue");
-  });
-  assert.equal(denied.statusCode, 403);
+    const req = {
+      auth: {
+        user: { id: "323456789012345678" },
+        permissions: [],
+        verifiedAt: Date.now(),
+      },
+    };
+    const allowed = response();
+    let nextCalls = 0;
+
+    await requirePermission("quests.edit")(req, allowed, () => {
+      nextCalls += 1;
+    });
+
+    assert.equal(nextCalls, 1);
+    assert.ok(req.auth.permissions.includes("quests.edit"));
+    assert.ok(req.auth.permissions.includes("rewards.issue"));
+
+    const denied = response();
+    await requirePermission("site.admin")(req, denied, () => {
+      throw new Error("request should not continue");
+    });
+    assert.equal(denied.statusCode, 403);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
 });
