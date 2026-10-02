@@ -406,6 +406,19 @@ export function createDiscordAuthRouter({
 } = {}) {
   const router = Router();
 
+  router.get("/discord/server", (req, res) => {
+    const guildId = config(env).guildId;
+
+    res.set("Cache-Control", "no-store");
+
+    if (!guildId) {
+      res.status(503).json({ error: "discord_not_configured" });
+      return;
+    }
+
+    res.redirect(`https://discord.com/channels/${encodeURIComponent(guildId)}`);
+  });
+
   router.get("/discord", (req, res) => {
     const mode = safeMode(req.query.mode);
     let current;
@@ -536,7 +549,12 @@ export function createDiscordAuthRouter({
         verifiedAt: now(),
       });
 
-      res.redirect(destinationUrl(ready.frontendUrl, returnTo, "connected"));
+      const destination =
+        mode === RECRUIT_MODE
+          ? onboardingUrl(ready.frontendUrl, "connected", returnTo)
+          : destinationUrl(ready.frontendUrl, returnTo, "connected");
+
+      res.redirect(destination);
     } catch (error) {
       logger.error("Discord authentication failed", error);
       const authCode = error.authCode || "failed";

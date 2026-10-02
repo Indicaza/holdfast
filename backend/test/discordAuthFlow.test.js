@@ -214,6 +214,27 @@ test("authorization start uses least-privilege scopes and signed state", async (
   );
 });
 
+test("Discord server shortcut opens the configured guild", async () => {
+  await withAuthServer(
+    {
+      env: authEnvironment(),
+      logger: silentLogger,
+    },
+    async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/auth/discord/server`, {
+        redirect: "manual",
+      });
+
+      assert.equal(response.status, 302);
+      assert.equal(
+        response.headers.get("location"),
+        `https://discord.com/channels/${GUILD_ID}`,
+      );
+      assert.equal(response.headers.get("cache-control"), "no-store");
+    },
+  );
+});
+
 test("authorization uses Render's generated URL on the first deploy", async () => {
   await withAuthServer(
     {
@@ -496,7 +517,7 @@ test("recruit flow joins once and applies the configured Recruit role", async ()
 
       assert.equal(
         response.headers.get("location"),
-        "https://holdfast.example/?auth=connected",
+        "https://holdfast.example/join?auth=connected",
       );
       assert.equal(
         discord.calls.filter((call) => call.options.method === "PUT").length,
@@ -545,7 +566,7 @@ test("recruit flow remains valid without an optional role ID", async () => {
       const response = await finishAuthorization(baseUrl, started);
       assert.equal(
         response.headers.get("location"),
-        "https://holdfast.example/?auth=connected",
+        "https://holdfast.example/join?auth=connected",
       );
     },
   );
@@ -591,7 +612,7 @@ test("a 204 Discord join is confirmed before a session is created", async () => 
       const response = await finishAuthorization(baseUrl, started);
       assert.equal(
         response.headers.get("location"),
-        "https://holdfast.example/?auth=connected",
+        "https://holdfast.example/join?auth=connected",
       );
       assert.equal(membershipChecks, 2);
     },
