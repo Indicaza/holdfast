@@ -39,6 +39,7 @@ function AuthorityScopeEditor({
   scope,
   capabilities,
   actorAuthority,
+  authorityEditable,
   onSaved,
   onBilletUpdated,
   onBilletDeleted,
@@ -61,7 +62,8 @@ function AuthorityScopeEditor({
   const [detailsMessage, setDetailsMessage] = useState('')
   const [deleteMessage, setDeleteMessage] = useState('')
 
-  const canEditAuthority = session.hasPermission('authority.manage')
+  const canEditAuthority =
+    session.hasPermission('authority.manage') && Boolean(authorityEditable)
   const canEditDetails =
     type === 'billet' && session.hasPermission('billets.edit')
   const canDeleteBillet =
