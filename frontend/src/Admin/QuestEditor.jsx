@@ -163,6 +163,28 @@ function questScopeAllows(session, permission, quest) {
   )
 }
 
+function rewardAuthorityAllows(session, permission, quest, objective) {
+  if (!questScopeAllows(session, permission, quest)) return false
+
+  const bucket =
+    permission === 'rewards.approve'
+      ? session.authority?.rewardLimits?.approve
+      : session.authority?.rewardLimits?.issue
+
+  if (!bucket) return false
+
+  const questMarks = (quest?.objectives || []).reduce(
+    (total, item) => total + (Number(item.reward?.marks) || 0),
+    0,
+  )
+
+  return (
+    (Number(objective?.reward?.rep) || 0) <= bucket.repPerObjective &&
+    (Number(objective?.reward?.marks) || 0) <= bucket.marksPerObjective &&
+    questMarks <= bucket.marksPerQuest
+  )
+}
+
 async function fetchGuildMembers(signal) {
   try {
     const result = await apiJson('/api/guild/members', { signal })
