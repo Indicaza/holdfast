@@ -1406,7 +1406,52 @@ function QuestEditor() {
     action?.()
   }
 
+  async function approveReward(questId, objectiveId) {
+    if (dirty) {
+      setStatus('ready')
+      setMessage('Save changes before approving rewards.')
+      return
+    }
+
+    setStatus('saving')
+    setMessage('Approving reward…')
+
+    try {
+      const result = await apiJson('/api/quests/manage/approve-reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          revision: draft.revision,
+          questId,
+          objectiveId,
+        }),
+      })
+
+      setDraft(result)
+      setSaved(result)
+      setStatus('ready')
+      setMessage('Reward approved. Any reward change will require approval again.')
+      announceQuestsChanged()
+    } catch (error) {
+      if (error?.code === 'quest_revision_conflict') {
+        setStatus('conflict')
+        setMessage(
+          'Someone changed the quest board after you opened it. Reload the latest version before approving.',
+        )
+      } else {
+        setStatus('error')
+        setMessage(error.message || 'Reward approval failed.')
+      }
+    }
+  }
+
   async function completeObjective(questId, objectiveId) {
+    if (dirty) {
+      setStatus('ready')
+      setMessage('Save changes before completing objectives.')
+      return
+    }
+
     setStatus('saving')
     setMessage('Completing objective and issuing rewards…')
 
@@ -1415,7 +1460,7 @@ function QuestEditor() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          document: draft,
+          revision: draft.revision,
           questId,
           objectiveId,
         }),
@@ -1487,6 +1532,7 @@ function QuestEditor() {
             ? 'Saved. Featured quest is live.'
             : 'Saved. No quest is currently featured.',
       )
+      await refreshSession()
       announceQuestsChanged()
     } catch (error) {
       if (error?.code === 'quest_revision_conflict') {
