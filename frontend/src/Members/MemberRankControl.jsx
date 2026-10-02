@@ -21,14 +21,36 @@ function memberName(member) {
   return member?.displayName || member?.username || 'Member'
 }
 
+function rankOrder(rank) {
+  return GUILD_RANKS.indexOf(rank)
+}
+
 function MemberRankControl({ member, onUpdated, compact = false }) {
   const session = useSession()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  if (!session.hasPermission('site.admin')) {
+  if (!session.hasPermission('members.rank.manage')) {
     return null
   }
+
+  if (!session.authority?.isOwner && member.id === session.user?.id) {
+    return null
+  }
+
+  const ceiling = session.authority?.isOwner
+    ? 'Commander'
+    : session.authority?.maxManagedRank
+  const ceilingOrder = rankOrder(ceiling)
+  const currentOrder = rankOrder(member.rank || 'Recruit')
+
+  if (ceilingOrder < 0 || currentOrder > ceilingOrder) {
+    return null
+  }
+
+  const manageableRanks = GUILD_RANKS.filter(
+    (rank) => rankOrder(rank) <= ceilingOrder,
+  )
 
   async function saveRank(rank, { force = false } = {}) {
     if (!rank || busy || (!force && rank === member.rank)) {
@@ -72,6 +94,10 @@ function MemberRankControl({ member, onUpdated, compact = false }) {
     } catch (error) {
       if (error?.code === 'owner_rank_locked') {
         setMessage('The guild owner is locked to Commander.')
+      } else if (error?.code === 'rank_ceiling_exceeded') {
+        setMessage('That rank is above your promotion authority.')
+      } else if (error?.code === 'self_authority_change_forbidden') {
+        setMessage('You cannot change your own authority.')
       } else {
         setMessage('Rank change failed.')
       }
@@ -96,7 +122,7 @@ function MemberRankControl({ member, onUpdated, compact = false }) {
             void saveRank(event.target.value)
           }}
         >
-          {GUILD_RANKS.map((rank) => (
+          {manageableRanks.map((rank) => (
             <option key={rank} value={rank}>
               {rank}
             </option>
