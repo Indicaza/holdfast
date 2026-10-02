@@ -169,6 +169,8 @@ test("legacy runtime JSON imports once into a fresh SQLite database", async () =
 
     const members = await readGuildMembers();
     assert.equal(members.length, 1);
+    assert.equal(members[0].rank, "Commander");
+    assert.equal(members[0].rankManaged, false);
     assert.equal(members[0].profile.characters[0].name, "Rook");
 
     const quests = await readQuests();
