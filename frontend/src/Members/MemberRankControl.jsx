@@ -4,7 +4,7 @@ import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
 import './MemberRankControl.css'
 
-export const GUILD_RANKS = [
+const GUILD_RANKS = [
   'Recruit',
   'Private',
   'Corporal',
