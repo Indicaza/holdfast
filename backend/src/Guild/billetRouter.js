@@ -13,7 +13,11 @@ import {
 import { createRateLimiter } from "../Security/httpSecurity.js";
 
 function billetErrorResponse(res, status) {
-  if (status === "invalid_name" || status === "invalid_responsibility") {
+  if (
+    status === "invalid_name" ||
+    status === "invalid_responsibility" ||
+    status === "reserved_name"
+  ) {
     res.status(400).json({ error: status });
     return true;
   }
