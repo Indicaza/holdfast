@@ -24,10 +24,7 @@ import {
   normalizeGuildRank,
   repProgressionForRank,
 } from "./rankSystem.js";
-import {
-  reconcileDiscordMemberRanks,
-  syncDiscordMemberRank,
-} from "../Discord/rankSync.js";
+import { syncDiscordMemberRank } from "../Discord/rankSync.js";
 import { syncDiscordMemberBillets } from "../Discord/billetSync.js";
 
 function emptyContribution() {
@@ -520,22 +517,7 @@ export function createMemberRouter() {
     (req, res) => updateBilletAssignment(req, res, false),
   );
 
-  router.post(
-    "/manage/reconcile-ranks",
-    requirePermission("site.admin"),
-    rankWriteRateLimit,
-    async (req, res) => {
-      try {
-        const summary = await reconcileDiscordMemberRanks();
 
-        res.set("Cache-Control", "no-store");
-        res.json({ summary });
-      } catch (error) {
-        console.error("Unable to reconcile Discord member ranks", error);
-        res.status(503).json({ error: "discord_rank_sync_unavailable" });
-      }
-    },
-  );
 
   return router;
 }
