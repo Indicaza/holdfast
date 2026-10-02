@@ -121,41 +121,19 @@ function assertEconomyPolicyChangeAllowed(next, current, auth) {
   if (!auth.permissions.includes("rewards.policy.edit")) {
     throw new QuestGovernanceError(
       "reward_policy_forbidden",
-      "You do not have permission to change guild economy policy.",
+      "You do not have permission to change guild reward policy.",
       403,
     );
   }
 
-  if (auth.authority?.isOwner) return;
+  const limitsChanged =
+    JSON.stringify(next.rewardLimits) !==
+    JSON.stringify(current.rewardLimits);
 
-  const available = [
-    auth.authority?.rewardLimits?.approve,
-    auth.authority?.rewardLimits?.issue,
-  ].filter(Boolean);
-
-  const ceiling = {
-    repPerObjective: Math.max(
-      0,
-      ...available.map((limits) => Number(limits.repPerObjective) || 0),
-    ),
-    marksPerObjective: Math.max(
-      0,
-      ...available.map((limits) => Number(limits.marksPerObjective) || 0),
-    ),
-    marksPerQuest: Math.max(
-      0,
-      ...available.map((limits) => Number(limits.marksPerQuest) || 0),
-    ),
-  };
-
-  if (
-    next.rewardLimits.rep.max > ceiling.repPerObjective ||
-    next.rewardLimits.marks.max > ceiling.marksPerObjective ||
-    next.rewardLimits.marksPerQuestMax > ceiling.marksPerQuest
-  ) {
+  if (limitsChanged && !auth.authority?.isOwner) {
     throw new QuestGovernanceError(
-      "economy_ceiling_exceeded",
-      "Guild economy guardrails cannot be raised above your own reward authority.",
+      "economy_root_required",
+      "Only the Commander can change Holdfast's absolute reward guardrails.",
       403,
     );
   }
