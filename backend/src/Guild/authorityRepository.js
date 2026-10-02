@@ -11,6 +11,7 @@ import {
   mergeAuthorityScopes,
   normalizeCapabilityList,
   normalizeManagedRank,
+  scopeProvidesMemberManagement,
 } from "./authorityPolicy.js";
 import {
   GUILD_RANKS,
@@ -194,12 +195,21 @@ function validatedScopeInput(input) {
     return { valid: false, error: "invalid_rank_ceiling" };
   }
 
+  const scope = {
+    permissions: normalizeCapabilityList(permissions),
+    maxManagedRank: normalizeManagedRank(maxManagedRank),
+  };
+
+  if (scope.maxManagedRank && !scopeProvidesMemberManagement(scope)) {
+    return {
+      valid: false,
+      error: "ceiling_requires_member_management",
+    };
+  }
+
   return {
     valid: true,
-    scope: {
-      permissions: normalizeCapabilityList(permissions),
-      maxManagedRank: normalizeManagedRank(maxManagedRank),
-    },
+    scope,
   };
 }
 
