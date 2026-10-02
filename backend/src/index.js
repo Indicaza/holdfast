@@ -21,6 +21,7 @@ import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
 import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
+import { createAuthorityRouter } from "./Guild/authorityRouter.js";
 import {
   corsOrigin,
   createRateLimiter,
@@ -91,6 +92,7 @@ app.use(
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
 app.use("/api/guild/billets", createBilletRouter());
+app.use("/api/guild/authority", createAuthorityRouter());
 app.use("/api/admin/audit", createAuditRouter());
 
 app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
