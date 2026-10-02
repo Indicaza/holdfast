@@ -11,7 +11,6 @@ import {
   rewardIsApproved,
 } from "../src/Quest/questSchema.js";
 import {
-  QuestStorageError,
   readQuests,
   writeQuests,
 } from "../src/Quest/questRepository.js";
@@ -208,7 +207,7 @@ test("the same member may be assigned to different objectives", () => {
   assert.doesNotThrow(() => normalizeQuestDocument(document));
 });
 
-test("invalid quest state read from SQLite reports an actionable storage error", async () => {
+test("stored rewards above configured caps remain readable and raise the effective cap", async () => {
   const previousDataDir = process.env.GUILD_DATA_DIR;
   const previousNodeEnv = process.env.NODE_ENV;
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-integrity-"));
@@ -223,15 +222,15 @@ test("invalid quest state read from SQLite reports an actionable storage error",
       db.prepare(
         "UPDATE objectives SET reward_rep = 5000 WHERE id = 'objective-one'",
       ).run();
+      db.prepare(
+        "UPDATE quest_settings SET rep_max = 1000 WHERE id = 1",
+      ).run();
     });
 
-    await assert.rejects(
-      () => readQuests(),
-      (error) =>
-        error instanceof QuestStorageError &&
-        error.message.includes("holdfast.sqlite") &&
-        /reward.rep must be 0 or between 0 and 1000/.test(error.message),
-    );
+    const document = await readQuests();
+
+    assert.equal(document.quests[0].objectives[0].reward.rep, 5000);
+    assert.equal(document.rewardLimits.rep.max, 5000);
   } finally {
     if (previousDataDir === undefined) {
       delete process.env.GUILD_DATA_DIR;
