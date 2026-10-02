@@ -22,10 +22,12 @@ import {
   readQuestWorkspace,
   questRevisionFromDatabase,
   updateQuests,
+  writeQuestEconomyToDatabase,
   writeQuestsToDatabase,
 } from "./questRepository.js";
 import {
   approveObjectiveReward,
+  assertChangedRewardsWithinPolicy,
   assertObjectiveCanIssue,
   enforceQuestWorkspaceAuthority,
   preserveQuestServerState,
@@ -57,7 +59,6 @@ const QUEST_WRITE_PERMISSIONS = [
   "quests.create",
   "quests.edit",
   "quests.publish",
-  "rewards.policy.edit",
 ];
 
 function preserveRestrictedEconomy(raw, current) {
@@ -107,52 +108,22 @@ function actorDisplayName(user) {
   );
 }
 
-function policyChanged(next, current) {
-  return (
-    next.rewardPolicy !== current.rewardPolicy ||
-    JSON.stringify(next.rewardLimits) !==
-      JSON.stringify(current.rewardLimits)
-  );
-}
-
-function assertEconomyPolicyChangeAllowed(next, current, auth) {
-  if (!policyChanged(next, current)) return;
-
-  if (!auth.permissions.includes("rewards.policy.edit")) {
-    throw new QuestGovernanceError(
-      "reward_policy_forbidden",
-      "You do not have permission to change guild reward policy.",
-      403,
-    );
-  }
-
-  const limitsChanged =
-    JSON.stringify(next.rewardLimits) !==
-    JSON.stringify(current.rewardLimits);
-
-  if (limitsChanged && !auth.authority?.isOwner) {
-    throw new QuestGovernanceError(
-      "economy_root_required",
-      "Only the Commander can change Holdfast's absolute reward guardrails.",
-      403,
-    );
-  }
-}
-
 function governedIncomingDocument(raw, current, req) {
-  const source = req.auth.permissions.includes("rewards.policy.edit")
-    ? raw
-    : preserveRestrictedEconomy(raw, current);
+  const source = preserveRestrictedEconomy(raw, current);
 
-  let next = normalizeQuestDocument(source);
+  let next = normalizeQuestDocument(source, {
+    enforceRewardLimits: false,
+  });
   next = preserveQuestServerState(
     next,
     current,
     req.auth.user.id,
   );
-  next = normalizeQuestDocument(next);
+  next = normalizeQuestDocument(next, {
+    enforceRewardLimits: false,
+  });
 
-  assertEconomyPolicyChangeAllowed(next, current, req.auth);
+  assertChangedRewardsWithinPolicy(next, current);
 
   return enforceQuestWorkspaceAuthority(next, current, {
     authority: req.auth.authority,
@@ -427,6 +398,81 @@ export function createQuestRouter() {
     },
   );
 
+  router.put(
+    "/manage/economy",
+    requirePermission("rewards.policy.edit"),
+    adminWriteRateLimit,
+    async (req, res) => {
+      try {
+        const result = withGuildTransaction((db) => {
+          const current = readQuestsFromDatabase(db);
+          const revisionBefore = assertQuestRevision(
+            db,
+            Number(req.body?.revision),
+          );
+          const requestedLimits = req.body?.rewardLimits ?? current.rewardLimits;
+
+          if (
+            !req.auth.authority?.isOwner &&
+            JSON.stringify(requestedLimits) !==
+              JSON.stringify(current.rewardLimits)
+          ) {
+            throw new QuestGovernanceError(
+              "economy_root_required",
+              "Only the Commander can change Holdfast's absolute reward guardrails.",
+              403,
+            );
+          }
+
+          const before = {
+            rewardPolicy: current.rewardPolicy,
+            rewardLimits: current.rewardLimits,
+          };
+
+          writeQuestEconomyToDatabase(db, {
+            rewardPolicy: req.body?.rewardPolicy ?? current.rewardPolicy,
+            rewardLimits: req.auth.authority?.isOwner
+              ? requestedLimits
+              : current.rewardLimits,
+          });
+
+          const revisionAfter = questRevisionFromDatabase(db);
+          const saved = {
+            ...readQuestsFromDatabase(db),
+            revision: revisionAfter,
+          };
+
+          recordAuditEventInDatabase({
+            db,
+            actorMemberId: req.auth.user.id,
+            eventType: "quest.economy_saved",
+            entityType: "quest_economy",
+            entityId: "primary",
+            payload: {
+              revisionBefore,
+              revisionAfter,
+              before,
+              after: {
+                rewardPolicy: saved.rewardPolicy,
+                rewardLimits: saved.rewardLimits,
+              },
+            },
+          });
+
+          return saved;
+        });
+
+        res.set("Cache-Control", "no-store");
+        res.json(result);
+      } catch (error) {
+        if (sendQuestError(res, error)) return;
+
+        console.error("Unable to save quest economy", error);
+        res.status(500).json({ error: "quest_economy_save_failed" });
+      }
+    },
+  );
+
   router.post(
     "/manage/approve-reward",
     requirePermission("rewards.approve"),
@@ -454,7 +500,9 @@ export function createQuestRouter() {
             },
           );
 
-          const saved = writeQuestsToDatabase(db, approved);
+          const saved = writeQuestsToDatabase(db, approved, {
+            enforceRewardLimits: false,
+          });
           const revisionAfter = questRevisionFromDatabase(db);
 
           recordAuditEventInDatabase({
@@ -585,6 +633,7 @@ export function createQuestRouter() {
           const saved = writeQuestsToDatabase(
             db,
             completeObjective(current, questId, objectiveId),
+            { enforceRewardLimits: false },
           );
 
           const revisionAfter = questRevisionFromDatabase(db);
