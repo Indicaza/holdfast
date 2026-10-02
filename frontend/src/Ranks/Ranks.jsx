@@ -95,89 +95,50 @@ const billetDefinitions = [
 const systemDefinitions = [
   {
     label: 'Rep',
-    title: 'Contribution recorded',
-    description: 'Earned through useful guild work. It only goes up and is never spent.',
+    description: 'Permanent record of useful guild contribution. It only goes up.',
   },
   {
     label: 'Rank',
-    title: 'Trust earned',
-    description: 'Rep can make you eligible. It cannot buy promotion or authority.',
+    description: 'Trust earned over time. Rep can qualify you; it cannot buy authority.',
   },
   {
     label: 'Billet',
-    title: 'A job right now',
-    description: 'A current responsibility such as Raid Leader or Quartermaster. Jobs can rotate.',
+    description: 'A current guild job. Jobs rotate as people step forward or take breaks.',
   },
   {
     label: 'Marks',
-    title: 'Something back',
-    description: 'Spendable rewards used to ask the guild for approved help, items, or support.',
+    description: 'Spendable rewards used to ask something back from the guild.',
   },
-]
-
-const repFloors = [
-  { value: '3,000', rank: 'Corporal' },
-  { value: '9,000', rank: 'Sergeant' },
-  { value: '21,000', rank: 'Master Sergeant' },
-  { value: '42,000', rank: 'Sergeant Major' },
 ]
 
 function Ranks() {
   return (
     <PageShell
-      eyebrow="How Holdfast works"
       title="Ranks & Roles"
       intro="Contribution earns Rep. Trust earns rank. Roles rotate with the work."
     >
       <article className="ranks-page">
-        <section className="ranks-page__system" aria-labelledby="ranks-system-title">
-          <div className="ranks-page__section-heading">
-            <div>
-              <span className="ranks-page__label">The short version</span>
-              <h2 id="ranks-system-title">Four things to know</h2>
-            </div>
-          </div>
-
+        <section className="ranks-page__system" aria-label="How Holdfast works">
           <div className="ranks-page__system-grid">
             {systemDefinitions.map((item) => (
               <article className="ranks-page__system-card" key={item.label}>
                 <span className="ranks-page__label">{item.label}</span>
-                <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </article>
             ))}
           </div>
 
           <p className="ranks-page__promotion-line">
-            <strong>Rep opens the door.</strong> Trust, leadership, recommendation,
-            and guild need decide promotion.
-          </p>
-
-          <div className="ranks-page__rep-track" aria-label="Enlisted Rep floors">
-            {repFloors.map((floor) => (
-              <div className="ranks-page__rep-floor" key={floor.rank}>
-                <strong>{floor.value}</strong>
-                <span>{floor.rank}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="ranks-page__rep-note">
-            Rep floors create eligibility, not automatic promotion. Officer ranks
-            are appointed separately.
+            <strong>Rep creates eligibility.</strong> Trust, leadership,
+            recommendation, and guild need decide promotion. Officers are
+            appointed separately.
           </p>
         </section>
 
-        <section className="ranks-page__section">
-          <div className="ranks-page__section-heading">
-            <div>
-              <span className="ranks-page__label">The ladder</span>
-              <h2>What the ranks mean</h2>
-            </div>
-            <p>
-              Rank shows the trust and responsibility someone is prepared to carry.
-            </p>
-          </div>
+        <section className="ranks-page__section ranks-page__section--ranks">
+          <header className="ranks-page__major-heading">
+            <h2>Ranks</h2>
+          </header>
 
           <div className="ranks-page__rank-grid">
             {rankDefinitions.map((rank) => (
@@ -196,17 +157,10 @@ function Ranks() {
           </div>
         </section>
 
-        <section className="ranks-page__section">
-          <div className="ranks-page__section-heading">
-            <div>
-              <span className="ranks-page__label">Billets</span>
-              <h2>Guild roles</h2>
-            </div>
-            <p>
-              These are jobs, not extra ranks. They can change hands without
-              changing someone&apos;s rank.
-            </p>
-          </div>
+        <section className="ranks-page__section ranks-page__section--billets">
+          <header className="ranks-page__major-heading">
+            <h2>Billets</h2>
+          </header>
 
           <div className="ranks-page__billet-grid">
             {billetDefinitions.map((billet) => (
