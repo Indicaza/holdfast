@@ -20,6 +20,11 @@ const RANK_ORDER = [
   'Commander',
 ]
 
+const MEMBER_MANAGEMENT_PERMISSIONS = new Set([
+  'members.rank.manage',
+  'members.billet.assign',
+])
+
 const rankDefinitions = [
   {
     name: 'Recruit',
@@ -145,7 +150,11 @@ function scopeWithinActor(scope, authority) {
     return false
   }
 
-  if (!scope?.maxManagedRank) return true
+  const grantsMemberManagement = (scope?.permissions || []).some(
+    (permission) => MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
+  )
+
+  if (!grantsMemberManagement || !scope?.maxManagedRank) return true
   if (!authority?.maxManagedRank) return false
 
   return (
@@ -176,9 +185,13 @@ function authoritySummary(scope) {
     : 0
   const permissionLabel =
     permissionCount === 1 ? '1 permission' : `${permissionCount} permissions`
-  const ceiling = scope.maxManagedRank
-    ? `manage through ${scope.maxManagedRank}`
-    : 'no member management'
+  const grantsMemberManagement = (scope.permissions || []).some(
+    (permission) => MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
+  )
+  const ceiling =
+    grantsMemberManagement && scope.maxManagedRank
+      ? `manage through ${scope.maxManagedRank}`
+      : 'no member management'
 
   return `${permissionLabel} · ${ceiling}`
 }
