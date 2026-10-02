@@ -973,7 +973,7 @@ async function inspectProvisioning({ client, guildId, manifest, state, command, 
         [],
         roleIds,
         false,
-        botId,
+        bot.id,
       ),
     });
     const previousId = nextState.channels[category.key] || null;
@@ -1462,7 +1462,7 @@ async function applyChannelChanges({
         [],
         roleIds,
         false,
-        botId,
+        inspection.bot.id,
       ),
     });
     let current = inspection.resolvedChannels.get(category.key);
