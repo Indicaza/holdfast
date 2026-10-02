@@ -219,6 +219,33 @@ test("authority designers cannot edit or grant scope above their own authority",
   }
 });
 
+test("authority scopes reject ceilings that grant no member-management capability", async () => {
+  const previous = preserveEnvironment();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-authority-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
+
+    await upsertGuildMember({ id: "owner-one", username: "rook" });
+
+    const result = await updateRankAuthority(
+      "Corporal",
+      {
+        permissions: ["quests.edit"],
+        maxManagedRank: "Sergeant",
+      },
+      { actorMemberId: "owner-one" },
+    );
+
+    assert.equal(result.status, "ceiling_requires_member_management");
+  } finally {
+    restoreEnvironment(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("billet authority can be customized and appears in the catalog", async () => {
   const previous = preserveEnvironment();
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-authority-"));
