@@ -71,6 +71,46 @@ function JoinModal({ onClose }) {
   }
 
   if (session.authenticated) {
+    if (authCode === 'connected') {
+      return (
+        <Modal
+          eyebrow="Welcome to Holdfast"
+          title="You're in."
+          intro="Discord is the next stop. Meet the crew, find a group, and get into the game. Your Holdfast profile can wait."
+          onClose={onClose}
+        >
+          <ol className="join-onboarding">
+            <li>
+              <strong>Open Discord.</strong>
+              <span>Your account is already connected to the Holdfast server.</span>
+            </li>
+            <li>
+              <strong>Say hello and play.</strong>
+              <span>Find the crew, ask questions, or jump into a group.</span>
+            </li>
+            <li>
+              <strong>Circle back later.</strong>
+              <span>Add your character, professions, and availability when convenient.</span>
+            </li>
+          </ol>
+
+          <div className="join-actions">
+            <a
+              className="join-action join-action--primary"
+              href="/api/auth/discord/server"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open Holdfast in Discord
+            </a>
+            <a className="join-action join-action--secondary" href="/members/me">
+              Set Up My Profile
+            </a>
+          </div>
+        </Modal>
+      )
+    }
+
     return (
       <Modal
         eyebrow="Holdfast"
