@@ -4,6 +4,8 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
+import BilletDefinitionManager from './BilletDefinitionManager.jsx'
+import MemberBilletControl from './MemberBilletControl.jsx'
 import MemberRankControl from './MemberRankControl.jsx'
 import './Members.css'
 
@@ -66,6 +68,13 @@ function MemberCard({ member }) {
           ) : null}
         </div>
         <p>@{member.username}</p>
+        {member.billets?.length ? (
+          <div className="billet-badges members-page__billets">
+            {member.billets.map((billet) => (
+              <span key={billet.id}>{billet.name}</span>
+            ))}
+          </div>
+        ) : null}
         {member.mainCharacter ? (
           <span className="members-page__character">
             {member.mainCharacter.name}
@@ -102,6 +111,7 @@ function MemberCard({ member }) {
 function Members() {
   const session = useSession()
   const [directory, setDirectory] = useState(EMPTY_DIRECTORY)
+  const [billets, setBillets] = useState([])
   const [status, setStatus] = useState('loading')
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
@@ -154,9 +164,14 @@ function Members() {
       setStatus('loading')
 
       try {
-        const result = await apiJson('/api/guild/members', {
-          signal: controller.signal,
-        })
+        const [result, billetResult] = await Promise.all([
+          apiJson('/api/guild/members', {
+            signal: controller.signal,
+          }),
+          apiJson('/api/guild/billets', {
+            signal: controller.signal,
+          }),
+        ])
 
         if (!active) return
 
@@ -164,6 +179,9 @@ function Members() {
           members: Array.isArray(result?.members) ? result.members : [],
           summary: result?.summary || EMPTY_DIRECTORY.summary,
         })
+        setBillets(
+          Array.isArray(billetResult?.billets) ? billetResult.billets : [],
+        )
         setStatus('ready')
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
@@ -205,6 +223,10 @@ function Members() {
         member.displayName,
         member.username,
         member.rank,
+        ...(member.billets || []).flatMap((billet) => [
+          billet.name,
+          billet.responsibility,
+        ]),
         profile.battleTag,
         profile.timezone,
         profile.availability,
@@ -265,12 +287,18 @@ function Members() {
     setReconcileMessage('')
 
     try {
-      const result = await apiJson('/api/guild/members/manage/reconcile-ranks', {
-        method: 'POST',
-      })
-      const summary = result?.summary || {}
+      const [rankResult, billetResult] = await Promise.all([
+        apiJson('/api/guild/members/manage/reconcile-ranks', {
+          method: 'POST',
+        }),
+        apiJson('/api/guild/billets/reconcile', {
+          method: 'POST',
+        }),
+      ])
+      const ranks = rankResult?.summary || {}
+      const billetSummary = billetResult?.summary || {}
       setReconcileMessage(
-        `Discord ranks checked: ${Number(summary.changed) || 0} repaired, ${Number(summary.unchanged) || 0} already correct.`,
+        `Discord checked: ${Number(ranks.changed) || 0} rank repairs, ${Number(billetSummary.changed) || 0} billet repairs.`,
       )
     } catch {
       setReconcileMessage('Discord rank reconciliation failed.')
@@ -390,7 +418,7 @@ function Members() {
             {session.hasPermission('site.admin') ? (
               <div className="members-page__admin-tools">
                 <span>
-                  Rank changes here are authoritative and sync to Discord.
+                  Rank and billet changes here are authoritative and sync to Discord.
                 </span>
                 <button
                   type="button"
@@ -408,6 +436,13 @@ function Members() {
             ) : null}
           </section>
 
+          {session.hasPermission('site.admin') ? (
+            <BilletDefinitionManager
+              billets={billets}
+              onChanged={setBillets}
+            />
+          ) : null}
+
           {visibleMembers.length ? (
             <section className="members-page__list" aria-label="Holdfast members">
               {visibleMembers.map((member) => (
@@ -418,6 +453,12 @@ function Members() {
                     <div className="members-page__rank-admin">
                       <MemberRankControl
                         member={member}
+                        compact
+                        onUpdated={updateMember}
+                      />
+                      <MemberBilletControl
+                        member={member}
+                        billets={billets}
                         compact
                         onUpdated={updateMember}
                       />
