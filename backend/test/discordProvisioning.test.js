@@ -481,6 +481,54 @@ test("missing permissions stop the complete plan before any write", async () => 
   assert.equal(client.writes.length, 0);
 });
 
+test("equal numeric role positions still respect Discord's snowflake tie-break", async () => {
+  const client = new FakeDiscordClient({
+    roles: [
+      everyoneRole(),
+      { ...botRole(ALL_MANAGEMENT_PERMISSIONS, 10), id: "100" },
+      memberRole({ id: "200", position: 10, color: 999 }),
+    ],
+    member: { roles: ["100"] },
+  });
+
+  await runDiscordProvisioning({
+    client,
+    guildId: GUILD_ID,
+    manifest: manifest(),
+    state: emptyState(),
+    command: "apply",
+  });
+
+  assert.equal(
+    client.roles.find((role) => role.id === "200").color,
+    123,
+  );
+});
+
+test("fresh role creation can order beneath a bot sharing the same numeric position", async () => {
+  const client = new FakeDiscordClient({
+    roles: [everyoneRole(), botRole(ALL_MANAGEMENT_PERMISSIONS, 1)],
+    channels: [],
+  });
+
+  const result = await runDiscordProvisioning({
+    client,
+    guildId: GUILD_ID,
+    manifest: manifest(),
+    state: emptyState(),
+    command: "apply",
+  });
+
+  assert.ok(result.roleIds.member);
+  assert.ok(
+    client.writes.some(
+      (write) =>
+        write.endpoint === `/guilds/${GUILD_ID}/roles` &&
+        write.method === "PATCH",
+    ),
+  );
+});
+
 test("role hierarchy violations stop before any write", async () => {
   const client = new FakeDiscordClient({
     roles: [
