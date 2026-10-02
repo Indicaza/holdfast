@@ -9,7 +9,8 @@ export const CAPABILITY_DEFINITIONS = [
   {
     id: "site.admin",
     label: "Website admin",
-    description: "Manage Holdfast website operations and protected guild controls.",
+    description: "Reserved for general website administration controls as they are added.",
+    status: "reserved",
   },
   {
     id: "quests.edit",
@@ -44,7 +45,8 @@ export const CAPABILITY_DEFINITIONS = [
   {
     id: "discord.manage",
     label: "Discord admin",
-    description: "Manage Holdfast-controlled Discord configuration through the website.",
+    description: "Reserved for future Holdfast-controlled Discord configuration from the website.",
+    status: "reserved",
   },
   {
     id: "authority.manage",
