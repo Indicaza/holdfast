@@ -273,6 +273,7 @@ export async function reconcileDiscordBillets({
   const client = clientFor(env, providedClient);
   const billets = providedBillets || (await readBillets());
   const members = providedMembers || (await readGuildMembers());
+  const managedMembers = members.filter((member) => member.billetsManaged);
   const liveRoles = await client.request(
     `/guilds/${current.guildId}/roles`,
   );
@@ -291,9 +292,10 @@ export async function reconcileDiscordBillets({
     unchanged: 0,
     missing: 0,
     failed: 0,
+    unmanaged: members.length - managedMembers.length,
   };
 
-  for (const member of members) {
+  for (const member of managedMembers) {
     summary.checked += 1;
 
     try {
