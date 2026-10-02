@@ -121,3 +121,23 @@ test("delegation requires every permission and the ceiling to fit inside actor a
     false,
   );
 });
+
+
+test("a ceiling without a member-management permission cannot elevate another scope", () => {
+  const merged = mergeAuthorityScopes([
+    {
+      permissions: ["members.rank.manage"],
+      maxManagedRank: "Corporal",
+    },
+    {
+      permissions: ["quests.edit"],
+      maxManagedRank: "Commander",
+    },
+  ]);
+
+  assert.deepEqual(
+    new Set(merged.permissions),
+    new Set(["members.rank.manage", "quests.edit"]),
+  );
+  assert.equal(merged.maxManagedRank, "Corporal");
+});
