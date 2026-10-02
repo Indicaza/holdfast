@@ -34,7 +34,7 @@ export const CAPABILITY_DEFINITIONS = [
   {
     id: "members.billet.assign",
     label: "Assign billets",
-    description: "Assign or remove billets that are within the holder's own authority.",
+    description: "Assign or remove billets within the holder's authority and member-management ceiling.",
   },
   {
     id: "audit.view",
