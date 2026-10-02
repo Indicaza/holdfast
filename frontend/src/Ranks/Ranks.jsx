@@ -221,9 +221,14 @@ function Ranks() {
   const [editing, setEditing] = useState(null)
   const [creatingBillet, setCreatingBillet] = useState(false)
   const canManageAuthority = session.hasPermission('authority.manage')
+  const canCreateBillets = session.hasPermission('billets.create')
+  const canEditBillets = session.hasPermission('billets.edit')
+  const canDeleteBillets = session.hasPermission('billets.delete')
+  const canManageBilletDefinitions =
+    canCreateBillets || canEditBillets || canDeleteBillets
 
   useEffect(() => {
-    if (!session.authenticated || !canManageAuthority) {
+    if (!session.authenticated) {
       setCatalog(null)
       setCatalogStatus('idle')
       setEditing(null)
@@ -257,7 +262,7 @@ function Ranks() {
       active = false
       controller.abort()
     }
-  }, [canManageAuthority, session.authenticated])
+  }, [session.authenticated])
 
   const rankScopes = useMemo(
     () =>
@@ -276,7 +281,7 @@ function Ranks() {
   )
 
   const visibleBillets = useMemo(() => {
-    if (!canManageAuthority || !catalog?.billets?.length) {
+    if (!catalog?.billets?.length) {
       return billetDefinitions
     }
 
@@ -291,10 +296,23 @@ function Ranks() {
         staticByName.get(scope.name)?.description ||
         'A delegated Holdfast responsibility.',
     }))
-  }, [canManageAuthority, catalog])
+  }, [catalog])
 
   function openScope(type, scope) {
-    if (!canEditScope(type, scope, session)) return
+    if (!scope) return
+
+    if (type === 'rank') {
+      if (!canEditScope(type, scope, session)) return
+    } else {
+      const canEditAuthority = canEditScope(type, scope, session)
+      const canDeleteWithinScope =
+        canDeleteBillets && scopeWithinActor(scope, session.authority)
+      const canOpen =
+        canEditAuthority || canEditBillets || canDeleteWithinScope
+
+      if (!canOpen) return
+    }
+
     setEditing({ type, scope })
   }
 
@@ -312,6 +330,42 @@ function Ranks() {
             ? { ...scope, ...updatedScope }
             : scope,
         ),
+      }
+    })
+    setEditing(null)
+  }
+
+  function updateBilletDefinition(updatedBillet) {
+    setCatalog((current) => {
+      if (!current) return current
+
+      return {
+        ...current,
+        billets: current.billets.map((billet) =>
+          billet.id === updatedBillet.id
+            ? { ...billet, ...updatedBillet }
+            : billet,
+        ),
+      }
+    })
+
+    setEditing((current) =>
+      current?.type === 'billet' && current.scope.id === updatedBillet.id
+        ? {
+            ...current,
+            scope: { ...current.scope, ...updatedBillet },
+          }
+        : current,
+    )
+  }
+
+  function removeBilletDefinition(billetId) {
+    setCatalog((current) => {
+      if (!current) return current
+
+      return {
+        ...current,
+        billets: current.billets.filter((billet) => billet.id !== billetId),
       }
     })
     setEditing(null)
@@ -426,15 +480,14 @@ function Ranks() {
           <header className="ranks-page__major-heading ranks-page__major-heading--with-action">
             <div>
               <h2>Billets</h2>
-              {canManageAuthority ? (
+              {canManageAuthority || canManageBilletDefinitions ? (
                 <p className="ranks-page__authority-hint">
-                  Select an editable billet to change the job-specific authority
-                  it adds on top of rank.
+                  Select a manageable billet to edit its job, authority, or lifecycle.
                 </p>
               ) : null}
             </div>
 
-            {canManageAuthority ? (
+            {canCreateBillets ? (
               <button
                 className="ranks-page__create-billet"
                 type="button"
@@ -457,9 +510,17 @@ function Ranks() {
           <div className="ranks-page__billet-grid">
             {visibleBillets.map((billet) => {
               const scope = billetScopes.get(billet.name)
-              const editable = canEditScope('billet', scope, session)
+              const authorityEditable = canEditScope('billet', scope, session)
+              const deleteWithinScope =
+                Boolean(scope) &&
+                !scope.discordManaged &&
+                canDeleteBillets &&
+                scopeWithinActor(scope, session.authority)
+              const editable =
+                Boolean(scope) &&
+                (authorityEditable || canEditBillets || deleteWithinScope)
               const protectedScope =
-                canManageAuthority &&
+                (canManageAuthority || canManageBilletDefinitions) &&
                 catalogStatus === 'ready' &&
                 scope &&
                 !editable
@@ -482,7 +543,7 @@ function Ranks() {
                     <span className="ranks-page__rank-group">Billet</span>
                     {editable ? (
                       <span className="ranks-page__edit-affordance">
-                        Edit authority
+                        Manage billet
                       </span>
                     ) : protectedScope ? (
                       <span className="ranks-page__protected">Protected</span>
@@ -523,7 +584,14 @@ function Ranks() {
           scope={editing.scope}
           capabilities={catalog.capabilities}
           actorAuthority={session.authority}
+          authorityEditable={canEditScope(
+            editing.type,
+            editing.scope,
+            session,
+          )}
           onSaved={updateScope}
+          onBilletUpdated={updateBilletDefinition}
+          onBilletDeleted={removeBilletDefinition}
           onClose={() => setEditing(null)}
         />
       ) : null}

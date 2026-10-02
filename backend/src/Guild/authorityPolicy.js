@@ -38,6 +38,21 @@ export const CAPABILITY_DEFINITIONS = [
     description: "Assign or remove billets within the holder's authority and member-management ceiling.",
   },
   {
+    id: "billets.create",
+    label: "Create billets",
+    description: "Create new Holdfast billets and their corresponding Discord roles.",
+  },
+  {
+    id: "billets.edit",
+    label: "Edit billet details",
+    description: "Change billet names and responsibility descriptions. Infrastructure billet names remain protected.",
+  },
+  {
+    id: "billets.delete",
+    label: "Delete billets",
+    description: "Delete custom billets and remove their Holdfast Discord roles.",
+  },
+  {
     id: "audit.view",
     label: "Audit history",
     description: "View administrative audit history.",

@@ -6,6 +6,7 @@ import path from "node:path";
 
 import {
   createBillet,
+  deleteBillet,
   readBillets,
   setMemberBilletAssignment,
   updateBillet,
@@ -107,6 +108,64 @@ test("billets can be created, described, edited, and assigned to members", async
 
     members = await readGuildMembers();
     assert.deepEqual(members[0].billets, []);
+  } finally {
+    restoreEnvironment(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("custom billets delete cleanly while infrastructure billets stay protected", async () => {
+  const previous = preserveEnvironment();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-billet-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "";
+
+    await upsertGuildMember({
+      id: "member-one",
+      username: "rook",
+    });
+
+    const created = await createBillet({
+      name: "Dungeon Master",
+      responsibility: "Builds dungeon groups.",
+    });
+
+    await setMemberBilletAssignment(
+      "member-one",
+      created.billet.id,
+      true,
+      { actorMemberId: "member-one" },
+    );
+
+    const deleted = await deleteBillet(
+      created.billet.id,
+      { actorMemberId: "member-one" },
+    );
+
+    assert.equal(deleted.status, "deleted");
+    assert.equal(deleted.assignmentCount, 1);
+    assert.equal(
+      (await readBillets()).some((billet) => billet.id === created.billet.id),
+      false,
+    );
+
+    const members = await readGuildMembers();
+    assert.deepEqual(members[0].billets, []);
+
+    const steward = (await readBillets()).find(
+      (billet) => billet.name === "Steward",
+    );
+    const protectedResult = await deleteBillet(steward.id, {
+      actorMemberId: "member-one",
+    });
+
+    assert.equal(protectedResult.status, "protected");
+    assert.ok(
+      (await readBillets()).some((billet) => billet.id === steward.id),
+    );
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });

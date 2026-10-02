@@ -81,6 +81,10 @@ function readBilletById(db, billetId) {
   );
 }
 
+export async function readBillet(billetId) {
+  return withGuildDatabase((db) => readBilletById(db, billetId));
+}
+
 export function readBilletsFromDatabase(db, { includeInactive = false } = {}) {
   const rows = includeInactive
     ? db
@@ -254,6 +258,59 @@ export async function updateBillet(
     return {
       status: "updated",
       billet: readBilletById(db, billetId),
+    };
+  });
+}
+
+export async function deleteBillet(
+  billetId,
+  { actorMemberId = null } = {},
+) {
+  return withGuildTransaction((db) => {
+    const existing = readBilletById(db, billetId);
+
+    if (!existing) {
+      return { status: "not-found", billet: null, assignmentCount: 0 };
+    }
+
+    if (existing.discordManaged) {
+      return {
+        status: "protected",
+        billet: existing,
+        assignmentCount: 0,
+      };
+    }
+
+    const assignmentCount = Number(
+      db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM member_billets WHERE billet_id = ?",
+        )
+        .get(billetId)?.count || 0,
+    );
+
+    recordAuditEventInDatabase({
+      db,
+      actorMemberId,
+      eventType: "billet.deleted",
+      entityType: "billet",
+      entityId: billetId,
+      payload: {
+        name: existing.name,
+        responsibility: existing.responsibility,
+        discordRoleId: existing.discordRoleId,
+        permissions: existing.permissions,
+        maxManagedRank: existing.maxManagedRank,
+        assignmentCount,
+      },
+    });
+
+    db.prepare("DELETE FROM billets WHERE id = ?").run(billetId);
+
+    return {
+      status: "deleted",
+      billet: existing,
+      assignmentCount,
     };
   });
 }

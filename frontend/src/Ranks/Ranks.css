@@ -203,7 +203,9 @@
 }
 
 .ranks-page__billet-card {
+  display: flex;
   min-height: 9rem;
+  flex-direction: column;
   padding: var(--space-5);
   border: var(--border-subtle);
   border-top: var(--border-accent);
@@ -496,4 +498,13 @@
   .ranks-page__major-heading--with-action .ranks-page__create-billet {
     justify-self: center;
   }
+}
+
+
+.ranks-page__billet-card .ranks-page__authority-summary {
+  margin-top: auto;
+}
+
+.ranks-page__billet-card > p {
+  margin-bottom: var(--space-4);
 }
