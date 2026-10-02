@@ -193,6 +193,7 @@ export async function reconcileDiscordMemberRanks({
   const current = rankSyncConfig(env);
   const client = discordClient(env, providedClient);
   const members = providedMembers || (await readGuildMembers());
+  const managedMembers = members.filter((member) => member.rankManaged);
   const liveRoles = await client.request(
     `/guilds/${current.guildId}/roles`,
   );
@@ -202,9 +203,10 @@ export async function reconcileDiscordMemberRanks({
     unchanged: 0,
     missing: 0,
     failed: 0,
+    unmanaged: members.length - managedMembers.length,
   };
 
-  for (const member of members) {
+  for (const member of managedMembers) {
     summary.checked += 1;
 
     try {
