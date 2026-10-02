@@ -1,45 +1,31 @@
 export const recruitmentFacts = [
   {
     id: 'founding',
-    label: 'Founding phase',
-    value: 'Building from scratch',
+    label: 'Founding now',
+    value: 'Launch crew forming',
     detail:
-      'We are meeting our first members during beta and building Holdfast for launch.',
+      'We are on the Normal realm for beta, then plant Holdfast on the PvP realm at launch.',
   },
   {
     id: 'region',
     label: 'North America',
     value: 'No fixed hours',
     detail:
-      'Log on when it works for you. Organized events will be scheduled around the people doing them.',
+      'Organized events flex around the people actually showing up to run them.',
   },
   {
-    id: 'solo',
-    label: 'Solo-friendly',
-    value: 'Group when you want',
+    id: 'pace',
+    label: 'Play your way',
+    value: 'Solo or grouped',
     detail:
-      'Play alone even when the guild is busy. Join a group when it sounds fun. There is no attendance pressure.',
-  },
-  {
-    id: 'voice',
-    label: 'Voice chat',
-    value: 'Optional by default',
-    detail:
-      'Use voice when you are comfortable. Coordination may matter for high-end content or leadership roles.',
-  },
-  {
-    id: 'realm',
-    label: 'Realm plan',
-    value: 'PvP at launch',
-    detail:
-      'We are playing on the Normal realm during beta, then moving Holdfast to the PvP realm at launch.',
+      'No attendance treadmill. Voice is optional unless coordination truly needs it.',
   },
   {
     id: 'recruiting',
-    label: 'Recruiting',
-    value: 'Everyone welcome',
+    label: 'Open roster',
+    value: 'New players welcome',
     detail:
-      'Every class, experience level, and play style is welcome. Find the version of Holdfast that fits you.',
+      'Every class and experience level has a place here. Learn, teach, or just play.',
   },
 ]
 

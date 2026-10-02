@@ -8,34 +8,29 @@ function RecruitmentSnapshot() {
       aria-labelledby="recruitment-snapshot-title"
     >
       <header className="recruitment-snapshot__header">
-        <div>
-          <p className="recruitment-snapshot__eyebrow">
-            Holdfast at a glance
-          </p>
-          <h2 id="recruitment-snapshot-title">
-            A guild that fits around your life.
-          </h2>
-        </div>
-        <p>
-          Invest as much of your time and personal space as feels comfortable.
-          Holdfast is somewhere to belong, not another obligation.
-        </p>
+        <p className="recruitment-snapshot__eyebrow">Holdfast at a glance</p>
+        <h2 id="recruitment-snapshot-title">
+          Find your pace. Find your people.
+        </h2>
       </header>
 
       <div className="recruitment-snapshot__facts">
-        {recruitmentFacts.map((fact) => (
+        {recruitmentFacts.map((fact, index) => (
           <article className="recruitment-snapshot__fact" key={fact.id}>
-            <span>{fact.label}</span>
+            <div className="recruitment-snapshot__fact-topline">
+              <span className="recruitment-snapshot__fact-label">{fact.label}</span>
+              <span className="recruitment-snapshot__fact-number" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            </div>
             <h3>{fact.value}</h3>
             <p>{fact.detail}</p>
+            <span className="recruitment-snapshot__fact-mark" aria-hidden="true">
+              ♜
+            </span>
           </article>
         ))}
       </div>
-
-      <p className="recruitment-snapshot__network">
-        We have friends and sister guilds around us, but Holdfast is building
-        its own culture and roster from day one.
-      </p>
     </section>
   )
 }
