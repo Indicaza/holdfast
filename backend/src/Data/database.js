@@ -756,7 +756,71 @@ const migrations = [
         );
       }
     },
+  },  {
+    version: 6,
+    name: "repair_legacy_quest_reward_caps",
+    up(db) {
+      const settings =
+        db.prepare("SELECT * FROM quest_settings WHERE id = 1").get() || {};
+
+      const existingMaxObjective =
+        db
+          .prepare(
+            `
+              SELECT
+                COALESCE(MAX(reward_rep), 0) AS rep_max,
+                COALESCE(MAX(reward_marks), 0) AS marks_max
+              FROM objectives
+            `,
+          )
+          .get() || {};
+
+      const existingMaxQuestMarks =
+        db
+          .prepare(
+            `
+              SELECT COALESCE(MAX(total_marks), 0) AS marks_quest_max
+              FROM (
+                SELECT
+                  quest_id,
+                  SUM(reward_marks) AS total_marks
+                FROM objectives
+                GROUP BY quest_id
+              )
+            `,
+          )
+          .get() || {};
+
+      const repairedRepMax = Math.max(
+        Number(settings.rep_max) || 0,
+        Number(existingMaxObjective.rep_max) || 0,
+      );
+      const repairedMarksMax = Math.max(
+        Number(settings.marks_max) || 0,
+        Number(existingMaxObjective.marks_max) || 0,
+      );
+      const repairedMarksQuestMax = Math.max(
+        Number(settings.marks_quest_max) || 0,
+        Number(existingMaxQuestMarks.marks_quest_max) || 0,
+      );
+
+      db.prepare(
+        `
+          UPDATE quest_settings
+          SET
+            rep_max = ?,
+            marks_max = ?,
+            marks_quest_max = ?
+          WHERE id = 1
+        `,
+      ).run(
+        repairedRepMax,
+        repairedMarksMax,
+        repairedMarksQuestMax,
+      );
+    },
   },
+
 ];
 
 function configureDatabase(db) {
