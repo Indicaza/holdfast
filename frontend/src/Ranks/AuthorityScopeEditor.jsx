@@ -216,6 +216,8 @@ function AuthorityScopeEditor({
           body: JSON.stringify({
             permissions,
             maxManagedRank: effectiveCeiling || null,
+            questScope: effectiveQuestScope,
+            rewardLimits: effectiveRewardLimits,
           }),
         }),
       )
@@ -233,6 +235,10 @@ function AuthorityScopeEditor({
         setMessage(
           'Enable Promote & demote or Assign billets before setting a ceiling.',
         )
+      } else if (error?.code === 'invalid_quest_scope') {
+        setMessage('Choose a valid quest scope.')
+      } else if (error?.code === 'invalid_reward_limits') {
+        setMessage('Reward limits must be non-negative whole numbers.')
       } else {
         setMessage('Could not save authority. Try again.')
       }
@@ -460,6 +466,127 @@ function AuthorityScopeEditor({
                 })}
               </div>
             </section>
+
+            {hasQuestAuthority ? (
+              <section className="authority-editor__section authority-editor__quest-scope">
+                <div className="authority-editor__section-heading">
+                  <div>
+                    <span>Quest scope</span>
+                    <h2>Whose quests can this authority touch?</h2>
+                  </div>
+                </div>
+
+                <div className="authority-editor__scope-options">
+                  <button
+                    type="button"
+                    className={
+                      effectiveQuestScope === 'own'
+                        ? 'authority-editor__scope-option authority-editor__scope-option--active'
+                        : 'authority-editor__scope-option'
+                    }
+                    disabled={busy}
+                    onClick={() => {
+                      setQuestScope('own')
+                      setMessage('')
+                    }}
+                  >
+                    <strong>Own</strong>
+                    <span>Only quests created by this member.</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      effectiveQuestScope === 'all'
+                        ? 'authority-editor__scope-option authority-editor__scope-option--active'
+                        : 'authority-editor__scope-option'
+                    }
+                    disabled={busy || !canUseAllQuestScope}
+                    onClick={() => {
+                      setQuestScope('all')
+                      setMessage('')
+                    }}
+                  >
+                    <strong>All</strong>
+                    <span>Any Holdfast quest.</span>
+                  </button>
+                </div>
+
+                {!canUseAllQuestScope ? (
+                  <small className="authority-editor__ceiling-note">
+                    All scope is above your own quest authority.
+                  </small>
+                ) : null}
+              </section>
+            ) : null}
+
+            {hasRewardAuthority ? (
+              <section className="authority-editor__section authority-editor__reward-scope">
+                <div className="authority-editor__section-heading">
+                  <div>
+                    <span>Reward bracket</span>
+                    <h2>How much economy authority?</h2>
+                  </div>
+                </div>
+
+                <p className="authority-editor__help">
+                  These limits apply to reward approval and/or issuance granted
+                  by this scope. Rank and billet brackets stack upward, but can
+                  never exceed the guild-wide guardrails.
+                </p>
+
+                <div className="authority-editor__reward-limits">
+                  {[
+                    [
+                      'repPerObjective',
+                      'Rep / objective',
+                      actorRewardCeiling.repPerObjective,
+                    ],
+                    [
+                      'marksPerObjective',
+                      'Marks / objective',
+                      actorRewardCeiling.marksPerObjective,
+                    ],
+                    [
+                      'marksPerQuest',
+                      'Marks / quest',
+                      actorRewardCeiling.marksPerQuest,
+                    ],
+                  ].map(([key, label, max]) => (
+                    <label key={key}>
+                      <span>{label}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={max}
+                        step="1"
+                        value={effectiveRewardLimits[key]}
+                        disabled={busy}
+                        onChange={(event) => {
+                          const value = Math.max(
+                            0,
+                            Math.min(
+                              Number(max) || 0,
+                              Number(event.target.value) || 0,
+                            ),
+                          )
+                          setRewardLimits((current) => ({
+                            ...current,
+                            [key]: value,
+                          }))
+                          setMessage('')
+                        }}
+                      />
+                      <small>
+                        Max {max}
+                        {economyPolicy?.[key] !== undefined
+                          ? ` · guild cap ${economyPolicy[key]}`
+                          : ''}
+                      </small>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <section className="authority-editor__section authority-editor__section--ceiling">
               <div className="authority-editor__section-heading">
