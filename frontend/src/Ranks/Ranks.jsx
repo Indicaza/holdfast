@@ -584,6 +584,7 @@ function Ranks() {
           scope={editing.scope}
           capabilities={catalog.capabilities}
           actorAuthority={session.authority}
+          economyPolicy={catalog.economyPolicy}
           authorityEditable={canEditScope(
             editing.type,
             editing.scope,
