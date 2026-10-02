@@ -214,22 +214,20 @@ test("authorization start uses least-privilege scopes and signed state", async (
   );
 });
 
-test("Discord server shortcut opens the configured guild", async () => {
+test("Discord server shortcut returns app and official web targets", async () => {
   await withAuthServer(
     {
       env: authEnvironment(),
       logger: silentLogger,
     },
     async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/api/auth/discord/server`, {
-        redirect: "manual",
-      });
+      const response = await fetch(`${baseUrl}/api/auth/discord/server`);
 
-      assert.equal(response.status, 302);
-      assert.equal(
-        response.headers.get("location"),
-        `https://discord.com/channels/${GUILD_ID}`,
-      );
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), {
+        appUrl: `discord://-/channels/${GUILD_ID}`,
+        webUrl: `https://discord.com/channels/${GUILD_ID}`,
+      });
       assert.equal(response.headers.get("cache-control"), "no-store");
     },
   );
