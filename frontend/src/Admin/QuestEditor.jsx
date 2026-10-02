@@ -31,6 +31,13 @@ function createId(prefix) {
 
 const blankReward = () => ({ rep: 0, marks: 0, items: [] })
 
+const blankRewardApproval = () => ({
+  approvedByMemberId: '',
+  approvedByName: '',
+  approvedAt: '',
+  fingerprint: '',
+})
+
 const blankRewardItem = () => ({
   id: createId('reward-item'),
   name: '',
@@ -53,15 +60,18 @@ const blankObjective = () => ({
   completed: false,
   need: '',
   reward: blankReward(),
+  rewardApproval: blankRewardApproval(),
   assignments: [],
 })
 
-const blankQuest = () => ({
+const blankQuest = (memberId = '') => ({
   id: createId('quest'),
   publication: 'draft',
   mode: 'rotating',
   title: 'New quest',
   summary: '',
+  createdByMemberId: memberId,
+  createdAt: new Date().toISOString(),
   objectives: [blankObjective()],
   completed: false,
 })
@@ -112,6 +122,45 @@ function ensureFocus(document) {
 
 function progress(count, total, singular) {
   return `${count}/${total} ${singular}${total === 1 ? '' : 's'}`
+}
+
+function rewardHasValue(reward) {
+  return Boolean(
+    Number(reward?.rep) > 0 ||
+      Number(reward?.marks) > 0 ||
+      (reward?.items || []).length,
+  )
+}
+
+function rewardApproved(objective) {
+  if (!rewardHasValue(objective?.reward)) return true
+
+  const approval = objective?.rewardApproval
+  if (!approval?.approvedAt || !approval?.fingerprint) return false
+
+  const fingerprint = JSON.stringify({
+    rep: Number(objective.reward?.rep) || 0,
+    marks: Number(objective.reward?.marks) || 0,
+    items: (objective.reward?.items || []).map((item) => ({
+      name: String(item?.name || '').trim(),
+      quantity: Number(item?.quantity) || 0,
+    })),
+  })
+
+  return approval.fingerprint === fingerprint
+}
+
+function questScopeAllows(session, permission, quest) {
+  if (!session.hasPermission(permission)) return false
+
+  const scope = session.authority?.questScopes?.[permission]
+
+  return (
+    scope === 'all' ||
+    (scope === 'own' &&
+      Boolean(session.user?.id) &&
+      quest?.createdByMemberId === session.user.id)
+  )
 }
 
 async function fetchGuildMembers(signal) {
