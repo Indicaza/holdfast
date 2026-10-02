@@ -72,6 +72,17 @@ export function guildRankMetadata(value) {
   };
 }
 
+export function guildRankOrder(value) {
+  return guildRankMetadata(value).order;
+}
+
+export function guildRanksThrough(value) {
+  const ceiling = guildRankOrder(value);
+  return RANK_DEFINITIONS
+    .filter((rank) => rank.order <= ceiling)
+    .map((rank) => rank.name);
+}
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
