@@ -194,6 +194,24 @@ export function resolveMemberAuthorityFromDatabase(
     rankScopeFromRow(rankRow),
     ...billetRows.map(billetScopeFromRow),
   ]);
+  const economy = readEconomyPolicyFromDatabase(db);
+
+  for (const bucket of ["approve", "issue"]) {
+    merged.rewardLimits[bucket] = {
+      repPerObjective: Math.min(
+        merged.rewardLimits[bucket].repPerObjective,
+        economy.repPerObjective,
+      ),
+      marksPerObjective: Math.min(
+        merged.rewardLimits[bucket].marksPerObjective,
+        economy.marksPerObjective,
+      ),
+      marksPerQuest: Math.min(
+        merged.rewardLimits[bucket].marksPerQuest,
+        economy.marksPerQuest,
+      ),
+    };
+  }
 
   return {
     ...merged,
@@ -335,7 +353,7 @@ export async function updateRankAuthority(
     }
 
     if (
-      !canDelegateScope(actor, existing) ||
+      (!actor.isOwner && !canDelegateScope(actor, existing)) ||
       !canDelegateScope(actor, validation.scope)
     ) {
       return { status: "scope_above_actor", scope: existing };
@@ -406,7 +424,7 @@ export async function updateBilletAuthority(
     }
 
     if (
-      !canDelegateScope(actor, existing) ||
+      (!actor.isOwner && !canDelegateScope(actor, existing)) ||
       !canDelegateScope(actor, validation.scope)
     ) {
       return { status: "scope_above_actor", scope: existing };
