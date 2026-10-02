@@ -74,12 +74,21 @@ function Admin() {
     )
   }
 
-  if (!session.hasPermission('quests.edit')) {
+  const canManageQuests = [
+    'quests.create',
+    'quests.edit',
+    'quests.publish',
+    'rewards.approve',
+    'rewards.issue',
+    'rewards.policy.edit',
+  ].some((permission) => session.hasPermission(permission))
+
+  if (!canManageQuests) {
     return (
       <PageShell
         eyebrow="Control Room"
         title="No management access"
-        intro="You are signed in, but this account does not have permission to edit guild quests."
+        intro="You are signed in, but this account does not have quest or reward management authority."
         centered
         className="admin-page admin-page--gate"
       />
