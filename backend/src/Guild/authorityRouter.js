@@ -14,7 +14,8 @@ import { createRateLimiter } from "../Security/httpSecurity.js";
 function sendAuthorityError(res, result) {
   if (
     result.status === "invalid_permissions" ||
-    result.status === "invalid_rank_ceiling"
+    result.status === "invalid_rank_ceiling" ||
+    result.status === "ceiling_requires_member_management"
   ) {
     res.status(400).json({ error: result.status });
     return true;
