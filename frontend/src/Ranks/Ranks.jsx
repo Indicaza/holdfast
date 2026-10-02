@@ -584,6 +584,11 @@ function Ranks() {
           scope={editing.scope}
           capabilities={catalog.capabilities}
           actorAuthority={session.authority}
+          authorityEditable={canEditScope(
+            editing.type,
+            editing.scope,
+            session,
+          )}
           onSaved={updateScope}
           onBilletUpdated={updateBilletDefinition}
           onBilletDeleted={removeBilletDefinition}
