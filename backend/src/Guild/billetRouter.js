@@ -6,10 +6,7 @@ import {
   readBillets,
   updateBillet,
 } from "./billetRepository.js";
-import {
-  ensureDiscordBilletRoles,
-  reconcileDiscordBillets,
-} from "../Discord/billetSync.js";
+import { ensureDiscordBilletRoles } from "../Discord/billetSync.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 
 function billetErrorResponse(res, status) {
@@ -132,21 +129,7 @@ export function createBilletRouter() {
     },
   );
 
-  router.post(
-    "/reconcile",
-    requirePermission("site.admin"),
-    writeRateLimit,
-    async (req, res) => {
-      try {
-        const summary = await reconcileDiscordBillets();
-        res.set("Cache-Control", "no-store");
-        res.json({ summary });
-      } catch (error) {
-        console.error("Unable to reconcile Discord billets", error);
-        res.status(503).json({ error: "discord_billet_sync_unavailable" });
-      }
-    },
-  );
+
 
   return router;
 }
