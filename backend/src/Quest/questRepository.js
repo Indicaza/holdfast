@@ -78,7 +78,7 @@ function storedQuestError(error) {
 }
 
 function settingsFromDatabase(db) {
-  return (
+  const settings =
     db.prepare("SELECT * FROM quest_settings WHERE id = 1").get() || {
       focused_quest_id: "",
       reward_policy: "",
@@ -87,8 +87,49 @@ function settingsFromDatabase(db) {
       marks_min: 0,
       marks_max: 1000,
       marks_quest_max: 1000,
-    }
-  );
+    };
+
+  const existingMaxObjective =
+    db
+      .prepare(
+        `
+          SELECT
+            COALESCE(MAX(reward_rep), 0) AS rep_max,
+            COALESCE(MAX(reward_marks), 0) AS marks_max
+          FROM objectives
+        `,
+      )
+      .get() || {};
+
+  const existingMaxQuestMarks =
+    db
+      .prepare(
+        `
+          SELECT COALESCE(MAX(total_marks), 0) AS marks_quest_max
+          FROM (
+            SELECT quest_id, SUM(reward_marks) AS total_marks
+            FROM objectives
+            GROUP BY quest_id
+          )
+        `,
+      )
+      .get() || {};
+
+  return {
+    ...settings,
+    rep_max: Math.max(
+      Number(settings.rep_max) || 0,
+      Number(existingMaxObjective.rep_max) || 0,
+    ),
+    marks_max: Math.max(
+      Number(settings.marks_max) || 0,
+      Number(existingMaxObjective.marks_max) || 0,
+    ),
+    marks_quest_max: Math.max(
+      Number(settings.marks_quest_max) || 0,
+      Number(existingMaxQuestMarks.marks_quest_max) || 0,
+    ),
+  };
 }
 
 function assignmentsForObjective(db, objectiveId) {
