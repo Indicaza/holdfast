@@ -1175,7 +1175,17 @@ function QuestCard({
 function QuestEditor() {
   const session = useSession()
   const refreshSession = session.refresh
+  const canCreateQuest = session.hasPermission('quests.create')
   const canEditRewardPolicy = session.hasPermission('rewards.policy.edit')
+  const canWriteWorkspace = [
+    'quests.create',
+    'quests.edit',
+    'quests.publish',
+    'rewards.policy.edit',
+  ].some((permission) => session.hasPermission(permission))
+  const canFeatureQuest =
+    session.hasPermission('quests.publish') &&
+    session.authority?.questScopes?.['quests.publish'] === 'all'
   const [draft, setDraft] = useState(null)
   const [saved, setSaved] = useState(null)
   const [members, setMembers] = useState([])
@@ -1271,7 +1281,22 @@ function QuestEditor() {
   }
 
   function importQuestDocument(nextDocument, result) {
-    setDocument(nextDocument)
+    const ownedDocument = {
+      ...nextDocument,
+      quests: nextDocument.quests.map((quest) => ({
+        ...quest,
+        createdByMemberId:
+          quest.createdByMemberId || session.user?.id || '',
+        createdAt: quest.createdAt || new Date().toISOString(),
+        objectives: quest.objectives.map((objective) => ({
+          ...objective,
+          rewardApproval:
+            objective.rewardApproval || blankRewardApproval(),
+        })),
+      })),
+    }
+
+    setDocument(ownedDocument)
     setStatus('ready')
     setMessage(
       result.featuredTitle
