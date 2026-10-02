@@ -375,6 +375,7 @@ const migrations = [
         );
       }
     },
+  },
   {
     version: 5,
     name: "quest_governance_and_economy",
@@ -639,7 +640,6 @@ const migrations = [
         );
       }
     },
-  },
   },
 ];
 
