@@ -1,6 +1,5 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
-import QuestEditor from './QuestEditor.jsx'
 import AuditLog from './AuditLog.jsx'
 import './Admin.css'
 
@@ -74,21 +73,14 @@ function Admin() {
     )
   }
 
-  const canManageQuests = [
-    'quests.create',
-    'quests.edit',
-    'quests.publish',
-    'rewards.approve',
-    'rewards.issue',
-    'rewards.policy.edit',
-  ].some((permission) => session.hasPermission(permission))
+  const canViewAudit = session.hasPermission('audit.view')
 
-  if (!canManageQuests) {
+  if (!canViewAudit) {
     return (
       <PageShell
         eyebrow="Control Room"
         title="No management access"
-        intro="You are signed in, but this account does not have quest or reward management authority."
+        intro="You are signed in, but this account does not have access to internal administrative records."
         centered
         className="admin-page admin-page--gate"
       />
@@ -99,12 +91,11 @@ function Admin() {
     <PageShell
       eyebrow="Control Room"
       title="Guild Control Room"
-      intro="Manage quests, rewards, and guild operations."
+      intro="Internal guild records and administrative history."
       centered
       className="admin-page"
     >
-      <QuestEditor />
-      {session.hasPermission('audit.view') ? <AuditLog /> : null}
+      <AuditLog />
     </PageShell>
   )
 }
