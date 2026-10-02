@@ -12,13 +12,10 @@ function Charter() {
         <section className="charter__section">
           <h2>Built to come back to</h2>
 
-          <p>A lot of us have spent years coming and going from World of Warcraft.</p>
-
           <p>
-            We play hard. Life changes. A job gets busy. A kid is born. Another
-            game steals us for six months. We burn out, disappear, swear we are
-            done, and then somebody says the right thing and suddenly we are
-            installing WoW again.
+            A lot of us have spent years coming and going from World of Warcraft.
+            Life gets busy. We burn out, vanish for a while, swear we are done,
+            and somehow end up installing WoW again.
           </p>
 
           <p className="charter__callout">
@@ -27,18 +24,10 @@ function Charter() {
           </p>
 
           <p>
-            The guild should not depend on any one person, including the Guild
-            Master. People should be able to step away without guilt. Leaders
-            should be able to hand off responsibility. Old friends should be
-            able to disappear for a season and return to familiar names instead
-            of another dead guild.
-          </p>
-
-          <p>
-            If we grow too large to feel like a community, we would rather grow
-            sideways than upward. Sister guilds can share the larger community,
-            economy, knowledge, events, and infrastructure. If activity falls
-            later, we can consolidate again.
+            That means no guilt when real life pulls you away, no system that
+            depends on one person, and no dead guild because one leader burned
+            out. Hand off responsibility, keep familiar faces, and come back when
+            you can.
           </p>
 
           <p>
