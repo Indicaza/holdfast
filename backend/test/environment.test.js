@@ -70,6 +70,7 @@ test("production configuration reports all actionable problems", () => {
       DISCORD_GUILD_ID: "not-an-id",
       GUILD_OWNER_DISCORD_IDS: "323456789012345678,invalid",
       DISCORD_SESSION_REVERIFY_SECONDS: "30",
+      DISCORD_RANK_RECONCILE_SECONDS: "30",
       PORT: "70000",
     }),
   );
@@ -104,6 +105,11 @@ test("production configuration reports all actionable problems", () => {
       "DISCORD_SESSION_REVERIFY_SECONDS must be an integer from 60 to 2592000",
     ),
   );
+  assert.ok(
+    problems.includes(
+      "DISCORD_RANK_RECONCILE_SECONDS must be an integer from 60 to 3600",
+    ),
+  );
 });
 
 test("production configuration rejects credentials embedded in the public origin", () => {
@@ -126,6 +132,22 @@ test("production configuration accepts bounded Discord revalidation intervals", 
   assert.deepEqual(
     productionEnvironmentProblems(
       validEnvironment({ DISCORD_SESSION_REVERIFY_SECONDS: "2592000" }),
+    ),
+    [],
+  );
+});
+
+
+test("production configuration accepts bounded Discord rank reconciliation intervals", () => {
+  assert.deepEqual(
+    productionEnvironmentProblems(
+      validEnvironment({ DISCORD_RANK_RECONCILE_SECONDS: "60" }),
+    ),
+    [],
+  );
+  assert.deepEqual(
+    productionEnvironmentProblems(
+      validEnvironment({ DISCORD_RANK_RECONCILE_SECONDS: "3600" }),
     ),
     [],
   );
