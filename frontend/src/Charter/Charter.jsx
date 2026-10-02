@@ -129,19 +129,11 @@ function Charter() {
           </p>
 
           <p>
-            Members are encouraged to contribute materials, useful items,
-            recipes, gold, or whatever else they can reasonably spare.
+            Contribute materials, useful items, recipes, or gold when you
+            reasonably can. The Quartermaster can put those resources to work
+            through crafting, trade, and the Auction House instead of letting
+            them sit.
           </p>
-
-          <p>
-            The Quartermaster can put those resources to work through crafting,
-            trade, and the Auction House. The value created can come back
-            through mounts, training, profession development, raid consumables,
-            equipment, investment, or help for someone who has hit an important
-            progression wall.
-          </p>
-
-          <p>The idea is simple.</p>
 
           <p>
             When members strengthen the guild, the guild should become more
