@@ -44,17 +44,10 @@ function Charter() {
           </p>
 
           <p>
-            Rank reflects the confidence Holdfast has placed in your judgment
-            and reliability.
+            Billets are jobs the guild needs done. They change hands as people
+            step forward, take breaks, or find a better fit. You can leave the
+            job without losing the trust you earned.
           </p>
-
-          <p>
-            A billet is a job the guild needs done. Steward. Quartermaster. Raid
-            Leader. PvP Lead. Billets change hands as people step forward, take
-            breaks, or find someone better suited to the work.
-          </p>
-
-          <p>You can leave a billet without losing the trust you earned.</p>
 
           <p className="charter__callout charter__callout--link">
             <strong>
@@ -64,14 +57,7 @@ function Charter() {
           </p>
 
           <p>
-            When Holdfast becomes profitable enough to support it, demanding
-            billets may also share in those profits. If someone is putting real
-            time into keeping things running for everyone else, the guild can
-            return some of that value to them.
-          </p>
-
-          <p>
-            We value leaders who can make decisions, own the consequences, teach
+            We value leaders who make decisions, own the consequences, teach
             what they know, and leave others more capable than they found them.
           </p>
 
