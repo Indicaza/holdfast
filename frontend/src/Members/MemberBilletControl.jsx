@@ -12,7 +12,14 @@ function assignedIds(member) {
   )
 }
 
-function MemberBilletControl({ member, billets, onUpdated, compact = false }) {
+function MemberBilletControl({
+  member,
+  billets,
+  onUpdated,
+  compact = false,
+  triggerLabel = 'Billets',
+  showCount = true,
+}) {
   const session = useSession()
   const [busyId, setBusyId] = useState(null)
   const [message, setMessage] = useState('')
@@ -115,8 +122,8 @@ function MemberBilletControl({ member, billets, onUpdated, compact = false }) {
       }
     >
       <summary>
-        Billets
-        <span>{current.size}</span>
+        <strong>{triggerLabel}</strong>
+        {showCount ? <span>{current.size}</span> : null}
       </summary>
 
       <div className="member-billet-control__menu">

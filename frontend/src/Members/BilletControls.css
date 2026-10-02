@@ -174,7 +174,12 @@
 
 .member-billet-control {
   position: relative;
+  z-index: 1;
   min-width: 12rem;
+}
+
+.member-billet-control[open] {
+  z-index: 1000;
 }
 
 .member-billet-control > summary {
@@ -184,16 +189,38 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding-inline: var(--space-3);
-  border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.62);
+  border: 1px solid rgba(196, 166, 103, 0.34);
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.055), transparent 72%),
+    rgba(3, 8, 15, 0.68);
   color: var(--color-text-strong);
   font-size: var(--font-size-sm);
   cursor: pointer;
   list-style: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.member-billet-control > summary:hover,
+.member-billet-control > summary:focus-visible,
+.member-billet-control[open] > summary {
+  border-color: var(--color-accent-bright);
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.1), transparent 72%),
+    rgba(3, 8, 15, 0.82);
 }
 
 .member-billet-control > summary::-webkit-details-marker {
   display: none;
+}
+
+.member-billet-control > summary strong {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
 }
 
 .member-billet-control > summary span {
@@ -204,17 +231,21 @@
 
 .member-billet-control__menu {
   position: absolute;
-  z-index: 20;
+  z-index: 1100;
+  top: calc(100% + var(--space-2));
   right: 0;
   display: grid;
-  width: min(28rem, calc(100vw - 2rem));
-  max-height: 24rem;
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: min(32rem, 70vh);
   overflow: auto;
-  margin-top: var(--space-2);
   padding: var(--space-3);
-  border: var(--border-accent);
-  background: var(--color-background);
-  box-shadow: var(--shadow-panel);
+  border: 1px solid rgba(196, 166, 103, 0.58);
+  background:
+    linear-gradient(150deg, rgba(29, 69, 111, 0.08), transparent 45%),
+    rgba(3, 8, 15, 0.985);
+  box-shadow:
+    0 1.25rem 3rem rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(196, 166, 103, 0.06);
 }
 
 .member-billet-control__menu label {
@@ -225,6 +256,11 @@
   padding: var(--space-3);
   border-bottom: var(--border-subtle);
   cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.member-billet-control__menu label:hover {
+  background: rgba(196, 166, 103, 0.045);
 }
 
 .member-billet-control__menu label:last-of-type {
@@ -296,8 +332,13 @@
 
   .member-billet-control__menu {
     position: relative;
+    z-index: 1;
+    top: auto;
     right: auto;
     width: 100%;
+    max-height: none;
+    margin-top: var(--space-2);
+    box-shadow: none;
   }
 }
 

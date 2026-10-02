@@ -352,44 +352,34 @@ function BilletPanel({ member, billets, canManage, onUpdated }) {
     return null
   }
 
+  const label = assigned.length === 1 ? 'Billet' : 'Billets'
+  const value = assigned.length
+    ? assigned.map((billet) => billet.name).join(' · ')
+    : 'None assigned'
+
   return (
     <section
-      className="member-profile__section member-profile__billet-section"
-      aria-labelledby="member-billets-title"
+      className={
+        canManage
+          ? 'member-profile__billet-strip member-profile__billet-strip--admin'
+          : 'member-profile__billet-strip'
+      }
+      aria-label="Guild billets"
     >
-      <div className="member-profile__section-heading">
-        <div>
-          <p>Current responsibilities</p>
-          <h2 id="member-billets-title">Billets</h2>
-        </div>
-
-        {canManage ? (
-          <MemberBilletControl
-            member={member}
-            billets={billets}
-            onUpdated={onUpdated}
-          />
-        ) : null}
+      <div className="member-profile__billet-summary">
+        <span>{label}</span>
+        <strong>{value}</strong>
       </div>
 
-      {assigned.length ? (
-        <div className="member-profile__billet-list">
-          {assigned.map((billet) => (
-            <article key={billet.id}>
-              <strong>{billet.name}</strong>
-              <p>
-                {billet.responsibility ||
-                  'No responsibility description has been added yet.'}
-              </p>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="member-profile__empty">
-          <strong>No billets assigned.</strong>
-          <span>This member does not currently hold a guild billet.</span>
-        </div>
-      )}
+      {canManage ? (
+        <MemberBilletControl
+          member={member}
+          billets={billets}
+          onUpdated={onUpdated}
+          triggerLabel="Manage billets"
+          showCount={false}
+        />
+      ) : null}
     </section>
   )
 }
