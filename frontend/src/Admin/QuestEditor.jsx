@@ -320,13 +320,13 @@ function ConfirmDialog({ confirmation, onCancel, onConfirm }) {
   )
 }
 
-function OrderActions({ index, length, label, onMove }) {
+function OrderActions({ index, length, label, onMove, disabled = false }) {
   return (
     <div className="quest-editor__order-actions" aria-label={`${label} order`}>
       <button
         type="button"
         aria-label={`Move ${label} up`}
-        disabled={index === 0}
+        disabled={disabled || index === 0}
         onClick={() => onMove(index, -1)}
       >
         ↑
@@ -334,7 +334,7 @@ function OrderActions({ index, length, label, onMove }) {
       <button
         type="button"
         aria-label={`Move ${label} down`}
-        disabled={index === length - 1}
+        disabled={disabled || index === length - 1}
         onClick={() => onMove(index, 1)}
       >
         ↓
