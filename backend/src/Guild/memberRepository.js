@@ -1,3 +1,4 @@
+import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
 import {
   withGuildDatabase,
   withGuildTransaction,
@@ -7,7 +8,7 @@ import {
   isValidTimeZone,
   normalizeMemberProfile,
 } from "./memberProfile.js";
-import { normalizeGuildRank } from "./rankSystem.js";
+import { isGuildRank, normalizeGuildRank } from "./rankSystem.js";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -402,6 +403,63 @@ export async function updateDetectedTimezone(memberId, timezone) {
         WHERE id = ?
       `,
     ).run(now, now, memberId);
+
+    return {
+      status: "updated",
+      member: readMemberById(db, memberId),
+    };
+  });
+}
+
+export async function updateGuildMemberRank(
+  memberId,
+  rank,
+  { actorMemberId = null } = {},
+) {
+  const requestedRank = String(rank || "").trim();
+
+  if (!isGuildRank(requestedRank)) {
+    return { status: "invalid", member: null };
+  }
+
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, memberId);
+
+    if (!existing) {
+      return { status: "not-found", member: null };
+    }
+
+    const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
+
+    if (ownerIds.has(memberId) && requestedRank !== "Commander") {
+      return { status: "owner-locked", member: existing };
+    }
+
+    if (existing.rank === requestedRank) {
+      return { status: "unchanged", member: existing };
+    }
+
+    const now = new Date().toISOString();
+
+    db.prepare(
+      `
+        UPDATE members
+        SET rank = ?, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(requestedRank, now, memberId);
+
+    recordAuditEventInDatabase({
+      db,
+      actorMemberId,
+      eventType: "member.rank.updated",
+      entityType: "member",
+      entityId: memberId,
+      payload: {
+        beforeRank: existing.rank,
+        afterRank: requestedRank,
+      },
+    });
 
     return {
       status: "updated",
