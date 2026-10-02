@@ -4,7 +4,7 @@ export const recruitmentFacts = [
     label: 'Founding now',
     value: 'Launch crew forming',
     detail:
-      'Join the first wave and help plant Holdfast on the PvP realm.',
+      'We are on the Normal realm for beta, then plant Holdfast on the PvP realm at launch.',
   },
   {
     id: 'region',
