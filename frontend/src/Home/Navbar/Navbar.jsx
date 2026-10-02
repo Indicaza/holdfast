@@ -131,8 +131,8 @@ function Navbar() {
                   <div className="navbar__account-links">
                     <a href="/members/me">My Profile</a>
                     <a href="/members">Members</a>
-                    {hasPermission('site.admin') || hasPermission('quests.edit') ? (
-                      <a href="/admin">Control Room</a>
+                    {hasPermission('audit.view') ? (
+                      <a href="/admin">Audit Log</a>
                     ) : null}
                     <button type="button" onClick={handleSignOut}>
                       Sign out
