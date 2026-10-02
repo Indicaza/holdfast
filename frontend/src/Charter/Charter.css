@@ -429,6 +429,32 @@
   padding-bottom: 10rem;
 }
 
+.charter__closing-list {
+  display: grid;
+  gap: var(--space-3);
+  max-width: var(--charter-copy-width);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.charter__closing-list li {
+  position: relative;
+  padding-left: 1.65rem;
+  color: var(--charter-copy);
+  font-size: var(--font-size-fib-21);
+  line-height: 1.55;
+}
+
+.charter__closing-list li::before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  top: 0.08em;
+  color: var(--charter-gold);
+  font-size: 0.58em;
+}
+
 /* ============================================================
    "LEAVE IT STRONGER."
    ============================================================ */
