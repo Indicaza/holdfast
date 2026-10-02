@@ -62,3 +62,35 @@ export function requirePermission(permission) {
     });
   };
 }
+
+
+export function requireAnyPermission(permissions) {
+  const required = Array.isArray(permissions) ? permissions : [];
+
+  return async (req, res, next) => {
+    await refreshDiscordSessionIfNeeded(req, res, () => {
+      if (!validAuthentication(req.auth)) {
+        res.status(401).json({ error: "authentication_required" });
+        return;
+      }
+
+      try {
+        const authority = hydrateAuthority(req);
+
+        if (
+          !required.some((permission) =>
+            authority.permissions.includes(permission),
+          )
+        ) {
+          res.status(403).json({ error: "permission_required" });
+          return;
+        }
+
+        next();
+      } catch (error) {
+        console.error("Unable to resolve member authority", error);
+        res.status(503).json({ error: "authority_unavailable" });
+      }
+    });
+  };
+}
