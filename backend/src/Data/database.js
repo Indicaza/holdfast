@@ -234,6 +234,91 @@ const migrations = [
       `);
     },
   },
+  {
+    version: 3,
+    name: "billets_and_assignments",
+    up(db) {
+      const now = new Date().toISOString();
+
+      db.exec(`
+        ALTER TABLE members
+          ADD COLUMN billets_managed INTEGER NOT NULL DEFAULT 0
+          CHECK (billets_managed IN (0, 1));
+
+        CREATE TABLE billets (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          responsibility TEXT NOT NULL DEFAULT '',
+          discord_role_id TEXT,
+          discord_managed INTEGER NOT NULL DEFAULT 0
+            CHECK (discord_managed IN (0, 1)),
+          active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE UNIQUE INDEX billets_name_unique_idx
+          ON billets(name COLLATE NOCASE);
+
+        CREATE UNIQUE INDEX billets_discord_role_unique_idx
+          ON billets(discord_role_id)
+          WHERE discord_role_id IS NOT NULL;
+
+        CREATE TABLE member_billets (
+          member_id TEXT NOT NULL
+            REFERENCES members(id) ON DELETE CASCADE,
+          billet_id TEXT NOT NULL
+            REFERENCES billets(id) ON DELETE CASCADE,
+          assigned_at TEXT NOT NULL,
+          assigned_by_member_id TEXT,
+          PRIMARY KEY(member_id, billet_id)
+        );
+
+        CREATE INDEX member_billets_billet_idx
+          ON member_billets(billet_id, member_id);
+      `);
+
+      const insertBillet = db.prepare(
+        `
+          INSERT INTO billets (
+            id,
+            name,
+            responsibility,
+            discord_role_id,
+            discord_managed,
+            active,
+            created_at,
+            updated_at
+          ) VALUES (?, ?, ?, NULL, 1, 1, ?, ?)
+        `,
+      );
+
+      for (const [id, name, responsibility] of [
+        [
+          "billet-steward",
+          "Steward",
+          "Helps administer Holdfast, coordinate leadership work, and keep guild operations moving.",
+        ],
+        [
+          "billet-quartermaster",
+          "Quartermaster",
+          "Manages guild supplies, crafting logistics, procurement, and shared resources.",
+        ],
+        [
+          "billet-raid-leader",
+          "Raid Leader",
+          "Organizes raid groups, preparation, strategy, and execution.",
+        ],
+        [
+          "billet-pvp-lead",
+          "PvP Lead",
+          "Organizes battlegrounds, world PvP, premades, and coordinated PvP response.",
+        ],
+      ]) {
+        insertBillet.run(id, name, responsibility, now, now);
+      }
+    },
+  },
 ];
 
 function configureDatabase(db) {

@@ -54,6 +54,8 @@ test("member profile and lifecycle survive SQLite upserts", async () => {
 
     assert.equal(created.rank, "Commander");
     assert.equal(created.rankManaged, true);
+    assert.equal(created.billetsManaged, true);
+    assert.deepEqual(created.billets, []);
     assert.equal(created.status, "active");
 
     const updated = await updateGuildMemberProfile("member-one", {

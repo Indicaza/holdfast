@@ -10,6 +10,7 @@ import { attachSession, setSession } from "./Auth/session.js";
 import { assertProductionEnvironment } from "./Config/environment.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { startDiscordRankReconciler } from "./Discord/rankSync.js";
+import { startDiscordBilletReconciler } from "./Discord/billetSync.js";
 import {
   ensureRuntimeDataDirectory,
   runtimeDataDirectory,
@@ -18,6 +19,7 @@ import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
+import { createBilletRouter } from "./Guild/billetRouter.js";
 import {
   corsOrigin,
   createRateLimiter,
@@ -87,6 +89,7 @@ app.use(
 );
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
+app.use("/api/guild/billets", createBilletRouter());
 app.use("/api/admin/audit", createAuditRouter());
 
 app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
@@ -157,10 +160,12 @@ const server = app.listen(PORT, () => {
 });
 
 const stopDiscordRankReconciler = startDiscordRankReconciler();
+const stopDiscordBilletReconciler = startDiscordBilletReconciler();
 
 function shutdown(signal) {
   console.log(`${signal} received; shutting down`);
   stopDiscordRankReconciler();
+  stopDiscordBilletReconciler();
 
   const forceExit = setTimeout(() => {
     console.error("Graceful shutdown timed out");
