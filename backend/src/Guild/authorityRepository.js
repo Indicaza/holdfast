@@ -364,6 +364,18 @@ export function authorityCanGrantBillet(
   return canDelegateScope(actorAuthority, billetScope);
 }
 
+export function authorityCanGrantRank(
+  actorAuthority,
+  rank,
+) {
+  if (!isGuildRank(rank)) return false;
+
+  return withGuildDatabase((db) => {
+    const scope = rankScopeByName(db, normalizeGuildRank(rank));
+    return Boolean(scope && canDelegateScope(actorAuthority, scope));
+  });
+}
+
 export function authorityCanManageTargetRank(
   actorAuthority,
   targetRank,
