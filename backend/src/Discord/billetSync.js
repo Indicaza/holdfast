@@ -5,9 +5,7 @@ import {
 import { readGuildMembers } from "../Guild/memberRepository.js";
 import { DiscordApiClient } from "./provisioning.js";
 
-const DEFAULT_RECONCILE_SECONDS = 300;
-const MIN_RECONCILE_SECONDS = 60;
-const MAX_RECONCILE_SECONDS = 3600;
+const RECONCILE_MILLISECONDS = 24 * 60 * 60 * 1000;
 const BILLET_ROLE_COLOR = 14532989;
 
 function configuredValue(value) {
@@ -19,21 +17,6 @@ function config(env = process.env) {
     guildId: configuredValue(env.DISCORD_GUILD_ID),
     botToken: configuredValue(env.DISCORD_BOT_TOKEN),
   };
-}
-
-function reconcileMilliseconds(env = process.env) {
-  const configured = Number(env.DISCORD_RANK_RECONCILE_SECONDS);
-  const seconds =
-    Number.isFinite(configured) && configured > 0
-      ? configured
-      : DEFAULT_RECONCILE_SECONDS;
-
-  return (
-    Math.min(
-      MAX_RECONCILE_SECONDS,
-      Math.max(MIN_RECONCILE_SECONDS, seconds),
-    ) * 1000
-  );
 }
 
 function clientFor(env, providedClient) {
@@ -363,7 +346,7 @@ export function startDiscordBilletReconciler({
 
   void run();
 
-  const timer = setInterval(run, reconcileMilliseconds(env));
+  const timer = setInterval(run, RECONCILE_MILLISECONDS);
   timer.unref?.();
 
   return () => {
