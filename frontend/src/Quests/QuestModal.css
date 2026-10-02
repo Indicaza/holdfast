@@ -538,3 +538,14 @@
     margin-right: 0;
   }
 }
+
+
+.quest-modal__field-note {
+  align-self: end;
+  padding: var(--space-3);
+  border-left: 2px solid rgba(196, 166, 103, 0.42);
+  background: rgba(196, 166, 103, 0.04);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
