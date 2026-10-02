@@ -20,6 +20,7 @@ import { initializeGuildData } from "./Data/initializeData.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
+import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
 import {
   corsOrigin,
   createRateLimiter,
@@ -106,16 +107,21 @@ app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
     console.error("Unable to update guild member directory", error);
   }
 
+  const authority = resolveMemberAuthority(req.auth.user.id);
+  req.auth.permissions = authority.permissions;
+  req.auth.authority = authority;
+
   setSession(res, {
     user: req.auth.user,
-    permissions: req.auth.permissions,
+    permissions: authority.permissions,
     verifiedAt: req.auth.verifiedAt,
   });
 
   res.json({
     authenticated: true,
     user: req.auth.user,
-    permissions: req.auth.permissions,
+    permissions: authority.permissions,
+    authority,
   });
 });
 
