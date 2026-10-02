@@ -541,3 +541,19 @@
     width: 100%;
   }
 }
+
+
+.members-page__billets {
+  margin-top: var(--space-2);
+}
+
+.members-page__rank-admin {
+  align-items: start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.members-page__rank-admin .member-rank-control,
+.members-page__rank-admin .member-billet-control {
+  flex: 0 1 16rem;
+}
