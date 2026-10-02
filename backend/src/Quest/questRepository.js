@@ -448,7 +448,7 @@ export async function updateQuests(mutator, options = {}) {
     }
 
     const saved = writeQuestsToDatabase(db, next, {
-      enforceRewardLimits: false,
+      enforceRewardLimits: options.enforceRewardLimits !== false,
     });
     const revisionAfter = questRevisionFromDatabase(db);
 
