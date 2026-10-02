@@ -56,9 +56,16 @@ test("rank and billet scopes merge into effective website authority", async () =
     const before = resolveMemberAuthority("member-one");
     assert.deepEqual(
       new Set(before.permissions),
-      new Set(["quests.edit", "rewards.issue"]),
+      new Set(["quests.create", "quests.edit"]),
     );
     assert.equal(before.maxManagedRank, null);
+    assert.equal(before.questScopes["quests.create"], "own");
+    assert.equal(before.questScopes["quests.edit"], "own");
+    assert.deepEqual(before.rewardLimits.issue, {
+      repPerObjective: 0,
+      marksPerObjective: 0,
+      marksPerQuest: 0,
+    });
 
     const quartermaster = (await readBillets()).find(
       (billet) => billet.name === "Quartermaster",
@@ -74,8 +81,8 @@ test("rank and billet scopes merge into effective website authority", async () =
     assert.deepEqual(
       new Set(after.permissions),
       new Set([
+        "quests.create",
         "quests.edit",
-        "rewards.issue",
         "rewards.policy.edit",
       ]),
     );
@@ -168,6 +175,8 @@ test("authority designers cannot edit or grant scope above their own authority",
       {
         permissions: [...majorDefault.permissions, "authority.manage"],
         maxManagedRank: majorDefault.maxManagedRank,
+        questScope: "all",
+        rewardLimits: majorDefault.rewardLimits.approve,
       },
       { actorMemberId: "owner-one" },
     );
@@ -182,6 +191,12 @@ test("authority designers cannot edit or grant scope above their own authority",
       {
         permissions: [],
         maxManagedRank: null,
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 0,
+          marksPerObjective: 0,
+          marksPerQuest: 0,
+        },
       },
       { actorMemberId: "major-one" },
     );
@@ -192,6 +207,12 @@ test("authority designers cannot edit or grant scope above their own authority",
       {
         permissions: ["discord.manage"],
         maxManagedRank: null,
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 0,
+          marksPerObjective: 0,
+          marksPerQuest: 0,
+        },
       },
       { actorMemberId: "major-one" },
     );
@@ -202,6 +223,12 @@ test("authority designers cannot edit or grant scope above their own authority",
       {
         permissions: ["quests.edit", "members.rank.manage"],
         maxManagedRank: "Major",
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 0,
+          marksPerObjective: 0,
+          marksPerQuest: 0,
+        },
       },
       { actorMemberId: "major-one" },
     );
@@ -212,6 +239,12 @@ test("authority designers cannot edit or grant scope above their own authority",
       {
         permissions: ["quests.edit", "members.rank.manage"],
         maxManagedRank: "Sergeant",
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 0,
+          marksPerObjective: 0,
+          marksPerQuest: 0,
+        },
       },
       { actorMemberId: "major-one" },
     );
@@ -238,6 +271,12 @@ test("authority scopes reject ceilings that grant no member-management capabilit
       {
         permissions: ["quests.edit"],
         maxManagedRank: "Sergeant",
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 0,
+          marksPerObjective: 0,
+          marksPerQuest: 0,
+        },
       },
       { actorMemberId: "owner-one" },
     );
@@ -273,6 +312,12 @@ test("billet authority can be customized and appears in the catalog", async () =
           "members.billet.assign",
         ],
         maxManagedRank: "Corporal",
+        questScope: "own",
+        rewardLimits: {
+          repPerObjective: 100,
+          marksPerObjective: 5,
+          marksPerQuest: 20,
+        },
       },
       { actorMemberId: "owner-one" },
     );
@@ -287,6 +332,12 @@ test("billet authority can be customized and appears in the catalog", async () =
     );
 
     assert.equal(catalogRaidLead.maxManagedRank, "Corporal");
+    assert.equal(catalogRaidLead.questScope, "own");
+    assert.deepEqual(catalogRaidLead.rewardLimits, {
+      repPerObjective: 100,
+      marksPerObjective: 5,
+      marksPerQuest: 20,
+    });
     assert.ok(
       catalogRaidLead.permissions.includes("members.billet.assign"),
     );
