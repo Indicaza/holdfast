@@ -474,21 +474,30 @@ function ObjectiveEditor({
   count,
   members,
   rewardLimits,
-  canComplete,
+  canEdit,
+  canApprove,
+  canIssue,
+  questPublished,
+  workspaceDirty,
   onChange,
   onMove,
   onDelete,
+  onApprove,
   onComplete,
 }) {
   const assignedMemberIds = new Set(
     objective.assignments.map((assignment) => assignment.memberId).filter(Boolean),
   )
   const assignedCount = assignedMemberIds.size
-  const hasReward =
-    objective.reward.rep > 0 ||
-    objective.reward.marks > 0 ||
-    objective.reward.items.length > 0
-  const completionReady = canComplete && (!hasReward || assignedCount > 0)
+  const hasReward = rewardHasValue(objective.reward)
+  const approved = rewardApproved(objective)
+  const approvalReady = canApprove && hasReward && !approved && !workspaceDirty
+  const completionReady =
+    canIssue &&
+    questPublished &&
+    !workspaceDirty &&
+    approved &&
+    (!hasReward || assignedCount > 0)
 
   function updateAssignment(assignmentIndex, nextAssignment) {
     onChange({
@@ -508,6 +517,14 @@ function ObjectiveEditor({
     })
   }
 
+  function updateReward(reward) {
+    onChange({
+      ...objective,
+      reward,
+      rewardApproval: blankRewardApproval(),
+    })
+  }
+
   return (
     <details className="quest-editor__objective">
       <summary>
@@ -521,6 +538,17 @@ function ObjectiveEditor({
           >
             {objective.priority}
           </span>
+          {hasReward && !objective.completed ? (
+            <span
+              className={
+                approved
+                  ? 'quest-editor__badge--approved'
+                  : 'quest-editor__badge--pending'
+              }
+            >
+              {approved ? 'Reward approved' : 'Reward pending'}
+            </span>
+          ) : null}
           {objective.completed ? (
             <span className="quest-editor__badge--complete">Complete</span>
           ) : null}
@@ -529,21 +557,23 @@ function ObjectiveEditor({
       </summary>
 
       <div className="quest-editor__entity-body">
-        <div className="quest-editor__entity-actions">
-          <OrderActions
-            index={index}
-            length={count}
-            label="objective"
-            onMove={onMove}
-          />
-          <ActionButton
-            tone="danger"
-            disabled={objective.completed}
-            onClick={onDelete}
-          >
-            Delete objective
-          </ActionButton>
-        </div>
+        {canEdit ? (
+          <div className="quest-editor__entity-actions">
+            <OrderActions
+              index={index}
+              length={count}
+              label="objective"
+              onMove={onMove}
+            />
+            <ActionButton
+              tone="danger"
+              disabled={objective.completed}
+              onClick={onDelete}
+            >
+              Delete objective
+            </ActionButton>
+          </div>
+        ) : null}
 
         <div
           className={`quest-editor__completion-row${
@@ -551,31 +581,64 @@ function ObjectiveEditor({
           }`}
         >
           <div>
-            <strong>{objective.completed ? 'Reward issued' : 'Ready to close?'}</strong>
+            <strong>
+              {objective.completed
+                ? 'Reward issued'
+                : hasReward && !approved
+                  ? 'Reward awaiting approval'
+                  : hasReward
+                    ? 'Reward approved'
+                    : 'Ready to close?'}
+            </strong>
             <small>
               {objective.completed
                 ? 'This objective is locked because its contribution reward has been recorded.'
-                : !canComplete
-                  ? 'Publish this quest before completing objectives.'
-                  : hasReward && assignedCount === 0
-                    ? 'Assign at least one guild member before issuing this reward.'
-                    : 'Completing saves current changes and permanently awards each assigned member.'}
+                : workspaceDirty
+                  ? 'Save changes before approving or completing this objective.'
+                  : hasReward && !approved
+                    ? canApprove
+                      ? 'Review the proposed reward, then approve it before payout.'
+                      : 'An authorized officer must approve this reward before payout.'
+                    : hasReward && objective.rewardApproval?.approvedByName
+                      ? `Approved by ${objective.rewardApproval.approvedByName}.`
+                      : !questPublished
+                        ? 'Publish this quest before completing objectives.'
+                        : hasReward && assignedCount === 0
+                          ? 'Assign at least one guild member before issuing this reward.'
+                          : canIssue
+                            ? 'Completion permanently records the contribution and payout.'
+                            : 'An authorized officer must issue completion and rewards.'}
             </small>
           </div>
+
           {!objective.completed ? (
-            <ActionButton
-              tone="complete"
-              disabled={!completionReady}
-              onClick={onComplete}
-            >
-              Complete & award
-            </ActionButton>
+            <div className="quest-editor__reward-actions">
+              {canApprove && hasReward && !approved ? (
+                <ActionButton
+                  tone="approve"
+                  disabled={!approvalReady}
+                  onClick={onApprove}
+                >
+                  Approve reward
+                </ActionButton>
+              ) : null}
+
+              {canIssue ? (
+                <ActionButton
+                  tone="complete"
+                  disabled={!completionReady}
+                  onClick={onComplete}
+                >
+                  Complete &amp; award
+                </ActionButton>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
         <fieldset
           className="quest-editor__objective-fields"
-          disabled={objective.completed}
+          disabled={!canEdit || objective.completed}
         >
           <div className="quest-editor__grid">
             <label className="quest-editor__field--wide">
@@ -626,11 +689,11 @@ function ObjectiveEditor({
           </div>
 
           <fieldset className="quest-editor__fieldset">
-            <legend>Reward</legend>
+            <legend>Reward proposal</legend>
             <RewardFields
               value={objective.reward}
               limits={rewardLimits}
-              onChange={(reward) => onChange({ ...objective, reward })}
+              onChange={updateReward}
             />
           </fieldset>
 
@@ -673,6 +736,13 @@ function ObjectiveEditor({
             ) : null}
           </fieldset>
         </fieldset>
+
+        {!canEdit ? (
+          <p className="quest-editor__scope-note">
+            This quest is outside your edit scope. Reward actions remain available
+            only when separately granted.
+          </p>
+        ) : null}
       </div>
     </details>
   )
