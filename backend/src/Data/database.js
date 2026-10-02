@@ -322,6 +322,7 @@ const migrations = [
         insertBillet.run(id, name, responsibility, now, now);
       }
     },
+  },
   {
     version: 4,
     name: "authority_scopes",
@@ -374,7 +375,6 @@ const migrations = [
         );
       }
     },
-  },
   },
 ];
 
