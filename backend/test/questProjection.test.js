@@ -103,6 +103,11 @@ test("public quest projection strips private/internal assignment identifiers", (
     avatar: "https://cdn.example.test/avatar.png",
   });
   assert.equal("memberId" in assignment, false);
+  assert.deepEqual(objective.rewardApproval, {
+    status: "pending",
+    approvedBy: "",
+    approvedAt: "",
+  });
 
   assert.deepEqual(rewardItem, {
     name: "Guild Cache",

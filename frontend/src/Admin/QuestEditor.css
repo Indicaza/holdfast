@@ -1070,3 +1070,108 @@
     width: 100%;
   }
 }
+
+
+.quest-editor__badge--approved,
+.quest-editor__badge--pending,
+.quest-editor__badge--review {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  padding-inline: var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.62rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-editor__badge--approved {
+  border-color: rgba(102, 170, 118, 0.42);
+  color: #b8d9ba;
+}
+
+.quest-editor__badge--pending {
+  border-color: rgba(196, 166, 103, 0.46);
+  color: var(--color-accent-bright);
+}
+
+.quest-editor__badge--review {
+  border-color: rgba(157, 191, 232, 0.34);
+  color: #9dbfe8;
+}
+
+.quest-editor__reward-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.quest-editor__action-button--approve {
+  border-color: rgba(196, 166, 103, 0.56);
+  background: rgba(196, 166, 103, 0.12);
+  color: var(--color-accent-bright);
+}
+
+.quest-editor__action-button--approve:hover:not(:disabled),
+.quest-editor__action-button--approve:focus-visible:not(:disabled) {
+  border-color: var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.2);
+  color: var(--color-text-strong);
+}
+
+.quest-editor__scope-note {
+  margin: 0 var(--space-6) var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid rgba(157, 191, 232, 0.42);
+  background: rgba(157, 191, 232, 0.04);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.quest-editor__scope-note--quest {
+  margin-top: var(--space-4);
+}
+
+.quest-editor__economy-callout {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid rgba(196, 166, 103, 0.3);
+  border-left: 3px solid var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.045);
+}
+
+.quest-editor__economy-callout strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.quest-editor__economy-callout p {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.quest-editor__economy-range--single {
+  align-content: start;
+}
+
+.quest-editor__economy-range--single > small {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+@media (max-width: 48rem) {
+  .quest-editor__reward-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .quest-editor__reward-actions .quest-editor__action-button {
+    flex: 1;
+  }
+}

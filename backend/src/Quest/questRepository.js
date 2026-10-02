@@ -86,6 +86,7 @@ function settingsFromDatabase(db) {
       rep_max: 1000,
       marks_min: 0,
       marks_max: 1000,
+      marks_quest_max: 1000,
     }
   );
 }
@@ -152,6 +153,12 @@ function objectivesForQuest(db, questId) {
         marks: Number(row.reward_marks) || 0,
         items: rewardItemsForObjective(db, row.id),
       },
+      rewardApproval: {
+        approvedByMemberId: row.reward_approved_by_member_id || "",
+        approvedByName: row.reward_approved_by_name || "",
+        approvedAt: row.reward_approved_at || "",
+        fingerprint: row.reward_approved_fingerprint || "",
+      },
       assignments: assignmentsForObjective(db, row.id),
     }));
 }
@@ -168,6 +175,8 @@ export function readQuestsFromDatabase(db) {
         mode: row.mode,
         title: row.title,
         summary: row.summary || "",
+        createdByMemberId: row.created_by_member_id || "",
+        createdAt: row.created_at || "",
         objectives: objectivesForQuest(db, row.id),
         completed: Boolean(row.completed),
       }));
@@ -185,6 +194,7 @@ export function readQuestsFromDatabase(db) {
           min: Number(settings.marks_min) || 0,
           max: Number(settings.marks_max) || 0,
         },
+        marksPerQuestMax: Number(settings.marks_quest_max) || 0,
       },
       quests,
     });
@@ -209,7 +219,8 @@ export function writeQuestsToDatabase(db, document) {
         rep_min = ?,
         rep_max = ?,
         marks_min = ?,
-        marks_max = ?
+        marks_max = ?,
+        marks_quest_max = ?
       WHERE id = 1
     `,
   ).run(
@@ -219,6 +230,7 @@ export function writeQuestsToDatabase(db, document) {
     normalized.rewardLimits.rep.max,
     normalized.rewardLimits.marks.min,
     normalized.rewardLimits.marks.max,
+    normalized.rewardLimits.marksPerQuestMax,
   );
 
   db.prepare("DELETE FROM quests").run();
@@ -231,9 +243,11 @@ export function writeQuestsToDatabase(db, document) {
         mode,
         title,
         summary,
+        created_by_member_id,
+        created_at,
         completed,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
   );
   const insertObjective = db.prepare(
@@ -248,8 +262,12 @@ export function writeQuestsToDatabase(db, document) {
         need,
         reward_rep,
         reward_marks,
+        reward_approved_by_member_id,
+        reward_approved_by_name,
+        reward_approved_at,
+        reward_approved_fingerprint,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
   );
   const insertRewardItem = db.prepare(
@@ -285,6 +303,8 @@ export function writeQuestsToDatabase(db, document) {
       quest.mode,
       quest.title,
       quest.summary,
+      quest.createdByMemberId || null,
+      quest.createdAt || "",
       quest.completed ? 1 : 0,
       questIndex,
     );
@@ -300,6 +320,10 @@ export function writeQuestsToDatabase(db, document) {
         objective.need,
         objective.reward.rep,
         objective.reward.marks,
+        objective.rewardApproval?.approvedByMemberId || null,
+        objective.rewardApproval?.approvedByName || "",
+        objective.rewardApproval?.approvedAt || "",
+        objective.rewardApproval?.fingerprint || "",
         objectiveIndex,
       );
 

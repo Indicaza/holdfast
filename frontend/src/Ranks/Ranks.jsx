@@ -181,20 +181,45 @@ function canEditScope(type, scope, session) {
 function authoritySummary(scope) {
   if (!scope) return null
 
-  const permissionCount = Array.isArray(scope.permissions)
-    ? scope.permissions.length
-    : 0
-  const permissionLabel =
-    permissionCount === 1 ? '1 permission' : `${permissionCount} permissions`
-  const grantsMemberManagement = (scope.permissions || []).some(
-    (permission) => MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
-  )
-  const ceiling =
-    grantsMemberManagement && scope.maxManagedRank
-      ? `manage through ${scope.maxManagedRank}`
-      : 'no member management'
+  const permissions = scope.permissions || []
+  const permissionCount = permissions.length
+  const parts = [
+    permissionCount === 1 ? '1 permission' : `${permissionCount} permissions`,
+  ]
 
-  return `${permissionLabel} · ${ceiling}`
+  const hasQuestAuthority = permissions.some((permission) =>
+    [
+      'quests.create',
+      'quests.edit',
+      'quests.publish',
+      'rewards.approve',
+      'rewards.issue',
+    ].includes(permission),
+  )
+
+  if (hasQuestAuthority) {
+    parts.push(`${scope.questScope === 'all' ? 'all' : 'own'} quests`)
+  }
+
+  const hasRewardAuthority = permissions.some((permission) =>
+    ['rewards.approve', 'rewards.issue'].includes(permission),
+  )
+
+  if (hasRewardAuthority && scope.rewardLimits) {
+    parts.push(
+      `${scope.rewardLimits.repPerObjective} Rep / ${scope.rewardLimits.marksPerObjective} Marks`,
+    )
+  }
+
+  const grantsMemberManagement = permissions.some((permission) =>
+    MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
+  )
+
+  if (grantsMemberManagement && scope.maxManagedRank) {
+    parts.push(`manage through ${scope.maxManagedRank}`)
+  }
+
+  return parts.join(' · ')
 }
 
 function interactiveCardProps(editable, onEdit, label) {
@@ -584,6 +609,7 @@ function Ranks() {
           scope={editing.scope}
           capabilities={catalog.capabilities}
           actorAuthority={session.authority}
+          economyPolicy={catalog.economyPolicy}
           authorityEditable={canEditScope(
             editing.type,
             editing.scope,

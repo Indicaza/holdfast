@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import QuestEditor from '../Admin/QuestEditor.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
@@ -98,11 +99,13 @@ function matchesTerms(text, terms) {
 }
 
 function availableReward(quest, currency) {
-  return quest.objectives.reduce(
-    (total, objective) =>
-      objective.completed ? total : total + (Number(objective.reward?.[currency]) || 0),
-    0,
-  )
+  return quest.objectives.reduce((total, objective) => {
+    if (objective.completed || objective.rewardApproval?.status === 'pending') {
+      return total
+    }
+
+    return total + (Number(objective.reward?.[currency]) || 0)
+  }, 0)
 }
 
 function Assignment({ assignment, objectiveTitle, onSelfClick }) {
@@ -185,17 +188,23 @@ function SignupSlot({ objectiveTitle, onClick }) {
   )
 }
 
-function Reward({ reward }) {
+function Reward({ reward, approval }) {
   const items = reward?.items ?? []
   const visibleItems = items.slice(0, MAX_VISIBLE_REWARD_ITEMS)
   const hiddenItemCount = Math.max(0, items.length - visibleItems.length)
+  const pending = approval?.status === 'pending'
+  const approved = approval?.status === 'approved'
 
   if (!reward || (!reward.rep && !reward.marks && !items.length)) {
     return null
   }
 
   return (
-    <div className="quest-board__reward">
+    <div className={
+      pending
+        ? 'quest-board__reward quest-board__reward--pending'
+        : 'quest-board__reward'
+    }>
       <div className="quest-board__reward-values">
         {reward.rep > 0 ? <span><strong>{reward.rep}</strong> Rep</span> : null}
         {reward.marks > 0 ? <span><strong>{reward.marks}</strong> Marks</span> : null}
@@ -219,6 +228,22 @@ function Reward({ reward }) {
           </span>
         ) : null}
       </div>
+      {pending ? (
+        <small className="quest-board__reward-status quest-board__reward-status--pending">
+          Pending approval
+        </small>
+      ) : approved ? (
+        <small
+          className="quest-board__reward-status quest-board__reward-status--approved"
+          title={
+            approval?.approvedBy
+              ? `Approved by ${approval.approvedBy}`
+              : 'Approved reward'
+          }
+        >
+          Approved
+        </small>
+      ) : null}
     </div>
   )
 }
@@ -331,7 +356,10 @@ function QuestObjectives({ quest, objectives, onSignup, onLeave }) {
                 </div>
               </div>
 
-              <Reward reward={objective.reward} />
+              <Reward
+                reward={objective.reward}
+                approval={objective.rewardApproval}
+              />
             </article>
           )
         })}
@@ -408,7 +436,17 @@ function Quests() {
   const [searchInput, setSearchInput] = useState(initialSearch)
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [sortBy, setSortBy] = useState('featured')
+  const [managing, setManaging] = useState(false)
   const signup = useQuestSignup({ catalog, setCatalog })
+
+  const canManageQuests = [
+    'quests.create',
+    'quests.edit',
+    'quests.publish',
+    'rewards.approve',
+    'rewards.issue',
+    'rewards.policy.edit',
+  ].some((permission) => session.hasPermission(permission))
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -559,7 +597,28 @@ function Quests() {
       centered
       className="quests-page"
     >
-      {status === 'loading' ? (
+      {canManageQuests ? (
+        <div className="quests-page__mode-bar">
+          <div>
+            <strong>{managing ? 'Quest management' : 'Quest board'}</strong>
+            <span>
+              {managing
+                ? 'Create, edit, approve, and issue within your authority.'
+                : 'Member view of published guild work.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setManaging((value) => !value)}
+          >
+            {managing ? 'Back to quest board' : 'Manage quests'}
+          </button>
+        </div>
+      ) : null}
+
+      {managing && canManageQuests ? (
+        <QuestEditor />
+      ) : status === 'loading' ? (
         <p className="quests-page__state">Opening the quest board…</p>
       ) : status === 'error' ? (
         <p className="quests-page__state quests-page__state--error">

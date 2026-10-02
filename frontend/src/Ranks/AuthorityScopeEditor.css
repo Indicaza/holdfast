@@ -472,3 +472,99 @@
     flex-direction: column;
   }
 }
+
+
+.authority-editor__scope-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.authority-editor__scope-option {
+  display: grid;
+  gap: var(--space-1);
+  min-height: 5.5rem;
+  padding: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.38);
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.authority-editor__scope-option strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
+}
+
+.authority-editor__scope-option span {
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.authority-editor__scope-option--active {
+  border-color: rgba(196, 166, 103, 0.68);
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.09), transparent 72%),
+    rgba(3, 8, 15, 0.58);
+}
+
+.authority-editor__scope-option--active strong {
+  color: var(--color-accent-bright);
+}
+
+.authority-editor__scope-option:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.authority-editor__reward-limits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.authority-editor__reward-limits label {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.28);
+}
+
+.authority-editor__reward-limits label > span {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.authority-editor__reward-limits input {
+  width: 100%;
+  min-height: 3rem;
+  padding-inline: var(--space-3);
+  border: 1px solid rgba(196, 166, 103, 0.3);
+  border-radius: 0;
+  background: rgba(3, 8, 15, 0.66);
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.authority-editor__reward-limits input:focus-visible {
+  border-color: var(--color-accent-bright);
+  outline: none;
+}
+
+.authority-editor__reward-limits small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 48rem) {
+  .authority-editor__scope-options,
+  .authority-editor__reward-limits {
+    grid-template-columns: 1fr;
+  }
+}

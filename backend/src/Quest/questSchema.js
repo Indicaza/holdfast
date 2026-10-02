@@ -11,6 +11,7 @@ const QUEST_MODES = ["rotating", "permanent"];
 const DEFAULT_REWARD_LIMITS = {
   rep: { min: 0, max: 1000 },
   marks: { min: 0, max: 1000 },
+  marksPerQuestMax: 1000,
 };
 
 function object(value, path) {
@@ -139,6 +140,63 @@ function reward(value, path) {
   };
 }
 
+export function rewardFingerprint(value) {
+  const normalized = {
+    rep: Number(value?.rep) || 0,
+    marks: Number(value?.marks) || 0,
+    items: (Array.isArray(value?.items) ? value.items : []).map((item) => ({
+      name: String(item?.name || "").trim(),
+      quantity: Number(item?.quantity) || 0,
+    })),
+  };
+
+  return JSON.stringify(normalized);
+}
+
+export function rewardNeedsApproval(value) {
+  return (
+    Number(value?.rep) > 0 ||
+    Number(value?.marks) > 0 ||
+    (Array.isArray(value?.items) && value.items.length > 0)
+  );
+}
+
+function rewardApproval(value, path) {
+  const input =
+    value && typeof value === "object" && !Array.isArray(value) ? value : {};
+
+  return {
+    approvedByMemberId: optionalText(
+      input.approvedByMemberId,
+      `${path}.approvedByMemberId`,
+      120,
+    ),
+    approvedByName: optionalText(
+      input.approvedByName,
+      `${path}.approvedByName`,
+      160,
+    ),
+    approvedAt: optionalText(input.approvedAt, `${path}.approvedAt`, 80),
+    fingerprint: optionalText(
+      input.fingerprint,
+      `${path}.fingerprint`,
+      5000,
+    ),
+  };
+}
+
+export function rewardIsApproved(objective) {
+  if (!rewardNeedsApproval(objective?.reward)) {
+    return true;
+  }
+
+  return Boolean(
+    objective?.rewardApproval?.approvedAt &&
+      objective.rewardApproval.fingerprint ===
+        rewardFingerprint(objective.reward),
+  );
+}
+
 function rewardRange(value, path, fallback) {
   const input = object(value ?? fallback, path);
   const min = wholeNumber(input.min ?? fallback.min, `${path}.min`);
@@ -157,6 +215,10 @@ function rewardLimits(value, path) {
   return {
     rep: rewardRange(input.rep, `${path}.rep`, DEFAULT_REWARD_LIMITS.rep),
     marks: rewardRange(input.marks, `${path}.marks`, DEFAULT_REWARD_LIMITS.marks),
+    marksPerQuestMax: wholeNumber(
+      input.marksPerQuestMax ?? DEFAULT_REWARD_LIMITS.marksPerQuestMax,
+      `${path}.marksPerQuestMax`,
+    ),
   };
 }
 
@@ -204,6 +266,10 @@ function objective(value, path, index, limits) {
     completed: input.completed === true,
     need: optionalText(input.need, `${path}.need`, 500),
     reward: normalizedReward,
+    rewardApproval: rewardApproval(
+      input.rewardApproval,
+      `${path}.rewardApproval`,
+    ),
     assignments: list(input.assignments ?? [], `${path}.assignments`, 20).map(
       (item, assignmentIndex) =>
         assignment(item, `${path}.assignments[${assignmentIndex}]`),
@@ -219,12 +285,30 @@ function quest(value, path, index, limits) {
   );
   const mode = questMode(input.mode, `${path}.mode`);
 
+  const marksTotal = objectives.reduce(
+    (total, objectiveItem) =>
+      total + (Number(objectiveItem.reward.marks) || 0),
+    0,
+  );
+
+  if (marksTotal > limits.marksPerQuestMax) {
+    throw new QuestValidationError(
+      `${path} proposes ${marksTotal} Marks, above the ${limits.marksPerQuestMax} Marks per quest limit`,
+    );
+  }
+
   return {
     id: identifier(input.id || `quest-${index + 1}`, `${path}.id`),
     publication: publication(input.publication, `${path}.publication`),
     mode,
     title: text(input.title, `${path}.title`, 200),
     summary: optionalText(input.summary, `${path}.summary`, 2000),
+    createdByMemberId: optionalText(
+      input.createdByMemberId,
+      `${path}.createdByMemberId`,
+      120,
+    ),
+    createdAt: optionalText(input.createdAt, `${path}.createdAt`, 80),
     objectives,
     completed:
       mode !== "permanent" &&
@@ -331,6 +415,8 @@ function projectPublicReward(rewardValue) {
 }
 
 function projectPublicObjective(objectiveItem, viewerMemberId = "") {
+  const approved = rewardIsApproved(objectiveItem);
+
   return {
     id: objectiveItem.id,
     title: objectiveItem.title,
@@ -339,6 +425,19 @@ function projectPublicObjective(objectiveItem, viewerMemberId = "") {
     completed: objectiveItem.completed,
     need: objectiveItem.need,
     reward: projectPublicReward(objectiveItem.reward),
+    rewardApproval: {
+      status: rewardNeedsApproval(objectiveItem.reward)
+        ? approved
+          ? "approved"
+          : "pending"
+        : "not-required",
+      approvedBy: approved
+        ? objectiveItem.rewardApproval.approvedByName
+        : "",
+      approvedAt: approved
+        ? objectiveItem.rewardApproval.approvedAt
+        : "",
+    },
     assignments: objectiveItem.assignments.map((assignmentItem) =>
       projectPublicAssignment(assignmentItem, viewerMemberId),
     ),

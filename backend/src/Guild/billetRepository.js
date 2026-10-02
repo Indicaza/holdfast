@@ -5,7 +5,11 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
-import { normalizeCapabilityList, normalizeManagedRank } from "./authorityPolicy.js";
+import {
+  normalizeCapabilityList,
+  normalizeManagedRank,
+  normalizeQuestScope,
+} from "./authorityPolicy.js";
 import { GUILD_RANKS } from "./rankSystem.js";
 
 const RESERVED_BILLET_NAMES = new Set(
@@ -35,6 +39,12 @@ function billetFromRow(row) {
     discordManaged: Boolean(row.discord_managed),
     permissions: parsePermissions(row.permissions_json),
     maxManagedRank: normalizeManagedRank(row.max_managed_rank),
+    questScope: normalizeQuestScope(row.quest_scope),
+    rewardLimits: {
+      repPerObjective: Number(row.reward_rep_max) || 0,
+      marksPerObjective: Number(row.reward_marks_max) || 0,
+      marksPerQuest: Number(row.reward_marks_quest_max) || 0,
+    },
     active: Boolean(row.active),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

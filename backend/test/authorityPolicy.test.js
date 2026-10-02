@@ -2,29 +2,46 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  mergeAuthorityScopes,
   canDelegateScope,
+  mergeAuthorityScopes,
 } from "../src/Guild/authorityPolicy.js";
 
-test("authority merging is additive across rank and billets", () => {
+const ZERO = {
+  repPerObjective: 0,
+  marksPerObjective: 0,
+  marksPerQuest: 0,
+};
+
+test("rank and billets combine additively without erasing authority", () => {
   const merged = mergeAuthorityScopes([
     {
-      permissions: ["quests.edit", "members.rank.manage"],
+      permissions: [
+        "quests.create",
+        "quests.edit",
+        "members.rank.manage",
+      ],
       maxManagedRank: "Sergeant",
+      questScope: "own",
+      rewardLimits: ZERO,
     },
     {
       permissions: ["rewards.policy.edit"],
       maxManagedRank: null,
+      questScope: "own",
+      rewardLimits: ZERO,
     },
     {
       permissions: ["audit.view", "quests.edit"],
-      maxManagedRank: "Corporal",
+      maxManagedRank: null,
+      questScope: "all",
+      rewardLimits: ZERO,
     },
   ]);
 
   assert.deepEqual(
     new Set(merged.permissions),
     new Set([
+      "quests.create",
       "quests.edit",
       "members.rank.manage",
       "rewards.policy.edit",
@@ -32,112 +49,191 @@ test("authority merging is additive across rank and billets", () => {
     ]),
   );
   assert.equal(merged.maxManagedRank, "Sergeant");
+  assert.equal(merged.questScopes["quests.create"], "own");
+  assert.equal(merged.questScopes["quests.edit"], "all");
 });
 
-test("a less powerful billet never removes rank permissions or lowers its ceiling", () => {
-  const rank = {
-    permissions: [
-      "site.admin",
-      "quests.edit",
-      "members.rank.manage",
-    ],
-    maxManagedRank: "Master Sergeant",
-  };
-  const billet = {
-    permissions: ["quests.edit"],
-    maxManagedRank: "Private",
-  };
+test("quest scope is composed per capability rather than globally", () => {
+  const merged = mergeAuthorityScopes([
+    {
+      permissions: ["quests.create", "quests.edit"],
+      questScope: "own",
+      rewardLimits: ZERO,
+    },
+    {
+      permissions: ["quests.publish"],
+      questScope: "all",
+      rewardLimits: ZERO,
+    },
+  ]);
 
-  const merged = mergeAuthorityScopes([rank, billet]);
-
-  assert.deepEqual(
-    new Set(merged.permissions),
-    new Set([
-      "site.admin",
-      "quests.edit",
-      "members.rank.manage",
-    ]),
-  );
-  assert.equal(merged.maxManagedRank, "Master Sergeant");
+  assert.equal(merged.questScopes["quests.create"], "own");
+  assert.equal(merged.questScopes["quests.edit"], "own");
+  assert.equal(merged.questScopes["quests.publish"], "all");
 });
 
-test("a more powerful billet adds authority on top of rank", () => {
-  const rank = {
-    permissions: ["quests.edit"],
-    maxManagedRank: null,
-  };
-  const billet = {
-    permissions: [
-      "members.billet.assign",
-      "rewards.issue",
-    ],
-    maxManagedRank: "Corporal",
-  };
+test("wider scope for the same quest capability wins", () => {
+  const merged = mergeAuthorityScopes([
+    {
+      permissions: ["quests.edit"],
+      questScope: "own",
+      rewardLimits: ZERO,
+    },
+    {
+      permissions: ["quests.edit"],
+      questScope: "all",
+      rewardLimits: ZERO,
+    },
+  ]);
 
-  const merged = mergeAuthorityScopes([rank, billet]);
+  assert.equal(merged.questScopes["quests.edit"], "all");
+});
 
-  assert.deepEqual(
-    new Set(merged.permissions),
-    new Set([
-      "quests.edit",
-      "members.billet.assign",
-      "rewards.issue",
-    ]),
-  );
+test("approve and issue reward brackets compose independently", () => {
+  const merged = mergeAuthorityScopes([
+    {
+      permissions: ["rewards.approve"],
+      questScope: "all",
+      rewardLimits: {
+        repPerObjective: 250,
+        marksPerObjective: 10,
+        marksPerQuest: 50,
+      },
+    },
+    {
+      permissions: ["rewards.issue"],
+      questScope: "all",
+      rewardLimits: {
+        repPerObjective: 100,
+        marksPerObjective: 5,
+        marksPerQuest: 20,
+      },
+    },
+    {
+      permissions: ["rewards.approve"],
+      questScope: "own",
+      rewardLimits: {
+        repPerObjective: 500,
+        marksPerObjective: 25,
+        marksPerQuest: 100,
+      },
+    },
+  ]);
+
+  assert.deepEqual(merged.rewardLimits.approve, {
+    repPerObjective: 500,
+    marksPerObjective: 25,
+    marksPerQuest: 100,
+  });
+  assert.deepEqual(merged.rewardLimits.issue, {
+    repPerObjective: 100,
+    marksPerObjective: 5,
+    marksPerQuest: 20,
+  });
+  assert.equal(merged.questScopes["rewards.approve"], "all");
+  assert.equal(merged.questScopes["rewards.issue"], "all");
+});
+
+test("a non-management scope cannot silently elevate member ceiling", () => {
+  const merged = mergeAuthorityScopes([
+    {
+      permissions: ["members.rank.manage"],
+      maxManagedRank: "Corporal",
+      questScope: "own",
+      rewardLimits: ZERO,
+    },
+    {
+      permissions: ["quests.edit"],
+      maxManagedRank: "Commander",
+      questScope: "all",
+      rewardLimits: ZERO,
+    },
+  ]);
+
   assert.equal(merged.maxManagedRank, "Corporal");
 });
 
-test("delegation requires every permission and the ceiling to fit inside actor authority", () => {
+test("delegation requires permission subset, quest scope, reward bracket, and member ceiling", () => {
   const actor = {
     permissions: [
+      "quests.create",
       "quests.edit",
+      "rewards.approve",
       "members.billet.assign",
-      "rewards.issue",
     ],
     maxManagedRank: "Sergeant",
+    questScopes: {
+      "quests.create": "own",
+      "quests.edit": "all",
+      "rewards.approve": "all",
+    },
+    rewardLimits: {
+      approve: {
+        repPerObjective: 250,
+        marksPerObjective: 10,
+        marksPerQuest: 50,
+      },
+      issue: ZERO,
+    },
   };
 
   assert.equal(
     canDelegateScope(actor, {
-      permissions: ["quests.edit", "rewards.issue"],
-      maxManagedRank: "Corporal",
+      permissions: ["quests.edit", "rewards.approve"],
+      maxManagedRank: null,
+      questScope: "own",
+      rewardLimits: {
+        repPerObjective: 100,
+        marksPerObjective: 5,
+        marksPerQuest: 25,
+      },
     }),
     true,
   );
 
   assert.equal(
     canDelegateScope(actor, {
+      permissions: ["quests.create"],
+      maxManagedRank: null,
+      questScope: "all",
+      rewardLimits: ZERO,
+    }),
+    false,
+    "cannot delegate All create scope from Own create scope",
+  );
+
+  assert.equal(
+    canDelegateScope(actor, {
+      permissions: ["rewards.approve"],
+      maxManagedRank: null,
+      questScope: "all",
+      rewardLimits: {
+        repPerObjective: 500,
+        marksPerObjective: 5,
+        marksPerQuest: 25,
+      },
+    }),
+    false,
+    "cannot delegate a reward bracket above actor authority",
+  );
+
+  assert.equal(
+    canDelegateScope(actor, {
       permissions: ["discord.manage"],
       maxManagedRank: null,
+      questScope: "own",
+      rewardLimits: ZERO,
     }),
     false,
   );
 
   assert.equal(
     canDelegateScope(actor, {
-      permissions: ["quests.edit"],
+      permissions: ["members.billet.assign"],
       maxManagedRank: "Lieutenant",
+      questScope: "own",
+      rewardLimits: ZERO,
     }),
     false,
   );
-});
-
-
-test("a ceiling without a member-management permission cannot elevate another scope", () => {
-  const merged = mergeAuthorityScopes([
-    {
-      permissions: ["members.rank.manage"],
-      maxManagedRank: "Corporal",
-    },
-    {
-      permissions: ["quests.edit"],
-      maxManagedRank: "Commander",
-    },
-  ]);
-
-  assert.deepEqual(
-    new Set(merged.permissions),
-    new Set(["members.rank.manage", "quests.edit"]),
-  );
-  assert.equal(merged.maxManagedRank, "Corporal");
 });

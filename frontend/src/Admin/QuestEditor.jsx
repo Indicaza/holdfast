@@ -31,6 +31,13 @@ function createId(prefix) {
 
 const blankReward = () => ({ rep: 0, marks: 0, items: [] })
 
+const blankRewardApproval = () => ({
+  approvedByMemberId: '',
+  approvedByName: '',
+  approvedAt: '',
+  fingerprint: '',
+})
+
 const blankRewardItem = () => ({
   id: createId('reward-item'),
   name: '',
@@ -53,15 +60,18 @@ const blankObjective = () => ({
   completed: false,
   need: '',
   reward: blankReward(),
+  rewardApproval: blankRewardApproval(),
   assignments: [],
 })
 
-const blankQuest = () => ({
+const blankQuest = (memberId = '') => ({
   id: createId('quest'),
   publication: 'draft',
   mode: 'rotating',
   title: 'New quest',
   summary: '',
+  createdByMemberId: memberId,
+  createdAt: new Date().toISOString(),
   objectives: [blankObjective()],
   completed: false,
 })
@@ -112,6 +122,67 @@ function ensureFocus(document) {
 
 function progress(count, total, singular) {
   return `${count}/${total} ${singular}${total === 1 ? '' : 's'}`
+}
+
+function rewardHasValue(reward) {
+  return Boolean(
+    Number(reward?.rep) > 0 ||
+      Number(reward?.marks) > 0 ||
+      (reward?.items || []).length,
+  )
+}
+
+function rewardApproved(objective) {
+  if (!rewardHasValue(objective?.reward)) return true
+
+  const approval = objective?.rewardApproval
+  if (!approval?.approvedAt || !approval?.fingerprint) return false
+
+  const fingerprint = JSON.stringify({
+    rep: Number(objective.reward?.rep) || 0,
+    marks: Number(objective.reward?.marks) || 0,
+    items: (objective.reward?.items || []).map((item) => ({
+      name: String(item?.name || '').trim(),
+      quantity: Number(item?.quantity) || 0,
+    })),
+  })
+
+  return approval.fingerprint === fingerprint
+}
+
+function questScopeAllows(session, permission, quest) {
+  if (!session.hasPermission(permission)) return false
+
+  const scope = session.authority?.questScopes?.[permission]
+
+  return (
+    scope === 'all' ||
+    (scope === 'own' &&
+      Boolean(session.user?.id) &&
+      quest?.createdByMemberId === session.user.id)
+  )
+}
+
+function rewardAuthorityAllows(session, permission, quest, objective) {
+  if (!questScopeAllows(session, permission, quest)) return false
+
+  const bucket =
+    permission === 'rewards.approve'
+      ? session.authority?.rewardLimits?.approve
+      : session.authority?.rewardLimits?.issue
+
+  if (!bucket) return false
+
+  const questMarks = (quest?.objectives || []).reduce(
+    (total, item) => total + (Number(item.reward?.marks) || 0),
+    0,
+  )
+
+  return (
+    (Number(objective?.reward?.rep) || 0) <= bucket.repPerObjective &&
+    (Number(objective?.reward?.marks) || 0) <= bucket.marksPerObjective &&
+    questMarks <= bucket.marksPerQuest
+  )
 }
 
 async function fetchGuildMembers(signal) {
@@ -271,13 +342,13 @@ function ConfirmDialog({ confirmation, onCancel, onConfirm }) {
   )
 }
 
-function OrderActions({ index, length, label, onMove }) {
+function OrderActions({ index, length, label, onMove, disabled = false }) {
   return (
     <div className="quest-editor__order-actions" aria-label={`${label} order`}>
       <button
         type="button"
         aria-label={`Move ${label} up`}
-        disabled={index === 0}
+        disabled={disabled || index === 0}
         onClick={() => onMove(index, -1)}
       >
         ↑
@@ -285,7 +356,7 @@ function OrderActions({ index, length, label, onMove }) {
       <button
         type="button"
         aria-label={`Move ${label} down`}
-        disabled={index === length - 1}
+        disabled={disabled || index === length - 1}
         onClick={() => onMove(index, 1)}
       >
         ↓
@@ -425,21 +496,30 @@ function ObjectiveEditor({
   count,
   members,
   rewardLimits,
-  canComplete,
+  canEdit,
+  canApprove,
+  canIssue,
+  questPublished,
+  workspaceDirty,
   onChange,
   onMove,
   onDelete,
+  onApprove,
   onComplete,
 }) {
   const assignedMemberIds = new Set(
     objective.assignments.map((assignment) => assignment.memberId).filter(Boolean),
   )
   const assignedCount = assignedMemberIds.size
-  const hasReward =
-    objective.reward.rep > 0 ||
-    objective.reward.marks > 0 ||
-    objective.reward.items.length > 0
-  const completionReady = canComplete && (!hasReward || assignedCount > 0)
+  const hasReward = rewardHasValue(objective.reward)
+  const approved = rewardApproved(objective)
+  const approvalReady = canApprove && hasReward && !approved && !workspaceDirty
+  const completionReady =
+    canIssue &&
+    questPublished &&
+    !workspaceDirty &&
+    approved &&
+    (!hasReward || assignedCount > 0)
 
   function updateAssignment(assignmentIndex, nextAssignment) {
     onChange({
@@ -459,6 +539,14 @@ function ObjectiveEditor({
     })
   }
 
+  function updateReward(reward) {
+    onChange({
+      ...objective,
+      reward,
+      rewardApproval: blankRewardApproval(),
+    })
+  }
+
   return (
     <details className="quest-editor__objective">
       <summary>
@@ -472,6 +560,17 @@ function ObjectiveEditor({
           >
             {objective.priority}
           </span>
+          {hasReward && !objective.completed ? (
+            <span
+              className={
+                approved
+                  ? 'quest-editor__badge--approved'
+                  : 'quest-editor__badge--pending'
+              }
+            >
+              {approved ? 'Reward approved' : 'Reward pending'}
+            </span>
+          ) : null}
           {objective.completed ? (
             <span className="quest-editor__badge--complete">Complete</span>
           ) : null}
@@ -480,21 +579,23 @@ function ObjectiveEditor({
       </summary>
 
       <div className="quest-editor__entity-body">
-        <div className="quest-editor__entity-actions">
-          <OrderActions
-            index={index}
-            length={count}
-            label="objective"
-            onMove={onMove}
-          />
-          <ActionButton
-            tone="danger"
-            disabled={objective.completed}
-            onClick={onDelete}
-          >
-            Delete objective
-          </ActionButton>
-        </div>
+        {canEdit ? (
+          <div className="quest-editor__entity-actions">
+            <OrderActions
+              index={index}
+              length={count}
+              label="objective"
+              onMove={onMove}
+            />
+            <ActionButton
+              tone="danger"
+              disabled={objective.completed}
+              onClick={onDelete}
+            >
+              Delete objective
+            </ActionButton>
+          </div>
+        ) : null}
 
         <div
           className={`quest-editor__completion-row${
@@ -502,31 +603,64 @@ function ObjectiveEditor({
           }`}
         >
           <div>
-            <strong>{objective.completed ? 'Reward issued' : 'Ready to close?'}</strong>
+            <strong>
+              {objective.completed
+                ? 'Reward issued'
+                : hasReward && !approved
+                  ? 'Reward awaiting approval'
+                  : hasReward
+                    ? 'Reward approved'
+                    : 'Ready to close?'}
+            </strong>
             <small>
               {objective.completed
                 ? 'This objective is locked because its contribution reward has been recorded.'
-                : !canComplete
-                  ? 'Publish this quest before completing objectives.'
-                  : hasReward && assignedCount === 0
-                    ? 'Assign at least one guild member before issuing this reward.'
-                    : 'Completing saves current changes and permanently awards each assigned member.'}
+                : workspaceDirty
+                  ? 'Save changes before approving or completing this objective.'
+                  : hasReward && !approved
+                    ? canApprove
+                      ? 'Review the proposed reward, then approve it before payout.'
+                      : 'An authorized officer must approve this reward before payout.'
+                    : hasReward && objective.rewardApproval?.approvedByName
+                      ? `Approved by ${objective.rewardApproval.approvedByName}.`
+                      : !questPublished
+                        ? 'Publish this quest before completing objectives.'
+                        : hasReward && assignedCount === 0
+                          ? 'Assign at least one guild member before issuing this reward.'
+                          : canIssue
+                            ? 'Completion permanently records the contribution and payout.'
+                            : 'An authorized officer must issue completion and rewards.'}
             </small>
           </div>
+
           {!objective.completed ? (
-            <ActionButton
-              tone="complete"
-              disabled={!completionReady}
-              onClick={onComplete}
-            >
-              Complete & award
-            </ActionButton>
+            <div className="quest-editor__reward-actions">
+              {canApprove && hasReward && !approved ? (
+                <ActionButton
+                  tone="approve"
+                  disabled={!approvalReady}
+                  onClick={onApprove}
+                >
+                  Approve reward
+                </ActionButton>
+              ) : null}
+
+              {canIssue ? (
+                <ActionButton
+                  tone="complete"
+                  disabled={!completionReady}
+                  onClick={onComplete}
+                >
+                  Complete &amp; award
+                </ActionButton>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
         <fieldset
           className="quest-editor__objective-fields"
-          disabled={objective.completed}
+          disabled={!canEdit || objective.completed}
         >
           <div className="quest-editor__grid">
             <label className="quest-editor__field--wide">
@@ -577,11 +711,11 @@ function ObjectiveEditor({
           </div>
 
           <fieldset className="quest-editor__fieldset">
-            <legend>Reward</legend>
+            <legend>Reward proposal</legend>
             <RewardFields
               value={objective.reward}
               limits={rewardLimits}
-              onChange={(reward) => onChange({ ...objective, reward })}
+              onChange={updateReward}
             />
           </fieldset>
 
@@ -624,12 +758,24 @@ function ObjectiveEditor({
             ) : null}
           </fieldset>
         </fieldset>
+
+        {!canEdit ? (
+          <p className="quest-editor__scope-note">
+            This quest is outside your edit scope. Reward actions remain available
+            only when separately granted.
+          </p>
+        ) : null}
       </div>
     </details>
   )
 }
 
-function EconomySettings({ document, canEdit, onChange }) {
+function EconomySettings({
+  document,
+  canEdit,
+  canEditLimits,
+  onChange,
+}) {
   function updateLimit(currency, key, value) {
     onChange({
       ...document,
@@ -643,17 +789,29 @@ function EconomySettings({ document, canEdit, onChange }) {
     })
   }
 
+  function updateMarksQuestMax(value) {
+    onChange({
+      ...document,
+      rewardLimits: {
+        ...document.rewardLimits,
+        marksPerQuestMax: Number(value),
+      },
+    })
+  }
+
   return (
     <details className="quest-editor__panel quest-editor__economy-panel">
       <summary className="quest-editor__economy-summary">
         <div>
           <span className="quest-editor__kicker">Guild economy</span>
-          <strong>Reward guardrails</strong>
+          <strong>Absolute reward guardrails</strong>
         </div>
         <span>
-          Rep {document.rewardLimits.rep.min}–{document.rewardLimits.rep.max}
+          {document.rewardLimits.rep.max} Rep / objective
           {' · '}
-          Marks {document.rewardLimits.marks.min}–{document.rewardLimits.marks.max}
+          {document.rewardLimits.marks.max} Marks / objective
+          {' · '}
+          {document.rewardLimits.marksPerQuestMax} Marks / quest
         </span>
       </summary>
 
@@ -661,10 +819,22 @@ function EconomySettings({ document, canEdit, onChange }) {
         {!canEdit ? (
           <>
             <p>{document.rewardPolicy || 'No guild reward policy set.'}</p>
-            <small>Only authorized reward-policy editors can change these rules.</small>
+            <small>
+              These are guild-wide ceilings. Rank and billet reward brackets
+              can only be equal or stricter.
+            </small>
           </>
         ) : (
           <>
+            <div className="quest-editor__economy-callout">
+              <strong>These are the hard ceiling.</strong>
+              <p>
+                No officer, rank, or billet can approve or issue more than these
+                values. Delegated reward brackets sit underneath them.
+                Only the Commander can change the hard caps.
+              </p>
+            </div>
+
             <label>
               <span>Policy</span>
               <textarea
@@ -682,26 +852,28 @@ function EconomySettings({ document, canEdit, onChange }) {
                 ['marks', 'Service Marks'],
               ].map(([currency, label]) => (
                 <div key={currency} className="quest-editor__economy-range">
-                  <strong>{label}</strong>
+                  <strong>{label} / objective</strong>
                   <label>
-                    <span>Minimum</span>
+                    <span>Minimum non-zero</span>
                     <input
                       type="number"
                       min="0"
                       step="1"
                       value={document.rewardLimits[currency].min}
+                      disabled={!canEditLimits}
                       onChange={(event) =>
                         updateLimit(currency, 'min', event.target.value)
                       }
                     />
                   </label>
                   <label>
-                    <span>Maximum</span>
+                    <span>Absolute maximum</span>
                     <input
                       type="number"
                       min="0"
                       step="1"
                       value={document.rewardLimits[currency].max}
+                      disabled={!canEditLimits}
                       onChange={(event) =>
                         updateLimit(currency, 'max', event.target.value)
                       }
@@ -709,6 +881,26 @@ function EconomySettings({ document, canEdit, onChange }) {
                   </label>
                 </div>
               ))}
+
+              <div className="quest-editor__economy-range quest-editor__economy-range--single">
+                <strong>Marks / quest</strong>
+                <label>
+                  <span>Absolute maximum</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={document.rewardLimits.marksPerQuestMax}
+                    disabled={!canEditLimits}
+                    onChange={(event) =>
+                      updateMarksQuestMax(event.target.value)
+                    }
+                  />
+                </label>
+                <small>
+                  Total proposed Marks across every objective in one quest.
+                </small>
+              </div>
             </div>
           </>
         )}
@@ -724,6 +916,15 @@ function QuestCard({
   members,
   rewardLimits,
   focused,
+  creatorName,
+  canEdit,
+  canPublish,
+  canApproveQuest,
+  canIssueQuest,
+  canApproveObjective,
+  canIssueObjective,
+  canReorder,
+  workspaceDirty,
   onChange,
   onPublicationChange,
   onMove,
@@ -731,6 +932,7 @@ function QuestCard({
   onRestore,
   onDelete,
   onConfirm,
+  onApproveReward,
   onCompleteObjective,
 }) {
   const completedCount = quest.objectives.filter(
@@ -784,7 +986,7 @@ function QuestCard({
     onConfirm({
       kicker: 'Complete objective',
       title: `Complete “${objective.title}”?`,
-      message: `This saves current changes and awards ${
+      message: `This awards ${
         rewards.length ? rewards.join(', ') : 'no currency reward'
       } to each of ${assignees.size} assigned member${
         assignees.size === 1 ? '' : 's'
@@ -807,10 +1009,14 @@ function QuestCard({
             {questCompleted(quest) ? (
               <span className="quest-editor__badge--complete">Complete</span>
             ) : null}
+            {!canEdit && (canApproveQuest || canIssueQuest) ? (
+              <span className="quest-editor__badge--review">Review only</span>
+            ) : null}
           </div>
           <strong>{quest.title || 'Untitled quest'}</strong>
           <small>
             {progress(completedCount, quest.objectives.length, 'objective')} complete
+            {creatorName ? ` · created by ${creatorName}` : ''}
           </small>
         </div>
         <span className="quest-editor__toggle" aria-hidden="true">+</span>
@@ -823,18 +1029,31 @@ function QuestCard({
             length={count}
             label="quest"
             onMove={onMove}
+            disabled={!canReorder}
           />
           <div className="quest-editor__lifecycle-actions">
             {quest.publication !== 'archived' ? (
-              <ActionButton tone="archive" onClick={onArchive}>
+              <ActionButton
+                tone="archive"
+                disabled={!canPublish}
+                onClick={onArchive}
+              >
                 Archive
               </ActionButton>
             ) : (
-              <ActionButton tone="restore" onClick={onRestore}>
+              <ActionButton
+                tone="restore"
+                disabled={!canPublish}
+                onClick={onRestore}
+              >
                 Restore to draft
               </ActionButton>
             )}
-            <ActionButton tone="danger" onClick={onDelete}>
+            <ActionButton
+              tone="danger"
+              disabled={!canEdit}
+              onClick={onDelete}
+            >
               Delete
             </ActionButton>
           </div>
@@ -845,6 +1064,7 @@ function QuestCard({
             <span>Quest title</span>
             <input
               value={quest.title}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, title: event.target.value })
               }
@@ -857,7 +1077,7 @@ function QuestCard({
               value={
                 quest.publication === 'archived' ? 'draft' : quest.publication
               }
-              disabled={quest.publication === 'archived'}
+              disabled={!canPublish || quest.publication === 'archived'}
               onChange={(event) => onPublicationChange(event.target.value)}
             >
               {PUBLICATION_OPTIONS.map(([value, label]) => (
@@ -870,6 +1090,7 @@ function QuestCard({
             <span>Quest type</span>
             <select
               value={quest.mode}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, mode: event.target.value })
               }
@@ -885,6 +1106,7 @@ function QuestCard({
             <textarea
               rows="3"
               value={quest.summary}
+              disabled={!canEdit}
               onChange={(event) =>
                 onChange({ ...quest, summary: event.target.value })
               }
@@ -897,6 +1119,7 @@ function QuestCard({
           <button
             className="quest-editor__secondary"
             type="button"
+            disabled={!canEdit}
             onClick={() =>
               onChange({
                 ...quest,
@@ -918,7 +1141,11 @@ function QuestCard({
                 count={quest.objectives.length}
                 members={members}
                 rewardLimits={rewardLimits}
-                canComplete={quest.publication === 'published'}
+                canEdit={canEdit}
+                canApprove={canApproveObjective(objective)}
+                canIssue={canIssueObjective(objective)}
+                questPublished={quest.publication === 'published'}
+                workspaceDirty={workspaceDirty}
                 onChange={(nextObjective) =>
                   updateObjective(objectiveIndex, nextObjective)
                 }
@@ -933,6 +1160,7 @@ function QuestCard({
                   })
                 }
                 onDelete={() => confirmDeleteObjective(objective)}
+                onApprove={() => onApproveReward(quest.id, objective.id)}
                 onComplete={() => confirmCompleteObjective(objective)}
               />
             ))
@@ -942,6 +1170,12 @@ function QuestCard({
             </p>
           )}
         </div>
+
+        {!canEdit ? (
+          <p className="quest-editor__scope-note quest-editor__scope-note--quest">
+            You can see this quest, but its content is outside your edit scope.
+          </p>
+        ) : null}
       </div>
     </details>
   )
@@ -950,7 +1184,17 @@ function QuestCard({
 function QuestEditor() {
   const session = useSession()
   const refreshSession = session.refresh
+  const canCreateQuest = session.hasPermission('quests.create')
   const canEditRewardPolicy = session.hasPermission('rewards.policy.edit')
+  const canWriteWorkspace = [
+    'quests.create',
+    'quests.edit',
+    'quests.publish',
+    'rewards.policy.edit',
+  ].some((permission) => session.hasPermission(permission))
+  const canFeatureQuest =
+    session.hasPermission('quests.publish') &&
+    session.authority?.questScopes?.['quests.publish'] === 'all'
   const [draft, setDraft] = useState(null)
   const [saved, setSaved] = useState(null)
   const [members, setMembers] = useState([])
@@ -1046,7 +1290,22 @@ function QuestEditor() {
   }
 
   function importQuestDocument(nextDocument, result) {
-    setDocument(nextDocument)
+    const ownedDocument = {
+      ...nextDocument,
+      quests: nextDocument.quests.map((quest) => ({
+        ...quest,
+        createdByMemberId:
+          quest.createdByMemberId || session.user?.id || '',
+        createdAt: quest.createdAt || new Date().toISOString(),
+        objectives: quest.objectives.map((objective) => ({
+          ...objective,
+          rewardApproval:
+            objective.rewardApproval || blankRewardApproval(),
+        })),
+      })),
+    }
+
+    setDocument(ownedDocument)
     setStatus('ready')
     setMessage(
       result.featuredTitle
@@ -1156,7 +1415,52 @@ function QuestEditor() {
     action?.()
   }
 
+  async function approveReward(questId, objectiveId) {
+    if (dirty) {
+      setStatus('ready')
+      setMessage('Save changes before approving rewards.')
+      return
+    }
+
+    setStatus('saving')
+    setMessage('Approving reward…')
+
+    try {
+      const result = await apiJson('/api/quests/manage/approve-reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          revision: draft.revision,
+          questId,
+          objectiveId,
+        }),
+      })
+
+      setDraft(result)
+      setSaved(result)
+      setStatus('ready')
+      setMessage('Reward approved. Any reward change will require approval again.')
+      announceQuestsChanged()
+    } catch (error) {
+      if (error?.code === 'quest_revision_conflict') {
+        setStatus('conflict')
+        setMessage(
+          'Someone changed the quest board after you opened it. Reload the latest version before approving.',
+        )
+      } else {
+        setStatus('error')
+        setMessage(error.message || 'Reward approval failed.')
+      }
+    }
+  }
+
   async function completeObjective(questId, objectiveId) {
+    if (dirty) {
+      setStatus('ready')
+      setMessage('Save changes before completing objectives.')
+      return
+    }
+
     setStatus('saving')
     setMessage('Completing objective and issuing rewards…')
 
@@ -1165,7 +1469,7 @@ function QuestEditor() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          document: draft,
+          revision: draft.revision,
           questId,
           objectiveId,
         }),
@@ -1237,6 +1541,7 @@ function QuestEditor() {
             ? 'Saved. Featured quest is live.'
             : 'Saved. No quest is currently featured.',
       )
+      await refreshSession()
       announceQuestsChanged()
     } catch (error) {
       if (error?.code === 'quest_revision_conflict') {
@@ -1282,6 +1587,40 @@ function QuestEditor() {
     (quest) => quest.publication === 'archived',
   )
   const currentMember = members.find((member) => member.id === session.user?.id)
+  const memberById = new Map(members.map((member) => [member.id, member]))
+  const canReorderQuests =
+    session.hasPermission('quests.edit') &&
+    session.authority?.questScopes?.['quests.edit'] === 'all'
+  const canBulkImport = canCreateQuest && canReorderQuests
+
+  function creatorNameFor(quest) {
+    if (!quest.createdByMemberId) return 'Legacy / unclaimed'
+    const creator = memberById.get(quest.createdByMemberId)
+    return creator?.displayName || creator?.username || 'Former member'
+  }
+
+  function capabilitiesFor(quest) {
+    return {
+      canEdit: questScopeAllows(session, 'quests.edit', quest),
+      canPublish: questScopeAllows(session, 'quests.publish', quest),
+      canApproveQuest: questScopeAllows(session, 'rewards.approve', quest),
+      canIssueQuest: questScopeAllows(session, 'rewards.issue', quest),
+      canApproveObjective: (objective) =>
+        rewardAuthorityAllows(
+          session,
+          'rewards.approve',
+          quest,
+          objective,
+        ),
+      canIssueObjective: (objective) =>
+        rewardAuthorityAllows(
+          session,
+          'rewards.issue',
+          quest,
+          objective,
+        ),
+    }
+  }
 
   return (
     <form className="quest-editor" onSubmit={save}>
@@ -1323,7 +1662,12 @@ function QuestEditor() {
           <button
             className="quest-editor__primary"
             type="submit"
-            disabled={!dirty || status === 'saving' || status === 'conflict'}
+            disabled={
+              !canWriteWorkspace ||
+              !dirty ||
+              status === 'saving' ||
+              status === 'conflict'
+            }
           >
             {status === 'saving' ? 'Saving…' : 'Save changes'}
           </button>
@@ -1343,6 +1687,7 @@ function QuestEditor() {
           <span>Featured quest</span>
           <select
             value={draft.focusedQuestId}
+            disabled={!canFeatureQuest}
             onChange={(event) =>
               setDocument((current) => ({
                 ...current,
@@ -1373,10 +1718,14 @@ function QuestEditor() {
           <button
             className="quest-editor__secondary"
             type="button"
+            disabled={!canCreateQuest}
             onClick={() =>
               setDocument((current) => ({
                 ...current,
-                quests: [...current.quests, blankQuest()],
+                quests: [
+                  ...current.quests,
+                  blankQuest(session.user?.id || ''),
+                ],
               }))
             }
           >
@@ -1395,6 +1744,10 @@ function QuestEditor() {
                 members={members}
                 rewardLimits={draft.rewardLimits}
                 focused={quest.id === draft.focusedQuestId}
+                creatorName={creatorNameFor(quest)}
+                {...capabilitiesFor(quest)}
+                canReorder={canReorderQuests}
+                workspaceDirty={dirty}
                 onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
                 onPublicationChange={(publication) =>
                   changeQuestPublication(quest.id, publication)
@@ -1406,6 +1759,7 @@ function QuestEditor() {
                 }
                 onDelete={() => requestDeleteQuest(quest)}
                 onConfirm={setConfirmation}
+                onApproveReward={approveReward}
                 onCompleteObjective={completeObjective}
               />
             ))
@@ -1436,6 +1790,10 @@ function QuestEditor() {
                   members={members}
                   rewardLimits={draft.rewardLimits}
                   focused={false}
+                  creatorName={creatorNameFor(quest)}
+                  {...capabilitiesFor(quest)}
+                  canReorder={canReorderQuests}
+                  workspaceDirty={dirty}
                   onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
                   onPublicationChange={(publication) =>
                     changeQuestPublication(quest.id, publication)
@@ -1447,6 +1805,7 @@ function QuestEditor() {
                   }
                   onDelete={() => requestDeleteQuest(quest)}
                   onConfirm={setConfirmation}
+                  onApproveReward={approveReward}
                   onCompleteObjective={completeObjective}
                 />
               ))}
@@ -1455,14 +1814,17 @@ function QuestEditor() {
         </section>
       ) : null}
 
-      <QuestJsonImport
-        questDocument={draft}
-        onImport={importQuestDocument}
-      />
+      {canBulkImport ? (
+        <QuestJsonImport
+          questDocument={draft}
+          onImport={importQuestDocument}
+        />
+      ) : null}
 
       <EconomySettings
         document={draft}
         canEdit={canEditRewardPolicy}
+        canEditLimits={Boolean(session.authority?.isOwner)}
         onChange={setDocument}
       />
 
@@ -1471,7 +1833,12 @@ function QuestEditor() {
         <button
           className="quest-editor__primary"
           type="submit"
-          disabled={!dirty || status === 'saving' || status === 'conflict'}
+          disabled={
+            !canWriteWorkspace ||
+            !dirty ||
+            status === 'saving' ||
+            status === 'conflict'
+          }
         >
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </button>
