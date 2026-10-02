@@ -736,18 +736,72 @@ test("apply reconciles guild, role, text, voice, and permission-overwrite fields
 
   assert.equal(client.guild.name, "Holdfast");
   assert.equal(client.roles.find((role) => role.id === "role-member").color, 123);
-  assert.equal(
-    client.channels.find((channel) => channel.id === "category-info")
-      .permission_overwrites.length,
-    2,
+  const category = client.channels.find(
+    (channel) => channel.id === "category-info",
   );
+  assert.equal(category.permission_overwrites.length, 3);
+  assert.deepEqual(
+    category.permission_overwrites.find((entry) => entry.id === BOT_ID),
+    {
+      id: BOT_ID,
+      type: 1,
+      allow: "1024",
+      deny: "0",
+    },
+  );
+
   const text = client.channels.find((channel) => channel.id === "channel-general");
-  assert.equal(text.permission_overwrites.length, 2);
+  assert.equal(text.permission_overwrites.length, 3);
+  assert.deepEqual(
+    text.permission_overwrites.find((entry) => entry.id === BOT_ID),
+    {
+      id: BOT_ID,
+      type: 1,
+      allow: "1024",
+      deny: "0",
+    },
+  );
   assert.equal(text.permission_overwrites.find((entry) => entry.id === "role-member").deny, "0");
   const voice = client.channels.find((channel) => channel.id === result.state.channels.lounge);
   assert.equal(voice.bitrate, 96000);
   assert.equal(voice.user_limit, 8);
   assert.equal(checkpoints, 2);
+});
+
+test("restricted categories keep the provisioning bot visible", async () => {
+  const desiredManifest = manifest();
+  desiredManifest.categories[0].accessRoles = ["member"];
+
+  const client = new FakeDiscordClient({
+    channels: [],
+  });
+
+  const result = await runDiscordProvisioning({
+    client,
+    guildId: GUILD_ID,
+    manifest: desiredManifest,
+    state: emptyState(),
+    command: "apply",
+  });
+
+  const category = client.channels.find(
+    (channel) => channel.id === result.state.channels.info,
+  );
+  const general = client.channels.find(
+    (channel) => channel.id === result.state.channels.general,
+  );
+
+  for (const channel of [category, general]) {
+    assert.deepEqual(
+      channel.permission_overwrites.find((entry) => entry.id === BOT_ID),
+      {
+        id: BOT_ID,
+        type: 1,
+        allow: "1024",
+        deny: "0",
+      },
+    );
+  }
 });
 
 test("removed managed resources archive and restore with the same IDs", async () => {
