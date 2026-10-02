@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import Modal from '../Modal/Modal.jsx'
 import { apiJson } from '../Api/apiClient.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
@@ -17,24 +18,33 @@ const RANKS = [
   'Commander',
 ]
 
+const MEMBER_MANAGEMENT_PERMISSIONS = new Set([
+  'members.rank.manage',
+  'members.billet.assign',
+])
+
 function rankOrder(rank) {
   return RANKS.indexOf(rank)
 }
 
-function scopeKey(type, scope) {
-  return type === 'rank' ? scope.rank : scope.id
+function samePermissions(left, right) {
+  const a = [...(left || [])].sort()
+  const b = [...(right || [])].sort()
+
+  return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
 function scopeName(type, scope) {
   return type === 'rank' ? scope.rank : scope.name
 }
 
-function AuthorityScopeCard({
+function AuthorityScopeEditor({
   type,
   scope,
   capabilities,
   actorAuthority,
   onSaved,
+  onClose,
 }) {
   const session = useSession()
   const [permissions, setPermissions] = useState(scope.permissions || [])
@@ -44,35 +54,41 @@ function AuthorityScopeCard({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    setPermissions(scope.permissions || [])
-    setMaxManagedRank(scope.maxManagedRank || '')
-  }, [scope])
-
   const actorPermissions = useMemo(
     () => new Set(actorAuthority?.permissions || []),
     [actorAuthority?.permissions],
   )
 
-  const canEditRank =
-    type !== 'rank' ||
-    actorAuthority?.isOwner ||
-    rankOrder(scope.rank) < rankOrder(actorAuthority?.memberRank)
+  const hasMemberManagement = permissions.some((permission) =>
+    MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
+  )
+  const effectiveCeiling = hasMemberManagement ? maxManagedRank : ''
+  const dirty =
+    !samePermissions(permissions, scope.permissions) ||
+    effectiveCeiling !== (scope.maxManagedRank || '')
 
-  const canEdit = Boolean(canEditRank)
+  const actorCeiling = actorAuthority?.isOwner
+    ? 'Commander'
+    : actorAuthority?.maxManagedRank
+  const actorCeilingOrder = rankOrder(actorCeiling)
+
+  function canGrant(permission) {
+    return actorAuthority?.isOwner || actorPermissions.has(permission)
+  }
 
   function togglePermission(permission) {
-    if (!canEdit) return
+    if (!canGrant(permission) || busy) return
 
     setPermissions((current) =>
       current.includes(permission)
         ? current.filter((item) => item !== permission)
         : [...current, permission],
     )
+    setMessage('')
   }
 
   async function save() {
-    if (busy || !canEdit) return
+    if (busy || !dirty) return
 
     setBusy(true)
     setMessage('')
@@ -92,7 +108,7 @@ function AuthorityScopeCard({
             },
             body: JSON.stringify({
               permissions,
-              maxManagedRank: maxManagedRank || null,
+              maxManagedRank: effectiveCeiling || null,
             }),
           }),
         refresh: session.refresh,
@@ -104,80 +120,120 @@ function AuthorityScopeCard({
 
       if (!result) return
 
-      onSaved?.(type, result.scope)
       await session.refresh()
-      setMessage('Authority saved.')
+      onSaved?.(type, result.scope)
     } catch (error) {
       if (error?.code === 'scope_above_actor') {
         setMessage('That would grant authority above your own.')
+      } else if (error?.code === 'invalid_rank_ceiling') {
+        setMessage('Choose a valid member-management ceiling.')
       } else {
-        setMessage('Could not save authority.')
+        setMessage('Could not save authority. Try again.')
       }
     } finally {
       setBusy(false)
     }
   }
 
-  const actorCeiling = actorAuthority?.isOwner
-    ? 'Commander'
-    : actorAuthority?.maxManagedRank
-  const actorCeilingOrder = rankOrder(actorCeiling)
+  const selectedCount = permissions.length
+  const title = scopeName(type, scope)
+  const intro =
+    type === 'rank'
+      ? 'Rank authority is the baseline every member of this rank receives. Billets add to it; they never replace it.'
+      : 'Billet authority stacks on top of the member’s rank. Removing a permission here never removes the same permission if their rank or another billet still grants it.'
 
   return (
-    <article className="authority-scope-card">
-      <header>
-        <div>
-          <span>{type === 'rank' ? 'Rank' : 'Billet'}</span>
-          <h3>{scopeName(type, scope)}</h3>
-        </div>
-        {scope.maxManagedRank ? (
-          <small>Manages through {scope.maxManagedRank}</small>
-        ) : (
-          <small>No member-management authority</small>
-        )}
-      </header>
+    <Modal
+      eyebrow={type === 'rank' ? 'Rank authority' : 'Billet authority'}
+      title={title}
+      intro={intro}
+      size="wide"
+      align="left"
+      onClose={busy ? undefined : onClose}
+    >
+      <div className="authority-editor">
+        <aside className="authority-editor__rule">
+          <span>How stacking works</span>
+          <strong>Permissions are additive.</strong>
+          <p>
+            Holdfast combines every permission granted by the member&apos;s rank
+            and billets. For member management, the highest available ceiling
+            wins.
+          </p>
+        </aside>
 
-      {type === 'billet' && scope.responsibility ? (
-        <p className="authority-scope-card__responsibility">
-          {scope.responsibility}
-        </p>
-      ) : null}
+        {type === 'billet' && scope.responsibility ? (
+          <div className="authority-editor__responsibility">
+            <span>Responsibility</span>
+            <p>{scope.responsibility}</p>
+          </div>
+        ) : null}
 
-      {!canEdit ? (
-        <p className="authority-scope-card__locked">
-          This scope is at or above your own rank and cannot be changed.
-        </p>
-      ) : (
-        <>
-          <div className="authority-scope-card__permissions">
+        <section className="authority-editor__section">
+          <header className="authority-editor__section-heading">
+            <div>
+              <span>Capabilities</span>
+              <h2>What this {type} can do</h2>
+            </div>
+            <strong>
+              {selectedCount} {selectedCount === 1 ? 'permission' : 'permissions'}
+            </strong>
+          </header>
+
+          <div className="authority-editor__permissions">
             {capabilities.map((capability) => {
-              const canGrant =
-                actorAuthority?.isOwner ||
-                actorPermissions.has(capability.id)
+              const grantable = canGrant(capability.id)
+              const checked = permissions.includes(capability.id)
 
               return (
-                <label key={capability.id}>
+                <label
+                  key={capability.id}
+                  className={
+                    grantable
+                      ? 'authority-editor__permission'
+                      : 'authority-editor__permission authority-editor__permission--locked'
+                  }
+                >
                   <input
                     type="checkbox"
-                    checked={permissions.includes(capability.id)}
-                    disabled={busy || !canGrant}
+                    checked={checked}
+                    disabled={busy || !grantable}
                     onChange={() => togglePermission(capability.id)}
                   />
                   <span>
                     <strong>{capability.label}</strong>
                     <small>{capability.description}</small>
                   </span>
+                  {!grantable ? <em>Above your authority</em> : null}
                 </label>
               )
             })}
           </div>
+        </section>
 
-          <label className="authority-scope-card__ceiling">
-            <span>Member management ceiling</span>
+        <section className="authority-editor__section authority-editor__section--ceiling">
+          <div className="authority-editor__section-heading">
+            <div>
+              <span>Delegation boundary</span>
+              <h2>Member-management ceiling</h2>
+            </div>
+          </div>
+
+          <p className="authority-editor__help">
+            This only matters when this scope grants Promote &amp; demote or
+            Assign billets. It is the highest-ranked member this authority can
+            modify.
+          </p>
+
+          <label className="authority-editor__ceiling">
+            <span>Can manage members through</span>
             <select
-              value={maxManagedRank}
-              disabled={busy}
-              onChange={(event) => setMaxManagedRank(event.target.value)}
+              value={effectiveCeiling}
+              disabled={busy || !hasMemberManagement}
+              onChange={(event) => {
+                setMaxManagedRank(event.target.value)
+                setMessage('')
+              }}
             >
               <option value="">No member-management authority</option>
               {RANKS.filter(
@@ -186,146 +242,51 @@ function AuthorityScopeCard({
                   rankOrder(rank) <= actorCeilingOrder,
               ).map((rank) => (
                 <option key={rank} value={rank}>
-                  Through {rank}
+                  {rank}
                 </option>
               ))}
             </select>
           </label>
 
-          <footer>
-            <button type="button" disabled={busy} onClick={() => void save()}>
-              {busy ? 'Saving…' : 'Save authority'}
-            </button>
-            {message ? <small aria-live="polite">{message}</small> : null}
-          </footer>
-        </>
-      )}
-    </article>
-  )
-}
+          {!hasMemberManagement ? (
+            <small className="authority-editor__ceiling-note">
+              Enable a member-management capability above to set a ceiling.
+            </small>
+          ) : null}
+        </section>
 
-function AuthorityScopeEditor() {
-  const session = useSession()
-  const [catalog, setCatalog] = useState(null)
-  const [status, setStatus] = useState('idle')
-
-  const canManage = session.hasPermission('authority.manage')
-
-  useEffect(() => {
-    if (!session.authenticated || !canManage) {
-      setCatalog(null)
-      setStatus('idle')
-      return
-    }
-
-    const controller = new AbortController()
-    let active = true
-
-    async function load() {
-      setStatus('loading')
-
-      try {
-        const result = await apiJson('/api/guild/authority', {
-          signal: controller.signal,
-        })
-
-        if (!active) return
-        setCatalog(result)
-        setStatus('ready')
-      } catch (error) {
-        if (!active || error?.name === 'AbortError') return
-        setStatus('error')
-      }
-    }
-
-    void load()
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [canManage, session.authenticated])
-
-  if (!canManage) return null
-
-  function updateScope(type, updated) {
-    setCatalog((current) => {
-      if (!current) return current
-
-      const collection = type === 'rank' ? 'ranks' : 'billets'
-      const id = scopeKey(type, updated)
-
-      return {
-        ...current,
-        [collection]: current[collection].map((scope) =>
-          scopeKey(type, scope) === id ? { ...scope, ...updated } : scope,
-        ),
-      }
-    })
-  }
-
-  return (
-    <section className="authority-scopes" aria-labelledby="authority-scopes-title">
-      <header className="authority-scopes__heading">
-        <div>
-          <span>Commander controls</span>
-          <h2 id="authority-scopes-title">Authority scopes</h2>
-        </div>
-        <p>
-          Ranks provide baseline authority. Billets add job-specific authority.
-          A leader can never grant permissions or a promotion ceiling above
-          their own.
-        </p>
-      </header>
-
-      {status === 'loading' ? (
-        <p className="authority-scopes__state">Loading authority…</p>
-      ) : status === 'error' ? (
-        <p className="authority-scopes__state">
-          Authority scopes could not be loaded.
-        </p>
-      ) : catalog ? (
-        <>
-          <div className="authority-scopes__group">
-            <div>
-              <span>Baseline authority</span>
-              <h3>Ranks</h3>
-            </div>
-            <div className="authority-scopes__grid">
-              {catalog.ranks.map((scope) => (
-                <AuthorityScopeCard
-                  key={scope.rank}
-                  type="rank"
-                  scope={scope}
-                  capabilities={catalog.capabilities}
-                  actorAuthority={session.authority}
-                  onSaved={updateScope}
-                />
-              ))}
-            </div>
+        <footer className="authority-editor__actions">
+          <div>
+            {message ? (
+              <span className="authority-editor__message" aria-live="polite">
+                {message}
+              </span>
+            ) : dirty ? (
+              <span>Unsaved changes</span>
+            ) : (
+              <span>No changes</span>
+            )}
           </div>
 
-          <div className="authority-scopes__group">
-            <div>
-              <span>Job authority</span>
-              <h3>Billets</h3>
-            </div>
-            <div className="authority-scopes__grid">
-              {catalog.billets.map((scope) => (
-                <AuthorityScopeCard
-                  key={scope.id}
-                  type="billet"
-                  scope={scope}
-                  capabilities={catalog.capabilities}
-                  actorAuthority={session.authority}
-                  onSaved={updateScope}
-                />
-              ))}
-            </div>
-          </div>
-        </>
-      ) : null}
-    </section>
+          <button
+            className="authority-editor__cancel"
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="authority-editor__save"
+            type="button"
+            disabled={busy || !dirty}
+            onClick={() => void save()}
+          >
+            {busy ? 'Saving…' : 'Save authority'}
+          </button>
+        </footer>
+      </div>
+    </Modal>
   )
 }
 
