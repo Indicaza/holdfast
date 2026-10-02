@@ -207,7 +207,7 @@ test("authority designers cannot edit or grant scope above their own authority",
     const allowed = await updateRankAuthority(
       "Lieutenant",
       {
-        permissions: ["quests.edit"],
+        permissions: ["quests.edit", "members.rank.manage"],
         maxManagedRank: "Sergeant",
       },
       { actorMemberId: "major-one" },
