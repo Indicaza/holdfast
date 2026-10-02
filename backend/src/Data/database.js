@@ -351,7 +351,81 @@ const migrations = [
         `,
       );
 
-      for (const [rank, scope] of Object.entries(DEFAULT_RANK_AUTHORITY)) {
+      const legacyRankAuthorityV4 = {
+        Recruit: { permissions: [], maxManagedRank: null },
+        Private: { permissions: [], maxManagedRank: null },
+        Corporal: {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+        Sergeant: {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+        "Master Sergeant": {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+        "Sergeant Major": {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+        Lieutenant: {
+          permissions: [
+            "site.admin",
+            "quests.edit",
+            "rewards.issue",
+            "rewards.policy.edit",
+            "members.rank.manage",
+            "members.billet.assign",
+            "audit.view",
+          ],
+          maxManagedRank: "Sergeant",
+        },
+        Captain: {
+          permissions: [
+            "site.admin",
+            "quests.edit",
+            "rewards.issue",
+            "rewards.policy.edit",
+            "members.rank.manage",
+            "members.billet.assign",
+            "audit.view",
+          ],
+          maxManagedRank: "Master Sergeant",
+        },
+        Major: {
+          permissions: [
+            "site.admin",
+            "quests.edit",
+            "rewards.issue",
+            "rewards.policy.edit",
+            "members.rank.manage",
+            "members.billet.assign",
+            "audit.view",
+          ],
+          maxManagedRank: "Sergeant Major",
+        },
+        Commander: {
+          permissions: [
+            "site.admin",
+            "quests.edit",
+            "rewards.issue",
+            "rewards.policy.edit",
+            "members.rank.manage",
+            "members.billet.assign",
+            "billets.create",
+            "billets.edit",
+            "billets.delete",
+            "audit.view",
+            "discord.manage",
+            "authority.manage",
+          ],
+          maxManagedRank: "Commander",
+        },
+      };
+
+      for (const [rank, scope] of Object.entries(legacyRankAuthorityV4)) {
         insertRankAuthority.run(
           rank,
           JSON.stringify(scope.permissions || []),
@@ -367,7 +441,35 @@ const migrations = [
         `,
       );
 
-      for (const [name, scope] of Object.entries(DEFAULT_BILLET_AUTHORITY)) {
+      const legacyBilletAuthorityV4 = {
+        Steward: {
+          permissions: [
+            "site.admin",
+            "quests.edit",
+            "rewards.issue",
+            "rewards.policy.edit",
+            "members.rank.manage",
+            "members.billet.assign",
+            "audit.view",
+            "discord.manage",
+          ],
+          maxManagedRank: "Sergeant Major",
+        },
+        Quartermaster: {
+          permissions: ["rewards.policy.edit"],
+          maxManagedRank: null,
+        },
+        "Raid Leader": {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+        "PvP Lead": {
+          permissions: ["quests.edit", "rewards.issue"],
+          maxManagedRank: null,
+        },
+      };
+
+      for (const [name, scope] of Object.entries(legacyBilletAuthorityV4)) {
         updateBilletAuthority.run(
           JSON.stringify(scope.permissions || []),
           scope.maxManagedRank || null,
