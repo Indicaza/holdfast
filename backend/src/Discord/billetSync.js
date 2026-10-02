@@ -108,6 +108,43 @@ async function ensureBilletRole({
   return role;
 }
 
+export async function deleteDiscordBilletRole(
+  billet,
+  {
+    env = process.env,
+    client: providedClient = null,
+  } = {},
+) {
+  if (!billet?.discordRoleId) {
+    return { status: "missing" };
+  }
+
+  const current = config(env);
+
+  if (!current.guildId) {
+    throw new Error("DISCORD_GUILD_ID is required for billet synchronization");
+  }
+
+  const client = clientFor(env, providedClient);
+
+  try {
+    await client.request(
+      `/guilds/${current.guildId}/roles/${billet.discordRoleId}`,
+      {
+        method: "DELETE",
+        auditReason: `Holdfast delete billet role ${billet.name}`,
+      },
+    );
+  } catch (error) {
+    if (error?.status === 404) {
+      return { status: "missing" };
+    }
+    throw error;
+  }
+
+  return { status: "deleted" };
+}
+
 export async function ensureDiscordBilletRoles({
   env = process.env,
   client: providedClient = null,
