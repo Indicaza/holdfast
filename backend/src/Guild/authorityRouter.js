@@ -15,6 +15,8 @@ function sendAuthorityError(res, result) {
   if (
     result.status === "invalid_permissions" ||
     result.status === "invalid_rank_ceiling" ||
+    result.status === "invalid_quest_scope" ||
+    result.status === "invalid_reward_limits" ||
     result.status === "ceiling_requires_member_management"
   ) {
     res.status(400).json({ error: result.status });
