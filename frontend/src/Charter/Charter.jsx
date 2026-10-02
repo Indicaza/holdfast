@@ -149,24 +149,20 @@ function Charter() {
           </p>
 
           <p>
-            You do not need to agree with everyone here about politics,
-            religion, culture, philosophy, or much of anything else.
-          </p>
-
-          <p>People can disagree, argue, joke around, and be themselves.</p>
-
-          <p>
-            What matters is how we treat one another and the community we share.
+            You do not need to agree about politics, religion, culture,
+            philosophy, or much of anything else. People can disagree, argue,
+            joke around, and be themselves.
           </p>
 
           <p>
-            Harassment, theft, scams, deliberate sabotage, abuse of shared
-            resources, and behavior that harms Holdfast have no place here.
+            What matters is how we treat one another. Harassment, theft, scams,
+            deliberate sabotage, abuse of shared resources, and behavior that
+            harms Holdfast have no place here.
           </p>
 
           <p>
-            Beyond that, we would rather learn how to live alongside different
-            people than demand that everybody become the same.
+            We would rather learn to live alongside different people than
+            demand that everybody become the same.
           </p>
         </section>
 
