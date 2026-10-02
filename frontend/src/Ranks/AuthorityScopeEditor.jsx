@@ -23,6 +23,25 @@ const MEMBER_MANAGEMENT_PERMISSIONS = new Set([
   'members.billet.assign',
 ])
 
+const QUEST_SCOPED_PERMISSIONS = new Set([
+  'quests.create',
+  'quests.edit',
+  'quests.publish',
+  'rewards.approve',
+  'rewards.issue',
+])
+
+const REWARD_PERMISSIONS = new Set([
+  'rewards.approve',
+  'rewards.issue',
+])
+
+const EMPTY_REWARD_LIMITS = {
+  repPerObjective: 0,
+  marksPerObjective: 0,
+  marksPerQuest: 0,
+}
+
 function rankOrder(rank) {
   return RANKS.indexOf(rank)
 }
@@ -39,6 +58,7 @@ function AuthorityScopeEditor({
   scope,
   capabilities,
   actorAuthority,
+  economyPolicy,
   authorityEditable,
   onSaved,
   onBilletUpdated,
@@ -50,6 +70,11 @@ function AuthorityScopeEditor({
   const [maxManagedRank, setMaxManagedRank] = useState(
     scope.maxManagedRank || '',
   )
+  const [questScope, setQuestScope] = useState(scope.questScope || 'own')
+  const [rewardLimits, setRewardLimits] = useState({
+    ...EMPTY_REWARD_LIMITS,
+    ...(scope.rewardLimits || {}),
+  })
   const [billetName, setBilletName] = useState(scope.name || '')
   const [responsibility, setResponsibility] = useState(
     scope.responsibility || '',
@@ -81,10 +106,25 @@ function AuthorityScopeEditor({
   const hasMemberManagement = permissions.some((permission) =>
     MEMBER_MANAGEMENT_PERMISSIONS.has(permission),
   )
+  const scopedPermissions = permissions.filter((permission) =>
+    QUEST_SCOPED_PERMISSIONS.has(permission),
+  )
+  const rewardPermissions = permissions.filter((permission) =>
+    REWARD_PERMISSIONS.has(permission),
+  )
+  const hasQuestAuthority = scopedPermissions.length > 0
+  const hasRewardAuthority = rewardPermissions.length > 0
   const effectiveCeiling = hasMemberManagement ? maxManagedRank : ''
+  const effectiveQuestScope = hasQuestAuthority ? questScope : 'own'
+  const effectiveRewardLimits = hasRewardAuthority
+    ? rewardLimits
+    : EMPTY_REWARD_LIMITS
   const authorityDirty =
     !samePermissions(permissions, scope.permissions) ||
-    effectiveCeiling !== (scope.maxManagedRank || '')
+    effectiveCeiling !== (scope.maxManagedRank || '') ||
+    effectiveQuestScope !== (scope.questScope || 'own') ||
+    JSON.stringify(effectiveRewardLimits) !==
+      JSON.stringify({ ...EMPTY_REWARD_LIMITS, ...(scope.rewardLimits || {}) })
   const detailsDirty =
     type === 'billet' &&
     (billetName.trim() !== (scope.name || '') ||
@@ -94,6 +134,40 @@ function AuthorityScopeEditor({
     ? 'Commander'
     : actorAuthority?.maxManagedRank
   const actorCeilingOrder = rankOrder(actorCeiling)
+
+  const canUseAllQuestScope =
+    actorAuthority?.isOwner ||
+    scopedPermissions.every(
+      (permission) => actorAuthority?.questScopes?.[permission] === 'all',
+    )
+
+  const actorRewardCeiling = rewardPermissions.reduce(
+    (current, permission) => {
+      const bucket =
+        permission === 'rewards.approve'
+          ? actorAuthority?.rewardLimits?.approve
+          : actorAuthority?.rewardLimits?.issue
+
+      if (!bucket) return current
+      if (!current) return { ...bucket }
+
+      return {
+        repPerObjective: Math.min(
+          current.repPerObjective,
+          bucket.repPerObjective,
+        ),
+        marksPerObjective: Math.min(
+          current.marksPerObjective,
+          bucket.marksPerObjective,
+        ),
+        marksPerQuest: Math.min(
+          current.marksPerQuest,
+          bucket.marksPerQuest,
+        ),
+      }
+    },
+    null,
+  ) || EMPTY_REWARD_LIMITS
 
   function canGrant(permission) {
     return actorAuthority?.isOwner || actorPermissions.has(permission)
