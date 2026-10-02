@@ -101,6 +101,7 @@ function projectMember(member, totals, assignments) {
     firstSeenAt: member.firstSeenAt,
     updatedAt: member.updatedAt,
     rank,
+    rankManaged: Boolean(member.rankManaged),
     rankMeta,
     role: rankMeta.isLeadership ? "Leadership" : "Member",
     profile: member.profile,
