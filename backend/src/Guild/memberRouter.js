@@ -20,6 +20,7 @@ import {
 } from "./billetRepository.js";
 import {
   authorityCanGrantBillet,
+  authorityCanGrantRank,
   authorityCanManageTargetRank,
 } from "./authorityRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
@@ -379,7 +380,8 @@ export function createMemberRouter() {
 
         if (
           !authorityCanManageTargetRank(req.auth.authority, target.rank) ||
-          !authorityCanManageTargetRank(req.auth.authority, requestedRank)
+          !authorityCanManageTargetRank(req.auth.authority, requestedRank) ||
+          !authorityCanGrantRank(req.auth.authority, requestedRank)
         ) {
           res.status(403).json({ error: "rank_ceiling_exceeded" });
           return;
