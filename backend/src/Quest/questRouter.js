@@ -240,6 +240,7 @@ export function createQuestRouter() {
               objectiveId,
             ).document,
           {
+            enforceRewardLimits: false,
             audit: {
               actorMemberId: member.id,
               eventType: "quest.objective_joined",
@@ -304,6 +305,7 @@ export function createQuestRouter() {
               objectiveId,
             ).document,
           {
+            enforceRewardLimits: false,
             audit: {
               actorMemberId: memberId,
               eventType: "quest.objective_left",
@@ -377,6 +379,7 @@ export function createQuestRouter() {
           {
             expectedRevision: Number(req.body?.revision),
             includeRevision: true,
+            enforceRewardLimits: false,
             audit: {
               actorMemberId: req.auth.user.id,
               eventType: "quest.workspace_saved",
