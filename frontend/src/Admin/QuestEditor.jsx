@@ -1739,7 +1739,7 @@ function QuestEditor() {
                 {...capabilitiesFor(quest)}
                 canReorder={canReorderQuests}
                 workspaceDirty={dirty}
-                onChange={(nextQuest) => updateQuest(quest.id, nextQuest)
+                onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
                 onPublicationChange={(publication) =>
                   changeQuestPublication(quest.id, publication)
                 }
@@ -1785,7 +1785,7 @@ function QuestEditor() {
                   {...capabilitiesFor(quest)}
                   canReorder={canReorderQuests}
                   workspaceDirty={dirty}
-                  onChange={(nextQuest) => updateQuest(quest.id, nextQuest)
+                  onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
                   onPublicationChange={(publication) =>
                     changeQuestPublication(quest.id, publication)
                   }
