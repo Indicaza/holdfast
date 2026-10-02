@@ -98,33 +98,12 @@ function Charter() {
           </p>
 
           <p>
-            Some of us have played Warcraft for most of our lives. That
-            experience is useful, but familiarity changes the way you see the
-            world.
+            Veterans know Azeroth well, but familiarity has a cost. New players
+            ask questions we stopped asking, notice things we walk past, and
+            remind us why this world was exciting in the first place.
           </p>
 
-          <p>Eventually, you stop noticing things.</p>
-
-          <p>
-            You stop wondering where the road goes because you already know. You
-            stop staring at a city because you have been running through it for
-            twenty years.
-          </p>
-
-          <p>New players bring some of that back.</p>
-
-          <p>
-            You ask questions veterans stopped asking. You notice things we walk
-            past. You get excited about things we have learned to treat as
-            ordinary.
-          </p>
-
-          <p>
-            Sometimes, seeing Azeroth through your eyes reminds the rest of us
-            why we loved it in the first place.
-          </p>
-
-          <p>
+          <p className="charter__callout">
             <strong>
               You are not showing up twenty years late. You are bringing
               something with you.
@@ -132,16 +111,10 @@ function Charter() {
           </p>
 
           <p>
-            If you want to become a great tank, raider, PvPer, class expert,
-            crafter, trader, organizer, or leader, we will help you build toward
-            it.
-          </p>
-
-          <p>You do not need to arrive finished.</p>
-
-          <p>
-            Come willing to learn. When somebody else arrives knowing nothing,
-            help them climb the same hill.
+            If you want to become a better tank, raider, PvPer, crafter,
+            organizer, or leader, we will help you get there. Come willing to
+            learn, and when the next new player arrives, help them climb the
+            same hill.
           </p>
         </section>
 
