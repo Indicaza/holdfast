@@ -60,8 +60,8 @@ function MemberRankManager() {
     [members],
   )
 
-  async function changeRank(member, rank) {
-    if (!rank || rank === member.rank || busyMemberId) return
+  async function changeRank(member, rank, { force = false } = {}) {
+    if (!rank || (!force && rank === member.rank) || busyMemberId) return
 
     setBusyMemberId(member.id)
     setMessage('')
@@ -87,7 +87,13 @@ function MemberRankManager() {
 
       setMembers((current) =>
         current.map((item) =>
-          item.id === member.id ? { ...item, rank: result.member.rank } : item,
+          item.id === member.id
+            ? {
+                ...item,
+                rank: result.member.rank,
+                rankManaged: Boolean(result.member.rankManaged),
+              }
+            : item,
         ),
       )
 
@@ -101,7 +107,7 @@ function MemberRankManager() {
         )
       } else {
         setMessage(
-          `${memberName(member)} is now ${result.member.rank}. Discord is in sync.`,
+          `${memberName(member)} is now ${result.member.rank}. Discord is in sync and the website owns this rank.`,
         )
       }
     } catch (error) {
@@ -135,7 +141,7 @@ function MemberRankManager() {
 
       const summary = result.summary || {}
       setMessage(
-        `Discord rank check complete: ${Number(summary.changed) || 0} repaired, ${Number(summary.unchanged) || 0} already correct, ${Number(summary.missing) || 0} not in Discord, ${Number(summary.failed) || 0} failed.`,
+        `Discord rank check complete: ${Number(summary.changed) || 0} repaired, ${Number(summary.unchanged) || 0} already correct, ${Number(summary.missing) || 0} not in Discord, ${Number(summary.unmanaged) || 0} awaiting website authority, ${Number(summary.failed) || 0} failed.`,
       )
     } catch {
       setMessage('Discord rank reconciliation could not be completed.')
@@ -152,7 +158,8 @@ function MemberRankManager() {
           <h2>Member ranks</h2>
           <p>
             The website is authoritative. Rank changes here are pushed to Discord,
-            and Discord drift is repaired automatically.
+            and Discord drift is repaired automatically. Existing members become
+            managed the first time their rank is saved here.
           </p>
         </div>
 
@@ -187,24 +194,42 @@ function MemberRankManager() {
                 <span>@{member.username}</span>
               </div>
 
-              <label>
-                <span className="sr-only">
-                  Rank for {memberName(member)}
-                </span>
-                <select
-                  value={member.rank || 'Recruit'}
-                  disabled={busyMemberId === member.id}
-                  onChange={(event) => {
-                    void changeRank(member, event.target.value)
-                  }}
-                >
-                  {ranks.map((rank) => (
-                    <option key={rank} value={rank}>
-                      {rank}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="admin-ranks__controls">
+                <label>
+                  <span className="sr-only">
+                    Rank for {memberName(member)}
+                  </span>
+                  <select
+                    value={member.rank || 'Recruit'}
+                    disabled={busyMemberId === member.id}
+                    onChange={(event) => {
+                      void changeRank(member, event.target.value)
+                    }}
+                  >
+                    {ranks.map((rank) => (
+                      <option key={rank} value={rank}>
+                        {rank}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {!member.rankManaged ? (
+                  <button
+                    type="button"
+                    disabled={busyMemberId === member.id}
+                    onClick={() => {
+                      void changeRank(member, member.rank || 'Recruit', {
+                        force: true,
+                      })
+                    }}
+                  >
+                    Use website rank
+                  </button>
+                ) : (
+                  <span className="admin-ranks__managed">Managed</span>
+                )}
+              </div>
             </div>
           ))}
         </div>
