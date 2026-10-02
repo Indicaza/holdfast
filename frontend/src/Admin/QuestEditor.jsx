@@ -770,7 +770,12 @@ function ObjectiveEditor({
   )
 }
 
-function EconomySettings({ document, canEdit, onChange }) {
+function EconomySettings({
+  document,
+  canEdit,
+  canEditLimits,
+  onChange,
+}) {
   function updateLimit(currency, key, value) {
     onChange({
       ...document,
@@ -826,6 +831,7 @@ function EconomySettings({ document, canEdit, onChange }) {
               <p>
                 No officer, rank, or billet can approve or issue more than these
                 values. Delegated reward brackets sit underneath them.
+                Only the Commander can change the hard caps.
               </p>
             </div>
 
@@ -854,6 +860,7 @@ function EconomySettings({ document, canEdit, onChange }) {
                       min="0"
                       step="1"
                       value={document.rewardLimits[currency].min}
+                      disabled={!canEditLimits}
                       onChange={(event) =>
                         updateLimit(currency, 'min', event.target.value)
                       }
@@ -866,6 +873,7 @@ function EconomySettings({ document, canEdit, onChange }) {
                       min="0"
                       step="1"
                       value={document.rewardLimits[currency].max}
+                      disabled={!canEditLimits}
                       onChange={(event) =>
                         updateLimit(currency, 'max', event.target.value)
                       }
@@ -883,6 +891,7 @@ function EconomySettings({ document, canEdit, onChange }) {
                     min="0"
                     step="1"
                     value={document.rewardLimits.marksPerQuestMax}
+                    disabled={!canEditLimits}
                     onChange={(event) =>
                       updateMarksQuestMax(event.target.value)
                     }
@@ -1815,6 +1824,7 @@ function QuestEditor() {
       <EconomySettings
         document={draft}
         canEdit={canEditRewardPolicy}
+        canEditLimits={Boolean(session.authority?.isOwner)}
         onChange={setDocument}
       />
 
