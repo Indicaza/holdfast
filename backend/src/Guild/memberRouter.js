@@ -491,8 +491,8 @@ export function createMemberRouter() {
         return;
       }
 
-      const members = await readGuildMembers();
-      const member = members.find(
+      const updatedMembers = await readGuildMembers();
+      const member = updatedMembers.find(
         (candidate) => candidate.id === req.params.memberId,
       );
 
@@ -565,8 +565,8 @@ export function createMemberRouter() {
           return;
         }
 
-        const members = await readGuildMembers();
-        const member = members.find(
+        const updatedMembers = await readGuildMembers();
+        const member = updatedMembers.find(
           (candidate) => candidate.id === req.params.memberId,
         );
 
