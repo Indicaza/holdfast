@@ -381,9 +381,12 @@ export function createMemberRouter() {
           );
         }
 
+        const projectedMember =
+          (await profileFor(req.params.memberId)) || result.member;
+
         res.set("Cache-Control", "no-store");
         res.json({
-          member: result.member,
+          member: projectedMember,
           status: result.status,
           discordSync,
         });
