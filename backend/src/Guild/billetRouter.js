@@ -3,10 +3,16 @@ import { Router } from "express";
 import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
 import {
   createBillet,
+  deleteBillet,
+  readBillet,
   readBillets,
   updateBillet,
 } from "./billetRepository.js";
-import { ensureDiscordBilletRoles } from "../Discord/billetSync.js";
+import {
+  deleteDiscordBilletRole,
+  ensureDiscordBilletRoles,
+} from "../Discord/billetSync.js";
+import { authorityCanGrantBillet } from "./authorityRepository.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 
 function billetErrorResponse(res, status) {
@@ -19,7 +25,11 @@ function billetErrorResponse(res, status) {
     return true;
   }
 
-  if (status === "duplicate_name" || status === "name_locked") {
+  if (
+    status === "duplicate_name" ||
+    status === "name_locked" ||
+    status === "protected"
+  ) {
     res.status(409).json({ error: status });
     return true;
   }
@@ -53,7 +63,7 @@ export function createBilletRouter() {
 
   router.post(
     "/",
-    requirePermission("authority.manage"),
+    requirePermission("billets.create"),
     writeRateLimit,
     async (req, res) => {
       try {
@@ -92,7 +102,7 @@ export function createBilletRouter() {
 
   router.patch(
     "/:billetId",
-    requirePermission("authority.manage"),
+    requirePermission("billets.edit"),
     writeRateLimit,
     async (req, res) => {
       try {
@@ -125,6 +135,59 @@ export function createBilletRouter() {
       } catch (error) {
         console.error("Unable to update billet", error);
         res.status(500).json({ error: "billet_update_failed" });
+      }
+    },
+  );
+
+
+  router.delete(
+    "/:billetId",
+    requirePermission("billets.delete"),
+    writeRateLimit,
+    async (req, res) => {
+      try {
+        const billet = await readBillet(req.params.billetId);
+
+        if (!billet) {
+          res.status(404).json({ error: "billet_not_found" });
+          return;
+        }
+
+        if (billet.discordManaged) {
+          res.status(409).json({ error: "protected" });
+          return;
+        }
+
+        if (!authorityCanGrantBillet(req.auth.authority, billet)) {
+          res.status(403).json({ error: "authority_scope_exceeded" });
+          return;
+        }
+
+        try {
+          await deleteDiscordBilletRole(billet);
+        } catch (error) {
+          console.error(
+            `Unable to delete Discord role for billet ${billet.id}`,
+            error,
+          );
+          res.status(503).json({ error: "discord_billet_delete_failed" });
+          return;
+        }
+
+        const result = await deleteBillet(req.params.billetId, {
+          actorMemberId: req.auth.user.id,
+        });
+
+        if (billetErrorResponse(res, result.status)) return;
+
+        res.json({
+          status: result.status,
+          billetId: req.params.billetId,
+          assignmentCount: result.assignmentCount,
+        });
+      } catch (error) {
+        console.error("Unable to delete billet", error);
+        res.status(500).json({ error: "billet_delete_failed" });
       }
     },
   );
