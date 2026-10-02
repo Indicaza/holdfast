@@ -53,7 +53,7 @@ export function createBilletRouter() {
 
   router.post(
     "/",
-    requirePermission("site.admin"),
+    requirePermission("authority.manage"),
     writeRateLimit,
     async (req, res) => {
       try {
@@ -92,7 +92,7 @@ export function createBilletRouter() {
 
   router.patch(
     "/:billetId",
-    requirePermission("site.admin"),
+    requirePermission("authority.manage"),
     writeRateLimit,
     async (req, res) => {
       try {
