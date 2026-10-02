@@ -481,7 +481,7 @@ test("missing permissions stop the complete plan before any write", async () => 
   assert.equal(client.writes.length, 0);
 });
 
-test("equal numeric role positions still respect Discord's snowflake tie-break", async () => {
+test("equal numeric role positions require a strict bot hierarchy", async () => {
   const client = new FakeDiscordClient({
     roles: [
       everyoneRole(),
@@ -491,41 +491,48 @@ test("equal numeric role positions still respect Discord's snowflake tie-break",
     member: { roles: ["100"] },
   });
 
-  await runDiscordProvisioning({
-    client,
-    guildId: GUILD_ID,
-    manifest: manifest(),
-    state: emptyState(),
-    command: "apply",
-  });
-
-  assert.equal(
-    client.roles.find((role) => role.id === "200").color,
-    123,
+  await assert.rejects(
+    runDiscordProvisioning({
+      client,
+      guildId: GUILD_ID,
+      manifest: manifest(),
+      state: emptyState(),
+      command: "apply",
+    }),
+    /strictly higher position.*drag it below and back above/,
   );
+  assert.equal(client.writes.length, 0);
 });
 
-test("fresh role creation can order beneath a bot sharing the same numeric position", async () => {
+test("fresh role creation stops before channels when the bot has no hierarchy space", async () => {
   const client = new FakeDiscordClient({
     roles: [everyoneRole(), botRole(ALL_MANAGEMENT_PERMISSIONS, 1)],
     channels: [],
   });
 
-  const result = await runDiscordProvisioning({
-    client,
-    guildId: GUILD_ID,
-    manifest: manifest(),
-    state: emptyState(),
-    command: "apply",
-  });
+  await assert.rejects(
+    runDiscordProvisioning({
+      client,
+      guildId: GUILD_ID,
+      manifest: manifest(),
+      state: emptyState(),
+      command: "apply",
+    }),
+    /strictly higher position/,
+  );
 
-  assert.ok(result.roleIds.member);
   assert.ok(
     client.writes.some(
       (write) =>
         write.endpoint === `/guilds/${GUILD_ID}/roles` &&
-        write.method === "PATCH",
+        write.method === "POST",
     ),
+  );
+  assert.equal(
+    client.writes.some((write) =>
+      write.endpoint.endsWith("/channels"),
+    ),
+    false,
   );
 });
 
@@ -545,7 +552,7 @@ test("role hierarchy violations stop before any write", async () => {
       state: emptyState(),
       command: "apply",
     }),
-    /move the bot role above it/,
+    /strictly higher position/,
   );
   assert.equal(client.writes.length, 0);
 });
