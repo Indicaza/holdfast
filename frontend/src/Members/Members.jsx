@@ -5,8 +5,6 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import BilletDefinitionManager from './BilletDefinitionManager.jsx'
-import MemberBilletControl from './MemberBilletControl.jsx'
-import MemberRankControl from './MemberRankControl.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -117,8 +115,6 @@ function Members() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('name')
-  const [reconciling, setReconciling] = useState(false)
-  const [reconcileMessage, setReconcileMessage] = useState('')
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -267,19 +263,6 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id, sort])
 
-  function updateMember(updatedMember) {
-    if (!updatedMember?.id) return
-
-    setDirectory((current) => ({
-      ...current,
-      members: current.members.map((member) =>
-        member.id === updatedMember.id
-          ? { ...member, ...updatedMember }
-          : member,
-      ),
-    }))
-  }
-
   function updateBilletDefinition(updatedBillet) {
     if (!updatedBillet?.id) return
 
@@ -307,33 +290,6 @@ function Members() {
         ),
       })),
     }))
-  }
-
-  async function reconcileDiscordRanks() {
-    if (reconciling) return
-
-    setReconciling(true)
-    setReconcileMessage('')
-
-    try {
-      const [rankResult, billetResult] = await Promise.all([
-        apiJson('/api/guild/members/manage/reconcile-ranks', {
-          method: 'POST',
-        }),
-        apiJson('/api/guild/billets/reconcile', {
-          method: 'POST',
-        }),
-      ])
-      const ranks = rankResult?.summary || {}
-      const billetSummary = billetResult?.summary || {}
-      setReconcileMessage(
-        `Discord checked: ${Number(ranks.changed) || 0} rank repairs, ${Number(billetSummary.changed) || 0} billet repairs.`,
-      )
-    } catch {
-      setReconcileMessage('Discord rank reconciliation failed.')
-    } finally {
-      setReconciling(false)
-    }
   }
 
   const closeGate = () => window.location.assign('/')
@@ -444,25 +400,6 @@ function Members() {
               </span>
             </p>
 
-            {session.hasPermission('site.admin') ? (
-              <div className="members-page__admin-tools">
-                <span>
-                  Rank and billet changes here are authoritative and sync to Discord.
-                </span>
-                <button
-                  type="button"
-                  disabled={reconciling}
-                  onClick={() => {
-                    void reconcileDiscordRanks()
-                  }}
-                >
-                  {reconciling ? 'Checking Discord…' : 'Reconcile Discord'}
-                </button>
-                {reconcileMessage ? (
-                  <small aria-live="polite">{reconcileMessage}</small>
-                ) : null}
-              </div>
-            ) : null}
           </section>
 
           {session.hasPermission('site.admin') ? (
@@ -475,25 +412,7 @@ function Members() {
           {visibleMembers.length ? (
             <section className="members-page__list" aria-label="Holdfast members">
               {visibleMembers.map((member) => (
-                <div className="members-page__member-row" key={member.id}>
-                  <MemberCard member={member} />
-
-                  {session.hasPermission('site.admin') ? (
-                    <div className="members-page__rank-admin">
-                      <MemberRankControl
-                        member={member}
-                        compact
-                        onUpdated={updateMember}
-                      />
-                      <MemberBilletControl
-                        member={member}
-                        billets={billets}
-                        compact
-                        onUpdated={updateMember}
-                      />
-                    </div>
-                  ) : null}
-                </div>
+                <MemberCard key={member.id} member={member} />
               ))}
             </section>
           ) : (
