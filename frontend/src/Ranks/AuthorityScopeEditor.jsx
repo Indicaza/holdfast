@@ -203,7 +203,12 @@ function AuthorityScopeEditor({
                     onChange={() => togglePermission(capability.id)}
                   />
                   <span>
-                    <strong>{capability.label}</strong>
+                    <strong>
+                      {capability.label}
+                      {capability.status === 'reserved' ? (
+                        <b className="authority-editor__reserved">Reserved</b>
+                      ) : null}
+                    </strong>
                     <small>{capability.description}</small>
                   </span>
                   {!grantable ? <em>Above your authority</em> : null}
