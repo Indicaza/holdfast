@@ -95,6 +95,74 @@ function totalMarksForQuest(quest) {
   );
 }
 
+function assertAmountWithinPolicy(currency, amount, range) {
+  if (amount === 0) return;
+
+  if (amount < range.min || amount > range.max) {
+    const label = currency === "rep" ? "Rep" : "Marks";
+    throw new QuestGovernanceError(
+      "reward_policy_exceeded",
+      `${label} rewards must be 0 or between ${range.min} and ${range.max}.`,
+      400,
+    );
+  }
+}
+
+export function assertChangedRewardsWithinPolicy(next, current) {
+  const currentById = new Map(
+    current.quests.map((quest) => [quest.id, quest]),
+  );
+
+  for (const nextQuest of next.quests) {
+    const currentQuest = currentById.get(nextQuest.id);
+    const currentObjectives = new Map(
+      (currentQuest?.objectives || []).map((objective) => [
+        objective.id,
+        objective,
+      ]),
+    );
+
+    for (const nextObjective of nextQuest.objectives) {
+      const currentObjective = currentObjectives.get(nextObjective.id);
+
+      for (const currency of ["rep", "marks"]) {
+        const nextAmount = Number(nextObjective.reward?.[currency]) || 0;
+        const currentAmount = currentObjective
+          ? Number(currentObjective.reward?.[currency]) || 0
+          : null;
+
+        if (currentAmount === nextAmount) continue;
+
+        assertAmountWithinPolicy(
+          currency,
+          nextAmount,
+          next.rewardLimits[currency],
+        );
+      }
+    }
+
+    const nextMarks = totalMarksForQuest(nextQuest);
+    const currentMarks = currentQuest ? totalMarksForQuest(currentQuest) : 0;
+
+    if (nextMarks !== currentMarks) {
+      const allowedMarks = Math.max(
+        Number(next.rewardLimits.marksPerQuestMax) || 0,
+        currentMarks,
+      );
+
+      if (nextMarks > allowedMarks) {
+        throw new QuestGovernanceError(
+          "reward_policy_exceeded",
+          `This quest proposes ${nextMarks} Marks, above the ${next.rewardLimits.marksPerQuestMax} Marks per quest limit.`,
+          400,
+        );
+      }
+    }
+  }
+
+  return true;
+}
+
 export function assertRewardWithinAuthority(
   authority,
   permission,
