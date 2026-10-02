@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { apiJson } from '../Api/apiClient.js'
 import Modal from '../Modal/Modal.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import './Join.css'
@@ -48,10 +50,63 @@ function safeReturnTo(value) {
 
 function JoinModal({ onClose }) {
   const session = useSession()
+  const [discordTarget, setDiscordTarget] = useState({
+    appUrl: 'discord://-/channels/@me',
+    webUrl: 'https://discord.com/app',
+  })
   const searchParams = new URLSearchParams(window.location.search)
   const authCode = searchParams.get('auth')
   const returnTo = safeReturnTo(searchParams.get('returnTo'))
   const notice = noticeFor(authCode)
+
+  useEffect(() => {
+    if (!session.authenticated || authCode !== 'connected') {
+      return undefined
+    }
+
+    let active = true
+
+    apiJson('/api/auth/discord/server')
+      .then((target) => {
+        if (
+          active &&
+          typeof target?.appUrl === 'string' &&
+          target.appUrl.startsWith('discord://') &&
+          typeof target?.webUrl === 'string' &&
+          target.webUrl.startsWith('https://discord.com/')
+        ) {
+          setDiscordTarget(target)
+        }
+      })
+      .catch(() => {
+        // The generic Discord app/web destinations remain a safe fallback.
+      })
+
+    return () => {
+      active = false
+    }
+  }, [authCode, session.authenticated])
+
+  function openDiscord() {
+    const fallback = window.setTimeout(() => {
+      if (
+        document.visibilityState === 'visible' &&
+        document.hasFocus()
+      ) {
+        window.location.assign(discordTarget.webUrl)
+      }
+    }, 1600)
+
+    const cancelFallback = () => window.clearTimeout(fallback)
+    window.addEventListener('pagehide', cancelFallback, { once: true })
+
+    try {
+      window.location.assign(discordTarget.appUrl)
+    } catch {
+      cancelFallback()
+      window.location.assign(discordTarget.webUrl)
+    }
+  }
 
   if (session.status === 'loading') {
     return (
@@ -95,14 +150,13 @@ function JoinModal({ onClose }) {
           </ol>
 
           <div className="join-actions">
-            <a
+            <button
               className="join-action join-action--primary"
-              href="/api/auth/discord/server"
-              target="_blank"
-              rel="noreferrer"
+              type="button"
+              onClick={openDiscord}
             >
-              Open Holdfast in Discord
-            </a>
+              Open Discord
+            </button>
             <a className="join-action join-action--secondary" href="/members/me">
               Set Up My Profile
             </a>
