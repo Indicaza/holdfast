@@ -9,6 +9,7 @@ import {
   normalizeMemberProfile,
 } from "./memberProfile.js";
 import { isGuildRank, normalizeGuildRank } from "./rankSystem.js";
+import { readMemberBilletsFromDatabase } from "./billetRepository.js";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -133,6 +134,7 @@ function memberFromRow(db, row) {
     status: memberStatus(row.status),
     departedAt: row.departed_at || null,
     permissions: jsonArray(row.permissions_json),
+    billets: readMemberBilletsFromDatabase(db, row.id),
     profile: profileFromRows(profileRow, characterRows),
     profileUpdatedAt: row.profile_updated_at || null,
     firstSeenAt: row.first_seen_at,
