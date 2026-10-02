@@ -133,7 +133,7 @@ function AuthorityScopeCard({
         {scope.maxManagedRank ? (
           <small>Manages through {scope.maxManagedRank}</small>
         ) : (
-          <small>No promotion authority</small>
+          <small>No member-management authority</small>
         )}
       </header>
 
@@ -173,13 +173,13 @@ function AuthorityScopeCard({
           </div>
 
           <label className="authority-scope-card__ceiling">
-            <span>Promotion ceiling</span>
+            <span>Member management ceiling</span>
             <select
               value={maxManagedRank}
               disabled={busy}
               onChange={(event) => setMaxManagedRank(event.target.value)}
             >
-              <option value="">No promotion authority</option>
+              <option value="">No member-management authority</option>
               {RANKS.filter(
                 (rank) =>
                   actorAuthority?.isOwner ||
