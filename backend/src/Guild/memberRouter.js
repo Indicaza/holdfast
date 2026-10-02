@@ -101,6 +101,7 @@ function projectMember(member, totals, assignments) {
     firstSeenAt: member.firstSeenAt,
     updatedAt: member.updatedAt,
     rank,
+    rankManaged: Boolean(member.rankManaged),
     rankMeta,
     role: rankMeta.isLeadership ? "Leadership" : "Member",
     profile: member.profile,
@@ -380,9 +381,12 @@ export function createMemberRouter() {
           );
         }
 
+        const projectedMember =
+          (await profileFor(req.params.memberId)) || result.member;
+
         res.set("Cache-Control", "no-store");
         res.json({
-          member: result.member,
+          member: projectedMember,
           status: result.status,
           discordSync,
         });

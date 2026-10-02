@@ -4,6 +4,7 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
+import MemberRankControl from './MemberRankControl.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -106,6 +107,8 @@ function Members() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('name')
+  const [reconciling, setReconciling] = useState(false)
+  const [reconcileMessage, setReconcileMessage] = useState('')
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -242,6 +245,40 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id, sort])
 
+  function updateMember(updatedMember) {
+    if (!updatedMember?.id) return
+
+    setDirectory((current) => ({
+      ...current,
+      members: current.members.map((member) =>
+        member.id === updatedMember.id
+          ? { ...member, ...updatedMember }
+          : member,
+      ),
+    }))
+  }
+
+  async function reconcileDiscordRanks() {
+    if (reconciling) return
+
+    setReconciling(true)
+    setReconcileMessage('')
+
+    try {
+      const result = await apiJson('/api/guild/members/manage/reconcile-ranks', {
+        method: 'POST',
+      })
+      const summary = result?.summary || {}
+      setReconcileMessage(
+        `Discord ranks checked: ${Number(summary.changed) || 0} repaired, ${Number(summary.unchanged) || 0} already correct.`,
+      )
+    } catch {
+      setReconcileMessage('Discord rank reconciliation failed.')
+    } finally {
+      setReconciling(false)
+    }
+  }
+
   const closeGate = () => window.location.assign('/')
 
   if (session.status === 'loading' || session.status === 'error') {
@@ -349,15 +386,44 @@ function Members() {
                 active {directory.summary.activeAssignmentCount === 1 ? 'assignment' : 'assignments'}
               </span>
             </p>
+
+            {session.hasPermission('site.admin') ? (
+              <div className="members-page__admin-tools">
+                <span>
+                  Rank changes here are authoritative and sync to Discord.
+                </span>
+                <button
+                  type="button"
+                  disabled={reconciling}
+                  onClick={() => {
+                    void reconcileDiscordRanks()
+                  }}
+                >
+                  {reconciling ? 'Checking Discord…' : 'Reconcile Discord'}
+                </button>
+                {reconcileMessage ? (
+                  <small aria-live="polite">{reconcileMessage}</small>
+                ) : null}
+              </div>
+            ) : null}
           </section>
 
           {visibleMembers.length ? (
             <section className="members-page__list" aria-label="Holdfast members">
               {visibleMembers.map((member) => (
-                <MemberCard
-                  key={member.id}
-                  member={member}
-                />
+                <div className="members-page__member-row" key={member.id}>
+                  <MemberCard member={member} />
+
+                  {session.hasPermission('site.admin') ? (
+                    <div className="members-page__rank-admin">
+                      <MemberRankControl
+                        member={member}
+                        compact
+                        onUpdated={updateMember}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               ))}
             </section>
           ) : (

@@ -1062,3 +1062,21 @@
 .member-profile__player-body--characters-only .member-profile__characters {
   border-right: 0;
 }
+
+
+.member-profile__rank-management {
+  margin-top: var(--space-4);
+}
+
+.member-profile__rank-management .member-rank-control {
+  align-items: stretch;
+}
+
+.member-profile__rank-management .member-rank-control label {
+  min-width: 0;
+  width: 100%;
+}
+
+.member-profile__rank-management .member-rank-control__managed {
+  align-self: start;
+}

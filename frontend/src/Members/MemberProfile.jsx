@@ -5,6 +5,7 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import MemberProfileEditor from './MemberProfileEditor.jsx'
+import MemberRankControl from './MemberRankControl.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import './MemberProfile.css'
 
@@ -172,7 +173,7 @@ function officerRepMilestone(lifetimeRep) {
   }
 }
 
-function RankProgress({ member }) {
+function RankProgress({ member, management = null }) {
   const lifetimeRep = Number(member.contribution?.rep) || 0
   const isOfficer = Boolean(member.rankMeta?.isOfficer)
   const progression = isOfficer
@@ -221,6 +222,11 @@ function RankProgress({ member }) {
         <div>
           <span>Guild rank</span>
           <h2 id="member-rank-title">{member.rank || 'Recruit'}</h2>
+          {management ? (
+            <div className="member-profile__rank-management">
+              {management}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -614,7 +620,19 @@ function MemberProfile({ memberId }) {
         </div>
       </section>
 
-      <RankProgress member={member} />
+      <RankProgress
+        member={member}
+        management={
+          session.hasPermission('site.admin') ? (
+            <MemberRankControl
+              member={member}
+              onUpdated={(updatedMember) => {
+                setMember(updatedMember)
+              }}
+            />
+          ) : null
+        }
+      />
 
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>
