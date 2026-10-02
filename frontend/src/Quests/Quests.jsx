@@ -98,11 +98,13 @@ function matchesTerms(text, terms) {
 }
 
 function availableReward(quest, currency) {
-  return quest.objectives.reduce(
-    (total, objective) =>
-      objective.completed ? total : total + (Number(objective.reward?.[currency]) || 0),
-    0,
-  )
+  return quest.objectives.reduce((total, objective) => {
+    if (objective.completed || objective.rewardApproval?.status === 'pending') {
+      return total
+    }
+
+    return total + (Number(objective.reward?.[currency]) || 0)
+  }, 0)
 }
 
 function Assignment({ assignment, objectiveTitle, onSelfClick }) {
@@ -185,17 +187,23 @@ function SignupSlot({ objectiveTitle, onClick }) {
   )
 }
 
-function Reward({ reward }) {
+function Reward({ reward, approval }) {
   const items = reward?.items ?? []
   const visibleItems = items.slice(0, MAX_VISIBLE_REWARD_ITEMS)
   const hiddenItemCount = Math.max(0, items.length - visibleItems.length)
+  const pending = approval?.status === 'pending'
+  const approved = approval?.status === 'approved'
 
   if (!reward || (!reward.rep && !reward.marks && !items.length)) {
     return null
   }
 
   return (
-    <div className="quest-board__reward">
+    <div className={
+      pending
+        ? 'quest-board__reward quest-board__reward--pending'
+        : 'quest-board__reward'
+    }>
       <div className="quest-board__reward-values">
         {reward.rep > 0 ? <span><strong>{reward.rep}</strong> Rep</span> : null}
         {reward.marks > 0 ? <span><strong>{reward.marks}</strong> Marks</span> : null}
@@ -219,6 +227,22 @@ function Reward({ reward }) {
           </span>
         ) : null}
       </div>
+      {pending ? (
+        <small className="quest-board__reward-status quest-board__reward-status--pending">
+          Pending approval
+        </small>
+      ) : approved ? (
+        <small
+          className="quest-board__reward-status quest-board__reward-status--approved"
+          title={
+            approval?.approvedBy
+              ? `Approved by ${approval.approvedBy}`
+              : 'Approved reward'
+          }
+        >
+          Approved
+        </small>
+      ) : null}
     </div>
   )
 }
@@ -331,7 +355,10 @@ function QuestObjectives({ quest, objectives, onSignup, onLeave }) {
                 </div>
               </div>
 
-              <Reward reward={objective.reward} />
+              <Reward
+                reward={objective.reward}
+                approval={objective.rewardApproval}
+              />
             </article>
           )
         })}
