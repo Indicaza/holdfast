@@ -11,13 +11,19 @@ import {
   readGuildMembers,
   updateDetectedTimezone,
   updateGuildMemberProfile,
+  updateGuildMemberRank,
 } from "./memberRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
 import {
+  GUILD_RANKS,
   guildRankMetadata,
   normalizeGuildRank,
   repProgressionForRank,
 } from "./rankSystem.js";
+import {
+  reconcileDiscordMemberRanks,
+  syncDiscordMemberRank,
+} from "../Discord/rankSync.js";
 
 function emptyContribution() {
   return {
@@ -184,6 +190,11 @@ export function createMemberRouter() {
     windowMs: 10 * 60 * 1000,
     max: 60,
   });
+  const rankWriteRateLimit = createRateLimiter({
+    name: "member-rank-write",
+    windowMs: 10 * 60 * 1000,
+    max: 60,
+  });
 
   router.get("/", requireAuthenticated, async (req, res) => {
     try {
@@ -320,10 +331,81 @@ export function createMemberRouter() {
         }));
 
         res.set("Cache-Control", "no-store");
-        res.json({ members: enriched });
+        res.json({
+          members: enriched,
+          ranks: GUILD_RANKS,
+        });
       } catch (error) {
         console.error("Unable to read guild member management directory", error);
         res.status(500).json({ error: "members_unavailable" });
+      }
+    },
+  );
+
+  router.patch(
+    "/manage/:memberId/rank",
+    requirePermission("site.admin"),
+    rankWriteRateLimit,
+    async (req, res) => {
+      try {
+        const result = await updateGuildMemberRank(
+          req.params.memberId,
+          req.body?.rank,
+          { actorMemberId: req.auth.user.id },
+        );
+
+        if (result.status === "invalid") {
+          res.status(400).json({ error: "invalid_rank" });
+          return;
+        }
+
+        if (result.status === "not-found") {
+          res.status(404).json({ error: "member_not_found" });
+          return;
+        }
+
+        if (result.status === "owner-locked") {
+          res.status(409).json({ error: "owner_rank_locked" });
+          return;
+        }
+
+        let discordSync = { status: "pending" };
+
+        try {
+          discordSync = await syncDiscordMemberRank(result.member);
+        } catch (error) {
+          console.error(
+            `Unable to sync Discord rank for member ${req.params.memberId}`,
+            error,
+          );
+        }
+
+        res.set("Cache-Control", "no-store");
+        res.json({
+          member: result.member,
+          status: result.status,
+          discordSync,
+        });
+      } catch (error) {
+        console.error("Unable to update guild member rank", error);
+        res.status(500).json({ error: "member_rank_update_failed" });
+      }
+    },
+  );
+
+  router.post(
+    "/manage/reconcile-ranks",
+    requirePermission("site.admin"),
+    rankWriteRateLimit,
+    async (req, res) => {
+      try {
+        const summary = await reconcileDiscordMemberRanks();
+
+        res.set("Cache-Control", "no-store");
+        res.json({ summary });
+      } catch (error) {
+        console.error("Unable to reconcile Discord member ranks", error);
+        res.status(503).json({ error: "discord_rank_sync_unavailable" });
       }
     },
   );
