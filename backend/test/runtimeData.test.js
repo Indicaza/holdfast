@@ -49,8 +49,8 @@ test("SQLite initializes inside the configured runtime directory", async () => {
     assert.equal(path.dirname(guildDatabaseFile()), directory);
     await access(guildDatabaseFile());
     assert.equal(settings.rep_max, 1000);
-    assert.deepEqual(appliedMigrationVersions(), [1]);
-    assert.deepEqual(appliedMigrationVersions(), [1]);
+    assert.deepEqual(appliedMigrationVersions(), [1, 2]);
+    assert.deepEqual(appliedMigrationVersions(), [1, 2]);
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });

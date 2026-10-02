@@ -9,6 +9,7 @@ import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { assertProductionEnvironment } from "./Config/environment.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
+import { startDiscordRankReconciler } from "./Discord/rankSync.js";
 import {
   ensureRuntimeDataDirectory,
   runtimeDataDirectory,
@@ -155,8 +156,11 @@ const server = app.listen(PORT, () => {
   console.log(`Guild database: ${guildDatabaseFile()}`);
 });
 
+const stopDiscordRankReconciler = startDiscordRankReconciler();
+
 function shutdown(signal) {
   console.log(`${signal} received; shutting down`);
+  stopDiscordRankReconciler();
 
   const forceExit = setTimeout(() => {
     console.error("Graceful shutdown timed out");

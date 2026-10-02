@@ -286,7 +286,10 @@ test("API client retries rate limits and reports JSON or text failures", async (
   const jsonFailure = new DiscordApiClient("secret", {
     fetchImplementation: async () => fakeResponse(403, '{"message":"Nope"}'),
   });
-  await assert.rejects(jsonFailure.request("/forbidden"), /\(403\): Nope/);
+  await assert.rejects(
+    jsonFailure.request("/forbidden"),
+    (error) => error.status === 403 && /\(403\): Nope/.test(error.message),
+  );
 
   const textFailure = new DiscordApiClient("secret", {
     fetchImplementation: async () => fakeResponse(500, "plain failure"),

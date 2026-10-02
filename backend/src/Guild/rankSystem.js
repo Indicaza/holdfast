@@ -51,6 +51,10 @@ const PREVIOUS_REP_FLOOR = {
   "Master Sergeant": 21000,
 };
 
+export function isGuildRank(value) {
+  return RANK_BY_NAME.has(String(value || "").trim());
+}
+
 export function normalizeGuildRank(value) {
   const rank = String(value || "").trim();
   return RANK_BY_NAME.has(rank) ? rank : "Recruit";

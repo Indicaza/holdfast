@@ -1,3 +1,4 @@
+import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
 import {
   withGuildDatabase,
   withGuildTransaction,
@@ -7,7 +8,7 @@ import {
   isValidTimeZone,
   normalizeMemberProfile,
 } from "./memberProfile.js";
-import { normalizeGuildRank } from "./rankSystem.js";
+import { isGuildRank, normalizeGuildRank } from "./rankSystem.js";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -55,6 +56,7 @@ function sameMemberIdentity(existing, next) {
     (existing.avatarUrl || "") === next.avatarUrl &&
     (existing.guildJoinedAt || null) === next.guildJoinedAt &&
     normalizeGuildRank(existing.rank) === next.rank &&
+    Boolean(existing.rankManaged) === Boolean(next.rankManaged) &&
     memberStatus(existing.status) === next.status &&
     (existing.departedAt || null) === next.departedAt &&
     sameStringArray(existing.permissions, next.permissions)
@@ -127,6 +129,7 @@ function memberFromRow(db, row) {
     avatarUrl: row.avatar_url || "",
     guildJoinedAt: row.guild_joined_at || null,
     rank: normalizeGuildRank(row.rank),
+    rankManaged: Boolean(row.rank_managed),
     status: memberStatus(row.status),
     departedAt: row.departed_at || null,
     permissions: jsonArray(row.permissions_json),
@@ -234,13 +237,14 @@ function writeMemberRow(db, member) {
         avatar_url,
         guild_joined_at,
         rank,
+        rank_managed,
         status,
         departed_at,
         permissions_json,
         profile_updated_at,
         first_seen_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         username = excluded.username,
         display_name = excluded.display_name,
@@ -248,6 +252,7 @@ function writeMemberRow(db, member) {
         avatar_url = excluded.avatar_url,
         guild_joined_at = excluded.guild_joined_at,
         rank = excluded.rank,
+        rank_managed = excluded.rank_managed,
         status = excluded.status,
         departed_at = excluded.departed_at,
         permissions_json = excluded.permissions_json,
@@ -263,6 +268,7 @@ function writeMemberRow(db, member) {
     member.avatarUrl || "",
     member.guildJoinedAt || null,
     normalizeGuildRank(member.rank),
+    member.rankManaged ? 1 : 0,
     memberStatus(member.status),
     member.departedAt || null,
     JSON.stringify(Array.isArray(member.permissions) ? member.permissions : []),
@@ -294,6 +300,7 @@ export function importMembersIntoDatabase(db, members) {
       avatarUrl: rawMember.avatarUrl || "",
       guildJoinedAt: rawMember.guildJoinedAt || null,
       rank: normalizeGuildRank(rawMember.rank || "Recruit"),
+      rankManaged: Boolean(rawMember.rankManaged),
       status: memberStatus(rawMember.status),
       departedAt: rawMember.departedAt || null,
       permissions: Array.isArray(rawMember.permissions)
@@ -410,6 +417,64 @@ export async function updateDetectedTimezone(memberId, timezone) {
   });
 }
 
+export async function updateGuildMemberRank(
+  memberId,
+  rank,
+  { actorMemberId = null } = {},
+) {
+  const requestedRank = String(rank || "").trim();
+
+  if (!isGuildRank(requestedRank)) {
+    return { status: "invalid", member: null };
+  }
+
+  return withGuildTransaction((db) => {
+    const existing = readMemberById(db, memberId);
+
+    if (!existing) {
+      return { status: "not-found", member: null };
+    }
+
+    const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
+
+    if (ownerIds.has(memberId) && requestedRank !== "Commander") {
+      return { status: "owner-locked", member: existing };
+    }
+
+    if (existing.rank === requestedRank && existing.rankManaged) {
+      return { status: "unchanged", member: existing };
+    }
+
+    const now = new Date().toISOString();
+
+    db.prepare(
+      `
+        UPDATE members
+        SET rank = ?, rank_managed = 1, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(requestedRank, now, memberId);
+
+    recordAuditEventInDatabase({
+      db,
+      actorMemberId,
+      eventType: "member.rank.updated",
+      entityType: "member",
+      entityId: memberId,
+      payload: {
+        beforeRank: existing.rank,
+        afterRank: requestedRank,
+        authorityEnabled: !existing.rankManaged,
+      },
+    });
+
+    return {
+      status: "updated",
+      member: readMemberById(db, memberId),
+    };
+  });
+}
+
 export async function updateGuildMemberProfile(memberId, profile) {
   return withGuildTransaction((db) => {
     const existing = readMemberById(db, memberId);
@@ -441,6 +506,7 @@ export async function upsertGuildMember(user, permissions = []) {
     const existing = readMemberById(db, user.id);
     const now = new Date().toISOString();
     const name = displayName(user);
+    const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
     const identity = {
       id: user.id,
       username: user.username,
@@ -449,6 +515,11 @@ export async function upsertGuildMember(user, permissions = []) {
       avatarUrl: user.avatarUrl || "",
       guildJoinedAt: user.guildJoinedAt || existing?.guildJoinedAt || null,
       rank: memberRank(user.id, existing?.rank),
+      rankManaged: ownerIds.has(user.id)
+        ? true
+        : existing
+          ? Boolean(existing.rankManaged)
+          : true,
       status: "active",
       departedAt: null,
       permissions: Array.isArray(permissions) ? permissions : [],

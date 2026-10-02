@@ -160,6 +160,16 @@ export function productionEnvironmentProblems(env = process.env) {
     }
   }
 
+  if (env.DISCORD_RANK_RECONCILE_SECONDS) {
+    const seconds = Number(env.DISCORD_RANK_RECONCILE_SECONDS);
+
+    if (!Number.isInteger(seconds) || seconds < 60 || seconds > 3600) {
+      problems.push(
+        "DISCORD_RANK_RECONCILE_SECONDS must be an integer from 60 to 3600",
+      );
+    }
+  }
+
   return problems;
 }
 

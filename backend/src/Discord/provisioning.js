@@ -82,9 +82,11 @@ export class DiscordApiClient {
         typeof body === "string"
           ? body.slice(0, 300)
           : body?.message || "Unknown Discord API error";
-      throw new Error(
+      const error = new Error(
         `Discord ${options.method || "GET"} ${endpoint} failed (${response.status}): ${detail}`,
       );
+      error.status = response.status;
+      throw error;
     }
 
     return body;

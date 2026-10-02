@@ -223,6 +223,17 @@ const migrations = [
       `);
     },
   },
+  {
+    version: 2,
+    name: "website_authoritative_member_ranks",
+    up(db) {
+      db.exec(`
+        ALTER TABLE members
+          ADD COLUMN rank_managed INTEGER NOT NULL DEFAULT 0
+          CHECK (rank_managed IN (0, 1));
+      `);
+    },
+  },
 ];
 
 function configureDatabase(db) {

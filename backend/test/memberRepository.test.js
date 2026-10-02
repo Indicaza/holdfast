@@ -9,6 +9,7 @@ import {
   readGuildMembers,
   updateDetectedTimezone,
   updateGuildMemberProfile,
+  updateGuildMemberRank,
   upsertGuildMember,
 } from "../src/Guild/memberRepository.js";
 
@@ -52,6 +53,7 @@ test("member profile and lifecycle survive SQLite upserts", async () => {
     );
 
     assert.equal(created.rank, "Commander");
+    assert.equal(created.rankManaged, true);
     assert.equal(created.status, "active");
 
     const updated = await updateGuildMemberProfile("member-one", {
@@ -108,3 +110,64 @@ test("member profile and lifecycle survive SQLite upserts", async () => {
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("website rank changes are persisted and owner rank stays locked", async () => {
+  const previous = preserveEnvironment();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-rank-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
+
+    const member = await upsertGuildMember({
+      id: "member-two",
+      username: "finch",
+    });
+
+    assert.equal(member.rank, "Recruit");
+    assert.equal(member.rankManaged, true);
+
+    const promoted = await updateGuildMemberRank(
+      "member-two",
+      "Sergeant",
+      { actorMemberId: "owner-one" },
+    );
+
+    assert.equal(promoted.status, "updated");
+    assert.equal(promoted.member.rank, "Sergeant");
+    assert.equal(promoted.member.rankManaged, true);
+
+    const unchanged = await updateGuildMemberRank(
+      "member-two",
+      "Sergeant",
+      { actorMemberId: "owner-one" },
+    );
+    assert.equal(unchanged.status, "unchanged");
+
+    const invalid = await updateGuildMemberRank(
+      "member-two",
+      "Space Admiral",
+      { actorMemberId: "owner-one" },
+    );
+    assert.equal(invalid.status, "invalid");
+
+    await upsertGuildMember({
+      id: "owner-one",
+      username: "rook",
+    });
+
+    const locked = await updateGuildMemberRank(
+      "owner-one",
+      "Recruit",
+      { actorMemberId: "owner-one" },
+    );
+
+    assert.equal(locked.status, "owner-locked");
+    assert.equal(locked.member.rank, "Commander");
+  } finally {
+    restoreEnvironment(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
