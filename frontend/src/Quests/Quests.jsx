@@ -6,6 +6,7 @@ import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import QuestEconomyModal from './QuestEconomyModal.jsx'
+import QuestJsonImportModal from './QuestJsonImportModal.jsx'
 import QuestModal from './QuestModal.jsx'
 import { useQuestSignup } from './QuestSignupFlow.jsx'
 import {
@@ -463,6 +464,20 @@ function Quests() {
     }
   }
 
+  async function importQuests(nextWorkspace, result) {
+    const saved = await saveWorkspace(
+      nextWorkspace,
+      `Imported ${result.importedCount} quest${result.importedCount === 1 ? '' : 's'}.`,
+    )
+
+    if (saved) {
+      setModal(null)
+      setModalMessage('')
+    }
+
+    return saved
+  }
+
   function openQuest(quest) {
     setModalMessage('')
     setModal({ kind: 'quest', questId: quest.id })
@@ -624,6 +639,18 @@ function Quests() {
                 }}
               >
                 Economy
+              </button>
+            ) : null}
+
+            {canCreate && workspace ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setModalMessage('')
+                  setModal({ kind: 'import' })
+                }}
+              >
+                AI / JSON
               </button>
             ) : null}
 
@@ -793,6 +820,20 @@ function Quests() {
             setModalMessage('')
           }}
           onSave={saveEconomy}
+        />
+      ) : null}
+
+      {modal?.kind === 'import' && workspace ? (
+        <QuestJsonImportModal
+          workspace={workspace}
+          session={session}
+          busy={mutationBusy}
+          message={modalMessage}
+          onClose={() => {
+            setModal(null)
+            setModalMessage('')
+          }}
+          onImport={importQuests}
         />
       ) : null}
 
