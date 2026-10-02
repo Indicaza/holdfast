@@ -134,6 +134,15 @@ test("billet validation rejects empty names and oversized responsibility text", 
       ).status,
       "invalid_responsibility",
     );
+    assert.equal(
+      (
+        await createBillet({
+          name: "Commander",
+          responsibility: "Definitely not a billet.",
+        })
+      ).status,
+      "reserved_name",
+    );
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });
