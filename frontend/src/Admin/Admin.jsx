@@ -19,7 +19,7 @@ function Admin() {
   if (session.status === 'loading') {
     return (
       <PageShell
-        eyebrow="Control Room"
+        eyebrow="Guild Audit"
         title="Checking credentials"
         intro="The guild is verifying your session."
         centered
@@ -31,7 +31,7 @@ function Admin() {
   if (session.status === 'error') {
     return (
       <PageShell
-        eyebrow="Control Room"
+        eyebrow="Guild Audit"
         title="Backend unavailable"
         intro="The guild API could not be reached."
         centered
@@ -53,7 +53,7 @@ function Admin() {
   if (!session.authenticated) {
     return (
       <PageShell
-        eyebrow="Control Room"
+        eyebrow="Guild Audit"
         title="Sign in with Discord"
         intro="Discord establishes your identity. Guild permissions decide what you can manage."
         centered
@@ -78,8 +78,8 @@ function Admin() {
   if (!canViewAudit) {
     return (
       <PageShell
-        eyebrow="Control Room"
-        title="No management access"
+        eyebrow="Guild Audit"
+        title="No audit access"
         intro="You are signed in, but this account does not have access to internal administrative records."
         centered
         className="admin-page admin-page--gate"
@@ -89,8 +89,8 @@ function Admin() {
 
   return (
     <PageShell
-      eyebrow="Control Room"
-      title="Guild Control Room"
+      eyebrow="Guild Audit"
+      title="Guild Audit"
       intro="Internal guild records and administrative history."
       centered
       className="admin-page"
