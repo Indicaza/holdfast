@@ -196,10 +196,8 @@ function MemberRankManager() {
 
               <div className="admin-ranks__controls">
                 <label>
-                  <span className="sr-only">
-                    Rank for {memberName(member)}
-                  </span>
                   <select
+                    aria-label={`Rank for ${memberName(member)}`}
                     value={member.rank || 'Recruit'}
                     disabled={busyMemberId === member.id}
                     onChange={(event) => {
