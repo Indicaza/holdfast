@@ -1578,6 +1578,40 @@ function QuestEditor() {
     (quest) => quest.publication === 'archived',
   )
   const currentMember = members.find((member) => member.id === session.user?.id)
+  const memberById = new Map(members.map((member) => [member.id, member]))
+  const canReorderQuests =
+    session.hasPermission('quests.edit') &&
+    session.authority?.questScopes?.['quests.edit'] === 'all'
+  const canBulkImport = canCreateQuest && canReorderQuests
+
+  function creatorNameFor(quest) {
+    if (!quest.createdByMemberId) return 'Legacy / unclaimed'
+    const creator = memberById.get(quest.createdByMemberId)
+    return creator?.displayName || creator?.username || 'Former member'
+  }
+
+  function capabilitiesFor(quest) {
+    return {
+      canEdit: questScopeAllows(session, 'quests.edit', quest),
+      canPublish: questScopeAllows(session, 'quests.publish', quest),
+      canApproveQuest: questScopeAllows(session, 'rewards.approve', quest),
+      canIssueQuest: questScopeAllows(session, 'rewards.issue', quest),
+      canApproveObjective: (objective) =>
+        rewardAuthorityAllows(
+          session,
+          'rewards.approve',
+          quest,
+          objective,
+        ),
+      canIssueObjective: (objective) =>
+        rewardAuthorityAllows(
+          session,
+          'rewards.issue',
+          quest,
+          objective,
+        ),
+    }
+  }
 
   return (
     <form className="quest-editor" onSubmit={save}>
@@ -1619,7 +1653,12 @@ function QuestEditor() {
           <button
             className="quest-editor__primary"
             type="submit"
-            disabled={!dirty || status === 'saving' || status === 'conflict'}
+            disabled={
+              !canWriteWorkspace ||
+              !dirty ||
+              status === 'saving' ||
+              status === 'conflict'
+            }
           >
             {status === 'saving' ? 'Saving…' : 'Save changes'}
           </button>
@@ -1639,6 +1678,7 @@ function QuestEditor() {
           <span>Featured quest</span>
           <select
             value={draft.focusedQuestId}
+            disabled={!canFeatureQuest}
             onChange={(event) =>
               setDocument((current) => ({
                 ...current,
@@ -1669,10 +1709,14 @@ function QuestEditor() {
           <button
             className="quest-editor__secondary"
             type="button"
+            disabled={!canCreateQuest}
             onClick={() =>
               setDocument((current) => ({
                 ...current,
-                quests: [...current.quests, blankQuest()],
+                quests: [
+                  ...current.quests,
+                  blankQuest(session.user?.id || ''),
+                ],
               }))
             }
           >
@@ -1691,7 +1735,11 @@ function QuestEditor() {
                 members={members}
                 rewardLimits={draft.rewardLimits}
                 focused={quest.id === draft.focusedQuestId}
-                onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
+                creatorName={creatorNameFor(quest)}
+                {...capabilitiesFor(quest)}
+                canReorder={canReorderQuests}
+                workspaceDirty={dirty}
+                onChange={(nextQuest) => updateQuest(quest.id, nextQuest)
                 onPublicationChange={(publication) =>
                   changeQuestPublication(quest.id, publication)
                 }
@@ -1702,6 +1750,7 @@ function QuestEditor() {
                 }
                 onDelete={() => requestDeleteQuest(quest)}
                 onConfirm={setConfirmation}
+                onApproveReward={approveReward}
                 onCompleteObjective={completeObjective}
               />
             ))
@@ -1732,7 +1781,11 @@ function QuestEditor() {
                   members={members}
                   rewardLimits={draft.rewardLimits}
                   focused={false}
-                  onChange={(nextQuest) => updateQuest(quest.id, nextQuest)}
+                  creatorName={creatorNameFor(quest)}
+                  {...capabilitiesFor(quest)}
+                  canReorder={canReorderQuests}
+                  workspaceDirty={dirty}
+                  onChange={(nextQuest) => updateQuest(quest.id, nextQuest)
                   onPublicationChange={(publication) =>
                     changeQuestPublication(quest.id, publication)
                   }
@@ -1743,6 +1796,7 @@ function QuestEditor() {
                   }
                   onDelete={() => requestDeleteQuest(quest)}
                   onConfirm={setConfirmation}
+                  onApproveReward={approveReward}
                   onCompleteObjective={completeObjective}
                 />
               ))}
@@ -1751,10 +1805,12 @@ function QuestEditor() {
         </section>
       ) : null}
 
-      <QuestJsonImport
-        questDocument={draft}
-        onImport={importQuestDocument}
-      />
+      {canBulkImport ? (
+        <QuestJsonImport
+          questDocument={draft}
+          onImport={importQuestDocument}
+        />
+      ) : null}
 
       <EconomySettings
         document={draft}
@@ -1767,7 +1823,12 @@ function QuestEditor() {
         <button
           className="quest-editor__primary"
           type="submit"
-          disabled={!dirty || status === 'saving' || status === 'conflict'}
+          disabled={
+            !canWriteWorkspace ||
+            !dirty ||
+            status === 'saving' ||
+            status === 'conflict'
+          }
         >
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </button>
