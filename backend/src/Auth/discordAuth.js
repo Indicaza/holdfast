@@ -411,12 +411,15 @@ export function createDiscordAuthRouter({
 
     res.set("Cache-Control", "no-store");
 
-    if (!guildId) {
+    if (!DISCORD_ID.test(guildId)) {
       res.status(503).json({ error: "discord_not_configured" });
       return;
     }
 
-    res.redirect(`https://discord.com/channels/${encodeURIComponent(guildId)}`);
+    res.json({
+      appUrl: `discord://-/channels/${guildId}`,
+      webUrl: `https://discord.com/channels/${guildId}`,
+    });
   });
 
   router.get("/discord", (req, res) => {
