@@ -440,6 +440,7 @@ function channelOverwrites(
   writerRoles,
   roleIds,
   readOnly,
+  botId,
 ) {
   const overwrites = [];
   let everyoneDeny = 0n;
@@ -453,6 +454,15 @@ function channelOverwrites(
       type: ROLE_OVERWRITE,
       allow: "0",
       deny: String(everyoneDeny),
+    });
+  }
+
+  if (accessRoles.length && botId) {
+    overwrites.push({
+      id: botId,
+      type: MEMBER_OVERWRITE,
+      allow: String(VIEW_CHANNEL),
+      deny: "0",
     });
   }
 
@@ -710,7 +720,7 @@ function finishReport(report, finishedAt) {
   return report;
 }
 
-function desiredChannelEntries(manifest, roleIds, categoryIds) {
+function desiredChannelEntries(manifest, roleIds, categoryIds, botId) {
   const entries = [];
   for (const [categoryIndex, category] of manifest.categories.entries()) {
     const accessRoles = category.accessRoles || [];
@@ -724,6 +734,7 @@ function desiredChannelEntries(manifest, roleIds, categoryIds) {
         [],
         roleIds,
         false,
+        botId,
       ),
     });
     entries.push({
@@ -750,6 +761,7 @@ function desiredChannelEntries(manifest, roleIds, categoryIds) {
             channel.writerRoles || [],
             roleIds,
             channel.readOnly === true,
+            botId,
           ),
         }),
       });
@@ -961,6 +973,7 @@ async function inspectProvisioning({ client, guildId, manifest, state, command, 
         [],
         roleIds,
         false,
+        botId,
       ),
     });
     const previousId = nextState.channels[category.key] || null;
@@ -1000,7 +1013,7 @@ async function inspectProvisioning({ client, guildId, manifest, state, command, 
     }
   }
 
-  const entries = desiredChannelEntries(manifest, roleIds, categoryIds);
+  const entries = desiredChannelEntries(manifest, roleIds, categoryIds, bot.id);
   for (const entry of entries) {
     let current = resolvedChannels.get(entry.key);
     if (entry.categoryKey !== null) {
@@ -1449,6 +1462,7 @@ async function applyChannelChanges({
         [],
         roleIds,
         false,
+        botId,
       ),
     });
     let current = inspection.resolvedChannels.get(category.key);
@@ -1481,6 +1495,7 @@ async function applyChannelChanges({
           channel.writerRoles || [],
           roleIds,
           channel.readOnly === true,
+          inspection.bot.id,
         ),
       });
       let existing = inspection.resolvedChannels.get(channel.key);
