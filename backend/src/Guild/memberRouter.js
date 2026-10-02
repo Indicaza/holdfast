@@ -15,8 +15,13 @@ import {
 } from "./memberRepository.js";
 import {
   claimMemberBilletAuthority,
+  readBillets,
   setMemberBilletAssignment,
 } from "./billetRepository.js";
+import {
+  authorityCanGrantBillet,
+  authorityCanManageTargetRank,
+} from "./authorityRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
 import {
   GUILD_RANKS,
@@ -349,13 +354,40 @@ export function createMemberRouter() {
 
   router.patch(
     "/manage/:memberId/rank",
-    requirePermission("site.admin"),
+    requirePermission("members.rank.manage"),
     rankWriteRateLimit,
     async (req, res) => {
       try {
+        const members = await readGuildMembers();
+        const target = members.find(
+          (member) => member.id === req.params.memberId,
+        );
+        const requestedRank = String(req.body?.rank || "").trim();
+
+        if (!target) {
+          res.status(404).json({ error: "member_not_found" });
+          return;
+        }
+
+        if (
+          !req.auth.authority?.isOwner &&
+          req.params.memberId === req.auth.user.id
+        ) {
+          res.status(403).json({ error: "self_authority_change_forbidden" });
+          return;
+        }
+
+        if (
+          !authorityCanManageTargetRank(req.auth.authority, target.rank) ||
+          !authorityCanManageTargetRank(req.auth.authority, requestedRank)
+        ) {
+          res.status(403).json({ error: "rank_ceiling_exceeded" });
+          return;
+        }
+
         const result = await updateGuildMemberRank(
           req.params.memberId,
-          req.body?.rank,
+          requestedRank,
           { actorMemberId: req.auth.user.id },
         );
 
@@ -403,6 +435,43 @@ export function createMemberRouter() {
 
   async function updateBilletAssignment(req, res, assigned) {
     try {
+      const [members, billets] = await Promise.all([
+        readGuildMembers(),
+        readBillets(),
+      ]);
+      const target = members.find(
+        (member) => member.id === req.params.memberId,
+      );
+      const billet = billets.find(
+        (item) => item.id === req.params.billetId,
+      );
+
+      if (!target) {
+        res.status(404).json({ error: "member_not_found" });
+        return;
+      }
+
+      if (!billet) {
+        res.status(404).json({ error: "billet_not_found" });
+        return;
+      }
+
+      if (
+        !req.auth.authority?.isOwner &&
+        req.params.memberId === req.auth.user.id
+      ) {
+        res.status(403).json({ error: "self_authority_change_forbidden" });
+        return;
+      }
+
+      if (
+        !authorityCanManageTargetRank(req.auth.authority, target.rank) ||
+        !authorityCanGrantBillet(req.auth.authority, billet)
+      ) {
+        res.status(403).json({ error: "authority_scope_exceeded" });
+        return;
+      }
+
       const result = await setMemberBilletAssignment(
         req.params.memberId,
         req.params.billetId,
@@ -455,10 +524,35 @@ export function createMemberRouter() {
 
   router.post(
     "/manage/:memberId/billets/claim",
-    requirePermission("site.admin"),
+    requirePermission("members.billet.assign"),
     rankWriteRateLimit,
     async (req, res) => {
       try {
+        const members = await readGuildMembers();
+        const target = members.find(
+          (member) => member.id === req.params.memberId,
+        );
+
+        if (!target) {
+          res.status(404).json({ error: "member_not_found" });
+          return;
+        }
+
+        if (
+          !req.auth.authority?.isOwner &&
+          req.params.memberId === req.auth.user.id
+        ) {
+          res.status(403).json({ error: "self_authority_change_forbidden" });
+          return;
+        }
+
+        if (
+          !authorityCanManageTargetRank(req.auth.authority, target.rank)
+        ) {
+          res.status(403).json({ error: "rank_ceiling_exceeded" });
+          return;
+        }
+
         const result = await claimMemberBilletAuthority(
           req.params.memberId,
           { actorMemberId: req.auth.user.id },
@@ -505,14 +599,14 @@ export function createMemberRouter() {
 
   router.put(
     "/manage/:memberId/billets/:billetId",
-    requirePermission("site.admin"),
+    requirePermission("members.billet.assign"),
     rankWriteRateLimit,
     (req, res) => updateBilletAssignment(req, res, true),
   );
 
   router.delete(
     "/manage/:memberId/billets/:billetId",
-    requirePermission("site.admin"),
+    requirePermission("members.billet.assign"),
     rankWriteRateLimit,
     (req, res) => updateBilletAssignment(req, res, false),
   );
