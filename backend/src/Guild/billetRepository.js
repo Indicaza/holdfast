@@ -5,6 +5,11 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { GUILD_RANKS } from "./rankSystem.js";
+
+const RESERVED_BILLET_NAMES = new Set(
+  ["@everyone", ...GUILD_RANKS].map((name) => name.toLowerCase()),
+);
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -33,6 +38,13 @@ function validateBilletInput({ name, responsibility }) {
     return {
       valid: false,
       error: "invalid_name",
+    };
+  }
+
+  if (RESERVED_BILLET_NAMES.has(normalizedName.toLowerCase())) {
+    return {
+      valid: false,
+      error: "reserved_name",
     };
   }
 
