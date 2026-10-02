@@ -253,10 +253,13 @@ function assignment(value, path) {
   };
 }
 
-function objective(value, path, index, limits) {
+function objective(value, path, index, limits, enforceRewardLimits) {
   const input = object(value, path);
   const normalizedReward = reward(input.reward, `${path}.reward`);
-  validateRewardWithinLimits(normalizedReward, limits, `${path}.reward`);
+
+  if (enforceRewardLimits) {
+    validateRewardWithinLimits(normalizedReward, limits, `${path}.reward`);
+  }
 
   return {
     id: identifier(input.id || `objective-${index + 1}`, `${path}.id`),
@@ -277,11 +280,17 @@ function objective(value, path, index, limits) {
   };
 }
 
-function quest(value, path, index, limits) {
+function quest(value, path, index, limits, enforceRewardLimits) {
   const input = object(value, path);
   const objectives = list(input.objectives ?? [], `${path}.objectives`, 50).map(
     (item, objectiveIndex) =>
-      objective(item, `${path}.objectives[${objectiveIndex}]`, objectiveIndex, limits),
+      objective(
+        item,
+        `${path}.objectives[${objectiveIndex}]`,
+        objectiveIndex,
+        limits,
+        enforceRewardLimits,
+      ),
   );
   const mode = questMode(input.mode, `${path}.mode`);
 
@@ -291,7 +300,7 @@ function quest(value, path, index, limits) {
     0,
   );
 
-  if (marksTotal > limits.marksPerQuestMax) {
+  if (enforceRewardLimits && marksTotal > limits.marksPerQuestMax) {
     throw new QuestValidationError(
       `${path} proposes ${marksTotal} Marks, above the ${limits.marksPerQuestMax} Marks per quest limit`,
     );
@@ -339,11 +348,19 @@ function assertUniqueAssignees(quests) {
   }
 }
 
-export function normalizeQuestDocument(value) {
+export function normalizeQuestDocument(value, options = {}) {
   const input = object(value, "questDocument");
   const limits = rewardLimits(input.rewardLimits, "questDocument.rewardLimits");
+  const enforceRewardLimits = options.enforceRewardLimits !== false;
   const quests = list(input.quests ?? [], "questDocument.quests", 60).map(
-    (item, index) => quest(item, `questDocument.quests[${index}]`, index, limits),
+    (item, index) =>
+      quest(
+        item,
+        `questDocument.quests[${index}]`,
+        index,
+        limits,
+        enforceRewardLimits,
+      ),
   );
 
   assertUniqueAssignees(quests);
@@ -462,7 +479,9 @@ function projectPublishedQuest(questItem, viewerMemberId = "") {
 }
 
 export function projectQuests(value, viewerMemberId = "") {
-  const document = normalizeQuestDocument(value);
+  const document = normalizeQuestDocument(value, {
+    enforceRewardLimits: false,
+  });
 
   return {
     focusedQuestId: document.focusedQuestId,
@@ -473,7 +492,9 @@ export function projectQuests(value, viewerMemberId = "") {
 }
 
 export function projectFeaturedQuest(value, viewerMemberId = "") {
-  const document = normalizeQuestDocument(value);
+  const document = normalizeQuestDocument(value, {
+    enforceRewardLimits: false,
+  });
   const focusedQuest = document.quests.find(
     (questItem) =>
       questItem.id === document.focusedQuestId &&
