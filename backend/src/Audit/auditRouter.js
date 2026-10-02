@@ -6,7 +6,7 @@ import { readAuditEvents } from "./auditRepository.js";
 export function createAuditRouter() {
   const router = Router();
 
-  router.get("/", requirePermission("site.admin"), (req, res) => {
+  router.get("/", requirePermission("audit.view"), (req, res) => {
     try {
       const events = readAuditEvents(req.query.limit, {
         includeSnapshots: req.query.details === "true",

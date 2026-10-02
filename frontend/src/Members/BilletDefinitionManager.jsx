@@ -14,7 +14,7 @@ function BilletDefinitionManager({ billets, onChanged }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
-  if (!session.hasPermission('site.admin')) {
+  if (!session.hasPermission('authority.manage')) {
     return null
   }
 

@@ -402,7 +402,7 @@ function Members() {
 
           </section>
 
-          {session.hasPermission('site.admin') ? (
+          {session.hasPermission('authority.manage') ? (
             <BilletDefinitionManager
               billets={billets}
               onChanged={updateBilletDefinition}
