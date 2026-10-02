@@ -455,7 +455,7 @@ function Ranks() {
                       <span className="ranks-page__rank-group">{rank.group}</span>
                       {editable ? (
                         <span className="ranks-page__edit-affordance">
-                          Manage billet
+                          Edit authority
                         </span>
                       ) : protectedScope ? (
                         <span className="ranks-page__protected">Protected</span>
@@ -513,6 +513,7 @@ function Ranks() {
               const authorityEditable = canEditScope('billet', scope, session)
               const deleteWithinScope =
                 Boolean(scope) &&
+                !scope.discordManaged &&
                 canDeleteBillets &&
                 scopeWithinActor(scope, session.authority)
               const editable =
@@ -542,7 +543,7 @@ function Ranks() {
                     <span className="ranks-page__rank-group">Billet</span>
                     {editable ? (
                       <span className="ranks-page__edit-affordance">
-                        Edit authority
+                        Manage billet
                       </span>
                     ) : protectedScope ? (
                       <span className="ranks-page__protected">Protected</span>
