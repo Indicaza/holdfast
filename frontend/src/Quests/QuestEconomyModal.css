@@ -1,0 +1,191 @@
+.quest-economy {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.quest-economy__message {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.06);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.quest-economy__policy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.quest-economy__policy > span,
+.quest-economy__range label > span,
+.quest-economy__quest-cap > span,
+.quest-economy__caps header span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-economy__policy textarea,
+.quest-economy__range input,
+.quest-economy__quest-cap input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-subtle);
+  border-radius: 0;
+  background: rgba(3, 8, 15, 0.62);
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.quest-economy__policy textarea {
+  resize: vertical;
+}
+
+.quest-economy__policy textarea:focus-visible,
+.quest-economy__range input:focus-visible,
+.quest-economy__quest-cap input:focus-visible {
+  border-color: var(--color-accent-bright);
+  outline: none;
+}
+
+.quest-economy__policy small,
+.quest-economy__range small,
+.quest-economy__quest-cap small,
+.quest-economy__caps > p,
+.quest-economy__actions > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.quest-economy__caps {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.055), transparent 26rem),
+    rgba(3, 8, 15, 0.3);
+}
+
+.quest-economy__caps header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.quest-economy__caps header > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-economy__caps h2 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-21);
+}
+
+.quest-economy__caps header strong {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-economy__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.quest-economy__range,
+.quest-economy__quest-cap {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.28);
+}
+
+.quest-economy__range > strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.quest-economy__range label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.quest-economy__quest-cap {
+  grid-column: 1 / -1;
+}
+
+.quest-economy__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: var(--border-subtle);
+}
+
+.quest-economy__actions > span {
+  margin-right: auto;
+}
+
+.quest-economy__actions button {
+  min-height: 2.7rem;
+  padding-inline: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.44);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.quest-economy__save {
+  border-color: rgba(196, 166, 103, 0.58) !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-bright),
+    var(--color-accent)
+  ) !important;
+  color: var(--color-background) !important;
+}
+
+.quest-economy__actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (max-width: 48rem) {
+  .quest-economy__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-economy__quest-cap {
+    grid-column: auto;
+  }
+
+  .quest-economy__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quest-economy__actions > span {
+    margin-right: 0;
+  }
+}
