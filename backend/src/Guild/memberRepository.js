@@ -58,6 +58,7 @@ function sameMemberIdentity(existing, next) {
     (existing.guildJoinedAt || null) === next.guildJoinedAt &&
     normalizeGuildRank(existing.rank) === next.rank &&
     Boolean(existing.rankManaged) === Boolean(next.rankManaged) &&
+    Boolean(existing.billetsManaged) === Boolean(next.billetsManaged) &&
     memberStatus(existing.status) === next.status &&
     (existing.departedAt || null) === next.departedAt &&
     sameStringArray(existing.permissions, next.permissions)
@@ -131,6 +132,7 @@ function memberFromRow(db, row) {
     guildJoinedAt: row.guild_joined_at || null,
     rank: normalizeGuildRank(row.rank),
     rankManaged: Boolean(row.rank_managed),
+    billetsManaged: Boolean(row.billets_managed),
     status: memberStatus(row.status),
     departedAt: row.departed_at || null,
     permissions: jsonArray(row.permissions_json),
@@ -240,13 +242,14 @@ function writeMemberRow(db, member) {
         guild_joined_at,
         rank,
         rank_managed,
+        billets_managed,
         status,
         departed_at,
         permissions_json,
         profile_updated_at,
         first_seen_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         username = excluded.username,
         display_name = excluded.display_name,
@@ -255,6 +258,7 @@ function writeMemberRow(db, member) {
         guild_joined_at = excluded.guild_joined_at,
         rank = excluded.rank,
         rank_managed = excluded.rank_managed,
+        billets_managed = excluded.billets_managed,
         status = excluded.status,
         departed_at = excluded.departed_at,
         permissions_json = excluded.permissions_json,
@@ -271,6 +275,7 @@ function writeMemberRow(db, member) {
     member.guildJoinedAt || null,
     normalizeGuildRank(member.rank),
     member.rankManaged ? 1 : 0,
+    member.billetsManaged ? 1 : 0,
     memberStatus(member.status),
     member.departedAt || null,
     JSON.stringify(Array.isArray(member.permissions) ? member.permissions : []),
@@ -303,6 +308,7 @@ export function importMembersIntoDatabase(db, members) {
       guildJoinedAt: rawMember.guildJoinedAt || null,
       rank: normalizeGuildRank(rawMember.rank || "Recruit"),
       rankManaged: Boolean(rawMember.rankManaged),
+      billetsManaged: Boolean(rawMember.billetsManaged),
       status: memberStatus(rawMember.status),
       departedAt: rawMember.departedAt || null,
       permissions: Array.isArray(rawMember.permissions)
@@ -522,6 +528,9 @@ export async function upsertGuildMember(user, permissions = []) {
         : existing
           ? Boolean(existing.rankManaged)
           : true,
+      billetsManaged: existing
+        ? Boolean(existing.billetsManaged)
+        : true,
       status: "active",
       departedAt: null,
       permissions: Array.isArray(permissions) ? permissions : [],
