@@ -71,7 +71,9 @@ function BilletDefinitionManager({ billets, onChanged }) {
       setMessage(
         error?.code === 'duplicate_name'
           ? 'A billet with that name already exists.'
-          : 'Could not create billet.',
+          : error?.code === 'reserved_name'
+            ? 'Rank names are reserved and cannot be used as billets.'
+            : 'Could not create billet.',
       )
     } finally {
       setBusy(false)
@@ -128,7 +130,9 @@ function BilletDefinitionManager({ billets, onChanged }) {
       setMessage(
         error?.code === 'duplicate_name'
           ? 'A billet with that name already exists.'
-          : 'Could not update billet.',
+          : error?.code === 'reserved_name'
+            ? 'Rank names are reserved and cannot be used as billets.'
+            : 'Could not update billet.',
       )
     } finally {
       setBusy(false)
