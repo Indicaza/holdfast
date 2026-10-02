@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import QuestEditor from '../Admin/QuestEditor.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
@@ -435,7 +436,17 @@ function Quests() {
   const [searchInput, setSearchInput] = useState(initialSearch)
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [sortBy, setSortBy] = useState('featured')
+  const [managing, setManaging] = useState(false)
   const signup = useQuestSignup({ catalog, setCatalog })
+
+  const canManageQuests = [
+    'quests.create',
+    'quests.edit',
+    'quests.publish',
+    'rewards.approve',
+    'rewards.issue',
+    'rewards.policy.edit',
+  ].some((permission) => session.hasPermission(permission))
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -586,7 +597,28 @@ function Quests() {
       centered
       className="quests-page"
     >
-      {status === 'loading' ? (
+      {canManageQuests ? (
+        <div className="quests-page__mode-bar">
+          <div>
+            <strong>{managing ? 'Quest management' : 'Quest board'}</strong>
+            <span>
+              {managing
+                ? 'Create, edit, approve, and issue within your authority.'
+                : 'Member view of published guild work.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setManaging((value) => !value)}
+          >
+            {managing ? 'Back to quest board' : 'Manage quests'}
+          </button>
+        </div>
+      ) : null}
+
+      {managing && canManageQuests ? (
+        <QuestEditor />
+      ) : status === 'loading' ? (
         <p className="quests-page__state">Opening the quest board…</p>
       ) : status === 'error' ? (
         <p className="quests-page__state quests-page__state--error">
