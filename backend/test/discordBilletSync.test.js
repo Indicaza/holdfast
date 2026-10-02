@@ -259,6 +259,7 @@ test("billet reconciliation repairs manual Discord drift", async () => {
     members: [
       {
         id: "managed",
+        billetsManaged: true,
         billets: [billet],
       },
     ],
@@ -267,7 +268,50 @@ test("billet reconciliation repairs manual Discord drift", async () => {
   });
 
   assert.equal(summary.changed, 1);
+  assert.equal(summary.unmanaged, 0);
   assert.deepEqual(client.members.get("managed").roles, [
+    billet.discordRoleId,
+  ]);
+});
+
+test("billet reconciliation leaves pre-migration members untouched until claimed", async () => {
+  const billet = {
+    id: "billet-quartermaster",
+    name: "Quartermaster",
+    responsibility: "",
+    discordRoleId: "500000000000000001",
+  };
+  const client = new FakeDiscordClient({
+    roles: [
+      {
+        id: billet.discordRoleId,
+        name: billet.name,
+        managed: false,
+      },
+    ],
+    members: {
+      legacy: [billet.discordRoleId],
+    },
+  });
+
+  const summary = await reconcileDiscordBillets({
+    env: environment(),
+    client,
+    billets: [billet],
+    members: [
+      {
+        id: "legacy",
+        billetsManaged: false,
+        billets: [],
+      },
+    ],
+    persistRoleId: async () => {},
+    logger: { error() {} },
+  });
+
+  assert.equal(summary.checked, 0);
+  assert.equal(summary.unmanaged, 1);
+  assert.deepEqual(client.members.get("legacy").roles, [
     billet.discordRoleId,
   ]);
 });
