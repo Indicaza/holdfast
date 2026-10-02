@@ -7,6 +7,8 @@ import path from "node:path";
 import {
   QuestValidationError,
   normalizeQuestDocument,
+  rewardFingerprint,
+  rewardIsApproved,
 } from "../src/Quest/questSchema.js";
 import {
   QuestStorageError,
@@ -130,6 +132,52 @@ test("quest rewards must stay inside configured limits", () => {
       error instanceof QuestValidationError &&
       /reward.rep must be 0 or between 0 and 200/.test(error.message),
   );
+});
+
+test("quest marks are capped across all objectives", () => {
+  const document = validDocument();
+  document.rewardLimits.marksPerQuestMax = 50;
+  document.quests[0].objectives[0].reward.marks = 30;
+  document.quests[0].objectives.push({
+    id: "objective-two",
+    title: "Second reward",
+    description: "",
+    priority: "Medium",
+    completed: false,
+    need: "",
+    reward: {
+      rep: 0,
+      marks: 21,
+      items: [],
+    },
+    assignments: [],
+  });
+
+  assert.throws(
+    () => normalizeQuestDocument(document),
+    (error) =>
+      error instanceof QuestValidationError &&
+      /51 Marks/.test(error.message) &&
+      /50 Marks per quest/.test(error.message),
+  );
+});
+
+test("reward approval is bound to the exact approved reward", () => {
+  const document = validDocument();
+  const objective = document.quests[0].objectives[0];
+
+  objective.rewardApproval = {
+    approvedByMemberId: "officer-one",
+    approvedByName: "Rook",
+    approvedAt: "2026-10-02T12:00:00.000Z",
+    fingerprint: rewardFingerprint(objective.reward),
+  };
+
+  const normalized = normalizeQuestDocument(document);
+  assert.equal(rewardIsApproved(normalized.quests[0].objectives[0]), true);
+
+  normalized.quests[0].objectives[0].reward.rep += 1;
+  assert.equal(rewardIsApproved(normalized.quests[0].objectives[0]), false);
 });
 
 test("the same member may be assigned to different objectives", () => {
