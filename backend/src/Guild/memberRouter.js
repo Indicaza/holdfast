@@ -13,6 +13,7 @@ import {
   updateGuildMemberProfile,
   updateGuildMemberRank,
 } from "./memberRepository.js";
+import { setMemberBilletAssignment } from "./billetRepository.js";
 import { primaryCharacter } from "./memberProfile.js";
 import {
   GUILD_RANKS,
@@ -24,6 +25,7 @@ import {
   reconcileDiscordMemberRanks,
   syncDiscordMemberRank,
 } from "../Discord/rankSync.js";
+import { syncDiscordMemberBillets } from "../Discord/billetSync.js";
 
 function emptyContribution() {
   return {
@@ -104,6 +106,7 @@ function projectMember(member, totals, assignments) {
     rankManaged: Boolean(member.rankManaged),
     rankMeta,
     role: rankMeta.isLeadership ? "Leadership" : "Member",
+    billets: Array.isArray(member.billets) ? member.billets : [],
     profile: member.profile,
     mainCharacter: primaryCharacter(member.profile),
     contribution,
@@ -395,6 +398,72 @@ export function createMemberRouter() {
         res.status(500).json({ error: "member_rank_update_failed" });
       }
     },
+  );
+
+  async function updateBilletAssignment(req, res, assigned) {
+    try {
+      const result = await setMemberBilletAssignment(
+        req.params.memberId,
+        req.params.billetId,
+        assigned,
+        { actorMemberId: req.auth.user.id },
+      );
+
+      if (result.status === "member-not-found") {
+        res.status(404).json({ error: "member_not_found" });
+        return;
+      }
+
+      if (result.status === "billet-not-found") {
+        res.status(404).json({ error: "billet_not_found" });
+        return;
+      }
+
+      const members = await readGuildMembers();
+      const member = members.find(
+        (candidate) => candidate.id === req.params.memberId,
+      );
+
+      let discordSync = { status: "pending" };
+
+      if (member) {
+        try {
+          discordSync = await syncDiscordMemberBillets(member);
+        } catch (error) {
+          console.error(
+            `Unable to sync Discord billets for member ${req.params.memberId}`,
+            error,
+          );
+        }
+      }
+
+      const projectedMember =
+        (await profileFor(req.params.memberId)) || member;
+
+      res.set("Cache-Control", "no-store");
+      res.json({
+        member: projectedMember,
+        status: result.status,
+        discordSync,
+      });
+    } catch (error) {
+      console.error("Unable to update member billet assignment", error);
+      res.status(500).json({ error: "member_billet_update_failed" });
+    }
+  }
+
+  router.put(
+    "/manage/:memberId/billets/:billetId",
+    requirePermission("site.admin"),
+    rankWriteRateLimit,
+    (req, res) => updateBilletAssignment(req, res, true),
+  );
+
+  router.delete(
+    "/manage/:memberId/billets/:billetId",
+    requirePermission("site.admin"),
+    rankWriteRateLimit,
+    (req, res) => updateBilletAssignment(req, res, false),
   );
 
   router.post(
