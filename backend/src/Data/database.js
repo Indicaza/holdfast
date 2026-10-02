@@ -553,6 +553,20 @@ const migrations = [
           "members.billet.assign",
           "audit.view",
         ],
+        Commander: [
+          "site.admin",
+          "quests.edit",
+          "rewards.issue",
+          "rewards.policy.edit",
+          "members.rank.manage",
+          "members.billet.assign",
+          "billets.create",
+          "billets.edit",
+          "billets.delete",
+          "audit.view",
+          "discord.manage",
+          "authority.manage",
+        ],
       };
 
       const samePermissionSet = (left, right) => {
