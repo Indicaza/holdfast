@@ -98,8 +98,7 @@ function JoinModal({ onClose }) {
     <Modal
       eyebrow="Join Holdfast"
       title="Come play with us."
-      intro="Holdfast is an Alliance guild built for organized play, useful contribution, and a community worth coming back to."
-      size="wide"
+      intro="Continue with Discord to join the Holdfast server and create your member profile. No application. No interview."
       onClose={onClose}
     >
       {notice ? (
@@ -109,36 +108,13 @@ function JoinModal({ onClose }) {
         </aside>
       ) : null}
 
-      <div className="join-highlights">
-        <article className="join-highlight">
-          <span className="join-highlight__number">01</span>
-          <h2>Play together.</h2>
-          <p>
-            Leveling, dungeons, raids, PvP, professions, and the strange
-            adventures that happen between them.
-          </p>
-        </article>
-
-        <article className="join-highlight">
-          <span className="join-highlight__number">02</span>
-          <h2>Find your place.</h2>
-          <p>
-            New players, veterans, crafters, organizers, competitors, and
-            people who simply want a solid group to call home.
-          </p>
-        </article>
-
-        <article className="join-highlight">
-          <span className="join-highlight__number">03</span>
-          <h2>Connect once.</h2>
-          <p>
-            Continuing with Discord joins the Holdfast server and creates
-            your Holdfast member profile.
-          </p>
-        </article>
+      <div className="join-quick-facts" aria-label="Holdfast recruitment basics">
+        <span>New players welcome</span>
+        <span>No attendance requirement</span>
+        <span>PvP realm at launch</span>
       </div>
 
-      <div className="join-actions">
+      <div className="join-actions join-actions--single">
         <button
           className="join-action join-action--primary"
           type="button"
@@ -146,10 +122,11 @@ function JoinModal({ onClose }) {
         >
           Continue with Discord
         </button>
-        <a className="join-action join-action--secondary" href="/charter">
-          Read the Charter
-        </a>
       </div>
+
+      <a className="join-charter-link" href="/charter">
+        Read the Charter
+      </a>
 
       <div className="join-member">
         <span>Already a member?</span>

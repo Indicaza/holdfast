@@ -27,44 +27,22 @@
   border-color: rgba(184, 91, 79, 0.62);
 }
 
-.join-highlights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: hidden;
+.join-quick-facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.join-quick-facts span {
+  padding: 0.5rem 0.75rem;
   border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.22);
-}
-
-.join-highlight {
-  padding: var(--space-6);
-  border-right: var(--border-subtle);
-  text-align: left;
-}
-
-.join-highlight:last-child {
-  border-right: 0;
-}
-
-.join-highlight__number {
-  display: block;
-  margin-bottom: var(--space-4);
-  color: var(--color-accent-bright);
-  font-family: var(--font-display);
-  font-size: var(--font-size-fib-21);
-  line-height: 1;
-}
-
-.join-highlight h2 {
-  margin: 0;
-  color: var(--color-text-strong);
-  font-size: var(--font-size-fib-21);
-}
-
-.join-highlight p {
-  margin-top: var(--space-3);
+  border-radius: 999px;
+  background: rgba(3, 8, 15, 0.3);
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
 }
 
 .join-actions {
@@ -77,6 +55,10 @@
 .join-actions--centered {
   max-width: 28rem;
   margin-inline: auto;
+}
+
+.join-actions--single {
+  grid-template-columns: 1fr;
 }
 
 .join-action {
@@ -127,6 +109,26 @@
 .join-action--secondary:focus-visible {
   background: rgba(11, 27, 48, 0.72);
   color: var(--color-accent-bright);
+}
+
+.join-charter-link {
+  display: block;
+  width: fit-content;
+  margin: var(--space-4) auto 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.18);
+  text-underline-offset: 0.18em;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    text-decoration-color var(--duration-fast) var(--ease-standard);
+}
+
+.join-charter-link:hover,
+.join-charter-link:focus-visible {
+  color: var(--color-accent-bright);
+  text-decoration-color: currentColor;
 }
 
 .join-member {
@@ -183,21 +185,6 @@
 @keyframes join-loading {
   to {
     opacity: 1;
-  }
-}
-
-@media (max-width: 48rem) {
-  .join-highlights {
-    grid-template-columns: 1fr;
-  }
-
-  .join-highlight {
-    border-right: 0;
-    border-bottom: var(--border-subtle);
-  }
-
-  .join-highlight:last-child {
-    border-bottom: 0;
   }
 }
 
