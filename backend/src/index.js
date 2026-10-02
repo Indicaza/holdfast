@@ -9,6 +9,7 @@ import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { assertProductionEnvironment } from "./Config/environment.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
+import { readQuestsFromDatabase } from "./Quest/questRepository.js";
 import { startDiscordRankReconciler } from "./Discord/rankSync.js";
 import { startDiscordBilletReconciler } from "./Discord/billetSync.js";
 import {
@@ -79,6 +80,60 @@ app.get("/api/health/live", (req, res) => {
   res.json({ status: "ok" });
 });
 app.get("/api/health/ready", readiness);
+
+app.get(
+  "/api/health/data",
+  requirePermission("site.admin"),
+  (req, res) => {
+    res.set("Cache-Control", "no-store");
+
+    try {
+      const data = withGuildDatabase((db) => {
+        const count = (table) =>
+          Number(
+            db
+              .prepare(`SELECT COUNT(*) AS count FROM ${table}`)
+              .get()?.count || 0,
+          );
+
+        let questDocument = { readable: true, error: null };
+
+        try {
+          readQuestsFromDatabase(db);
+        } catch (error) {
+          questDocument = {
+            readable: false,
+            error: error?.message || "Unknown quest data error.",
+          };
+        }
+
+        return {
+          databaseFile: guildDatabaseFile(),
+          members: count("members"),
+          quests: count("quests"),
+          objectives: count("objectives"),
+          assignments: count("assignments"),
+          contributions: count("contribution_transactions"),
+          auditEvents: count("audit_events"),
+          migrations: db
+            .prepare(
+              "SELECT version, name, applied_at FROM schema_migrations ORDER BY version",
+            )
+            .all(),
+          questDocument,
+        };
+      });
+
+      res.json({ status: "ok", data });
+    } catch (error) {
+      console.error("Data health check failed", error);
+      res.status(503).json({
+        status: "unavailable",
+        error: error?.message || "data_health_failed",
+      });
+    }
+  },
+);
 
 app.use(
   "/api/auth",
