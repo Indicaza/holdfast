@@ -59,6 +59,15 @@ export const CAPABILITY_IDS = CAPABILITY_DEFINITIONS.map(
 
 const CAPABILITY_SET = new Set(CAPABILITY_IDS);
 
+export const MEMBER_MANAGEMENT_CAPABILITIES = [
+  "members.rank.manage",
+  "members.billet.assign",
+];
+
+const MEMBER_MANAGEMENT_CAPABILITY_SET = new Set(
+  MEMBER_MANAGEMENT_CAPABILITIES,
+);
+
 export const DEFAULT_RANK_AUTHORITY = {
   Recruit: { permissions: [], maxManagedRank: null },
   Private: { permissions: [], maxManagedRank: null },
@@ -179,6 +188,12 @@ export function normalizeManagedRank(value) {
   return isGuildRank(value) ? normalizeGuildRank(value) : null;
 }
 
+export function scopeProvidesMemberManagement(scope) {
+  return normalizeCapabilityList(scope?.permissions).some((permission) =>
+    MEMBER_MANAGEMENT_CAPABILITY_SET.has(permission),
+  );
+}
+
 export function authorityScope(permissions, maxManagedRank = null) {
   return {
     permissions: normalizeCapabilityList(permissions),
@@ -191,12 +206,17 @@ export function mergeAuthorityScopes(scopes) {
   let ceiling = null;
   let ceilingOrder = -1;
 
+  // Authority is additive: no rank or billet can erase a permission granted
+  // by another source. The shared member-management ceiling is the highest
+  // valid ceiling from a scope that actually grants member-management power.
   for (const scope of Array.isArray(scopes) ? scopes : []) {
     for (const permission of normalizeCapabilityList(scope?.permissions)) {
       permissions.add(permission);
     }
 
-    const candidate = normalizeManagedRank(scope?.maxManagedRank);
+    const candidate = scopeProvidesMemberManagement(scope)
+      ? normalizeManagedRank(scope?.maxManagedRank)
+      : null;
 
     if (candidate && guildRankOrder(candidate) > ceilingOrder) {
       ceiling = candidate;
