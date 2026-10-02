@@ -91,6 +91,20 @@ function settingsFromDatabase(db) {
   );
 }
 
+function rewardLimitsFromSettings(settings) {
+  return {
+    rep: {
+      min: Number(settings.rep_min) || 0,
+      max: Number(settings.rep_max) || 0,
+    },
+    marks: {
+      min: Number(settings.marks_min) || 0,
+      max: Number(settings.marks_max) || 0,
+    },
+    marksPerQuestMax: Number(settings.marks_quest_max) || 0,
+  };
+}
+
 function assignmentsForObjective(db, objectiveId) {
   return db
     .prepare(
@@ -181,23 +195,16 @@ export function readQuestsFromDatabase(db) {
         completed: Boolean(row.completed),
       }));
 
-    return normalizeQuestDocument({
-      version: 1,
-      focusedQuestId: settings.focused_quest_id || "",
-      rewardPolicy: settings.reward_policy || "",
-      rewardLimits: {
-        rep: {
-          min: Number(settings.rep_min) || 0,
-          max: Number(settings.rep_max) || 0,
-        },
-        marks: {
-          min: Number(settings.marks_min) || 0,
-          max: Number(settings.marks_max) || 0,
-        },
-        marksPerQuestMax: Number(settings.marks_quest_max) || 0,
+    return normalizeQuestDocument(
+      {
+        version: 1,
+        focusedQuestId: settings.focused_quest_id || "",
+        rewardPolicy: settings.reward_policy || "",
+        rewardLimits: rewardLimitsFromSettings(settings),
+        quests,
       },
-      quests,
-    });
+      { enforceRewardLimits: false },
+    );
   } catch (error) {
     if (error instanceof QuestStorageError) {
       throw error;
@@ -207,8 +214,14 @@ export function readQuestsFromDatabase(db) {
   }
 }
 
-export function writeQuestsToDatabase(db, document) {
-  const normalized = normalizeQuestDocument(document);
+export function writeQuestsToDatabase(
+  db,
+  document,
+  { enforceRewardLimits = true } = {},
+) {
+  const normalized = normalizeQuestDocument(document, {
+    enforceRewardLimits,
+  });
 
   db.prepare(
     `
@@ -357,6 +370,47 @@ export function writeQuestsToDatabase(db, document) {
   return normalized;
 }
 
+export function writeQuestEconomyToDatabase(
+  db,
+  { rewardPolicy, rewardLimits },
+) {
+  const normalized = normalizeQuestDocument({
+    version: 1,
+    focusedQuestId: "",
+    rewardPolicy: rewardPolicy ?? "",
+    rewardLimits,
+    quests: [],
+  });
+
+  db.prepare(
+    `
+      UPDATE quest_settings
+      SET
+        reward_policy = ?,
+        rep_min = ?,
+        rep_max = ?,
+        marks_min = ?,
+        marks_max = ?,
+        marks_quest_max = ?
+      WHERE id = 1
+    `,
+  ).run(
+    normalized.rewardPolicy,
+    normalized.rewardLimits.rep.min,
+    normalized.rewardLimits.rep.max,
+    normalized.rewardLimits.marks.min,
+    normalized.rewardLimits.marks.max,
+    normalized.rewardLimits.marksPerQuestMax,
+  );
+
+  advanceQuestRevision(db);
+
+  return {
+    rewardPolicy: normalized.rewardPolicy,
+    rewardLimits: normalized.rewardLimits,
+  };
+}
+
 export function importQuestsIntoDatabase(db, document) {
   return writeQuestsToDatabase(db, document);
 }
@@ -393,7 +447,9 @@ export async function updateQuests(mutator, options = {}) {
       throw new Error("Quest mutations must be synchronous");
     }
 
-    const saved = writeQuestsToDatabase(db, next);
+    const saved = writeQuestsToDatabase(db, next, {
+      enforceRewardLimits: false,
+    });
     const revisionAfter = questRevisionFromDatabase(db);
 
     if (options.audit) {
