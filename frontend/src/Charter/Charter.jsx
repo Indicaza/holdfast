@@ -165,19 +165,11 @@ function Charter() {
         <section className="charter__section charter__section--closing">
           <h2>Leave it stronger</h2>
 
-          <p>The name, the castle, and our colors all point toward the same idea.</p>
-
-          <p>
+          <p className="charter__callout">
             <strong>
               Blue for trust. White for fairness. Gold for excellence. The
               castle for something built to hold.
             </strong>
-          </p>
-
-          <p>
-            You do not have to give everything to Holdfast. You do not have to
-            be online every night. You do not have to become an officer, a top
-            raider, or the person who farms ten thousand herbs.
           </p>
 
           <p>Bring what you can.</p>
@@ -187,11 +179,7 @@ function Charter() {
 
           <p>
             Build something useful enough that the next person does not have to
-            start from zero.
-          </p>
-
-          <p>
-            And when your turn comes to wander away from Azeroth for a while,
+            start from zero. When your turn comes to wander away from Azeroth,
             leave behind a guild a little stronger than the one that welcomed
             you.
           </p>
