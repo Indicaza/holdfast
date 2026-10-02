@@ -241,11 +241,17 @@ const migrations = [
       const now = new Date().toISOString();
 
       db.exec(`
+        ALTER TABLE members
+          ADD COLUMN billets_managed INTEGER NOT NULL DEFAULT 0
+          CHECK (billets_managed IN (0, 1));
+
         CREATE TABLE billets (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           responsibility TEXT NOT NULL DEFAULT '',
           discord_role_id TEXT,
+          discord_managed INTEGER NOT NULL DEFAULT 0
+            CHECK (discord_managed IN (0, 1)),
           active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
@@ -279,10 +285,11 @@ const migrations = [
             name,
             responsibility,
             discord_role_id,
+            discord_managed,
             active,
             created_at,
             updated_at
-          ) VALUES (?, ?, ?, NULL, 1, ?, ?)
+          ) VALUES (?, ?, ?, NULL, 1, 1, ?, ?)
         `,
       );
 
