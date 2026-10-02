@@ -7,12 +7,12 @@ import {
 } from '../src/Home/recruitmentContent.js'
 import { foundingMissionAction } from '../src/Home/FoundingMission/foundingMissionAction.js'
 
-test('recruitment facts cover the founding-phase promises without duplicates', () => {
-  assert.equal(recruitmentFacts.length, 6)
-  assert.equal(new Set(recruitmentFacts.map((fact) => fact.id)).size, 6)
+test('recruitment facts stay concise, complete, and unique', () => {
+  assert.equal(recruitmentFacts.length, 4)
+  assert.equal(new Set(recruitmentFacts.map((fact) => fact.id)).size, 4)
   assert.deepEqual(
     recruitmentFacts.map((fact) => fact.id),
-    ['founding', 'region', 'solo', 'voice', 'realm', 'recruiting'],
+    ['founding', 'region', 'pace', 'recruiting'],
   )
 
   for (const fact of recruitmentFacts) {
@@ -22,11 +22,11 @@ test('recruitment facts cover the founding-phase promises without duplicates', (
   }
 })
 
-test('realm and founding copy clearly distinguish beta from launch', () => {
-  const realm = recruitmentFacts.find((fact) => fact.id === 'realm')
+test('founding copy clearly distinguishes beta from launch', () => {
+  const founding = recruitmentFacts.find((fact) => fact.id === 'founding')
 
-  assert.match(realm.detail, /Normal realm during beta/)
-  assert.match(realm.detail, /PvP realm at launch/)
+  assert.match(founding.detail, /Normal realm for beta/)
+  assert.match(founding.detail, /PvP realm at launch/)
   assert.match(foundingMission.description, /in-game guild charter/)
   assert.match(foundingMission.description, /PvP realm/)
 })
