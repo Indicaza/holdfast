@@ -762,17 +762,29 @@ function EconomySettings({ document, canEdit, onChange }) {
     })
   }
 
+  function updateMarksQuestMax(value) {
+    onChange({
+      ...document,
+      rewardLimits: {
+        ...document.rewardLimits,
+        marksPerQuestMax: Number(value),
+      },
+    })
+  }
+
   return (
     <details className="quest-editor__panel quest-editor__economy-panel">
       <summary className="quest-editor__economy-summary">
         <div>
           <span className="quest-editor__kicker">Guild economy</span>
-          <strong>Reward guardrails</strong>
+          <strong>Absolute reward guardrails</strong>
         </div>
         <span>
-          Rep {document.rewardLimits.rep.min}–{document.rewardLimits.rep.max}
+          {document.rewardLimits.rep.max} Rep / objective
           {' · '}
-          Marks {document.rewardLimits.marks.min}–{document.rewardLimits.marks.max}
+          {document.rewardLimits.marks.max} Marks / objective
+          {' · '}
+          {document.rewardLimits.marksPerQuestMax} Marks / quest
         </span>
       </summary>
 
@@ -780,10 +792,21 @@ function EconomySettings({ document, canEdit, onChange }) {
         {!canEdit ? (
           <>
             <p>{document.rewardPolicy || 'No guild reward policy set.'}</p>
-            <small>Only authorized reward-policy editors can change these rules.</small>
+            <small>
+              These are guild-wide ceilings. Rank and billet reward brackets
+              can only be equal or stricter.
+            </small>
           </>
         ) : (
           <>
+            <div className="quest-editor__economy-callout">
+              <strong>These are the hard ceiling.</strong>
+              <p>
+                No officer, rank, or billet can approve or issue more than these
+                values. Delegated reward brackets sit underneath them.
+              </p>
+            </div>
+
             <label>
               <span>Policy</span>
               <textarea
@@ -801,9 +824,9 @@ function EconomySettings({ document, canEdit, onChange }) {
                 ['marks', 'Service Marks'],
               ].map(([currency, label]) => (
                 <div key={currency} className="quest-editor__economy-range">
-                  <strong>{label}</strong>
+                  <strong>{label} / objective</strong>
                   <label>
-                    <span>Minimum</span>
+                    <span>Minimum non-zero</span>
                     <input
                       type="number"
                       min="0"
@@ -815,7 +838,7 @@ function EconomySettings({ document, canEdit, onChange }) {
                     />
                   </label>
                   <label>
-                    <span>Maximum</span>
+                    <span>Absolute maximum</span>
                     <input
                       type="number"
                       min="0"
@@ -828,6 +851,25 @@ function EconomySettings({ document, canEdit, onChange }) {
                   </label>
                 </div>
               ))}
+
+              <div className="quest-editor__economy-range quest-editor__economy-range--single">
+                <strong>Marks / quest</strong>
+                <label>
+                  <span>Absolute maximum</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={document.rewardLimits.marksPerQuestMax}
+                    onChange={(event) =>
+                      updateMarksQuestMax(event.target.value)
+                    }
+                  />
+                </label>
+                <small>
+                  Total proposed Marks across every objective in one quest.
+                </small>
+              </div>
             </div>
           </>
         )}
