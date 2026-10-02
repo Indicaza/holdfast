@@ -95,7 +95,7 @@ function Admin() {
       className="admin-page"
     >
       <QuestEditor />
-      {session.hasPermission('site.admin') ? <AuditLog /> : null}
+      {session.hasPermission('audit.view') ? <AuditLog /> : null}
     </PageShell>
   )
 }
