@@ -161,6 +161,12 @@ function BilletDefinitionManager({ billets, onChanged }) {
                     maxLength="48"
                     value={editName}
                     aria-label="Billet name"
+                    disabled={billet.discordManaged}
+                    title={
+                      billet.discordManaged
+                        ? 'This billet name is used by Discord infrastructure.'
+                        : undefined
+                    }
                     onChange={(event) => setEditName(event.target.value)}
                   />
                   <textarea
@@ -195,9 +201,11 @@ function BilletDefinitionManager({ billets, onChanged }) {
                   <div>
                     <strong>{billet.name}</strong>
                     <span>
-                      {billet.discordRoleId
-                        ? 'Discord linked'
-                        : 'Discord sync pending'}
+                      {billet.discordManaged
+                        ? 'Discord infrastructure'
+                        : billet.discordRoleId
+                          ? 'Discord linked'
+                          : 'Discord sync pending'}
                     </span>
                   </div>
                   <p>
