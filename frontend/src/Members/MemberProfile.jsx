@@ -5,6 +5,7 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import MemberProfileEditor from './MemberProfileEditor.jsx'
+import MemberBilletControl from './MemberBilletControl.jsx'
 import MemberRankControl from './MemberRankControl.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import './MemberProfile.css'
@@ -344,6 +345,55 @@ function CharacterCard({ character, main = false }) {
   )
 }
 
+function BilletPanel({ member, billets, canManage, onUpdated }) {
+  const assigned = Array.isArray(member.billets) ? member.billets : []
+
+  if (!assigned.length && !canManage) {
+    return null
+  }
+
+  return (
+    <section
+      className="member-profile__section member-profile__billet-section"
+      aria-labelledby="member-billets-title"
+    >
+      <div className="member-profile__section-heading">
+        <div>
+          <p>Current responsibilities</p>
+          <h2 id="member-billets-title">Billets</h2>
+        </div>
+
+        {canManage ? (
+          <MemberBilletControl
+            member={member}
+            billets={billets}
+            onUpdated={onUpdated}
+          />
+        ) : null}
+      </div>
+
+      {assigned.length ? (
+        <div className="member-profile__billet-list">
+          {assigned.map((billet) => (
+            <article key={billet.id}>
+              <strong>{billet.name}</strong>
+              <p>
+                {billet.responsibility ||
+                  'No responsibility description has been added yet.'}
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="member-profile__empty">
+          <strong>No billets assigned.</strong>
+          <span>This member does not currently hold a guild billet.</span>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function PlayerIdentity({ member, editable, onEdit }) {
   const profile = member.profile || {}
   const characters = Array.isArray(profile.characters)
@@ -458,6 +508,7 @@ function PlayerIdentity({ member, editable, onEdit }) {
 function MemberProfile({ memberId }) {
   const session = useSession()
   const [member, setMember] = useState(null)
+  const [billets, setBillets] = useState([])
   const [status, setStatus] = useState('loading')
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -479,12 +530,20 @@ function MemberProfile({ memberId }) {
 
     async function loadProfile() {
       try {
-        const result = await apiJson(endpoint, {
-          signal: controller.signal,
-        })
+        const [result, billetResult] = await Promise.all([
+          apiJson(endpoint, {
+            signal: controller.signal,
+          }),
+          apiJson('/api/guild/billets', {
+            signal: controller.signal,
+          }),
+        ])
 
         if (!active) return
         setMember(result?.member || null)
+        setBillets(
+          Array.isArray(billetResult?.billets) ? billetResult.billets : [],
+        )
         setStatus(result?.member ? 'ready' : 'not-found')
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
@@ -632,6 +691,15 @@ function MemberProfile({ memberId }) {
             />
           ) : null
         }
+      />
+
+      <BilletPanel
+        member={member}
+        billets={billets}
+        canManage={session.hasPermission('site.admin')}
+        onUpdated={(updatedMember) => {
+          setMember(updatedMember)
+        }}
       />
 
       <section className="member-profile__stats" aria-label="Member service totals">
