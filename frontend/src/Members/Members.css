@@ -473,87 +473,25 @@
 }
 
 
-.members-page__admin-tools {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: var(--border-subtle);
-}
 
-.members-page__admin-tools > span,
-.members-page__admin-tools small {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
 
-.members-page__admin-tools button {
-  min-height: 2.5rem;
-  padding-inline: var(--space-3);
-  border: var(--border-subtle);
-  background: rgba(196, 166, 103, 0.08);
-  color: var(--color-accent-bright);
-  font: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  cursor: pointer;
-}
 
-.members-page__admin-tools button:disabled {
-  opacity: 0.55;
-  cursor: wait;
-}
 
-.members-page__member-row {
-  display: grid;
-  gap: 0;
-}
 
-.members-page__rank-admin {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--space-3) var(--space-5);
-  border: var(--border-subtle);
-  border-top: 0;
-  background: rgba(3, 8, 15, 0.5);
-}
 
-@media (max-width: 38rem) {
-  .members-page__admin-tools {
-    align-items: stretch;
-    flex-direction: column;
-  }
 
-  .members-page__admin-tools button {
-    width: 100%;
-  }
 
-  .members-page__rank-admin {
-    justify-content: stretch;
-  }
 
-  .members-page__rank-admin .member-rank-control {
-    width: 100%;
-  }
-}
+
+
+
+
 
 
 .members-page__billets {
   margin-top: var(--space-2);
 }
 
-.members-page__rank-admin {
-  align-items: start;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
 
-.members-page__rank-admin .member-rank-control,
-.members-page__rank-admin .member-billet-control {
-  flex: 0 1 16rem;
-}
+
+
