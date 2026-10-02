@@ -4,7 +4,6 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
-import BilletDefinitionManager from './BilletDefinitionManager.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -109,7 +108,6 @@ function MemberCard({ member }) {
 function Members() {
   const session = useSession()
   const [directory, setDirectory] = useState(EMPTY_DIRECTORY)
-  const [billets, setBillets] = useState([])
   const [status, setStatus] = useState('loading')
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
@@ -160,14 +158,9 @@ function Members() {
       setStatus('loading')
 
       try {
-        const [result, billetResult] = await Promise.all([
-          apiJson('/api/guild/members', {
-            signal: controller.signal,
-          }),
-          apiJson('/api/guild/billets', {
-            signal: controller.signal,
-          }),
-        ])
+        const result = await apiJson('/api/guild/members', {
+          signal: controller.signal,
+        })
 
         if (!active) return
 
@@ -175,9 +168,6 @@ function Members() {
           members: Array.isArray(result?.members) ? result.members : [],
           summary: result?.summary || EMPTY_DIRECTORY.summary,
         })
-        setBillets(
-          Array.isArray(billetResult?.billets) ? billetResult.billets : [],
-        )
         setStatus('ready')
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
@@ -262,35 +252,6 @@ function Members() {
       })
     })
   }, [directory.members, filter, query, session.user?.id, sort])
-
-  function updateBilletDefinition(updatedBillet) {
-    if (!updatedBillet?.id) return
-
-    setBillets((current) => {
-      const exists = current.some((billet) => billet.id === updatedBillet.id)
-      const next = exists
-        ? current.map((billet) =>
-            billet.id === updatedBillet.id ? updatedBillet : billet,
-          )
-        : [...current, updatedBillet]
-
-      return next.sort((left, right) =>
-        left.name.localeCompare(right.name, undefined, {
-          sensitivity: 'base',
-        }),
-      )
-    })
-
-    setDirectory((current) => ({
-      ...current,
-      members: current.members.map((member) => ({
-        ...member,
-        billets: (member.billets || []).map((billet) =>
-          billet.id === updatedBillet.id ? updatedBillet : billet,
-        ),
-      })),
-    }))
-  }
 
   const closeGate = () => window.location.assign('/')
 
@@ -401,13 +362,6 @@ function Members() {
             </p>
 
           </section>
-
-          {session.hasPermission('authority.manage') ? (
-            <BilletDefinitionManager
-              billets={billets}
-              onChanged={updateBilletDefinition}
-            />
-          ) : null}
 
           {visibleMembers.length ? (
             <section className="members-page__list" aria-label="Holdfast members">
