@@ -92,6 +92,57 @@ test("rank and billet scopes merge into effective website authority", async () =
   }
 });
 
+test("multiple billets only add to rank authority and the highest ceiling wins", async () => {
+  const previous = preserveEnvironment();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-authority-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
+
+    await upsertGuildMember({ id: "owner-one", username: "rook" });
+    await upsertGuildMember({ id: "member-one", username: "leader" });
+    await updateGuildMemberRank("member-one", "Lieutenant", {
+      actorMemberId: "owner-one",
+    });
+
+    const lieutenant = resolveMemberAuthority("member-one");
+    assert.ok(lieutenant.permissions.includes("site.admin"));
+    assert.ok(lieutenant.permissions.includes("members.rank.manage"));
+    assert.equal(lieutenant.maxManagedRank, "Sergeant");
+
+    const billets = await readBillets();
+    const steward = billets.find((billet) => billet.name === "Steward");
+    const quartermaster = billets.find(
+      (billet) => billet.name === "Quartermaster",
+    );
+
+    await setMemberBilletAssignment("member-one", steward.id, true, {
+      actorMemberId: "owner-one",
+    });
+    await setMemberBilletAssignment("member-one", quartermaster.id, true, {
+      actorMemberId: "owner-one",
+    });
+
+    const combined = resolveMemberAuthority("member-one");
+
+    for (const permission of lieutenant.permissions) {
+      assert.ok(
+        combined.permissions.includes(permission),
+        `rank permission ${permission} should survive billet stacking`,
+      );
+    }
+
+    assert.ok(combined.permissions.includes("discord.manage"));
+    assert.ok(combined.permissions.includes("rewards.policy.edit"));
+    assert.equal(combined.maxManagedRank, "Sergeant Major");
+  } finally {
+    restoreEnvironment(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("authority designers cannot edit or grant scope above their own authority", async () => {
   const previous = preserveEnvironment();
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-authority-"));
