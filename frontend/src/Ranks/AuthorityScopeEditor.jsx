@@ -127,6 +127,8 @@ function AuthorityScopeEditor({
         setMessage('That would grant authority above your own.')
       } else if (error?.code === 'invalid_rank_ceiling') {
         setMessage('Choose a valid member-management ceiling.')
+      } else if (error?.code === 'ceiling_requires_member_management') {
+        setMessage('Enable Promote & demote or Assign billets before setting a ceiling.')
       } else {
         setMessage('Could not save authority. Try again.')
       }
