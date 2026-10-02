@@ -47,6 +47,7 @@ export function SessionProvider({ children }) {
     authenticated: false,
     user: null,
     permissions: [],
+    authority: null,
   })
 
   const refresh = useCallback(async () => {
@@ -57,6 +58,7 @@ export function SessionProvider({ children }) {
         authenticated: Boolean(data?.authenticated),
         user: data?.user ?? null,
         permissions: data?.permissions ?? [],
+        authority: data?.authority ?? null,
       }
 
       setSession(nextSession)
@@ -72,6 +74,7 @@ export function SessionProvider({ children }) {
         authenticated: false,
         user: null,
         permissions: [],
+        authority: null,
       }
 
       setSession(nextSession)
@@ -102,6 +105,7 @@ export function SessionProvider({ children }) {
       authenticated: false,
       user: null,
       permissions: [],
+      authority: null,
     })
   }, [])
 
