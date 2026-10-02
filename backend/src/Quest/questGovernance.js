@@ -288,7 +288,19 @@ export function enforceQuestWorkspaceAuthority(
     }
   }
 
-  if (json(questOrder(next)) !== json(questOrder(current))) {
+  const survivingIds = new Set(
+    current.quests
+      .filter((quest) => nextById.has(quest.id))
+      .map((quest) => quest.id),
+  );
+  const currentSurvivorOrder = questOrder(current).filter((id) =>
+    survivingIds.has(id),
+  );
+  const nextSurvivorOrder = questOrder(next).filter((id) =>
+    survivingIds.has(id),
+  );
+
+  if (json(nextSurvivorOrder) !== json(currentSurvivorOrder)) {
     if (
       !authority?.permissions?.includes("quests.edit") ||
       authority?.questScopes?.["quests.edit"] !== "all"
