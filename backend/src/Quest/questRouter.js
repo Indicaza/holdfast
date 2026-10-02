@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  requireAnyPermission,
   requireAuthenticated,
   requirePermission,
 } from "../Auth/permissions.js";
@@ -24,10 +25,18 @@ import {
   writeQuestsToDatabase,
 } from "./questRepository.js";
 import {
+  approveObjectiveReward,
+  assertObjectiveCanIssue,
+  enforceQuestWorkspaceAuthority,
+  preserveQuestServerState,
+  QuestGovernanceError,
+} from "./questGovernance.js";
+import {
   QuestValidationError,
   normalizeQuestDocument,
   projectFeaturedQuest,
   projectQuests,
+  rewardNeedsApproval,
 } from "./questSchema.js";
 import {
   QuestSignupError,
@@ -35,38 +44,27 @@ import {
   signupForObjective,
 } from "./questSignup.js";
 
-function preserveRestrictedEconomy(next, current) {
+const QUEST_MANAGEMENT_PERMISSIONS = [
+  "quests.create",
+  "quests.edit",
+  "quests.publish",
+  "rewards.approve",
+  "rewards.issue",
+  "rewards.policy.edit",
+];
+
+const QUEST_WRITE_PERMISSIONS = [
+  "quests.create",
+  "quests.edit",
+  "quests.publish",
+  "rewards.policy.edit",
+];
+
+function preserveRestrictedEconomy(raw, current) {
   return {
-    ...next,
+    ...raw,
     rewardPolicy: current.rewardPolicy,
     rewardLimits: current.rewardLimits,
-  };
-}
-
-function completionByObjective(document) {
-  const completion = new Map();
-
-  for (const quest of document.quests) {
-    for (const objective of quest.objectives) {
-      completion.set(objective.id, objective.completed === true);
-    }
-  }
-
-  return completion;
-}
-
-function preserveObjectiveCompletion(next, current) {
-  const completion = completionByObjective(current);
-
-  return {
-    ...next,
-    quests: next.quests.map((quest) => ({
-      ...quest,
-      objectives: quest.objectives.map((objective) => ({
-        ...objective,
-        completed: completion.get(objective.id) === true,
-      })),
-    })),
   };
 }
 
@@ -96,11 +94,129 @@ function completeObjective(document, questId, objectiveId) {
 }
 
 function hasReward(objective) {
+  return rewardNeedsApproval(objective?.reward);
+}
+
+function actorDisplayName(user) {
   return (
-    objective.reward.rep > 0 ||
-    objective.reward.marks > 0 ||
-    objective.reward.items.length > 0
+    user?.guildNickname ||
+    user?.globalName ||
+    user?.displayName ||
+    user?.username ||
+    "Officer"
   );
+}
+
+function policyChanged(next, current) {
+  return (
+    next.rewardPolicy !== current.rewardPolicy ||
+    JSON.stringify(next.rewardLimits) !==
+      JSON.stringify(current.rewardLimits)
+  );
+}
+
+function assertEconomyPolicyChangeAllowed(next, current, auth) {
+  if (!policyChanged(next, current)) return;
+
+  if (!auth.permissions.includes("rewards.policy.edit")) {
+    throw new QuestGovernanceError(
+      "reward_policy_forbidden",
+      "You do not have permission to change guild economy policy.",
+      403,
+    );
+  }
+
+  if (auth.authority?.isOwner) return;
+
+  const available = [
+    auth.authority?.rewardLimits?.approve,
+    auth.authority?.rewardLimits?.issue,
+  ].filter(Boolean);
+
+  const ceiling = {
+    repPerObjective: Math.max(
+      0,
+      ...available.map((limits) => Number(limits.repPerObjective) || 0),
+    ),
+    marksPerObjective: Math.max(
+      0,
+      ...available.map((limits) => Number(limits.marksPerObjective) || 0),
+    ),
+    marksPerQuest: Math.max(
+      0,
+      ...available.map((limits) => Number(limits.marksPerQuest) || 0),
+    ),
+  };
+
+  if (
+    next.rewardLimits.rep.max > ceiling.repPerObjective ||
+    next.rewardLimits.marks.max > ceiling.marksPerObjective ||
+    next.rewardLimits.marksPerQuestMax > ceiling.marksPerQuest
+  ) {
+    throw new QuestGovernanceError(
+      "economy_ceiling_exceeded",
+      "Guild economy guardrails cannot be raised above your own reward authority.",
+      403,
+    );
+  }
+}
+
+function governedIncomingDocument(raw, current, req) {
+  const source = req.auth.permissions.includes("rewards.policy.edit")
+    ? raw
+    : preserveRestrictedEconomy(raw, current);
+
+  let next = normalizeQuestDocument(source);
+  next = preserveQuestServerState(
+    next,
+    current,
+    req.auth.user.id,
+  );
+  next = normalizeQuestDocument(next);
+
+  assertEconomyPolicyChangeAllowed(next, current, req.auth);
+
+  return enforceQuestWorkspaceAuthority(next, current, {
+    authority: req.auth.authority,
+    actorMemberId: req.auth.user.id,
+  });
+}
+
+function sendQuestError(res, error) {
+  if (error instanceof QuestRevisionConflict) {
+    res.status(409).json({
+      error: error.code,
+      message: error.message,
+      currentRevision: error.currentRevision,
+    });
+    return true;
+  }
+
+  if (error instanceof QuestValidationError) {
+    res.status(400).json({
+      error: "invalid_quest_document",
+      message: error.message,
+    });
+    return true;
+  }
+
+  if (error instanceof QuestGovernanceError) {
+    res.status(error.status).json({
+      error: error.code,
+      message: error.message,
+    });
+    return true;
+  }
+
+  if (error?.status && error?.code) {
+    res.status(error.status).json({
+      error: error.code,
+      message: error.message,
+    });
+    return true;
+  }
+
+  return false;
 }
 
 export function createQuestRouter() {
@@ -201,13 +317,7 @@ export function createQuestRouter() {
           return;
         }
 
-        if (error instanceof QuestValidationError) {
-          res.status(400).json({
-            error: "invalid_quest_document",
-            message: error.message,
-          });
-          return;
-        }
+        if (sendQuestError(res, error)) return;
 
         console.error("Unable to sign member up for objective", error);
         res.status(500).json({
@@ -271,13 +381,7 @@ export function createQuestRouter() {
           return;
         }
 
-        if (error instanceof QuestValidationError) {
-          res.status(400).json({
-            error: "invalid_quest_document",
-            message: error.message,
-          });
-          return;
-        }
+        if (sendQuestError(res, error)) return;
 
         console.error("Unable to remove member from objective", error);
         res.status(500).json({
@@ -288,150 +392,192 @@ export function createQuestRouter() {
     },
   );
 
-  router.get("/manage", requirePermission("quests.edit"), async (req, res) => {
-    try {
-      const document = await readQuestWorkspace();
-      res.set("Cache-Control", "no-store");
-      res.json(document);
-    } catch (error) {
-      console.error("Unable to read quest workspace", error);
+  router.get(
+    "/manage",
+    requireAnyPermission(QUEST_MANAGEMENT_PERMISSIONS),
+    async (req, res) => {
+      try {
+        const document = await readQuestWorkspace();
+        res.set("Cache-Control", "no-store");
+        res.json(document);
+      } catch (error) {
+        console.error("Unable to read quest workspace", error);
 
-      if (error instanceof QuestStorageError) {
-        res.status(500).json({
-          error: "quest_data_invalid",
-          message: error.message,
-        });
-        return;
+        if (error instanceof QuestStorageError) {
+          res.status(500).json({
+            error: "quest_data_invalid",
+            message: error.message,
+          });
+          return;
+        }
+
+        res.status(500).json({ error: "quests_unavailable" });
       }
-
-      res.status(500).json({ error: "quests_unavailable" });
-    }
-  });
+    },
+  );
 
   router.put(
     "/manage",
-    requirePermission("quests.edit"),
-    adminWriteRateLimit,
-    async (req, res) => {
-    try {
-      const saved = await updateQuests(
-        (current) => {
-          let document = normalizeQuestDocument(req.body);
-          document = preserveObjectiveCompletion(document, current);
-
-          if (!req.auth.permissions.includes("rewards.policy.edit")) {
-            document = preserveRestrictedEconomy(document, current);
-          }
-
-          return document;
-        },
-        {
-          expectedRevision: Number(req.body?.revision),
-          includeRevision: true,
-          audit: {
-            actorMemberId: req.auth.user.id,
-            eventType: "quest.workspace_saved",
-            entityType: "quest_workspace",
-            entityId: "primary",
-            includeDocuments: true,
-          },
-        },
-      );
-
-      res.set("Cache-Control", "no-store");
-      res.json(saved);
-    } catch (error) {
-      if (error instanceof QuestRevisionConflict) {
-        res.status(409).json({
-          error: error.code,
-          message: error.message,
-          currentRevision: error.currentRevision,
-        });
-        return;
-      }
-
-      if (error instanceof QuestValidationError) {
-        res.status(400).json({
-          error: "invalid_quest_document",
-          message: error.message,
-        });
-        return;
-      }
-
-      console.error("Unable to save quest workspace", error);
-      res.status(500).json({ error: "quests_save_failed" });
-    }
-  },
-  );
-
-  router.post(
-    "/manage/complete-objective",
-    requirePermission("quests.edit"),
-    requirePermission("rewards.issue"),
+    requireAnyPermission(QUEST_WRITE_PERMISSIONS),
     adminWriteRateLimit,
     async (req, res) => {
       try {
-        const questId = String(req.body.questId || "");
-        const objectiveId = String(req.body.objectiveId || "");
+        const saved = await updateQuests(
+          (current) =>
+            governedIncomingDocument(req.body, current, req),
+          {
+            expectedRevision: Number(req.body?.revision),
+            includeRevision: true,
+            audit: {
+              actorMemberId: req.auth.user.id,
+              eventType: "quest.workspace_saved",
+              entityType: "quest_workspace",
+              entityId: "primary",
+              includeDocuments: true,
+            },
+          },
+        );
+
+        res.set("Cache-Control", "no-store");
+        res.json(saved);
+      } catch (error) {
+        if (sendQuestError(res, error)) return;
+
+        console.error("Unable to save quest workspace", error);
+        res.status(500).json({ error: "quests_save_failed" });
+      }
+    },
+  );
+
+  router.post(
+    "/manage/approve-reward",
+    requirePermission("rewards.approve"),
+    adminWriteRateLimit,
+    async (req, res) => {
+      try {
+        const questId = String(req.body?.questId || "");
+        const objectiveId = String(req.body?.objectiveId || "");
 
         const result = withGuildTransaction((db) => {
           const current = readQuestsFromDatabase(db);
           const revisionBefore = assertQuestRevision(
             db,
-            Number(req.body.document?.revision),
+            Number(req.body?.revision),
           );
-          let document = normalizeQuestDocument(req.body.document);
-          document = preserveObjectiveCompletion(document, current);
 
-          if (!req.auth.permissions.includes("rewards.policy.edit")) {
-            document = preserveRestrictedEconomy(document, current);
+          const approved = approveObjectiveReward(
+            current,
+            questId,
+            objectiveId,
+            {
+              authority: req.auth.authority,
+              actorMemberId: req.auth.user.id,
+              actorName: actorDisplayName(req.auth.user),
+            },
+          );
+
+          const saved = writeQuestsToDatabase(db, approved);
+          const revisionAfter = questRevisionFromDatabase(db);
+
+          recordAuditEventInDatabase({
+            db,
+            actorMemberId: req.auth.user.id,
+            eventType: "quest.reward_approved",
+            entityType: "objective",
+            entityId: objectiveId,
+            payload: {
+              questId,
+              objectiveId,
+              revisionBefore,
+              revisionAfter,
+              before: current,
+              after: saved,
+            },
+          });
+
+          return { ...saved, revision: revisionAfter };
+        });
+
+        res.set("Cache-Control", "no-store");
+        res.json(result);
+      } catch (error) {
+        if (sendQuestError(res, error)) return;
+
+        console.error("Unable to approve objective reward", error);
+        res.status(500).json({ error: "reward_approval_failed" });
+      }
+    },
+  );
+
+  router.post(
+    "/manage/complete-objective",
+    requirePermission("rewards.issue"),
+    adminWriteRateLimit,
+    async (req, res) => {
+      try {
+        const questId = String(req.body?.questId || "");
+        const objectiveId = String(req.body?.objectiveId || "");
+
+        const result = withGuildTransaction((db) => {
+          const current = readQuestsFromDatabase(db);
+          const revisionBefore = assertQuestRevision(
+            db,
+            Number(req.body?.revision),
+          );
+          const currentTarget = findObjective(
+            current,
+            questId,
+            objectiveId,
+          );
+
+          if (!currentTarget.quest || !currentTarget.objective) {
+            throw new QuestGovernanceError(
+              "objective_not_found",
+              "That objective no longer exists.",
+              404,
+            );
           }
 
-          document = normalizeQuestDocument(document);
-
-          const target = findObjective(document, questId, objectiveId);
-          const currentTarget = findObjective(current, questId, objectiveId);
-
-          if (!target.quest || !target.objective) {
-            const error = new Error("That objective no longer exists.");
-            error.code = "objective_not_found";
-            error.status = 404;
-            throw error;
-          }
-
-          if (target.quest.publication !== "published") {
-            const error = new Error(
+          if (currentTarget.quest.publication !== "published") {
+            throw new QuestGovernanceError(
+              "quest_not_published",
               "Publish the quest before completing objectives.",
+              400,
             );
-            error.code = "quest_not_published";
-            error.status = 400;
-            throw error;
           }
 
-          if (currentTarget.objective?.completed) {
-            const error = new Error(
+          if (currentTarget.objective.completed) {
+            throw new QuestGovernanceError(
+              "objective_already_completed",
               "That objective has already been completed and rewarded.",
+              409,
             );
-            error.code = "objective_already_completed";
-            error.status = 409;
-            throw error;
           }
+
+          const { quest, objective } = assertObjectiveCanIssue(
+            current,
+            questId,
+            objectiveId,
+            {
+              authority: req.auth.authority,
+              actorMemberId: req.auth.user.id,
+            },
+          );
 
           const memberIds = [
             ...new Set(
-              target.objective.assignments
+              objective.assignments
                 .map((assignment) => assignment.memberId)
                 .filter(Boolean),
             ),
           ];
 
-          if (hasReward(target.objective) && !memberIds.length) {
-            const error = new Error(
+          if (hasReward(objective) && !memberIds.length) {
+            throw new QuestGovernanceError(
+              "objective_unassigned",
               "Assign at least one guild member before issuing this reward.",
+              400,
             );
-            error.code = "objective_unassigned";
-            error.status = 400;
-            throw error;
           }
 
           const guildMembers = readGuildMembersFromDatabase(db);
@@ -443,25 +589,24 @@ export function createQuestRouter() {
             .filter(Boolean);
 
           if (assignedMembers.length !== memberIds.length) {
-            const error = new Error(
+            throw new QuestGovernanceError(
+              "unknown_assignee",
               "One or more assigned members are no longer in the Holdfast member directory.",
+              400,
             );
-            error.code = "unknown_assignee";
-            error.status = 400;
-            throw error;
           }
 
           const awards = awardObjectiveInDatabase({
             db,
-            quest: target.quest,
-            objective: target.objective,
+            quest,
+            objective,
             members: assignedMembers,
             awardedBy: req.auth.user,
           });
 
           const saved = writeQuestsToDatabase(
             db,
-            completeObjective(document, questId, objectiveId),
+            completeObjective(current, questId, objectiveId),
           );
 
           const revisionAfter = questRevisionFromDatabase(db);
@@ -492,30 +637,7 @@ export function createQuestRouter() {
         res.set("Cache-Control", "no-store");
         res.json(result);
       } catch (error) {
-        if (error instanceof QuestRevisionConflict) {
-          res.status(409).json({
-            error: error.code,
-            message: error.message,
-            currentRevision: error.currentRevision,
-          });
-          return;
-        }
-
-        if (error instanceof QuestValidationError) {
-          res.status(400).json({
-            error: "invalid_quest_document",
-            message: error.message,
-          });
-          return;
-        }
-
-        if (error?.status && error?.code) {
-          res.status(error.status).json({
-            error: error.code,
-            message: error.message,
-          });
-          return;
-        }
+        if (sendQuestError(res, error)) return;
 
         console.error("Unable to complete objective", error);
         res.status(500).json({ error: "objective_completion_failed" });
