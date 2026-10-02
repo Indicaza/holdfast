@@ -403,18 +403,22 @@ function QuestEditForm({
     ? session.hasPermission('quests.create')
     : questScopeAllows(session, 'quests.edit', quest)
   const canPublish = questScopeAllows(session, 'quests.publish', quest)
-  const canFeature =
-    canPublish && session.authority?.questScopes?.['quests.publish'] === 'all'
   const [draft, setDraft] = useState(() => structuredClone(quest))
   const [featured, setFeatured] = useState(Boolean(focused))
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const dirty = useMemo(
     () =>
+      isNew ||
       JSON.stringify(draft) !== JSON.stringify(quest) ||
       featured !== Boolean(focused),
-    [draft, featured, focused, quest],
+    [draft, featured, focused, isNew, quest],
   )
+
+  const canFeature =
+    canPublish && session.authority?.questScopes?.['quests.publish'] === 'all'
+  const canChangePublication = canPublish && (!focused || canFeature)
+  const canDeleteQuest = canEditContent && (!focused || canFeature)
 
   function updateObjective(index, nextObjective) {
     setDraft((current) => ({
@@ -460,7 +464,7 @@ function QuestEditForm({
           <span>Publication</span>
           <select
             value={draft.publication}
-            disabled={!canPublish || busy}
+            disabled={!canChangePublication || busy}
             onChange={(event) => setDraft((current) => ({
               ...current,
               publication: event.target.value,
@@ -471,6 +475,13 @@ function QuestEditForm({
             <option value="archived">Archived</option>
           </select>
         </label>
+
+        {focused && canPublish && !canFeature ? (
+          <small className="quest-modal__field-note">
+            This quest is currently featured. All-scope publish authority is required
+            to unpublish or archive the featured quest.
+          </small>
+        ) : null}
 
         <label className="quest-modal__field--wide">
           <span>Summary</span>
@@ -544,7 +555,7 @@ function QuestEditForm({
           {dirty ? 'Unsaved changes' : 'Up to date'}
         </div>
 
-        {!isNew && canEditContent ? (
+        {!isNew && canDeleteQuest ? (
           confirmDelete ? (
             <div className="quest-modal__delete-confirm">
               <span>Delete this quest?</span>
