@@ -11,7 +11,12 @@ import {
   mergeAuthorityScopes,
   normalizeCapabilityList,
   normalizeManagedRank,
+  normalizeQuestScope,
+  normalizeRewardLimits,
+  rewardLimitsAreValid,
   scopeProvidesMemberManagement,
+  scopeProvidesQuestAuthority,
+  scopeProvidesRewardAuthority,
 } from "./authorityPolicy.js";
 import {
   GUILD_RANKS,
@@ -45,6 +50,12 @@ function rankScopeFromRow(row) {
     rank: normalizeGuildRank(row.rank),
     permissions: parsePermissions(row.permissions_json),
     maxManagedRank: normalizeManagedRank(row.max_managed_rank),
+    questScope: normalizeQuestScope(row.quest_scope),
+    rewardLimits: {
+      repPerObjective: Number(row.reward_rep_max) || 0,
+      marksPerObjective: Number(row.reward_marks_max) || 0,
+      marksPerQuest: Number(row.reward_marks_quest_max) || 0,
+    },
   };
 }
 
@@ -60,6 +71,12 @@ function billetScopeFromRow(row) {
     active: Boolean(row.active),
     permissions: parsePermissions(row.permissions_json),
     maxManagedRank: normalizeManagedRank(row.max_managed_rank),
+    questScope: normalizeQuestScope(row.quest_scope),
+    rewardLimits: {
+      repPerObjective: Number(row.reward_rep_max) || 0,
+      marksPerObjective: Number(row.reward_marks_max) || 0,
+      marksPerQuest: Number(row.reward_marks_quest_max) || 0,
+    },
   };
 }
 
@@ -93,6 +110,17 @@ export function readBilletAuthorityFromDatabase(db) {
     .map(billetScopeFromRow);
 }
 
+export function readEconomyPolicyFromDatabase(db) {
+  const row =
+    db.prepare("SELECT * FROM quest_settings WHERE id = 1").get() || {};
+
+  return {
+    repPerObjective: Number(row.rep_max) || 0,
+    marksPerObjective: Number(row.marks_max) || 0,
+    marksPerQuest: Number(row.marks_quest_max) || 0,
+  };
+}
+
 export function resolveMemberAuthorityFromDatabase(
   db,
   memberId,
@@ -104,6 +132,11 @@ export function resolveMemberAuthorityFromDatabase(
     return {
       permissions: [],
       maxManagedRank: null,
+      questScopes: {},
+      rewardLimits: {
+        approve: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+        issue: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+      },
       memberRank: "Recruit",
       isOwner: false,
     };
@@ -117,7 +150,7 @@ export function resolveMemberAuthorityFromDatabase(
     .get(normalizedMemberId);
 
   if (ownerIds.has(normalizedMemberId)) {
-    const authority = fullOwnerAuthority();
+    const authority = fullOwnerAuthority(readEconomyPolicyFromDatabase(db));
     return {
       ...authority,
       memberRank: member?.rank
@@ -130,6 +163,11 @@ export function resolveMemberAuthorityFromDatabase(
     return {
       permissions: [],
       maxManagedRank: null,
+      questScopes: {},
+      rewardLimits: {
+        approve: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+        issue: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+      },
       memberRank: "Recruit",
       isOwner: false,
     };
@@ -175,12 +213,19 @@ export function readAuthorityCatalog() {
     capabilities: CAPABILITY_DEFINITIONS,
     ranks: readRankAuthorityFromDatabase(db),
     billets: readBilletAuthorityFromDatabase(db),
+    economyPolicy: readEconomyPolicyFromDatabase(db),
   }));
 }
 
 function validatedScopeInput(input) {
   const permissions = input?.permissions;
   const maxManagedRank = input?.maxManagedRank;
+  const questScope = input?.questScope ?? "own";
+  const rewardLimits = input?.rewardLimits ?? {
+    repPerObjective: 0,
+    marksPerObjective: 0,
+    marksPerQuest: 0,
+  };
 
   if (!capabilityListIsValid(permissions)) {
     return { valid: false, error: "invalid_permissions" };
@@ -195,15 +240,37 @@ function validatedScopeInput(input) {
     return { valid: false, error: "invalid_rank_ceiling" };
   }
 
+  if (!["own", "all"].includes(questScope)) {
+    return { valid: false, error: "invalid_quest_scope" };
+  }
+
+  if (!rewardLimitsAreValid(rewardLimits)) {
+    return { valid: false, error: "invalid_reward_limits" };
+  }
+
   const scope = {
     permissions: normalizeCapabilityList(permissions),
     maxManagedRank: normalizeManagedRank(maxManagedRank),
+    questScope: normalizeQuestScope(questScope),
+    rewardLimits: normalizeRewardLimits(rewardLimits),
   };
 
   if (scope.maxManagedRank && !scopeProvidesMemberManagement(scope)) {
     return {
       valid: false,
       error: "ceiling_requires_member_management",
+    };
+  }
+
+  if (!scopeProvidesQuestAuthority(scope)) {
+    scope.questScope = "own";
+  }
+
+  if (!scopeProvidesRewardAuthority(scope)) {
+    scope.rewardLimits = {
+      repPerObjective: 0,
+      marksPerObjective: 0,
+      marksPerQuest: 0,
     };
   }
 
@@ -277,12 +344,22 @@ export async function updateRankAuthority(
     db.prepare(
       `
         UPDATE rank_authority
-        SET permissions_json = ?, max_managed_rank = ?
+        SET
+          permissions_json = ?,
+          max_managed_rank = ?,
+          quest_scope = ?,
+          reward_rep_max = ?,
+          reward_marks_max = ?,
+          reward_marks_quest_max = ?
         WHERE rank = ?
       `,
     ).run(
       JSON.stringify(validation.scope.permissions),
       validation.scope.maxManagedRank,
+      validation.scope.questScope,
+      validation.scope.rewardLimits.repPerObjective,
+      validation.scope.rewardLimits.marksPerObjective,
+      validation.scope.rewardLimits.marksPerQuest,
       rank,
     );
 
@@ -338,12 +415,23 @@ export async function updateBilletAuthority(
     db.prepare(
       `
         UPDATE billets
-        SET permissions_json = ?, max_managed_rank = ?, updated_at = ?
+        SET
+          permissions_json = ?,
+          max_managed_rank = ?,
+          quest_scope = ?,
+          reward_rep_max = ?,
+          reward_marks_max = ?,
+          reward_marks_quest_max = ?,
+          updated_at = ?
         WHERE id = ?
       `,
     ).run(
       JSON.stringify(validation.scope.permissions),
       validation.scope.maxManagedRank,
+      validation.scope.questScope,
+      validation.scope.rewardLimits.repPerObjective,
+      validation.scope.rewardLimits.marksPerObjective,
+      validation.scope.rewardLimits.marksPerQuest,
       new Date().toISOString(),
       billetId,
     );
