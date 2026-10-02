@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   approveObjectiveReward,
+  assertChangedRewardsWithinPolicy,
   assertObjectiveCanIssue,
   enforceQuestWorkspaceAuthority,
   preserveQuestServerState,
@@ -395,5 +396,87 @@ test("reward issuance requires approval and its own independent bracket", () => 
     (error) =>
       error instanceof QuestGovernanceError &&
       error.code === "reward_authority_exceeded",
+  );
+});
+
+test("unchanged legacy rewards do not block unrelated quest edits", () => {
+  const current = document([
+    quest({
+      creator: "member-one",
+      objectives: [objective({ rep: 5000, marks: 1200 })],
+    }),
+  ]);
+  const next = structuredClone(current);
+  next.quests[0].summary = "Updated summary";
+
+  assert.doesNotThrow(() =>
+    assertChangedRewardsWithinPolicy(next, current),
+  );
+});
+
+test("changed reward amounts must obey current guild limits", () => {
+  const current = document([
+    quest({
+      creator: "member-one",
+      objectives: [objective({ rep: 5000, marks: 5 })],
+    }),
+  ]);
+  const next = structuredClone(current);
+  next.quests[0].objectives[0].reward.rep = 5001;
+
+  assert.throws(
+    () => assertChangedRewardsWithinPolicy(next, current),
+    (error) =>
+      error instanceof QuestGovernanceError &&
+      error.code === "reward_policy_exceeded",
+  );
+});
+
+test("legacy over-cap quest totals may shrink but not grow", () => {
+  const current = document([
+    quest({
+      creator: "member-one",
+      objectives: [
+        objective({ id: "one", rep: 0, marks: 700 }),
+        objective({ id: "two", rep: 0, marks: 700 }),
+      ],
+    }),
+  ]);
+
+  const reduced = structuredClone(current);
+  reduced.quests[0].objectives[1].reward.marks = 600;
+
+  assert.doesNotThrow(() =>
+    assertChangedRewardsWithinPolicy(reduced, current),
+  );
+
+  const increased = structuredClone(current);
+  increased.quests[0].objectives[1].reward.marks = 800;
+
+  assert.throws(
+    () => assertChangedRewardsWithinPolicy(increased, current),
+    (error) =>
+      error instanceof QuestGovernanceError &&
+      error.code === "reward_policy_exceeded",
+  );
+});
+
+test("new quest totals cannot exceed the current Marks per quest cap", () => {
+  const current = document([]);
+  const next = document([
+    quest({
+      creator: "member-one",
+      objectives: [
+        objective({ id: "one", rep: 0, marks: 600 }),
+        objective({ id: "two", rep: 0, marks: 500 }),
+      ],
+    }),
+  ]);
+
+  assert.throws(
+    () => assertChangedRewardsWithinPolicy(next, current),
+    (error) =>
+      error instanceof QuestGovernanceError &&
+      error.code === "reward_policy_exceeded",
   );
 });

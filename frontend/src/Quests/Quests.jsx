@@ -160,7 +160,9 @@ function Quests() {
 
   const canManage = canManageAnyQuest(session)
   const canCreate = session.hasPermission('quests.create')
-  const canEditEconomy = session.hasPermission('rewards.policy.edit')
+  const canEditEconomy =
+    session.hasPermission('rewards.policy.edit') ||
+    Boolean(session.authority?.isOwner)
 
   const loadData = useCallback(
     async (signal) => {
@@ -426,17 +428,38 @@ function Quests() {
   async function saveEconomy({ rewardPolicy, rewardLimits }) {
     if (!workspace) return
 
-    const next = {
-      ...structuredClone(workspace),
-      rewardPolicy,
-      rewardLimits,
-    }
+    setMutationBusy(true)
+    setModalMessage('Saving…')
 
-    const result = await saveWorkspace(next, 'Reward policy saved.')
+    try {
+      const result = await authenticatedMutation(() =>
+        apiJson('/api/quests/manage/economy', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            revision: workspace.revision,
+            rewardPolicy,
+            rewardLimits,
+          }),
+        }),
+      )
 
-    if (result) {
+      if (!result) return
+
+      setWorkspace(result)
+      announceChanged()
       setModal(null)
       setModalMessage('')
+    } catch (error) {
+      if (error?.code === 'quest_revision_conflict') {
+        setModalMessage(
+          'The quest economy changed after you opened it. Close and reopen Economy to load the latest values.',
+        )
+      } else {
+        setModalMessage(error?.message || 'Holdfast could not save reward policy.')
+      }
+    } finally {
+      setMutationBusy(false)
     }
   }
 

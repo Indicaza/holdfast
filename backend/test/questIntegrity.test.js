@@ -11,8 +11,8 @@ import {
   rewardIsApproved,
 } from "../src/Quest/questSchema.js";
 import {
-  QuestStorageError,
   readQuests,
+  writeQuestEconomyToDatabase,
   writeQuests,
 } from "../src/Quest/questRepository.js";
 import { withGuildDatabase } from "../src/Data/database.js";
@@ -208,7 +208,7 @@ test("the same member may be assigned to different objectives", () => {
   assert.doesNotThrow(() => normalizeQuestDocument(document));
 });
 
-test("invalid quest state read from SQLite reports an actionable storage error", async () => {
+test("stored rewards above configured caps remain readable without changing policy", async () => {
   const previousDataDir = process.env.GUILD_DATA_DIR;
   const previousNodeEnv = process.env.NODE_ENV;
   const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-integrity-"));
@@ -225,13 +225,91 @@ test("invalid quest state read from SQLite reports an actionable storage error",
       ).run();
     });
 
-    await assert.rejects(
-      () => readQuests(),
+    const document = await readQuests();
+
+    assert.equal(document.quests[0].objectives[0].reward.rep, 5000);
+    assert.equal(document.rewardLimits.rep.max, 1000);
+    assert.throws(
+      () => normalizeQuestDocument(document),
       (error) =>
-        error instanceof QuestStorageError &&
-        error.message.includes("holdfast.sqlite") &&
+        error instanceof QuestValidationError &&
         /reward.rep must be 0 or between 0 and 1000/.test(error.message),
     );
+  } finally {
+    if (previousDataDir === undefined) {
+      delete process.env.GUILD_DATA_DIR;
+    } else {
+      process.env.GUILD_DATA_DIR = previousDataDir;
+    }
+
+    if (previousNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = previousNodeEnv;
+    }
+
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("economy updates do not rewrite quest or assignment rows", async () => {
+  const previousDataDir = process.env.GUILD_DATA_DIR;
+  const previousNodeEnv = process.env.NODE_ENV;
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-economy-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+
+    await writeQuests(validDocument());
+
+    const before = withGuildDatabase((db) => ({
+      questRowId: db
+        .prepare("SELECT rowid FROM quests WHERE id = 'quest-one'")
+        .get().rowid,
+      objectiveRowId: db
+        .prepare("SELECT rowid FROM objectives WHERE id = 'objective-one'")
+        .get().rowid,
+      assignmentId: db
+        .prepare(
+          "SELECT id FROM assignments WHERE objective_id = 'objective-one'",
+        )
+        .get().id,
+    }));
+
+    withGuildDatabase((db) =>
+      writeQuestEconomyToDatabase(db, {
+        rewardPolicy: "Keep rewards modest.",
+        rewardLimits: {
+          rep: { min: 0, max: 250 },
+          marks: { min: 0, max: 25 },
+          marksPerQuestMax: 50,
+        },
+      }),
+    );
+
+    const after = withGuildDatabase((db) => ({
+      questRowId: db
+        .prepare("SELECT rowid FROM quests WHERE id = 'quest-one'")
+        .get().rowid,
+      objectiveRowId: db
+        .prepare("SELECT rowid FROM objectives WHERE id = 'objective-one'")
+        .get().rowid,
+      assignmentId: db
+        .prepare(
+          "SELECT id FROM assignments WHERE objective_id = 'objective-one'",
+        )
+        .get().id,
+    }));
+    const document = await readQuests();
+
+    assert.deepEqual(after, before);
+    assert.equal(document.rewardPolicy, "Keep rewards modest.");
+    assert.deepEqual(document.rewardLimits, {
+      rep: { min: 0, max: 250 },
+      marks: { min: 0, max: 25 },
+      marksPerQuestMax: 50,
+    });
   } finally {
     if (previousDataDir === undefined) {
       delete process.env.GUILD_DATA_DIR;
