@@ -14,6 +14,7 @@ function QuestEconomyModal({
   const [limits, setLimits] = useState(() => structuredClone(workspace.rewardLimits))
   const canEditPolicy = session.hasPermission('rewards.policy.edit')
   const canEditLimits = Boolean(session.authority?.isOwner)
+  const canSave = canEditPolicy || canEditLimits
 
   const dirty = useMemo(
     () =>
@@ -161,7 +162,7 @@ function QuestEconomyModal({
           <button
             className="quest-economy__save"
             type="button"
-            disabled={busy || !dirty || !canEditPolicy}
+            disabled={busy || !dirty || !canSave}
             onClick={() => onSave?.({ rewardPolicy: policy, rewardLimits: limits })}
           >
             {busy ? 'Saving…' : 'Save policy'}
