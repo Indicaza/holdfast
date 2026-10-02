@@ -163,7 +163,7 @@ function Charter() {
         </section>
 
         <section className="charter__section charter__section--closing">
-          <h2>Leave it stronger</h2>
+          <h2>What we ask</h2>
 
           <p className="charter__callout">
             <strong>
@@ -172,10 +172,12 @@ function Charter() {
             </strong>
           </p>
 
-          <p>Bring what you can.</p>
-          <p>Learn what you can.</p>
-          <p>Teach what you know.</p>
-          <p>Make some friends.</p>
+          <ul className="charter__closing-list">
+            <li>Bring what you can.</li>
+            <li>Learn what you can.</li>
+            <li>Teach what you know.</li>
+            <li>Make some friends.</li>
+          </ul>
 
           <p>
             Build something useful enough that the next person does not have to
