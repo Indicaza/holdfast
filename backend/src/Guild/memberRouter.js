@@ -140,16 +140,26 @@ function latestActivityAt(member, history) {
 }
 
 async function memberWorkspace() {
-  const [members, totals, quests] = await Promise.all([
+  const [members, totals] = await Promise.all([
     readGuildMembers(),
     readContributionTotals(),
-    readQuests(),
   ]);
+
+  let assignments = new Map();
+
+  try {
+    assignments = activeAssignmentsByMember(await readQuests());
+  } catch (error) {
+    console.error(
+      "Quest data is unavailable; serving member directory without active quest assignments",
+      error,
+    );
+  }
 
   return {
     members,
     totals,
-    assignments: activeAssignmentsByMember(quests),
+    assignments,
   };
 }
 
