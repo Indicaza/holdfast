@@ -12,6 +12,41 @@ function assignedIds(member) {
   )
 }
 
+const RANKS = [
+  'Recruit',
+  'Private',
+  'Corporal',
+  'Sergeant',
+  'Master Sergeant',
+  'Sergeant Major',
+  'Lieutenant',
+  'Captain',
+  'Major',
+  'Commander',
+]
+
+function rankOrder(rank) {
+  return RANKS.indexOf(rank)
+}
+
+function canGrantBillet(authority, billet) {
+  if (authority?.isOwner) return true
+
+  const permissions = new Set(authority?.permissions || [])
+
+  if ((billet.permissions || []).some((permission) => !permissions.has(permission))) {
+    return false
+  }
+
+  if (!billet.maxManagedRank) return true
+  if (!authority?.maxManagedRank) return false
+
+  return (
+    rankOrder(billet.maxManagedRank) <=
+    rankOrder(authority.maxManagedRank)
+  )
+}
+
 function MemberBilletControl({
   member,
   billets,
@@ -24,10 +59,28 @@ function MemberBilletControl({
   const [busyId, setBusyId] = useState(null)
   const [message, setMessage] = useState('')
 
-  if (!session.hasPermission('site.admin')) {
+  if (!session.hasPermission('members.billet.assign')) {
     return null
   }
 
+  if (!session.authority?.isOwner && member.id === session.user?.id) {
+    return null
+  }
+
+  const ceilingOrder = rankOrder(
+    session.authority?.isOwner
+      ? 'Commander'
+      : session.authority?.maxManagedRank,
+  )
+  const memberOrder = rankOrder(member.rank || 'Recruit')
+
+  if (ceilingOrder < 0 || memberOrder > ceilingOrder) {
+    return null
+  }
+
+  const grantableBillets = billets.filter((billet) =>
+    canGrantBillet(session.authority, billet),
+  )
   const current = assignedIds(member)
 
   async function setAssignment(billet, assigned) {
@@ -66,8 +119,14 @@ function MemberBilletControl({
       } else {
         setMessage('Saved and synced to Discord.')
       }
-    } catch {
-      setMessage('Billet assignment failed.')
+    } catch (error) {
+      if (error?.code === 'authority_scope_exceeded') {
+        setMessage('That billet is outside your authority.')
+      } else if (error?.code === 'self_authority_change_forbidden') {
+        setMessage('You cannot change your own authority.')
+      } else {
+        setMessage('Billet assignment failed.')
+      }
     } finally {
       setBusyId(null)
     }
@@ -149,8 +208,8 @@ function MemberBilletControl({
           </span>
         )}
 
-        {billets.length ? (
-          billets.map((billet) => (
+        {grantableBillets.length ? (
+          grantableBillets.map((billet) => (
             <label key={billet.id}>
               <input
                 type="checkbox"
@@ -169,7 +228,7 @@ function MemberBilletControl({
             </label>
           ))
         ) : (
-          <p>No billets have been created yet.</p>
+          <p>No billets are within your assignment authority.</p>
         )}
 
         {message ? (
