@@ -891,7 +891,7 @@ async function inspectProvisioning({ client, guildId, manifest, state, command, 
     (desiredRoleOrder.length !== manifest.roles.length ||
       !sameValue(currentRoleOrder, desiredRoleOrder));
   if (roleOrderingNeeded) {
-    addChange(report, "role.order", "roles", null, "Managed rank roles");
+    addChange(report, "role.order", "roles", null, "Managed roles");
   }
 
   for (const role of resolvedExistingRoles) {
