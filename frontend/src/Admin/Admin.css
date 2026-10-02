@@ -319,3 +319,42 @@
     gap: var(--space-2);
   }
 }
+
+
+.admin-ranks__controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.admin-ranks__controls button {
+  min-height: 2.6rem;
+  padding-inline: var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-ranks__controls button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.admin-ranks__managed {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+@media (max-width: 42rem) {
+  .admin-ranks__controls {
+    grid-template-columns: 1fr;
+  }
+}
