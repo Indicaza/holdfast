@@ -53,13 +53,7 @@ function BilletDefinitionManager({ billets, onChanged }) {
 
       if (!result) return
 
-      onChanged?.((current) =>
-        [...current, result.billet].sort((left, right) =>
-          left.name.localeCompare(right.name, undefined, {
-            sensitivity: 'base',
-          }),
-        ),
-      )
+      onChanged?.(result.billet)
       setName('')
       setResponsibility('')
       setMessage(
@@ -109,17 +103,7 @@ function BilletDefinitionManager({ billets, onChanged }) {
 
       if (!result) return
 
-      onChanged?.((current) =>
-        current
-          .map((billet) =>
-            billet.id === result.billet.id ? result.billet : billet,
-          )
-          .sort((left, right) =>
-            left.name.localeCompare(right.name, undefined, {
-              sensitivity: 'base',
-            }),
-          ),
-      )
+      onChanged?.(result.billet)
       setEditingId(null)
       setMessage(
         result.discordSync?.status === 'synced'
