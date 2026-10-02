@@ -51,9 +51,9 @@ export const CAPABILITY_DEFINITIONS = [
   },
   {
     id: "rewards.policy.edit",
-    label: "Guild economy policy",
+    label: "Reward policy",
     description:
-      "Change the guild-wide reward policy and absolute Rep/Marks guardrails.",
+      "Edit guild reward guidance. Absolute Rep/Marks hard caps remain Commander-owned.",
   },
   {
     id: "members.rank.manage",
