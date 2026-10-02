@@ -910,8 +910,10 @@ function QuestCard({
   creatorName,
   canEdit,
   canPublish,
-  canApprove,
-  canIssue,
+  canApproveQuest,
+  canIssueQuest,
+  canApproveObjective,
+  canIssueObjective,
   canReorder,
   workspaceDirty,
   onChange,
@@ -998,7 +1000,7 @@ function QuestCard({
             {questCompleted(quest) ? (
               <span className="quest-editor__badge--complete">Complete</span>
             ) : null}
-            {!canEdit && (canApprove || canIssue) ? (
+            {!canEdit && (canApproveQuest || canIssueQuest) ? (
               <span className="quest-editor__badge--review">Review only</span>
             ) : null}
           </div>
@@ -1131,8 +1133,8 @@ function QuestCard({
                 members={members}
                 rewardLimits={rewardLimits}
                 canEdit={canEdit}
-                canApprove={canApprove}
-                canIssue={canIssue}
+                canApprove={canApproveObjective(objective)}
+                canIssue={canIssueObjective(objective)}
                 questPublished={quest.publication === 'published'}
                 workspaceDirty={workspaceDirty}
                 onChange={(nextObjective) =>
