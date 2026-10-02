@@ -1,6 +1,7 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import RankInsignia from '../Members/RankInsignia.jsx'
 import PublicJoinCallout from '../PublicJoinCallout/PublicJoinCallout.jsx'
+import AuthorityScopeEditor from './AuthorityScopeEditor.jsx'
 import './Ranks.css'
 
 const rankDefinitions = [
@@ -171,6 +172,8 @@ function Ranks() {
             ))}
           </div>
         </section>
+
+        <AuthorityScopeEditor />
 
         <PublicJoinCallout
           title="You do not need a rank to belong here."
