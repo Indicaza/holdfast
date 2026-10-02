@@ -649,9 +649,10 @@ function assertRoleManageable(role, botRole, purpose) {
   if (role.managed) {
     throw new Error(`Cannot ${purpose} managed Discord role ${role.name} (${role.id})`);
   }
-  if (!botRole || compareRoleHierarchy(botRole, role) <= 0) {
+  if (!botRole || Number(role.position) >= Number(botRole.position)) {
+    const botLabel = botRole?.name || "bot";
     throw new Error(
-      `Cannot ${purpose} role ${role.name} (${role.id}); move the bot role above it`,
+      `Cannot ${purpose} role ${role.name} (${role.id}); Discord requires the ${botLabel} role to have a strictly higher position. If it already appears above this role, drag it below and back above the managed roles to refresh the hierarchy.`,
     );
   }
 }
@@ -915,10 +916,19 @@ async function inspectProvisioning({ client, guildId, manifest, state, command, 
   const currentRoleOrder = [...resolvedExistingRoles]
     .sort((left, right) => compareRoleHierarchy(right, left))
     .map((role) => role.id);
+  const strictRolePositions = manifest.roles
+    .map((role) => resolvedRoles.get(role.key))
+    .filter(Boolean)
+    .every(
+      (role, index, ordered) =>
+        index === 0 ||
+        Number(ordered[index - 1].position) > Number(role.position),
+    );
   const roleOrderingNeeded =
     roleIds.size > 0 &&
     (desiredRoleOrder.length !== manifest.roles.length ||
-      !sameValue(currentRoleOrder, desiredRoleOrder));
+      !sameValue(currentRoleOrder, desiredRoleOrder) ||
+      !strictRolePositions);
   if (roleOrderingNeeded) {
     addChange(report, "role.order", "roles", null, "Managed roles");
   }
@@ -1334,13 +1344,10 @@ async function applyRoleChanges({
       assertRoleManageable(current, botRole, "order");
       return current;
     });
-    // The top managed role may share the bot role's numeric position.
-    // Discord resolves equal positions by role ID, and the bot integration role
-    // is still higher in the hierarchy when compareRoleHierarchy says it is.
-    const topPosition = Number(botRole.position);
+    const topPosition = Number(botRole.position) - 1;
     if (topPosition < managed.length) {
       throw new Error(
-        "Bot role does not have enough hierarchy space to order managed roles",
+        "Bot role does not have enough hierarchy space to order managed roles; move the bot role to the top of the Holdfast-managed roles and retry",
       );
     }
     const orderedRoles = await client.request(`/guilds/${guildId}/roles`, {
@@ -1362,9 +1369,9 @@ async function applyRoleChanges({
       verifiedOrder.some(
         (role, index) =>
           !verifiedBotRole ||
-          compareRoleHierarchy(verifiedBotRole, role) <= 0 ||
+          Number(role.position) >= Number(verifiedBotRole.position) ||
           (index > 0 &&
-            compareRoleHierarchy(verifiedOrder[index - 1], role) <= 0),
+            Number(verifiedOrder[index - 1].position) <= Number(role.position)),
       )
     ) {
       throw new Error("Discord did not preserve the requested managed role order");
