@@ -5,6 +5,7 @@ import PageShell from '../PageShell/PageShell.jsx'
 import RankInsignia from '../Members/RankInsignia.jsx'
 import PublicJoinCallout from '../PublicJoinCallout/PublicJoinCallout.jsx'
 import AuthorityScopeEditor from './AuthorityScopeEditor.jsx'
+import BilletCreateModal from './BilletCreateModal.jsx'
 import './Ranks.css'
 
 const RANK_ORDER = [
@@ -218,6 +219,7 @@ function Ranks() {
   const [catalog, setCatalog] = useState(null)
   const [catalogStatus, setCatalogStatus] = useState('idle')
   const [editing, setEditing] = useState(null)
+  const [creatingBillet, setCreatingBillet] = useState(false)
   const canManageAuthority = session.hasPermission('authority.manage')
 
   useEffect(() => {
@@ -225,6 +227,7 @@ function Ranks() {
       setCatalog(null)
       setCatalogStatus('idle')
       setEditing(null)
+      setCreatingBillet(false)
       return undefined
     }
 
@@ -312,6 +315,24 @@ function Ranks() {
       }
     })
     setEditing(null)
+  }
+
+  function addBillet(createdBillet) {
+    setCatalog((current) => {
+      if (!current) return current
+
+      const billets = [...current.billets, createdBillet].sort((left, right) =>
+        left.name.localeCompare(right.name, undefined, {
+          sensitivity: 'base',
+        }),
+      )
+
+      return {
+        ...current,
+        billets,
+      }
+    })
+    setCreatingBillet(false)
   }
 
   return (
@@ -402,13 +423,27 @@ function Ranks() {
         </section>
 
         <section className="ranks-page__section ranks-page__section--billets">
-          <header className="ranks-page__major-heading">
-            <h2>Billets</h2>
+          <header className="ranks-page__major-heading ranks-page__major-heading--with-action">
+            <div>
+              <h2>Billets</h2>
+              {canManageAuthority ? (
+                <p className="ranks-page__authority-hint">
+                  Select an editable billet to change the job-specific authority
+                  it adds on top of rank.
+                </p>
+              ) : null}
+            </div>
+
             {canManageAuthority ? (
-              <p className="ranks-page__authority-hint">
-                Select an editable billet to change the job-specific authority
-                it adds on top of rank.
-              </p>
+              <button
+                className="ranks-page__create-billet"
+                type="button"
+                disabled={catalogStatus !== 'ready'}
+                onClick={() => setCreatingBillet(true)}
+              >
+                <span aria-hidden="true">＋</span>
+                Create billet
+              </button>
             ) : null}
           </header>
 
@@ -471,6 +506,13 @@ function Ranks() {
           description="Join Holdfast, play at your own pace, and contribute in whatever way fits you."
         />
       </article>
+
+      {creatingBillet ? (
+        <BilletCreateModal
+          onCreated={addBillet}
+          onClose={() => setCreatingBillet(false)}
+        />
+      ) : null}
 
       {editing && catalog ? (
         <AuthorityScopeEditor
