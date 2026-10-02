@@ -708,3 +708,36 @@
     width: 100%;
   }
 }
+
+
+.quest-board__reward {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quest-board__reward--pending .quest-board__reward-values {
+  opacity: 0.62;
+}
+
+.quest-board__reward-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.25rem;
+  padding-inline: var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.58rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.quest-board__reward-status--pending {
+  border-color: rgba(196, 166, 103, 0.38);
+  color: var(--color-accent-bright);
+}
+
+.quest-board__reward-status--approved {
+  border-color: rgba(102, 170, 118, 0.34);
+  color: #b8d9ba;
+}
