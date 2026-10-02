@@ -18,6 +18,7 @@ function billetFromRow(row) {
     name: row.name,
     responsibility: row.responsibility || "",
     discordRoleId: row.discord_role_id || null,
+    discordManaged: Boolean(row.discord_managed),
     active: Boolean(row.active),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -173,6 +174,13 @@ export async function updateBillet(
       return { status: "not-found", billet: null };
     }
 
+    if (
+      existing.discordManaged &&
+      existing.name !== validation.value.name
+    ) {
+      return { status: "name_locked", billet: existing };
+    }
+
     const duplicate = db
       .prepare(
         "SELECT id FROM billets WHERE name = ? COLLATE NOCASE AND id <> ?",
@@ -280,6 +288,16 @@ export async function setMemberBilletAssignment(
       )
       .get(memberId, billetId);
 
+    const now = new Date().toISOString();
+
+    db.prepare(
+      `
+        UPDATE members
+        SET billets_managed = 1, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(now, memberId);
+
     if (assigned && current) {
       return {
         status: "unchanged",
@@ -307,7 +325,7 @@ export async function setMemberBilletAssignment(
       ).run(
         memberId,
         billetId,
-        new Date().toISOString(),
+        now,
         actorMemberId || null,
       );
     } else {
@@ -333,6 +351,53 @@ export async function setMemberBilletAssignment(
 
     return {
       status: assigned ? "assigned" : "removed",
+      billets: readMemberBilletsFromDatabase(db, memberId),
+    };
+  });
+}
+
+
+export async function claimMemberBilletAuthority(
+  memberId,
+  { actorMemberId = null } = {},
+) {
+  return withGuildTransaction((db) => {
+    const member = db
+      .prepare("SELECT id, billets_managed FROM members WHERE id = ? AND status = 'active'")
+      .get(memberId);
+
+    if (!member) {
+      return { status: "member-not-found", billets: [] };
+    }
+
+    if (Boolean(member.billets_managed)) {
+      return {
+        status: "unchanged",
+        billets: readMemberBilletsFromDatabase(db, memberId),
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    db.prepare(
+      `
+        UPDATE members
+        SET billets_managed = 1, updated_at = ?
+        WHERE id = ?
+      `,
+    ).run(now, memberId);
+
+    recordAuditEventInDatabase({
+      db,
+      actorMemberId,
+      eventType: "member.billet.authority_enabled",
+      entityType: "member",
+      entityId: memberId,
+      payload: {},
+    });
+
+    return {
+      status: "claimed",
       billets: readMemberBilletsFromDatabase(db, memberId),
     };
   });
