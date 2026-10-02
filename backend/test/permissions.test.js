@@ -253,8 +253,9 @@ test("permission middleware admits only authority granted by rank and billets", 
     });
 
     assert.equal(nextCalls, 1);
+    assert.ok(req.auth.permissions.includes("quests.create"));
     assert.ok(req.auth.permissions.includes("quests.edit"));
-    assert.ok(req.auth.permissions.includes("rewards.issue"));
+    assert.equal(req.auth.permissions.includes("rewards.issue"), false);
 
     const denied = response();
     await requirePermission("site.admin")(req, denied, () => {
