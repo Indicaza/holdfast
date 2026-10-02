@@ -66,6 +66,46 @@ function MemberBilletControl({ member, billets, onUpdated, compact = false }) {
     }
   }
 
+  async function claimAuthority() {
+    if (busyId) return
+
+    setBusyId('claim')
+    setMessage('')
+
+    try {
+      const result = await runAuthenticatedMutation({
+        request: () =>
+          apiJson(
+            '/api/guild/members/manage/' +
+              encodeURIComponent(member.id) +
+              '/billets/claim',
+            {
+              method: 'POST',
+            },
+          ),
+        refresh: session.refresh,
+        reauthenticate: () =>
+          session.signIn(
+            window.location.pathname + window.location.search + window.location.hash,
+          ),
+      })
+
+      if (!result) return
+
+      onUpdated?.(result.member)
+
+      if (result.discordSync?.status === 'pending') {
+        setMessage('Website authority enabled. Discord repair is queued.')
+      } else {
+        setMessage('Website now owns this member\'s billet assignments.')
+      }
+    } catch {
+      setMessage('Could not enable website billet authority.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <details
       className={
@@ -80,6 +120,28 @@ function MemberBilletControl({ member, billets, onUpdated, compact = false }) {
       </summary>
 
       <div className="member-billet-control__menu">
+        {!member.billetsManaged ? (
+          <div className="member-billet-control__authority">
+            <p>
+              Existing member: confirm the website as the source of truth for
+              billet assignments before drift repair begins.
+            </p>
+            <button
+              type="button"
+              disabled={Boolean(busyId)}
+              onClick={() => {
+                void claimAuthority()
+              }}
+            >
+              Use website billets
+            </button>
+          </div>
+        ) : (
+          <span className="member-billet-control__managed">
+            Website managed
+          </span>
+        )}
+
         {billets.length ? (
           billets.map((billet) => (
             <label key={billet.id}>
