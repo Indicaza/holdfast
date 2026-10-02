@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { resolvePermissions } from "../src/Auth/permissionResolver.js";
 import {
+  requireAnyPermission,
   requireAuthenticated,
   requirePermission,
 } from "../src/Auth/permissions.js";
@@ -205,6 +206,110 @@ test("permission middleware ignores stale session permissions and fails closed f
     let nextCalls = 0;
 
     await requirePermission("site.admin")(req, res, () => {
+      nextCalls += 1;
+    });
+
+    assert.equal(nextCalls, 0);
+    assert.equal(res.statusCode, 403);
+    assert.deepEqual(res.body, { error: "permission_required" });
+    assert.deepEqual(req.auth.permissions, []);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("any-permission middleware rejects unauthenticated requests", async () => {
+  const req = { auth: null };
+  const res = response();
+  let nextCalls = 0;
+
+  await requireAnyPermission(["quests.create", "rewards.issue"])(
+    req,
+    res,
+    () => {
+      nextCalls += 1;
+    },
+  );
+
+  assert.equal(nextCalls, 0);
+  assert.equal(res.statusCode, 401);
+  assert.deepEqual(res.body, { error: "authentication_required" });
+});
+
+test("any-permission middleware admits one matching database capability", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
+
+    await upsertGuildMember({ id: "owner-one", username: "owner" });
+    await upsertGuildMember({
+      id: "member-one",
+      username: "corporal",
+    });
+    await updateGuildMemberRank("member-one", "Corporal", {
+      actorMemberId: "owner-one",
+    });
+
+    const req = {
+      auth: {
+        user: { id: "member-one" },
+        permissions: [],
+        verifiedAt: Date.now(),
+      },
+    };
+    const res = response();
+    let nextCalls = 0;
+
+    await requireAnyPermission([
+      "rewards.issue",
+      "quests.create",
+    ])(req, res, () => {
+      nextCalls += 1;
+    });
+
+    assert.equal(nextCalls, 1);
+    assert.equal(res.statusCode, 200);
+    assert.ok(req.auth.permissions.includes("quests.create"));
+    assert.equal(req.auth.permissions.includes("rewards.issue"), false);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("any-permission middleware denies when none of the requested capabilities are granted", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "";
+
+    await upsertGuildMember({
+      id: "member-one",
+      username: "recruit",
+    });
+
+    const req = {
+      auth: {
+        user: { id: "member-one" },
+        permissions: ["quests.create"],
+        verifiedAt: Date.now(),
+      },
+    };
+    const res = response();
+    let nextCalls = 0;
+
+    await requireAnyPermission([
+      "quests.create",
+      "rewards.issue",
+    ])(req, res, () => {
       nextCalls += 1;
     });
 
