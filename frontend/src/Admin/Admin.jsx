@@ -2,7 +2,6 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import QuestEditor from './QuestEditor.jsx'
 import AuditLog from './AuditLog.jsx'
-import MemberRankManager from './MemberRankManager.jsx'
 import './Admin.css'
 
 const authMessages = {
@@ -91,11 +90,10 @@ function Admin() {
     <PageShell
       eyebrow="Control Room"
       title="Guild Control Room"
-      intro="Manage members, ranks, quests, rewards, and guild operations."
+      intro="Manage quests, rewards, and guild operations."
       centered
       className="admin-page"
     >
-      {session.hasPermission('site.admin') ? <MemberRankManager /> : null}
       <QuestEditor />
       {session.hasPermission('site.admin') ? <AuditLog /> : null}
     </PageShell>
