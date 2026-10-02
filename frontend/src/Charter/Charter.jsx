@@ -69,24 +69,20 @@ function Charter() {
         <section className="charter__section">
           <h2>Excellence matters</h2>
 
-          <p>There are many ways to be exceptional here.</p>
-
           <p>
-            You might be the tank everybody trusts, the healer who saves bad
-            pulls, the raider who executes cleanly, the PvPer people want beside
-            them, the class expert who knows every edge case, the crafter with
-            the right recipe, the trader who sees an opportunity early, the
-            teacher who makes people better, or the organizer who makes the
-            whole thing work.
+            There are many ways to be exceptional here: master your class,
+            become the person people trust in a hard fight, teach what you know,
+            build something useful, or make the group around you better.
           </p>
 
-          <p>Leadership is one form of excellence, not the only one.</p>
-
-          <p>
+          <p className="charter__callout">
             <strong>Skill earns recognition. Service earns trust.</strong>
           </p>
 
-          <p>You do not need a title to matter here.</p>
+          <p>
+            Leadership is one form of excellence, not the only one. You do not
+            need a title to matter here.
+          </p>
         </section>
 
         <section className="charter__section">
