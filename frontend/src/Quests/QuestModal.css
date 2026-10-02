@@ -1,0 +1,540 @@
+.quest-modal,
+.quest-modal__editor {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.quest-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quest-modal__meta > span {
+  display: inline-flex;
+  min-height: 1.7rem;
+  align-items: center;
+  padding-inline: var(--space-3);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.38);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-modal__message {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid var(--color-accent-bright);
+  background: rgba(196, 166, 103, 0.06);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.quest-modal__manage-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  background:
+    linear-gradient(135deg, rgba(196, 166, 103, 0.07), transparent 70%),
+    rgba(3, 8, 15, 0.38);
+}
+
+.quest-modal__manage-strip > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-modal__manage-strip strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.quest-modal__manage-strip span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__manage-strip button,
+.quest-modal__subheading button,
+.quest-modal__objective-actions button,
+.quest-modal__editor-actions button {
+  min-height: 2.65rem;
+  padding-inline: var(--space-4);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.44);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.quest-modal__manage-strip button:hover,
+.quest-modal__manage-strip button:focus-visible,
+.quest-modal__subheading button:hover,
+.quest-modal__subheading button:focus-visible,
+.quest-modal__objective-actions button:hover,
+.quest-modal__objective-actions button:focus-visible,
+.quest-modal__editor-actions button:hover,
+.quest-modal__editor-actions button:focus-visible {
+  border-color: var(--color-accent-bright);
+  color: var(--color-text-strong);
+}
+
+.quest-modal__objects,
+.quest-modal__objectives,
+.quest-modal__objective-editor-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.quest-modal__objective,
+.quest-modal__objective-editor {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-subtle);
+  background:
+    linear-gradient(135deg, rgba(29, 69, 111, 0.055), transparent 24rem),
+    rgba(3, 8, 15, 0.26);
+}
+
+.quest-modal__objective--complete {
+  opacity: 0.72;
+}
+
+.quest-modal__objective-heading,
+.quest-modal__subheading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.quest-modal__objective-heading > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-modal__objective-heading > div:first-child > span,
+.quest-modal__label,
+.quest-modal__fields label > span,
+.quest-modal__reward-numbers label > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-modal__objective-heading h3 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-fib-21);
+}
+
+.quest-modal__objective-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.quest-modal__priority,
+.quest-modal__done,
+.quest-modal__approval {
+  display: inline-flex;
+  min-height: 1.55rem;
+  align-items: center;
+  padding-inline: var(--space-2);
+  border: var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-style: normal;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-modal__priority--main {
+  border-color: rgba(196, 166, 103, 0.58);
+  color: var(--color-accent-bright);
+}
+
+.quest-modal__priority--high {
+  border-color: rgba(196, 96, 96, 0.45);
+  color: #dfa19d;
+}
+
+.quest-modal__priority--medium {
+  border-color: rgba(157, 191, 232, 0.32);
+  color: #a9c4e4;
+}
+
+.quest-modal__priority--low {
+  color: var(--color-text-muted);
+}
+
+.quest-modal__done,
+.quest-modal__approval--approved {
+  border-color: rgba(102, 170, 118, 0.38);
+  color: #b8d9ba;
+}
+
+.quest-modal__approval--pending {
+  border-color: rgba(196, 166, 103, 0.42);
+  color: var(--color-accent-bright);
+}
+
+.quest-modal__approval--not-required {
+  color: var(--color-text-muted);
+}
+
+.quest-modal__objective > p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+.quest-modal__need {
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid rgba(157, 191, 232, 0.36);
+  background: rgba(157, 191, 232, 0.035);
+}
+
+.quest-modal__need strong {
+  margin-right: var(--space-2);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-modal__objective-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.quest-modal__objective-grid > div,
+.quest-modal__preserved-assignments {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.quest-modal__assignments,
+.quest-modal__reward-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quest-modal__assignment,
+.quest-modal__reward-summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.46);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__assignment--self {
+  border-color: rgba(196, 166, 103, 0.42);
+  color: var(--color-text-strong);
+}
+
+.quest-modal__assignment img,
+.quest-modal__assignment b {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+}
+
+.quest-modal__assignment b {
+  display: grid;
+  place-items: center;
+  background: rgba(196, 166, 103, 0.12);
+  color: var(--color-accent-bright);
+  font-size: 0.65rem;
+}
+
+.quest-modal__assignment small {
+  color: var(--color-accent-bright);
+}
+
+.quest-modal__reward-summary > span strong {
+  color: var(--color-accent-bright);
+}
+
+.quest-modal__unassigned,
+.quest-modal__no-reward {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-style: italic;
+}
+
+.quest-modal__objective-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-subtle);
+}
+
+.quest-modal__member-action,
+.quest-modal__officer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.quest-modal__member-action small {
+  color: var(--color-text-muted);
+}
+
+.quest-modal__primary {
+  border-color: rgba(196, 166, 103, 0.58) !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-bright),
+    var(--color-accent)
+  ) !important;
+  color: var(--color-background) !important;
+}
+
+.quest-modal__approve {
+  border-color: rgba(196, 166, 103, 0.5) !important;
+  color: var(--color-accent-bright) !important;
+}
+
+.quest-modal__issue {
+  border-color: rgba(102, 170, 118, 0.42) !important;
+  color: #b8d9ba !important;
+}
+
+.quest-modal__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.quest-modal__field--wide {
+  grid-column: 1 / -1;
+}
+
+.quest-modal__fields label,
+.quest-modal__reward-numbers label {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+}
+
+.quest-modal__fields input,
+.quest-modal__fields textarea,
+.quest-modal__fields select,
+.quest-modal__reward-numbers input,
+.quest-modal__item-row input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-subtle);
+  border-radius: 0;
+  background: rgba(3, 8, 15, 0.62);
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.quest-modal__fields textarea {
+  resize: vertical;
+}
+
+.quest-modal__fields input:focus-visible,
+.quest-modal__fields textarea:focus-visible,
+.quest-modal__fields select:focus-visible,
+.quest-modal__reward-numbers input:focus-visible,
+.quest-modal__item-row input:focus-visible {
+  border-color: var(--color-accent-bright);
+  outline: none;
+}
+
+.quest-modal__fields input:disabled,
+.quest-modal__fields textarea:disabled,
+.quest-modal__fields select:disabled {
+  opacity: 0.55;
+}
+
+.quest-modal__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  background: rgba(196, 166, 103, 0.045);
+}
+
+.quest-modal__feature > span {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-modal__feature strong {
+  color: var(--color-text-strong);
+}
+
+.quest-modal__feature small {
+  color: var(--color-text-muted);
+}
+
+.quest-modal__subheading > div,
+.quest-modal__subheading {
+  color: var(--color-text-strong);
+}
+
+.quest-modal__subheading > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.quest-modal__subheading small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__reward-editor {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: var(--border-subtle);
+}
+
+.quest-modal__reward-editor legend {
+  padding-inline: var(--space-2);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.quest-modal__reward-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.quest-modal__reward-numbers small,
+.quest-modal__preserved-assignments small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__item-editor {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.quest-modal__item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6rem auto;
+  gap: var(--space-2);
+}
+
+.quest-modal__remove,
+.quest-modal__danger,
+.quest-modal__danger-link {
+  border-color: rgba(184, 91, 79, 0.44) !important;
+  color: rgba(238, 151, 138, 0.95) !important;
+}
+
+.quest-modal__locked {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: var(--border-subtle);
+}
+
+.quest-modal__save-state {
+  margin-right: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__delete-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quest-modal__delete-confirm > span {
+  color: rgba(238, 151, 138, 0.95);
+  font-size: var(--font-size-xs);
+}
+
+.quest-modal__empty {
+  padding: var(--space-8);
+  border: var(--border-subtle);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.quest-modal button:disabled,
+.quest-modal__editor button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (max-width: 48rem) {
+  .quest-modal__manage-strip,
+  .quest-modal__objective-actions,
+  .quest-modal__editor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quest-modal__objective-grid,
+  .quest-modal__fields,
+  .quest-modal__reward-numbers {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-modal__field--wide {
+    grid-column: auto;
+  }
+
+  .quest-modal__item-row {
+    grid-template-columns: 1fr 5rem;
+  }
+
+  .quest-modal__item-row .quest-modal__remove {
+    grid-column: 1 / -1;
+  }
+
+  .quest-modal__save-state {
+    margin-right: 0;
+  }
+}
