@@ -300,3 +300,41 @@
     width: 100%;
   }
 }
+
+
+.member-billet-control__authority {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: var(--border-subtle);
+}
+
+.member-billet-control__authority p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.member-billet-control__authority button {
+  min-height: 2.4rem;
+  border: var(--border-accent);
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.member-billet-control__managed {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.64rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
