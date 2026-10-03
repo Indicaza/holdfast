@@ -29,12 +29,13 @@ test.describe.serial('quest browser regression coverage', () => {
     await page.getByRole('button', { name: 'Back to the quest' }).click()
 
     await openQuest(page)
-    await expect(page.getByText('Mira Member')).toBeVisible()
-    await page.getByLabel(/Completion note/).fill('Twenty linen delivered to the bank.')
-    await page.getByRole('button', { name: 'Request completion' }).click()
+    const linen = page.locator('article').filter({ hasText: 'Gather the linen' })
+    await expect(linen.getByText('Mira Member', { exact: true })).toBeVisible()
+    await linen.getByLabel(/Completion note/).fill('Twenty linen delivered to the bank.')
+    await linen.getByRole('button', { name: 'Request completion' }).click()
 
-    await expect(page.getByText('Completion requested.')).toBeVisible()
-    await expect(page.getByText('Ready for review')).toBeVisible()
+    await expect(linen.getByText('Completion requested.')).toBeVisible()
+    await expect(linen.getByText('Ready for review')).toBeVisible()
 
     await context.close()
   })
@@ -47,18 +48,19 @@ test.describe.serial('quest browser regression coverage', () => {
     await page.goto('/quests')
     await openQuest(page)
 
-    await expect(page.getByText('Ready for review')).toBeVisible()
-    await page.getByRole('button', { name: 'Approve work' }).click()
-    await expect(page.getByText('Work approved.')).toBeVisible()
+    const linen = page.locator('article').filter({ hasText: 'Gather the linen' })
+    await expect(linen.getByText('Ready for review')).toBeVisible()
+    await linen.getByRole('button', { name: 'Approve work' }).click()
+    await expect(linen.getByText('Work approved.')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Approve reward' }).click()
+    await linen.getByRole('button', { name: 'Approve reward' }).click()
     await expect(page.getByText(/Reward approved\./)).toBeVisible()
 
-    await page.getByRole('button', { name: 'Complete & award' }).click()
+    await linen.getByRole('button', { name: 'Complete & award' }).click()
     await expect(
       page.getByText(/Objective complete\. Issued 100 Rep and 5 Marks across 1 member/),
     ).toBeVisible()
-    await expect(page.getByText('Complete', { exact: true }).first()).toBeVisible()
+    await expect(linen.getByText('Complete', { exact: true })).toBeVisible()
 
     await context.close()
   })
@@ -80,7 +82,7 @@ test.describe.serial('quest browser regression coverage', () => {
     await openQuest(page)
     const assignedScout = page.locator('article').filter({ hasText: 'Scout the roads' })
     await assignedScout.getByRole('button', { name: 'Leave objective' }).click()
-    await page.getByRole('button', { name: 'Leave objective' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Leave objective' }).click()
 
     await openQuest(page)
     const reopenedScout = page.locator('article').filter({ hasText: 'Scout the roads' })
