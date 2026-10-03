@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
 import Modal from '../Modal/Modal.jsx'
+import {
+  QuestCompletionControls,
+  QuestCompletionProvider,
+} from './QuestCompletionFlow.jsx'
 import { objectiveSelfAssignment } from './QuestSignupFlow.jsx'
 import {
   PRIORITIES,
@@ -132,59 +136,59 @@ function ObjectiveView({
       </div>
 
       {!objective.completed ? (
-        <footer className="quest-modal__objective-actions">
-          <div className="quest-modal__member-action">
-            {selfAssignment ? (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => onLeave?.(quest, objective)}
-              >
-                Leave objective
-              </button>
-            ) : quest.publication === 'published' ? (
-              <button
-                className="quest-modal__primary"
-                type="button"
-                disabled={busy}
-                onClick={() => onSignup?.(quest, objective)}
-              >
-                Sign up
-              </button>
-            ) : (
-              <small>Publish this quest before members can sign up.</small>
-            )}
-          </div>
+        <>
+          <footer className="quest-modal__objective-actions">
+            <div className="quest-modal__member-action">
+              {selfAssignment ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onLeave?.(quest, objective)}
+                >
+                  Leave objective
+                </button>
+              ) : quest.publication === 'published' ? (
+                <button
+                  className="quest-modal__primary"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onSignup?.(quest, objective)}
+                >
+                  Sign up
+                </button>
+              ) : (
+                <small>Publish this quest before members can sign up.</small>
+              )}
+            </div>
 
-          <div className="quest-modal__officer-actions">
-            {canApprove ? (
-              <button
-                className="quest-modal__approve"
-                type="button"
-                disabled={busy}
-                onClick={() => onApprove?.(quest, objective)}
-              >
-                Approve reward
-              </button>
-            ) : null}
+            <div className="quest-modal__officer-actions">
+              {canApprove ? (
+                <button
+                  className="quest-modal__approve"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onApprove?.(quest, objective)}
+                >
+                  Approve reward
+                </button>
+              ) : null}
+            </div>
+          </footer>
 
-            {canIssue ? (
-              <button
-                className="quest-modal__issue"
-                type="button"
-                disabled={busy || !canIssueNow}
-                title={
-                  canIssueNow
-                    ? ''
-                    : 'Rewarded objectives need at least one assigned member.'
-                }
-                onClick={() => onIssue?.(quest, objective)}
-              >
-                Complete & award
-              </button>
-            ) : null}
-          </div>
-        </footer>
+          {quest.publication === 'published' ? (
+            <QuestCompletionControls
+              quest={quest}
+              objective={objective}
+              selfAssignment={selfAssignment}
+              rewardApproval={approval}
+              hasReward={hasReward}
+              canIssue={canIssue}
+              canIssueNow={canIssueNow}
+              parentBusy={busy}
+              onIssue={onIssue}
+            />
+          ) : null}
+        </>
       ) : null}
     </article>
   )
@@ -705,28 +709,30 @@ function QuestModal({
           </div>
         ) : null}
 
-        <div className="quest-modal__objectives">
-          {(quest.objectives || []).length ? (
-            quest.objectives.map((objective, index) => (
-              <ObjectiveView
-                key={objective.id}
-                quest={quest}
-                objective={objective}
-                index={index}
-                session={session}
-                busy={busy}
-                onSignup={onSignup}
-                onLeave={onLeave}
-                onApprove={onApprove}
-                onIssue={onIssue}
-              />
-            ))
-          ) : (
-            <div className="quest-modal__empty">
-              No objectives have been added yet.
-            </div>
-          )}
-        </div>
+        <QuestCompletionProvider quest={quest} session={session}>
+          <div className="quest-modal__objectives">
+            {(quest.objectives || []).length ? (
+              quest.objectives.map((objective, index) => (
+                <ObjectiveView
+                  key={objective.id}
+                  quest={quest}
+                  objective={objective}
+                  index={index}
+                  session={session}
+                  busy={busy}
+                  onSignup={onSignup}
+                  onLeave={onLeave}
+                  onApprove={onApprove}
+                  onIssue={onIssue}
+                />
+              ))
+            ) : (
+              <div className="quest-modal__empty">
+                No objectives have been added yet.
+              </div>
+            )}
+          </div>
+        </QuestCompletionProvider>
       </div>
     </Modal>
   )

@@ -8,6 +8,7 @@ import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { assertProductionEnvironment } from "./Config/environment.js";
+import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
 import { startDiscordRankReconciler } from "./Discord/rankSync.js";
@@ -144,6 +145,7 @@ app.use(
   }),
   createDiscordAuthRouter(),
 );
+app.use("/api/quests", createQuestCompletionRouter());
 app.use("/api/quests", createQuestRouter());
 app.use("/api/guild/members", createMemberRouter());
 app.use("/api/guild/billets", createBilletRouter());
