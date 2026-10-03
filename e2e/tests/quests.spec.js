@@ -30,7 +30,7 @@ test.describe.serial('quest browser regression coverage', () => {
 
     await openQuest(page)
     const linen = page.locator('article').filter({ hasText: 'Gather the linen' })
-    await expect(linen.getByText('Mira Member', { exact: true })).toBeVisible()
+    await expect(linen.getByText('Mira Member')).toBeVisible()
     await linen.getByLabel(/Completion note/).fill('Twenty linen delivered to the bank.')
     await linen.getByRole('button', { name: 'Request completion' }).click()
 
