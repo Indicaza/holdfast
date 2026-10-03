@@ -1,0 +1,59 @@
+[
+  {
+    "id": "e2e-member",
+    "username": "e2e-member",
+    "displayName": "Mira Member",
+    "initials": "MM",
+    "rank": "Private",
+    "rankManaged": true,
+    "billetsManaged": true,
+    "status": "active",
+    "permissions": [],
+    "profile": {
+      "battleTag": "Mira#0001",
+      "timezone": "America/Detroit",
+      "timezoneSource": "manual",
+      "availability": "Evenings",
+      "bio": "Browser-test guild member.",
+      "characters": []
+    }
+  },
+  {
+    "id": "e2e-officer",
+    "username": "e2e-officer",
+    "displayName": "Owen Officer",
+    "initials": "OO",
+    "rank": "Lieutenant",
+    "rankManaged": true,
+    "billetsManaged": true,
+    "status": "active",
+    "permissions": [],
+    "profile": {
+      "battleTag": "Owen#0002",
+      "timezone": "America/Detroit",
+      "timezoneSource": "manual",
+      "availability": "Evenings",
+      "bio": "Browser-test officer.",
+      "characters": []
+    }
+  },
+  {
+    "id": "e2e-commander",
+    "username": "e2e-commander",
+    "displayName": "Casey Commander",
+    "initials": "CC",
+    "rank": "Commander",
+    "rankManaged": true,
+    "billetsManaged": true,
+    "status": "active",
+    "permissions": [],
+    "profile": {
+      "battleTag": "Casey#0003",
+      "timezone": "America/Detroit",
+      "timezoneSource": "manual",
+      "availability": "Any time",
+      "bio": "Browser-test commander.",
+      "characters": []
+    }
+  }
+]
