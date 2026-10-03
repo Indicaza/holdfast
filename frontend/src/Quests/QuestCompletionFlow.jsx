@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react'
 import { apiJson } from '../Api/apiClient.js'
@@ -93,70 +92,60 @@ export function QuestCompletionProvider({ quest, session, children }) {
     }
   }
 
-  const value = useMemo(
-    () => ({
-      session,
-      completions,
-      loading,
-      busyObjectiveId,
-      feedback,
-      requestCompletion: (objectiveId, note) =>
-        mutate(
-          objectiveId,
-          () =>
-            apiJson('/api/quests/member/request-completion', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                questId: quest.id,
-                objectiveId,
-                note,
-              }),
+  const value = {
+    session,
+    completions,
+    loading,
+    busyObjectiveId,
+    feedback,
+    requestCompletion: (objectiveId, note) =>
+      mutate(
+        objectiveId,
+        () =>
+          apiJson('/api/quests/member/request-completion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              questId: quest.id,
+              objectiveId,
+              note,
             }),
-          'Completion requested.',
-        ),
-      withdrawCompletion: (objectiveId) =>
-        mutate(
-          objectiveId,
-          () =>
-            apiJson('/api/quests/member/withdraw-completion', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                questId: quest.id,
-                objectiveId,
-              }),
+          }),
+        'Completion requested.',
+      ),
+    withdrawCompletion: (objectiveId) =>
+      mutate(
+        objectiveId,
+        () =>
+          apiJson('/api/quests/member/withdraw-completion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              questId: quest.id,
+              objectiveId,
             }),
-          'Completion request withdrawn.',
-        ),
-      reviewCompletion: (objectiveId, decision, note) =>
-        mutate(
-          objectiveId,
-          () =>
-            apiJson('/api/quests/manage/review-completion', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                questId: quest.id,
-                objectiveId,
-                decision,
-                note,
-              }),
+          }),
+        'Completion request withdrawn.',
+      ),
+    reviewCompletion: (objectiveId, decision, note) =>
+      mutate(
+        objectiveId,
+        () =>
+          apiJson('/api/quests/manage/review-completion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              questId: quest.id,
+              objectiveId,
+              decision,
+              note,
             }),
-          decision === 'approved'
-            ? 'Work approved.'
-            : 'Sent back to the assignee.',
-        ),
-    }),
-    [
-      busyObjectiveId,
-      completions,
-      feedback,
-      loading,
-      quest.id,
-      session,
-    ],
-  )
+          }),
+        decision === 'approved'
+          ? 'Work approved.'
+          : 'Sent back to the assignee.',
+      ),
+  }
 
   return (
     <CompletionContext.Provider value={value}>
