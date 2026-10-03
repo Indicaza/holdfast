@@ -6,11 +6,11 @@ test('public shell renders core pages', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Holdfast')
 
   await page.goto('/charter')
-  await expect(page).toHaveTitle(/Charter.*Holdfast/i)
+  await expect(page).toHaveTitle(/Holdfast Charter/i)
   await expect(page.locator('body')).toContainText('Charter')
 
   await page.goto('/ranks')
-  await expect(page).toHaveTitle(/Ranks.*Holdfast/i)
+  await expect(page).toHaveTitle(/Ranks & Roles \| Holdfast/i)
   await expect(page.locator('body')).toContainText(/Ranks|Rep/i)
 })
 
