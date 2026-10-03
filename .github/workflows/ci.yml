@@ -100,7 +100,6 @@ jobs:
     env:
       E2E_BASE_URL: http://127.0.0.1:4173
       FRONTEND_URL: http://127.0.0.1:4173
-      GUILD_DATA_DIR: ${{ runner.temp }}/holdfast-e2e-data
       GUILD_OWNER_DISCORD_IDS: e2e-commander
       NODE_ENV: test
       PORT: 4173
@@ -179,10 +178,12 @@ jobs:
         if: steps.coverage.outputs.skip != 'true'
         shell: bash
         run: |
-          rm -rf "$GUILD_DATA_DIR"
-          mkdir -p "$GUILD_DATA_DIR"
-          cp e2e/fixtures/members.json "$GUILD_DATA_DIR/members.json"
-          cp e2e/fixtures/quests.json "$GUILD_DATA_DIR/quests.json"
+          DATA_DIR="$RUNNER_TEMP/holdfast-e2e-data"
+          echo "GUILD_DATA_DIR=$DATA_DIR" >> "$GITHUB_ENV"
+          rm -rf "$DATA_DIR"
+          mkdir -p "$DATA_DIR"
+          cp e2e/fixtures/members.json "$DATA_DIR/members.json"
+          cp e2e/fixtures/quests.json "$DATA_DIR/quests.json"
 
       - name: Start Holdfast
         if: steps.coverage.outputs.skip != 'true'
