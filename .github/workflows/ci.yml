@@ -90,6 +90,144 @@ jobs:
         working-directory: backend
         run: npm run test:discord
 
+  browser-regression:
+    name: Browser regression
+    needs:
+      - frontend
+      - backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      E2E_BASE_URL: http://127.0.0.1:4173
+      FRONTEND_URL: http://127.0.0.1:4173
+      GUILD_DATA_DIR: ${{ runner.temp }}/holdfast-e2e-data
+      GUILD_OWNER_DISCORD_IDS: e2e-commander
+      NODE_ENV: test
+      PORT: 4173
+      SERVE_FRONTEND: "true"
+      SESSION_SECRET: holdfast-e2e-session-secret-change-me-1234567890
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select browser coverage
+        id: coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]; then
+            echo "specs=tests" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git diff --name-only \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            > "$RUNNER_TEMP/holdfast-changed-files.txt"
+
+          echo "Changed files:"
+          cat "$RUNNER_TEMP/holdfast-changed-files.txt"
+
+          if grep -Eq '^(e2e/|\.github/workflows/ci\.yml$)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
+            echo "specs=tests" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif grep -Eq '^(frontend/src/Quests/|backend/src/Quest/|backend/src/Contribution/)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
+            echo "specs=tests/smoke.spec.js tests/quests.spec.js" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif grep -Eq '^(frontend/src/(Members|Ranks|Auth|Api|PageShell|Home)/|frontend/src/(App|routing)\.|backend/src/(Auth|Guild|Data|Security)/)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
+            echo "specs=tests" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif grep -Eq '^(frontend/src/|backend/src/|Dockerfile$|render\.yaml$)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
+            echo "specs=tests/smoke.spec.js" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "specs=" >> "$GITHUB_OUTPUT"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.coverage.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install backend dependencies
+        if: steps.coverage.outputs.skip != 'true'
+        working-directory: backend
+        run: npm ci
+
+      - name: Install and build frontend
+        if: steps.coverage.outputs.skip != 'true'
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Playwright
+        if: steps.coverage.outputs.skip != 'true'
+        working-directory: e2e
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Prepare disposable guild data
+        if: steps.coverage.outputs.skip != 'true'
+        shell: bash
+        run: |
+          rm -rf "$GUILD_DATA_DIR"
+          mkdir -p "$GUILD_DATA_DIR"
+          cp e2e/fixtures/members.json "$GUILD_DATA_DIR/members.json"
+          cp e2e/fixtures/quests.json "$GUILD_DATA_DIR/quests.json"
+
+      - name: Start Holdfast
+        if: steps.coverage.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix backend start > "$RUNNER_TEMP/holdfast-e2e-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/holdfast-e2e-server.pid"
+
+          for attempt in {1..40}; do
+            if curl --fail --silent "$E2E_BASE_URL/api/health/ready" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Holdfast did not become ready."
+          cat "$RUNNER_TEMP/holdfast-e2e-server.log"
+          exit 1
+
+      - name: Run selected browser journeys
+        if: steps.coverage.outputs.skip != 'true'
+        working-directory: e2e
+        run: npx playwright test ${{ steps.coverage.outputs.specs }}
+
+      - name: Upload browser failure evidence
+        if: failure() && steps.coverage.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-regression-failure
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+            ${{ runner.temp }}/holdfast-e2e-server.log
+
+      - name: Stop Holdfast
+        if: always() && steps.coverage.outputs.skip != 'true'
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/holdfast-e2e-server.pid" ]]; then
+            kill "$(cat "$RUNNER_TEMP/holdfast-e2e-server.pid")" 2>/dev/null || true
+          fi
+
   production-image:
     name: Production image
     runs-on: ubuntu-latest
