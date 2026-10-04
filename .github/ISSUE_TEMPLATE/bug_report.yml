@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible problem in Holdfast
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please avoid posting secrets, tokens, production member data, or security vulnerabilities here.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Public website / UI
+        - Authentication / Discord
+        - Members / profiles
+        - Quests / rewards
+        - Notifications
+        - Ranks / billets / permissions
+        - Persistence / migrations / backups
+        - Deployment / CI
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / environment
+      placeholder: Chrome 154 on Windows 11, local dev, production, etc.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Additional context
+      description: Screenshots, logs, or other non-sensitive evidence.
