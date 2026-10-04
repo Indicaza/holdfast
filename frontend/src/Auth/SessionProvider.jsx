@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { apiFetch, apiJson } from '../Api/apiClient.js'
@@ -42,6 +43,8 @@ function currentReturnTo() {
 }
 
 export function SessionProvider({ children }) {
+  const generation = useRef(0)
+  const inFlight = useRef(null)
   const [session, setSession] = useState({
     status: 'loading',
     authenticated: false,
@@ -50,40 +53,61 @@ export function SessionProvider({ children }) {
     authority: null,
   })
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await apiJson('/api/me')
-      const nextSession = {
-        status: 'ready',
-        authenticated: Boolean(data?.authenticated),
-        user: data?.user ?? null,
-        permissions: data?.permissions ?? [],
-        authority: data?.authority ?? null,
+  const refresh = useCallback(() => {
+    if (inFlight.current) return inFlight.current
+    setSession((current) => current.status === 'error' ? { ...current, status: 'loading' } : current)
+    const requestGeneration = generation.current
+    const request = (async () => {
+      try {
+        const data = await apiJson('/api/me')
+        const nextSession = {
+          status: 'ready',
+          authenticated: Boolean(data?.authenticated),
+          user: data?.user ?? null,
+          permissions: data?.permissions ?? [],
+          authority: data?.authority ?? null,
+        }
+
+        if (requestGeneration !== generation.current) return null
+        setSession(nextSession)
+
+        if (data?.authenticated) {
+          void syncDetectedTimezone()
+        }
+
+        return nextSession
+      } catch {
+        const nextSession = {
+          status: 'error',
+          authenticated: false,
+          user: null,
+          permissions: [],
+          authority: null,
+        }
+
+        if (requestGeneration !== generation.current) return null
+        setSession(nextSession)
+        return nextSession
       }
-
-      setSession(nextSession)
-
-      if (data?.authenticated) {
-        void syncDetectedTimezone()
-      }
-
-      return nextSession
-    } catch {
-      const nextSession = {
-        status: 'error',
-        authenticated: false,
-        user: null,
-        permissions: [],
-        authority: null,
-      }
-
-      setSession(nextSession)
-      return nextSession
-    }
+    })()
+    inFlight.current = request
+    void request.finally(() => {
+      if (inFlight.current === request) inFlight.current = null
+    })
+    return request
   }, [])
 
   useEffect(() => {
     refresh()
+    const onVisibility = () => {
+      if (!document.hidden) void refresh()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [refresh])
 
   const signIn = useCallback((returnTo = currentReturnTo(), mode = 'member') => {
@@ -100,6 +124,8 @@ export function SessionProvider({ children }) {
       throw new Error('Sign out failed')
     }
 
+    generation.current += 1
+    inFlight.current = null
     setSession({
       status: 'ready',
       authenticated: false,
@@ -122,4 +148,3 @@ export function SessionProvider({ children }) {
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }
-

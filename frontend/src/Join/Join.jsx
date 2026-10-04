@@ -1,7 +1,7 @@
 import Home from '../Home/Home.jsx'
 
 function Join() {
-  return <Home initialJoinOpen />
+  return <Home />
 }
 
 export default Join

@@ -104,6 +104,22 @@
   gap: var(--space-3);
 }
 
+.navbar__session-state {
+  display: grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  color: var(--color-text-muted);
+  letter-spacing: 0.15em;
+}
+
+.navbar__account-error {
+  padding: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  letter-spacing: normal;
+}
+
 .navbar__account {
   position: relative;
 }

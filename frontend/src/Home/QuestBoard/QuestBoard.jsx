@@ -192,6 +192,7 @@ function QuestBoard({ onJoin }) {
   const signup = useQuestSignup({ catalog, setCatalog })
 
   useEffect(() => {
+    if (session.status !== 'ready') return undefined
     let active = true
 
     function applyCatalog(nextCatalog) {
@@ -232,7 +233,7 @@ function QuestBoard({ onJoin }) {
       window.removeEventListener(QUESTS_CHANGED_KEY, loadCatalog)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [session.authenticated])
+  }, [session.authenticated, session.status])
 
   const featuredQuest = useMemo(() => {
     if (!catalog.focusedQuestId) return null

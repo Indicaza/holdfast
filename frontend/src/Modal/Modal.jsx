@@ -25,6 +25,7 @@ function Modal({
     document.body.style.overflow = 'hidden'
 
     function handleKeyDown(event) {
+      if (panelRef.current?.closest('[inert]')) return
       if (event.key === 'Escape' && onCloseRef.current) {
         event.preventDefault()
         onCloseRef.current()
