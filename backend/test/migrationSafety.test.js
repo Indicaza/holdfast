@@ -278,15 +278,25 @@ for (const withLegacyCompletionTable of [false, true]) {
       const upgraded = openGuildDatabase();
 
       try {
-        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6]);
+        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6, 7]);
         assert.deepEqual(persistentState(upgraded), before);
         assert.equal(upgraded.prepare("PRAGMA quick_check").get().quick_check, "ok");
         assert.equal(upgraded.prepare("PRAGMA foreign_key_check").all().length, 0);
 
-        const migration = upgraded
+        const completionMigration = upgraded
           .prepare("SELECT name FROM schema_migrations WHERE version = 6")
           .get();
-        assert.equal(migration.name, "quest_completion_review");
+        assert.equal(completionMigration.name, "quest_completion_review");
+
+        const notificationMigration = upgraded
+          .prepare("SELECT name FROM schema_migrations WHERE version = 7")
+          .get();
+        assert.equal(notificationMigration.name, "member_notifications");
+        assert.ok(
+          upgraded
+            .prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name = 'notifications'")
+            .get(),
+        );
 
         const completionCount = Number(
           upgraded
