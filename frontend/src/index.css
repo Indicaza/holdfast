@@ -41,8 +41,58 @@ textarea {
   font: inherit;
 }
 
-button {
+:where(
+  button,
+  [role="button"],
+  a[class*="__action"],
+  a[class*="__button"]
+) {
+  border-radius: var(--radius-button);
   color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: background, border-color, box-shadow, color, filter,
+    opacity, scale, transform, translate !important;
+  transition-duration: var(--duration-fast) !important;
+  transition-timing-function: var(--ease-standard) !important;
+}
+
+:where(
+  button,
+  [role="button"],
+  a[class*="__action"],
+  a[class*="__button"]
+):not(:disabled):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  :where(
+    button,
+    [role="button"],
+    a[class*="__action"],
+    a[class*="__button"]
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    filter: brightness(1.06);
+    scale: 1.01;
+  }
+}
+
+:where(
+  button,
+  [role="button"],
+  a[class*="__action"],
+  a[class*="__button"]
+):not(:disabled):not([aria-disabled="true"]):active {
+  filter: brightness(0.96);
+  scale: 0.985;
+  translate: 0 1px;
+  transition-duration: 75ms !important;
+}
+
+:where(button:disabled, [role="button"][aria-disabled="true"]) {
+  filter: saturate(0.72);
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 img,
