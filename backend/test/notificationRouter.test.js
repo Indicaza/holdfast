@@ -9,7 +9,11 @@ async function withRouter(run, { authenticated = true, dependencies = {} } = {})
   app.use(express.json())
   if (authenticated) {
     app.use((req, res, next) => {
-      req.auth = { user: { id: 'member-1', username: 'member' }, permissions: [] }
+      req.auth = {
+        user: { id: 'member-1', username: 'member' },
+        permissions: [],
+        verifiedAt: Date.now(),
+      }
       next()
     })
   }
