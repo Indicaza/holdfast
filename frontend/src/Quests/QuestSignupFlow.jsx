@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
+import { useRecruitment } from '../Join/JoinContext.js'
 import Modal from '../Modal/Modal.jsx'
 import './QuestSignupFlow.css'
 
@@ -53,6 +54,7 @@ function duplicateDialog(quest, objective) {
 
 export function useQuestSignup({ catalog, setCatalog }) {
   const session = useSession()
+  const { openJoin } = useRecruitment()
   const [dialog, setDialog] = useState(null)
   const pendingHandledRef = useRef('')
 
@@ -141,9 +143,8 @@ export function useQuestSignup({ catalog, setCatalog }) {
     }
 
     if (!session.authenticated) {
-      session.signIn(
+      openJoin(
         pendingQuestActionReturnTo(quest.id, objective.id, 'signup'),
-        'member',
       )
       return
     }

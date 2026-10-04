@@ -1,3 +1,4 @@
+import JoinLink from '../Join/JoinLink.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import './NotFound.css'
 
@@ -13,9 +14,9 @@ function NotFound() {
         <a className="not-found__primary" href="/">
           Return Home
         </a>
-        <a className="not-found__secondary" href="/join">
+        <JoinLink className="not-found__secondary">
           Join Holdfast
-        </a>
+        </JoinLink>
       </div>
     </PageShell>
   )

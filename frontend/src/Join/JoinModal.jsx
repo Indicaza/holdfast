@@ -3,6 +3,7 @@ import { apiJson } from '../Api/apiClient.js'
 import Modal from '../Modal/Modal.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import './Join.css'
+import { currentReturnTo, safeReturnTo } from './joinDestination.js'
 
 function noticeFor(code) {
   if (code === 'not-member') {
@@ -40,15 +41,7 @@ function noticeFor(code) {
   return null
 }
 
-function safeReturnTo(value) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return '/'
-  }
-
-  return value
-}
-
-function JoinModal({ onClose }) {
+function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() }) {
   const session = useSession()
   const [discordTarget, setDiscordTarget] = useState({
     appUrl: 'discord://-/channels/@me',
@@ -56,7 +49,9 @@ function JoinModal({ onClose }) {
   })
   const searchParams = new URLSearchParams(window.location.search)
   const authCode = searchParams.get('auth')
-  const returnTo = safeReturnTo(searchParams.get('returnTo'))
+  const returnTo = safeReturnTo(requestedReturnTo)
+  const destination = new URL(returnTo, window.location.origin)
+  const pendingSignup = destination.searchParams.has('signupQuest') && destination.searchParams.has('signupObjective')
   const notice = noticeFor(authCode)
 
   useEffect(() => {
@@ -125,6 +120,16 @@ function JoinModal({ onClose }) {
     )
   }
 
+  if (session.status === 'error') {
+    return (
+      <Modal eyebrow="Holdfast" title="Connection problem" intro="We could not check your member session. Try again to continue." onClose={onClose}>
+        <div className="join-actions join-actions--single">
+          <button className="join-action join-action--primary" type="button" onClick={session.refresh}>Retry connection</button>
+        </div>
+      </Modal>
+    )
+  }
+
   if (session.authenticated) {
     if (authCode === 'connected') {
       return (
@@ -157,8 +162,8 @@ function JoinModal({ onClose }) {
             >
               Open Discord
             </button>
-            <a className="join-action join-action--secondary" href="/members/me">
-              Set Up My Profile
+            <a className="join-action join-action--secondary" href={pendingSignup ? returnTo : '/members/me'}>
+              {pendingSignup ? 'Continue to objective' : 'Set Up My Profile'}
             </a>
           </div>
         </Modal>
@@ -181,7 +186,7 @@ function JoinModal({ onClose }) {
             type="button"
             onClick={onClose}
           >
-            Back Home
+            Back
           </button>
         </div>
       </Modal>
@@ -199,6 +204,13 @@ function JoinModal({ onClose }) {
         <aside className={`join-notice join-notice--${notice.tone}`}>
           <strong>{notice.title}</strong>
           <span>{notice.body}</span>
+        </aside>
+      ) : null}
+
+      {pendingSignup ? (
+        <aside className="join-notice join-notice--info">
+          <strong>Join first, then lend a hand.</strong>
+          <span>We will bring you back to this objective so you can confirm your signup.</span>
         </aside>
       ) : null}
 

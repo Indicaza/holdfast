@@ -1,3 +1,4 @@
+import JoinLink from '../Join/JoinLink.jsx'
 import Modal from '../Modal/Modal.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import './MemberAccessModal.css'
@@ -96,9 +97,9 @@ function MemberAccessModal({ returnTo, onClose }) {
       )}
 
       {session.status !== 'loading' ? (
-        <a className="member-access__join" href="/join">
+        <JoinLink className="member-access__join" returnTo={returnTo}>
           New to Holdfast? Join the guild
-        </a>
+        </JoinLink>
       ) : null}
     </Modal>
   )

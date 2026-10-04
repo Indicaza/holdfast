@@ -4,7 +4,7 @@ import { foundingMissionAction } from './foundingMissionAction.js'
 import './FoundingMission.css'
 
 function FoundingMission({ onJoin }) {
-  const { authenticated } = useSession()
+  const { authenticated, status, refresh } = useSession()
   const action = foundingMissionAction(authenticated)
 
   return (
@@ -22,7 +22,11 @@ function FoundingMission({ onJoin }) {
         <p>{foundingMission.description}</p>
       </div>
 
-      {authenticated ? (
+      {status !== 'ready' ? (
+        <button className="founding-mission__action" type="button" disabled={status === 'loading'} onClick={refresh}>
+          {status === 'loading' ? 'Checking session…' : 'Retry connection'}
+        </button>
+      ) : authenticated ? (
         <a className="founding-mission__action" href={action.href}>
           {action.label}
         </a>

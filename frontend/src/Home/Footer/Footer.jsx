@@ -1,3 +1,4 @@
+import JoinLink from '../../Join/JoinLink.jsx'
 import './Footer.css'
 import { footerNavigationLinks } from '../../navigation.js'
 
@@ -16,10 +17,10 @@ function Footer() {
       </div>
 
       <nav className="footer__links" aria-label="Footer navigation">
-        {footerNavigationLinks.map((link) => (
-          <a key={link.label} href={link.href}>
-            {link.label}
-          </a>
+        {footerNavigationLinks.map((link) => link.href === '/join' ? (
+          <JoinLink key={link.label}>{link.label}</JoinLink>
+        ) : (
+          <a key={link.label} href={link.href}>{link.label}</a>
         ))}
       </nav>
     </footer>

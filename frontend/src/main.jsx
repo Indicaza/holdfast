@@ -5,12 +5,15 @@ import './index.css'
 import App from './App.jsx'
 import AppErrorBoundary from './AppErrorBoundary/AppErrorBoundary.jsx'
 import { SessionProvider } from './Auth/SessionProvider.jsx'
+import RecruitmentProvider from './Join/RecruitmentProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
       <SessionProvider>
-        <App />
+        <RecruitmentProvider>
+          <App />
+        </RecruitmentProvider>
       </SessionProvider>
     </AppErrorBoundary>
   </StrictMode>,

@@ -4,7 +4,7 @@ import { heroSlides } from '../HeroStory/heroStory.js'
 import './HeroContent.css'
 
 function HeroContent({ story, onJoin }) {
-  const { authenticated } = useSession()
+  const { authenticated, status, refresh } = useSession()
   const slide = story.activeSlide
   const storyRef = useRef(null)
   const [storyHeight, setStoryHeight] = useState(null)
@@ -42,7 +42,11 @@ function HeroContent({ story, onJoin }) {
         </div>
       </div>
       <div className="hero-content__actions">
-        {authenticated ? (
+        {status !== 'ready' ? (
+          <button className="hero-content__primary" type="button" disabled={status === 'loading'} onClick={refresh}>
+            {status === 'loading' ? 'Checking session…' : 'Retry connection'}
+          </button>
+        ) : authenticated ? (
           <a className="hero-content__primary" href="/quests">View Quests</a>
         ) : (
           <button className="hero-content__primary" type="button" onClick={onJoin}>Join Holdfast</button>

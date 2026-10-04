@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useRef } from 'react'
 import Footer from './Footer/Footer.jsx'
 import QuestBoard from './QuestBoard/QuestBoard.jsx'
 import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
@@ -6,28 +6,13 @@ import HeroContent from './HeroContent/HeroContent.jsx'
 import HeroSlideshow from './HeroSlideshow/HeroSlideshow.jsx'
 import { useHeroStory } from './HeroStory/heroStory.js'
 import Navbar from './Navbar/Navbar.jsx'
-import JoinModal from '../Join/JoinModal.jsx'
+import { useRecruitment } from '../Join/JoinContext.js'
 import './Home.css'
 
-function Home({ overlay = null, initialJoinOpen = false }) {
-  const [joinOpen, setJoinOpen] = useState(initialJoinOpen)
+function Home({ overlay = null }) {
+  const { isOpen: joinOpen, openJoin } = useRecruitment()
   const heroRef = useRef(null)
   const story = useHeroStory({ heroRef, blocked: Boolean(overlay) || joinOpen })
-  const isJoinRoute =
-    (window.location.pathname.replace(/\/+$/, '') || '/') === '/join'
-
-  const openJoin = useCallback(() => {
-    setJoinOpen(true)
-  }, [])
-
-  const closeJoin = useCallback(() => {
-    if (isJoinRoute) {
-      window.location.assign('/')
-      return
-    }
-
-    setJoinOpen(false)
-  }, [isJoinRoute])
 
   return (
     <div className="home">
@@ -52,7 +37,6 @@ function Home({ overlay = null, initialJoinOpen = false }) {
       </div>
 
       {overlay}
-      {!overlay && joinOpen ? <JoinModal onClose={closeJoin} /> : null}
     </div>
   )
 }

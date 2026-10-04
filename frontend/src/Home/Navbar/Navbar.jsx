@@ -21,9 +21,11 @@ function isActiveLink(pathname, href) {
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState('')
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const { authenticated, user, hasPermission, signIn, signOut } = useSession()
+  const { status, authenticated, user, hasPermission, signIn, signOut, refresh } = useSession()
   const links = primaryNavigationLinks(authenticated)
 
   useEffect(() => {
@@ -53,11 +55,15 @@ function Navbar() {
   }, [accountOpen])
 
   async function handleSignOut() {
+    setSigningOut(true)
+    setSignOutError('')
     try {
       await signOut()
       setAccountOpen(false)
     } catch {
-      return
+      setSignOutError('Could not sign out. Try again.')
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -90,7 +96,13 @@ function Navbar() {
           </nav>
 
           <div className="navbar__actions">
-            {!authenticated ? (
+            {status === 'loading' ? (
+              <span className="navbar__session-state" role="status" aria-label="Checking member session" aria-busy="true">
+                <span aria-hidden="true">•••</span>
+              </span>
+            ) : status === 'error' ? (
+              <button className="navbar__sign-in-button" type="button" onClick={refresh}>Retry connection</button>
+            ) : !authenticated ? (
               <button
                 className="navbar__sign-in-button"
                 type="button"
@@ -134,9 +146,10 @@ function Navbar() {
                     {hasPermission('audit.view') ? (
                       <a href="/admin">Audit Log</a>
                     ) : null}
-                    <button type="button" onClick={handleSignOut}>
-                      Sign out
+                    <button type="button" onClick={handleSignOut} disabled={signingOut}>
+                      {signingOut ? 'Signing out…' : 'Sign out'}
                     </button>
+                    {signOutError ? <p className="navbar__account-error" role="alert">{signOutError}</p> : null}
                   </div>
                 </div>
               </div>
