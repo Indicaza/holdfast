@@ -1,4 +1,6 @@
 .page-shell {
+  display: flex;
+  flex-direction: column;
   min-height: 100svh;
   background:
     radial-gradient(circle at 78% 12%, rgba(29, 69, 111, 0.28), transparent 32rem),
@@ -19,14 +21,18 @@
 
 .page-shell__frame {
   position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   width: min(100%, var(--layout-max-width));
-  min-height: 100svh;
+  min-height: 0;
   margin-inline: auto;
   padding-inline: var(--layout-gutter);
 }
 
 .page-shell__main {
-  min-height: calc(100svh - var(--nav-height) - 7rem);
+  flex: 1;
+  min-height: 0;
   padding-block: clamp(var(--space-16), 10vw, var(--space-32));
 }
 
@@ -146,6 +152,8 @@
 
 .page-shell--centered .page-shell__header h1 {
   max-width: none;
+  white-space: normal;
+  text-wrap: balance;
   font-size: clamp(var(--font-size-fib-55), 6vw, var(--font-size-fib-89));
   line-height: 0.98;
   letter-spacing: -0.025em;
@@ -175,3 +183,11 @@
   animation: charter-gold-shimmer-soft 18s ease-in-out infinite;
 }
 
+@media (max-width: 48rem) {
+  .page-shell__header h1,
+  .page-shell--centered .page-shell__header h1 {
+    font-size: clamp(2.25rem, 8vw, 3.4375rem);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+}
