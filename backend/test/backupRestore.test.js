@@ -10,6 +10,7 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
@@ -18,6 +19,7 @@ import {
 } from "../src/Data/database.js";
 
 const execFileAsync = promisify(execFile);
+const BACKEND_DIR = fileURLToPath(new URL("../", import.meta.url));
 
 function preserveEnvironment() {
   return {
@@ -130,27 +132,40 @@ function seedDatabase() {
 }
 
 function readState() {
-  return withGuildDatabase((db) => ({
-    member: db
+  return withGuildDatabase((db) => {
+    const member = db
       .prepare("SELECT display_name, rank FROM members WHERE id = ?")
-      .get("restore-member"),
-    quest: db
+      .get("restore-member");
+    const quest = db
       .prepare("SELECT title, publication FROM quests WHERE id = ?")
-      .get("restore-quest"),
-    objective: db
+      .get("restore-quest");
+    const objective = db
       .prepare("SELECT title, reward_rep, reward_marks FROM objectives WHERE id = ?")
-      .get("restore-objective"),
-    assignment: db
+      .get("restore-objective");
+    const assignment = db
       .prepare(
         "SELECT member_id, name FROM assignments WHERE objective_id = ?",
       )
-      .get("restore-objective"),
-    sentinel: db
+      .get("restore-objective");
+    const sentinel = db
       .prepare("SELECT value FROM app_meta WHERE key = 'restore_sentinel'")
-      .get(),
-    integrity: db.prepare("PRAGMA quick_check").all(),
-    foreignKeys: db.prepare("PRAGMA foreign_key_check").all(),
-  }));
+      .get();
+
+    return {
+      memberDisplayName: member?.display_name,
+      memberRank: member?.rank,
+      questTitle: quest?.title,
+      questPublication: quest?.publication,
+      objectiveTitle: objective?.title,
+      rewardRep: Number(objective?.reward_rep),
+      rewardMarks: Number(objective?.reward_marks),
+      assignmentMemberId: assignment?.member_id,
+      assignmentName: assignment?.name,
+      sentinel: sentinel?.value,
+      integrity: db.prepare("PRAGMA quick_check").get().quick_check,
+      foreignKeyViolations: db.prepare("PRAGMA foreign_key_check").all().length,
+    };
+  });
 }
 
 test("backup artifact can restore the same persistent guild state", async () => {
@@ -170,7 +185,7 @@ test("backup artifact can restore the same persistent guild state", async () => 
       process.execPath,
       ["scripts/backupData.js"],
       {
-        cwd: path.resolve("backend"),
+        cwd: BACKEND_DIR,
         env: {
           ...process.env,
           NODE_ENV: "test",
@@ -203,8 +218,8 @@ test("backup artifact can restore the same persistent guild state", async () => 
 
     const after = readState();
     assert.deepEqual(after, before);
-    assert.deepEqual(after.integrity, [{ quick_check: "ok" }]);
-    assert.deepEqual(after.foreignKeys, []);
+    assert.equal(after.integrity, "ok");
+    assert.equal(after.foreignKeyViolations, 0);
   } finally {
     restoreEnvironment(previous);
     await rm(root, { recursive: true, force: true });
