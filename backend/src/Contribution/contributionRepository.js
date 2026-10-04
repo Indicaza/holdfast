@@ -2,6 +2,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { createNotificationInDatabase } from "../Notification/notificationRepository.js";
 
 function transactionId(objectiveId, memberId) {
   return `objective:${objectiveId}:member:${memberId}`;
@@ -48,6 +49,20 @@ function transactionFromRow(row) {
         }
       : null,
   };
+}
+
+function rewardSummary(transaction) {
+  const parts = [];
+  if (transaction.rep) parts.push(`${transaction.rep} Rep`);
+  if (transaction.marks) parts.push(`${transaction.marks} Marks`);
+
+  for (const item of transaction.items || []) {
+    if (item?.name && Number(item.quantity) > 0) {
+      parts.push(`${Number(item.quantity)}× ${item.name}`);
+    }
+  }
+
+  return parts.join(" · ");
 }
 
 export function awardObjectiveInDatabase({
@@ -124,6 +139,30 @@ export function awardObjectiveInDatabase({
 
     if (Number(result.changes) > 0) {
       transactions.push(transaction);
+
+      const summary = rewardSummary(transaction);
+      if (summary) {
+        createNotificationInDatabase({
+          db,
+          recipientMemberId: transaction.memberId,
+          type: "reward_issued",
+          kind: "update",
+          title: "Reward issued",
+          message: `“${transaction.objectiveTitle}” paid out: ${summary}.`,
+          href: "/members/me",
+          entityType: "objective",
+          entityId: transaction.objectiveId,
+          data: {
+            questId: transaction.questId,
+            objectiveId: transaction.objectiveId,
+            rep: transaction.rep,
+            marks: transaction.marks,
+            items: transaction.items,
+          },
+          dedupeKey: `reward:${transaction.objectiveId}:${transaction.memberId}`,
+          now,
+        });
+      }
     }
   }
 
