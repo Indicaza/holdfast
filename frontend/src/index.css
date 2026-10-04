@@ -45,22 +45,50 @@ textarea {
   button,
   [role="button"],
   a[class*="__action"],
-  a[class*="__button"]
+  a[class*="__button"],
+  a[class*="__primary"],
+  a[class*="__secondary"],
+  a[class*="__cta"],
+  .navbar__link,
+  .navbar__mobile-link,
+  .navbar__account-links a
 ) {
-  border-radius: var(--radius-button);
+  --interactive-radius: var(--radius-button);
+  --interactive-hover-scale: 1.015;
+  --interactive-hover-lift: -2px;
+  --interactive-press-scale: 0.972;
+
+  border-radius: var(--interactive-radius) !important;
   color: inherit;
+  transform-origin: center;
   -webkit-tap-highlight-color: transparent;
   transition-property: background, border-color, box-shadow, color, filter,
     opacity, scale, transform, translate !important;
   transition-duration: var(--duration-fast) !important;
   transition-timing-function: var(--ease-standard) !important;
+  user-select: none;
+}
+
+:where(
+  .navbar__account-button,
+  .notification-bell__button,
+  .quest-board__signup-slot,
+  .quest-board__assignee--action
+) {
+  --interactive-radius: 50%;
 }
 
 :where(
   button,
   [role="button"],
   a[class*="__action"],
-  a[class*="__button"]
+  a[class*="__button"],
+  a[class*="__primary"],
+  a[class*="__secondary"],
+  a[class*="__cta"],
+  .navbar__link,
+  .navbar__mobile-link,
+  .navbar__account-links a
 ):not(:disabled):not([aria-disabled="true"]) {
   cursor: pointer;
 }
@@ -70,10 +98,17 @@ textarea {
     button,
     [role="button"],
     a[class*="__action"],
-    a[class*="__button"]
+    a[class*="__button"],
+    a[class*="__primary"],
+    a[class*="__secondary"],
+    a[class*="__cta"],
+    .navbar__link,
+    .navbar__mobile-link,
+    .navbar__account-links a
   ):not(:disabled):not([aria-disabled="true"]):hover {
-    filter: brightness(1.06);
-    scale: 1.01;
+    filter: brightness(1.08) saturate(1.04);
+    scale: var(--interactive-hover-scale);
+    translate: 0 var(--interactive-hover-lift);
   }
 }
 
@@ -81,18 +116,26 @@ textarea {
   button,
   [role="button"],
   a[class*="__action"],
-  a[class*="__button"]
+  a[class*="__button"],
+  a[class*="__primary"],
+  a[class*="__secondary"],
+  a[class*="__cta"],
+  .navbar__link,
+  .navbar__mobile-link,
+  .navbar__account-links a
 ):not(:disabled):not([aria-disabled="true"]):active {
-  filter: brightness(0.96);
-  scale: 0.985;
+  filter: brightness(0.93) saturate(1.06);
+  scale: var(--interactive-press-scale);
   translate: 0 1px;
-  transition-duration: 75ms !important;
+  transition-duration: 70ms !important;
 }
 
 :where(button:disabled, [role="button"][aria-disabled="true"]) {
   filter: saturate(0.72);
   opacity: 0.58;
   cursor: not-allowed;
+  scale: 1;
+  translate: 0;
 }
 
 img,
@@ -148,5 +191,21 @@ h6 {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  :where(
+    button,
+    [role="button"],
+    a[class*="__action"],
+    a[class*="__button"],
+    a[class*="__primary"],
+    a[class*="__secondary"],
+    a[class*="__cta"],
+    .navbar__link,
+    .navbar__mobile-link,
+    .navbar__account-links a
+  ) {
+    scale: 1 !important;
+    translate: 0 !important;
   }
 }
