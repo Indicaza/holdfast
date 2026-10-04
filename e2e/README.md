@@ -36,3 +36,9 @@ Install the harness with `npm ci` so CI and local runs use the committed lockfil
 CI retains the Playwright HTML report, trace, screenshots/video, and backend server log on failure. Those artifacts are the first place to look when a browser test breaks.
 
 The goal is velocity: catch expensive regressions automatically without turning Holdfast into a QA project.
+
+## Saved member and leadership workflows
+
+`workflows.spec.js` checks profile persistence and retry after a failed save, rank changes, billet authority and assignment, quest publication/archive/deletion, invalid and valid JSON imports, concurrent quest edits, and completion rejection/resubmission. Setup and cleanup use the normal API; the important actions run through the rendered UI. Fixtures are disposable and no live Discord calls are needed.
+
+A conflict must preserve the newer server data and offer a recovery path that actually loads it. Failed saves must preserve the editable draft. These assertions are part of the full CI browser gate.
