@@ -1,56 +1,89 @@
 .notification-bell {
   position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
 }
 
 .notification-bell__button {
   position: relative;
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 1.875rem;
+  height: 1.875rem;
   padding: 0;
   place-items: center;
   border: var(--border-subtle);
-  background: var(--color-surface);
+  border-radius: 50%;
+  background: linear-gradient(
+    145deg,
+    rgba(17, 35, 58, 0.9),
+    rgba(6, 16, 29, 0.94)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 0.18rem 0.55rem rgba(0, 0, 0, 0.24);
   color: var(--color-text-muted);
   cursor: pointer;
   transition:
     border-color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.notification-bell__button::after {
+  content: "";
+  position: absolute;
+  inset: -0.45rem;
+  border-radius: 50%;
 }
 
 .notification-bell__button:hover,
 .notification-bell__button:focus-visible,
 .notification-bell__button[aria-expanded="true"] {
   border-color: var(--color-accent);
-  background: rgba(196, 166, 103, 0.08);
+  background: linear-gradient(
+    145deg,
+    rgba(33, 46, 63, 0.96),
+    rgba(11, 27, 48, 0.96)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(196, 166, 103, 0.08),
+    0 0.22rem 0.7rem rgba(0, 0, 0, 0.3);
   color: var(--color-accent-bright);
+  transform: translateY(-1px);
 }
 
 .notification-bell__button svg {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 0.9rem;
+  height: 0.9rem;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.7;
+  stroke-width: 1.8;
 }
 
 .notification-bell__badge {
   position: absolute;
-  top: -0.3rem;
-  right: -0.35rem;
+  z-index: 2;
+  top: -0.38rem;
+  left: -0.42rem;
   display: grid;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  padding-inline: 0.22rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding-inline: 0.18rem;
   place-items: center;
-  border: 1px solid var(--color-background);
+  border: 2px solid rgba(3, 8, 15, 0.98);
   border-radius: 999px;
   background: var(--color-accent-bright);
+  box-shadow:
+    0 0 0 1px rgba(196, 166, 103, 0.24),
+    0 0.14rem 0.4rem rgba(0, 0, 0, 0.4);
   color: var(--color-background);
-  font-size: 0.62rem;
+  font-size: 0.55rem;
+  font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
