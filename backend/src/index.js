@@ -19,6 +19,7 @@ import {
 } from "./Data/runtimeData.js";
 import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
+import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
@@ -41,6 +42,12 @@ const PORT = process.env.PORT || 3000;
 const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
 
 await ensureRuntimeDataDirectory();
+const startupBackup = await backupGuildDatabaseBeforeMigrations();
+
+if (startupBackup.status === "created") {
+  console.log(`Pre-migration SQLite snapshot created at ${startupBackup.file}`);
+}
+
 const dataInitialization = initializeGuildData();
 
 if (dataInitialization.status === "imported") {
