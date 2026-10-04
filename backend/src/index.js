@@ -7,6 +7,7 @@ import { ensureRuntimeDataDirectory, runtimeDataDirectory } from "./Data/runtime
 import { guildDatabaseFile } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
+import { startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -35,11 +36,13 @@ const server = app.listen(PORT, () => {
 
 const stopDiscordRankReconciler = startDiscordRankReconciler();
 const stopDiscordBilletReconciler = startDiscordBilletReconciler();
+const stopOffsiteBackupScheduler = startOffsiteBackupScheduler();
 
 function shutdown(signal) {
   console.log(`${signal} received; shutting down`);
   stopDiscordRankReconciler();
   stopDiscordBilletReconciler();
+  stopOffsiteBackupScheduler();
 
   const forceExit = setTimeout(() => {
     console.error("Graceful shutdown timed out");

@@ -57,3 +57,5 @@ todo.md
 
 # Runtime guild data
 backend/data/
+
+e2e/production-smoke-failure.png

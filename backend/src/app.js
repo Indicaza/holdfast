@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { offsiteBackupHealth } from "./Data/offsiteBackup.js";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { createAuditRouter } from "./Audit/auditRouter.js";
@@ -44,12 +45,19 @@ export function createApp({ discordAuthOptions } = {}) {
   app.use(attachSession);
   app.use("/api", requireTrustedMutationOrigin);
 
-  function readiness(req, res) {
+  async function readiness(req, res) {
     res.set("Cache-Control", "no-store");
 
     try {
-      withGuildDatabase((db) => db.prepare("SELECT 1").get());
-      res.json({ status: "ok" });
+      withGuildDatabase((db) => {
+        const settings = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE id = 1").get();
+        if (!settings) throw new Error("Quest settings are missing");
+        if (settings.focused_quest_id && !db.prepare("SELECT id FROM quests WHERE id = ?").get(settings.focused_quest_id)) throw new Error("Featured quest is missing");
+        if (!Number(db.prepare("SELECT COUNT(*) AS count FROM rank_authority").get().count)) throw new Error("Rank authority is missing");
+        db.prepare("SELECT COUNT(*) FROM members").get();
+        db.prepare("SELECT COUNT(*) FROM contribution_transactions").get();
+      });
+      res.json({ status: "ok", offsiteBackup: await offsiteBackupHealth() });
     } catch (error) {
       console.error("Readiness check failed", error);
       res.status(503).json({ status: "unavailable" });
@@ -59,7 +67,7 @@ export function createApp({ discordAuthOptions } = {}) {
   app.get("/api/health", readiness);
   app.get("/api/health/live", (req, res) => {
     res.set("Cache-Control", "no-store");
-    res.json({ status: "ok" });
+    res.json({ status: "ok", release: process.env.RENDER_GIT_COMMIT || process.env.HOLDFAST_RELEASE_SHA || null });
   });
   app.get("/api/health/ready", readiness);
 

@@ -1,0 +1,12 @@
+{
+  "Rules": [
+    {
+      "ID": "holdfast-backup-retention",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "holdfast/" },
+      "Expiration": { "Days": 90 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 90 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    }
+  ]
+}
