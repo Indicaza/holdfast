@@ -94,6 +94,31 @@ probe_state() {
   '
 }
 
+probe_startup_backup() {
+  docker exec "$CONTAINER_NAME" node --input-type=module -e '
+    import { readdirSync } from "node:fs";
+    import { DatabaseSync } from "node:sqlite";
+    const directory = "/data/deploy-backups";
+    const files = readdirSync(directory).filter((name) => name.endsWith(".sqlite")).sort();
+    if (files.length !== 1) throw new Error(`Expected one startup snapshot, found ${files.length}`);
+    const file = `${directory}/${files[0]}`;
+    const db = new DatabaseSync(file);
+    try {
+      const migration = db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get();
+      const quest = db.prepare("SELECT title FROM quests WHERE id = ?").get("e2e-supply-run");
+      const result = {
+        files: files.length,
+        schemaVersion: Number(migration.version),
+        questTitle: quest?.title || "",
+        integrity: db.prepare("PRAGMA quick_check").get().quick_check,
+      };
+      console.log(JSON.stringify(result));
+    } finally {
+      db.close();
+    }
+  '
+}
+
 smoke_http() {
   curl --fail --silent "$BASE_URL/api/health/live" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/health/ready" | grep -q '"status":"ok"'
@@ -134,4 +159,11 @@ if ! cmp --silent "$FIRST_STATE_FILE" "$SECOND_STATE_FILE"; then
   exit 1
 fi
 
-echo "Production artifact boot, HTTP smoke, migration, and restart persistence all passed."
+BACKUP_STATE="$(probe_startup_backup)"
+echo "$BACKUP_STATE"
+echo "$BACKUP_STATE" | grep -q '"files":1'
+echo "$BACKUP_STATE" | grep -q '"schemaVersion":6'
+echo "$BACKUP_STATE" | grep -q '"questTitle":"E2E Supply Run"'
+echo "$BACKUP_STATE" | grep -q '"integrity":"ok"'
+
+echo "Production artifact boot, HTTP smoke, startup snapshot, migration, and restart persistence all passed."
