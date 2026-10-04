@@ -107,6 +107,13 @@ test('rank, billet, and completion handoffs create useful notifications', () => 
   assert.ok(memberInbox.json.notifications.some((item) => item.type === 'rank_changed'))
   assert.ok(memberInbox.json.notifications.some((item) => item.type === 'billet_changed'))
 
+  const signup = await request('/api/quests/member/signup', {
+    persona: 'member',
+    method: 'POST',
+    body: objective,
+  })
+  assert.equal(signup.status, 200, signup.text)
+
   const requested = await request('/api/quests/member/request-completion', {
     persona: 'member',
     method: 'POST',
