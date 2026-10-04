@@ -27,13 +27,22 @@ test('signed-in navigation adds member destinations before public pages', () => 
   )
 })
 
-test('footer leads with joining and contains no developer destination', () => {
+test('footer leads with joining and exposes the public source repository', () => {
   assert.deepEqual(
     footerNavigationLinks.map((link) => link.href),
-    ['/join', '/charter', '/ranks', '/privacy'],
+    [
+      '/join',
+      '/charter',
+      '/ranks',
+      '/privacy',
+      'https://github.com/Indicaza/holdfast',
+    ],
   )
-  assert.equal(
-    footerNavigationLinks.some((link) => link.href.includes('github.com')),
-    false,
-  )
+
+  const source = footerNavigationLinks.find((link) => link.label === 'Source')
+  assert.deepEqual(source, {
+    label: 'Source',
+    href: 'https://github.com/Indicaza/holdfast',
+    external: true,
+  })
 })
