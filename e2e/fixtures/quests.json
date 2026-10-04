@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "focusedQuestId": "e2e-supply-run",
+  "rewardPolicy": "E2E fixture policy",
+  "rewardLimits": {
+    "rep": { "min": 0, "max": 1000 },
+    "marks": { "min": 0, "max": 1000 },
+    "marksPerQuestMax": 1000
+  },
+  "quests": [
+    {
+      "id": "e2e-supply-run",
+      "publication": "published",
+      "mode": "rotating",
+      "title": "E2E Supply Run",
+      "summary": "Disposable quest used by browser regression tests.",
+      "createdByMemberId": "e2e-officer",
+      "createdAt": "2026-10-03T00:00:00.000Z",
+      "objectives": [
+        {
+          "id": "e2e-linen",
+          "title": "Gather the linen",
+          "description": "Bring the guild twenty bolts worth of starter cloth.",
+          "priority": "High",
+          "completed": false,
+          "need": "20 Linen Cloth",
+          "reward": {
+            "rep": 100,
+            "marks": 5,
+            "items": []
+          },
+          "assignments": []
+        },
+        {
+          "id": "e2e-patrol",
+          "title": "Scout the roads",
+          "description": "Volunteer for a short patrol so signup and leave flows can be exercised.",
+          "priority": "Medium",
+          "completed": false,
+          "need": "1 volunteer",
+          "reward": {
+            "rep": 0,
+            "marks": 0,
+            "items": []
+          },
+          "assignments": []
+        }
+      ]
+    }
+  ]
+}

@@ -44,6 +44,8 @@ Desktop.ini
 .eslintcache
 .parcel-cache/
 .turbo/
+playwright-report/
+test-results/
 
 # Temporary files
 tmp/
