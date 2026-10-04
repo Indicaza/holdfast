@@ -25,17 +25,11 @@ CI seeds three disposable members:
 
 The browser receives a normally signed Holdfast session cookie. There is no E2E login route or production test backdoor. Backend authorization still resolves from the seeded member's real rank/billet authority.
 
-## CI selection
+## CI coverage
 
-Pull requests do not blindly run every browser journey:
+Every pull request, merge-group candidate, and push to `main` runs the complete browser suite. Dependencies, recruitment, shared modals, and new feature directories receive the same coverage as existing features. The release gate rejects failed, skipped, cancelled, or missing checks.
 
-- Quest changes → smoke + quest journeys
-- Member/Auth/Guild/shared-state changes → full browser suite
-- Other application changes → smoke suite
-- Docs/non-runtime changes → browser suite can be skipped
-- Pushes to `main` → full browser suite
-
-When adding a new feature area, add its spec and extend the path mapping in `.github/workflows/ci.yml` so later changes to that area trigger the relevant journey.
+Install the harness with `npm ci` so CI and local runs use the committed lockfile.
 
 ## Failures
 
