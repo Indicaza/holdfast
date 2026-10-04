@@ -24,6 +24,7 @@ const REQUIRED_TABLES = [
   "member_billets",
   "member_profiles",
   "members",
+  "notifications",
   "objectives",
   "quest_completion_requests",
   "quest_settings",
@@ -265,7 +266,7 @@ test("fresh database applies every migration and satisfies the schema contract",
         assert.ok(names.includes(required), `required table ${required} is missing`);
       }
 
-      assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6]);
+      assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6, 7]);
       assert.equal(db.prepare("PRAGMA quick_check").get().quick_check, "ok");
       assert.equal(db.prepare("PRAGMA foreign_key_check").all().length, 0);
     } finally {
