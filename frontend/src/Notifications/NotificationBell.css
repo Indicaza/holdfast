@@ -51,7 +51,7 @@
   background: var(--color-accent-bright);
   color: var(--color-background);
   font-size: 0.62rem;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
