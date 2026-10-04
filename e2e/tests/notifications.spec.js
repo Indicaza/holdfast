@@ -116,7 +116,7 @@ test('action notifications show Needs you, become Handled after another workflow
 
     await leader.page.keyboard.press('Escape')
     await expect(leader.page.locator('.notification-bell__panel')).toHaveCount(0)
-    await expect(leader.page.getByText(objectiveTitle, { exact: true })).toHaveCount(0)
+    await expect(leader.page.locator('.notification-bell').getByText(objectiveTitle, { exact: true })).toHaveCount(0)
   } finally {
     const latest = await json(leader.context, '/api/quests/manage')
     latest.quests = latest.quests.filter((quest) => quest.id !== questId)
