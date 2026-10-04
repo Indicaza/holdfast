@@ -7,6 +7,7 @@ import {
   DEFAULT_BILLET_AUTHORITY,
   DEFAULT_RANK_AUTHORITY,
 } from "../Guild/authorityPolicy.js";
+import { notificationMigration } from "../Notification/notificationMigration.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
 
@@ -785,6 +786,7 @@ const migrations = [
       `);
     },
   },
+  notificationMigration,
 ];
 
 function configureDatabase(db) {

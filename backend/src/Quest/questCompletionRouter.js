@@ -10,6 +10,11 @@ import {
   withGuildTransaction,
 } from "../Data/database.js";
 import { readGuildMembersFromDatabase } from "../Guild/memberRepository.js";
+import { questReviewerMemberIdsInDatabase } from "../Notification/notificationAudience.js";
+import {
+  createNotificationInDatabase,
+  resolveNotificationsInDatabase,
+} from "../Notification/notificationRepository.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import { readQuestsFromDatabase } from "./questRepository.js";
 import {
@@ -46,6 +51,23 @@ function requireTarget(res, target) {
     message: "Choose an objective first.",
   });
   return false;
+}
+
+function findTarget(document, target) {
+  const quest = document.quests.find((item) => item.id === target.questId);
+  const objective = quest?.objectives.find(
+    (item) => item.id === target.objectiveId,
+  );
+
+  return { quest, objective };
+}
+
+function completionReviewKey(objectiveId) {
+  return `completion-review:${objectiveId}`;
+}
+
+function completionMemberKey(objectiveId) {
+  return `completion-member:${objectiveId}`;
 }
 
 export function createQuestCompletionRouter() {
@@ -127,6 +149,37 @@ export function createQuestCompletionRouter() {
             },
           });
 
+          const { quest, objective } = findTarget(document, target);
+          resolveNotificationsInDatabase(db, {
+            dedupeKey: completionMemberKey(target.objectiveId),
+            recipientMemberId: member.id,
+          });
+          resolveNotificationsInDatabase(db, {
+            dedupeKey: completionReviewKey(target.objectiveId),
+          });
+
+          if (quest && objective) {
+            const reviewerIds = questReviewerMemberIdsInDatabase(db, quest, {
+              excludeMemberIds: [member.id],
+            });
+
+            for (const reviewerId of reviewerIds) {
+              createNotificationInDatabase({
+                db,
+                recipientMemberId: reviewerId,
+                type: "completion_requested",
+                kind: "action",
+                title: "Completion review requested",
+                message: `${saved.requestedByName} marked “${objective.title}” ready for review.`,
+                href: "/quests",
+                entityType: "objective",
+                entityId: target.objectiveId,
+                data: target,
+                dedupeKey: completionReviewKey(target.objectiveId),
+              });
+            }
+          }
+
           return saved;
         });
 
@@ -170,6 +223,10 @@ export function createQuestCompletionRouter() {
             entityType: "objective",
             entityId: target.objectiveId,
             payload: target,
+          });
+
+          resolveNotificationsInDatabase(db, {
+            dedupeKey: completionReviewKey(target.objectiveId),
           });
         });
 
@@ -225,6 +282,50 @@ export function createQuestCompletionRouter() {
               requestedByMemberId: saved.requestedByMemberId,
             },
           });
+
+          const { objective } = findTarget(document, target);
+          resolveNotificationsInDatabase(db, {
+            dedupeKey: completionReviewKey(target.objectiveId),
+          });
+          resolveNotificationsInDatabase(db, {
+            dedupeKey: completionMemberKey(target.objectiveId),
+            recipientMemberId: saved.requestedByMemberId,
+          });
+
+          if (
+            objective &&
+            saved.requestedByMemberId !== req.auth.user.id
+          ) {
+            createNotificationInDatabase({
+              db,
+              recipientMemberId: saved.requestedByMemberId,
+              type:
+                saved.status === "approved"
+                  ? "completion_approved"
+                  : "completion_rejected",
+              kind: saved.status === "approved" ? "update" : "action",
+              title:
+                saved.status === "approved"
+                  ? "Completion approved"
+                  : "Changes requested",
+              message:
+                saved.status === "approved"
+                  ? `“${objective.title}” was approved and is ready for final reward issue.`
+                  : saved.reviewNote ||
+                    `“${objective.title}” needs another pass before approval.`,
+              href: "/quests",
+              entityType: "objective",
+              entityId: target.objectiveId,
+              data: {
+                ...target,
+                reviewNote: saved.reviewNote,
+              },
+              dedupeKey:
+                saved.status === "approved"
+                  ? `completion-approved:${target.objectiveId}`
+                  : completionMemberKey(target.objectiveId),
+            });
+          }
 
           return saved;
         });

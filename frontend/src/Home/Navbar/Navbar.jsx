@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
+import NotificationBell from '../../Notifications/NotificationBell.jsx'
 import {
   primaryNavigationLinks,
   signInNavigationLabel,
@@ -111,48 +112,51 @@ function Navbar() {
                 {signInNavigationLabel}
               </button>
             ) : (
-              <div className="navbar__account" ref={accountRef}>
-                <button
-                  className="navbar__account-button"
-                  type="button"
-                  aria-label={`Open account menu for ${displayName(user)}`}
-                  aria-expanded={accountOpen}
-                  onClick={() => setAccountOpen((open) => !open)}
-                >
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt=""
-                      width="36"
-                      height="36"
-                      decoding="async"
-                    />
-                  ) : (
-                    <span aria-hidden="true">♜</span>
-                  )}
-                </button>
+              <>
+                <NotificationBell />
+                <div className="navbar__account" ref={accountRef}>
+                  <button
+                    className="navbar__account-button"
+                    type="button"
+                    aria-label={`Open account menu for ${displayName(user)}`}
+                    aria-expanded={accountOpen}
+                    onClick={() => setAccountOpen((open) => !open)}
+                  >
+                    {user?.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt=""
+                        width="36"
+                        height="36"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span aria-hidden="true">♜</span>
+                    )}
+                  </button>
 
-                <div
-                  className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}
-                >
-                  <div className="navbar__account-identity">
-                    <strong>{displayName(user)}</strong>
-                    <span>@{user?.username}</span>
-                  </div>
+                  <div
+                    className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}
+                  >
+                    <div className="navbar__account-identity">
+                      <strong>{displayName(user)}</strong>
+                      <span>@{user?.username}</span>
+                    </div>
 
-                  <div className="navbar__account-links">
-                    <a href="/members/me">My Profile</a>
-                    <a href="/members">Members</a>
-                    {hasPermission('audit.view') ? (
-                      <a href="/admin">Audit Log</a>
-                    ) : null}
-                    <button type="button" onClick={handleSignOut} disabled={signingOut}>
-                      {signingOut ? 'Signing out…' : 'Sign out'}
-                    </button>
-                    {signOutError ? <p className="navbar__account-error" role="alert">{signOutError}</p> : null}
+                    <div className="navbar__account-links">
+                      <a href="/members/me">My Profile</a>
+                      <a href="/members">Members</a>
+                      {hasPermission('audit.view') ? (
+                        <a href="/admin">Audit Log</a>
+                      ) : null}
+                      <button type="button" onClick={handleSignOut} disabled={signingOut}>
+                        {signingOut ? 'Signing out…' : 'Sign out'}
+                      </button>
+                      {signOutError ? <p className="navbar__account-error" role="alert">{signOutError}</p> : null}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             <button

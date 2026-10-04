@@ -5,6 +5,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { createNotificationInDatabase } from "../Notification/notificationRepository.js";
 import {
   normalizeCapabilityList,
   normalizeManagedRank,
@@ -438,6 +439,29 @@ export async function setMemberBilletAssignment(
         billetName: billet.name,
       },
     });
+
+    if (actorMemberId !== memberId) {
+      createNotificationInDatabase({
+        db,
+        recipientMemberId: memberId,
+        type: "billet_changed",
+        kind: "update",
+        title: assigned ? "Billet assigned" : "Billet removed",
+        message: assigned
+          ? `You were assigned the ${billet.name} billet.`
+          : `The ${billet.name} billet was removed from your profile.`,
+        href: "/members/me",
+        entityType: "billet",
+        entityId: billetId,
+        data: {
+          billetId,
+          billetName: billet.name,
+          assigned,
+        },
+        dedupeKey: `member-billet:${billetId}`,
+        now,
+      });
+    }
 
     return {
       status: assigned ? "assigned" : "removed",
