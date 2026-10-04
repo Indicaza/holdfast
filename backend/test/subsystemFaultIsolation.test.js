@@ -128,7 +128,8 @@ test("invalid quest data cannot take member and contribution systems down with i
     });
 
     const authority = resolveMemberAuthority("isolation-commander");
-    assert.equal(authority.rank, "Commander");
+    assert.equal(authority.memberRank, "Commander");
+    assert.equal(authority.isOwner, true);
     assert.ok(authority.permissions.includes("site.admin"));
   } finally {
     restoreEnvironment(previous);
