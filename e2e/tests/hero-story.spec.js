@@ -92,6 +92,20 @@ test('reduced motion starts paused and mobile captions sit below the artwork', a
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(2)
 })
 
+test('changing the motion preference during a fade keeps artwork and caption aligned', async ({ page }) => {
+  await stopClock(page)
+  await ready(page)
+  await page.clock.runFor(18500)
+  await expect(artwork(page)).toHaveAttribute('data-scene', 'dwarf')
+  await expect(caption(page)).toHaveAttribute('data-caption', 'gnome')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(caption(page)).toHaveAttribute('data-caption', 'dwarf')
+  await expect(page.getByRole('button', { name: 'Play story' })).toBeVisible()
+  await expect(page.locator('.hero-slideshow__slide')).toHaveCount(1)
+  await page.clock.runFor(30000)
+  await expect(caption(page)).toHaveAttribute('data-caption', 'dwarf')
+})
+
 test('failed artwork keeps the current scene and offers a working retry', async ({ page }) => {
   await page.route('**/assets/dwarf-*.webp', (route) => route.abort())
   await ready(page)

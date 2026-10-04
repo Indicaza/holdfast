@@ -105,7 +105,13 @@ export class HeroPlayback {
 
   setReducedMotion(reducedMotion) {
     this.update({ reducedMotion })
-    if (reducedMotion) this.setPauseReason('user', true)
+    if (reducedMotion) {
+      this.setPauseReason('user', true)
+      if (this.state.phase !== 'holding') {
+        this.update({ captionIndex: this.state.imageIndex })
+        this.hold()
+      }
+    }
   }
 
   toggle = () => this.setPauseReason('user', !this.state.userPaused)

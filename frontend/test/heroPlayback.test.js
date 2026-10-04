@@ -162,6 +162,19 @@ test('reduced motion begins paused and optional autoplay swaps scenes without a 
   assert.equal(playback.state.phase, 'holding')
 })
 
+test('enabling reduced motion during a fade finishes the scene and pauses it', async () => {
+  const { playback, flush, advance } = setup()
+  await flush()
+  await advance(18500)
+  playback.setReducedMotion(true)
+  assert.equal(playback.state.captionIndex, 1)
+  assert.equal(playback.state.imageIndex, 1)
+  assert.equal(playback.state.previousIndex, null)
+  assert.equal(playback.state.phase, 'holding')
+  await advance(30000)
+  assert.equal(playback.state.captionIndex, 1)
+})
+
 test('stopped controllers ignore a pending image load and can restart safely', async () => {
   let resolveImage
   const { playback, flush, advance } = setup(() => new Promise((resolve) => { resolveImage = resolve }))
