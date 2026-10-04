@@ -16,6 +16,7 @@ import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
 import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
 import { createAuthorityRouter } from "./Guild/authorityRouter.js";
+import { createNotificationRouter } from "./Notification/notificationRouter.js";
 import {
   corsOrigin,
   createRateLimiter,
@@ -56,6 +57,7 @@ export function createApp({ discordAuthOptions } = {}) {
         if (!Number(db.prepare("SELECT COUNT(*) AS count FROM rank_authority").get().count)) throw new Error("Rank authority is missing");
         db.prepare("SELECT COUNT(*) FROM members").get();
         db.prepare("SELECT COUNT(*) FROM contribution_transactions").get();
+        db.prepare("SELECT COUNT(*) FROM notifications").get();
       });
       res.json({ status: "ok", offsiteBackup: await offsiteBackupHealth() });
     } catch (error) {
@@ -104,6 +106,7 @@ export function createApp({ discordAuthOptions } = {}) {
             objectives: count("objectives"),
             assignments: count("assignments"),
             contributions: count("contribution_transactions"),
+            notifications: count("notifications"),
             auditEvents: count("audit_events"),
             migrations: db
               .prepare(
@@ -134,6 +137,7 @@ export function createApp({ discordAuthOptions } = {}) {
     }),
     createDiscordAuthRouter(discordAuthOptions),
   );
+  app.use("/api/notifications", createNotificationRouter());
   app.use("/api/quests", createQuestCompletionRouter());
   app.use("/api/quests", createQuestRouter());
   app.use("/api/guild/members", createMemberRouter());
