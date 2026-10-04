@@ -112,7 +112,7 @@ test('rank, billet, and completion handoffs create useful notifications', () => 
     method: 'POST',
     body: objective,
   })
-  assert.equal(signup.status, 200, signup.text)
+  assert.equal(signup.status, 201, signup.text)
 
   const requested = await request('/api/quests/member/request-completion', {
     persona: 'member',
