@@ -18,7 +18,9 @@
     "discord:apply": "node scripts/provisionDiscord.js apply",
     "discord:restore": "node scripts/provisionDiscord.js restore",
     "discord:export": "node scripts/provisionDiscord.js export",
-    "discord:prune": "node scripts/provisionDiscord.js prune"
+    "discord:prune": "node scripts/provisionDiscord.js prune",
+    "test:coverage": "node scripts/testCoverage.js",
+    "test:safety-mutations": "node scripts/checkSafetyMutations.js"
   },
   "keywords": [],
   "author": "",
