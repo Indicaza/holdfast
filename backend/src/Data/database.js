@@ -757,6 +757,33 @@ const migrations = [
       }
     },
   },
+  {
+    version: 6,
+    name: "quest_completion_review",
+    up(db) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS quest_completion_requests (
+          objective_id TEXT PRIMARY KEY,
+          quest_id TEXT NOT NULL,
+          status TEXT NOT NULL
+            CHECK (status IN ('pending', 'approved', 'rejected')),
+          objective_fingerprint TEXT NOT NULL,
+          requested_by_member_id TEXT NOT NULL,
+          requested_by_name TEXT NOT NULL DEFAULT '',
+          requested_at TEXT NOT NULL,
+          request_note TEXT NOT NULL DEFAULT '',
+          reviewed_by_member_id TEXT,
+          reviewed_by_name TEXT NOT NULL DEFAULT '',
+          reviewed_at TEXT NOT NULL DEFAULT '',
+          review_note TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS quest_completion_requests_quest_status_idx
+          ON quest_completion_requests(quest_id, status, updated_at DESC);
+      `);
+    },
+  },
 ];
 
 function configureDatabase(db) {
@@ -766,7 +793,12 @@ function configureDatabase(db) {
   db.exec("PRAGMA synchronous = NORMAL");
 }
 
-function runMigrations(db) {
+export function migrateGuildDatabase(db, { throughVersion = Infinity } = {}) {
+  configureDatabase(db);
+  runMigrations(db, { throughVersion });
+}
+
+function runMigrations(db, { throughVersion = Infinity } = {}) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY,
@@ -783,7 +815,7 @@ function runMigrations(db) {
   );
 
   for (const migration of migrations) {
-    if (applied.has(migration.version)) {
+    if (migration.version > throughVersion || applied.has(migration.version)) {
       continue;
     }
 
@@ -812,8 +844,7 @@ export function openGuildDatabase() {
   mkdirSync(runtimeDataDirectory(), { recursive: true });
 
   const db = new DatabaseSync(guildDatabaseFile());
-  configureDatabase(db);
-  runMigrations(db);
+  migrateGuildDatabase(db);
   return db;
 }
 
