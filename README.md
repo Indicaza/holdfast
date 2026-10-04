@@ -56,19 +56,37 @@ Feature-specific code stays close to the feature that owns it. Shared infrastruc
 
 ## Quick start
 
-Holdfast uses **Node 24**.
+Holdfast uses **Node 24**. `.nvmrc` pins the expected major version for tools that support it.
 
 ```bash
 git clone https://github.com/Indicaza/holdfast.git
 cd holdfast
 ```
 
-Run the backend:
+Install the backend and create a local environment file:
 
 ```bash
 cd backend
 cp .env.example .env
 npm ci
+```
+
+Windows PowerShell equivalent:
+
+```powershell
+Copy-Item .env.example .env
+npm ci
+```
+
+For ordinary public development you do **not** need access to the Holdfast Discord server. Put a local-only session secret in `backend/.env`, set `HOLDFAST_DEV_AUTH=true`, then seed the development personas:
+
+```text
+SESSION_SECRET=local-development-only-change-me
+HOLDFAST_DEV_AUTH=true
+```
+
+```bash
+npm run dev:seed
 npm run dev
 ```
 
@@ -80,9 +98,17 @@ npm ci
 npm run dev
 ```
 
-Vite serves the frontend locally and proxies `/api` requests to the backend on port `3000`.
+Vite normally serves `http://localhost:5173` and proxies `/api` to the backend on port `3000`.
 
-Discord-backed authentication requires local Discord application credentials. See [Development](docs/DEVELOPMENT.md) for setup details and test commands.
+Development login personas are then available at:
+
+- `http://localhost:5173/api/dev/login/member`
+- `http://localhost:5173/api/dev/login/officer`
+- `http://localhost:5173/api/dev/login/commander`
+
+The sandbox is explicitly disabled in production and production startup rejects `HOLDFAST_DEV_AUTH=true`.
+
+See [Development](docs/DEVELOPMENT.md) for the complete setup, sandbox behavior, real Discord integration setup, and test commands.
 
 ## Testing
 
@@ -121,7 +147,7 @@ See:
 
 Outside contributions are welcome. Start with [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
-For meaningful behavior changes, open an issue before investing in a large implementation. Keep pull requests focused and include regression coverage where practical.
+Look for issues labeled `good first issue` or `help wanted` if you want a contained place to start. For meaningful behavior changes, open or claim an issue before investing in a large implementation. Keep pull requests focused and include regression coverage where practical.
 
 Security issues should follow [SECURITY.md](.github/SECURITY.md) rather than being posted publicly.
 
@@ -130,3 +156,7 @@ Security issues should follow [SECURITY.md](.github/SECURITY.md) rather than bei
 Holdfast is actively developed and used as a live guild platform. The codebase intentionally favors small, understandable systems with strong operational guardrails over speculative enterprise architecture.
 
 Future work includes deeper Discord delivery and the Holdfast WoW addon/bridge while keeping the website authoritative.
+
+## License
+
+Holdfast is open source under the [MIT License](LICENSE).

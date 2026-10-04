@@ -7,6 +7,10 @@ import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
+import {
+  createDevelopmentAuthRouter,
+  developmentAuthEnabled,
+} from "./Development/developmentAuth.js";
 import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
@@ -26,8 +30,7 @@ import {
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
 
-
-export function createApp({ discordAuthOptions } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -127,6 +130,17 @@ export function createApp({ discordAuthOptions } = {}) {
       }
     },
   );
+
+  const developmentEnv = developmentAuthOptions?.env || process.env;
+  if (developmentAuthEnabled(developmentEnv)) {
+    app.use(
+      "/api/dev",
+      createDevelopmentAuthRouter({
+        ...developmentAuthOptions,
+        env: developmentEnv,
+      }),
+    );
+  }
 
   app.use(
     "/api/auth",

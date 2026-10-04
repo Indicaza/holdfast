@@ -7,6 +7,8 @@ Holdfast is a live guild platform, not a demo project. Changes should favor dura
 ## Before you start
 
 - Check existing issues and pull requests before duplicating work.
+- Look for `good first issue` and `help wanted` when you want a contained starting point.
+- Comment on an issue when you start work so two people do not unknowingly build the same thing.
 - For a significant feature or behavior change, open an issue first so scope can be agreed before implementation.
 - Keep unrelated refactors out of feature pull requests.
 - Do not commit secrets, production data, Discord tokens, SQLite databases, backups, or local environment files.
@@ -15,13 +17,7 @@ Holdfast is a live guild platform, not a demo project. Changes should favor dura
 
 Holdfast uses Node 24. See [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md) for the full setup.
 
-Frontend:
-
-```bash
-cd frontend
-npm ci
-npm run dev
-```
+Most contributors do **not** need Holdfast Discord credentials. The repository includes an explicitly development-only local identity sandbox with Member, Officer, and Commander personas.
 
 Backend:
 
@@ -29,8 +25,24 @@ Backend:
 cd backend
 cp .env.example .env
 npm ci
+```
+
+Set a local session secret and `HOLDFAST_DEV_AUTH=true` in `backend/.env`, then:
+
+```bash
+npm run dev:seed
 npm run dev
 ```
+
+Frontend in another terminal:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+The complete sandbox login URLs and Windows setup are documented in [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md).
 
 ## Architecture
 
@@ -71,6 +83,7 @@ Changes touching authentication, Discord provisioning, notifications, persistenc
 
 A good Holdfast pull request:
 
+- links the issue it addresses when one exists
 - explains the user-visible or operational problem
 - keeps the change focused
 - includes tests for behavior and regressions where practical

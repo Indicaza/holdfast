@@ -9,6 +9,11 @@ export const footerNavigationLinks = [
   { label: 'Join Holdfast', href: '/join' },
   ...publicNavigationLinks,
   { label: 'Privacy', href: '/privacy' },
+  {
+    label: 'Source',
+    href: 'https://github.com/Indicaza/holdfast',
+    external: true,
+  },
 ]
 
 export function primaryNavigationLinks(authenticated) {

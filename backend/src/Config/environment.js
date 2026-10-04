@@ -19,6 +19,10 @@ function configuredValue(value) {
   return String(value || "").trim();
 }
 
+function enabledValue(value) {
+  return configuredValue(value).toLowerCase() === "true";
+}
+
 export function publicWebsiteUrl(env = process.env) {
   return (
     configuredValue(env.FRONTEND_URL) ||
@@ -47,6 +51,10 @@ export function productionEnvironmentProblems(env = process.env) {
     if (!configuredValue(env[name])) {
       problems.push(`${name} is required`);
     }
+  }
+
+  if (enabledValue(env.HOLDFAST_DEV_AUTH)) {
+    problems.push("HOLDFAST_DEV_AUTH must be disabled in production");
   }
 
   const configuredFrontendUrl =
