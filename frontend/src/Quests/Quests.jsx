@@ -287,6 +287,7 @@ function Quests() {
       return result
     } catch (error) {
       if (error?.code === 'quest_revision_conflict') {
+        await loadData()
         setModalMessage(
           'Someone changed the quest board first. Close and reopen this quest to load the latest version.',
         )
