@@ -165,56 +165,58 @@ function NotificationBell() {
         ) : null}
       </button>
 
-      <section
-        className={`notification-bell__panel ${open ? 'notification-bell__panel--open' : ''}`}
-        aria-label="Notifications"
-      >
-        <header className="notification-bell__header">
-          <div>
-            <strong>Notifications</strong>
-            {inbox.actionCount > 0 ? <span>{inbox.actionCount} need you</span> : null}
+      {open ? (
+        <section
+          className="notification-bell__panel notification-bell__panel--open"
+          aria-label="Notifications"
+        >
+          <header className="notification-bell__header">
+            <div>
+              <strong>Notifications</strong>
+              {inbox.actionCount > 0 ? <span>{inbox.actionCount} need you</span> : null}
+            </div>
+            {inbox.unreadCount > 0 ? (
+              <button type="button" onClick={markAllRead}>Mark all read</button>
+            ) : null}
+          </header>
+
+          <div className="notification-bell__list">
+            {status === 'loading' ? (
+              <p className="notification-bell__empty">Checking Holdfast…</p>
+            ) : status === 'error' ? (
+              <button className="notification-bell__retry" type="button" onClick={refresh}>
+                Couldn’t load notifications. Retry
+              </button>
+            ) : inbox.notifications.length === 0 ? (
+              <p className="notification-bell__empty">You’re caught up.</p>
+            ) : (
+              inbox.notifications.map((notification) => {
+                const unread = !notification.readAt && !notification.resolvedAt
+                const actionable = notification.kind === 'action' && !notification.resolvedAt
+
+                return (
+                  <button
+                    key={notification.id}
+                    className={`notification-bell__item ${unread ? 'notification-bell__item--unread' : ''}`}
+                    type="button"
+                    onClick={() => openNotification(notification)}
+                  >
+                    <span className="notification-bell__item-topline">
+                      <strong>{notification.title}</strong>
+                      <time dateTime={notification.createdAt}>{relativeTime(notification.createdAt)}</time>
+                    </span>
+                    {notification.message ? <span>{notification.message}</span> : null}
+                    <span className="notification-bell__item-meta">
+                      {actionable ? <em>Needs you</em> : null}
+                      {notification.resolvedAt ? <em>Handled</em> : null}
+                    </span>
+                  </button>
+                )
+              })
+            )}
           </div>
-          {inbox.unreadCount > 0 ? (
-            <button type="button" onClick={markAllRead}>Mark all read</button>
-          ) : null}
-        </header>
-
-        <div className="notification-bell__list">
-          {status === 'loading' ? (
-            <p className="notification-bell__empty">Checking Holdfast…</p>
-          ) : status === 'error' ? (
-            <button className="notification-bell__retry" type="button" onClick={refresh}>
-              Couldn’t load notifications. Retry
-            </button>
-          ) : inbox.notifications.length === 0 ? (
-            <p className="notification-bell__empty">You’re caught up.</p>
-          ) : (
-            inbox.notifications.map((notification) => {
-              const unread = !notification.readAt && !notification.resolvedAt
-              const actionable = notification.kind === 'action' && !notification.resolvedAt
-
-              return (
-                <button
-                  key={notification.id}
-                  className={`notification-bell__item ${unread ? 'notification-bell__item--unread' : ''}`}
-                  type="button"
-                  onClick={() => openNotification(notification)}
-                >
-                  <span className="notification-bell__item-topline">
-                    <strong>{notification.title}</strong>
-                    <time dateTime={notification.createdAt}>{relativeTime(notification.createdAt)}</time>
-                  </span>
-                  {notification.message ? <span>{notification.message}</span> : null}
-                  <span className="notification-bell__item-meta">
-                    {actionable ? <em>Needs you</em> : null}
-                    {notification.resolvedAt ? <em>Handled</em> : null}
-                  </span>
-                </button>
-              )
-            })
-          )}
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   )
 }
