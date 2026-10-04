@@ -82,6 +82,10 @@ jobs:
         working-directory: backend
         run: npm test
 
+      - name: Database disaster safety gate
+        working-directory: backend
+        run: npm run test:db-safety
+
       - name: Enforce authentication coverage
         working-directory: backend
         run: npm run test:auth
