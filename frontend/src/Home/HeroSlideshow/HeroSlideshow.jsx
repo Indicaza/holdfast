@@ -1,20 +1,13 @@
-import {
-  fadeDuration,
-  heroSlides,
-  slideDuration,
-} from '../HeroStory/heroStory.js'
+import { heroSlides, initialSlideDuration, slideDuration, fadeDuration } from '../HeroStory/heroStory.js'
 import './HeroSlideshow.css'
 
-function getSlideStyle(slide, shouldRenderImage) {
+function getSlideStyle(slide, visit) {
   return {
-    backgroundImage: shouldRenderImage
-      ? `linear-gradient(115deg, rgba(7, 17, 31, 0.2), rgba(7, 17, 31, 0.02) 58%, rgba(7, 17, 31, 0.18)), url("${slide.src}")`
-      : 'none',
-    backgroundPosition: slide.position,
+    backgroundImage: `url("${slide.src}")`,
+    '--hero-position': slide.position,
+    '--hero-mobile-position': slide.mobilePosition,
     transformOrigin: slide.origin,
-    '--hero-fade-duration': `${fadeDuration}ms`,
-    '--hero-pan-duration': `${slide.pan.duration ?? slideDuration}ms`,
-    '--hero-pan-easing': slide.pan.easing ?? 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+    '--hero-pan-duration': `${visit === 0 ? initialSlideDuration + fadeDuration : slideDuration + fadeDuration * 2}ms`,
     '--hero-scale-start': slide.pan.startScale ?? '1.06',
     '--hero-scale-end': slide.pan.endScale ?? '1.02',
     '--hero-pan-start-x': slide.pan.startX ?? '0%',
@@ -24,39 +17,28 @@ function getSlideStyle(slide, shouldRenderImage) {
   }
 }
 
-function HeroSlideshow({ activeIndex, previousIndex }) {
+function HeroSlideshow({ story }) {
+  const layers = story.previousIndex === null
+    ? [{ index: story.imageIndex, visit: story.visit }]
+    : [{ index: story.previousIndex, visit: story.previousVisit }, { index: story.imageIndex, visit: story.visit }]
+
   return (
-    <div className="hero-slideshow" aria-hidden="true">
-      {heroSlides.map((slide, index) => {
-        const isActive = index === activeIndex
-        const isPrevious = index === previousIndex
-        const shouldRenderImage = isActive || isPrevious
-
-        const classNames = ['hero-slideshow__slide']
-
-        if (isActive) {
-          classNames.push('hero-slideshow__slide--active')
-        }
-
-        if (isPrevious) {
-          classNames.push('hero-slideshow__slide--previous')
-        }
-
+    <div className={`hero-slideshow ${story.isPaused ? 'hero-slideshow--paused' : ''}`} aria-hidden="true">
+      {layers.map(({ index, visit }) => {
+        const slide = heroSlides[index]
+        const isActive = visit === story.visit
         return (
           <div
-            key={slide.id}
-            className={classNames.join(' ')}
-            style={getSlideStyle(slide, shouldRenderImage)}
-          />
+            key={visit}
+            className={`hero-slideshow__slide ${isActive ? 'hero-slideshow__slide--active' : ''} ${isActive && story.phase !== 'holding' ? 'hero-slideshow__slide--entering' : ''}`}
+            data-scene={slide.id}
+            style={{ '--hero-fade-duration': `${story.fadeDuration}ms` }}
+          >
+            <div className="hero-slideshow__art" style={getSlideStyle(slide, visit)} />
+          </div>
         )
       })}
-
-      <div
-        className="hero-slideshow__bloom"
-        style={{ animationDuration: `${slideDuration + 4400}ms` }}
-      />
       <div className="hero-slideshow__vignette" />
-      <div className="hero-slideshow__texture" />
     </div>
   )
 }

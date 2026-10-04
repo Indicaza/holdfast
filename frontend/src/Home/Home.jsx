@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Footer from './Footer/Footer.jsx'
 import QuestBoard from './QuestBoard/QuestBoard.jsx'
 import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
@@ -10,8 +10,9 @@ import JoinModal from '../Join/JoinModal.jsx'
 import './Home.css'
 
 function Home({ overlay = null, initialJoinOpen = false }) {
-  const { activeIndex, previousIndex, activeSlide } = useHeroStory()
   const [joinOpen, setJoinOpen] = useState(initialJoinOpen)
+  const heroRef = useRef(null)
+  const story = useHeroStory({ heroRef, blocked: Boolean(overlay) || joinOpen })
   const isJoinRoute =
     (window.location.pathname.replace(/\/+$/, '') || '/') === '/join'
 
@@ -30,16 +31,16 @@ function Home({ overlay = null, initialJoinOpen = false }) {
 
   return (
     <div className="home">
-      <HeroSlideshow activeIndex={activeIndex} previousIndex={previousIndex} />
+      <HeroSlideshow story={story} />
       <div className="home__overlay" aria-hidden="true" />
 
       <Navbar />
 
       <div className="home__frame">
         <main className="home__content">
-          <section className="home__hero-section">
+          <section className="home__hero-section" ref={heroRef}>
             <div className="home__hero">
-              <HeroContent slide={activeSlide} onJoin={openJoin} />
+              <HeroContent story={story} onJoin={openJoin} />
             </div>
           </section>
 

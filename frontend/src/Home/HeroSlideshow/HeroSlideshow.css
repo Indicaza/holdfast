@@ -7,106 +7,75 @@
   height: calc(100svh - var(--nav-height));
   overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 72% 24%, rgba(29, 69, 111, 0.3), transparent 30%),
-    linear-gradient(135deg, #07111f, #0b1b30 52%, #050b13);
+  background: #07111f;
+}
+
+.hero-slideshow__slide,
+.hero-slideshow__art,
+.hero-slideshow__vignette {
+  position: absolute;
+  inset: 0;
 }
 
 .hero-slideshow__slide {
-  position: absolute;
-  inset: 0;
   z-index: 0;
-  background-repeat: no-repeat;
-  background-size: cover;
-  opacity: 0;
-  filter: saturate(0.82) contrast(1.04) brightness(0.82);
-  backface-visibility: hidden;
-  transform: scale(var(--hero-scale-start, 1.06)) translate3d(var(--hero-pan-start-x, 0%), var(--hero-pan-start-y, 0%), 0);
-  transition: opacity var(--hero-fade-duration, 2200ms) var(--ease-standard);
-}
-
-.hero-slideshow__slide--active,
-.hero-slideshow__slide--previous {
-  animation: hero-slide-drift var(--hero-pan-duration, 14200ms) var(--hero-pan-easing, cubic-bezier(0.2, 0.58, 0.36, 0.98)) both;
+  opacity: 1;
 }
 
 .hero-slideshow__slide--active {
-  z-index: 2;
-  opacity: 1;
-  will-change: opacity, transform;
-}
-
-.hero-slideshow__slide--previous {
   z-index: 1;
-  opacity: 0;
 }
 
-.hero-slideshow__bloom,
-.hero-slideshow__vignette,
-.hero-slideshow__texture {
-  position: absolute;
-  inset: 0;
+.hero-slideshow__slide--entering {
+  animation: hero-scene-reveal var(--hero-fade-duration) linear both;
 }
 
-.hero-slideshow__bloom {
-  background:
-    radial-gradient(circle at 72% 24%, rgba(221, 193, 125, 0.1), transparent 24%),
-    radial-gradient(circle at 24% 74%, rgba(38, 85, 134, 0.14), transparent 32%);
-  animation: hero-bloom 11s ease-in-out infinite alternate;
+.hero-slideshow__art {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: var(--hero-position);
+  filter: saturate(0.96) contrast(1.02);
+  animation: hero-slide-drift var(--hero-pan-duration) linear both;
+  will-change: transform;
+}
+
+.hero-slideshow--paused .hero-slideshow__slide,
+.hero-slideshow--paused .hero-slideshow__art {
+  animation-play-state: paused;
 }
 
 .hero-slideshow__vignette {
-  background:
-    linear-gradient(180deg, rgba(3, 8, 15, 0.05) 0%, transparent 22%, transparent 66%, rgba(3, 8, 15, 0.58) 100%),
-    radial-gradient(ellipse at center, transparent 48%, rgba(3, 8, 15, 0.38) 112%);
+  z-index: 2;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(3, 8, 15, 0.24) 112%);
 }
 
-.hero-slideshow__texture {
-  opacity: 0.055;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.06) 0,
-      rgba(255, 255, 255, 0.06) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-  mix-blend-mode: soft-light;
+@keyframes hero-scene-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes hero-slide-drift {
   from {
-    transform: scale(var(--hero-scale-start, 1.06)) translate3d(var(--hero-pan-start-x, 0%), var(--hero-pan-start-y, 0%), 0);
+    transform: scale(var(--hero-scale-start)) translate3d(var(--hero-pan-start-x), var(--hero-pan-start-y), 0);
   }
-
   to {
-    transform: scale(var(--hero-scale-end, 1.02)) translate3d(var(--hero-pan-end-x, 0%), var(--hero-pan-end-y, 0%), 0);
+    transform: scale(var(--hero-scale-end)) translate3d(var(--hero-pan-end-x), var(--hero-pan-end-y), 0);
   }
 }
 
-@keyframes hero-bloom {
-  from {
-    transform: translate3d(-1%, 0, 0) scale(1);
-    opacity: 0.7;
+@media (max-width: 48rem) {
+  .hero-slideshow {
+    height: var(--hero-art-height);
   }
-
-  to {
-    transform: translate3d(1.5%, -1%, 0) scale(1.04);
-    opacity: 1;
+  .hero-slideshow__art {
+    background-position: var(--hero-mobile-position);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slideshow__slide,
-  .hero-slideshow__slide--active,
-  .hero-slideshow__slide--previous,
-  .hero-slideshow__bloom {
-    transform: none;
+  .hero-slideshow__art,
+  .hero-slideshow__slide--entering {
     animation: none;
-  }
-
-  .hero-slideshow__slide,
-  .hero-slideshow__slide--previous {
-    transition: opacity var(--duration-fast) linear;
+    transform: none;
   }
 }
