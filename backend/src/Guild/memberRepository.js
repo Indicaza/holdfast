@@ -3,6 +3,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { createNotificationInDatabase } from "../Notification/notificationRepository.js";
 import {
   emptyMemberProfile,
   isValidTimeZone,
@@ -475,6 +476,26 @@ export async function updateGuildMemberRank(
         authorityEnabled: !existing.rankManaged,
       },
     });
+
+    if (existing.rank !== requestedRank && actorMemberId !== memberId) {
+      createNotificationInDatabase({
+        db,
+        recipientMemberId: memberId,
+        type: "rank_changed",
+        kind: "update",
+        title: "Rank changed",
+        message: `Your Holdfast rank is now ${requestedRank}.`,
+        href: "/members/me",
+        entityType: "member",
+        entityId: memberId,
+        data: {
+          beforeRank: existing.rank,
+          afterRank: requestedRank,
+        },
+        dedupeKey: `member-rank:${memberId}`,
+        now,
+      });
+    }
 
     return {
       status: "updated",
