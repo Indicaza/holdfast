@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -116,70 +117,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Select browser coverage
-        id: coverage
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]; then
-            echo "specs=tests" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          git diff --name-only \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.event.pull_request.head.sha }}" \
-            > "$RUNNER_TEMP/holdfast-changed-files.txt"
-
-          echo "Changed files:"
-          cat "$RUNNER_TEMP/holdfast-changed-files.txt"
-
-          if grep -Eq '^(e2e/|\.github/workflows/ci\.yml$)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
-            echo "specs=tests" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif grep -Eq '^(frontend/src/Quests/|backend/src/Quest/|backend/src/Contribution/)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
-            echo "specs=tests/smoke.spec.js tests/quests.spec.js" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif grep -Eq '^(frontend/src/(Members|Ranks|Auth|Api|PageShell|Home)/|frontend/src/(App|routing)\.|backend/src/(Auth|Guild|Data|Security)/)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
-            echo "specs=tests" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif grep -Eq '^(frontend/src/|backend/src/|Dockerfile$|render\.yaml$)' "$RUNNER_TEMP/holdfast-changed-files.txt"; then
-            echo "specs=tests/smoke.spec.js" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "specs=" >> "$GITHUB_OUTPUT"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Set up Node
-        if: steps.coverage.outputs.skip != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
       - name: Install backend dependencies
-        if: steps.coverage.outputs.skip != 'true'
         working-directory: backend
         run: npm ci
 
       - name: Install and build frontend
-        if: steps.coverage.outputs.skip != 'true'
         working-directory: frontend
         run: |
           npm ci
           npm run build
 
       - name: Install Playwright
-        if: steps.coverage.outputs.skip != 'true'
         working-directory: e2e
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
 
       - name: Prepare disposable guild data
-        if: steps.coverage.outputs.skip != 'true'
         shell: bash
         run: |
           DATA_DIR="$RUNNER_TEMP/holdfast-e2e-data"
@@ -190,7 +149,6 @@ jobs:
           cp e2e/fixtures/quests.json "$DATA_DIR/quests.json"
 
       - name: Start Holdfast
-        if: steps.coverage.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -208,13 +166,12 @@ jobs:
           cat "$RUNNER_TEMP/holdfast-e2e-server.log"
           exit 1
 
-      - name: Run selected browser journeys
-        if: steps.coverage.outputs.skip != 'true'
+      - name: Run browser journeys
         working-directory: e2e
-        run: npx playwright test ${{ steps.coverage.outputs.specs }}
+        run: npx playwright test
 
       - name: Upload browser failure evidence
-        if: failure() && steps.coverage.outputs.skip != 'true'
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: browser-regression-failure
@@ -226,7 +183,7 @@ jobs:
             ${{ runner.temp }}/holdfast-e2e-server.log
 
       - name: Stop Holdfast
-        if: always() && steps.coverage.outputs.skip != 'true'
+        if: always()
         shell: bash
         run: |
           if [[ -f "$RUNNER_TEMP/holdfast-e2e-server.pid" ]]; then
@@ -248,3 +205,19 @@ jobs:
       - name: Torture production artifact
         shell: bash
         run: bash scripts/production-artifact-smoke.sh holdfast-ci:latest
+
+  release-gate:
+    name: Release gate
+    if: always()
+    needs: [frontend, backend, browser-regression, production-image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Require every release check to succeed
+        env:
+          RELEASE_CHECKS: ${{ toJSON(needs) }}
+        run: node scripts/release-gate.mjs
