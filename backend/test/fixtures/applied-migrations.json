@@ -1,0 +1,32 @@
+[
+  {
+    "version": 1,
+    "name": "core_guildos_schema",
+    "sha256": "4130ac7915cb434eb8e94303f18f8cdcbf49d3dc36f8aa0bf5e63a11213f43c1"
+  },
+  {
+    "version": 2,
+    "name": "website_authoritative_member_ranks",
+    "sha256": "7e2cc1253a93d0ad86986ba5b60ba427d09676cf6ded7b01a26ece2fd709957f"
+  },
+  {
+    "version": 3,
+    "name": "billets_and_assignments",
+    "sha256": "76c2950b0118c1dcfd27303eed952ba24ae88c72d5be56a8744947379f278929"
+  },
+  {
+    "version": 4,
+    "name": "authority_scopes",
+    "sha256": "d1d182f0359ea7bba985c7295be812fff8aee41e605eb7e4ad626e7a19e3e16b"
+  },
+  {
+    "version": 5,
+    "name": "quest_governance_and_economy",
+    "sha256": "d413a87040fed12d914992192b9235796d3bb0b427509cc5840b9d03a6b2ea42"
+  },
+  {
+    "version": 6,
+    "name": "quest_completion_review",
+    "sha256": "863df2a3d8f092f30ea96754c89906d5a824f7bd41c5324db7b844bbf8bd4306"
+  }
+]

@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 
 import { runtimeDataDirectory, runtimeDataFile } from "./runtimeData.js";
@@ -885,4 +886,8 @@ export function appliedMigrationVersions() {
       .all()
       .map((row) => Number(row.version)),
   );
+}
+
+export function guildMigrationHistory() {
+  return migrations.map(({ version, name, up }) => ({ version, name, sha256: createHash('sha256').update(up.toString()).digest('hex') }))
 }

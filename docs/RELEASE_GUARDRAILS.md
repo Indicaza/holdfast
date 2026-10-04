@@ -31,3 +31,13 @@ When a test catches a bug, keep the regression assertion. Do not weaken threshol
 The complete backend suite enforces 85% lines, 75% branches, and 90% functions over application modules, with the existing higher authentication and Discord provisioning gates retained. The coverage inventory rejects new source modules missing from the report. `src/index.js` owns process startup and shutdown and is verified through the production artifact smoke test; HTTP middleware and router assembly live in the testable `createApp` factory. CI retains the LCOV report.
 
 The safety mutation smoke test runs disposable copies with the audit permission check and mutation-origin check removed. Each altered copy must fail its targeted business assertion; crashes and syntax errors do not count as catching the regression.
+
+## Recovery and production feedback
+
+The disaster safety gate includes a frozen historical database upgrade and encrypted backup restore verification. See [BACKUP_AND_RECOVERY.md](BACKUP_AND_RECOVERY.md) for storage setup, key custody, retention, restore commands, and the production monitor. Branch protection and backup credentials require owner setup; the hourly production monitor starts after its workflow reaches main.
+
+## Merge the guardrail stack
+
+Merge #122 → #123 → #124 → #125 in that order using **Create a merge commit** to retain branch ancestry. If you choose squash merges, rebase each remaining branch onto main and retarget its PR before merging it. CI must remain green on the resulting merge candidate.
+
+Frontend unit tests cover plain JavaScript helpers; their coverage percentage does not represent React component coverage. The browser gate supplies coverage of rendered workflows. Backend coverage includes every application module except the production process bootstrap, which is exercised by the container smoke.

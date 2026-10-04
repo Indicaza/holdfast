@@ -27,6 +27,7 @@ export async function withHttpApp(run, options = {}) {
     DISCORD_BOT_TOKEN: '',
     TRUSTED_ORIGINS: '',
     TRUST_PROXY: '',
+    BACKUP_OFFSITE_ENABLED: '',
     ...options.env,
   }
   const previous = Object.fromEntries(Object.keys(overrides).map((key) => [key, process.env[key]]))

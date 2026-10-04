@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
-    "test:db-safety": "node --test test/databaseSafety.test.js test/migrationSafety.test.js test/startupBackup.test.js test/legacyJsonImport.test.js",
+    "test:db-safety": "node --test test/databaseSafety.test.js test/migrationSafety.test.js test/startupBackup.test.js test/legacyJsonImport.test.js test/frozenRelease.test.js test/offsiteBackup.test.js",
     "test:auth": "node --test --experimental-test-coverage --test-coverage-include=src/Auth/*.js --test-coverage-lines=95 --test-coverage-branches=85 --test-coverage-functions=93 test/discordAuthConfig.test.js test/discordAuthFlow.test.js test/discordSession.test.js test/oauthReturnTo.test.js test/permissions.test.js test/session.test.js",
     "test:discord": "node --test --experimental-test-coverage --test-coverage-include=src/Discord/provisioning.js --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=90 test/discordProvisioning.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
@@ -20,13 +20,16 @@
     "discord:export": "node scripts/provisionDiscord.js export",
     "discord:prune": "node scripts/provisionDiscord.js prune",
     "test:coverage": "node scripts/testCoverage.js",
-    "test:safety-mutations": "node scripts/checkSafetyMutations.js"
+    "test:safety-mutations": "node scripts/checkSafetyMutations.js",
+    "backup:offsite": "node scripts/offsiteBackup.js",
+    "backup:restore": "node scripts/restoreBackup.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1146.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.1",
     "express": "^5.2.1"
