@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { createEncryptedSnapshot, decryptSnapshot, restoreEncryptedSnapshot, backupKey, MAX_SNAPSHOT_BYTES } from '../src/Data/encryptedBackup.js'
@@ -9,6 +12,16 @@ import { withHttpApp } from '../testSupport/httpHarness.js'
 
 const encryptionKey = 'a1'.repeat(32)
 const configured = { BACKUP_OFFSITE_ENABLED: 'true', BACKUP_S3_BUCKET: 'test-backup', BACKUP_S3_REGION: 'us-east-1', BACKUP_S3_ACCESS_KEY_ID: 'fixture-access', BACKUP_S3_SECRET_ACCESS_KEY: 'fixture-secret', BACKUP_ENCRYPTION_KEY: encryptionKey }
+
+test('invalid enabled backup configuration fails startup before creating or migrating the database', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'holdfast-invalid-backup-startup-'))
+  try {
+    const result = spawnSync(process.execPath, ['src/index.js'], { cwd: new URL('../', import.meta.url), env: { ...process.env, NODE_ENV: 'test', GUILD_DATA_DIR: directory, PORT: '0', ...configured, BACKUP_ENCRYPTION_KEY: 'invalid' }, encoding: 'utf8', timeout: 5000 })
+    assert.equal(result.status, 1, result.stderr)
+    assert.match(result.stderr, /BACKUP_ENCRYPTION_KEY/)
+    assert.equal(existsSync(path.join(directory, 'holdfast.sqlite')), false)
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
 
 test('encrypted snapshots restore a consistent database and provisioning state without overwriting files', () => withHttpApp(async ({ directory }) => {
   await writeFile(path.join(directory, 'discord-provisioning-state.json'), '{"guildId":"fixture-guild"}')

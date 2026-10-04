@@ -7,10 +7,11 @@ import { ensureRuntimeDataDirectory, runtimeDataDirectory } from "./Data/runtime
 import { guildDatabaseFile } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
-import { startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
+import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
 
 dotenv.config();
 assertProductionEnvironment();
+offsiteBackupConfig();
 
 await ensureRuntimeDataDirectory();
 const startupBackup = await backupGuildDatabaseBeforeMigrations();
