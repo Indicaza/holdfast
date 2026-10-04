@@ -8,7 +8,11 @@ import {
   readMemberNotifications,
 } from "./notificationRepository.js";
 
-export function createNotificationRouter() {
+export function createNotificationRouter({
+  readNotifications = readMemberNotifications,
+  markAllRead = markAllNotificationsRead,
+  markRead = markNotificationRead,
+} = {}) {
   const router = Router();
   const writeRateLimit = createRateLimiter({
     name: "notification-write",
@@ -18,7 +22,7 @@ export function createNotificationRouter() {
 
   router.get("/", requireAuthenticated, (req, res) => {
     try {
-      const inbox = readMemberNotifications(req.auth.user.id);
+      const inbox = readNotifications(req.auth.user.id);
       res.set("Cache-Control", "no-store");
       res.json(inbox);
     } catch (error) {
@@ -36,7 +40,7 @@ export function createNotificationRouter() {
     writeRateLimit,
     (req, res) => {
       try {
-        const updated = markAllNotificationsRead(req.auth.user.id);
+        const updated = markAllRead(req.auth.user.id);
         res.set("Cache-Control", "no-store");
         res.json({ updated });
       } catch (error) {
@@ -52,7 +56,7 @@ export function createNotificationRouter() {
     writeRateLimit,
     (req, res) => {
       try {
-        const notification = markNotificationRead(
+        const notification = markRead(
           req.auth.user.id,
           req.params.notificationId,
         );
