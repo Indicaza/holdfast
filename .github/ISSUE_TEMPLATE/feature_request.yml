@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a focused improvement to Holdfast
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Holdfast favors small, durable systems over speculative complexity. Describe the player/member problem first, then the proposed solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What friction or missing capability are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should Holdfast do differently?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Public website / UI
+        - Authentication / Discord
+        - Members / profiles
+        - Quests / rewards
+        - Notifications
+        - Ranks / billets / permissions
+        - Persistence / migrations / backups
+        - Deployment / CI
+        - WoW addon / bridge integration
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope notes
+      description: Constraints, alternatives, mockups, or implementation ideas if you have them.
