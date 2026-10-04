@@ -265,10 +265,8 @@ test("fresh database applies every migration and satisfies the schema contract",
       }
 
       assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5]);
-      assert.deepEqual(db.prepare("PRAGMA quick_check").all(), [
-        { quick_check: "ok" },
-      ]);
-      assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
+      assert.equal(db.prepare("PRAGMA quick_check").get().quick_check, "ok");
+      assert.equal(db.prepare("PRAGMA foreign_key_check").all().length, 0);
     } finally {
       db.close();
     }
@@ -302,22 +300,18 @@ test("persistent guild state survives repeated close and reopen cycles unchanged
       quest: db
         .prepare("SELECT title, publication FROM quests WHERE id = ?")
         .get("safety-quest"),
-      integrity: db.prepare("PRAGMA quick_check").all(),
-      foreignKeys: db.prepare("PRAGMA foreign_key_check").all(),
+      integrity: db.prepare("PRAGMA quick_check").get().quick_check,
+      foreignKeyViolations: db.prepare("PRAGMA foreign_key_check").all().length,
     }));
 
     assert.deepEqual(after.counts, before.counts);
     assert.equal(after.sentinel, "leave-it-stronger");
-    assert.deepEqual(after.member, {
-      display_name: "Safety Member",
-      rank: "Commander",
-    });
-    assert.deepEqual(after.quest, {
-      title: "Safety Quest",
-      publication: "published",
-    });
-    assert.deepEqual(after.integrity, [{ quick_check: "ok" }]);
-    assert.deepEqual(after.foreignKeys, []);
+    assert.equal(after.member.display_name, "Safety Member");
+    assert.equal(after.member.rank, "Commander");
+    assert.equal(after.quest.title, "Safety Quest");
+    assert.equal(after.quest.publication, "published");
+    assert.equal(after.integrity, "ok");
+    assert.equal(after.foreignKeyViolations, 0);
   });
 });
 
@@ -390,8 +384,8 @@ test("legacy JSON cannot overwrite a populated SQLite database", async () => {
         .get(),
     }));
 
-    assert.deepEqual(state.safetyMember, { display_name: "Safety Member" });
+    assert.equal(state.safetyMember.display_name, "Safety Member");
     assert.equal(state.legacyMember, undefined);
-    assert.deepEqual(state.sentinel, { value: "leave-it-stronger" });
+    assert.equal(state.sentinel.value, "leave-it-stronger");
   });
 });
