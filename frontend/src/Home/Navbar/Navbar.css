@@ -126,8 +126,8 @@
 
 .navbar__account-button {
   display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   place-items: center;
   overflow: hidden;
@@ -157,7 +157,7 @@
 
 .navbar__sign-in-button {
   display: inline-flex;
-  min-height: 2.4rem;
+  min-height: 2.75rem;
   align-items: center;
   justify-content: center;
   padding-inline: var(--space-4);
@@ -273,7 +273,7 @@
   }
 
   .navbar__sign-in-button {
-    min-height: 2.25rem;
+    min-height: 2.75rem;
     padding-inline: var(--space-3);
     font-size: 0.65rem;
   }
@@ -285,8 +285,8 @@
 
   .navbar__menu-button {
     display: grid;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
     place-content: center;
     gap: 0.35rem;
     border: var(--border-subtle);

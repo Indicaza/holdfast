@@ -9,6 +9,7 @@
    ============================================================ */
 
 .page-shell:has(.charter) {
+  overflow-x: clip;
   --charter-width: 80rem;
   --charter-copy-width: 64rem;
 
@@ -569,4 +570,71 @@
 
   pointer-events: none;
   z-index: 0;
+}
+
+@media (max-width: 48rem) {
+  .page-shell:has(.charter) .page-shell__main {
+    padding-block: var(--space-8);
+  }
+
+  .page-shell:has(.charter) .page-shell__body {
+    margin-top: 0;
+  }
+
+  .charter {
+    padding: 0 0 var(--space-3);
+  }
+
+  .charter__title {
+    margin-bottom: var(--space-12);
+  }
+
+  .charter__title::before {
+    position: relative;
+    display: block;
+    top: auto;
+    left: auto;
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto var(--space-6);
+    transform: none;
+  }
+
+  .charter__title h1 {
+    font-size: clamp(2.25rem, 9vw, 3.25rem);
+    letter-spacing: 0.035em;
+    overflow-wrap: anywhere;
+  }
+
+  .charter__section h2 {
+    font-size: clamp(1.5rem, 6vw, 2.125rem);
+  }
+
+  .charter__section h2::after {
+    max-width: 100%;
+  }
+
+  .charter__section p,
+  .charter__closing-list li {
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+
+  .charter__section p.charter__callout {
+    padding-inline: var(--space-4);
+  }
+
+  .charter__section p.charter__maxim {
+    font-size: clamp(2rem, 8vw, 3.4375rem);
+  }
+
+  .charter__section p.charter__motto {
+    font-size: clamp(1.25rem, 5vw, 2.125rem);
+  }
+
+  .charter__section:nth-of-type(3)::before,
+  .charter__section:nth-of-type(5)::before,
+  .charter__section:nth-of-type(6)::after {
+    display: none;
+  }
 }

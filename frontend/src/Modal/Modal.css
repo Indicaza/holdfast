@@ -37,8 +37,8 @@
   top: var(--space-4);
   right: var(--space-4);
   display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   place-items: center;
   border: var(--border-subtle);

@@ -253,3 +253,11 @@
     opacity: 0.7;
   }
 }
+
+.join-charter-link,
+.join-member button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+}
