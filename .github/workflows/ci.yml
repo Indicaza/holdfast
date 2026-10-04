@@ -81,7 +81,20 @@ jobs:
 
       - name: Test
         working-directory: backend
-        run: npm test
+        run: npm run test:coverage
+
+      - name: Verify critical safety assertions catch broken guards
+        working-directory: backend
+        run: npm run test:safety-mutations
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/backend.lcov
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Database disaster safety gate
         working-directory: backend
