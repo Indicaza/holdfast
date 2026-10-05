@@ -11,6 +11,7 @@ import {
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
+const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
@@ -70,6 +71,13 @@ const routes = {
     description:
       'Join Holdfast through Discord and create your Holdfast member profile.',
     robots: defaultRobots,
+  },
+  '/guildweaver/connect': {
+    component: GuildweaverConnect,
+    path: '/guildweaver/connect',
+    title: 'Connect Guildweaver | Holdfast',
+    description: 'Securely connect Guildweaver Bridge to your Holdfast member profile.',
+    robots: 'noindex,nofollow',
   },
   '/privacy': {
     component: Privacy,
