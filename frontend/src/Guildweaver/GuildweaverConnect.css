@@ -1,0 +1,94 @@
+.guildweaver-connect-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: #07111f;
+  color: #f4efe4;
+}
+
+.guildweaver-connect-card {
+  width: min(34rem, 100%);
+  border: 1px solid rgba(211, 177, 105, 0.35);
+  background: rgba(8, 20, 35, 0.96);
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35);
+}
+
+.guildweaver-connect-mark {
+  font-size: 2.2rem;
+  color: #d3b169;
+}
+
+.guildweaver-connect-eyebrow {
+  margin: 0.5rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #d3b169;
+  font-weight: 700;
+}
+
+.guildweaver-connect-card h1 {
+  margin: 0.35rem 0 1rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  font-weight: 500;
+}
+
+.guildweaver-connect-copy,
+.guildweaver-connect-note,
+.guildweaver-connect-error,
+.guildweaver-connect-success {
+  line-height: 1.65;
+}
+
+.guildweaver-connect-copy {
+  color: #c8d0dc;
+}
+
+.guildweaver-connect-code {
+  margin: 1.5rem 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.45rem;
+  letter-spacing: 0.16em;
+  color: #f4efe4;
+}
+
+.guildweaver-connect-button {
+  margin-top: 1rem;
+  border: 1px solid #d3b169;
+  background: transparent;
+  color: #e7c77e;
+  padding: 0.9rem 1.3rem;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.guildweaver-connect-button:hover:not(:disabled) {
+  background: rgba(211, 177, 105, 0.1);
+}
+
+.guildweaver-connect-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.guildweaver-connect-success {
+  color: #e7c77e;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.guildweaver-connect-error {
+  color: #ffb4a8;
+}
+
+.guildweaver-connect-note {
+  margin: 2rem 0 0;
+  color: #8f9aaa;
+  font-size: 0.9rem;
+}
