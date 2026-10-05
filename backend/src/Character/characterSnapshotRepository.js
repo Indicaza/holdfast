@@ -25,39 +25,55 @@ function snapshotFromRow(row) {
   };
 }
 
+export function recordCharacterSnapshotInDatabase({
+  db,
+  characterId,
+  source,
+  payload,
+  capturedAt = new Date().toISOString(),
+}) {
+  if (!db || !characterId || !source) {
+    throw new Error("db, characterId, and source are required");
+  }
+
+  const result = db.prepare(
+    `
+      INSERT INTO character_snapshots (
+        character_id,
+        source,
+        captured_at,
+        payload_json
+      ) VALUES (?, ?, ?, ?)
+    `,
+  ).run(
+    String(characterId),
+    String(source),
+    String(capturedAt),
+    JSON.stringify(payload ?? {}),
+  );
+
+  return snapshotFromRow(
+    db
+      .prepare("SELECT * FROM character_snapshots WHERE id = ?")
+      .get(result.lastInsertRowid),
+  );
+}
+
 export async function recordCharacterSnapshot({
   characterId,
   source,
   payload,
   capturedAt = new Date().toISOString(),
 }) {
-  if (!characterId || !source) {
-    throw new Error("characterId and source are required");
-  }
-
-  return withGuildTransaction((db) => {
-    const result = db.prepare(
-      `
-        INSERT INTO character_snapshots (
-          character_id,
-          source,
-          captured_at,
-          payload_json
-        ) VALUES (?, ?, ?, ?)
-      `,
-    ).run(
-      String(characterId),
-      String(source),
-      String(capturedAt),
-      JSON.stringify(payload ?? {}),
-    );
-
-    return snapshotFromRow(
-      db
-        .prepare("SELECT * FROM character_snapshots WHERE id = ?")
-        .get(result.lastInsertRowid),
-    );
-  });
+  return withGuildTransaction((db) =>
+    recordCharacterSnapshotInDatabase({
+      db,
+      characterId,
+      source,
+      payload,
+      capturedAt,
+    }),
+  );
 }
 
 export async function readLatestCharacterSnapshot(characterId) {
