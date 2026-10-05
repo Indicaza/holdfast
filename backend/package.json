@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Holdfast guild operations backend",
   "main": "index.js",
   "scripts": {
     "test": "node --test",
@@ -9,6 +9,7 @@
     "test:auth": "node --test --experimental-test-coverage --test-coverage-include=src/Auth/*.js --test-coverage-lines=95 --test-coverage-branches=85 --test-coverage-functions=93 test/discordAuthConfig.test.js test/discordAuthFlow.test.js test/discordSession.test.js test/oauthReturnTo.test.js test/permissions.test.js test/session.test.js",
     "test:discord": "node --test --experimental-test-coverage --test-coverage-include=src/Discord/provisioning.js --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=90 test/discordProvisioning.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
+    "dev:seed": "node scripts/seedDevelopment.js",
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",
     "backup": "node scripts/backupData.js",
@@ -24,9 +25,13 @@
     "backup:offsite": "node scripts/offsiteBackup.js",
     "backup:restore": "node scripts/restoreBackup.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "guild-management",
+    "world-of-warcraft",
+    "discord"
+  ],
+  "author": "Zach Reitmeier",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-s3": "3.1146.0",

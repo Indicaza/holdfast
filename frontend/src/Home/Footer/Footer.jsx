@@ -17,11 +17,22 @@ function Footer() {
       </div>
 
       <nav className="footer__links" aria-label="Footer navigation">
-        {footerNavigationLinks.map((link) => link.href === '/join' ? (
-          <JoinLink key={link.label}>{link.label}</JoinLink>
-        ) : (
-          <a key={link.label} href={link.href}>{link.label}</a>
-        ))}
+        {footerNavigationLinks.map((link) => {
+          if (link.href === '/join') {
+            return <JoinLink key={link.label}>{link.label}</JoinLink>
+          }
+
+          return (
+            <a
+              key={link.label}
+              href={link.href}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noreferrer' : undefined}
+            >
+              {link.label}
+            </a>
+          )
+        })}
       </nav>
     </footer>
   )

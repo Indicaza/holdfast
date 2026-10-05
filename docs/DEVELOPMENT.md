@@ -5,7 +5,7 @@
 - Node.js 24
 - npm
 - Git
-- Optional: a Discord application and bot for authentication/integration work
+- Optional: a Discord application and bot for real authentication/integration work
 
 The frontend runs on Vite and proxies `/api` to the backend at `http://localhost:3000`.
 
@@ -22,7 +22,14 @@ Backend:
 cd backend
 cp .env.example .env
 npm ci
-npm run dev
+```
+
+Windows PowerShell:
+
+```powershell
+cd backend
+Copy-Item .env.example .env
+npm ci
 ```
 
 Frontend in another terminal:
@@ -33,13 +40,62 @@ npm ci
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
+## Public contributor sandbox
 
-## Environment
+You do not need Holdfast Discord credentials to work on most of the website.
+
+In `backend/.env`, set:
+
+```text
+SESSION_SECRET=local-development-only-change-me
+HOLDFAST_DEV_AUTH=true
+```
+
+Then prepare the local fixture identities and sample quest:
+
+```bash
+cd backend
+npm run dev:seed
+npm run dev
+```
+
+Open the frontend URL shown by Vite, normally `http://localhost:5173`, then choose a local persona by visiting one of these URLs:
+
+```text
+http://localhost:5173/api/dev/login/member
+http://localhost:5173/api/dev/login/officer
+http://localhost:5173/api/dev/login/commander
+```
+
+The routes set the normal signed Holdfast session cookie and return you to the website. From that point forward the application uses the normal database, authority, permissions, and session paths.
+
+The personas are:
+
+- **Member** — Private; useful for ordinary member UX and permission-denied states.
+- **Officer** — Lieutenant; useful for quest/reward/member-management flows.
+- **Commander** — Commander; useful for full administrative UI.
+
+`npm run dev:seed` is conservative:
+
+- it only creates or updates fixture members with `dev-*` IDs
+- it adds sample quests only when the local quest database is empty
+- it does not replace existing quests by default
+- `npm run dev:seed -- --reset-quests` deliberately replaces local quest data with the sample fixture
+
+The development auth surface is defense-in-depth guarded:
+
+- it requires `HOLDFAST_DEV_AUTH=true`
+- it is never enabled when `NODE_ENV=production`
+- production configuration validation rejects `HOLDFAST_DEV_AUTH=true`
+- login fails until the expected seeded rank exists in SQLite
+
+Do not add development identities, bypasses, or fixtures to production-specific code paths.
+
+## Real Discord development
 
 `backend/.env.example` documents every supported backend variable.
 
-For ordinary local UI/API development, keep production-only values unset. Discord login, guild membership checks, and provisioning commands require valid Discord credentials.
+Discord login, guild membership checks, rank/billet synchronization, and provisioning commands require valid Discord credentials. Contributors working on those boundaries should use their own disposable development application/server rather than production Holdfast credentials.
 
 Never commit `.env`, tokens, session secrets, SQLite files, backups, or exported live Discord state.
 
@@ -48,6 +104,26 @@ Never commit `.env`, tokens, session secrets, SQLite files, backups, or exported
 Local mutable state defaults to `backend/data/` and is ignored by Git. `GUILD_DATA_DIR` can override the location.
 
 Production data is not seed data and should never be copied into the repository for debugging.
+
+If you already have valuable local data, back it up before intentionally using `--reset-quests` or experimenting with persistence code.
+
+## Running the app
+
+Backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
 
 ## Tests
 
