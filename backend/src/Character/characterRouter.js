@@ -163,6 +163,11 @@ export function createCharacterRouter() {
           return;
         }
 
+        if (result.status === "already-approved") {
+          res.status(409).json({ error: "pairing_already_approved" });
+          return;
+        }
+
         res.set("Cache-Control", "no-store");
         res.json({
           status: "approved",
