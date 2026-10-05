@@ -7,6 +7,7 @@ import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
+import { createCharacterRouter } from "./Character/characterRouter.js";
 import {
   createDevelopmentAuthRouter,
   developmentAuthEnabled,
@@ -47,6 +48,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   );
   app.use(express.json({ limit: "256kb" }));
   app.use(attachSession);
+  app.use("/api/bridge", createCharacterRouter());
   app.use("/api", requireTrustedMutationOrigin);
 
   async function readiness(req, res) {
