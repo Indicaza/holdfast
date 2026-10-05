@@ -126,11 +126,23 @@ export function approveGuildweaverPairing({ userCode, memberId }) {
       return { status: "consumed" };
     }
 
+    if (pairing.status === "approved") {
+      if (pairing.member_id !== member.id) {
+        return { status: "already-approved" };
+      }
+
+      return {
+        status: "approved",
+        memberId: member.id,
+        deviceName: pairing.device_name,
+      };
+    }
+
     db.prepare(
       `
         UPDATE guildweaver_pairings
         SET status = 'approved', member_id = ?, approved_at = ?
-        WHERE id = ?
+        WHERE id = ? AND status = 'pending'
       `,
     ).run(member.id, now, pairing.id);
 
