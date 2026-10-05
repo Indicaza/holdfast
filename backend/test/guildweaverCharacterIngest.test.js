@@ -4,8 +4,6 @@ import assert from "node:assert/strict";
 import { readLatestCharacterSnapshot } from "../src/Character/characterSnapshotRepository.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
-const bridgeToken = "guildweaver-http-test-token-at-least-32-bytes";
-
 function snapshot(overrides = {}) {
   return {
     schemaVersion: 1,
@@ -31,83 +29,102 @@ function snapshot(overrides = {}) {
   };
 }
 
-test("Guildweaver bridge requires its bearer token", async () => {
-  await withHttpApp(
-    async ({ request }) => {
-      const response = await request("/api/bridge/characters/snapshot", {
-        method: "POST",
-        body: {
-          memberId: memberIds.member,
-          revision: 1,
-          snapshot: snapshot(),
-        },
-      });
+async function pairDevice(request, persona = "member") {
+  const started = await request("/api/bridge/pairing/start", {
+    method: "POST",
+    body: { deviceName: "Character ingest test" },
+  });
 
-      assert.equal(response.status, 401);
-      assert.equal(response.json.error, "invalid_bridge_token");
-    },
-    { env: { GUILDWEAVER_BRIDGE_TOKEN: bridgeToken } },
-  );
+  assert.equal(started.status, 201);
+
+  const approved = await request("/api/bridge/pairing/approve", {
+    persona,
+    method: "POST",
+    body: { userCode: started.json.userCode },
+  });
+
+  assert.equal(approved.status, 200);
+
+  const exchanged = await request("/api/bridge/pairing/token", {
+    method: "POST",
+    body: { deviceCode: started.json.deviceCode },
+  });
+
+  assert.equal(exchanged.status, 200);
+  assert.match(exchanged.json.deviceToken, /^gwd_/);
+
+  return exchanged.json.deviceToken;
+}
+
+test("Guildweaver character ingest requires a paired device credential", async () => {
+  await withHttpApp(async ({ request }) => {
+    const response = await request("/api/bridge/characters/snapshot", {
+      method: "POST",
+      body: {
+        revision: 1,
+        snapshot: snapshot(),
+      },
+    });
+
+    assert.equal(response.status, 401);
+    assert.equal(response.json.error, "invalid_device_token");
+  });
 });
 
-test("Guildweaver bridge seeds a member character and retains the raw snapshot", async () => {
-  await withHttpApp(
-    async ({ request }) => {
-      const response = await request("/api/bridge/characters/snapshot", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${bridgeToken}` },
-        body: {
-          memberId: memberIds.member,
-          revision: 7,
-          snapshot: snapshot(),
-        },
-      });
+test("Guildweaver paired device seeds a member character and retains the raw snapshot", async () => {
+  await withHttpApp(async ({ request }) => {
+    const deviceToken = await pairDevice(request);
+    const response = await request("/api/bridge/characters/snapshot", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${deviceToken}` },
+      body: {
+        memberId: memberIds.officer,
+        revision: 7,
+        snapshot: snapshot(),
+      },
+    });
 
-      assert.equal(response.status, 201);
-      assert.equal(response.json.status, "created");
-      assert.equal(response.json.revision, 7);
-      assert.equal(response.json.character.name, "Rook Ravenstar");
-      assert.deepEqual(response.json.character.professions, ["Mining", "Blacksmithing"]);
+    assert.equal(response.status, 201);
+    assert.equal(response.json.status, "created");
+    assert.equal(response.json.revision, 7);
+    assert.equal(response.json.memberId, memberIds.member);
+    assert.equal(response.json.character.name, "Rook Ravenstar");
+    assert.deepEqual(response.json.character.professions, ["Mining", "Blacksmithing"]);
 
-      const memberResponse = await request(`/api/guild/members/${memberIds.member}`, {
-        persona: "member",
-      });
+    const memberResponse = await request(`/api/guild/members/${memberIds.member}`, {
+      persona: "member",
+    });
 
-      assert.equal(memberResponse.status, 200);
-      const character = memberResponse.json.member.profile.characters.find(
-        (item) => item.name === "Rook Ravenstar",
-      );
-      assert.ok(character);
-      assert.equal(character.className, "Warrior");
-      assert.equal(character.spec, "Arms");
-      assert.deepEqual(character.professions, ["Mining", "Blacksmithing"]);
+    assert.equal(memberResponse.status, 200);
+    const character = memberResponse.json.member.profile.characters.find(
+      (item) => item.name === "Rook Ravenstar",
+    );
+    assert.ok(character);
+    assert.equal(character.className, "Warrior");
+    assert.equal(character.spec, "Arms");
+    assert.deepEqual(character.professions, ["Mining", "Blacksmithing"]);
 
-      const stored = await readLatestCharacterSnapshot(character.id);
-      assert.equal(stored.source, "guildweaver");
-      assert.equal(stored.payload.level, 20);
-      assert.equal(stored.payload.realm, "Classic Beta PvE 2");
-      assert.equal(stored.payload.equipment[0].slot, "MainHandSlot");
-    },
-    { env: { GUILDWEAVER_BRIDGE_TOKEN: bridgeToken } },
-  );
+    const stored = await readLatestCharacterSnapshot(character.id);
+    assert.equal(stored.source, "guildweaver");
+    assert.equal(stored.payload.level, 20);
+    assert.equal(stored.payload.realm, "Classic Beta PvE 2");
+    assert.equal(stored.payload.equipment[0].slot, "MainHandSlot");
+  });
 });
 
-test("Guildweaver bridge rejects unsupported snapshot schemas", async () => {
-  await withHttpApp(
-    async ({ request }) => {
-      const response = await request("/api/bridge/characters/snapshot", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${bridgeToken}` },
-        body: {
-          memberId: memberIds.member,
-          revision: 1,
-          snapshot: snapshot({ schemaVersion: 99 }),
-        },
-      });
+test("Guildweaver paired device rejects unsupported snapshot schemas", async () => {
+  await withHttpApp(async ({ request }) => {
+    const deviceToken = await pairDevice(request);
+    const response = await request("/api/bridge/characters/snapshot", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${deviceToken}` },
+      body: {
+        revision: 1,
+        snapshot: snapshot({ schemaVersion: 99 }),
+      },
+    });
 
-      assert.equal(response.status, 400);
-      assert.equal(response.json.error, "unsupported_snapshot_schema");
-    },
-    { env: { GUILDWEAVER_BRIDGE_TOKEN: bridgeToken } },
-  );
+    assert.equal(response.status, 400);
+    assert.equal(response.json.error, "unsupported_snapshot_schema");
+  });
 });
