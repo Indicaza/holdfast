@@ -14,6 +14,7 @@ import {
 } from "./Development/developmentAuth.js";
 import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
+import { createGuildweaverQuestRouter } from "./Quest/guildweaverQuestRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
 import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
@@ -49,6 +50,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   app.use(express.json({ limit: "256kb" }));
   app.use(attachSession);
   app.use("/api/bridge", createCharacterRouter());
+  app.use("/api/bridge", createGuildweaverQuestRouter());
   app.use("/api", requireTrustedMutationOrigin);
 
   async function readiness(req, res) {
