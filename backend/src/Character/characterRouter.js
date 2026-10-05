@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { publicWebsiteUrl } from "../Config/environment.js";
 import {
   createRateLimiter,
   requireTrustedMutationOrigin,
@@ -64,7 +65,8 @@ export function createCharacterRouter() {
       const pairing = startGuildweaverPairing({
         deviceName: req.body?.deviceName,
       });
-      const verificationUri = `${req.protocol}://${req.get("host")}/guildweaver/connect?code=${encodeURIComponent(pairing.userCode)}`;
+      const baseUrl = publicWebsiteUrl().replace(/\/+$/, "");
+      const verificationUri = `${baseUrl}/guildweaver/connect?code=${encodeURIComponent(pairing.userCode)}`;
 
       res.set("Cache-Control", "no-store");
       res.status(201).json({
