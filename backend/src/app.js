@@ -7,6 +7,7 @@ import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
 import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
+import { createCharacterRouter } from "./Character/characterRouter.js";
 import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
@@ -26,7 +27,6 @@ import {
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
 
-
 export function createApp({ discordAuthOptions } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
@@ -44,6 +44,7 @@ export function createApp({ discordAuthOptions } = {}) {
   );
   app.use(express.json({ limit: "256kb" }));
   app.use(attachSession);
+  app.use("/api/bridge", createCharacterRouter());
   app.use("/api", requireTrustedMutationOrigin);
 
   async function readiness(req, res) {
