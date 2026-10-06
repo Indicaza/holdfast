@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
+import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
 import {
   readCharacterArmory,
-  readIntelligenceSummary,
   searchRecipes,
 } from "./telemetryProjection.js";
 
@@ -14,7 +14,7 @@ export function createIntelligenceRouter() {
   router.get("/", requireAuthenticated, (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
-      res.json(readIntelligenceSummary());
+      res.json(readSyncedIntelligenceSummary());
     } catch (error) {
       console.error("Unable to read guild intelligence", error);
       res.status(500).json({ error: "intelligence_unavailable" });
