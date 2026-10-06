@@ -1,13 +1,13 @@
 .guildweaver-page .page-shell__main {
-  padding-top: clamp(var(--space-14), 9vw, var(--space-24));
+  padding-top: clamp(var(--space-12), 9vw, var(--space-20));
 }
 
 .guildweaver-page .page-shell__body {
   display: grid;
   width: min(100%, 58rem);
   max-width: none;
-  gap: clamp(var(--space-16), 10vw, var(--space-24));
-  margin-top: clamp(var(--space-14), 8vw, var(--space-20));
+  gap: clamp(var(--space-16), 10vw, var(--space-20));
+  margin-top: clamp(var(--space-12), 8vw, var(--space-20));
 }
 
 .guildweaver-page .page-shell__intro {
@@ -15,6 +15,13 @@
   margin-inline: auto;
   line-height: 1.7;
   text-wrap: pretty;
+}
+
+.guildweaver-page button,
+.guildweaver-page a {
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0px;
+  --interactive-press-scale: 1;
 }
 
 .guildweaver-download-panel {
@@ -345,7 +352,7 @@
 @media (max-width: 46rem) {
   .guildweaver-page .page-shell__body {
     gap: var(--space-16);
-    margin-top: var(--space-14);
+    margin-top: var(--space-12);
   }
 
   .guildweaver-download-panel {
