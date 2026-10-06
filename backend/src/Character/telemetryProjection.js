@@ -43,8 +43,13 @@ function entityName(value) {
 }
 
 function iconFileId(value) {
+  const icon = value?.icon;
   return integer(
-    value?.iconFileID ?? value?.iconFileId ?? value?.icon?.fileDataID ?? value?.icon?.fileDataId,
+    value?.iconFileID ??
+      value?.iconFileId ??
+      (typeof icon === "number" || typeof icon === "string" ? icon : null) ??
+      icon?.fileDataID ??
+      icon?.fileDataId,
   );
 }
 
@@ -58,13 +63,63 @@ function recipeKey(recipe) {
   return id ? `id:${id}` : `name:${slug(entityName(recipe))}`;
 }
 
-function normalizeReagent(reagent) {
+function itemLinkName(value) {
+  if (typeof value !== "string") return "";
+  return text(value.match(/\[([^\]]+)\]/)?.[1], 160);
+}
+
+function normalizeReagent(reagent, slot = null) {
   return {
     itemId: integer(reagent?.itemID ?? reagent?.itemId ?? reagent?.id),
+    currencyId: integer(reagent?.currencyID ?? reagent?.currencyId),
     name: entityName(reagent?.item ?? reagent),
-    quantity: integer(reagent?.quantity ?? reagent?.count ?? reagent?.required, 0) ?? 0,
+    quantity:
+      integer(
+        reagent?.quantity ??
+          reagent?.quantityRequired ??
+          reagent?.count ??
+          slot?.quantityRequired ??
+          reagent?.required,
+        0,
+      ) ?? 0,
     iconFileId: iconFileId(reagent),
+    slotIndex: integer(slot?.slotIndex),
+    required: slot?.required === undefined ? null : Boolean(slot.required),
   };
+}
+
+function normalizeRecipeReagents(raw) {
+  const result = [];
+
+  for (const entry of array(raw?.reagents ?? raw?.materials)) {
+    if (Array.isArray(entry?.reagents)) {
+      for (const reagent of entry.reagents) {
+        result.push(normalizeReagent(reagent, entry));
+      }
+      continue;
+    }
+
+    result.push(normalizeReagent(entry));
+  }
+
+  return result;
+}
+
+function gameBuildLabel(snapshot) {
+  const raw = snapshot?.gameBuild ?? snapshot?.build ?? snapshot?.gameVersion;
+  if (raw === null || raw === undefined) return "";
+  if (typeof raw !== "object" || Array.isArray(raw)) return text(raw, 96);
+
+  const version = text(raw.version, 40);
+  const build = text(raw.build, 40);
+  const interfaceVersion = text(raw.interface ?? raw.interfaceVersion, 20);
+  const parts = [];
+
+  if (version) parts.push(version);
+  if (build) parts.push(`build ${build}`);
+  if (interfaceVersion) parts.push(`interface ${interfaceVersion}`);
+
+  return text(parts.join(" · "), 96);
 }
 
 export function normalizeProfessions(snapshot) {
@@ -103,7 +158,8 @@ export function normalizeRecipes(snapshot, professions = normalizeProfessions(sn
     if (seen.has(key)) return;
     seen.add(key);
 
-    const professionName = entityName(raw?.profession) || profession?.name || "";
+    const professionName =
+      text(raw?.professionName, 96) || entityName(raw?.profession) || profession?.name || "";
     const professionId = integer(
       raw?.professionID ?? raw?.professionId ?? raw?.profession?.id ?? profession?.id,
     );
@@ -113,15 +169,22 @@ export function normalizeRecipes(snapshot, professions = normalizeProfessions(sn
       id: integer(raw?.id ?? raw?.recipeID ?? raw?.recipeId),
       name: entityName(raw) || "Unknown recipe",
       iconFileId: iconFileId(raw),
-      professionKey: professionId ? `id:${professionId}` : profession?.key || `name:${slug(professionName)}`,
+      professionKey: professionId
+        ? `id:${professionId}`
+        : profession?.key || `name:${slug(professionName)}`,
       professionId,
       professionName,
       known: raw?.known === undefined ? true : Boolean(raw.known),
-      requiredSkill: integer(raw?.requiredSkill ?? raw?.requirements?.skill ?? raw?.skillRequired),
+      requiredSkill: integer(
+        raw?.requiredSkill ?? raw?.requirements?.skill ?? raw?.skillRequired,
+      ),
       requirements: raw?.requirements ?? null,
-      craftedItemId: integer(raw?.craftedItemID ?? raw?.craftedItemId ?? raw?.craftedItem?.id),
-      craftedItemName: entityName(raw?.craftedItem),
-      reagents: array(raw?.reagents ?? raw?.materials).map(normalizeReagent),
+      craftedItemId: integer(
+        raw?.craftedItemID ?? raw?.craftedItemId ?? raw?.craftedItem?.id,
+      ),
+      craftedItemName:
+        entityName(raw?.craftedItem) || itemLinkName(raw?.craftedItemLink),
+      reagents: normalizeRecipeReagents(raw),
     });
   }
 
@@ -217,7 +280,13 @@ export function ensureTelemetryProjectionSchema(db) {
   `);
 }
 
-export function projectTelemetrySnapshotInDatabase({ db, characterId, snapshotId, snapshot, capturedAt }) {
+export function projectTelemetrySnapshotInDatabase({
+  db,
+  characterId,
+  snapshotId,
+  snapshot,
+  capturedAt,
+}) {
   ensureTelemetryProjectionSchema(db);
   const organization = normalizeOrganization(snapshot);
   const professions = normalizeProfessions(snapshot);
@@ -258,14 +327,18 @@ export function projectTelemetrySnapshotInDatabase({ db, characterId, snapshotId
     guildName,
     integer(snapshot?.level, 0) ?? 0,
     integer(snapshot?.schemaVersion, 0) ?? 0,
-    text(snapshot?.gameBuild ?? snapshot?.build ?? snapshot?.gameVersion?.build ?? snapshot?.gameVersion, 96),
+    gameBuildLabel(snapshot),
     snapshotId,
     text(snapshot?.lastSeen ?? capturedAt, 48) || capturedAt,
     now,
   );
 
-  db.prepare("DELETE FROM telemetry_professions WHERE character_id = ?").run(characterId);
-  db.prepare("DELETE FROM telemetry_recipes WHERE character_id = ?").run(characterId);
+  db.prepare("DELETE FROM telemetry_professions WHERE character_id = ?").run(
+    characterId,
+  );
+  db.prepare("DELETE FROM telemetry_recipes WHERE character_id = ?").run(
+    characterId,
+  );
 
   const insertProfession = db.prepare(`
     INSERT INTO telemetry_professions (
@@ -319,15 +392,40 @@ export function projectTelemetrySnapshotInDatabase({ db, characterId, snapshotId
 }
 
 function equipmentSlot(raw, index) {
-  const slot = text(raw?.slot ?? raw?.slotName ?? raw?.inventorySlot ?? raw?.slotId ?? index, 48);
+  const slot = text(
+    raw?.slot ?? raw?.slotName ?? raw?.inventorySlot ?? raw?.slotId ?? index,
+    48,
+  );
+  const enchantId = integer(raw?.enchantID ?? raw?.enchantId);
+  const gemIds = array(raw?.gemIDs ?? raw?.gemIds)
+    .map((value) => integer(value))
+    .filter((value) => value !== null);
+  const bonusIds = array(raw?.bonusIDs ?? raw?.bonusIds)
+    .map((value) => integer(value))
+    .filter((value) => value !== null);
+  const modifierData = array(raw?.modifierData ?? raw?.modifiers);
+  const enchant =
+    raw?.enchant ??
+    raw?.enchantment ??
+    raw?.modifier ??
+    (enchantId || gemIds.length || bonusIds.length || modifierData.length
+      ? { id: enchantId, gemIds, bonusIds, modifierData }
+      : null);
+
   return {
     slot,
+    slotId: integer(raw?.slotId),
     itemId: integer(raw?.itemID ?? raw?.itemId ?? raw?.id),
     itemLink: text(raw?.itemLink ?? raw?.link, 1000),
+    itemString: text(raw?.itemString, 1000),
     name: entityName(raw?.item ?? raw) || text(raw?.itemName, 160),
     quality: integer(raw?.quality),
     itemLevel: integer(raw?.itemLevel ?? raw?.ilevel ?? raw?.level),
-    enchant: raw?.enchant ?? raw?.enchantment ?? raw?.modifier ?? raw?.modifiers ?? null,
+    enchant,
+    enchantId,
+    gemIds,
+    bonusIds,
+    modifierData,
     iconFileId: iconFileId(raw),
   };
 }
@@ -336,7 +434,9 @@ export function normalizeEquipment(snapshot) {
   const source = Array.isArray(snapshot?.equipment)
     ? snapshot.equipment
     : array(snapshot?.equipment?.slots ?? snapshot?.gear);
-  return source.map(equipmentSlot).filter((item) => item.slot || item.itemId || item.name);
+  return source
+    .map(equipmentSlot)
+    .filter((item) => item.slot || item.itemId || item.name);
 }
 
 function talentEntry(raw) {
@@ -349,41 +449,110 @@ function talentEntry(raw) {
     iconFileId: iconFileId(raw),
     selected: Boolean(raw?.selected ?? raw?.isSelected ?? raw?.active),
     rank: integer(raw?.rank ?? raw?.currentRank, 0) ?? 0,
-    maxRank: integer(raw?.maxRank ?? raw?.ranks, 0) ?? 0,
+    maxRank: integer(raw?.maxRank ?? raw?.maxRanks ?? raw?.ranks, 0) ?? 0,
+  };
+}
+
+function normalizeTalentNode(node, index, treeId = null) {
+  const entries = array(node?.entries).map(talentEntry);
+  const selectedId = integer(node?.selectedEntryID ?? node?.selectedEntryId);
+  if (selectedId !== null) {
+    for (const entry of entries) {
+      entry.selected = entry.selected || entry.id === selectedId;
+    }
+  }
+
+  return {
+    id: integer(node?.id ?? node?.nodeID ?? node?.nodeId, index) ?? index,
+    treeId,
+    x: finiteNumber(node?.x ?? node?.posX ?? node?.position?.x, 0) ?? 0,
+    y: finiteNumber(node?.y ?? node?.posY ?? node?.position?.y, 0) ?? 0,
+    type: text(node?.type, 48),
+    rank:
+      integer(
+        node?.rank ??
+          node?.currentRank ??
+          node?.activeRank ??
+          node?.ranksPurchased,
+        0,
+      ) ?? 0,
+    maxRank: integer(node?.maxRank ?? node?.maxRanks, 0) ?? 0,
+    selected:
+      Boolean(node?.selected ?? node?.active) ||
+      entries.some((entry) => entry.selected),
+    entries,
+  };
+}
+
+function normalizeTalentEdge(edge, treeId = null) {
+  return {
+    treeId,
+    from: integer(
+      edge?.from ??
+        edge?.source ??
+        edge?.sourceNodeId ??
+        edge?.sourceNodeID ??
+        edge?.fromNodeID ??
+        edge?.fromNodeId,
+    ),
+    to: integer(
+      edge?.to ??
+        edge?.target ??
+        edge?.targetNodeId ??
+        edge?.targetNodeID ??
+        edge?.toNodeID ??
+        edge?.toNodeId,
+    ),
+    required: edge?.required === undefined ? true : Boolean(edge.required),
+    active: edge?.isActive === undefined ? null : Boolean(edge.isActive),
+    type: edge?.type ?? null,
   };
 }
 
 export function normalizeTalents(snapshot) {
   const raw = object(snapshot?.talents ?? snapshot?.talentTree);
-  const nodes = array(raw.nodes ?? snapshot?.talentNodes).map((node, index) => {
-    const entries = array(node?.entries).map(talentEntry);
-    const selectedId = integer(node?.selectedEntryID ?? node?.selectedEntryId);
-    if (selectedId !== null) {
-      for (const entry of entries) entry.selected = entry.selected || entry.id === selectedId;
-    }
-    return {
-      id: integer(node?.id ?? node?.nodeID ?? node?.nodeId, index) ?? index,
-      x: finiteNumber(node?.x ?? node?.posX ?? node?.position?.x, 0) ?? 0,
-      y: finiteNumber(node?.y ?? node?.posY ?? node?.position?.y, 0) ?? 0,
-      type: text(node?.type, 48),
-      rank: integer(node?.rank ?? node?.currentRank, 0) ?? 0,
-      maxRank: integer(node?.maxRank, 0) ?? 0,
-      selected: Boolean(node?.selected ?? node?.active) || entries.some((entry) => entry.selected),
-      entries,
-    };
-  });
+  const trees = array(raw.trees);
+  const nodes = [];
+  const edges = [];
 
-  const edges = array(raw.edges ?? raw.connections ?? snapshot?.talentEdges).map((edge) => ({
-    from: integer(edge?.from ?? edge?.source ?? edge?.fromNodeID ?? edge?.fromNodeId),
-    to: integer(edge?.to ?? edge?.target ?? edge?.toNodeID ?? edge?.toNodeId),
-    required: edge?.required === undefined ? true : Boolean(edge.required),
-  })).filter((edge) => edge.from !== null && edge.to !== null);
+  if (trees.length) {
+    for (const tree of trees) {
+      const treeId = integer(tree?.id ?? tree?.treeID ?? tree?.treeId);
+      const nodeOffset = nodes.length;
+      for (const [index, node] of array(tree?.nodes).entries()) {
+        nodes.push(normalizeTalentNode(node, nodeOffset + index, treeId));
+      }
+      for (const edge of array(tree?.edges ?? tree?.connections)) {
+        const normalized = normalizeTalentEdge(edge, treeId);
+        if (normalized.from !== null && normalized.to !== null) edges.push(normalized);
+      }
+    }
+  } else {
+    for (const [index, node] of array(raw.nodes ?? snapshot?.talentNodes).entries()) {
+      nodes.push(normalizeTalentNode(node, index));
+    }
+    for (const edge of array(raw.edges ?? raw.connections ?? snapshot?.talentEdges)) {
+      const normalized = normalizeTalentEdge(edge);
+      if (normalized.from !== null && normalized.to !== null) edges.push(normalized);
+    }
+  }
+
+  const treeIds = trees.length
+    ? trees
+        .map((tree) => integer(tree?.id ?? tree?.treeID ?? tree?.treeId))
+        .filter((value) => value !== null)
+    : array(raw.treeIds ?? raw.treeIDs)
+        .map((value) => integer(value))
+        .filter((value) => value !== null);
 
   return {
     configId: integer(raw?.configID ?? raw?.configId ?? snapshot?.talentConfigID),
-    treeId: integer(raw?.treeID ?? raw?.treeId),
+    treeId: integer(raw?.treeID ?? raw?.treeId, treeIds[0] ?? null),
+    treeIds,
     specId: integer(raw?.specID ?? raw?.specId ?? snapshot?.specialization?.id),
     name: entityName(raw) || text(snapshot?.specialization?.name, 96),
+    pointsSpent: integer(raw?.pointsSpent),
+    pointsAvailable: integer(raw?.pointsAvailable),
     nodes,
     edges,
   };
@@ -393,7 +562,9 @@ function stats(snapshot) {
   const source = object(snapshot?.stats ?? snapshot?.attributes);
   const result = {};
   for (const [key, value] of Object.entries(source)) {
-    if (["string", "number", "boolean"].includes(typeof value)) result[text(key, 48)] = value;
+    if (["string", "number", "boolean"].includes(typeof value)) {
+      result[text(key, 48)] = value;
+    }
   }
   return result;
 }
@@ -403,7 +574,8 @@ function professionFromRow(row) {
     key: row.profession_key,
     id: row.profession_id === null ? null : Number(row.profession_id),
     name: row.name,
-    iconFileId: row.icon_file_id === null ? null : Number(row.icon_file_id),
+    iconFileId:
+      row.icon_file_id === null ? null : Number(row.icon_file_id),
     current: Number(row.skill_current) || 0,
     max: Number(row.skill_max) || 0,
     modifier: Number(row.skill_modifier) || 0,
@@ -417,13 +589,16 @@ function recipeFromRow(row) {
     id: row.recipe_id === null ? null : Number(row.recipe_id),
     name: row.name,
     professionKey: row.profession_key,
-    professionId: row.profession_id === null ? null : Number(row.profession_id),
+    professionId:
+      row.profession_id === null ? null : Number(row.profession_id),
     professionName: row.profession_name,
     iconFileId: row.icon_file_id === null ? null : Number(row.icon_file_id),
     known: Boolean(row.known),
-    requiredSkill: row.required_skill === null ? null : Number(row.required_skill),
+    requiredSkill:
+      row.required_skill === null ? null : Number(row.required_skill),
     requirements: parseJson(row.requirements_json, null),
-    craftedItemId: row.crafted_item_id === null ? null : Number(row.crafted_item_id),
+    craftedItemId:
+      row.crafted_item_id === null ? null : Number(row.crafted_item_id),
     craftedItemName: row.crafted_item_name,
     reagents: parseJson(row.reagents_json, []),
   };
@@ -431,7 +606,8 @@ function recipeFromRow(row) {
 
 function characterRows(db) {
   ensureTelemetryProjectionSchema(db);
-  return db.prepare(`
+  return db
+    .prepare(`
     SELECT
       c.id, c.member_id, c.name, c.race, c.class_name, c.spec, c.is_main,
       m.display_name AS member_name, m.rank AS member_rank,
@@ -442,7 +618,8 @@ function characterRows(db) {
     JOIN members m ON m.id = c.member_id AND m.status = 'active'
     LEFT JOIN telemetry_characters t ON t.character_id = c.id
     LEFT JOIN telemetry_organizations o ON o.id = t.organization_id
-  `).all();
+  `)
+    .all();
 }
 
 export function readIntelligenceSummary() {
@@ -463,37 +640,59 @@ export function readIntelligenceSummary() {
       isMain: Boolean(row.is_main),
     }));
 
-    const professions = db.prepare(`
+    const professions = db
+      .prepare(`
       SELECT p.name, COUNT(DISTINCT p.character_id) AS characters
       FROM telemetry_professions p
       JOIN characters c ON c.id = p.character_id
       JOIN members m ON m.id = c.member_id AND m.status = 'active'
       GROUP BY p.name COLLATE NOCASE
       ORDER BY characters DESC, p.name COLLATE NOCASE
-    `).all().map((row) => ({ name: row.name, characters: Number(row.characters) || 0 }));
+    `)
+      .all()
+      .map((row) => ({
+        name: row.name,
+        characters: Number(row.characters) || 0,
+      }));
 
-    const recipeCount = Number(db.prepare(`
+    const recipeCount = Number(
+      db
+        .prepare(`
       SELECT COUNT(*) AS count FROM telemetry_recipes r
       JOIN characters c ON c.id = r.character_id
       JOIN members m ON m.id = c.member_id AND m.status = 'active'
       WHERE r.known = 1
-    `).get()?.count || 0);
+    `)
+        .get()?.count || 0,
+    );
 
-    const classDistribution = db.prepare(`
+    const classDistribution = db
+      .prepare(`
       SELECT c.class_name AS name, COUNT(*) AS count
       FROM characters c JOIN members m ON m.id = c.member_id AND m.status = 'active'
       WHERE c.class_name <> ''
       GROUP BY c.class_name COLLATE NOCASE
       ORDER BY count DESC, name COLLATE NOCASE
-    `).all().map((row) => ({ name: row.name, count: Number(row.count) || 0 }));
+    `)
+      .all()
+      .map((row) => ({
+        name: row.name,
+        count: Number(row.count) || 0,
+      }));
 
-    const specDistribution = db.prepare(`
+    const specDistribution = db
+      .prepare(`
       SELECT c.spec AS name, COUNT(*) AS count
       FROM characters c JOIN members m ON m.id = c.member_id AND m.status = 'active'
       WHERE c.spec <> ''
       GROUP BY c.spec COLLATE NOCASE
       ORDER BY count DESC, name COLLATE NOCASE
-    `).all().map((row) => ({ name: row.name, count: Number(row.count) || 0 }));
+    `)
+      .all()
+      .map((row) => ({
+        name: row.name,
+        count: Number(row.count) || 0,
+      }));
 
     return {
       summary: {
@@ -501,7 +700,9 @@ export function readIntelligenceSummary() {
         professionCount: professions.length,
         recipeCount,
       },
-      characters: [...characters].sort((a, b) => String(b.lastSeenAt || "").localeCompare(String(a.lastSeenAt || ""))),
+      characters: [...characters].sort((a, b) =>
+        String(b.lastSeenAt || "").localeCompare(String(a.lastSeenAt || "")),
+      ),
       professions,
       classDistribution,
       specDistribution,
@@ -511,24 +712,44 @@ export function readIntelligenceSummary() {
 
 export function readCharacterArmory(characterId) {
   return withGuildDatabase((db) => {
-    const row = characterRows(db).find((item) => item.id === String(characterId));
+    const row = characterRows(db).find(
+      (item) => item.id === String(characterId),
+    );
     if (!row) return null;
 
     let payload = {};
     if (row.latest_snapshot_id) {
       payload = parseJson(
-        db.prepare("SELECT payload_json FROM character_snapshots WHERE id = ?").get(row.latest_snapshot_id)?.payload_json,
+        db
+          .prepare(
+            "SELECT payload_json FROM character_snapshots WHERE id = ?",
+          )
+          .get(row.latest_snapshot_id)?.payload_json,
         {},
       );
     } else {
       payload = parseJson(
-        db.prepare("SELECT payload_json FROM character_snapshots WHERE character_id = ? ORDER BY captured_at DESC, id DESC LIMIT 1").get(row.id)?.payload_json,
+        db
+          .prepare(
+            "SELECT payload_json FROM character_snapshots WHERE character_id = ? ORDER BY captured_at DESC, id DESC LIMIT 1",
+          )
+          .get(row.id)?.payload_json,
         {},
       );
     }
 
-    const professions = db.prepare("SELECT * FROM telemetry_professions WHERE character_id = ? ORDER BY name COLLATE NOCASE").all(row.id).map(professionFromRow);
-    const recipes = db.prepare("SELECT * FROM telemetry_recipes WHERE character_id = ? ORDER BY profession_name COLLATE NOCASE, name COLLATE NOCASE").all(row.id).map(recipeFromRow);
+    const professions = db
+      .prepare(
+        "SELECT * FROM telemetry_professions WHERE character_id = ? ORDER BY name COLLATE NOCASE",
+      )
+      .all(row.id)
+      .map(professionFromRow);
+    const recipes = db
+      .prepare(
+        "SELECT * FROM telemetry_recipes WHERE character_id = ? ORDER BY profession_name COLLATE NOCASE, name COLLATE NOCASE",
+      )
+      .all(row.id)
+      .map(recipeFromRow);
 
     return {
       character: {
@@ -541,13 +762,17 @@ export function readCharacterArmory(characterId) {
         className: entityName(payload?.class) || row.class_name,
         spec: entityName(payload?.specialization) || row.spec,
         level: integer(payload?.level, Number(row.level) || 0) ?? 0,
-        realm: text(payload?.realm ?? payload?.realmName, 96) || row.realm || "",
+        realm:
+          text(payload?.realm ?? payload?.realmName, 96) || row.realm || "",
         region: text(payload?.region, 24) || row.region || "",
         guildName: entityName(payload?.guild) || row.guild_name || "",
-        organization: row.organization_id ? { id: row.organization_id, name: row.organization_name || "" } : null,
+        organization: row.organization_id
+          ? { id: row.organization_id, name: row.organization_name || "" }
+          : null,
         lastSeenAt: text(payload?.lastSeen, 48) || row.last_seen_at || null,
-        gameBuild: text(payload?.gameBuild ?? payload?.build ?? payload?.gameVersion?.build ?? payload?.gameVersion, 96) || row.game_build || "",
-        schemaVersion: integer(payload?.schemaVersion, Number(row.schema_version) || 0) ?? 0,
+        gameBuild: gameBuildLabel(payload) || row.game_build || "",
+        schemaVersion:
+          integer(payload?.schemaVersion, Number(row.schema_version) || 0) ?? 0,
         isMain: Boolean(row.is_main),
       },
       stats: stats(payload),
@@ -564,7 +789,8 @@ export function searchRecipes(query = "", { limit = 100 } = {}) {
   const normalized = text(query, 120).toLowerCase();
   return withGuildDatabase((db) => {
     ensureTelemetryProjectionSchema(db);
-    const rows = db.prepare(`
+    const rows = db
+      .prepare(`
       SELECT r.*, c.name AS character_name, c.class_name, t.realm, t.last_seen_at,
         m.display_name AS member_name
       FROM telemetry_recipes r
@@ -575,7 +801,14 @@ export function searchRecipes(query = "", { limit = 100 } = {}) {
         AND (? = '' OR lower(r.name) LIKE ? OR lower(r.crafted_item_name) LIKE ? OR CAST(r.crafted_item_id AS TEXT) = ?)
       ORDER BY r.name COLLATE NOCASE, c.name COLLATE NOCASE
       LIMIT ?
-    `).all(normalized, `%${normalized}%`, `%${normalized}%`, normalized, Math.max(1, Math.min(250, Number(limit) || 100)));
+    `)
+      .all(
+        normalized,
+        `%${normalized}%`,
+        `%${normalized}%`,
+        normalized,
+        Math.max(1, Math.min(250, Number(limit) || 100)),
+      );
 
     return rows.map((row) => ({
       ...recipeFromRow(row),
@@ -596,7 +829,9 @@ export function searchCraftFinder(query = "") {
   const grouped = new Map();
 
   for (const row of rows) {
-    const key = row.id ? `id:${row.id}` : `${row.professionName}:${row.name}`.toLowerCase();
+    const key = row.id
+      ? `id:${row.id}`
+      : `${row.professionName}:${row.name}`.toLowerCase();
     if (!grouped.has(key)) {
       grouped.set(key, {
         recipe: {
