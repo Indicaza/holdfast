@@ -1,24 +1,32 @@
 import { expect, test } from '@playwright/test'
 import { authenticate } from '../helpers/auth.js'
 
-test('member Intelligence keeps the Holdfast navbar and hides privileged operations', async ({ page, context }) => {
+test('member GuildOS keeps the Holdfast navbar and hides privileged operations', async ({ page, context }) => {
   await authenticate(context, 'member')
   await page.goto('/intelligence')
 
   await expect(page.locator('.navbar')).toBeVisible()
   await expect(page.locator('.navbar').getByRole('link', { name: 'Holdfast home' })).toBeVisible()
+  await expect(page.locator('.navbar__links a[href="/intelligence"]')).toHaveCount(0)
+  await expect(page.getByText('GuildOS', { exact: true }).first()).toBeVisible()
 
   const rail = page.locator('.intelligence-rail__nav')
+  await expect(rail.getByText('Guild', { exact: true })).toBeVisible()
   await expect(rail.getByRole('button', { name: /^Overview\b/ })).toBeVisible()
   await expect(rail.getByRole('button', { name: /^Audit Log\b/ })).toHaveCount(0)
   await expect(rail.getByRole('button', { name: /^Guildweaver\b/ })).toHaveCount(0)
+
+  await page.locator('.navbar__account-button').click()
+  const accountLinks = page.locator('.navbar__account-links')
+  await expect(accountLinks.getByRole('link', { name: 'GuildOS', exact: true })).toHaveAttribute('href', '/intelligence')
+  await expect(accountLinks.locator('a[href^="/intelligence"]')).toHaveCount(1)
 
   await page.goto('/intelligence#audit')
   await expect(page.locator('.intelligence-app__topbar').getByRole('heading', { name: 'Overview' })).toBeVisible()
   await expect(page.locator('.admin-audit')).toHaveCount(0)
 })
 
-test('commander can use audit and Guildweaver consoles inside Intelligence', async ({ page, context }) => {
+test('commander can use audit and Guildweaver consoles inside GuildOS', async ({ page, context }) => {
   await authenticate(context, 'commander')
   await page.goto('/intelligence')
 
@@ -45,8 +53,9 @@ test('commander can use audit and Guildweaver consoles inside Intelligence', asy
   await expect(page.getByLabel('Filter telemetry kind')).toBeVisible()
 
   await page.locator('.navbar__account-button').click()
-  await expect(page.locator('.navbar__account-links').getByRole('link', { name: 'Audit Log' })).toHaveAttribute('href', '/intelligence#audit')
-  await expect(page.locator('.navbar__account-links').getByRole('link', { name: 'Guildweaver Sync' })).toHaveAttribute('href', '/intelligence#guildweaver')
+  const accountLinks = page.locator('.navbar__account-links')
+  await expect(accountLinks.getByRole('link', { name: 'GuildOS', exact: true })).toHaveAttribute('href', '/intelligence')
+  await expect(accountLinks.locator('a[href^="/intelligence"]')).toHaveCount(1)
 })
 
 test('standalone Guildweaver admin route remains available for compatibility', async ({ page, context }) => {
