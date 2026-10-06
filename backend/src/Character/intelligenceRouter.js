@@ -1,10 +1,10 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import {
   readCharacterArmory,
   readIntelligenceSummary,
-  searchCraftFinder,
   searchRecipes,
 } from "./telemetryProjection.js";
 
@@ -49,7 +49,7 @@ export function createIntelligenceRouter() {
 
   router.get("/craft-finder", requireAuthenticated, (req, res) => {
     try {
-      const results = searchCraftFinder(req.query?.q || "");
+      const results = searchCraftFinderWithSkill(req.query?.q || "");
       res.set("Cache-Control", "no-store");
       res.json({ results });
     } catch (error) {
