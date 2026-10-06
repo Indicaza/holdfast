@@ -19,7 +19,11 @@ test("Guildweaver package URLs stay pinned to the public release contract", () =
   const env = { GUILDWEAVER_RELEASE_CHANNEL: "beta" };
   assert.equal(
     guildweaverDownloadUrl("windows", { env }),
-    "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverBridge.zip",
+    "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverInstaller.exe",
+  );
+  assert.equal(
+    guildweaverDownloadUrl("macos", { env }),
+    "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverInstaller-macos.pkg",
   );
   assert.equal(
     guildweaverDownloadUrl("macos-arm64", { env }),
@@ -37,6 +41,7 @@ test("Guildweaver metadata exposes stable Holdfast routes instead of raw asset U
   assert.equal(metadata.channel, "edge");
   assert.equal(metadata.channelLabel, "Alpha / Edge");
   assert.equal(metadata.packages.windows.download, "/guildweaver/download/windows");
+  assert.equal(metadata.packages.macos.download, "/guildweaver/download/macos");
   assert.equal(
     metadata.packages["macos-x64"].checksum,
     "/guildweaver/download/macos-x64/sha256",
@@ -50,7 +55,14 @@ test("public Guildweaver routes redirect to the configured release channel", asy
       assert.equal(windows.status, 302);
       assert.equal(
         windows.headers.get("location"),
-        "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverBridge.zip",
+        "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverInstaller.exe",
+      );
+
+      const macos = await request("/guildweaver/download/macos");
+      assert.equal(macos.status, 302);
+      assert.equal(
+        macos.headers.get("location"),
+        "https://github.com/Indicaza/guildweaver-bridge/releases/download/beta/GuildweaverInstaller-macos.pkg",
       );
 
       const checksum = await request("/guildweaver/download/linux-x64/sha256");
@@ -67,6 +79,7 @@ test("public Guildweaver routes redirect to the configured release channel", asy
       const metadata = await request("/api/guildweaver/release");
       assert.equal(metadata.status, 200);
       assert.equal(metadata.json.channel, "beta");
+      assert.equal(metadata.json.packages.macos.download, "/guildweaver/download/macos");
       assert.equal(metadata.json.packages["macos-arm64"].download, "/guildweaver/download/macos-arm64");
     },
     { env: { GUILDWEAVER_RELEASE_CHANNEL: "beta" } },
