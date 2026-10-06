@@ -16,9 +16,10 @@ test('Guildweaver detects broad operating-system families without guessing CPU a
   assert.equal(detectGuildweaverOs({ userAgent: 'Something Unknown' }), 'unknown')
 })
 
-test('Guildweaver recommendations choose conservative defaults and expose alternatives', () => {
+test('Guildweaver recommendations never guess macOS CPU architecture', () => {
   assert.equal(recommendedGuildweaverDownload({ platform: 'Win32' })?.id, 'windows')
-  assert.equal(recommendedGuildweaverDownload({ platform: 'MacIntel' })?.id, 'macos-arm64')
+  assert.equal(recommendedGuildweaverDownload({ platform: 'MacIntel' }), null)
+  assert.equal(recommendedGuildweaverDownload({ userAgentData: { platform: 'macOS' } }), null)
   assert.equal(recommendedGuildweaverDownload({ platform: 'Linux x86_64' })?.id, 'linux-x64')
   assert.equal(recommendedGuildweaverDownload({ platform: 'Unknown' }), null)
 
