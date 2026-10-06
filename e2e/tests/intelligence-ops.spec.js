@@ -38,7 +38,9 @@ test('commander can use audit and Guildweaver consoles inside Intelligence', asy
   await expect(page).toHaveURL(/#guildweaver$/)
   await expect(topbar.getByRole('heading', { name: 'Guildweaver' })).toBeVisible()
   await expect(page.locator('.gw-admin-console')).toBeVisible()
-  await expect(page.getByLabel('Search Guildweaver snapshots')).toBeVisible()
+  await expect(page.getByLabel('Search Guildweaver telemetry')).toBeVisible()
+  await expect(page.getByLabel('Filter telemetry domain')).toBeVisible()
+  await expect(page.getByLabel('Filter telemetry kind')).toBeVisible()
 
   await page.locator('.navbar__account-button').click()
   await expect(page.locator('.navbar__account-links').getByRole('link', { name: 'Audit Log' })).toHaveAttribute('href', '/intelligence#audit')
