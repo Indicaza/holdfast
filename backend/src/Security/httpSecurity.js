@@ -1,10 +1,9 @@
 import { publicWebsiteUrl } from "../Config/environment.js";
-import { createLiveMutationObserver } from "../Live/liveUpdateRouter.js";
+import { observeLiveMutation } from "../Live/liveMutationObserver.js";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 const rateBuckets = new Map();
-const liveMutationObserver = createLiveMutationObserver();
 
 function normalizeOrigin(value) {
   if (!value) {
@@ -72,7 +71,7 @@ export function requireTrustedMutationOrigin(req, res, next) {
 
   if (!origin) {
     if (process.env.NODE_ENV !== "production") {
-      liveMutationObserver(req, res, next);
+      observeLiveMutation(req, res, next);
       return;
     }
 
@@ -85,7 +84,7 @@ export function requireTrustedMutationOrigin(req, res, next) {
     return;
   }
 
-  liveMutationObserver(req, res, next);
+  observeLiveMutation(req, res, next);
 }
 
 export function securityHeaders(req, res, next) {
