@@ -64,7 +64,7 @@ export function telemetryDomain(eventType) {
   const normalized = text(eventType, 120).toLowerCase();
   return (
     normalized
-      .replace(/_(snapshot|observation|completed|learned|entered|killed)$/, "") ||
+      .replace(/_(snapshot|observation|completed|learned|entered|killed|definition)$/, "") ||
     "unknown"
   );
 }
