@@ -16,9 +16,11 @@ export function classifyLiveMutation(req) {
   if (path.startsWith('/api/bridge/characters/snapshot')) {
     events.push({ topics: ['intelligence', 'armory'], source: 'guildweaver.character' })
     events.push({ topics: ['guildweaver'], source: 'guildweaver.character', permission: 'site.admin' })
-  } else if (path.startsWith('/api/bridge')) {
-    events.push({ topics: ['quests'], source: 'guildweaver.bridge' })
-    events.push({ topics: ['guildweaver'], source: 'guildweaver.bridge', permission: 'site.admin' })
+  } else if (path.startsWith('/api/bridge/quests')) {
+    events.push({ topics: ['quests', 'notifications'], source: 'guildweaver.quests' })
+    events.push({ topics: ['guildweaver'], source: 'guildweaver.quests', permission: 'site.admin' })
+  } else if (path.startsWith('/api/bridge/pairing')) {
+    events.push({ topics: ['guildweaver'], source: 'guildweaver.pairing' })
   } else if (path.startsWith('/api/quests')) {
     events.push({ topics: ['quests', 'notifications'], source: 'quests' })
   } else if (path.startsWith('/api/guild/members')) {
@@ -29,7 +31,7 @@ export function classifyLiveMutation(req) {
     events.push({ topics: ['notifications'], source: 'notifications', memberId: actorId })
   }
 
-  if (events.length) {
+  if (events.length && !path.startsWith('/api/notifications')) {
     events.push({ topics: ['audit'], source: 'mutation', permission: 'audit.view' })
   }
 
