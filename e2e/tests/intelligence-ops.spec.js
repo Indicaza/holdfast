@@ -38,7 +38,7 @@ test('commander can use audit and Guildweaver consoles inside Intelligence', asy
   await expect(page).toHaveURL(/#guildweaver$/)
   await expect(topbar.getByRole('heading', { name: 'Guildweaver' })).toBeVisible()
   await expect(page.locator('.gw-admin-console')).toBeVisible()
-  await expect(page.getByLabel('Search Guildweaver snapshots')).toBeVisible()
+  await expect(page.getByLabel('Search Guildweaver telemetry')).toBeVisible()
 
   await page.locator('.navbar__account-button').click()
   await expect(page.locator('.navbar__account-links').getByRole('link', { name: 'Audit Log' })).toHaveAttribute('href', '/intelligence#audit')
@@ -49,6 +49,6 @@ test('standalone Guildweaver admin route remains available for compatibility', a
   await authenticate(context, 'commander')
   await page.goto('/admin/guildweaver')
 
-  await expect(page.getByRole('heading', { name: 'Sync Console' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Telemetry Oscilloscope' })).toBeVisible()
   await expect(page.locator('.gw-admin-console')).toBeVisible()
 })
