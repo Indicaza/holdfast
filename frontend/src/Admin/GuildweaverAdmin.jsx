@@ -2,6 +2,7 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import GuildweaverConsole from './GuildweaverConsole.jsx'
 import './Admin.css'
+import './GuildweaverOscilloscope.css'
 
 function Gate({ session }) {
   if (session.status === 'loading') {
@@ -36,8 +37,8 @@ export default function GuildweaverAdmin() {
   return (
     <PageShell
       eyebrow="Guildweaver Admin"
-      title="Sync Console"
-      intro="See exactly what Guildweaver is sending, when it arrived, and how each character changes over time."
+      title="Telemetry Oscilloscope"
+      intro="Inspect every telemetry domain through one generic record viewer. New streams appear automatically, and any record can be copied as a self-contained debugging report."
       centered
       className="admin-page guildweaver-admin-page"
     >
