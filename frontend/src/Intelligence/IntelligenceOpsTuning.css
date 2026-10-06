@@ -1,0 +1,62 @@
+.intelligence-app {
+  inset: var(--nav-height) 0 0;
+  z-index: 1;
+}
+
+.intelligence-rail__section-label {
+  margin: var(--space-4) .7rem .15rem;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  color: rgba(221, 193, 125, .72);
+  font-size: .62rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.intelligence-app--collapsed .intelligence-rail__section-label {
+  height: 1px;
+  margin: .75rem .45rem .35rem;
+  padding: 0;
+  border: 0;
+  background: rgba(255, 255, 255, .09);
+  color: transparent;
+  font-size: 0;
+}
+
+.intelligence-app .admin-audit {
+  width: 100%;
+  margin-top: 0;
+}
+
+.intelligence-app .guildweaver-console-embed {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-5);
+}
+
+.intelligence-app .guildweaver-console-embed .gw-admin-stats {
+  margin-bottom: 0;
+}
+
+.intelligence-app .guildweaver-console-embed .gw-admin-workspace {
+  min-height: 38rem;
+}
+
+@media (max-width: 54rem) {
+  .intelligence-app--collapsed .intelligence-rail__section-label {
+    height: auto;
+    margin: var(--space-4) .7rem .15rem;
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(255, 255, 255, .07);
+    background: transparent;
+    color: rgba(221, 193, 125, .72);
+    font-size: .62rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .intelligence-app .guildweaver-console-embed .gw-admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
