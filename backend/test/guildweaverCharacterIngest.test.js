@@ -112,6 +112,30 @@ test("Guildweaver paired device seeds a member character and retains the raw sna
   });
 });
 
+test("Guildweaver paired device accepts current schema 2 snapshots", async () => {
+  await withHttpApp(async ({ request }) => {
+    const deviceToken = await pairDevice(request);
+    const response = await request("/api/bridge/characters/snapshot", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${deviceToken}` },
+      body: {
+        revision: 8,
+        snapshot: snapshot({
+          schemaVersion: 2,
+          characterId: "character-schema2-ingest",
+          guid: undefined,
+          addonVersion: "0.5.0-alpha.1",
+        }),
+      },
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.json.status, "created");
+    assert.equal(response.json.revision, 8);
+    assert.equal(response.json.character.id, "guildweaver-id:character-schema2-ingest");
+  });
+});
+
 test("Guildweaver paired device rejects unsupported snapshot schemas", async () => {
   await withHttpApp(async ({ request }) => {
     const deviceToken = await pairDevice(request);

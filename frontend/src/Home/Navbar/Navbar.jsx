@@ -16,6 +16,10 @@ function isActiveLink(pathname, href) {
     return pathname === '/members' || pathname.startsWith('/members/')
   }
 
+  if (href === '/intelligence') {
+    return pathname === '/intelligence' || pathname.startsWith('/armory/')
+  }
+
   return pathname === href
 }
 
@@ -72,9 +76,7 @@ function Navbar() {
     <header className="navbar">
       <div className="navbar__inner">
         <a className="navbar__brand" href="/" aria-label="Holdfast home">
-          <span className="navbar__brand-mark" aria-hidden="true">
-            ♜
-          </span>
+          <span className="navbar__brand-mark" aria-hidden="true">♜</span>
           <span className="navbar__brand-name">Holdfast</span>
         </a>
 
@@ -123,21 +125,13 @@ function Navbar() {
                     onClick={() => setAccountOpen((open) => !open)}
                   >
                     {user?.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt=""
-                        width="36"
-                        height="36"
-                        decoding="async"
-                      />
+                      <img src={user.avatarUrl} alt="" width="36" height="36" decoding="async" />
                     ) : (
                       <span aria-hidden="true">♜</span>
                     )}
                   </button>
 
-                  <div
-                    className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}
-                  >
+                  <div className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}>
                     <div className="navbar__account-identity">
                       <strong>{displayName(user)}</strong>
                       <span>@{user?.username}</span>
@@ -146,9 +140,8 @@ function Navbar() {
                     <div className="navbar__account-links">
                       <a href="/members/me">My Profile</a>
                       <a href="/members">Members</a>
-                      {hasPermission('audit.view') ? (
-                        <a href="/admin">Audit Log</a>
-                      ) : null}
+                      <a href="/intelligence">Guild Intelligence</a>
+                      {hasPermission('audit.view') ? <a href="/admin">Audit Log</a> : null}
                       <button type="button" onClick={handleSignOut} disabled={signingOut}>
                         {signingOut ? 'Signing out…' : 'Sign out'}
                       </button>
@@ -190,15 +183,7 @@ function Navbar() {
             </a>
           ))}
           {authenticated ? (
-            <>
-              <a
-                className="navbar__mobile-link"
-                href="/members/me"
-                aria-current={pathname === '/members/me' ? 'page' : undefined}
-              >
-                My Profile
-              </a>
-            </>
+            <a className="navbar__mobile-link" href="/members/me" aria-current={pathname === '/members/me' ? 'page' : undefined}>My Profile</a>
           ) : null}
         </nav>
       </div>
