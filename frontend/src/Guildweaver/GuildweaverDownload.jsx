@@ -4,45 +4,36 @@ import Modal from '../Modal/Modal.jsx'
 import {
   detectGuildweaverOs,
   guildweaverDownloads,
-  guildweaverDownloadsForOs,
   recommendedGuildweaverDownload,
 } from './downloads.js'
 import './GuildweaverDownload.css'
 
 export default function GuildweaverDownload({ compact = false, navigatorLike = globalThis.navigator }) {
   const [showAllDownloads, setShowAllDownloads] = useState(false)
+  const [downloadStarted, setDownloadStarted] = useState(false)
   const detectedOs = detectGuildweaverOs(navigatorLike)
   const recommended = recommendedGuildweaverDownload(navigatorLike)
-  const macDownloads = guildweaverDownloadsForOs('macos')
-  const intelMac = macDownloads.find((download) => download.id === 'macos-x64')
-  const appleSiliconMac = macDownloads.find((download) => download.id === 'macos-arm64')
-  const isMac = detectedOs === 'macos'
+  const nativeInstaller = detectedOs === 'windows' || detectedOs === 'macos'
+
+  function beginDownload() {
+    setDownloadStarted(true)
+  }
 
   if (compact) {
-    if (isMac) {
-      return (
-        <div className="guildweaver-download guildweaver-download--compact">
-          <a className="guildweaver-download__primary" href="/guildweaver">
-            Choose Mac download
-          </a>
-          <span className="guildweaver-download__detail">Intel and Apple Silicon builds available</span>
-        </div>
-      )
-    }
-
     return (
       <div className="guildweaver-download guildweaver-download--compact">
         <a
           className="guildweaver-download__primary"
           href={recommended?.href || '/guildweaver'}
+          onClick={recommended ? beginDownload : undefined}
         >
-          {recommended ? `Download for ${recommended.label}` : 'Choose a download'}
+          {nativeInstaller ? 'Install Guildweaver' : recommended ? 'Download Guildweaver' : 'Get Guildweaver'}
         </a>
-        {recommended ? (
-          <span className="guildweaver-download__detail">
-            {recommended.detail} · other platforms available
-          </span>
-        ) : null}
+        <span className="guildweaver-download__detail">
+          {nativeInstaller
+            ? 'Open the installer after it downloads. Guildweaver handles the rest.'
+            : 'Windows and macOS have one-click installers.'}
+        </span>
       </div>
     )
   }
@@ -50,70 +41,46 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
   return (
     <section className="guildweaver-download" aria-labelledby="guildweaver-download-title">
       <div className="guildweaver-download__lead">
-        <p className="guildweaver-download__eyebrow">Download</p>
         <h2 id="guildweaver-download-title">
-          {isMac ? 'Choose your Mac' : recommended ? `Guildweaver for ${recommended.label}` : 'Choose your platform'}
+          {nativeInstaller ? 'Install Guildweaver' : recommended ? `Guildweaver for ${recommended.label}` : 'Get Guildweaver'}
         </h2>
         <p>
-          {isMac
-            ? 'Browsers cannot reliably tell Intel Macs from Apple Silicon. Pick the processor your Mac uses.'
-            : recommended
-              ? 'We detected your operating system. Download the bridge to get started.'
-              : 'Pick the build that matches this computer.'}
+          {nativeInstaller
+            ? 'One installer sets up Guildweaver, finds WoW, installs the addon, and keeps everything updated.'
+            : detectedOs === 'linux'
+              ? 'Linux is still a manual package for now. Windows and macOS use one-click installers.'
+              : 'Choose the platform for this computer.'}
         </p>
       </div>
 
-      {isMac ? (
-        <div className="guildweaver-download__mac-choices">
-          <a className="guildweaver-download__choice" href={intelMac?.href || '/guildweaver'}>
-            <strong>Intel Mac</strong>
-            <span>Intel processor</span>
+      <div className="guildweaver-download__actions">
+        {recommended ? (
+          <a className="guildweaver-download__primary" href={recommended.href} onClick={beginDownload}>
+            {nativeInstaller ? 'Install Guildweaver' : `Download for ${recommended.label}`}
           </a>
-          <a className="guildweaver-download__choice" href={appleSiliconMac?.href || '/guildweaver'}>
-            <strong>Apple Silicon</strong>
-            <span>M1, M2, M3, M4 or newer</span>
-          </a>
-        </div>
-      ) : (
-        <div className="guildweaver-download__actions">
-          {recommended ? (
-            <a className="guildweaver-download__primary" href={recommended.href}>
-              Download for {recommended.label}
-            </a>
-          ) : null}
-          <button
-            className="guildweaver-download__secondary"
-            type="button"
-            onClick={() => setShowAllDownloads(true)}
-          >
-            {recommended ? 'Other platforms' : 'Choose platform'}
-          </button>
-        </div>
-      )}
-
-      {isMac ? (
-        <p className="guildweaver-download__help">Not sure? Apple menu → About This Mac will show your processor.</p>
-      ) : recommended ? (
-        <a className="guildweaver-download__checksum" href={recommended.checksumHref}>
-          SHA-256 checksum
-        </a>
-      ) : null}
-
-      {isMac ? (
+        ) : null}
         <button
-          className="guildweaver-download__plain-button"
+          className="guildweaver-download__secondary"
           type="button"
           onClick={() => setShowAllDownloads(true)}
         >
-          Windows or Linux downloads
+          Other platforms
         </button>
+      </div>
+
+      {nativeInstaller ? (
+        <p className="guildweaver-download__next-step">
+          {downloadStarted
+            ? 'Download started. Open the installer when your browser finishes — Guildweaver does everything else.'
+            : 'After it downloads, open the installer. That is the only manual step.'}
+        </p>
       ) : null}
 
       {showAllDownloads ? (
         <Modal
           eyebrow="Downloads"
-          title="Choose your platform."
-          intro="Pick the build that matches this computer. Every package has a matching SHA-256 checksum."
+          title="Other platforms"
+          intro="Windows and macOS use native installers. Linux packages remain manual for now."
           size="wide"
           onClose={() => setShowAllDownloads(false)}
         >
@@ -125,7 +92,9 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
                   <span>{download.detail}</span>
                 </div>
                 <div className="guildweaver-download__platform-actions">
-                  <a href={download.href}>Download</a>
+                  <a href={download.href} onClick={() => setDownloadStarted(true)}>
+                    {download.os === 'windows' || download.os === 'macos' ? 'Installer' : 'Download'}
+                  </a>
                   <a href={download.checksumHref}>Checksum</a>
                 </div>
               </div>
