@@ -1,5 +1,8 @@
 import { withGuildTransaction } from "../Data/database.js";
-import { recordCharacterSnapshotInDatabase } from "./characterSnapshotRepository.js";
+import {
+  ensureCharacterSnapshotObservabilitySchema,
+  recordCharacterSnapshotInDatabase,
+} from "./characterSnapshotRepository.js";
 import { projectTelemetrySnapshotInDatabase } from "./telemetryProjection.js";
 
 function text(value, maxLength) {
@@ -171,6 +174,7 @@ export async function syncGuildweaverCharacter({
 
     const captured = capturedAt(snapshot);
     const payloadJson = JSON.stringify(snapshot ?? {});
+    ensureCharacterSnapshotObservabilitySchema(db);
     const duplicate = db.prepare(`
       SELECT s.id, s.captured_at, i.received_at, i.bridge_revision
       FROM character_snapshots s
