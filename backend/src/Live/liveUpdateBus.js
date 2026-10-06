@@ -13,7 +13,14 @@ function canReceive(subscriber, event) {
   return true
 }
 
-export function publishLiveUpdate({ topics, source = 'unknown', entityId = null, memberId = null, permission = null } = {}) {
+export function publishLiveUpdate({
+  topics,
+  source = 'unknown',
+  entityId = null,
+  actorId = null,
+  memberId = null,
+  permission = null,
+} = {}) {
   const normalizedTopics = normalizeTopics(topics)
   if (!normalizedTopics.length) return null
 
@@ -23,6 +30,7 @@ export function publishLiveUpdate({ topics, source = 'unknown', entityId = null,
     topics: normalizedTopics,
     source,
     entityId: entityId ? String(entityId) : null,
+    actorId: actorId ? String(actorId) : null,
     memberId: memberId ? String(memberId) : null,
     permission: permission ? String(permission) : null,
     at: new Date().toISOString(),
