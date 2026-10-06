@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { createLiveUpdateRouter } from "../Live/liveUpdateRouter.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   markAllNotificationsRead,
@@ -15,6 +16,8 @@ export function createNotificationRouter() {
     windowMs: 10 * 60 * 1000,
     max: 180,
   });
+
+  router.use("/live", createLiveUpdateRouter());
 
   router.get("/", requireAuthenticated, (req, res) => {
     try {
