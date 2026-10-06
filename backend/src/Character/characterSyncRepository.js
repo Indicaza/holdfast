@@ -1,4 +1,5 @@
 import { withGuildTransaction } from "../Data/database.js";
+import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import {
   ensureCharacterSnapshotObservabilitySchema,
   recordCharacterSnapshotInDatabase,
@@ -94,7 +95,7 @@ export async function syncGuildweaverCharacter({
     return { status: "invalid", character: null, snapshot: null };
   }
 
-  return withGuildTransaction((db) => {
+  const result = withGuildTransaction((db) => {
     const member = db
       .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
       .get(normalizedMemberId);
@@ -247,4 +248,20 @@ export async function syncGuildweaverCharacter({
       snapshot: storedSnapshot,
     };
   });
+
+  if (result.status === "created" || result.status === "updated") {
+    publishLiveUpdate({
+      topics: ["intelligence", "armory", "members"],
+      source: "guildweaver.character",
+      entityId: result.character.id,
+    });
+    publishLiveUpdate({
+      topics: ["guildweaver"],
+      source: "guildweaver.character",
+      entityId: result.character.id,
+      permission: "site.admin",
+    });
+  }
+
+  return result;
 }
