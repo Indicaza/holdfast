@@ -6,6 +6,11 @@ import {
   readGuildweaverSnapshot,
   readGuildweaverSnapshotHistory,
 } from "./guildweaverAdminRepository.js";
+import {
+  readTelemetryHistory,
+  readTelemetryRecord,
+  readTelemetrySummary,
+} from "./telemetryRecordRepository.js";
 
 export function createGuildweaverAdminRouter() {
   const router = Router();
@@ -19,6 +24,57 @@ export function createGuildweaverAdminRouter() {
     } catch (error) {
       console.error("Unable to read Guildweaver admin summary", error);
       res.status(500).json({ error: "guildweaver_admin_summary_unavailable" });
+    }
+  });
+
+  router.get("/telemetry/summary", (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json({ summary: readTelemetrySummary() });
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry summary", error);
+      res.status(500).json({ error: "guildweaver_telemetry_summary_unavailable" });
+    }
+  });
+
+  router.get("/telemetry", (req, res) => {
+    try {
+      const result = readTelemetryHistory({
+        q: req.query.q,
+        domain: req.query.domain,
+        kind: req.query.kind,
+        eventType: req.query.eventType,
+        characterId: req.query.characterId,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      });
+      res.set("Cache-Control", "no-store");
+      res.json(result);
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry history", error);
+      res.status(500).json({ error: "guildweaver_telemetry_history_unavailable" });
+    }
+  });
+
+  router.get("/telemetry/:id", (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id < 1) {
+        res.status(400).json({ error: "invalid_telemetry_id" });
+        return;
+      }
+
+      const record = readTelemetryRecord(id);
+      if (!record) {
+        res.status(404).json({ error: "telemetry_not_found" });
+        return;
+      }
+
+      res.set("Cache-Control", "no-store");
+      res.json({ record });
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry record", error);
+      res.status(500).json({ error: "guildweaver_telemetry_unavailable" });
     }
   });
 
