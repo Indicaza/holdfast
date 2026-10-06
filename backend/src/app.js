@@ -22,6 +22,10 @@ import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
 import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
 import { createAuthorityRouter } from "./Guild/authorityRouter.js";
+import {
+  guildweaverDownloadUrl,
+  guildweaverReleaseMetadata,
+} from "./Guildweaver/releaseConfig.js";
 import { createNotificationRouter } from "./Notification/notificationRouter.js";
 import {
   corsOrigin,
@@ -163,6 +167,11 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   app.use("/api/guild/authority", createAuthorityRouter());
   app.use("/api/admin/audit", createAuditRouter());
 
+  app.get("/api/guildweaver/release", (req, res) => {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(guildweaverReleaseMetadata(process.env));
+  });
+
   app.get("/api/me", refreshDiscordSessionIfNeeded, async (req, res) => {
     res.set("Cache-Control", "no-store");
 
@@ -204,6 +213,33 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
 
   app.use("/api", (req, res) => {
     res.status(404).json({ error: "not_found" });
+  });
+
+  app.get("/guildweaver/download/:platform/sha256", (req, res) => {
+    const target = guildweaverDownloadUrl(req.params.platform, {
+      env: process.env,
+      checksum: true,
+    });
+
+    if (!target) {
+      res.status(404).json({ error: "unsupported_platform" });
+      return;
+    }
+
+    res.redirect(302, target);
+  });
+
+  app.get("/guildweaver/download/:platform", (req, res) => {
+    const target = guildweaverDownloadUrl(req.params.platform, {
+      env: process.env,
+    });
+
+    if (!target) {
+      res.status(404).json({ error: "unsupported_platform" });
+      return;
+    }
+
+    res.redirect(302, target);
   });
 
   mountProductionFrontend(app);
