@@ -15,6 +15,23 @@ function number(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+export function canonicalEquipmentSlot(value) {
+  const normalized = String(value || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .replace(/SLOT$/, '')
+
+  const aliases = {
+    FINGER0: 'FINGER1',
+    FINGER1: 'FINGER2',
+    TRINKET0: 'TRINKET1',
+    TRINKET1: 'TRINKET2',
+    SECONDARYHAND: 'OFFHAND',
+  }
+
+  return aliases[normalized] || normalized
+}
+
 export function normalizeIntelligence(payload) {
   const source = object(payload)
   const summary = object(source.summary)
@@ -83,8 +100,11 @@ export function normalizeArmory(payload) {
     talents: {
       configId: talents.configId ?? null,
       treeId: talents.treeId ?? null,
+      treeIds: array(talents.treeIds),
       specId: talents.specId ?? null,
       name: text(talents.name),
+      pointsSpent: talents.pointsSpent == null ? null : number(talents.pointsSpent),
+      pointsAvailable: talents.pointsAvailable == null ? null : number(talents.pointsAvailable),
       nodes: array(talents.nodes).map((node) => ({
         ...object(node),
         id: node?.id ?? 0,
