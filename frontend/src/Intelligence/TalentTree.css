@@ -1,0 +1,181 @@
+.talent-tree {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.talent-tree__toolbar,
+.talent-tree__detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.talent-tree__toolbar > div:first-child,
+.talent-tree__detail-heading > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.talent-tree__toolbar strong,
+.talent-tree__detail strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+}
+
+.talent-tree__toolbar span,
+.talent-tree__detail span,
+.talent-tree__detail p,
+.talent-empty p {
+  color: var(--color-text-muted);
+}
+
+.talent-tree__zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.talent-tree__zoom button {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border: var(--border-subtle);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--color-text-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.talent-tree__zoom span {
+  min-width: 3.4rem;
+  text-align: center;
+  font-size: var(--font-size-xs);
+}
+
+.talent-tree__viewport {
+  overflow: auto;
+  border: 1px solid rgba(196, 166, 103, 0.22);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(196, 166, 103, 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(8, 17, 30, 0.98), rgba(3, 8, 16, 0.98));
+  overscroll-behavior: contain;
+}
+
+.talent-tree__canvas {
+  position: relative;
+  width: calc(660px * var(--talent-zoom));
+  height: calc(560px * var(--talent-zoom));
+  min-width: 100%;
+  transform-origin: top left;
+}
+
+.talent-tree__edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.talent-tree__edges line {
+  stroke: rgba(196, 166, 103, 0.34);
+  stroke-width: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+
+.talent-node {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  padding: 5px;
+  transform: translate(-50%, -50%);
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.85rem;
+  background: rgba(4, 9, 17, 0.94);
+  box-shadow: 0 0.5rem 1.2rem rgba(0, 0, 0, 0.42);
+  cursor: pointer;
+}
+
+.talent-node--selected {
+  border-color: var(--color-accent-bright);
+  box-shadow: 0 0 0 1px rgba(196, 166, 103, 0.24), 0 0 1.25rem rgba(196, 166, 103, 0.18);
+}
+
+.talent-node--active {
+  outline: 2px solid rgba(244, 236, 216, 0.72);
+  outline-offset: 3px;
+}
+
+.talent-node__rank {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.35rem;
+  min-width: 1.7rem;
+  padding: 0.18rem 0.35rem;
+  border: 1px solid rgba(196, 166, 103, 0.5);
+  border-radius: 999px;
+  background: #07111d;
+  color: var(--color-text-strong);
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
+.talent-tree__detail {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: var(--space-4);
+  border-left: 2px solid rgba(196, 166, 103, 0.52);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.talent-tree__detail-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 15rem;
+}
+
+.talent-tree__detail p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.talent-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.talent-empty > span {
+  color: var(--color-accent-bright);
+  font-size: 2rem;
+}
+
+.talent-empty h3,
+.talent-empty p {
+  margin: 0;
+}
+
+@media (max-width: 46rem) {
+  .talent-tree__toolbar,
+  .talent-tree__detail {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .talent-tree__canvas {
+    min-width: calc(620px * var(--talent-zoom));
+  }
+}
