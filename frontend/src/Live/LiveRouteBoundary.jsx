@@ -1,8 +1,10 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useSession } from '../Auth/sessionContext.js'
 import { matchesLiveTopics, routeTopics } from './liveRouteTopics.js'
 import { useLiveUpdates } from './liveUpdatesContext.js'
 
 export default function LiveRouteBoundary({ children }) {
+  const session = useSession()
   const { event } = useLiveUpdates()
   const [version, setVersion] = useState(0)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -11,6 +13,7 @@ export default function LiveRouteBoundary({ children }) {
 
   useEffect(() => {
     if (!event || !matchesLiveTopics(event.topics, topics)) return
+    if (event.actorId && event.actorId === session.user?.id) return
 
     if (pathname === '/quests') {
       window.dispatchEvent(new Event('holdfast:quests-changed'))
@@ -18,7 +21,7 @@ export default function LiveRouteBoundary({ children }) {
     }
 
     setVersion((current) => current + 1)
-  }, [event, pathname, topics])
+  }, [event, pathname, session.user?.id, topics])
 
   return <Fragment key={version}>{children}</Fragment>
 }
