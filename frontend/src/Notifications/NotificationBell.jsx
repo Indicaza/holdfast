@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useLiveUpdates } from '../Live/LiveUpdatesProvider.jsx'
+import { useLiveUpdates } from '../Live/liveUpdatesContext.js'
 import './NotificationBell.css'
 
 function relativeTime(value) {
