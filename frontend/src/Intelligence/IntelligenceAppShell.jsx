@@ -1,34 +1,8 @@
 import { useEffect } from 'react'
 
 import NotificationBell from '../Notifications/NotificationBell.jsx'
+import intelligenceViews from './intelligenceViews.js'
 import './IntelligenceAppShell.css'
-
-const views = [
-  {
-    id: 'overview',
-    label: 'Overview',
-    description: 'Roster health and recent activity',
-    icon: 'overview',
-  },
-  {
-    id: 'roster',
-    label: 'Roster',
-    description: 'Class, spec, and profession mix',
-    icon: 'roster',
-  },
-  {
-    id: 'characters',
-    label: 'Characters',
-    description: 'Browse synced armories',
-    icon: 'characters',
-  },
-  {
-    id: 'craft',
-    label: 'Craft Finder',
-    description: 'Find recipes and crafters',
-    icon: 'craft',
-  },
-]
 
 function displayName(user) {
   return user?.guildNickname || user?.globalName || user?.username || 'Member'
@@ -75,8 +49,6 @@ function ViewIcon({ name }) {
   )
 }
 
-export { views as intelligenceViews }
-
 export default function IntelligenceAppShell({
   activeView,
   collapsed,
@@ -88,7 +60,7 @@ export default function IntelligenceAppShell({
   session,
   children,
 }) {
-  const currentView = views.find((view) => view.id === activeView) || views[0]
+  const currentView = intelligenceViews.find((view) => view.id === activeView) || intelligenceViews[0]
 
   useEffect(() => {
     if (!mobileOpen) return undefined
@@ -128,7 +100,7 @@ export default function IntelligenceAppShell({
         </div>
 
         <nav className="intelligence-rail__nav" aria-label="Intelligence views">
-          {views.map((view) => {
+          {intelligenceViews.map((view) => {
             const active = activeView === view.id
             return (
               <button
