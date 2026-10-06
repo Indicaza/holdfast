@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import Navbar from '../Home/Navbar/Navbar.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import './IntelligenceAppShell.css'
+import './IntelligenceOpsTuning.css'
 
 function ViewIcon({ name }) {
   if (name === 'overview') {
