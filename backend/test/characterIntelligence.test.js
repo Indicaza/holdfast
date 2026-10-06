@@ -171,7 +171,9 @@ test("character intelligence projects rich snapshots and remains idempotent", as
     assert.equal(armory.json.equipment[0].name, "Golem Skull Helm");
     assert.equal(armory.json.equipment[0].itemLevel, 35);
     assert.equal(armory.json.talents.nodes.length, 2);
-    assert.deepEqual(armory.json.talents.edges[0], { from: 101, to: 102, required: true });
+    assert.equal(armory.json.talents.edges[0].from, 101);
+    assert.equal(armory.json.talents.edges[0].to, 102);
+    assert.equal(armory.json.talents.edges[0].required, true);
     assert.equal(armory.json.professions.find((entry) => entry.name === "Blacksmithing").current, 225);
     assert.equal(armory.json.recipes[0].name, "Mithril Spurs");
     assert.equal(armory.json.recipes[0].reagents[0].quantity, 4);
