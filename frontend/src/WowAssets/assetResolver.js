@@ -31,8 +31,9 @@ export function resolveWowIconAsset({ iconFileId, itemId, spellId, recipeId, siz
   }
 
   try {
-    const parsed = new URL(url, window?.location?.origin || 'https://holdfast.invalid')
-    return parsed.protocol === 'https:' || parsed.origin === window?.location?.origin ? parsed.toString() : null
+    const browserOrigin = globalThis.window?.location?.origin || 'https://holdfast.invalid'
+    const parsed = new URL(url, browserOrigin)
+    return parsed.protocol === 'https:' || parsed.origin === browserOrigin ? parsed.toString() : null
   } catch {
     return null
   }
