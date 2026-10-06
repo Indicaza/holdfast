@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
 import Navbar from '../Home/Navbar/Navbar.jsx'
+import LiveStatusBadge from '../Live/LiveStatusBadge.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import './IntelligenceAppShell.css'
 import './IntelligenceOpsTuning.css'
@@ -206,6 +207,7 @@ export default function IntelligenceAppShell({
             </div>
 
             <div className="intelligence-app__actions">
+              <LiveStatusBadge />
               <div className="intelligence-app__freshness" title="Characters reporting within the last 24 hours">
                 <span aria-hidden="true" />
                 <strong>{freshCharacters}</strong>
