@@ -12,6 +12,8 @@ import {
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const GuildweaverAdmin = lazy(() => import('./Admin/GuildweaverAdmin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
+const CharacterArmory = lazy(() => import('./Intelligence/CharacterArmory.jsx'))
+const GuildIntelligence = lazy(() => import('./Intelligence/GuildIntelligence.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
@@ -48,6 +50,13 @@ const routes = {
     path: '/members',
     title: 'Members | Holdfast',
     description: 'Browse the Holdfast member directory.',
+    robots: 'noindex,nofollow',
+  },
+  '/intelligence': {
+    component: GuildIntelligence,
+    path: '/intelligence',
+    title: 'Guild Intelligence | Holdfast',
+    description: 'Browse synced Holdfast characters, professions, recipes, and crafting knowledge.',
     robots: 'noindex,nofollow',
   },
   '/charter': {
@@ -112,21 +121,18 @@ const routes = {
   },
 }
 
+function decodedSegment(value) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function memberProfileRoute(pathname) {
   const match = pathname.match(/^\/members\/([^/]+)$/)
-
-  if (!match) {
-    return null
-  }
-
-  let memberId = match[1]
-
-  try {
-    memberId = decodeURIComponent(memberId)
-  } catch {
-    memberId = match[1]
-  }
-
+  if (!match) return null
+  const memberId = decodedSegment(match[1])
   return {
     component: MemberProfile,
     path: pathname,
@@ -137,18 +143,33 @@ function memberProfileRoute(pathname) {
   }
 }
 
+function characterArmoryRoute(pathname) {
+  const match = pathname.match(/^\/armory\/([^/]+)$/)
+  if (!match) return null
+  const characterId = decodedSegment(match[1])
+  return {
+    component: CharacterArmory,
+    path: pathname,
+    title: 'Character Armory | Holdfast',
+    description: 'View a synced World of Warcraft character armory.',
+    robots: 'noindex,nofollow',
+    props: { characterId },
+  }
+}
+
 function App() {
   const requestedPathname = normalizePathname(window.location.pathname)
+  const dynamicRoute = memberProfileRoute(requestedPathname) ?? characterArmoryRoute(requestedPathname)
   const pathname = resolvePathname(requestedPathname, Object.keys(routes))
-  const route = pathname
-    ? memberProfileRoute(pathname) ?? routes[pathname]
+  const route = dynamicRoute ?? (pathname
+    ? routes[pathname]
     : {
         component: NotFound,
         path: requestedPathname,
         title: 'Page Not Found | Holdfast',
         description: 'The requested Holdfast page could not be found.',
         robots: 'noindex,nofollow',
-      }
+      })
   const Page = route.component
 
   useEffect(() => {
