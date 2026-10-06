@@ -7,12 +7,13 @@ async function seedArmory(page, context) {
 
   return page.evaluate(async () => {
     async function json(url, options = {}) {
+      const { headers = {}, ...requestOptions } = options
       const response = await fetch(url, {
+        ...requestOptions,
         headers: {
           'Content-Type': 'application/json',
-          ...(options.headers || {}),
+          ...headers,
         },
-        ...options,
       })
       const body = await response.json()
       if (!response.ok) throw new Error(`${url}: ${response.status} ${JSON.stringify(body)}`)
