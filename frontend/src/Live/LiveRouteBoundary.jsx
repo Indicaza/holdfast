@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { matchesLiveTopics, routeTopics } from './liveRouteTopics.js'
-import { useLiveUpdates } from './LiveUpdatesProvider.jsx'
+import { useLiveUpdates } from './liveUpdatesContext.js'
 
 export default function LiveRouteBoundary({ children }) {
   const { event } = useLiveUpdates()
