@@ -14,6 +14,7 @@ import {
   exchangeGuildweaverPairing,
   startGuildweaverPairing,
 } from "./guildweaverDeviceRepository.js";
+import { createTelemetryRouter } from "./telemetryRouter.js";
 
 const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2]);
 
@@ -62,6 +63,8 @@ export function createCharacterRouter() {
     windowMs: 10 * 60 * 1000,
     max: 300,
   });
+
+  router.use(createTelemetryRouter());
 
   router.post("/pairing/start", pairingStartRateLimit, (req, res) => {
     try {
