@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  canonicalEquipmentSlot,
   formatSyncAge,
   normalizeArmory,
   normalizeIntelligence,
@@ -28,6 +29,36 @@ test('armory parsing degrades incomplete telemetry into stable empty collections
   assert.deepEqual(armory.professions, [])
   assert.deepEqual(armory.recipes, [])
   assert.deepEqual(armory.stats, {})
+})
+
+test('armory parsing retains reconstructed tree metadata', () => {
+  const armory = normalizeArmory({
+    talents: {
+      configId: 10001,
+      treeId: 20001,
+      treeIds: [20001, 20002],
+      pointsSpent: 10,
+      pointsAvailable: 1,
+      nodes: [],
+      edges: [],
+    },
+  })
+
+  assert.equal(armory.talents.configId, 10001)
+  assert.equal(armory.talents.treeId, 20001)
+  assert.deepEqual(armory.talents.treeIds, [20001, 20002])
+  assert.equal(armory.talents.pointsSpent, 10)
+  assert.equal(armory.talents.pointsAvailable, 1)
+})
+
+test('Blizzard equipment slot names map onto the paper doll', () => {
+  assert.equal(canonicalEquipmentSlot('HeadSlot'), 'HEAD')
+  assert.equal(canonicalEquipmentSlot('MainHandSlot'), 'MAINHAND')
+  assert.equal(canonicalEquipmentSlot('SecondaryHandSlot'), 'OFFHAND')
+  assert.equal(canonicalEquipmentSlot('Finger0Slot'), 'FINGER1')
+  assert.equal(canonicalEquipmentSlot('Finger1Slot'), 'FINGER2')
+  assert.equal(canonicalEquipmentSlot('Trinket0Slot'), 'TRINKET1')
+  assert.equal(canonicalEquipmentSlot('Trinket1Slot'), 'TRINKET2')
 })
 
 test('intelligence parsing ignores malformed collection fields and normalizes counts', () => {
