@@ -2,21 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { ItemDetailCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
+import { canonicalEquipmentSlot } from './model.js'
 
 const leftSlots = ['HEAD', 'NECK', 'SHOULDER', 'BACK', 'CHEST', 'SHIRT', 'TABARD', 'WRIST']
 const rightSlots = ['HANDS', 'WAIST', 'LEGS', 'FEET', 'FINGER1', 'FINGER2', 'TRINKET1', 'TRINKET2']
 const weaponSlots = ['MAINHAND', 'OFFHAND', 'RANGED']
-
-function canonicalSlot(value) {
-  return String(value || '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .replace('FINGER0', 'FINGER1')
-    .replace('TRINKET0', 'TRINKET1')
-    .replace('MAINHANDSLOT', 'MAINHAND')
-    .replace('SECONDARYHANDSLOT', 'OFFHAND')
-    .replace('RANGEDSLOT', 'RANGED')
-}
 
 function slotLabel(value) {
   const labels = {
@@ -24,7 +14,7 @@ function slotLabel(value) {
     HANDS: 'Hands', WAIST: 'Waist', LEGS: 'Legs', FEET: 'Feet', FINGER1: 'Finger 1', FINGER2: 'Finger 2', TRINKET1: 'Trinket 1', TRINKET2: 'Trinket 2',
     MAINHAND: 'Main Hand', OFFHAND: 'Off Hand', RANGED: 'Ranged',
   }
-  return labels[canonicalSlot(value)] || String(value || 'Slot')
+  return labels[canonicalEquipmentSlot(value)] || String(value || 'Slot')
 }
 
 function classKey(value) {
@@ -54,7 +44,7 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
   const bySlot = useMemo(() => {
     const result = new Map()
     for (const item of equipment) {
-      const key = canonicalSlot(item.slot)
+      const key = canonicalEquipmentSlot(item.slot)
       if (key) result.set(key, item)
     }
     return result
