@@ -94,7 +94,7 @@ function Overview({ availableViews, data, freshCharacters, onSelectView }) {
 
   return (
     <>
-      <section className="intel-scorecards" aria-label="Guild intelligence summary">
+      <section className="intel-scorecards" aria-label="GuildOS summary">
         <article><span>Synced characters</span><strong>{data.summary.characterCount}</strong><small>Armory-ready profiles</small></article>
         <article><span>Fresh in 24h</span><strong>{freshCharacters}</strong><small>Characters reporting recently</small></article>
         <article><span>Professions represented</span><strong>{data.summary.professionCount}</strong><small>Across synced characters</small></article>
@@ -105,16 +105,16 @@ function Overview({ availableViews, data, freshCharacters, onSelectView }) {
         <RecentCharacters characters={data.characters} />
 
         <section className="intelligence-overview-tools" aria-labelledby="intelligence-tools-title">
-          <span>Tools</span>
+          <span>Workspaces</span>
           <h2 id="intelligence-tools-title">Go straight to the question.</h2>
-          <p>Each workspace keeps one kind of guild intelligence focused instead of stacking everything into one long page.</p>
-          <button type="button" onClick={() => onSelectView('roster')}>
-            <strong>Inspect roster composition</strong>
-            <small>Class, spec, and profession coverage</small>
-          </button>
+          <p>GuildOS keeps each job focused instead of stacking every tool and dataset into one long page.</p>
           <button type="button" onClick={() => onSelectView('characters')}>
             <strong>Browse characters</strong>
             <small>Search every synced armory</small>
+          </button>
+          <button type="button" onClick={() => onSelectView('roster')}>
+            <strong>Inspect roster composition</strong>
+            <small>Class, spec, and profession coverage</small>
           </button>
           <button type="button" onClick={() => onSelectView('craft')}>
             <strong>Find a crafter</strong>
@@ -387,7 +387,7 @@ export default function GuildIntelligence() {
       views={availableViews}
     >
       {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
-      {status === 'error' ? <p className="intel-error">Guild intelligence could not be loaded.</p> : null}
+      {status === 'error' ? <p className="intel-error">GuildOS could not be loaded.</p> : null}
       {status === 'ready' ? (
         <Workspace
           activeView={activeView}

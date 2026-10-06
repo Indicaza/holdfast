@@ -20,11 +20,12 @@ test('the account action is labeled as sign in rather than recruitment', () => {
   assert.equal(signInNavigationLabel, 'Sign In')
 })
 
-test('signed-in navigation adds member destinations before public pages', () => {
+test('signed-in primary navigation stays focused and leaves GuildOS in the account menu', () => {
   assert.deepEqual(
     primaryNavigationLinks(true).map((link) => link.href),
-    ['/quests', '/members', '/intelligence', '/charter', '/ranks', '/guildweaver'],
+    ['/quests', '/members', '/charter', '/ranks', '/guildweaver'],
   )
+  assert.equal(primaryNavigationLinks(true).some((link) => link.href === '/intelligence'), false)
 })
 
 test('footer leads with joining and exposes Guildweaver plus the public source repository', () => {

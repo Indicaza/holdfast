@@ -16,10 +16,6 @@ function isActiveLink(pathname, href) {
     return pathname === '/members' || pathname.startsWith('/members/')
   }
 
-  if (href === '/intelligence') {
-    return pathname === '/intelligence' || pathname.startsWith('/armory/')
-  }
-
   return pathname === href
 }
 
@@ -30,7 +26,7 @@ function Navbar() {
   const [signOutError, setSignOutError] = useState('')
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const { status, authenticated, user, hasPermission, signIn, signOut, refresh } = useSession()
+  const { status, authenticated, user, signIn, signOut, refresh } = useSession()
   const links = primaryNavigationLinks(authenticated)
 
   useEffect(() => {
@@ -140,9 +136,7 @@ function Navbar() {
                     <div className="navbar__account-links">
                       <a href="/members/me">My Profile</a>
                       <a href="/members">Members</a>
-                      <a href="/intelligence">Guild Intelligence</a>
-                      {hasPermission('audit.view') ? <a href="/intelligence#audit">Audit Log</a> : null}
-                      {hasPermission('site.admin') ? <a href="/intelligence#guildweaver">Guildweaver Sync</a> : null}
+                      <a href="/intelligence">GuildOS</a>
                       <button type="button" onClick={handleSignOut} disabled={signingOut}>
                         {signingOut ? 'Signing out…' : 'Sign out'}
                       </button>
