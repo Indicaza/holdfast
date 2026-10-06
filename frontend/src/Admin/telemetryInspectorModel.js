@@ -4,8 +4,44 @@ export const TELEMETRY_SECTION_SHARE_FORMAT = 'guildweaver.telemetry-section-sha
 const DOMAIN_ADAPTERS = {
   character: {
     label: 'Character',
-    summaryKeys: ['name', 'realm', 'level', 'class', 'race', 'specialization', 'reason'],
+    summaryKeys: ['name', 'realm', 'level', 'class', 'race', 'specialization'],
   },
+  talent_tree: {
+    label: 'Talent Tree',
+    summaryKeys: ['class', 'treeId', 'sourceApi', 'kind', 'gameBuild'],
+  },
+}
+
+const FIELD_LABELS = {
+  activeEntryId: 'Active Entry ID',
+  activeEntryRank: 'Active Entry Rank',
+  addonVersion: 'Addon Version',
+  bonusIds: 'Bonus IDs',
+  characterId: 'Character ID',
+  characterKey: 'Character Key',
+  classId: 'Class ID',
+  configId: 'Config ID',
+  craftedItemId: 'Crafted Item ID',
+  definitionId: 'Definition ID',
+  enchantId: 'Enchant ID',
+  gemItemIds: 'Gem Item IDs',
+  iconFileDataId: 'Icon FileDataID',
+  instanceDifficultyId: 'Instance Difficulty ID',
+  itemId: 'Item ID',
+  itemLevel: 'Item Level',
+  linkLevel: 'Link Level',
+  maxSkillLevel: 'Max Skill Level',
+  qualityId: 'Quality ID',
+  rawItemString: 'Raw Item String',
+  recipeId: 'Recipe ID',
+  schemaVersion: 'Schema Version',
+  skillLineAbilityId: 'Skill Line Ability ID',
+  skillLineId: 'Skill Line ID',
+  specializationId: 'Specialization ID',
+  spellId: 'Spell ID',
+  treeId: 'Tree ID',
+  treeIds: 'Tree IDs',
+  upgradeTypeId: 'Upgrade Type ID',
 }
 
 const OVERVIEW_KEYS = [
@@ -17,7 +53,6 @@ const OVERVIEW_KEYS = [
   'bodyType',
   'sex',
   'specialization',
-  'reason',
   'addonVersion',
   'schemaVersion',
   'capturedAt',
@@ -27,7 +62,9 @@ const OVERVIEW_KEYS = [
 ]
 
 export function humanizeTelemetryName(value) {
-  return String(value || 'unknown')
+  const key = String(value || 'unknown')
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key]
+  return key
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
@@ -47,7 +84,7 @@ export function telemetryPreview(value) {
   if (value === undefined) return '—'
   if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
   if (typeof value === 'object') {
-    const preferred = value.name || value.label || value.id
+    const preferred = value.name || value.label || value.token || value.id
     return preferred ? String(preferred) : `${Object.keys(value).length} fields`
   }
   return String(value)
@@ -115,6 +152,43 @@ export function telemetryPayloadSections(record) {
   }
 
   return sections
+}
+
+function collectReferenceIds(value, refs, depth = 0) {
+  if (depth > 16 || value === null || value === undefined) return
+  if (Array.isArray(value)) {
+    for (const entry of value) collectReferenceIds(entry, refs, depth + 1)
+    return
+  }
+  if (typeof value !== 'object') return
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (key === 'itemId' || key === 'craftedItemId') {
+      const id = Number(entry)
+      if (Number.isInteger(id) && id > 0) refs.itemIds.add(id)
+    } else if (key === 'spellId') {
+      const id = Number(entry)
+      if (Number.isInteger(id) && id > 0) refs.spellIds.add(id)
+    } else if (key === 'iconFileDataId') {
+      const id = Number(entry)
+      if (Number.isInteger(id) && id > 0) refs.iconFileDataIds.add(id)
+    }
+    collectReferenceIds(entry, refs, depth + 1)
+  }
+}
+
+export function telemetryExternalReferences(record) {
+  const refs = {
+    itemIds: new Set(),
+    spellIds: new Set(),
+    iconFileDataIds: new Set(),
+  }
+  collectReferenceIds(record?.payload, refs)
+  return {
+    itemIds: [...refs.itemIds].sort((a, b) => a - b),
+    spellIds: [...refs.spellIds].sort((a, b) => a - b),
+    iconFileDataIds: [...refs.iconFileDataIds].sort((a, b) => a - b),
+  }
 }
 
 function shareMetadata(record) {
