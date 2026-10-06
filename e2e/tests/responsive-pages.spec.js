@@ -41,7 +41,7 @@ test('phone navigation, account, recruitment, and footer controls have usable to
   const controls = [
     page.locator('.navbar').getByRole('button', { name: 'Sign In', exact: true }),
     page.getByRole('button', { name: 'Toggle navigation' }),
-    page.locator('footer').getByRole('link', { name: 'Charter' }),
+    page.locator('footer').getByRole('link', { name: 'Privacy' }),
   ]
   for (const control of controls) {
     await expect(control).toBeVisible()

@@ -18,12 +18,16 @@ test('recruitment preserves the public page, scroll position, and keyboard focus
   expect(Math.abs(await page.evaluate(() => window.scrollY) - before)).toBeLessThanOrEqual(2)
 })
 
-test('footer recruitment works in place and direct join links return to their source', async ({ page }) => {
+test('footer exposes utility links and direct join links return to their source', async ({ page }) => {
   await page.goto('/privacy')
-  await page.locator('footer').getByRole('link', { name: 'Join Holdfast' }).click()
-  await expect(page).toHaveURL(/\/privacy$/)
-  await expect(page.getByRole('dialog')).toContainText('Come play with us.')
-  await page.getByRole('button', { name: 'Close', exact: true }).click()
+  const footer = page.locator('footer')
+  const privacy = footer.getByRole('link', { name: 'Privacy' })
+  const source = footer.getByRole('link', { name: 'Source' })
+  await expect(privacy).toBeVisible()
+  await expect(source).toBeVisible()
+  expect(await privacy.getAttribute('href')).toBe('/privacy')
+  expect(await source.getAttribute('href')).toBe('https://github.com/Indicaza/holdfast')
+
   await page.goto('/join?returnTo=%2Franks')
   await expect(page.getByRole('dialog')).toContainText('Come play with us.')
   await page.keyboard.press('Escape')

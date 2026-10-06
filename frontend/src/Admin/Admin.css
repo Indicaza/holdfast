@@ -80,7 +80,6 @@
   }
 }
 
-
 .admin-page--gate .page-shell__header {
   max-width: 64rem;
   margin-inline: auto;
@@ -107,6 +106,29 @@
   justify-items: center;
   text-align: center;
 }
+
+.admin-nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.admin-nav a {
+  min-width: 7rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-decoration: none;
+}
+
+.admin-nav a[aria-current='page'] {
+  border-color: var(--color-accent-bright);
+  color: var(--color-text-strong);
+}
+
 .admin-audit {
   margin-top: var(--space-8);
   padding: clamp(var(--space-5), 4vw, var(--space-8));
