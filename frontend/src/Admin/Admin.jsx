@@ -95,7 +95,7 @@ function Admin() {
       centered
       className="admin-page"
     >
-      <nav className="gw-admin-nav" aria-label="Admin sections">
+      <nav className="admin-nav" aria-label="Admin sections">
         <a href="/admin" aria-current="page">Audit</a>
         {session.hasPermission('site.admin') ? <a href="/admin/guildweaver">Guildweaver</a> : null}
       </nav>
