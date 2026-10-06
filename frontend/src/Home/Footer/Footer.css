@@ -69,6 +69,7 @@
 
 .footer__links a {
   display: inline-flex;
+  /* Keep mobile utility links at the 44px interaction guardrail regardless of root font size. */
   min-height: 44px;
   align-items: center;
   color: var(--color-text-muted);
