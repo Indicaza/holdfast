@@ -55,8 +55,8 @@ const routes = {
   '/intelligence': {
     component: GuildIntelligence,
     path: '/intelligence',
-    title: 'Guild Intelligence | Holdfast',
-    description: 'Browse synced Holdfast characters, professions, recipes, and crafting knowledge.',
+    title: 'GuildOS | Holdfast',
+    description: 'Holdfast GuildOS for synced characters, roster intelligence, crafting knowledge, and guild operations.',
     robots: 'noindex,nofollow',
   },
   '/charter': {
