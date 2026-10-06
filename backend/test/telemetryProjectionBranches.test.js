@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { sanitizeArmoryEquipment } from "../src/Character/armorySanitizer.js";
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import {
   normalizeEquipment,
@@ -51,14 +52,14 @@ test("telemetry normalizers accept alternate and malformed optional shapes", () 
   assert.equal(recipes[0].craftedItemId, 88);
   assert.equal(recipes[0].reagents[0].quantity, 2);
 
-  const equipment = normalizeEquipment({
+  const equipment = sanitizeArmoryEquipment(normalizeEquipment({
     equipment: {
       slots: [
         { inventorySlot: "CHEST", id: "123", itemName: "Old Chest", level: "19", modifiers: ["old"] },
         null,
       ],
     },
-  });
+  }));
   assert.equal(equipment.length, 1);
   assert.equal(equipment[0].slot, "CHEST");
   assert.equal(equipment[0].itemId, 123);
@@ -135,7 +136,7 @@ test("legacy summary and craft projections remain readable for compatibility", a
     assert.equal(summary.characters.length, 1);
     assert.equal(summary.characters[0].organizationName, "Sister Guild");
     assert.equal(summary.professions[0].name, "Blacksmithing");
-    assert.equal(summary.recipeCount, 1);
+    assert.equal(summary.summary.recipeCount, 1);
 
     const craft = searchCraftFinder("branch");
     assert.equal(craft.length, 1);
