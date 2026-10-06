@@ -70,7 +70,7 @@ test('generic telemetry storage is idempotent and preserves the canonical envelo
   assert.equal(created.status, 'created')
   assert.equal(created.record.kind, 'state')
   assert.equal(created.record.eventType, 'collector_health_snapshot')
-  assert.equal(created.record.capturedAt, '2026-10-06T11:00:00.000Z')
+  assert.equal(created.record.capturedAt, '2026-10-06T07:00:00.000Z')
   assert.equal(created.record.payload.eventQueue.capacity, 512)
 
   const duplicate = ingestGuildweaverTelemetry({
