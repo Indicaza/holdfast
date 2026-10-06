@@ -1,8 +1,8 @@
 .guildweaver-download {
   display: grid;
-  width: min(100%, 42rem);
+  width: min(100%, 38rem);
   justify-items: center;
-  gap: var(--space-5);
+  gap: var(--space-6);
   margin-inline: auto;
   text-align: center;
 }
@@ -10,8 +10,8 @@
 .guildweaver-download__lead {
   display: grid;
   justify-items: center;
-  gap: var(--space-2);
-  max-width: 38rem;
+  gap: var(--space-3);
+  max-width: 34rem;
 }
 
 .guildweaver-download__eyebrow {
@@ -24,110 +24,140 @@
 }
 
 .guildweaver-download__lead h2,
-.guildweaver-download__lead p {
+.guildweaver-download__lead p,
+.guildweaver-download__help {
   margin: 0;
 }
 
 .guildweaver-download__lead h2 {
   color: var(--color-text-strong);
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, var(--font-size-fib-34));
+  font-size: clamp(1.9rem, 4vw, var(--font-size-fib-34));
   font-weight: var(--font-weight-display);
-  line-height: 1.05;
+  line-height: 1.08;
   text-wrap: balance;
 }
 
 .guildweaver-download__lead p,
-.guildweaver-download__detail {
+.guildweaver-download__detail,
+.guildweaver-download__help {
   color: var(--color-text-muted);
-  line-height: 1.55;
+  line-height: 1.6;
   text-wrap: pretty;
 }
 
-.guildweaver-download__actions {
+.guildweaver-download__actions,
+.guildweaver-download__mac-choices {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  width: 100%;
 }
 
 .guildweaver-download__primary,
-.guildweaver-download__secondary {
+.guildweaver-download__secondary,
+.guildweaver-download__choice {
   display: inline-flex;
-  min-height: 3.35rem;
+  min-height: 3.4rem;
   align-items: center;
   justify-content: center;
   padding: 0 var(--space-6);
   border-radius: var(--radius-button);
   font-family: inherit;
-  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-caps);
   text-align: center;
-  text-transform: uppercase;
   cursor: pointer;
   transition:
     background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
+    color var(--duration-fast) var(--ease-standard);
 }
 
 .guildweaver-download__primary {
   border: var(--border-accent);
-  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  background: var(--color-accent-bright);
   color: var(--color-background);
-  box-shadow: 0 0.8rem 2.2rem rgba(0, 0, 0, 0.22);
 }
 
 .guildweaver-download__secondary {
   border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.32);
+  background: transparent;
   color: var(--color-text-strong);
 }
 
 .guildweaver-download__primary:hover,
-.guildweaver-download__primary:focus-visible,
-.guildweaver-download__secondary:hover,
-.guildweaver-download__secondary:focus-visible {
-  transform: translateY(-1px);
-}
-
-.guildweaver-download__primary:hover,
 .guildweaver-download__primary:focus-visible {
-  background: var(--color-accent-bright);
-  box-shadow: 0 1rem 2.6rem rgba(0, 0, 0, 0.28);
+  background: var(--color-accent);
 }
 
 .guildweaver-download__secondary:hover,
 .guildweaver-download__secondary:focus-visible {
-  border-color: rgba(221, 193, 125, 0.45);
-  background: rgba(16, 39, 66, 0.72);
+  border-color: var(--color-border-strong);
   color: var(--color-accent-bright);
 }
 
-.guildweaver-download__checksum {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
+.guildweaver-download__mac-choices {
+  max-width: 34rem;
+}
+
+.guildweaver-download__choice {
+  display: grid;
+  flex: 1 1 14rem;
+  min-height: 5.5rem;
+  gap: 0.25rem;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-subtle);
+  background: transparent;
+}
+
+.guildweaver-download__choice:hover,
+.guildweaver-download__choice:focus-visible {
+  border-color: var(--color-accent-bright);
+}
+
+.guildweaver-download__choice strong {
+  color: var(--color-text-strong);
+}
+
+.guildweaver-download__choice span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.guildweaver-download__checksum,
+.guildweaver-download__plain-button {
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   text-decoration: underline;
   text-decoration-color: rgba(255, 255, 255, 0.2);
-  text-underline-offset: 0.18em;
+  text-underline-offset: 0.2em;
+}
+
+.guildweaver-download__plain-button {
+  min-height: 2.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
 }
 
 .guildweaver-download__checksum:hover,
-.guildweaver-download__checksum:focus-visible {
+.guildweaver-download__checksum:focus-visible,
+.guildweaver-download__plain-button:hover,
+.guildweaver-download__plain-button:focus-visible {
   color: var(--color-accent-bright);
   text-decoration-color: currentColor;
 }
 
+.guildweaver-download__help {
+  max-width: 28rem;
+  font-size: var(--font-size-xs);
+}
+
 .guildweaver-download__platforms {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
 }
 
 .guildweaver-download__platform {
@@ -135,17 +165,19 @@
   min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border: var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgba(3, 8, 15, 0.32);
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-subtle);
   text-align: left;
+}
+
+.guildweaver-download__platform:first-child {
+  border-top: var(--border-subtle);
 }
 
 .guildweaver-download__platform > div:first-child {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.2rem;
 }
 
 .guildweaver-download__platform strong {
@@ -161,7 +193,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--space-3);
+  gap: var(--space-4);
   font-size: var(--font-size-xs);
 }
 
@@ -226,19 +258,15 @@
   text-decoration-color: currentColor;
 }
 
-@media (max-width: 44rem) {
-  .guildweaver-download__platforms {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 30rem) {
-  .guildweaver-download__actions {
-    width: 100%;
+@media (max-width: 34rem) {
+  .guildweaver-download__actions,
+  .guildweaver-download__mac-choices {
+    flex-direction: column;
   }
 
   .guildweaver-download__primary,
-  .guildweaver-download__secondary {
+  .guildweaver-download__secondary,
+  .guildweaver-download__choice {
     width: 100%;
   }
 
@@ -249,19 +277,5 @@
 
   .guildweaver-download__platform-actions {
     justify-content: flex-start;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .guildweaver-download__primary,
-  .guildweaver-download__secondary {
-    transition: none;
-  }
-
-  .guildweaver-download__primary:hover,
-  .guildweaver-download__primary:focus-visible,
-  .guildweaver-download__secondary:hover,
-  .guildweaver-download__secondary:focus-visible {
-    transform: none;
   }
 }

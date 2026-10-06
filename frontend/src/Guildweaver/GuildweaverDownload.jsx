@@ -4,20 +4,32 @@ import Modal from '../Modal/Modal.jsx'
 import {
   detectGuildweaverOs,
   guildweaverDownloads,
+  guildweaverDownloadsForOs,
   recommendedGuildweaverDownload,
 } from './downloads.js'
 import './GuildweaverDownload.css'
-
-function platformLabel(download) {
-  return `${download.label} · ${download.detail}`
-}
 
 export default function GuildweaverDownload({ compact = false, navigatorLike = globalThis.navigator }) {
   const [showAllDownloads, setShowAllDownloads] = useState(false)
   const detectedOs = detectGuildweaverOs(navigatorLike)
   const recommended = recommendedGuildweaverDownload(navigatorLike)
+  const macDownloads = guildweaverDownloadsForOs('macos')
+  const intelMac = macDownloads.find((download) => download.id === 'macos-x64')
+  const appleSiliconMac = macDownloads.find((download) => download.id === 'macos-arm64')
+  const isMac = detectedOs === 'macos'
 
   if (compact) {
+    if (isMac) {
+      return (
+        <div className="guildweaver-download guildweaver-download--compact">
+          <a className="guildweaver-download__primary" href="/guildweaver">
+            Choose Mac download
+          </a>
+          <span className="guildweaver-download__detail">Intel and Apple Silicon builds available</span>
+        </div>
+      )
+    }
+
     return (
       <div className="guildweaver-download guildweaver-download--compact">
         <a
@@ -38,38 +50,63 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
   return (
     <section className="guildweaver-download" aria-labelledby="guildweaver-download-title">
       <div className="guildweaver-download__lead">
-        <p className="guildweaver-download__eyebrow">Recommended for this computer</p>
+        <p className="guildweaver-download__eyebrow">Download</p>
         <h2 id="guildweaver-download-title">
-          {recommended ? platformLabel(recommended) : 'Choose your platform'}
+          {isMac ? 'Choose your Mac' : recommended ? `Guildweaver for ${recommended.label}` : 'Choose your platform'}
         </h2>
         <p>
-          {detectedOs === 'macos'
-            ? 'Apple Silicon is recommended for modern Macs. Intel builds are available under other downloads.'
+          {isMac
+            ? 'Browsers cannot reliably tell Intel Macs from Apple Silicon. Pick the processor your Mac uses.'
             : recommended
-              ? 'We detected your operating system. One download gets the bridge and addon setup started.'
-              : 'We could not confidently detect your operating system. Choose your platform below.'}
+              ? 'We detected your operating system. Download the bridge to get started.'
+              : 'Pick the build that matches this computer.'}
         </p>
       </div>
 
-      <div className="guildweaver-download__actions">
-        {recommended ? (
-          <a className="guildweaver-download__primary" href={recommended.href}>
-            Download for {recommended.label}
+      {isMac ? (
+        <div className="guildweaver-download__mac-choices">
+          <a className="guildweaver-download__choice" href={intelMac?.href || '/guildweaver'}>
+            <strong>Intel Mac</strong>
+            <span>Intel processor</span>
           </a>
-        ) : null}
+          <a className="guildweaver-download__choice" href={appleSiliconMac?.href || '/guildweaver'}>
+            <strong>Apple Silicon</strong>
+            <span>M1, M2, M3, M4 or newer</span>
+          </a>
+        </div>
+      ) : (
+        <div className="guildweaver-download__actions">
+          {recommended ? (
+            <a className="guildweaver-download__primary" href={recommended.href}>
+              Download for {recommended.label}
+            </a>
+          ) : null}
+          <button
+            className="guildweaver-download__secondary"
+            type="button"
+            onClick={() => setShowAllDownloads(true)}
+          >
+            {recommended ? 'Other platforms' : 'Choose platform'}
+          </button>
+        </div>
+      )}
+
+      {isMac ? (
+        <p className="guildweaver-download__help">Not sure? Apple menu → About This Mac will show your processor.</p>
+      ) : recommended ? (
+        <a className="guildweaver-download__checksum" href={recommended.checksumHref}>
+          SHA-256 checksum
+        </a>
+      ) : null}
+
+      {isMac ? (
         <button
-          className="guildweaver-download__secondary"
+          className="guildweaver-download__plain-button"
           type="button"
           onClick={() => setShowAllDownloads(true)}
         >
-          Other downloads
+          Windows or Linux downloads
         </button>
-      </div>
-
-      {recommended ? (
-        <a className="guildweaver-download__checksum" href={recommended.checksumHref}>
-          Verify SHA-256 checksum
-        </a>
       ) : null}
 
       {showAllDownloads ? (

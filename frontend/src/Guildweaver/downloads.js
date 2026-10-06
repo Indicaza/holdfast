@@ -72,14 +72,17 @@ export function detectGuildweaverOs(navigatorLike = {}) {
 
 export function recommendedGuildweaverDownload(navigatorLike = {}) {
   const os = detectGuildweaverOs(navigatorLike)
+
+  // Browsers do not reliably expose whether a Mac is Intel or Apple Silicon.
+  // Never guess here: macOS users explicitly choose the correct build in the UI.
+  if (os === 'macos') return null
+
   const preferredId =
     os === 'windows'
       ? 'windows'
-      : os === 'macos'
-        ? 'macos-arm64'
-        : os === 'linux'
-          ? 'linux-x64'
-          : null
+      : os === 'linux'
+        ? 'linux-x64'
+        : null
 
   return preferredId
     ? guildweaverDownloads.find((download) => download.id === preferredId) || null
