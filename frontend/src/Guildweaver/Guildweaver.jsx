@@ -27,34 +27,26 @@ const authorityFacts = [
   'Automated protected in-game guild actions',
 ]
 
-const trustCards = [
+const detailItems = [
   {
     id: 'source',
-    eyebrow: 'Open source',
-    title: 'Inspect everything.',
-    body: 'Website, bridge, and addon are all public.',
-    mark: '⌘',
+    title: 'Open source',
+    body: 'Browse the website, bridge, and addon repositories.',
   },
   {
     id: 'privacy',
-    eyebrow: 'Data boundary',
-    title: 'Game facts only.',
-    body: 'No Battle.net credentials. Holdfast keeps authority.',
-    mark: '◇',
+    title: 'What gets synced',
+    body: 'See the data boundary and what Guildweaver cannot access.',
   },
   {
     id: 'architecture',
-    eyebrow: 'Architecture',
-    title: 'No black box.',
-    body: 'See exactly how data moves from WoW to Holdfast.',
-    mark: '↕',
+    title: 'How it works',
+    body: 'See the path from WoW to the bridge, Holdfast, and Discord.',
   },
   {
     id: 'verification',
-    eyebrow: 'Verification',
-    title: 'Trust, but verify.',
-    body: 'Public builds, releases, and SHA-256 checksums.',
-    mark: '✓',
+    title: 'Verify the download',
+    body: 'Release artifacts, public builds, checksums, and alpha status.',
   },
 ]
 
@@ -84,76 +76,68 @@ export default function Guildweaver() {
     <PageShell
       eyebrow="Holdfast companion"
       title="Guildweaver"
-      intro="Install once. Guildweaver connects World of Warcraft to Holdfast, keeps the addon current, and quietly handles supported sync in the background."
+      intro="Connect World of Warcraft to Holdfast. Install the bridge once, pair this computer, and Guildweaver keeps the addon and supported sync working for you."
       centered
       className="guildweaver-page"
     >
-      <section className="guildweaver-hero-card">
-        <div className="guildweaver-product-mark" aria-hidden="true">♜</div>
-
-        <div className="guildweaver-release-line" aria-label="Guildweaver release status">
-          <span className="guildweaver-release-badge">{release.channelLabel}</span>
-          <span className="guildweaver-release-platforms">Windows · macOS · Linux</span>
-        </div>
-
+      <section className="guildweaver-download-panel">
+        <p className="guildweaver-release-status">{release.channelLabel} release · Windows · macOS · Linux</p>
         <GuildweaverDownload />
-
-        <div className="guildweaver-hero-trust">
-          <span>Open source</span>
-          <span>SHA-256 verified</span>
-          <span>No Battle.net credentials</span>
-        </div>
-
         <button
           className="guildweaver-text-button"
           type="button"
           onClick={() => setActiveModal('verification')}
         >
-          Currently unsigned alpha software · learn what that means
+          Guildweaver is currently unsigned alpha software
         </button>
       </section>
 
-      <section className="guildweaver-section guildweaver-how">
+      <section className="guildweaver-section">
         <div className="guildweaver-section__heading">
-          <p>How it works</p>
-          <h2>Three steps. Then forget about it.</h2>
+          <p>What happens next</p>
+          <h2>Install. Pair. Play.</h2>
         </div>
 
         <ol className="guildweaver-steps">
           <li>
-            <strong>Install the Bridge</strong>
-            <span>Download the build for this computer and run the included installer.</span>
+            <span className="guildweaver-step-number">1</span>
+            <div>
+              <strong>Install the Bridge</strong>
+              <span>Run the download. The bridge finds WoW and installs the addon.</span>
+            </div>
           </li>
           <li>
-            <strong>Pair with Holdfast</strong>
-            <span>Approve the device in your browser. Guildweaver finds WoW and installs the addon.</span>
+            <span className="guildweaver-step-number">2</span>
+            <div>
+              <strong>Pair with Holdfast</strong>
+              <span>Your browser opens once so you can approve this computer.</span>
+            </div>
           </li>
           <li>
-            <strong>Play normally</strong>
-            <span>The bridge and addon maintain themselves and sync supported data as you play.</span>
+            <span className="guildweaver-step-number">3</span>
+            <div>
+              <strong>Play normally</strong>
+              <span>Guildweaver maintains itself and syncs supported data in the background.</span>
+            </div>
           </li>
         </ol>
       </section>
 
-      <section className="guildweaver-section guildweaver-trust-section">
+      <section className="guildweaver-section">
         <div className="guildweaver-section__heading">
-          <p>Built in the open</p>
-          <h2>Nothing important is hidden.</h2>
+          <p>Want more detail?</p>
+          <h2>Everything is inspectable.</h2>
+          <span>You do not need any of this to install Guildweaver. It is here if you want to look deeper.</span>
         </div>
 
-        <div className="guildweaver-trust-grid">
-          {trustCards.map((card) => (
-            <button
-              className="guildweaver-trust-card"
-              type="button"
-              key={card.id}
-              onClick={() => setActiveModal(card.id)}
-            >
-              <span className="guildweaver-trust-card__mark" aria-hidden="true">{card.mark}</span>
-              <span className="guildweaver-trust-card__eyebrow">{card.eyebrow}</span>
-              <strong>{card.title}</strong>
-              <span>{card.body}</span>
-              <small>Explore →</small>
+        <div className="guildweaver-detail-list">
+          {detailItems.map((item) => (
+            <button type="button" key={item.id} onClick={() => setActiveModal(item.id)}>
+              <span>
+                <strong>{item.title}</strong>
+                <small>{item.body}</small>
+              </span>
+              <b aria-hidden="true">→</b>
             </button>
           ))}
         </div>
@@ -169,7 +153,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Open source"
           title="Inspect the whole stack."
-          intro="Every Holdfast-owned piece of Guildweaver is public. Browse the code, history, issues, and build configuration yourself."
+          intro="Every Holdfast-owned piece of Guildweaver is public."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -189,7 +173,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Data boundary"
           title="Game facts, not credentials."
-          intro="WoW owns observed character data. Holdfast owns guild authority. Guildweaver connects the two without becoming either one."
+          intro="WoW owns observed character data. Holdfast owns guild authority."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -201,7 +185,7 @@ export default function Guildweaver() {
               </ul>
             </section>
             <section>
-              <p>Never receives authority over</p>
+              <p>Cannot access or control</p>
               <ul>
                 {authorityFacts.map((fact) => <li key={fact}>{fact}</li>)}
               </ul>
@@ -215,7 +199,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Architecture"
           title="No black box."
-          intro="The addon observes WoW. The local bridge moves supported data over HTTPS. Holdfast remains authoritative for guild-owned state."
+          intro="The addon observes WoW. The bridge moves supported data over HTTPS. Holdfast remains authoritative for guild-owned state."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -237,22 +221,21 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Verification"
           title="Trust, but verify."
-          intro="Guildweaver is early software. We would rather show you exactly how it is built than ask you to blindly trust a binary."
+          intro="Guildweaver is early software. The source, build pipeline, releases, and checksums are public."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
           <div className="guildweaver-verification-modal">
-            <aside>
-              <strong>Unsigned alpha</strong>
-              <span>Desktop packages are not yet Windows code-signed or Apple-notarized. Your operating system may warn you before first launch.</span>
-            </aside>
+            <p>
+              Desktop packages are not yet Windows code-signed or Apple-notarized, so your operating system may warn you before first launch.
+            </p>
             <div className="guildweaver-verification-links">
               <a href={release.releasePage} target="_blank" rel="noreferrer">Current release <span>↗</span></a>
               <a href={release.buildPipeline} target="_blank" rel="noreferrer">Public build pipeline <span>↗</span></a>
               <a href="https://github.com/Indicaza/guildweaver-bridge/blob/main/README.md" target="_blank" rel="noreferrer">Installation notes <span>↗</span></a>
               <a href={release.reportIssue} target="_blank" rel="noreferrer">Report a bug <span>↗</span></a>
             </div>
-            <p>Every platform download publishes a matching SHA-256 checksum beside the release asset.</p>
+            <p>Every platform download publishes a matching SHA-256 checksum.</p>
           </div>
         </Modal>
       ) : null}
