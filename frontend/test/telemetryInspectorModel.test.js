@@ -4,7 +4,9 @@ import test from 'node:test'
 import {
   buildTelemetrySectionShareBundle,
   buildTelemetryShareBundle,
+  humanizeTelemetryName,
   telemetryDomainDescriptor,
+  telemetryExternalReferences,
   telemetryPayloadSections,
   telemetrySummaryEntries,
 } from '../src/Admin/telemetryInspectorModel.js'
@@ -20,6 +22,13 @@ test('telemetry inspector supports unknown domains without bespoke UI', () => {
     ['alpha', 1],
     ['beta', { enabled: true }],
   ])
+})
+
+test('normalized telemetry uses semantic labels', () => {
+  assert.equal(telemetryDomainDescriptor({ domain: 'talent_tree' }).label, 'Talent Tree')
+  assert.equal(humanizeTelemetryName('iconFileDataId'), 'Icon FileDataID')
+  assert.equal(humanizeTelemetryName('qualityId'), 'Quality ID')
+  assert.equal(humanizeTelemetryName('rawItemString'), 'Raw Item String')
 })
 
 test('share bundle is self-describing and retains the canonical envelope', () => {
@@ -51,16 +60,17 @@ test('share bundle is self-describing and retains the canonical envelope', () =>
   assert.deepEqual(bundle.envelope, record.envelope)
 })
 
-test('character payload is split into compact overview and focused sections', () => {
+test('character schema v3 is split into compact overview and focused sections', () => {
   const record = {
     payload: {
+      schemaVersion: 3,
       name: 'Rook',
-      realm: 'Darkwing',
+      realm: 'Classic Beta PvE 2',
       level: 7,
-      class: { id: 4, name: 'Rogue' },
-      equipment: [{ slot: 'MainHandSlot', itemId: 7166 }],
-      professions: [{ name: 'Leatherworking', skillLevel: 43 }],
-      talents: { trees: [{ id: 1111, nodes: new Array(40).fill({ rank: 0 }) }] },
+      class: { id: 4, name: 'Rogue', token: 'ROGUE' },
+      equipment: [{ slot: 'main_hand', itemId: 7166, iconFileDataId: 135650 }],
+      professions: [{ name: 'Leatherworking', skillLineId: 165, skillLevel: 43 }],
+      talents: { treeIds: [1111], allocations: [] },
     },
   }
 
@@ -72,8 +82,35 @@ test('character payload is split into compact overview and focused sections', ()
     'talents',
   ])
   assert.equal(sections[0].value.name, 'Rook')
-  assert.equal(sections[0].value.class.name, 'Rogue')
-  assert.equal(sections[3].value.trees[0].id, 1111)
+  assert.equal(sections[0].value.class.token, 'ROGUE')
+  assert.equal(sections[3].value.treeIds[0], 1111)
+})
+
+test('normalized ids are ready for later WoW API enrichment', () => {
+  const record = {
+    payload: {
+      equipment: [
+        { itemId: 7166, iconFileDataId: 135650 },
+        { itemId: 5957, iconFileDataId: 132760 },
+      ],
+      professions: [
+        {
+          recipes: [
+            { recipeId: 1001, craftedItemId: 2853, iconFileDataId: 132604 },
+          ],
+        },
+      ],
+      nodes: [
+        { entries: [{ spellId: 14162, iconFileDataId: 132292 }] },
+      ],
+    },
+  }
+
+  assert.deepEqual(telemetryExternalReferences(record), {
+    itemIds: [2853, 5957, 7166],
+    spellIds: [14162],
+    iconFileDataIds: [132292, 132604, 132760, 135650],
+  })
 })
 
 test('focused share bundle includes metadata and only the selected payload section', () => {
@@ -86,11 +123,12 @@ test('focused share bundle includes metadata and only the selected payload secti
     revision: 13,
     schemaVersion: 1,
     characterId: 'rook',
-    realm: 'Darkwing',
+    realm: 'Classic Beta PvE 2',
     payload: {
+      schemaVersion: 3,
       name: 'Rook',
-      equipment: [{ slot: 'MainHandSlot', itemId: 7166 }],
-      talents: { trees: [{ id: 1111 }] },
+      equipment: [{ slot: 'main_hand', itemId: 7166 }],
+      talents: { treeIds: [1111], allocations: [] },
     },
   }
 

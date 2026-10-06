@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { recordTelemetry } from '../src/Character/telemetryRecordRepository.js'
+import { recordTelemetry, telemetryDomain } from '../src/Character/telemetryRecordRepository.js'
 import { withHttpApp } from '../testSupport/httpHarness.js'
 
 test('generic telemetry is durable, idempotent, sanitized, and inspectable', () => withHttpApp(async ({ request }) => {
@@ -15,8 +15,13 @@ test('generic telemetry is durable, idempotent, sanitized, and inspectable', () 
     installationId: 'install-test',
     characterId: 'character-test',
     payload: {
+      schemaVersion: 3,
       name: 'Quill',
       level: 20,
+      equipment: [{
+        itemId: 5957,
+        rawItemString: 'item:5957::::::::Player-4620-014B5E8E:',
+      }],
       accountId: 'must-not-survive',
       nested: { battleTag: 'must-not-survive-either', safe: true },
     },
@@ -38,6 +43,7 @@ test('generic telemetry is durable, idempotent, sanitized, and inspectable', () 
   assert.equal(first.record.payload.accountId, undefined)
   assert.equal(first.record.payload.nested.battleTag, undefined)
   assert.equal(first.record.payload.nested.safe, true)
+  assert.equal(first.record.payload.equipment[0].rawItemString, 'item:5957::::::::Player-REDACTED:')
 
   const duplicate = recordTelemetry({
     deviceId: 'device-telemetry-test',
@@ -72,3 +78,8 @@ test('generic telemetry is durable, idempotent, sanitized, and inspectable', () 
   assert.ok(summary.json.summary.records >= 1)
   assert.ok(summary.json.summary.domains.some((entry) => entry.domain === 'character'))
 }))
+
+test('definition event types collapse to their semantic domain', () => {
+  assert.equal(telemetryDomain('talent_tree_definition'), 'talent_tree')
+  assert.equal(telemetryDomain('character_snapshot'), 'character')
+})
