@@ -10,6 +10,7 @@ import {
 } from './routing.js'
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
+const GuildweaverAdmin = lazy(() => import('./Admin/GuildweaverAdmin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
@@ -100,6 +101,13 @@ const routes = {
     path: '/admin',
     title: 'Guild Control Room',
     description: 'Guild administrative control room.',
+    robots: 'noindex,nofollow',
+  },
+  '/admin/guildweaver': {
+    component: GuildweaverAdmin,
+    path: '/admin/guildweaver',
+    title: 'Guildweaver Sync Console | Holdfast',
+    description: 'Internal Guildweaver sync payload history and diagnostics.',
     robots: 'noindex,nofollow',
   },
 }
