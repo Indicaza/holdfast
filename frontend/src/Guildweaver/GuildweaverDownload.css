@@ -14,18 +14,9 @@
   max-width: 34rem;
 }
 
-.guildweaver-download__eyebrow {
-  margin: 0;
-  color: var(--color-accent-bright);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
-}
-
 .guildweaver-download__lead h2,
 .guildweaver-download__lead p,
-.guildweaver-download__help {
+.guildweaver-download__next-step {
   margin: 0;
 }
 
@@ -40,14 +31,13 @@
 
 .guildweaver-download__lead p,
 .guildweaver-download__detail,
-.guildweaver-download__help {
+.guildweaver-download__next-step {
   color: var(--color-text-muted);
   line-height: 1.6;
   text-wrap: pretty;
 }
 
-.guildweaver-download__actions,
-.guildweaver-download__mac-choices {
+.guildweaver-download__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -56,13 +46,15 @@
 }
 
 .guildweaver-download__primary,
-.guildweaver-download__secondary,
-.guildweaver-download__choice {
+.guildweaver-download__secondary {
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0px;
+
   display: inline-flex;
-  min-height: 3.4rem;
+  min-height: 3.5rem;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-7);
   border-radius: var(--radius-button);
   font-family: inherit;
   font-weight: var(--font-weight-semibold);
@@ -75,6 +67,7 @@
 }
 
 .guildweaver-download__primary {
+  min-width: 13rem;
   border: var(--border-accent);
   background: var(--color-accent-bright);
   color: var(--color-background);
@@ -97,63 +90,9 @@
   color: var(--color-accent-bright);
 }
 
-.guildweaver-download__mac-choices {
-  max-width: 34rem;
-}
-
-.guildweaver-download__choice {
-  display: grid;
-  flex: 1 1 14rem;
-  min-height: 5.5rem;
-  gap: 0.25rem;
-  padding: var(--space-4) var(--space-5);
-  border: var(--border-subtle);
-  background: transparent;
-}
-
-.guildweaver-download__choice:hover,
-.guildweaver-download__choice:focus-visible {
-  border-color: var(--color-accent-bright);
-}
-
-.guildweaver-download__choice strong {
-  color: var(--color-text-strong);
-}
-
-.guildweaver-download__choice span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
-.guildweaver-download__checksum,
-.guildweaver-download__plain-button {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.2);
-  text-underline-offset: 0.2em;
-}
-
-.guildweaver-download__plain-button {
-  min-height: 2.5rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-
-.guildweaver-download__checksum:hover,
-.guildweaver-download__checksum:focus-visible,
-.guildweaver-download__plain-button:hover,
-.guildweaver-download__plain-button:focus-visible {
-  color: var(--color-accent-bright);
-  text-decoration-color: currentColor;
-}
-
-.guildweaver-download__help {
-  max-width: 28rem;
-  font-size: var(--font-size-xs);
+.guildweaver-download__next-step {
+  max-width: 31rem;
+  font-size: var(--font-size-sm);
 }
 
 .guildweaver-download__platforms {
@@ -259,14 +198,12 @@
 }
 
 @media (max-width: 34rem) {
-  .guildweaver-download__actions,
-  .guildweaver-download__mac-choices {
+  .guildweaver-download__actions {
     flex-direction: column;
   }
 
   .guildweaver-download__primary,
-  .guildweaver-download__secondary,
-  .guildweaver-download__choice {
+  .guildweaver-download__secondary {
     width: 100%;
   }
 
