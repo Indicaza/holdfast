@@ -14,6 +14,8 @@ import {
   startGuildweaverPairing,
 } from "./guildweaverDeviceRepository.js";
 
+const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2]);
+
 function bearerToken(req) {
   const authorization = String(req.get("Authorization") || "");
   const match = authorization.match(/^Bearer\s+(.+)$/i);
@@ -195,7 +197,8 @@ export function createCharacterRouter() {
           return;
         }
 
-        if (Number(snapshot.schemaVersion) !== 1) {
+        const snapshotSchemaVersion = Number(snapshot.schemaVersion);
+        if (!SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS.has(snapshotSchemaVersion)) {
           res.status(400).json({ error: "unsupported_snapshot_schema" });
           return;
         }
