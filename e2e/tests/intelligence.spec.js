@@ -239,15 +239,24 @@ test('member Armory renders equipment, talent tree, professions, recipes, and na
   expect(overflow).toBeLessThanOrEqual(1)
 })
 
-test('guild intelligence discovers synced characters and Craft Finder results', async ({ page, context }) => {
+test('guild intelligence discovers synced characters, tunes roster composition, and finds crafters', async ({ page, context }) => {
   await seedArmory(page, context)
   await page.goto('/intelligence')
 
   await expect(page.getByRole('heading', { name: 'The living armory.' })).toBeVisible()
+  await expect(page.getByText('Fresh in 24h', { exact: true })).toBeVisible()
   await expect(page.getByText('Armorytest', { exact: true }).first()).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Classes' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Specs' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Professions' })).toBeVisible()
+
+  const composition = page.locator('.roster-composition')
+  await expect(composition.getByRole('heading', { name: 'See what the guild can field.' })).toBeVisible()
+  await expect(composition.getByRole('button', { name: 'Classes' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(composition.getByRole('button', { name: /^Warrior\b/ })).toBeVisible()
+
+  await composition.getByRole('button', { name: 'Professions' }).click()
+  await expect(composition.getByRole('button', { name: 'Professions' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(composition.getByRole('button', { name: /^Blacksmithing\b/ })).toBeVisible()
+  await composition.getByLabel('Slice detail').selectOption('5')
+  await expect(composition.getByLabel('Slice detail')).toHaveValue('5')
 
   const craftSearch = page.getByPlaceholder('Mithril Spurs, potion, item ID…')
   await craftSearch.fill('spurs')

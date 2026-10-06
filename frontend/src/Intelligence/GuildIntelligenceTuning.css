@@ -1,0 +1,27 @@
+.intelligence-page.page-shell--centered .page-shell__header {
+  text-align: center;
+}
+
+.intelligence-page.page-shell--centered .page-shell__intro {
+  margin-inline: auto;
+}
+
+#composition {
+  scroll-margin-top: 6rem;
+}
+
+.intel-scorecards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 72rem) {
+  .intel-scorecards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 56rem) {
+  .intel-scorecards {
+    grid-template-columns: 1fr;
+  }
+}

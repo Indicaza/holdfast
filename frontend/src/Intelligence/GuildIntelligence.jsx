@@ -8,37 +8,9 @@ import PageShell from '../PageShell/PageShell.jsx'
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
+import RosterComposition from './RosterComposition.jsx'
 import './GuildIntelligence.css'
-
-function Distribution({ title, entries }) {
-  const max = Math.max(1, ...entries.map((entry) => Number(entry.count || entry.characters) || 0))
-  const total = entries.reduce((sum, entry) => sum + (Number(entry.count || entry.characters) || 0), 0)
-
-  return (
-    <section className="intel-panel intel-distribution-card">
-      <div className="intel-panel__heading intel-panel__heading--compact">
-        <div>
-          <span>Distribution</span>
-          <h2>{title}</h2>
-        </div>
-        {entries.length ? <small>{total} represented</small> : null}
-      </div>
-      {entries.length ? (
-        <div className="intel-bars">
-          {entries.slice(0, 10).map((entry) => {
-            const count = Number(entry.count || entry.characters) || 0
-            return (
-              <div className="intel-bar" key={entry.name}>
-                <div><span>{entry.name}</span><strong>{count}</strong></div>
-                <div className="intel-bar__track"><span style={{ width: `${(count / max) * 100}%` }} /></div>
-              </div>
-            )
-          })}
-        </div>
-      ) : <p className="intel-muted">No telemetry yet.</p>}
-    </section>
-  )
-}
+import './GuildIntelligenceTuning.css'
 
 function professionSkillLabel(crafter, professionName) {
   const current = Number(crafter?.professionSkill) || 0
@@ -46,6 +18,14 @@ function professionSkillLabel(crafter, professionName) {
   const modifier = Number(crafter?.professionModifier) || 0
   if (!current && !maximum && !modifier) return ''
   return `${professionName || 'Profession'} ${current}${maximum ? `/${maximum}` : ''}${modifier ? ` +${modifier}` : ''}`
+}
+
+function freshSyncCount(characters, hours = 24) {
+  const cutoff = Date.now() - (hours * 60 * 60 * 1000)
+  return characters.filter((character) => {
+    const timestamp = new Date(character.lastSeenAt || '').getTime()
+    return Number.isFinite(timestamp) && timestamp >= cutoff
+  }).length
 }
 
 function CraftFinder() {
@@ -167,6 +147,7 @@ export default function GuildIntelligence() {
 
   const closeGate = () => window.location.assign('/')
   const recentCharacters = useMemo(() => data.characters.slice(0, 8), [data.characters])
+  const freshCharacters = useMemo(() => freshSyncCount(data.characters), [data.characters])
 
   if (session.status === 'loading' || session.status === 'error' || !session.authenticated) {
     return <Home overlay={<MemberAccessModal returnTo="/intelligence" onClose={closeGate} />} />
@@ -176,24 +157,28 @@ export default function GuildIntelligence() {
     <PageShell
       eyebrow="Guild Intelligence"
       title="The living armory."
-      intro="Characters, builds, professions, and recipes reported by Guildweaver—organized for the people actually playing together."
+      intro="Characters, builds, professions, and recipes reported by Guildweaver, organized for the people actually playing together."
       className="intelligence-page"
+      centered
     >
       {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
       {status === 'error' ? <p className="intel-error">Guild intelligence could not be loaded.</p> : null}
       {status === 'ready' ? (
         <>
           <nav className="intel-paths" aria-label="Guild intelligence sections">
+            <a href="#composition"><strong>Roster mix</strong><span>Explore class, spec, and profession coverage</span></a>
             <a href="#characters"><strong>Characters</strong><span>Open synced armories</span></a>
-            <a href="#professions"><strong>Professions</strong><span>See guild coverage</span></a>
             <a href="#recipes"><strong>Craft Finder</strong><span>Find who can make it</span></a>
           </nav>
 
           <section className="intel-scorecards" aria-label="Guild intelligence summary">
             <article><span>Synced characters</span><strong>{data.summary.characterCount}</strong><small>Armory-ready profiles</small></article>
+            <article><span>Fresh in 24h</span><strong>{freshCharacters}</strong><small>Characters reporting recently</small></article>
             <article><span>Professions represented</span><strong>{data.summary.professionCount}</strong><small>Across synced characters</small></article>
             <article><span>Known recipes</span><strong>{data.summary.recipeCount}</strong><small>Searchable craft knowledge</small></article>
           </section>
+
+          <RosterComposition data={data} />
 
           <section className="intel-panel intel-characters" id="characters">
             <div className="intel-panel__heading intel-panel__heading--split">
@@ -218,19 +203,6 @@ export default function GuildIntelligence() {
                 ))}
               </div>
             ) : <EmptyTelemetry title="No characters synced yet.">Install Guildweaver and the first character snapshot will appear here automatically.</EmptyTelemetry>}
-          </section>
-
-          <section className="intel-section" id="professions">
-            <div className="intel-section__heading">
-              <span>Guild coverage</span>
-              <h2>What the roster can field.</h2>
-              <p>Current class, specialization, and profession coverage from synced characters.</p>
-            </div>
-            <div className="intel-distributions">
-              <Distribution title="Classes" entries={data.classDistribution} />
-              <Distribution title="Specs" entries={data.specDistribution} />
-              <Distribution title="Professions" entries={data.professions} />
-            </div>
           </section>
 
           <CraftFinder />
