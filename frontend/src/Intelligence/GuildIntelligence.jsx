@@ -32,6 +32,14 @@ function Distribution({ title, entries }) {
   )
 }
 
+function professionSkillLabel(crafter, professionName) {
+  const current = Number(crafter?.professionSkill) || 0
+  const maximum = Number(crafter?.professionMaxSkill) || 0
+  const modifier = Number(crafter?.professionModifier) || 0
+  if (!current && !maximum && !modifier) return ''
+  return `${professionName || 'Profession'} ${current}${maximum ? `/${maximum}` : ''}${modifier ? ` +${modifier}` : ''}`
+}
+
 function CraftFinder() {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
@@ -90,16 +98,22 @@ function CraftFinder() {
                 <WowIcon iconFileId={result.recipe?.iconFileId} recipeId={result.recipe?.id} label={result.recipe?.name} size={50} />
                 <div>
                   <strong>{result.recipe?.name || 'Unknown recipe'}</strong>
-                  <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill` : ''}</span>
+                  <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill required` : ''}</span>
                 </div>
               </div>
               <div className="craft-result__crafters">
-                {result.crafters?.map((crafter) => (
-                  <a key={crafter.id} href={`/armory/${encodeURIComponent(crafter.id)}`}>
-                    <span><strong>{crafter.name}</strong><small>{crafter.className || 'Character'}{crafter.realm ? ` · ${crafter.realm}` : ''}</small></span>
-                    <em>{formatSyncAge(crafter.lastSeenAt)}</em>
-                  </a>
-                ))}
+                {result.crafters?.map((crafter) => {
+                  const skill = professionSkillLabel(crafter, result.recipe?.professionName)
+                  return (
+                    <a key={crafter.id} href={`/armory/${encodeURIComponent(crafter.id)}`}>
+                      <span>
+                        <strong>{crafter.name}</strong>
+                        <small>{skill || crafter.className || 'Character'}{crafter.realm ? ` · ${crafter.realm}` : ''}</small>
+                      </span>
+                      <em>{formatSyncAge(crafter.lastSeenAt)}</em>
+                    </a>
+                  )
+                })}
               </div>
             </article>
           ))}
@@ -186,6 +200,7 @@ export default function GuildIntelligence() {
 
           <div className="intel-distributions" id="professions">
             <Distribution title="Classes" entries={data.classDistribution} />
+            <Distribution title="Specs" entries={data.specDistribution} />
             <Distribution title="Professions" entries={data.professions} />
           </div>
 
