@@ -55,6 +55,7 @@ test('successful member writes appear on the authenticated live stream', () => w
   const text = await readUntil(reader, /"members"/)
   assert.match(text, /event: change/)
   assert.match(text, /"notifications"/)
+  assert.match(text, /"actorId":/)
   controller.abort()
 }))
 
@@ -75,14 +76,20 @@ test('live bus scopes private and privileged invalidations', () => {
   resetLiveUpdatesForTests()
 })
 
-test('mutation classification targets only affected read models', () => {
-  assert.deepEqual(
-    classifyLiveMutation({ method: 'PATCH', originalUrl: '/api/guild/members/me', auth: { user: { id: 'm1' } } }).map((event) => event.topics),
-    [['members', 'ranks', 'authority', 'notifications'], ['audit']],
-  )
-  assert.deepEqual(
-    classifyLiveMutation({ method: 'POST', originalUrl: '/api/quests/member/signup' }).map((event) => event.topics),
-    [['quests', 'notifications'], ['audit']],
-  )
+test('mutation classification targets only affected read models and identifies the actor', () => {
+  const memberEvents = classifyLiveMutation({
+    method: 'PATCH',
+    originalUrl: '/api/guild/members/me',
+    auth: { user: { id: 'm1' } },
+  })
+  assert.deepEqual(memberEvents.map((event) => event.topics), [
+    ['members', 'ranks', 'authority', 'notifications'],
+    ['audit'],
+  ])
+  assert.deepEqual(memberEvents.map((event) => event.actorId), ['m1', 'm1'])
+
+  const questEvents = classifyLiveMutation({ method: 'POST', originalUrl: '/api/quests/member/signup' })
+  assert.deepEqual(questEvents.map((event) => event.topics), [['quests', 'notifications'], ['audit']])
+  assert.deepEqual(questEvents.map((event) => event.actorId), [null, null])
   assert.deepEqual(classifyLiveMutation({ method: 'GET', originalUrl: '/api/quests/member' }), [])
 })
