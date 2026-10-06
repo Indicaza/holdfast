@@ -239,30 +239,60 @@ test('member Armory renders equipment, talent tree, professions, recipes, and na
   expect(overflow).toBeLessThanOrEqual(1)
 })
 
-test('guild intelligence discovers synced characters, tunes roster composition, and finds crafters', async ({ page, context }) => {
+test('guild intelligence behaves like a fixed app with switchable workspaces', async ({ page, context }) => {
   await seedArmory(page, context)
   await page.goto('/intelligence')
 
-  await expect(page.getByRole('heading', { name: 'The living armory.' })).toBeVisible()
+  const app = page.locator('.intelligence-app')
+  const topbar = page.locator('.intelligence-app__topbar')
+  const rail = page.locator('.intelligence-rail__nav')
+
+  await expect(app).toBeVisible()
+  await expect(topbar.getByRole('heading', { name: 'Overview' })).toBeVisible()
   await expect(page.getByText('Fresh in 24h', { exact: true })).toBeVisible()
   await expect(page.getByText('Armorytest', { exact: true }).first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Collapse intelligence navigation' }).click()
+  await expect(app).toHaveClass(/intelligence-app--collapsed/)
+  await page.getByRole('button', { name: 'Expand intelligence navigation' }).click()
+  await expect(app).not.toHaveClass(/intelligence-app--collapsed/)
+
+  await rail.getByRole('button', { name: /^Roster\b/ }).click()
+  await expect(topbar.getByRole('heading', { name: 'Roster' })).toBeVisible()
+  await expect(page).toHaveURL(/#roster$/)
 
   const composition = page.locator('.roster-composition')
   await expect(composition.getByRole('heading', { name: 'See what the guild can field.' })).toBeVisible()
   await expect(composition.getByRole('button', { name: 'Classes' })).toHaveAttribute('aria-pressed', 'true')
   await expect(composition.getByRole('button', { name: /^Warrior\b/ })).toBeVisible()
-
   await composition.getByRole('button', { name: 'Professions' }).click()
-  await expect(composition.getByRole('button', { name: 'Professions' })).toHaveAttribute('aria-pressed', 'true')
   await expect(composition.getByRole('button', { name: /^Blacksmithing\b/ })).toBeVisible()
   await composition.getByLabel('Slice detail').selectOption('5')
   await expect(composition.getByLabel('Slice detail')).toHaveValue('5')
 
+  await rail.getByRole('button', { name: /^Characters\b/ }).click()
+  await expect(topbar.getByRole('heading', { name: 'Characters' })).toBeVisible()
+  await page.getByPlaceholder('Name, class, spec, realm…').fill('Protection')
+  await expect(page.getByText('Armorytest', { exact: true })).toBeVisible()
+  await page.getByPlaceholder('Name, class, spec, realm…').fill('Mage')
+  await expect(page.getByRole('heading', { name: 'No characters match.' })).toBeVisible()
+
+  await rail.getByRole('button', { name: /^Craft Finder\b/ }).click()
+  await expect(topbar.getByRole('heading', { name: 'Craft Finder' })).toBeVisible()
   const craftSearch = page.getByPlaceholder('Mithril Spurs, potion, item ID…')
   await craftSearch.fill('spurs')
   await expect(page.locator('.craft-result').getByText('Mithril Spurs', { exact: true })).toBeVisible()
   await expect(page.getByText('Blacksmithing 225/225')).toBeVisible()
   await expect(page.locator('.craft-result__crafters').getByText('Armorytest', { exact: true })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 780 })
+  await expect(page.getByRole('button', { name: 'Open intelligence navigation' })).toBeVisible()
+  await page.getByRole('button', { name: 'Open intelligence navigation' }).click()
+  await expect(app).toHaveClass(/intelligence-app--mobile-open/)
+  await rail.getByRole('button', { name: /^Overview\b/ }).click()
+  await expect(topbar.getByRole('heading', { name: 'Overview' })).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
 })
 
 test('guild intelligence remains member-gated', async ({ page }) => {
