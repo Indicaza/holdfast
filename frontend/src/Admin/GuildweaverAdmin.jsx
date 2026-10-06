@@ -114,21 +114,7 @@ export default function GuildweaverAdmin() {
     }
   }, [canView, offset, submittedQuery])
 
-  useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    if (!snapshots.length) {
-      setSelected(null)
-      return
-    }
-    if (!selected || !snapshots.some((snapshot) => snapshot.id === selected.id)) {
-      selectSnapshot(snapshots[0])
-    }
-    // selectSnapshot intentionally follows the current page of history.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshots])
-
-  const selectSnapshot = async (snapshot) => {
+  const selectSnapshot = useCallback(async (snapshot) => {
     setSelected(snapshot)
     setDetailLoading(true)
     setCopied(false)
@@ -140,7 +126,19 @@ export default function GuildweaverAdmin() {
     } finally {
       setDetailLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!snapshots.length) {
+      setSelected(null)
+      return
+    }
+    if (!selected || !snapshots.some((snapshot) => snapshot.id === selected.id)) {
+      selectSnapshot(snapshots[0])
+    }
+  }, [snapshots, selected, selectSnapshot])
 
   const copyPayload = async () => {
     if (!selected?.payload) return
