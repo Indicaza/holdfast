@@ -39,7 +39,7 @@ export function classifyLiveMutation(req) {
 }
 
 export function observeLiveMutation(req, res, next) {
-  if (!MUTATION_METHODS.has(String(req.method || '').toUpperCase())) {
+  if (!MUTATION_METHODS.has(String(req.method || '').toUpperCase()) || typeof res?.once !== 'function') {
     next()
     return
   }
