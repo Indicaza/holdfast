@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import AuditLog from '../Admin/AuditLog.jsx'
+import GuildweaverConsole from '../Admin/GuildweaverConsole.jsx'
+import '../Admin/Admin.css'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
@@ -16,12 +19,14 @@ const VIEW_ALIASES = Object.freeze({
   composition: 'roster',
   professions: 'roster',
   recipes: 'craft',
+  admin: 'audit',
+  sync: 'guildweaver',
 })
 
-function readViewFromLocation() {
+function readViewFromLocation(views) {
   const raw = window.location.hash.replace(/^#/, '').trim().toLowerCase()
   const candidate = VIEW_ALIASES[raw] || raw
-  return intelligenceViews.some((view) => view.id === candidate) ? candidate : 'overview'
+  return views.some((view) => view.id === candidate) ? candidate : 'overview'
 }
 
 function professionSkillLabel(crafter, professionName) {
@@ -83,7 +88,10 @@ function RecentCharacters({ characters, limit = 6 }) {
   )
 }
 
-function Overview({ data, freshCharacters, onSelectView }) {
+function Overview({ availableViews, data, freshCharacters, onSelectView }) {
+  const canAudit = availableViews.some((view) => view.id === 'audit')
+  const canInspectGuildweaver = availableViews.some((view) => view.id === 'guildweaver')
+
   return (
     <>
       <section className="intel-scorecards" aria-label="Guild intelligence summary">
@@ -112,6 +120,18 @@ function Overview({ data, freshCharacters, onSelectView }) {
             <strong>Find a crafter</strong>
             <small>Search known recipes and items</small>
           </button>
+          {canAudit ? (
+            <button type="button" onClick={() => onSelectView('audit')}>
+              <strong>Review audit history</strong>
+              <small>Inspect administrative activity and safety records</small>
+            </button>
+          ) : null}
+          {canInspectGuildweaver ? (
+            <button type="button" onClick={() => onSelectView('guildweaver')}>
+              <strong>Inspect Guildweaver sync</strong>
+              <small>Trace snapshots, devices, lag, and raw payloads</small>
+            </button>
+          ) : null}
         </section>
       </div>
     </>
@@ -261,18 +281,20 @@ function CraftFinder() {
   )
 }
 
-function Workspace({ activeView, data, freshCharacters, onSelectView }) {
+function Workspace({ activeView, availableViews, data, freshCharacters, onSelectView, session }) {
   if (activeView === 'roster') return <RosterComposition data={data} />
   if (activeView === 'characters') return <CharacterBrowser characters={data.characters} />
   if (activeView === 'craft') return <CraftFinder />
-  return <Overview data={data} freshCharacters={freshCharacters} onSelectView={onSelectView} />
+  if (activeView === 'audit' && session.hasPermission('audit.view')) return <AuditLog />
+  if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <GuildweaverConsole />
+  return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onSelectView={onSelectView} />
 }
 
 export default function GuildIntelligence() {
   const session = useSession()
   const [status, setStatus] = useState('loading')
   const [data, setData] = useState(() => normalizeIntelligence({}))
-  const [activeView, setActiveView] = useState(readViewFromLocation)
+  const [activeView, setActiveView] = useState('overview')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -281,6 +303,14 @@ export default function GuildIntelligence() {
       return false
     }
   })
+
+  const canAudit = session.hasPermission('audit.view')
+  const canInspectGuildweaver = session.hasPermission('site.admin')
+  const availableViews = useMemo(() => intelligenceViews.filter((view) => {
+    if (view.permission === 'audit.view') return canAudit
+    if (view.permission === 'site.admin') return canInspectGuildweaver
+    return true
+  }), [canAudit, canInspectGuildweaver])
 
   useEffect(() => {
     if (!session.authenticated) {
@@ -307,17 +337,20 @@ export default function GuildIntelligence() {
   }, [session.authenticated])
 
   useEffect(() => {
+    if (!session.authenticated) return undefined
+
     function syncView() {
-      setActiveView(readViewFromLocation())
+      setActiveView(readViewFromLocation(availableViews))
     }
 
+    syncView()
     window.addEventListener('hashchange', syncView)
     window.addEventListener('popstate', syncView)
     return () => {
       window.removeEventListener('hashchange', syncView)
       window.removeEventListener('popstate', syncView)
     }
-  }, [])
+  }, [availableViews, session.authenticated])
 
   useEffect(() => {
     try {
@@ -328,6 +361,7 @@ export default function GuildIntelligence() {
   }, [collapsed])
 
   function selectView(view) {
+    if (!availableViews.some((candidate) => candidate.id === view)) return
     setActiveView(view)
     if (window.location.hash !== `#${view}`) {
       window.history.pushState(null, '', `#${view}`)
@@ -350,16 +384,18 @@ export default function GuildIntelligence() {
       onSelectView={selectView}
       onToggleCollapsed={() => setCollapsed((value) => !value)}
       onToggleMobile={setMobileOpen}
-      session={session}
+      views={availableViews}
     >
       {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
       {status === 'error' ? <p className="intel-error">Guild intelligence could not be loaded.</p> : null}
       {status === 'ready' ? (
         <Workspace
           activeView={activeView}
+          availableViews={availableViews}
           data={data}
           freshCharacters={freshCharacters}
           onSelectView={selectView}
+          session={session}
         />
       ) : null}
     </IntelligenceAppShell>

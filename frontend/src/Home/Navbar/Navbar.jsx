@@ -141,7 +141,8 @@ function Navbar() {
                       <a href="/members/me">My Profile</a>
                       <a href="/members">Members</a>
                       <a href="/intelligence">Guild Intelligence</a>
-                      {hasPermission('audit.view') ? <a href="/admin">Audit Log</a> : null}
+                      {hasPermission('audit.view') ? <a href="/intelligence#audit">Audit Log</a> : null}
+                      {hasPermission('site.admin') ? <a href="/intelligence#guildweaver">Guildweaver Sync</a> : null}
                       <button type="button" onClick={handleSignOut} disabled={signingOut}>
                         {signingOut ? 'Signing out…' : 'Sign out'}
                       </button>
