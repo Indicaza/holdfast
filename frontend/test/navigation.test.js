@@ -23,7 +23,7 @@ test('the account action is labeled as sign in rather than recruitment', () => {
 test('signed-in navigation adds member destinations before public pages', () => {
   assert.deepEqual(
     primaryNavigationLinks(true).map((link) => link.href),
-    ['/quests', '/members', '/charter', '/ranks', '/guildweaver'],
+    ['/quests', '/members', '/intelligence', '/charter', '/ranks', '/guildweaver'],
   )
 })
 
