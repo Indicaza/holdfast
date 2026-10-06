@@ -1,39 +1,35 @@
-import JoinLink from '../../Join/JoinLink.jsx'
 import './Footer.css'
-import { footerNavigationLinks } from '../../navigation.js'
+
+const sourceRepositoryUrl = 'https://github.com/Indicaza/holdfast'
 
 function Footer() {
   return (
     <footer className="footer">
-      <div className="footer__brand">
-        <span className="footer__mark" aria-hidden="true">
-          ♜
-        </span>
+      <div className="footer__identity">
+        <div className="footer__brand">
+          <span className="footer__mark" aria-hidden="true">
+            ♜
+          </span>
 
-        <div>
-          <p className="footer__name">Holdfast</p>
-          <p className="footer__motto">Servimus ut permaneat.</p>
+          <div>
+            <p className="footer__name">Holdfast</p>
+            <p className="footer__motto">Servimus ut permaneat.</p>
+          </div>
         </div>
+
+        <p className="footer__maxim">Leave it stronger.</p>
       </div>
 
-      <nav className="footer__links" aria-label="Footer navigation">
-        {footerNavigationLinks.map((link) => {
-          if (link.href === '/join') {
-            return <JoinLink key={link.label}>{link.label}</JoinLink>
-          }
+      <div className="footer__meta">
+        <nav className="footer__links" aria-label="Footer links">
+          <a href="/privacy">Privacy</a>
+          <a href={sourceRepositoryUrl} target="_blank" rel="noreferrer">
+            Source
+          </a>
+        </nav>
 
-          return (
-            <a
-              key={link.label}
-              href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noreferrer' : undefined}
-            >
-              {link.label}
-            </a>
-          )
-        })}
-      </nav>
+        <p className="footer__copyright">© {new Date().getFullYear()} Holdfast</p>
+      </div>
     </footer>
   )
 }
