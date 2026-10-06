@@ -51,6 +51,12 @@ function capturedAt(snapshot) {
 }
 
 function preferredCharacterId(snapshot) {
+  const anonymousCharacterId = text(snapshot?.characterId, 128);
+
+  if (anonymousCharacterId) {
+    return `guildweaver-id:${anonymousCharacterId}`;
+  }
+
   const guid = text(snapshot?.guid, 96);
 
   if (guid) {
@@ -78,7 +84,10 @@ export async function syncGuildweaverCharacter({
   const name = text(snapshot?.name, 32);
   const race = text(snapshot?.race?.name ?? snapshot?.race, 32);
   const className = text(snapshot?.class?.name ?? snapshot?.class, 32);
-  const spec = text(snapshot?.specialization?.name ?? snapshot?.spec?.name ?? snapshot?.spec, 48);
+  const spec = text(
+    snapshot?.specialization?.name ?? snapshot?.spec?.name ?? snapshot?.spec,
+    48,
+  );
   const professions = professionNames(snapshot?.professions);
 
   if (!normalizedMemberId || !name) {
@@ -175,14 +184,16 @@ export async function syncGuildweaverCharacter({
     const captured = capturedAt(snapshot);
     const payloadJson = JSON.stringify(snapshot ?? {});
     ensureCharacterSnapshotObservabilitySchema(db);
-    const duplicate = db.prepare(`
+    const duplicate = db
+      .prepare(`
       SELECT s.id, s.captured_at, i.received_at, i.bridge_revision
       FROM character_snapshots s
       LEFT JOIN character_snapshot_ingests i ON i.snapshot_id = s.id
       WHERE s.character_id = ? AND s.captured_at = ? AND s.payload_json = ?
       ORDER BY s.id DESC
       LIMIT 1
-    `).get(characterId, captured, payloadJson);
+    `)
+      .get(characterId, captured, payloadJson);
 
     let storedSnapshot;
     let status = existing ? "updated" : "created";
@@ -194,7 +205,10 @@ export async function syncGuildweaverCharacter({
         source,
         capturedAt: duplicate.captured_at,
         receivedAt: duplicate.received_at || duplicate.captured_at,
-        bridgeRevision: duplicate.bridge_revision === null ? null : Number(duplicate.bridge_revision),
+        bridgeRevision:
+          duplicate.bridge_revision === null
+            ? null
+            : Number(duplicate.bridge_revision),
         payload: snapshot,
       };
       status = "unchanged";
