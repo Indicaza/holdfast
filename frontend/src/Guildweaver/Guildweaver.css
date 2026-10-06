@@ -1,77 +1,150 @@
-.guildweaver-page .page-shell__body {
-  display: grid;
-  gap: var(--space-12);
+.guildweaver-page .page-shell__main {
+  padding-top: clamp(var(--space-12), 8vw, var(--space-20));
 }
 
-.guildweaver-hero-card,
-.guildweaver-section {
-  width: min(100%, 68rem);
+.guildweaver-page .page-shell__body {
+  display: grid;
+  width: min(100%, 70rem);
+  max-width: none;
+  gap: clamp(var(--space-12), 8vw, var(--space-20));
+  margin-top: clamp(var(--space-10), 6vw, var(--space-16));
+}
+
+.guildweaver-page .page-shell__intro {
+  max-width: 46rem;
   margin-inline: auto;
+  text-wrap: pretty;
 }
 
 .guildweaver-hero-card {
+  position: relative;
   display: grid;
+  justify-items: center;
   gap: var(--space-6);
-  padding: clamp(var(--space-6), 5vw, var(--space-10));
-  border: var(--border-accent);
+  overflow: hidden;
+  width: min(100%, 62rem);
+  margin-inline: auto;
+  padding: clamp(var(--space-8), 6vw, var(--space-12));
+  border: 1px solid rgba(196, 166, 103, 0.42);
   border-radius: var(--radius-xl);
   background:
-    linear-gradient(145deg, rgba(16, 39, 66, 0.78), rgba(7, 17, 31, 0.9));
-  box-shadow: var(--shadow-panel);
+    radial-gradient(circle at 50% -10%, rgba(221, 193, 125, 0.14), transparent 26rem),
+    radial-gradient(circle at 84% 18%, rgba(29, 69, 111, 0.28), transparent 20rem),
+    linear-gradient(155deg, rgba(16, 39, 66, 0.92), rgba(3, 8, 15, 0.96));
+  box-shadow:
+    0 2rem 6rem rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.guildweaver-hero-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(247, 245, 239, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 245, 239, 0.018) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  content: '';
+}
+
+.guildweaver-hero-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.guildweaver-product-mark {
+  display: grid;
+  width: 4.5rem;
+  height: 4.5rem;
+  place-items: center;
+  border: 1px solid rgba(221, 193, 125, 0.42);
+  border-radius: 1.2rem;
+  background: rgba(196, 166, 103, 0.08);
+  color: var(--color-accent-bright);
+  font-size: 2.2rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .guildweaver-release-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .guildweaver-release-badge {
-  padding: 0.35rem 0.65rem;
+  padding: 0.38rem 0.72rem;
   border: 1px solid rgba(196, 166, 103, 0.5);
   border-radius: var(--radius-pill);
+  background: rgba(196, 166, 103, 0.06);
   color: var(--color-accent-bright);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.guildweaver-alpha-note {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid rgba(221, 193, 125, 0.28);
-  border-radius: var(--radius-md);
-  background: rgba(196, 166, 103, 0.07);
-}
-
-.guildweaver-alpha-note strong {
-  color: var(--color-accent-bright);
-}
-
-.guildweaver-alpha-note span {
+.guildweaver-release-platforms {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  line-height: 1.6;
+}
+
+.guildweaver-hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.guildweaver-hero-trust span {
+  padding: 0.5rem 0.75rem;
+  border: var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: rgba(3, 8, 15, 0.32);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.guildweaver-text-button {
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.guildweaver-text-button:hover,
+.guildweaver-text-button:focus-visible {
+  color: var(--color-accent-bright);
+  text-decoration-color: currentColor;
 }
 
 .guildweaver-section {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-7);
+  width: min(100%, 66rem);
+  margin-inline: auto;
 }
 
 .guildweaver-section__heading {
   display: grid;
-  max-width: 48rem;
+  justify-items: center;
+  max-width: 46rem;
+  margin-inline: auto;
   gap: var(--space-2);
+  text-align: center;
 }
 
-.guildweaver-section__heading p,
-.guildweaver-section-kicker {
+.guildweaver-section__heading p {
   margin: 0;
   color: var(--color-accent-bright);
   font-size: var(--font-size-xs);
@@ -80,25 +153,19 @@
   text-transform: uppercase;
 }
 
-.guildweaver-section__heading h2,
-.guildweaver-boundary-card h2,
-.guildweaver-verification h2 {
+.guildweaver-section__heading h2 {
   margin: 0;
   color: var(--color-text-strong);
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, var(--font-size-fib-34));
+  font-size: clamp(var(--font-size-fib-34), 4vw, var(--font-size-fib-55));
   font-weight: var(--font-weight-display);
-}
-
-.guildweaver-section__heading > span,
-.guildweaver-verification p {
-  color: var(--color-text-muted);
-  line-height: 1.65;
+  line-height: 1.05;
+  text-wrap: balance;
 }
 
 .guildweaver-steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
   margin: 0;
   padding: 0;
@@ -108,130 +175,244 @@
 
 .guildweaver-steps li {
   display: grid;
+  justify-items: center;
   align-content: start;
-  gap: var(--space-2);
-  min-height: 12rem;
-  padding: var(--space-5);
+  gap: var(--space-3);
+  min-height: 13rem;
+  padding: var(--space-6) var(--space-5);
   border: var(--border-subtle);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background:
+    linear-gradient(180deg, rgba(16, 39, 66, 0.62), rgba(7, 17, 31, 0.72));
+  text-align: center;
   counter-increment: guildweaver-step;
 }
 
 .guildweaver-steps li::before {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 2.4rem;
+  height: 2.4rem;
   place-items: center;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   border: 1px solid rgba(196, 166, 103, 0.42);
   border-radius: 50%;
+  background: rgba(196, 166, 103, 0.05);
   color: var(--color-accent-bright);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   content: counter(guildweaver-step);
 }
 
-.guildweaver-steps strong,
-.guildweaver-repository strong {
+.guildweaver-steps strong {
   color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
 }
 
-.guildweaver-steps span,
-.guildweaver-repository > span:not(.guildweaver-repository__mark) {
+.guildweaver-steps span {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   line-height: 1.55;
+  text-wrap: pretty;
 }
 
-.guildweaver-boundaries {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.guildweaver-boundary-card {
+.guildweaver-trust-grid {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
-  padding: var(--space-6);
+}
+
+.guildweaver-trust-card {
+  display: grid;
+  min-width: 0;
+  min-height: 13.5rem;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
   border: var(--border-subtle);
   border-radius: var(--radius-lg);
-  background: rgba(11, 27, 48, 0.58);
+  background: rgba(7, 17, 31, 0.62);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
-.guildweaver-boundary-card ul {
+.guildweaver-trust-card:hover,
+.guildweaver-trust-card:focus-visible {
+  border-color: rgba(221, 193, 125, 0.5);
+  background: rgba(16, 39, 66, 0.82);
+  box-shadow: 0 1rem 2.6rem rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px);
+}
+
+.guildweaver-trust-card__mark {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  margin-bottom: var(--space-1);
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  border-radius: 50%;
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-md);
+}
+
+.guildweaver-trust-card__eyebrow {
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.guildweaver-trust-card strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-fib-21);
+}
+
+.guildweaver-trust-card > span:not(.guildweaver-trust-card__mark, .guildweaver-trust-card__eyebrow) {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.guildweaver-trust-card small {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.guildweaver-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-5);
+  width: min(100%, 66rem);
+  margin-inline: auto;
+  padding-top: var(--space-2);
+  border-top: var(--border-subtle);
+}
+
+.guildweaver-footer-links a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.guildweaver-footer-links a:hover,
+.guildweaver-footer-links a:focus-visible {
+  color: var(--color-accent-bright);
+}
+
+.guildweaver-modal-repositories {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.guildweaver-modal-repositories a {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 11rem;
+  padding: var(--space-5);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: rgba(3, 8, 15, 0.28);
+}
+
+.guildweaver-modal-repositories a:hover,
+.guildweaver-modal-repositories a:focus-visible {
+  border-color: rgba(221, 193, 125, 0.45);
+  background: rgba(16, 39, 66, 0.48);
+}
+
+.guildweaver-modal-repositories strong {
+  color: var(--color-text-strong);
+}
+
+.guildweaver-modal-repositories span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.guildweaver-modal-repositories small {
+  margin-top: auto;
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold);
+}
+
+.guildweaver-modal-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.guildweaver-modal-columns section {
+  padding: var(--space-5);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: rgba(3, 8, 15, 0.28);
+}
+
+.guildweaver-modal-columns p {
+  margin: 0 0 var(--space-3);
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.guildweaver-modal-columns ul {
   display: grid;
   gap: var(--space-3);
   margin: 0;
   padding-left: 1.1rem;
   color: var(--color-text-muted);
-  line-height: 1.55;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
 }
 
-.guildweaver-boundary-card li::marker {
+.guildweaver-modal-columns li::marker {
   color: var(--color-accent);
 }
 
-.guildweaver-repositories {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.guildweaver-repository {
-  position: relative;
-  display: grid;
-  gap: var(--space-3);
-  min-height: 13rem;
-  padding: var(--space-5);
-  border: var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    background var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-
-.guildweaver-repository:hover,
-.guildweaver-repository:focus-visible {
-  border-color: var(--color-border-strong);
-  background: rgba(16, 39, 66, 0.82);
-  transform: translateY(-2px);
-}
-
-.guildweaver-repository__mark {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  color: var(--color-accent-bright);
-}
-
-.guildweaver-repository small {
-  margin-top: auto;
-  color: var(--color-accent-bright);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-}
-
-.guildweaver-architecture {
-  grid-template-columns: minmax(0, 0.7fr) minmax(18rem, 1fr);
+.guildweaver-modal-link {
+  display: flex;
+  width: fit-content;
+  min-height: 2.75rem;
   align-items: center;
-  padding: var(--space-6);
-  border: var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: rgba(3, 8, 15, 0.28);
+  margin: var(--space-5) auto 0;
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .guildweaver-architecture__diagram {
   display: grid;
   justify-items: center;
   gap: var(--space-2);
-  padding: var(--space-5);
+  max-width: 28rem;
+  margin-inline: auto;
   font-family: var(--font-mono);
   text-align: center;
 }
 
 .guildweaver-architecture__diagram span {
-  width: min(100%, 22rem);
+  width: min(100%, 24rem);
   padding: var(--space-3) var(--space-4);
   border: var(--border-subtle);
   border-radius: var(--radius-md);
@@ -245,73 +426,89 @@
   font-weight: var(--font-weight-medium);
 }
 
-.guildweaver-verification {
-  grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.7fr);
-  align-items: start;
-  padding: var(--space-6);
-  border: var(--border-accent);
-  border-radius: var(--radius-lg);
+.guildweaver-verification-modal {
+  display: grid;
+  gap: var(--space-5);
 }
 
-.guildweaver-verification > div:first-child {
+.guildweaver-verification-modal aside {
   display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid rgba(221, 193, 125, 0.28);
+  border-radius: var(--radius-lg);
+  background: rgba(196, 166, 103, 0.07);
+  text-align: center;
+}
+
+.guildweaver-verification-modal aside strong {
+  color: var(--color-accent-bright);
+}
+
+.guildweaver-verification-modal aside span,
+.guildweaver-verification-modal > p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.guildweaver-verification-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.guildweaver-verification p {
-  margin: 0;
-}
-
-.guildweaver-verification__links {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.guildweaver-verification__links a {
+.guildweaver-verification-links a {
   display: flex;
-  min-height: 2.75rem;
+  min-height: 3rem;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   padding: 0 var(--space-4);
-  border-bottom: var(--border-subtle);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
   color: var(--color-text-strong);
   font-size: var(--font-size-sm);
 }
 
-.guildweaver-verification__links a::after {
+.guildweaver-verification-links a span {
   color: var(--color-accent-bright);
-  content: '→';
 }
 
-.guildweaver-verification__links a:hover,
-.guildweaver-verification__links a:focus-visible {
+.guildweaver-verification-links a:hover,
+.guildweaver-verification-links a:focus-visible {
+  border-color: rgba(221, 193, 125, 0.45);
   color: var(--color-accent-bright);
 }
 
 @media (max-width: 64rem) {
-  .guildweaver-steps {
+  .guildweaver-trust-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .guildweaver-repositories {
+  .guildweaver-modal-repositories {
     grid-template-columns: 1fr;
   }
 
-  .guildweaver-repository {
+  .guildweaver-modal-repositories a {
     min-height: auto;
   }
 }
 
-@media (max-width: 46rem) {
-  .guildweaver-boundaries,
-  .guildweaver-architecture,
-  .guildweaver-verification {
-    grid-template-columns: 1fr;
+@media (max-width: 48rem) {
+  .guildweaver-page .page-shell__body {
+    gap: var(--space-12);
   }
-}
 
-@media (max-width: 34rem) {
-  .guildweaver-steps {
+  .guildweaver-hero-card {
+    padding: var(--space-7) var(--space-5);
+  }
+
+  .guildweaver-steps,
+  .guildweaver-modal-columns,
+  .guildweaver-verification-links {
     grid-template-columns: 1fr;
   }
 
@@ -320,13 +517,23 @@
   }
 }
 
+@media (max-width: 34rem) {
+  .guildweaver-trust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guildweaver-trust-card {
+    min-height: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .guildweaver-repository {
+  .guildweaver-trust-card {
     transition: none;
   }
 
-  .guildweaver-repository:hover,
-  .guildweaver-repository:focus-visible {
+  .guildweaver-trust-card:hover,
+  .guildweaver-trust-card:focus-visible {
     transform: none;
   }
 }
