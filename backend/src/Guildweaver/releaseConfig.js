@@ -3,23 +3,27 @@ const RELEASE_CHANNELS = new Set(["edge", "beta", "stable"]);
 
 export const guildweaverPackages = Object.freeze({
   windows: Object.freeze({
-    label: "Windows x64",
-    artifact: "GuildweaverBridge.zip",
+    label: "Windows installer",
+    artifact: "GuildweaverInstaller.exe",
+  }),
+  macos: Object.freeze({
+    label: "macOS installer",
+    artifact: "GuildweaverInstaller-macos.pkg",
   }),
   "macos-arm64": Object.freeze({
-    label: "macOS Apple Silicon",
+    label: "macOS Apple Silicon manual package",
     artifact: "GuildweaverBridge-macos-arm64.zip",
   }),
   "macos-x64": Object.freeze({
-    label: "macOS Intel",
+    label: "macOS Intel manual package",
     artifact: "GuildweaverBridge-macos-x64.zip",
   }),
   "linux-x64": Object.freeze({
-    label: "Linux x64",
+    label: "Linux x64 manual package",
     artifact: "GuildweaverBridge-linux-x64.zip",
   }),
   "linux-arm64": Object.freeze({
-    label: "Linux ARM64",
+    label: "Linux ARM64 manual package",
     artifact: "GuildweaverBridge-linux-arm64.zip",
   }),
 });
