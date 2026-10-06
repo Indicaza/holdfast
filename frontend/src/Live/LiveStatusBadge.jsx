@@ -1,4 +1,4 @@
-import { useLiveUpdates } from './LiveUpdatesProvider.jsx'
+import { useLiveUpdates } from './liveUpdatesContext.js'
 import './LiveStatusBadge.css'
 
 const LABELS = {
