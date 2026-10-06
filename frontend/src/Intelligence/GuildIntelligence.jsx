@@ -12,9 +12,17 @@ import './GuildIntelligence.css'
 
 function Distribution({ title, entries }) {
   const max = Math.max(1, ...entries.map((entry) => Number(entry.count || entry.characters) || 0))
+  const total = entries.reduce((sum, entry) => sum + (Number(entry.count || entry.characters) || 0), 0)
+
   return (
-    <section className="intel-panel">
-      <div className="intel-panel__heading"><span>Distribution</span><h2>{title}</h2></div>
+    <section className="intel-panel intel-distribution-card">
+      <div className="intel-panel__heading intel-panel__heading--compact">
+        <div>
+          <span>Distribution</span>
+          <h2>{title}</h2>
+        </div>
+        {entries.length ? <small>{total} represented</small> : null}
+      </div>
       {entries.length ? (
         <div className="intel-bars">
           {entries.slice(0, 10).map((entry) => {
@@ -79,16 +87,21 @@ function CraftFinder() {
   return (
     <section className="craft-finder" id="recipes">
       <div className="craft-finder__heading">
-        <div><span>Guild Craft Finder</span><h2>Who can make it?</h2></div>
-        <p>Search synced recipes or crafted items. No ordering workflow yet—just the useful answer.</p>
+        <div>
+          <span>Guild Craft Finder</span>
+          <h2>Who can make it?</h2>
+          <p>Search synced recipes or crafted items and jump straight to the characters who know them.</p>
+        </div>
       </div>
-      <label className="craft-finder__search">
-        <span>Recipe or item</span>
-        <input type="search" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Mithril Spurs, potion, item ID…" />
-      </label>
-      {status === 'loading' ? <p className="intel-muted">Searching known recipes…</p> : null}
-      {status === 'error' ? <p className="intel-error">Craft Finder is unavailable right now.</p> : null}
-      {status === 'idle' ? <p className="craft-finder__hint">Type at least two characters to search the guild recipe index.</p> : null}
+      <div className="craft-finder__search-wrap">
+        <label className="craft-finder__search">
+          <span>Recipe or item</span>
+          <input type="search" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Mithril Spurs, potion, item ID…" />
+        </label>
+        {status === 'loading' ? <p className="intel-muted">Searching known recipes…</p> : null}
+        {status === 'error' ? <p className="intel-error">Craft Finder is unavailable right now.</p> : null}
+        {status === 'idle' ? <p className="craft-finder__hint">Type at least two characters to search the guild recipe index.</p> : null}
+      </div>
       {status === 'ready' && !results.length ? <EmptyTelemetry title="No synced crafter found.">Try another recipe or item name. The index only contains telemetry we have actually received.</EmptyTelemetry> : null}
       {results.length ? (
         <div className="craft-results">
@@ -171,7 +184,9 @@ export default function GuildIntelligence() {
       {status === 'ready' ? (
         <>
           <nav className="intel-paths" aria-label="Guild intelligence sections">
-            <a href="#characters">Characters</a><a href="#professions">Professions</a><a href="#recipes">Recipes & Craft Finder</a>
+            <a href="#characters"><strong>Characters</strong><span>Open synced armories</span></a>
+            <a href="#professions"><strong>Professions</strong><span>See guild coverage</span></a>
+            <a href="#recipes"><strong>Craft Finder</strong><span>Find who can make it</span></a>
           </nav>
 
           <section className="intel-scorecards" aria-label="Guild intelligence summary">
@@ -182,7 +197,7 @@ export default function GuildIntelligence() {
 
           <section className="intel-panel intel-characters" id="characters">
             <div className="intel-panel__heading intel-panel__heading--split">
-              <div><span>Armory</span><h2>Recently synced characters</h2></div>
+              <div><span>Armory</span><h2>Recently synced characters</h2><p>Open a character to inspect equipment, talents, professions, and known recipes.</p></div>
               <a href="/members">Member directory →</a>
             </div>
             {recentCharacters.length ? (
@@ -190,25 +205,40 @@ export default function GuildIntelligence() {
                 {recentCharacters.map((character) => (
                   <a className="intel-character-card" href={`/armory/${encodeURIComponent(character.id)}`} key={character.id}>
                     <div className="intel-character-card__crest" aria-hidden="true">♜</div>
-                    <div><strong>{character.name}</strong><span>{character.level ? `Level ${character.level} · ` : ''}{character.spec || character.className || 'Class unknown'}</span><small>{character.realm || character.guildName || 'Realm not reported'}</small></div>
-                    <em>{formatSyncAge(character.lastSeenAt)}</em>
+                    <div className="intel-character-card__identity">
+                      <strong>{character.name}</strong>
+                      <span>{character.level ? `Level ${character.level} · ` : ''}{character.spec || character.className || 'Class unknown'}</span>
+                      <small>{character.realm || character.guildName || 'Realm not reported'}</small>
+                    </div>
+                    <div className="intel-character-card__meta">
+                      <em>{formatSyncAge(character.lastSeenAt)}</em>
+                      <span aria-hidden="true">→</span>
+                    </div>
                   </a>
                 ))}
               </div>
             ) : <EmptyTelemetry title="No characters synced yet.">Install Guildweaver and the first character snapshot will appear here automatically.</EmptyTelemetry>}
           </section>
 
-          <div className="intel-distributions" id="professions">
-            <Distribution title="Classes" entries={data.classDistribution} />
-            <Distribution title="Specs" entries={data.specDistribution} />
-            <Distribution title="Professions" entries={data.professions} />
-          </div>
+          <section className="intel-section" id="professions">
+            <div className="intel-section__heading">
+              <span>Guild coverage</span>
+              <h2>What the roster can field.</h2>
+              <p>Current class, specialization, and profession coverage from synced characters.</p>
+            </div>
+            <div className="intel-distributions">
+              <Distribution title="Classes" entries={data.classDistribution} />
+              <Distribution title="Specs" entries={data.specDistribution} />
+              <Distribution title="Professions" entries={data.professions} />
+            </div>
+          </section>
 
           <CraftFinder />
 
           <section className="intel-future">
             <span>Built to grow</span>
-            <h2>Next layers slot into the same intelligence system.</h2>
+            <h2>More intelligence can land here without turning this into an admin console.</h2>
+            <p>The same telemetry surface can expand into market, gathering, drop-rate, and item intelligence as those collectors come online.</p>
             <div><span>Auction House</span><span>Rare drops</span><span>Gathering telemetry</span><span>Craft profitability</span><span>Item intelligence</span></div>
           </section>
         </>
