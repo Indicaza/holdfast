@@ -8,7 +8,7 @@ test('member GuildOS keeps the Holdfast navbar and hides privileged operations',
   await expect(page.locator('.navbar')).toBeVisible()
   await expect(page.locator('.navbar').getByRole('link', { name: 'Holdfast home' })).toBeVisible()
   await expect(page.locator('.navbar__links a[href="/intelligence"]')).toHaveCount(0)
-  await expect(page.getByText('GuildOS', { exact: true }).first()).toBeVisible()
+  await expect(page.locator('.intelligence-rail__brand-copy strong', { hasText: 'GuildOS' })).toBeVisible()
 
   const rail = page.locator('.intelligence-rail__nav')
   await expect(rail.getByText('Guild', { exact: true })).toBeVisible()
