@@ -1,11 +1,17 @@
 .guildweaver-download {
   display: grid;
-  gap: var(--space-6);
+  width: min(100%, 42rem);
+  justify-items: center;
+  gap: var(--space-5);
+  margin-inline: auto;
+  text-align: center;
 }
 
 .guildweaver-download__lead {
   display: grid;
+  justify-items: center;
   gap: var(--space-2);
+  max-width: 38rem;
 }
 
 .guildweaver-download__eyebrow {
@@ -25,50 +31,80 @@
 .guildweaver-download__lead h2 {
   color: var(--color-text-strong);
   font-family: var(--font-display);
-  font-size: clamp(1.65rem, 3vw, var(--font-size-fib-34));
+  font-size: clamp(1.8rem, 4vw, var(--font-size-fib-34));
   font-weight: var(--font-weight-display);
+  line-height: 1.05;
+  text-wrap: balance;
 }
 
 .guildweaver-download__lead p,
 .guildweaver-download__detail {
   color: var(--color-text-muted);
   line-height: 1.55;
+  text-wrap: pretty;
 }
 
-.guildweaver-download__recommended {
+.guildweaver-download__actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  justify-content: center;
   gap: var(--space-3);
 }
 
-.guildweaver-download__primary {
+.guildweaver-download__primary,
+.guildweaver-download__secondary {
   display: inline-flex;
-  min-height: 3.25rem;
+  min-height: 3.35rem;
   align-items: center;
   justify-content: center;
   padding: 0 var(--space-6);
-  border: var(--border-accent);
   border-radius: var(--radius-button);
-  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
-  color: var(--color-background);
+  font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-caps);
   text-align: center;
   text-transform: uppercase;
-  box-shadow: var(--shadow-soft);
+  cursor: pointer;
   transition:
     background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
+}
+
+.guildweaver-download__primary {
+  border: var(--border-accent);
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  color: var(--color-background);
+  box-shadow: 0 0.8rem 2.2rem rgba(0, 0, 0, 0.22);
+}
+
+.guildweaver-download__secondary {
+  border: var(--border-subtle);
+  background: rgba(3, 8, 15, 0.32);
+  color: var(--color-text-strong);
+}
+
+.guildweaver-download__primary:hover,
+.guildweaver-download__primary:focus-visible,
+.guildweaver-download__secondary:hover,
+.guildweaver-download__secondary:focus-visible {
+  transform: translateY(-1px);
 }
 
 .guildweaver-download__primary:hover,
 .guildweaver-download__primary:focus-visible {
   background: var(--color-accent-bright);
-  box-shadow: var(--shadow-panel);
-  transform: translateY(-1px);
+  box-shadow: 0 1rem 2.6rem rgba(0, 0, 0, 0.28);
+}
+
+.guildweaver-download__secondary:hover,
+.guildweaver-download__secondary:focus-visible {
+  border-color: rgba(221, 193, 125, 0.45);
+  background: rgba(16, 39, 66, 0.72);
+  color: var(--color-accent-bright);
 }
 
 .guildweaver-download__checksum {
@@ -76,7 +112,7 @@
   min-height: 2.75rem;
   align-items: center;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   text-decoration: underline;
   text-decoration-color: rgba(255, 255, 255, 0.2);
   text-underline-offset: 0.18em;
@@ -104,6 +140,7 @@
   border: var(--border-subtle);
   border-radius: var(--radius-md);
   background: rgba(3, 8, 15, 0.32);
+  text-align: left;
 }
 
 .guildweaver-download__platform > div:first-child {
@@ -133,6 +170,7 @@
 }
 
 .guildweaver-download--compact {
+  width: 100%;
   gap: var(--space-2);
 }
 
@@ -195,6 +233,15 @@
 }
 
 @media (max-width: 30rem) {
+  .guildweaver-download__actions {
+    width: 100%;
+  }
+
+  .guildweaver-download__primary,
+  .guildweaver-download__secondary {
+    width: 100%;
+  }
+
   .guildweaver-download__platform {
     align-items: flex-start;
     flex-direction: column;
@@ -206,12 +253,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .guildweaver-download__primary {
+  .guildweaver-download__primary,
+  .guildweaver-download__secondary {
     transition: none;
   }
 
   .guildweaver-download__primary:hover,
-  .guildweaver-download__primary:focus-visible {
+  .guildweaver-download__primary:focus-visible,
+  .guildweaver-download__secondary:hover,
+  .guildweaver-download__secondary:focus-visible {
     transform: none;
   }
 }
