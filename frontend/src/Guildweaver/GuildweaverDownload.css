@@ -145,6 +145,49 @@
   text-align: center;
 }
 
+.join-guildweaver {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid rgba(196, 166, 103, 0.32);
+  border-radius: var(--radius-lg);
+  background: rgba(196, 166, 103, 0.055);
+}
+
+.join-guildweaver > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.join-guildweaver > div:first-child strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.join-guildweaver > div:first-child span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.join-guildweaver > a {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.18);
+  text-underline-offset: 0.18em;
+}
+
+.join-guildweaver > a:hover,
+.join-guildweaver > a:focus-visible {
+  color: var(--color-accent-bright);
+  text-decoration-color: currentColor;
+}
+
 @media (max-width: 44rem) {
   .guildweaver-download__platforms {
     grid-template-columns: 1fr;
