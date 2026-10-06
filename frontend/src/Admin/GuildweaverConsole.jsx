@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import './Admin.css'
 import './GuildweaverAdmin.css'
@@ -30,19 +30,23 @@ function formatBytes(value) {
   return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`
 }
 
-function formatLag(value) {
-  if (value === null || value === undefined) return '—'
-  const ms = Number(value)
-  if (!Number.isFinite(ms)) return '—'
-  if (ms < 1000) return `${ms} ms`
-  return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)} s`
-}
-
 function valuePreview(value) {
-  if (value === null) return 'null'
+  if (value === null || value === undefined) return 'null'
   if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
   if (typeof value === 'object') return `${Object.keys(value).length} field${Object.keys(value).length === 1 ? '' : 's'}`
   return String(value)
+}
+
+function humanize(value) {
+  return String(value || 'unknown')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+function shortId(value) {
+  const text = String(value || '')
+  if (!text) return '—'
+  return text.length > 14 ? `${text.slice(0, 10)}…` : text
 }
 
 async function getJson(url) {
@@ -52,18 +56,94 @@ async function getJson(url) {
   return body
 }
 
+function collectorHealthSummary(payload) {
+  const queue = payload?.eventQueue || {}
+  const observed = payload?.observed || {}
+  return [
+    ['Addon', payload?.addonVersion || '—'],
+    ['SV schema', payload?.savedVariablesSchemaVersion ?? '—'],
+    ['State streams', observed.stateStreamCount ?? '—'],
+    ['Professions', observed.professionCount ?? '—'],
+    ['Recipes', observed.knownRecipeCount ?? '—'],
+    ['Event queue', `${queue.queued ?? 0}/${queue.capacity ?? 0}`],
+    ['Dropped', queue.dropped ?? 0],
+    ['Talent API', observed.talentApi || '—'],
+  ]
+}
+
+const DOMAIN_RENDERERS = {
+  collector_health_snapshot: {
+    title: 'Collector health',
+    summary: collectorHealthSummary,
+  },
+}
+
+function domainRenderer(record) {
+  return DOMAIN_RENDERERS[record?.eventType] || {
+    title: humanize(record?.eventType),
+    summary: null,
+  }
+}
+
+function shareReport(record) {
+  if (!record) return null
+  return {
+    reportVersion: 1,
+    source: 'Guildweaver Telemetry Oscilloscope',
+    copiedAt: new Date().toISOString(),
+    record: {
+      id: record.id,
+      kind: record.kind,
+      eventType: record.eventType,
+      streamKey: record.streamKey,
+      revision: record.revision,
+      schemaVersion: record.schemaVersion,
+      capturedAt: record.capturedAt,
+      receivedAt: record.receivedAt,
+      realm: record.realm,
+      region: record.region,
+      installationId: record.installationId,
+      characterId: record.characterId,
+      guildId: record.guildId,
+      deviceId: record.deviceId,
+      memberId: record.memberId,
+      gameBuild: record.gameBuild,
+    },
+    envelope: record.envelope,
+  }
+}
+
+function SummaryGrid({ entries }) {
+  if (!entries?.length) return null
+  return (
+    <div className="gw-admin-json-summary">
+      {entries.map(([key, value]) => (
+        <div key={key}><span>{key}</span><strong>{valuePreview(value)}</strong></div>
+      ))}
+    </div>
+  )
+}
+
 export default function GuildweaverConsole() {
   const [summary, setSummary] = useState(null)
-  const [snapshots, setSnapshots] = useState([])
+  const [records, setRecords] = useState([])
   const [selected, setSelected] = useState(null)
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
+  const [kind, setKind] = useState('')
+  const [eventType, setEventType] = useState('')
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
   const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState('')
+
+  const telemetrySummary = summary?.telemetry || null
+  const eventTypes = useMemo(
+    () => telemetrySummary?.eventTypes || [],
+    [telemetrySummary],
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -71,29 +151,31 @@ export default function GuildweaverConsole() {
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
       if (submittedQuery) params.set('q', submittedQuery)
+      if (kind) params.set('kind', kind)
+      if (eventType) params.set('eventType', eventType)
       const [summaryBody, historyBody] = await Promise.all([
         getJson('/api/admin/guildweaver/summary'),
-        getJson(`/api/admin/guildweaver/snapshots?${params}`),
+        getJson(`/api/admin/guildweaver/telemetry?${params}`),
       ])
       setSummary(summaryBody.summary)
-      setSnapshots(historyBody.snapshots || [])
+      setRecords(historyBody.records || [])
       setHasMore(Boolean(historyBody.pagination?.hasMore))
     } catch (loadError) {
-      setError(loadError.message || 'Unable to load Guildweaver data.')
+      setError(loadError.message || 'Unable to load Guildweaver telemetry.')
     } finally {
       setLoading(false)
     }
-  }, [offset, submittedQuery])
+  }, [eventType, kind, offset, submittedQuery])
 
-  const selectSnapshot = useCallback(async (snapshot) => {
-    setSelected(snapshot)
+  const selectRecord = useCallback(async (record) => {
+    setSelected(record)
     setDetailLoading(true)
-    setCopied(false)
+    setCopied('')
     try {
-      const body = await getJson(`/api/admin/guildweaver/snapshots/${snapshot.id}`)
-      setSelected(body.snapshot)
+      const body = await getJson(`/api/admin/guildweaver/telemetry/${record.id}`)
+      setSelected(body.record)
     } catch (detailError) {
-      setError(detailError.message || 'Unable to load snapshot payload.')
+      setError(detailError.message || 'Unable to load telemetry payload.')
     } finally {
       setDetailLoading(false)
     }
@@ -102,36 +184,43 @@ export default function GuildweaverConsole() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    if (!snapshots.length) {
+    if (!records.length) {
       setSelected(null)
       return
     }
-    if (!selected || !snapshots.some((snapshot) => snapshot.id === selected.id)) {
-      selectSnapshot(snapshots[0])
+    if (!selected || !records.some((record) => record.id === selected.id)) {
+      selectRecord(records[0])
     }
-  }, [snapshots, selected, selectSnapshot])
+  }, [records, selected, selectRecord])
 
-  const copyPayload = async () => {
-    if (!selected?.payload) return
-    await navigator.clipboard.writeText(JSON.stringify(selected.payload, null, 2))
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1500)
+  const copyJson = async (value, label) => {
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(value, null, 2))
+      setCopied(label)
+      window.setTimeout(() => setCopied(''), 1600)
+    } catch {
+      setError('Clipboard access failed. Select the JSON below and copy it manually.')
+    }
   }
+
+  const renderer = selected ? domainRenderer(selected) : null
+  const domainSummary = renderer?.summary ? renderer.summary(selected?.payload) : null
 
   return (
     <div className="guildweaver-console-embed">
-      {summary ? (
-        <section className="gw-admin-stats" aria-label="Guildweaver sync summary">
-          <div><strong>{summary.snapshots}</strong><span>Snapshots</span></div>
-          <div><strong>{summary.characters}</strong><span>Characters</span></div>
-          <div><strong>{summary.devices}</strong><span>Devices</span></div>
-          <div><strong>{summary.last24h}</strong><span>Last 24h</span></div>
-          <div><strong>{relativeTime(summary.lastReceivedAt)}</strong><span>Last sync</span></div>
+      {telemetrySummary ? (
+        <section className="gw-admin-stats" aria-label="Guildweaver telemetry summary">
+          <div><strong>{telemetrySummary.records}</strong><span>Records</span></div>
+          <div><strong>{telemetrySummary.domains}</strong><span>Domains</span></div>
+          <div><strong>{telemetrySummary.states}</strong><span>State</span></div>
+          <div><strong>{telemetrySummary.events}</strong><span>Events</span></div>
+          <div><strong>{relativeTime(telemetrySummary.lastReceivedAt)}</strong><span>Last received</span></div>
         </section>
       ) : null}
 
       <section className="gw-admin-console">
-        <header className="gw-admin-toolbar">
+        <header className="gw-admin-toolbar gw-admin-toolbar--stacked">
           <form
             className="gw-admin-search"
             onSubmit={(event) => {
@@ -140,47 +229,69 @@ export default function GuildweaverConsole() {
               setSubmittedQuery(query.trim())
             }}
           >
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search character, member, device, source, or payload…" aria-label="Search Guildweaver snapshots" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stream, realm, character, device, or payload…" aria-label="Search Guildweaver telemetry" />
             <button type="submit">Search</button>
             {submittedQuery ? <button type="button" onClick={() => { setQuery(''); setSubmittedQuery(''); setOffset(0) }}>Clear</button> : null}
           </form>
           <button className="gw-admin-refresh" type="button" onClick={load} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
         </header>
 
+        <div className="gw-admin-filters" aria-label="Telemetry filters">
+          <select value={kind} onChange={(event) => { setKind(event.target.value); setOffset(0) }} aria-label="Filter by telemetry kind">
+            <option value="">All records</option>
+            <option value="state">State</option>
+            <option value="event">Events</option>
+          </select>
+          <select value={eventType} onChange={(event) => { setEventType(event.target.value); setOffset(0) }} aria-label="Filter by telemetry domain">
+            <option value="">All domains</option>
+            {eventTypes.map((domain) => (
+              <option key={`${domain.kind}:${domain.eventType}`} value={domain.eventType}>
+                {humanize(domain.eventType)} ({domain.count})
+              </option>
+            ))}
+          </select>
+          <span>{telemetrySummary?.installations || 0} installation{telemetrySummary?.installations === 1 ? '' : 's'} · {telemetrySummary?.characters || 0} character{telemetrySummary?.characters === 1 ? '' : 's'}</span>
+        </div>
+
         {error ? <p className="gw-admin-error">{error}</p> : null}
 
         <div className="gw-admin-workspace">
-          <section className="gw-admin-history" aria-label="Snapshot history">
+          <section className="gw-admin-history" aria-label="Telemetry history">
             <div className="gw-admin-pane-heading">
-              <div><span>History</span><strong>{snapshots.length ? `${offset + 1}–${offset + snapshots.length}` : '0'} shown</strong></div>
+              <div><span>Telemetry</span><strong>{records.length ? `${offset + 1}–${offset + records.length}` : '0'} shown</strong></div>
             </div>
 
-            {loading && !snapshots.length ? <p className="gw-admin-empty">Loading snapshots…</p> : null}
-            {!loading && !snapshots.length ? <p className="gw-admin-empty">No snapshots match this view.</p> : null}
+            {loading && !records.length ? <p className="gw-admin-empty">Loading telemetry…</p> : null}
+            {!loading && !records.length ? (
+              <p className="gw-admin-empty">No generic telemetry has reached the oscilloscope for this view yet.</p>
+            ) : null}
 
             <div className="gw-admin-history-list">
-              {snapshots.map((snapshot) => (
-                <button
-                  key={snapshot.id}
-                  type="button"
-                  className={`gw-admin-history-item${selected?.id === snapshot.id ? ' is-selected' : ''}`}
-                  onClick={() => selectSnapshot(snapshot)}
-                >
-                  <div className="gw-admin-history-title">
-                    <strong>{snapshot.characterName}</strong>
-                    <span>#{snapshot.id}</span>
-                  </div>
-                  <div className="gw-admin-history-meta">
-                    <span>Lvl {snapshot.level || '?'}</span>
-                    <span>{snapshot.className || 'Unknown class'}</span>
-                    <span>{snapshot.reason || snapshot.source}</span>
-                  </div>
-                  <div className="gw-admin-history-time">
-                    <span>{relativeTime(snapshot.receivedAt)}</span>
-                    <span>{formatBytes(snapshot.payloadBytes)}</span>
-                  </div>
-                </button>
-              ))}
+              {records.map((record) => {
+                const definition = domainRenderer(record)
+                return (
+                  <button
+                    key={record.id}
+                    type="button"
+                    className={`gw-admin-history-item${selected?.id === record.id ? ' is-selected' : ''}`}
+                    onClick={() => selectRecord(record)}
+                  >
+                    <div className="gw-admin-history-title">
+                      <strong>{definition.title}</strong>
+                      <span>#{record.id}</span>
+                    </div>
+                    <div className="gw-admin-history-meta">
+                      <span className={`gw-admin-kind gw-admin-kind--${record.kind}`}>{record.kind}</span>
+                      <span>rev {record.revision}</span>
+                      <span>{record.realm || 'Unknown realm'}</span>
+                    </div>
+                    <div className="gw-admin-history-time">
+                      <span>{relativeTime(record.receivedAt)}</span>
+                      <span>{formatBytes(record.payloadBytes)}</span>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
 
             <div className="gw-admin-pagination">
@@ -189,43 +300,47 @@ export default function GuildweaverConsole() {
             </div>
           </section>
 
-          <section className="gw-admin-detail" aria-label="Snapshot detail">
-            {!selected ? <p className="gw-admin-empty">Select a snapshot to inspect its payload.</p> : (
+          <section className="gw-admin-detail" aria-label="Telemetry detail">
+            {!selected ? <p className="gw-admin-empty">Select a telemetry record to inspect the exact payload.</p> : (
               <>
                 <div className="gw-admin-detail-header">
                   <div>
-                    <span>Snapshot #{selected.id}</span>
-                    <h2>{selected.characterName}</h2>
-                    <p>{selected.memberName} · {selected.payload?.realm || 'Unknown realm'}</p>
+                    <span>{selected.kind} · record #{selected.id}</span>
+                    <h2>{renderer.title}</h2>
+                    <p>{selected.realm || 'Unknown realm'} · {shortId(selected.characterId)} · revision {selected.revision}</p>
                   </div>
-                  <button type="button" onClick={copyPayload} disabled={!selected.payload}>{copied ? 'Copied' : 'Copy JSON'}</button>
+                  <div className="gw-admin-copy-actions">
+                    <button type="button" onClick={() => copyJson(shareReport(selected), 'report')} disabled={!selected.envelope}>{copied === 'report' ? 'Report copied' : 'Copy report'}</button>
+                    <button type="button" onClick={() => copyJson(selected.payload, 'payload')} disabled={!selected.payload}>{copied === 'payload' ? 'Payload copied' : 'Copy payload'}</button>
+                  </div>
                 </div>
 
                 <dl className="gw-admin-facts">
                   <div><dt>Captured</dt><dd title={formatTime(selected.capturedAt)}>{relativeTime(selected.capturedAt)}</dd></div>
                   <div><dt>Received</dt><dd title={formatTime(selected.receivedAt)}>{relativeTime(selected.receivedAt)}</dd></div>
-                  <div><dt>Bridge lag</dt><dd>{formatLag(selected.lagMs)}</dd></div>
-                  <div><dt>Revision</dt><dd>{selected.bridgeRevision ?? '—'}</dd></div>
-                  <div><dt>Addon</dt><dd>{selected.addonVersion || '—'}</dd></div>
-                  <div><dt>Schema</dt><dd>{selected.schemaVersion ?? '—'}</dd></div>
-                  <div><dt>Reason</dt><dd>{selected.reason || '—'}</dd></div>
-                  <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId ? `${selected.deviceId.slice(0, 8)}…` : '—'}</dd></div>
+                  <div><dt>Schema</dt><dd>{selected.schemaVersion}</dd></div>
+                  <div><dt>Revision</dt><dd>{selected.revision}</dd></div>
+                  <div><dt>Stream</dt><dd title={selected.streamKey}>{selected.streamKey}</dd></div>
+                  <div><dt>Device</dt><dd title={selected.deviceId}>{shortId(selected.deviceId)}</dd></div>
+                  <div><dt>Installation</dt><dd title={selected.installationId}>{shortId(selected.installationId)}</dd></div>
+                  <div><dt>Character</dt><dd title={selected.characterId}>{shortId(selected.characterId)}</dd></div>
                 </dl>
 
-                <div className="gw-admin-payload-heading">
-                  <div><span>Raw payload</span><strong>{formatBytes(selected.payloadBytes)}</strong></div>
-                  {detailLoading ? <span>Loading full payload…</span> : null}
-                </div>
-
-                {selected.payload ? (
-                  <div className="gw-admin-json-summary">
-                    {Object.entries(selected.payload).map(([key, value]) => (
-                      <div key={key}><span>{key}</span><strong>{valuePreview(value)}</strong></div>
-                    ))}
+                {domainSummary ? (
+                  <div className="gw-admin-domain-summary">
+                    <div className="gw-admin-payload-heading"><div><span>Domain summary</span><strong>optional renderer</strong></div></div>
+                    <SummaryGrid entries={domainSummary} />
                   </div>
                 ) : null}
 
-                <pre className="gw-admin-json"><code>{selected.payload ? JSON.stringify(selected.payload, null, 2) : 'Loading raw payload…'}</code></pre>
+                <div className="gw-admin-payload-heading">
+                  <div><span>Canonical payload</span><strong>{formatBytes(selected.payloadBytes)}</strong></div>
+                  {detailLoading ? <span>Loading full payload…</span> : <span>{humanize(selected.eventType)}</span>}
+                </div>
+
+                {selected.payload ? <SummaryGrid entries={Object.entries(selected.payload)} /> : null}
+
+                <pre className="gw-admin-json"><code>{selected.payload ? JSON.stringify(selected.payload, null, 2) : 'Loading canonical payload…'}</code></pre>
               </>
             )}
           </section>
