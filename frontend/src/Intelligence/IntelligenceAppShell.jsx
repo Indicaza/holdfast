@@ -98,7 +98,7 @@ export default function IntelligenceAppShell({
   children,
 }) {
   const currentView = views.find((view) => view.id === activeView) || views[0] || intelligenceViews[0]
-  const primaryViews = views.filter((view) => view.section !== 'operations')
+  const guildViews = views.filter((view) => view.section !== 'operations')
   const operationViews = views.filter((view) => view.section === 'operations')
 
   useEffect(() => {
@@ -121,27 +121,28 @@ export default function IntelligenceAppShell({
     <>
       <Navbar />
       <div className={`intelligence-app ${collapsed ? 'intelligence-app--collapsed' : ''} ${mobileOpen ? 'intelligence-app--mobile-open' : ''}`}>
-        <aside className="intelligence-rail" aria-label="Guild Intelligence navigation">
+        <aside className="intelligence-rail" aria-label="GuildOS navigation">
           <div className="intelligence-rail__brand-row">
-            <div className="intelligence-rail__brand" aria-label="Guild Intelligence">
+            <div className="intelligence-rail__brand" aria-label="GuildOS">
               <span className="intelligence-rail__brand-mark" aria-hidden="true">♜</span>
               <span className="intelligence-rail__brand-copy">
-                <strong>Intelligence</strong>
-                <small>Guild operations</small>
+                <strong>GuildOS</strong>
+                <small>Holdfast operations</small>
               </span>
             </div>
             <button
               className="intelligence-rail__close-mobile"
               type="button"
-              aria-label="Close intelligence navigation"
+              aria-label="Close GuildOS navigation"
               onClick={() => onToggleMobile(false)}
             >
               ×
             </button>
           </div>
 
-          <nav className="intelligence-rail__nav" aria-label="Intelligence views">
-            {primaryViews.map((view) => (
+          <nav className="intelligence-rail__nav" aria-label="GuildOS workspaces">
+            <div className="intelligence-rail__section-label">Guild</div>
+            {guildViews.map((view) => (
               <ViewButton
                 activeView={activeView}
                 collapsed={collapsed}
@@ -168,7 +169,7 @@ export default function IntelligenceAppShell({
             <button
               className="intelligence-rail__collapse"
               type="button"
-              aria-label={collapsed ? 'Expand intelligence navigation' : 'Collapse intelligence navigation'}
+              aria-label={collapsed ? 'Expand GuildOS navigation' : 'Collapse GuildOS navigation'}
               aria-pressed={collapsed}
               onClick={onToggleCollapsed}
             >
@@ -181,7 +182,7 @@ export default function IntelligenceAppShell({
         <button
           className="intelligence-app__backdrop"
           type="button"
-          aria-label="Close intelligence navigation"
+          aria-label="Close GuildOS navigation"
           onClick={() => onToggleMobile(false)}
         />
 
@@ -191,7 +192,7 @@ export default function IntelligenceAppShell({
               <button
                 className="intelligence-app__menu-button"
                 type="button"
-                aria-label="Open intelligence navigation"
+                aria-label="Open GuildOS navigation"
                 aria-expanded={mobileOpen}
                 onClick={() => onToggleMobile(true)}
               >
@@ -200,7 +201,7 @@ export default function IntelligenceAppShell({
                 <span />
               </button>
               <div>
-                <span>Guild Intelligence</span>
+                <span>GuildOS</span>
                 <h1>{currentView.label}</h1>
                 <p>{currentView.description}</p>
               </div>
