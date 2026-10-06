@@ -250,11 +250,11 @@ test('guild intelligence discovers synced characters, tunes roster composition, 
   const composition = page.locator('.roster-composition')
   await expect(composition.getByRole('heading', { name: 'See what the guild can field.' })).toBeVisible()
   await expect(composition.getByRole('button', { name: 'Classes' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(composition.getByText('Warrior', { exact: true })).toBeVisible()
+  await expect(composition.getByRole('button', { name: /^Warrior\b/ })).toBeVisible()
 
   await composition.getByRole('button', { name: 'Professions' }).click()
   await expect(composition.getByRole('button', { name: 'Professions' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(composition.getByText('Blacksmithing', { exact: true })).toBeVisible()
+  await expect(composition.getByRole('button', { name: /^Blacksmithing\b/ })).toBeVisible()
   await composition.getByLabel('Slice detail').selectOption('5')
   await expect(composition.getByLabel('Slice detail')).toHaveValue('5')
 
