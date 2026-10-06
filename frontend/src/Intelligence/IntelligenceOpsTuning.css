@@ -14,6 +14,12 @@
   text-transform: uppercase;
 }
 
+.intelligence-rail__section-label:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .intelligence-app--collapsed .intelligence-rail__section-label {
   height: 1px;
   margin: .75rem .45rem .35rem;
@@ -22,6 +28,10 @@
   background: rgba(255, 255, 255, .09);
   color: transparent;
   font-size: 0;
+}
+
+.intelligence-app--collapsed .intelligence-rail__section-label:first-child {
+  display: none;
 }
 
 .intelligence-app .admin-audit {
@@ -52,6 +62,13 @@
     background: transparent;
     color: rgba(221, 193, 125, .72);
     font-size: .62rem;
+  }
+
+  .intelligence-app--collapsed .intelligence-rail__section-label:first-child {
+    display: block;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 }
 
