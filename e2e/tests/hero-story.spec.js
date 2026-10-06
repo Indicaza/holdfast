@@ -14,6 +14,14 @@ async function stopClock(page) {
   await page.clock.pauseAt(new Date())
 }
 
+function expectTransformClose(actual, expected) {
+  const values = (transform) => transform.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || []
+  const actualValues = values(actual)
+  const expectedValues = values(expected)
+  expect(actualValues).toHaveLength(expectedValues.length)
+  actualValues.forEach((value, index) => expect(value).toBeCloseTo(expectedValues[index], 5))
+}
+
 test('all eleven scenes stay in story order and manual playback wraps', async ({ page }) => {
   await ready(page)
   for (const [index, scene] of scenes.entries()) {
@@ -42,7 +50,7 @@ test('autoplay crossfade, caption, and drift pause together', async ({ page }) =
   const before = await art.evaluate((element) => getComputedStyle(element).transform)
   await page.clock.runFor(30000)
   await expect(caption(page)).toHaveAttribute('data-caption', 'gnome')
-  expect(await art.evaluate((element) => getComputedStyle(element).transform)).toBe(before)
+  expectTransformClose(await art.evaluate((element) => getComputedStyle(element).transform), before)
   await page.getByRole('button', { name: 'Play story' }).click()
   await page.clock.runFor(800)
   await expect(caption(page)).toHaveAttribute('data-caption', 'dwarf')

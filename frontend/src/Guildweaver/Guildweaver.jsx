@@ -76,7 +76,7 @@ export default function Guildweaver() {
     <PageShell
       eyebrow="Holdfast companion"
       title="Guildweaver"
-      intro="Connect World of Warcraft to Holdfast. Install the bridge once, pair this computer, and Guildweaver keeps the addon and supported sync working for you."
+      intro="Install it once. Guildweaver finds WoW, installs the addon, connects this computer to Holdfast, and keeps itself updated."
       centered
       className="guildweaver-page"
     >
@@ -95,29 +95,29 @@ export default function Guildweaver() {
       <section className="guildweaver-section">
         <div className="guildweaver-section__heading">
           <p>What happens next</p>
-          <h2>Install. Pair. Play.</h2>
+          <h2>Install. Approve. Done.</h2>
         </div>
 
         <ol className="guildweaver-steps">
           <li>
             <span className="guildweaver-step-number">1</span>
             <div>
-              <strong>Install the Bridge</strong>
-              <span>Run the download. The bridge finds WoW and installs the addon.</span>
+              <strong>Open the installer</strong>
+              <span>Click Install Guildweaver, then open the file your browser downloads.</span>
             </div>
           </li>
           <li>
             <span className="guildweaver-step-number">2</span>
             <div>
-              <strong>Pair with Holdfast</strong>
-              <span>Your browser opens once so you can approve this computer.</span>
+              <strong>Approve this computer</strong>
+              <span>Holdfast opens in your browser once so you can connect the device.</span>
             </div>
           </li>
           <li>
             <span className="guildweaver-step-number">3</span>
             <div>
-              <strong>Play normally</strong>
-              <span>Guildweaver maintains itself and syncs supported data in the background.</span>
+              <strong>Play</strong>
+              <span>WoW discovery, the addon, background sync, and future updates are handled for you.</span>
             </div>
           </li>
         </ol>
@@ -227,7 +227,7 @@ export default function Guildweaver() {
         >
           <div className="guildweaver-verification-modal">
             <p>
-              Desktop packages are not yet Windows code-signed or Apple-notarized, so your operating system may warn you before first launch.
+              The Windows installer is not yet code-signed and the macOS installer is not yet Apple-notarized, so your operating system may warn you before first launch.
             </p>
             <div className="guildweaver-verification-links">
               <a href={release.releasePage} target="_blank" rel="noreferrer">Current release <span>↗</span></a>
@@ -235,7 +235,7 @@ export default function Guildweaver() {
               <a href="https://github.com/Indicaza/guildweaver-bridge/blob/main/README.md" target="_blank" rel="noreferrer">Installation notes <span>↗</span></a>
               <a href={release.reportIssue} target="_blank" rel="noreferrer">Report a bug <span>↗</span></a>
             </div>
-            <p>Every platform download publishes a matching SHA-256 checksum.</p>
+            <p>Every installer and platform package publishes a matching SHA-256 checksum.</p>
           </div>
         </Modal>
       ) : null}
