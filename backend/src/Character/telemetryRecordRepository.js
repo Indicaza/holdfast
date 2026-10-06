@@ -13,12 +13,15 @@ const FORBIDDEN_KEYS = new Set([
   "privatemessages",
 ]);
 
+const PLAYER_GUID_PATTERN = /Player-\d+-[A-F0-9]+/gi;
+
 function normalizedKey(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 export function sanitizeTelemetryValue(value, depth = 0) {
   if (depth > 32) return null;
+  if (typeof value === "string") return value.replace(PLAYER_GUID_PATTERN, "Player-REDACTED");
   if (Array.isArray(value)) {
     return value.map((entry) => sanitizeTelemetryValue(entry, depth + 1));
   }
