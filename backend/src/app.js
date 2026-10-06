@@ -9,6 +9,7 @@ import { requirePermission } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { createCharacterRouter } from "./Character/characterRouter.js";
 import { createGuildweaverAdminRouter } from "./Character/guildweaverAdminRouter.js";
+import { createIntelligenceRouter } from "./Character/intelligenceRouter.js";
 import {
   createDevelopmentAuthRouter,
   developmentAuthEnabled,
@@ -166,6 +167,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   app.use("/api/guild/members", createMemberRouter());
   app.use("/api/guild/billets", createBilletRouter());
   app.use("/api/guild/authority", createAuthorityRouter());
+  app.use("/api/intelligence", createIntelligenceRouter());
   app.use("/api/admin/audit", createAuditRouter());
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
 
