@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
 import {
@@ -29,7 +30,7 @@ export function createIntelligenceRouter() {
         return;
       }
       res.set("Cache-Control", "no-store");
-      res.json(armory);
+      res.json(sanitizeArmoryPayload(armory));
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
