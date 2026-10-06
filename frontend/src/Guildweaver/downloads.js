@@ -3,31 +3,23 @@ export const guildweaverDownloads = Object.freeze([
     id: 'windows',
     os: 'windows',
     label: 'Windows',
-    detail: '64-bit',
+    detail: 'Installer',
     href: '/guildweaver/download/windows',
     checksumHref: '/guildweaver/download/windows/sha256',
   }),
   Object.freeze({
-    id: 'macos-arm64',
+    id: 'macos',
     os: 'macos',
     label: 'macOS',
-    detail: 'Apple Silicon',
-    href: '/guildweaver/download/macos-arm64',
-    checksumHref: '/guildweaver/download/macos-arm64/sha256',
-  }),
-  Object.freeze({
-    id: 'macos-x64',
-    os: 'macos',
-    label: 'macOS',
-    detail: 'Intel',
-    href: '/guildweaver/download/macos-x64',
-    checksumHref: '/guildweaver/download/macos-x64/sha256',
+    detail: 'Intel & Apple Silicon',
+    href: '/guildweaver/download/macos',
+    checksumHref: '/guildweaver/download/macos/sha256',
   }),
   Object.freeze({
     id: 'linux-x64',
     os: 'linux',
     label: 'Linux',
-    detail: 'x64',
+    detail: 'x64 · manual package',
     href: '/guildweaver/download/linux-x64',
     checksumHref: '/guildweaver/download/linux-x64/sha256',
   }),
@@ -35,7 +27,7 @@ export const guildweaverDownloads = Object.freeze([
     id: 'linux-arm64',
     os: 'linux',
     label: 'Linux',
-    detail: 'ARM64',
+    detail: 'ARM64 · manual package',
     href: '/guildweaver/download/linux-arm64',
     checksumHref: '/guildweaver/download/linux-arm64/sha256',
   }),
@@ -72,17 +64,14 @@ export function detectGuildweaverOs(navigatorLike = {}) {
 
 export function recommendedGuildweaverDownload(navigatorLike = {}) {
   const os = detectGuildweaverOs(navigatorLike)
-
-  // Browsers do not reliably expose whether a Mac is Intel or Apple Silicon.
-  // Never guess here: macOS users explicitly choose the correct build in the UI.
-  if (os === 'macos') return null
-
   const preferredId =
     os === 'windows'
       ? 'windows'
-      : os === 'linux'
-        ? 'linux-x64'
-        : null
+      : os === 'macos'
+        ? 'macos'
+        : os === 'linux'
+          ? 'linux-x64'
+          : null
 
   return preferredId
     ? guildweaverDownloads.find((download) => download.id === preferredId) || null
