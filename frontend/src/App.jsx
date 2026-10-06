@@ -11,6 +11,7 @@ import {
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
+const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
@@ -70,6 +71,14 @@ const routes = {
     title: 'Join Holdfast | Alliance WoW Forever Guild',
     description:
       'Join Holdfast through Discord and create your Holdfast member profile.',
+    robots: defaultRobots,
+  },
+  '/guildweaver': {
+    component: Guildweaver,
+    path: '/guildweaver',
+    title: 'Guildweaver | Holdfast',
+    description:
+      'Download Guildweaver for Windows, macOS, or Linux and inspect the open-source bridge, addon, release pipeline, and data boundaries.',
     robots: defaultRobots,
   },
   '/guildweaver/connect': {
