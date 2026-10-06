@@ -1,0 +1,330 @@
+.intelligence-app__content:has(.guildweaver-console-embed) {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  align-content: stretch;
+  gap: 0;
+  overflow: hidden;
+  padding: var(--space-4);
+}
+
+.guildweaver-console-embed {
+  min-width: 0;
+  min-height: 0;
+}
+
+.intelligence-app__content:has(.guildweaver-console-embed) .guildweaver-console-embed {
+  height: 100%;
+}
+
+.gw-admin-console {
+  display: flex;
+  height: min(72dvh, 52rem);
+  min-height: 34rem;
+  flex-direction: column;
+}
+
+.intelligence-app__content:has(.guildweaver-console-embed) .gw-admin-console {
+  height: 100%;
+  min-height: 0;
+}
+
+.gw-admin-toolbar {
+  position: relative;
+  flex: 0 0 auto;
+  gap: var(--space-2);
+  padding: .65rem;
+}
+
+.gw-admin-search {
+  min-width: 14rem;
+}
+
+.gw-admin-search input {
+  width: 100%;
+}
+
+.gw-admin-toolbar-status {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: .3rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.gw-admin-toolbar-status strong {
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-medium);
+}
+
+.gw-admin-toolbar-status i {
+  opacity: .45;
+  font-style: normal;
+}
+
+.gw-admin-filter-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.gw-admin-filter-menu > summary {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  padding: 0 var(--space-4);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  list-style: none;
+}
+
+.gw-admin-filter-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gw-admin-filter-menu[open] > summary,
+.gw-admin-filter-menu > summary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-strong);
+}
+
+.gw-admin-filter-menu > div {
+  position: absolute;
+  top: calc(100% + .45rem);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: 17rem;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: #08111d;
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .32);
+}
+
+.gw-admin-filter-menu label {
+  display: grid;
+  gap: .35rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.gw-admin-filter-menu select {
+  min-height: 2.55rem;
+  padding: 0 .7rem;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text-strong);
+  background: #050d17;
+  font: inherit;
+}
+
+.gw-admin-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.gw-admin-history,
+.gw-admin-detail {
+  min-height: 0;
+}
+
+.gw-admin-history-list {
+  max-height: none;
+  min-height: 0;
+}
+
+.gw-admin-pane-heading {
+  flex: 0 0 auto;
+  padding: .7rem var(--space-3);
+}
+
+.gw-admin-history-item {
+  padding: .8rem var(--space-3);
+}
+
+.gw-admin-history-meta {
+  justify-content: space-between;
+}
+
+.gw-admin-detail {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-4);
+}
+
+.gw-admin-detail-header {
+  align-items: center;
+  padding-bottom: var(--space-3);
+}
+
+.gw-admin-detail-header h2 {
+  margin-top: .1rem;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+}
+
+.gw-admin-detail-header p {
+  margin-top: .15rem;
+  font-size: var(--font-size-xs);
+}
+
+.gw-admin-detail-header > small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.gw-admin-section-inspector {
+  display: grid;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  margin: 0;
+}
+
+.gw-admin-section-tabs {
+  padding: .6rem .75rem;
+}
+
+.gw-admin-section-tabs button {
+  min-width: 6.25rem;
+  min-height: 2.65rem;
+  padding: .35rem .6rem;
+}
+
+.gw-admin-section-heading {
+  min-height: 3rem;
+  padding: .45rem .75rem;
+  border-bottom: var(--border-subtle);
+}
+
+.gw-admin-section-json {
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  border-top: 0;
+}
+
+.gw-admin-advanced-row {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.gw-admin-record-details,
+.gw-admin-advanced-row .gw-admin-envelope {
+  max-height: 16rem;
+  margin: 0;
+  overflow: auto;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(2, 9, 18, .35);
+}
+
+.gw-admin-record-details > summary,
+.gw-admin-advanced-row .gw-admin-envelope > summary {
+  display: flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  list-style: none;
+}
+
+.gw-admin-record-details > summary::-webkit-details-marker,
+.gw-admin-advanced-row .gw-admin-envelope > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gw-admin-record-details[open] > summary,
+.gw-admin-advanced-row .gw-admin-envelope[open] > summary {
+  border-bottom: var(--border-subtle);
+  color: var(--color-text-strong);
+}
+
+.gw-admin-record-details .gw-admin-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.gw-admin-record-details .gw-admin-facts dd {
+  font-size: var(--font-size-xs);
+}
+
+.gw-admin-advanced-actions,
+.gw-admin-envelope-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.gw-admin-advanced-actions button,
+.gw-admin-envelope-actions button {
+  min-height: 2.2rem;
+  padding: 0 var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.gw-admin-advanced-actions button:hover,
+.gw-admin-envelope-actions button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-strong);
+}
+
+.gw-admin-advanced-row .gw-admin-envelope .gw-admin-json {
+  max-height: 10rem;
+}
+
+@media (max-width: 72rem) {
+  .gw-admin-toolbar-status {
+    display: none;
+  }
+}
+
+@media (max-width: 54rem) {
+  .intelligence-app__content:has(.guildweaver-console-embed) {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .intelligence-app__content:has(.guildweaver-console-embed) .guildweaver-console-embed {
+    height: auto;
+  }
+
+  .intelligence-app__content:has(.guildweaver-console-embed) .gw-admin-console,
+  .gw-admin-console {
+    height: auto;
+    min-height: 60rem;
+  }
+
+  .gw-admin-detail {
+    overflow: visible;
+  }
+
+  .gw-admin-section-inspector {
+    min-height: 28rem;
+  }
+
+  .gw-admin-advanced-row {
+    grid-template-columns: 1fr;
+  }
+}

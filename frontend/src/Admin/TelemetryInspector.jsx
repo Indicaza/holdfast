@@ -6,8 +6,6 @@ import {
   stringifyTelemetryShareBundle,
   telemetryDomainDescriptor,
   telemetryPayloadSections,
-  telemetryPreview,
-  telemetrySummaryEntries,
 } from './telemetryInspectorModel.js'
 
 const PAGE_SIZE = 40
@@ -74,6 +72,8 @@ export default function TelemetryInspector() {
     () => payloadSections.find((section) => section.key === selectedSectionKey) || payloadSections[0] || null,
     [payloadSections, selectedSectionKey],
   )
+
+  const activeFilterCount = Number(Boolean(domain)) + Number(Boolean(kind))
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -148,21 +148,20 @@ export default function TelemetryInspector() {
     window.setTimeout(() => setCopyState(''), 1600)
   }
 
+  const clearFilters = () => {
+    setQuery('')
+    setSubmittedQuery('')
+    setDomain('')
+    setKind('')
+    setOffset(0)
+  }
+
   const descriptor = telemetryDomainDescriptor(selected)
+  const displayName = selected?.payload?.name || descriptor.label
 
   return (
     <div className="guildweaver-console-embed">
-      {summary ? (
-        <section className="gw-admin-stats" aria-label="Guildweaver telemetry summary">
-          <div><strong>{summary.records}</strong><span>Records</span></div>
-          <div><strong>{summary.streams}</strong><span>Streams</span></div>
-          <div><strong>{summary.characters}</strong><span>Characters</span></div>
-          <div><strong>{summary.devices}</strong><span>Devices</span></div>
-          <div><strong>{relativeTime(summary.lastReceivedAt)}</strong><span>Last received</span></div>
-        </section>
-      ) : null}
-
-      <section className="gw-admin-console">
+      <section className="gw-admin-console" aria-label="Guildweaver telemetry workspace">
         <header className="gw-admin-toolbar">
           <form
             className="gw-admin-search"
@@ -172,19 +171,42 @@ export default function TelemetryInspector() {
               setSubmittedQuery(query.trim())
             }}
           >
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stream, event, character, realm, device, or payload…" aria-label="Search Guildweaver telemetry" />
-            <select value={domain} onChange={(event) => { setDomain(event.target.value); setOffset(0) }} aria-label="Filter telemetry domain">
-              <option value="">All domains</option>
-              {domains.map((name) => <option key={name} value={name}>{humanizeTelemetryName(name)}</option>)}
-            </select>
-            <select value={kind} onChange={(event) => { setKind(event.target.value); setOffset(0) }} aria-label="Filter telemetry kind">
-              <option value="">State + events</option>
-              <option value="state">State</option>
-              <option value="event">Events</option>
-            </select>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search telemetry…" aria-label="Search Guildweaver telemetry" />
             <button type="submit">Search</button>
-            {(submittedQuery || domain || kind) ? <button type="button" onClick={() => { setQuery(''); setSubmittedQuery(''); setDomain(''); setKind(''); setOffset(0) }}>Clear</button> : null}
+            {(submittedQuery || domain || kind) ? <button type="button" onClick={clearFilters}>Clear</button> : null}
           </form>
+
+          <div className="gw-admin-toolbar-status" aria-label="Guildweaver telemetry summary">
+            <strong>{summary?.records ?? 0}</strong>
+            <span>records</span>
+            <i aria-hidden="true">·</i>
+            <strong>{summary?.streams ?? 0}</strong>
+            <span>streams</span>
+            <i aria-hidden="true">·</i>
+            <span>{relativeTime(summary?.lastReceivedAt)}</span>
+          </div>
+
+          <details className="gw-admin-filter-menu">
+            <summary>Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</summary>
+            <div>
+              <label>
+                <span>Domain</span>
+                <select value={domain} onChange={(event) => { setDomain(event.target.value); setOffset(0) }} aria-label="Filter telemetry domain">
+                  <option value="">All domains</option>
+                  {domains.map((name) => <option key={name} value={name}>{humanizeTelemetryName(name)}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Kind</span>
+                <select value={kind} onChange={(event) => { setKind(event.target.value); setOffset(0) }} aria-label="Filter telemetry kind">
+                  <option value="">State + events</option>
+                  <option value="state">State</option>
+                  <option value="event">Events</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
           <button className="gw-admin-refresh" type="button" onClick={load} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
         </header>
 
@@ -193,7 +215,7 @@ export default function TelemetryInspector() {
         <div className="gw-admin-workspace">
           <section className="gw-admin-history" aria-label="Telemetry history">
             <div className="gw-admin-pane-heading">
-              <div><span>Telemetry</span><strong>{records.length ? `${offset + 1}–${offset + records.length}` : '0'} shown</strong></div>
+              <div><span>History</span><strong>{records.length ? `${offset + 1}–${offset + records.length}` : '0'}</strong></div>
             </div>
 
             {loading && !records.length ? <p className="gw-admin-empty">Loading telemetry…</p> : null}
@@ -211,16 +233,15 @@ export default function TelemetryInspector() {
                   >
                     <div className="gw-admin-history-title">
                       <strong>{itemDescriptor.label}</strong>
-                      <span>#{record.id}</span>
-                    </div>
-                    <div className="gw-admin-history-meta">
-                      <span>{record.kind}</span>
-                      <span>{record.eventType}</span>
                       <span>rev {record.revision}</span>
                     </div>
-                    <div className="gw-admin-history-time">
-                      <span>{relativeTime(record.receivedAt)}</span>
+                    <div className="gw-admin-history-meta">
+                      <span>{record.eventType}</span>
                       <span>{formatBytes(record.payloadBytes)}</span>
+                    </div>
+                    <div className="gw-admin-history-time">
+                      <span>{record.realm || 'Unknown realm'}</span>
+                      <span>{relativeTime(record.receivedAt)}</span>
                     </div>
                   </button>
                 )
@@ -234,52 +255,19 @@ export default function TelemetryInspector() {
           </section>
 
           <section className="gw-admin-detail" aria-label="Telemetry detail">
-            {!selected ? <p className="gw-admin-empty">Select a telemetry record to inspect its canonical server payload.</p> : (
+            {!selected ? <p className="gw-admin-empty">Select a telemetry record to inspect it.</p> : (
               <>
                 <div className="gw-admin-detail-header">
                   <div>
-                    <span>{selected.kind} · {selected.eventType} · #{selected.id}</span>
-                    <h2>{descriptor.label}</h2>
-                    <p>{selected.realm || 'Unknown realm'} · {selected.streamKey}</p>
+                    <span>{descriptor.label} · {selected.eventType}</span>
+                    <h2>{displayName}</h2>
+                    <p>{selected.realm || 'Unknown realm'} · rev {selected.revision} · {formatBytes(selected.payloadBytes)} · received {relativeTime(selected.receivedAt)}</p>
                   </div>
-                  <div className="gw-admin-copy-actions">
-                    <button type="button" onClick={() => performCopy('payload')} disabled={!selected.payload}>{copyState === 'payload' ? 'Payload copied' : 'Copy payload'}</button>
-                    <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Full bundle copied' : 'Copy full bundle'}</button>
-                  </div>
+                  {detailLoading ? <small>Loading payload…</small> : null}
                 </div>
-
-                <dl className="gw-admin-facts">
-                  <div><dt>Captured</dt><dd title={formatTime(selected.capturedAt)}>{relativeTime(selected.capturedAt)}</dd></div>
-                  <div><dt>Received</dt><dd title={formatTime(selected.receivedAt)}>{relativeTime(selected.receivedAt)}</dd></div>
-                  <div><dt>Kind</dt><dd>{selected.kind}</dd></div>
-                  <div><dt>Revision</dt><dd>{selected.revision}</dd></div>
-                  <div><dt>Schema</dt><dd>{selected.schemaVersion}</dd></div>
-                  <div><dt>Character</dt><dd title={selected.characterId}>{selected.characterId ? `${selected.characterId.slice(0, 12)}…` : '—'}</dd></div>
-                  <div><dt>Install</dt><dd title={selected.installationId}>{selected.installationId ? `${selected.installationId.slice(0, 12)}…` : '—'}</dd></div>
-                  <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId ? `${selected.deviceId.slice(0, 12)}…` : '—'}</dd></div>
-                </dl>
-
-                <div className="gw-admin-payload-heading">
-                  <div><span>Payload summary</span><strong>{formatBytes(selected.payloadBytes)}</strong></div>
-                  {detailLoading ? <span>Loading canonical payload…</span> : null}
-                </div>
-
-                {selected.payload ? (
-                  <div className="gw-admin-json-summary">
-                    {telemetrySummaryEntries(selected).map(([key, value]) => (
-                      <div key={key}><span>{humanizeTelemetryName(key)}</span><strong>{telemetryPreview(value)}</strong></div>
-                    ))}
-                  </div>
-                ) : null}
 
                 {payloadSections.length ? (
                   <section className="gw-admin-section-inspector" aria-label="Payload sections">
-                    <div className="gw-admin-payload-heading">
-                      <div><span>Focus payload</span><strong>{payloadSections.length} sections</strong></div>
-                      <button type="button" onClick={() => performCopy('section')} disabled={!selectedSection}>
-                        {copyState === 'section' ? 'Section copied for ChatGPT' : 'Copy selected section'}
-                      </button>
-                    </div>
                     <div className="gw-admin-section-tabs" role="tablist" aria-label="Choose payload section">
                       {payloadSections.map((section) => (
                         <button
@@ -301,23 +289,40 @@ export default function TelemetryInspector() {
                         <span>{selectedSection ? formatBytes(selectedSection.bytes) : '0 B'}</span>
                       </div>
                       <button type="button" onClick={() => performCopy('section')} disabled={!selectedSection}>
-                        {copyState === 'section' ? 'Copied' : 'Copy'}
+                        {copyState === 'section' ? 'Copied for ChatGPT' : 'Copy section'}
                       </button>
                     </div>
                     <pre className="gw-admin-json gw-admin-section-json"><code>{selectedSection ? JSON.stringify(selectedSection.value, null, 2) : 'No section selected.'}</code></pre>
                   </section>
                 ) : null}
 
-                <details className="gw-admin-envelope">
-                  <summary>
-                    <span>Full canonical envelope</span>
-                    <strong>{selected.eventType}</strong>
-                  </summary>
-                  <div className="gw-admin-envelope-actions">
-                    <button type="button" onClick={() => performCopy('envelope')}>{copyState === 'envelope' ? 'Envelope copied' : 'Copy envelope'}</button>
-                  </div>
-                  <pre className="gw-admin-json"><code>{selected.envelope ? JSON.stringify(selected.envelope, null, 2) : 'Loading canonical payload…'}</code></pre>
-                </details>
+                <div className="gw-admin-advanced-row">
+                  <details className="gw-admin-record-details">
+                    <summary>Record details</summary>
+                    <dl className="gw-admin-facts">
+                      <div><dt>Captured</dt><dd title={formatTime(selected.capturedAt)}>{relativeTime(selected.capturedAt)}</dd></div>
+                      <div><dt>Received</dt><dd title={formatTime(selected.receivedAt)}>{relativeTime(selected.receivedAt)}</dd></div>
+                      <div><dt>Kind</dt><dd>{selected.kind}</dd></div>
+                      <div><dt>Schema</dt><dd>{selected.schemaVersion}</dd></div>
+                      <div><dt>Character</dt><dd title={selected.characterId}>{selected.characterId || '—'}</dd></div>
+                      <div><dt>Install</dt><dd title={selected.installationId}>{selected.installationId || '—'}</dd></div>
+                      <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId || '—'}</dd></div>
+                      <div><dt>Stream</dt><dd title={selected.streamKey}>{selected.streamKey || '—'}</dd></div>
+                    </dl>
+                    <div className="gw-admin-advanced-actions">
+                      <button type="button" onClick={() => performCopy('payload')} disabled={!selected.payload}>{copyState === 'payload' ? 'Payload copied' : 'Copy payload'}</button>
+                      <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Bundle copied' : 'Copy full bundle'}</button>
+                    </div>
+                  </details>
+
+                  <details className="gw-admin-envelope">
+                    <summary>Full envelope</summary>
+                    <div className="gw-admin-envelope-actions">
+                      <button type="button" onClick={() => performCopy('envelope')}>{copyState === 'envelope' ? 'Envelope copied' : 'Copy envelope'}</button>
+                    </div>
+                    <pre className="gw-admin-json"><code>{selected.envelope ? JSON.stringify(selected.envelope, null, 2) : 'Loading canonical payload…'}</code></pre>
+                  </details>
+                </div>
               </>
             )}
           </section>
