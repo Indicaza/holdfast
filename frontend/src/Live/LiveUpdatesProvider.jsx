@@ -1,10 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from '../Auth/sessionContext.js'
-
-const LiveUpdatesContext = createContext({
-  status: 'offline',
-  event: null,
-})
+import { LiveUpdatesContext } from './liveUpdatesContext.js'
 
 function parsedEvent(event) {
   try {
@@ -90,8 +86,4 @@ export function LiveUpdatesProvider({ children }) {
       {children}
     </LiveUpdatesContext.Provider>
   )
-}
-
-export function useLiveUpdates() {
-  return useContext(LiveUpdatesContext)
 }
