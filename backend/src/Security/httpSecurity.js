@@ -1,4 +1,5 @@
 import { publicWebsiteUrl } from "../Config/environment.js";
+import { observeLiveMutation } from "../Live/liveMutationObserver.js";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -70,7 +71,7 @@ export function requireTrustedMutationOrigin(req, res, next) {
 
   if (!origin) {
     if (process.env.NODE_ENV !== "production") {
-      next();
+      observeLiveMutation(req, res, next);
       return;
     }
 
@@ -83,7 +84,7 @@ export function requireTrustedMutationOrigin(req, res, next) {
     return;
   }
 
-  next();
+  observeLiveMutation(req, res, next);
 }
 
 export function securityHeaders(req, res, next) {

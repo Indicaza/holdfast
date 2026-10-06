@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { useLiveUpdates } from '../Live/liveUpdatesContext.js'
 import './NotificationBell.css'
 
 function relativeTime(value) {
@@ -33,6 +34,7 @@ function BellIcon() {
 }
 
 function NotificationBell() {
+  const { event: liveEvent } = useLiveUpdates()
   const [open, setOpen] = useState(false)
   const [inbox, setInbox] = useState({
     notifications: [],
@@ -80,6 +82,11 @@ function NotificationBell() {
       document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [refresh])
+
+  useEffect(() => {
+    if (!liveEvent?.topics?.some((topic) => topic === 'notifications' || topic === '*')) return
+    void refresh()
+  }, [liveEvent, refresh])
 
   useEffect(() => {
     if (!open) return undefined

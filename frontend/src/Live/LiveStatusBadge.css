@@ -1,0 +1,56 @@
+.live-status {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: .42rem;
+  padding: 0 .72rem;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, .025);
+  font-size: .68rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+}
+
+.live-status__dot {
+  width: .48rem;
+  height: .48rem;
+  border-radius: 50%;
+  background: #6c7480;
+}
+
+.live-status--live {
+  border-color: rgba(88, 167, 119, .24);
+  color: var(--color-text-strong);
+  background: rgba(88, 167, 119, .055);
+}
+
+.live-status--live .live-status__dot {
+  background: #72be8e;
+  box-shadow: 0 0 .65rem rgba(114, 190, 142, .55);
+}
+
+.live-status--connecting .live-status__dot,
+.live-status--reconnecting .live-status__dot {
+  background: var(--color-accent-bright);
+  box-shadow: 0 0 .65rem rgba(196, 166, 103, .4);
+}
+
+.live-status--offline {
+  border-color: rgba(210, 105, 91, .18);
+}
+
+.live-status--offline .live-status__dot {
+  background: #c86f63;
+}
+
+@media (max-width: 40rem) {
+  .live-status {
+    padding-inline: .6rem;
+  }
+
+  .live-status > span:last-child {
+    display: none;
+  }
+}

@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
+import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import {
   applyGuildweaverQuestActions,
@@ -81,6 +82,10 @@ export function createGuildweaverQuestRouter() {
           res.status(404).json({ error: "member_not_found" });
           return;
         }
+
+        publishLiveUpdate({ topics: ["quests", "notifications"], source: "guildweaver.quests" });
+        publishLiveUpdate({ topics: ["guildweaver"], source: "guildweaver.quests", permission: "site.admin" });
+        publishLiveUpdate({ topics: ["audit"], source: "guildweaver.quests", permission: "audit.view" });
 
         res.set("Cache-Control", "no-store");
         res.json(result);

@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { publicWebsiteUrl } from "../Config/environment.js";
+import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import {
   createRateLimiter,
   requireTrustedMutationOrigin,
@@ -117,6 +118,12 @@ export function createCharacterRouter() {
         res.status(400).json({ error: "pairing_invalid" });
         return;
       }
+
+      publishLiveUpdate({
+        topics: ["guildweaver"],
+        source: "guildweaver.connected",
+        entityId: result.deviceId,
+      });
 
       res.json({
         status: "connected",
