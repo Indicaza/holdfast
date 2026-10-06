@@ -1,0 +1,101 @@
+.wow-icon {
+  display: inline-grid;
+  width: var(--wow-icon-size);
+  height: var(--wow-icon-size);
+  flex: 0 0 auto;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.6rem;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.08), transparent 52%), #0a1322;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0.4rem 1rem rgba(0, 0, 0, 0.28);
+}
+
+.wow-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wow-icon__fallback {
+  color: rgba(244, 236, 216, 0.74);
+  font-family: var(--font-display);
+  font-size: max(0.64rem, calc(var(--wow-icon-size) * 0.24));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+}
+
+.wow-icon--quality-1 { border-color: rgba(255, 255, 255, 0.42); }
+.wow-icon--quality-2 { border-color: rgba(54, 196, 70, 0.88); }
+.wow-icon--quality-3 { border-color: rgba(55, 134, 255, 0.9); }
+.wow-icon--quality-4 { border-color: rgba(174, 79, 255, 0.92); }
+.wow-icon--quality-5 { border-color: rgba(255, 128, 0, 0.92); }
+.wow-icon--quality-6 { border-color: rgba(226, 40, 40, 0.9); }
+.wow-icon--quality-7 { border-color: rgba(31, 177, 255, 0.9); }
+
+.item-quality-0 { color: #9d9d9d; }
+.item-quality-1 { color: #f3efe4; }
+.item-quality-2 { color: #5fd35f; }
+.item-quality-3 { color: #6da2ff; }
+.item-quality-4 { color: #b46aff; }
+.item-quality-5 { color: #ff9b37; }
+.item-quality-6 { color: #ff5a5a; }
+.item-quality-7 { color: #54d6ff; }
+
+.item-detail {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid rgba(196, 166, 103, 0.24);
+  border-radius: var(--radius-lg);
+  background: rgba(3, 8, 16, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.item-detail__topline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.item-detail__topline > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.item-detail__name {
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.item-detail__topline span,
+.item-detail dt,
+.item-detail code {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.item-detail dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem var(--space-3);
+  margin: 0;
+}
+
+.item-detail dd {
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.item-detail code {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.item-detail--compact {
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
