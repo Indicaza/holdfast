@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
+import './Admin.css'
 import './GuildweaverAdmin.css'
 
 const PAGE_SIZE = 30
@@ -43,12 +44,6 @@ function valuePreview(value) {
   if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`
   if (typeof value === 'object') return `${Object.keys(value).length} field${Object.keys(value).length === 1 ? '' : 's'}`
   return String(value)
-}
-
-function changedKeys(current, previous) {
-  if (!current || !previous) return []
-  const keys = new Set([...Object.keys(current), ...Object.keys(previous)])
-  return [...keys].filter((key) => JSON.stringify(current[key]) !== JSON.stringify(previous[key]))
 }
 
 async function getJson(url) {
@@ -127,15 +122,11 @@ export default function GuildweaverAdmin() {
       return
     }
     if (!selected || !snapshots.some((snapshot) => snapshot.id === selected.id)) {
-      setSelected(snapshots[0])
+      selectSnapshot(snapshots[0])
     }
-  }, [snapshots, selected])
-
-  const previous = useMemo(() => {
-    if (!selected) return null
-    const index = snapshots.findIndex((snapshot) => snapshot.id === selected.id)
-    return index >= 0 && index + 1 < snapshots.length ? snapshots[index + 1] : null
-  }, [selected, snapshots])
+    // selectSnapshot intentionally follows the current page of history.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshots])
 
   const selectSnapshot = async (snapshot) => {
     setSelected(snapshot)
@@ -160,19 +151,15 @@ export default function GuildweaverAdmin() {
 
   if (!canView) return <Gate session={session} />
 
-  const changes = selected?.payload && previous?.payload
-    ? changedKeys(selected.payload, previous.payload)
-    : []
-
   return (
     <PageShell
       eyebrow="Guildweaver Admin"
       title="Sync Console"
-      intro="See exactly what Guildweaver is sending, when it arrived, and how each character changed over time."
+      intro="See exactly what Guildweaver is sending, when it arrived, and how each character changes over time."
       centered
       className="admin-page guildweaver-admin-page"
     >
-      <nav className="gw-admin-nav" aria-label="Admin sections">
+      <nav className="admin-nav" aria-label="Admin sections">
         <a href="/admin">Audit</a>
         <a href="/admin/guildweaver" aria-current="page">Guildweaver</a>
       </nav>
@@ -253,7 +240,7 @@ export default function GuildweaverAdmin() {
                   <div>
                     <span>Snapshot #{selected.id}</span>
                     <h2>{selected.characterName}</h2>
-                    <p>{selected.memberName} · {selected.realm || selected.payload?.realm || 'Unknown realm'}</p>
+                    <p>{selected.memberName} · {selected.payload?.realm || 'Unknown realm'}</p>
                   </div>
                   <button type="button" onClick={copyPayload} disabled={!selected.payload}>{copied ? 'Copied' : 'Copy JSON'}</button>
                 </div>
@@ -269,13 +256,6 @@ export default function GuildweaverAdmin() {
                   <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId ? `${selected.deviceId.slice(0, 8)}…` : '—'}</dd></div>
                 </dl>
 
-                {changes.length ? (
-                  <div className="gw-admin-changes">
-                    <span>Changed from previous</span>
-                    <div>{changes.map((key) => <code key={key}>{key}</code>)}</div>
-                  </div>
-                ) : null}
-
                 <div className="gw-admin-payload-heading">
                   <div><span>Raw payload</span><strong>{formatBytes(selected.payloadBytes)}</strong></div>
                   {detailLoading ? <span>Loading full payload…</span> : null}
@@ -289,7 +269,7 @@ export default function GuildweaverAdmin() {
                   </div>
                 ) : null}
 
-                <pre className="gw-admin-json"><code>{selected.payload ? JSON.stringify(selected.payload, null, 2) : 'Select this snapshot to load its raw payload.'}</code></pre>
+                <pre className="gw-admin-json"><code>{selected.payload ? JSON.stringify(selected.payload, null, 2) : 'Loading raw payload…'}</code></pre>
               </>
             )}
           </section>
