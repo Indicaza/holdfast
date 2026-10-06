@@ -25,6 +25,7 @@ export function primaryNavigationLinks(authenticated) {
   return [
     { label: 'Quests', href: '/quests' },
     { label: 'Members', href: '/members' },
+    { label: 'Intelligence', href: '/intelligence' },
     ...publicNavigationLinks,
   ]
 }
