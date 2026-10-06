@@ -26,6 +26,19 @@ function snapshot(name = "Rook") {
 
 test("Guildweaver device pairing binds snapshots to the approving Discord member", async () => {
   await withHttpApp(async ({ request }) => {
+    const anonymousStatus = await request("/api/guildweaver/status");
+    assert.equal(anonymousStatus.status, 401);
+
+    const beforeStatus = await request("/api/guildweaver/status", {
+      persona: "member",
+    });
+    assert.equal(beforeStatus.status, 200);
+    assert.deepEqual(beforeStatus.json, {
+      connected: false,
+      deviceCount: 0,
+      lastSeenAt: null,
+    });
+
     const started = await request("/api/bridge/pairing/start", {
       method: "POST",
       body: { deviceName: "Zach's PC" },
@@ -70,6 +83,14 @@ test("Guildweaver device pairing binds snapshots to the approving Discord member
     assert.equal(exchanged.json.status, "connected");
     assert.equal(exchanged.json.memberId, memberIds.member);
     assert.match(exchanged.json.deviceToken, /^gwd_/);
+
+    const afterStatus = await request("/api/guildweaver/status", {
+      persona: "member",
+    });
+    assert.equal(afterStatus.status, 200);
+    assert.equal(afterStatus.json.connected, true);
+    assert.equal(afterStatus.json.deviceCount, 1);
+    assert.match(afterStatus.json.lastSeenAt, /^\d{4}-\d{2}-\d{2}T/);
 
     const synced = await request("/api/bridge/characters/snapshot", {
       method: "POST",

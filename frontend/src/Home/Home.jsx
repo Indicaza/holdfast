@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import Footer from './Footer/Footer.jsx'
+import GuildweaverPrompt from './GuildweaverPrompt/GuildweaverPrompt.jsx'
 import QuestBoard from './QuestBoard/QuestBoard.jsx'
 import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
@@ -30,6 +31,7 @@ function Home({ overlay = null }) {
           </section>
 
           <RecruitmentSnapshot />
+          <GuildweaverPrompt />
           <QuestBoard onJoin={openJoin} />
         </main>
 

@@ -3,10 +3,16 @@ import { JoinContext } from './JoinContext.js'
 import JoinModal from './JoinModal.jsx'
 import { currentReturnTo, safeReturnTo } from './joinDestination.js'
 
+function openJoinOnLoad() {
+  const pathname = window.location.pathname.replace(/\/+$/, '')
+  const authCode = new URLSearchParams(window.location.search).get('auth')
+  return pathname === '/join' && authCode !== 'connected'
+}
+
 function RecruitmentProvider({ children }) {
   const openerRef = useRef(null)
   const [join, setJoin] = useState(() => ({
-    isOpen: window.location.pathname.replace(/\/+$/, '') === '/join',
+    isOpen: openJoinOnLoad(),
     returnTo: currentReturnTo(),
   }))
   const openJoin = useCallback((returnTo, opener) => {

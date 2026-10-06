@@ -23,6 +23,7 @@ import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
 import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
 import { createAuthorityRouter } from "./Guild/authorityRouter.js";
+import { createGuildweaverMemberStatusRouter } from "./Guildweaver/memberStatusRouter.js";
 import {
   guildweaverDownloadUrl,
   guildweaverReleaseMetadata,
@@ -168,6 +169,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   app.use("/api/guild/authority", createAuthorityRouter());
   app.use("/api/admin/audit", createAuditRouter());
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
+  app.use("/api/guildweaver", createGuildweaverMemberStatusRouter());
 
   app.get("/api/guildweaver/release", (req, res) => {
     res.set("Cache-Control", "public, max-age=300");
