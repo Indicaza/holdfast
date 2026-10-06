@@ -61,6 +61,9 @@ export async function syncGuildweaverCharacter({
   memberId,
   snapshot,
   source = "guildweaver",
+  deviceId = "",
+  bridgeRevision = null,
+  receivedAt = new Date().toISOString(),
 }) {
   const normalizedMemberId = text(memberId, 96);
   const name = text(snapshot?.name, 32);
@@ -165,6 +168,9 @@ export async function syncGuildweaverCharacter({
       characterId,
       source,
       capturedAt: capturedAt(snapshot),
+      receivedAt,
+      deviceId,
+      bridgeRevision,
       payload: snapshot,
     });
 
