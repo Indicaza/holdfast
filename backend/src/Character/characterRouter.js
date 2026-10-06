@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { publicWebsiteUrl } from "../Config/environment.js";
+import { ingestGuildweaverTelemetry } from "../Guildweaver/telemetryRepository.js";
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import {
   createRateLimiter,
@@ -61,6 +62,11 @@ export function createCharacterRouter() {
     name: "guildweaver-character-ingest",
     windowMs: 10 * 60 * 1000,
     max: 300,
+  });
+  const telemetryIngestRateLimit = createRateLimiter({
+    name: "guildweaver-telemetry-ingest",
+    windowMs: 10 * 60 * 1000,
+    max: 1800,
   });
 
   router.post("/pairing/start", pairingStartRateLimit, (req, res) => {
@@ -242,6 +248,56 @@ export function createCharacterRouter() {
       } catch (error) {
         console.error("Unable to ingest Guildweaver character snapshot", error);
         res.status(500).json({ error: "character_snapshot_ingest_failed" });
+      }
+    },
+  );
+
+  router.post(
+    "/telemetry",
+    telemetryIngestRateLimit,
+    requireGuildweaverDevice,
+    (req, res) => {
+      try {
+        const result = ingestGuildweaverTelemetry({
+          deviceId: req.guildweaverDevice.id,
+          memberId: req.guildweaverDevice.memberId,
+          idempotencyKey: req.get("Idempotency-Key"),
+          record: req.body,
+          receivedAt: new Date().toISOString(),
+        });
+
+        res.set("Cache-Control", "no-store");
+
+        if (result.status === "invalid") {
+          res.status(400).json({
+            error: result.error,
+            ...(result.field ? { field: result.field } : {}),
+          });
+          return;
+        }
+
+        if (result.status === "conflict") {
+          res.status(409).json({ error: "telemetry_idempotency_conflict" });
+          return;
+        }
+
+        publishLiveUpdate({
+          topics: ["guildweaver"],
+          source: "guildweaver.telemetry",
+          entityId: String(result.record.id),
+        });
+
+        res.status(result.status === "created" ? 201 : 200).json({
+          status: result.status,
+          recordId: result.record.id,
+          eventType: result.record.eventType,
+          kind: result.record.kind,
+          revision: result.record.revision,
+          receivedAt: result.record.receivedAt,
+        });
+      } catch (error) {
+        console.error("Unable to ingest Guildweaver telemetry", error);
+        res.status(500).json({ error: "guildweaver_telemetry_ingest_failed" });
       }
     },
   );
