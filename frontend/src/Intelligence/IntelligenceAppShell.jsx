@@ -133,7 +133,7 @@ export default function IntelligenceAppShell({
             <button
               className="intelligence-rail__close-mobile"
               type="button"
-              aria-label="Close GuildOS navigation"
+              aria-label="Close intelligence navigation"
               onClick={() => onToggleMobile(false)}
             >
               ×
@@ -169,7 +169,7 @@ export default function IntelligenceAppShell({
             <button
               className="intelligence-rail__collapse"
               type="button"
-              aria-label={collapsed ? 'Expand GuildOS navigation' : 'Collapse GuildOS navigation'}
+              aria-label={collapsed ? 'Expand intelligence navigation' : 'Collapse intelligence navigation'}
               aria-pressed={collapsed}
               onClick={onToggleCollapsed}
             >
@@ -182,7 +182,7 @@ export default function IntelligenceAppShell({
         <button
           className="intelligence-app__backdrop"
           type="button"
-          aria-label="Close GuildOS navigation"
+          aria-label="Close intelligence navigation"
           onClick={() => onToggleMobile(false)}
         />
 
@@ -192,7 +192,7 @@ export default function IntelligenceAppShell({
               <button
                 className="intelligence-app__menu-button"
                 type="button"
-                aria-label="Open GuildOS navigation"
+                aria-label="Open intelligence navigation"
                 aria-expanded={mobileOpen}
                 onClick={() => onToggleMobile(true)}
               >
