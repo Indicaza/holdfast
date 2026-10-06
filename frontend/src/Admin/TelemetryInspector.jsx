@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   humanizeTelemetryName,
+  stringifyTelemetrySectionShareBundle,
   stringifyTelemetryShareBundle,
   telemetryDomainDescriptor,
+  telemetryPayloadSections,
   telemetryPreview,
   telemetrySummaryEntries,
 } from './telemetryInspectorModel.js'
@@ -50,6 +52,7 @@ export default function TelemetryInspector() {
   const [summary, setSummary] = useState(null)
   const [records, setRecords] = useState([])
   const [selected, setSelected] = useState(null)
+  const [selectedSectionKey, setSelectedSectionKey] = useState('overview')
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [domain, setDomain] = useState('')
@@ -65,6 +68,12 @@ export default function TelemetryInspector() {
     const names = new Set((summary?.domains || []).map((entry) => entry.domain).filter(Boolean))
     return [...names].sort()
   }, [summary])
+
+  const payloadSections = useMemo(() => telemetryPayloadSections(selected), [selected])
+  const selectedSection = useMemo(
+    () => payloadSections.find((section) => section.key === selectedSectionKey) || payloadSections[0] || null,
+    [payloadSections, selectedSectionKey],
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -90,6 +99,7 @@ export default function TelemetryInspector() {
 
   const selectRecord = useCallback(async (record) => {
     setSelected(record)
+    setSelectedSectionKey('overview')
     setDetailLoading(true)
     setCopyState('')
     try {
@@ -114,11 +124,25 @@ export default function TelemetryInspector() {
     }
   }, [records, selected, selectRecord])
 
+  useEffect(() => {
+    if (!payloadSections.length) return
+    if (!payloadSections.some((section) => section.key === selectedSectionKey)) {
+      setSelectedSectionKey(payloadSections[0].key)
+    }
+  }, [payloadSections, selectedSectionKey])
+
   const performCopy = async (mode) => {
     if (!selected?.envelope) return
-    const value = mode === 'share'
-      ? stringifyTelemetryShareBundle(selected)
-      : JSON.stringify(selected.envelope, null, 2)
+    let value = ''
+
+    if (mode === 'share') value = stringifyTelemetryShareBundle(selected)
+    if (mode === 'envelope') value = JSON.stringify(selected.envelope, null, 2)
+    if (mode === 'payload') value = JSON.stringify(selected.payload || {}, null, 2)
+    if (mode === 'section' && selectedSection) {
+      value = stringifyTelemetrySectionShareBundle(selected, selectedSection.key)
+    }
+
+    if (!value) return
     await copyText(value)
     setCopyState(mode)
     window.setTimeout(() => setCopyState(''), 1600)
@@ -219,8 +243,8 @@ export default function TelemetryInspector() {
                     <p>{selected.realm || 'Unknown realm'} · {selected.streamKey}</p>
                   </div>
                   <div className="gw-admin-copy-actions">
-                    <button type="button" onClick={() => performCopy('json')} disabled={!selected.envelope}>{copyState === 'json' ? 'Copied' : 'Copy JSON'}</button>
-                    <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Copied for ChatGPT' : 'Copy Share Bundle'}</button>
+                    <button type="button" onClick={() => performCopy('payload')} disabled={!selected.payload}>{copyState === 'payload' ? 'Payload copied' : 'Copy payload'}</button>
+                    <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Full bundle copied' : 'Copy full bundle'}</button>
                   </div>
                 </div>
 
@@ -248,10 +272,52 @@ export default function TelemetryInspector() {
                   </div>
                 ) : null}
 
-                <div className="gw-admin-payload-heading">
-                  <div><span>Canonical envelope</span><strong>{selected.eventType}</strong></div>
-                </div>
-                <pre className="gw-admin-json"><code>{selected.envelope ? JSON.stringify(selected.envelope, null, 2) : 'Loading canonical payload…'}</code></pre>
+                {payloadSections.length ? (
+                  <section className="gw-admin-section-inspector" aria-label="Payload sections">
+                    <div className="gw-admin-payload-heading">
+                      <div><span>Focus payload</span><strong>{payloadSections.length} sections</strong></div>
+                      <button type="button" onClick={() => performCopy('section')} disabled={!selectedSection}>
+                        {copyState === 'section' ? 'Section copied for ChatGPT' : 'Copy selected section'}
+                      </button>
+                    </div>
+                    <div className="gw-admin-section-tabs" role="tablist" aria-label="Choose payload section">
+                      {payloadSections.map((section) => (
+                        <button
+                          key={section.key}
+                          type="button"
+                          role="tab"
+                          aria-selected={selectedSection?.key === section.key}
+                          className={selectedSection?.key === section.key ? 'is-selected' : ''}
+                          onClick={() => setSelectedSectionKey(section.key)}
+                        >
+                          <span>{section.label}</span>
+                          <small>{formatBytes(section.bytes)}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="gw-admin-section-heading">
+                      <div>
+                        <strong>{selectedSection?.label || 'Payload'}</strong>
+                        <span>{selectedSection ? formatBytes(selectedSection.bytes) : '0 B'}</span>
+                      </div>
+                      <button type="button" onClick={() => performCopy('section')} disabled={!selectedSection}>
+                        {copyState === 'section' ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <pre className="gw-admin-json gw-admin-section-json"><code>{selectedSection ? JSON.stringify(selectedSection.value, null, 2) : 'No section selected.'}</code></pre>
+                  </section>
+                ) : null}
+
+                <details className="gw-admin-envelope">
+                  <summary>
+                    <span>Full canonical envelope</span>
+                    <strong>{selected.eventType}</strong>
+                  </summary>
+                  <div className="gw-admin-envelope-actions">
+                    <button type="button" onClick={() => performCopy('envelope')}>{copyState === 'envelope' ? 'Envelope copied' : 'Copy envelope'}</button>
+                  </div>
+                  <pre className="gw-admin-json"><code>{selected.envelope ? JSON.stringify(selected.envelope, null, 2) : 'Loading canonical payload…'}</code></pre>
+                </details>
               </>
             )}
           </section>
