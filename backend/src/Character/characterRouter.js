@@ -203,6 +203,9 @@ export function createCharacterRouter() {
         const result = await syncGuildweaverCharacter({
           memberId,
           snapshot,
+          deviceId: req.guildweaverDevice.id,
+          bridgeRevision: Number.isFinite(revision) ? revision : null,
+          receivedAt: new Date().toISOString(),
         });
 
         if (result.status === "invalid") {
@@ -223,7 +226,8 @@ export function createCharacterRouter() {
           character: result.character,
           snapshotId: result.snapshot.id,
           capturedAt: result.snapshot.capturedAt,
-          revision: Number.isFinite(revision) ? revision : null,
+          receivedAt: result.snapshot.receivedAt,
+          revision: result.snapshot.bridgeRevision,
         });
       } catch (error) {
         console.error("Unable to ingest Guildweaver character snapshot", error);
