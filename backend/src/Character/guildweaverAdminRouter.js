@@ -2,6 +2,11 @@ import { Router } from "express";
 
 import { requirePermission } from "../Auth/permissions.js";
 import {
+  readGuildweaverTelemetryHistory,
+  readGuildweaverTelemetryRecord,
+  readGuildweaverTelemetrySummary,
+} from "../Guildweaver/telemetryRepository.js";
+import {
   readGuildweaverAdminSummary,
   readGuildweaverSnapshot,
   readGuildweaverSnapshotHistory,
@@ -15,10 +20,57 @@ export function createGuildweaverAdminRouter() {
   router.get("/summary", (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
-      res.json({ summary: readGuildweaverAdminSummary() });
+      res.json({
+        summary: {
+          ...readGuildweaverAdminSummary(),
+          telemetry: readGuildweaverTelemetrySummary(),
+        },
+      });
     } catch (error) {
       console.error("Unable to read Guildweaver admin summary", error);
       res.status(500).json({ error: "guildweaver_admin_summary_unavailable" });
+    }
+  });
+
+  router.get("/telemetry", (req, res) => {
+    try {
+      const result = readGuildweaverTelemetryHistory({
+        q: req.query.q,
+        kind: req.query.kind,
+        eventType: req.query.eventType,
+        characterId: req.query.characterId,
+        installationId: req.query.installationId,
+        deviceId: req.query.deviceId,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      });
+      res.set("Cache-Control", "no-store");
+      res.json(result);
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry history", error);
+      res.status(500).json({ error: "guildweaver_telemetry_history_unavailable" });
+    }
+  });
+
+  router.get("/telemetry/:id", (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id < 1) {
+        res.status(400).json({ error: "invalid_telemetry_id" });
+        return;
+      }
+
+      const record = readGuildweaverTelemetryRecord(id);
+      if (!record) {
+        res.status(404).json({ error: "telemetry_record_not_found" });
+        return;
+      }
+
+      res.set("Cache-Control", "no-store");
+      res.json({ record });
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry record", error);
+      res.status(500).json({ error: "guildweaver_telemetry_record_unavailable" });
     }
   });
 
