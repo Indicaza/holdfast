@@ -1,5 +1,6 @@
 import { withGuildTransaction } from "../Data/database.js";
 import { recordCharacterSnapshotInDatabase } from "./characterSnapshotRepository.js";
+import { projectTelemetrySnapshotInDatabase } from "./telemetryProjection.js";
 
 function text(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
@@ -32,10 +33,15 @@ function professionNames(value) {
 }
 
 function capturedAt(snapshot) {
-  const timestamp = Number(snapshot?.capturedAt);
+  const numericTimestamp = Number(snapshot?.capturedAt);
 
-  if (Number.isFinite(timestamp) && timestamp > 0) {
-    return new Date(timestamp * 1000).toISOString();
+  if (Number.isFinite(numericTimestamp) && numericTimestamp > 0) {
+    return new Date(numericTimestamp * 1000).toISOString();
+  }
+
+  if (typeof snapshot?.capturedAt === "string") {
+    const parsed = new Date(snapshot.capturedAt);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
   }
 
   return new Date().toISOString();
@@ -67,9 +73,9 @@ export async function syncGuildweaverCharacter({
 }) {
   const normalizedMemberId = text(memberId, 96);
   const name = text(snapshot?.name, 32);
-  const race = text(snapshot?.race?.name, 32);
-  const className = text(snapshot?.class?.name, 32);
-  const spec = text(snapshot?.specialization?.name, 48);
+  const race = text(snapshot?.race?.name ?? snapshot?.race, 32);
+  const className = text(snapshot?.class?.name ?? snapshot?.class, 32);
+  const spec = text(snapshot?.specialization?.name ?? snapshot?.spec?.name ?? snapshot?.spec, 48);
   const professions = professionNames(snapshot?.professions);
 
   if (!normalizedMemberId || !name) {
@@ -163,19 +169,54 @@ export async function syncGuildweaverCharacter({
       `,
     ).run(now, now, normalizedMemberId);
 
-    const storedSnapshot = recordCharacterSnapshotInDatabase({
+    const captured = capturedAt(snapshot);
+    const payloadJson = JSON.stringify(snapshot ?? {});
+    const duplicate = db.prepare(`
+      SELECT s.id, s.captured_at, i.received_at, i.bridge_revision
+      FROM character_snapshots s
+      LEFT JOIN character_snapshot_ingests i ON i.snapshot_id = s.id
+      WHERE s.character_id = ? AND s.captured_at = ? AND s.payload_json = ?
+      ORDER BY s.id DESC
+      LIMIT 1
+    `).get(characterId, captured, payloadJson);
+
+    let storedSnapshot;
+    let status = existing ? "updated" : "created";
+
+    if (duplicate) {
+      storedSnapshot = {
+        id: Number(duplicate.id),
+        characterId,
+        source,
+        capturedAt: duplicate.captured_at,
+        receivedAt: duplicate.received_at || duplicate.captured_at,
+        bridgeRevision: duplicate.bridge_revision === null ? null : Number(duplicate.bridge_revision),
+        payload: snapshot,
+      };
+      status = "unchanged";
+    } else {
+      storedSnapshot = recordCharacterSnapshotInDatabase({
+        db,
+        characterId,
+        source,
+        capturedAt: captured,
+        receivedAt,
+        deviceId,
+        bridgeRevision,
+        payload: snapshot,
+      });
+    }
+
+    projectTelemetrySnapshotInDatabase({
       db,
       characterId,
-      source,
-      capturedAt: capturedAt(snapshot),
-      receivedAt,
-      deviceId,
-      bridgeRevision,
-      payload: snapshot,
+      snapshotId: storedSnapshot.id,
+      snapshot,
+      capturedAt: storedSnapshot.capturedAt,
     });
 
     return {
-      status: existing ? "updated" : "created",
+      status,
       character: {
         id: characterId,
         name,
