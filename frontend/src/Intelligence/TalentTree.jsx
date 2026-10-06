@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import './TalentTree.css'
@@ -58,12 +58,25 @@ export function TalentNode({ node, position, active, onSelect }) {
 export default function TalentTree({ talents }) {
   const nodes = Array.isArray(talents?.nodes) ? talents.nodes : []
   const edges = Array.isArray(talents?.edges) ? talents.edges : []
-  const [activeId, setActiveId] = useState(nodes[0]?.id ?? null)
+  const [activeId, setActiveId] = useState(null)
   const [zoom, setZoom] = useState(1)
   const frame = useMemo(() => bounds(nodes), [nodes])
   const positions = useMemo(() => new Map(nodes.map((node) => [node.id, point(node, frame)])), [frame, nodes])
-  const activeNode = nodes.find((node) => node.id === activeId) || null
+  const activeNode = nodes.find((node) => node.id === activeId) || nodes[0] || null
   const entry = selectedEntry(activeNode)
+  const activeRank = Number(entry?.rank ?? activeNode?.rank) || 0
+  const activeMaxRank = Number(entry?.maxRank ?? activeNode?.maxRank) || activeRank || 1
+
+  useEffect(() => {
+    if (!nodes.length) {
+      if (activeId !== null) setActiveId(null)
+      return
+    }
+
+    if (!nodes.some((node) => node.id === activeId)) {
+      setActiveId(nodes[0].id)
+    }
+  }, [activeId, nodes])
 
   if (!nodes.length) {
     return (
@@ -104,7 +117,7 @@ export default function TalentTree({ talents }) {
               key={node.id}
               node={node}
               position={positions.get(node.id)}
-              active={node.id === activeId}
+              active={node.id === activeNode?.id}
               onSelect={(selected) => setActiveId(selected.id)}
             />
           ))}
@@ -118,7 +131,7 @@ export default function TalentTree({ talents }) {
               <WowIcon iconFileId={entry?.iconFileId} spellId={entry?.spellId} label={entry?.name || String(activeNode.id)} size={52} />
               <div>
                 <strong>{entry?.name || `Talent node ${activeNode.id}`}</strong>
-                <span>{activeNode.selected ? 'Selected' : 'Available'}{entry?.rank || activeNode.rank ? ` · Rank ${entry?.rank ?? activeNode.rank}/${entry?.maxRank ?? activeNode.maxRank || 1}` : ''}</span>
+                <span>{activeNode.selected || entry?.selected ? 'Selected' : 'Available'}{activeRank ? ` · Rank ${activeRank}/${activeMaxRank}` : ''}</span>
               </div>
             </div>
             <p>{entry?.description || 'No description was included in this telemetry snapshot.'}</p>
