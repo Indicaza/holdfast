@@ -12,7 +12,7 @@ test('signed-out navigation keeps public information easy to reach', () => {
   assert.deepEqual(primaryNavigationLinks(false), publicNavigationLinks)
   assert.deepEqual(
     publicNavigationLinks.map((link) => link.href),
-    ['/charter', '/ranks'],
+    ['/charter', '/ranks', '/guildweaver'],
   )
 })
 
@@ -23,17 +23,18 @@ test('the account action is labeled as sign in rather than recruitment', () => {
 test('signed-in navigation adds member destinations before public pages', () => {
   assert.deepEqual(
     primaryNavigationLinks(true).map((link) => link.href),
-    ['/quests', '/members', '/charter', '/ranks'],
+    ['/quests', '/members', '/charter', '/ranks', '/guildweaver'],
   )
 })
 
-test('footer leads with joining and exposes the public source repository', () => {
+test('footer leads with joining and exposes Guildweaver plus the public source repository', () => {
   assert.deepEqual(
     footerNavigationLinks.map((link) => link.href),
     [
       '/join',
       '/charter',
       '/ranks',
+      '/guildweaver',
       '/privacy',
       'https://github.com/Indicaza/holdfast',
     ],
