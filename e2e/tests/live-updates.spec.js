@@ -30,8 +30,10 @@ async function submitTelemetry(page) {
       method: 'POST',
       body: JSON.stringify({ deviceCode: pairing.deviceCode }),
     })
+    const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
+    const name = `Live${suffix}`
 
-    return json('/api/bridge/characters/snapshot', {
+    const result = await json('/api/bridge/characters/snapshot', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token.deviceToken}` },
       body: JSON.stringify({
@@ -39,9 +41,9 @@ async function submitTelemetry(page) {
         snapshot: {
           schemaVersion: 2,
           capturedAt: Math.floor(Date.now() / 1000),
-          characterId: 'live-feed-e2e-character',
-          characterKey: 'classic beta pve 2:livefeed',
-          name: 'Livefeed',
+          characterId: `live-feed-e2e-${suffix}`,
+          characterKey: `classic beta pve 2:${name.toLowerCase()}`,
+          name,
           realm: 'Classic Beta PvE 2',
           region: 'US',
           level: 31,
@@ -55,6 +57,8 @@ async function submitTelemetry(page) {
         },
       }),
     })
+
+    return { ...result, fixtureName: name }
   })
 }
 
@@ -79,10 +83,10 @@ test('Guildweaver telemetry refreshes an open Intelligence dashboard without nav
     const urlBefore = page.url()
 
     const result = await submitTelemetry(senderPage)
-    expect(['created', 'updated']).toContain(result.status)
+    expect(result.status).toBe('created')
 
     await expect.poll(() => intelligenceReads).toBeGreaterThan(initialReads)
-    await expect(page.getByText('Livefeed', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText(result.fixtureName, { exact: true }).first()).toBeVisible()
     expect(page.url()).toBe(urlBefore)
     await expect(page.getByRole('status', { name: 'Live updates: Live' })).toBeVisible()
   } finally {
