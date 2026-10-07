@@ -62,10 +62,10 @@ export function ItemIcon({ item, size = 48, className = '' }) {
   return (
     <WowIcon
       src={item?.mediaUrl || item?.catalog?.metadata?.mediaUrl}
-      iconFileId={item?.iconFileId ?? item?.iconFileID}
+      iconFileId={item?.iconFileId ?? item?.iconFileDataId ?? item?.iconFileID}
       itemId={item?.itemId ?? item?.itemID}
       label={item?.name || item?.slot}
-      quality={item?.quality}
+      quality={item?.quality ?? item?.qualityId}
       size={size}
       className={className}
     />
@@ -80,7 +80,10 @@ function enchantLabel(enchant) {
 }
 
 function itemType(item) {
-  return [item?.itemSubclassName || item?.subclass, item?.equipLocation].filter(Boolean).join(' · ')
+  return [
+    item?.itemSubclassName || item?.itemSubclass?.name || item?.subclass,
+    item?.equipLocation,
+  ].filter(Boolean).join(' · ')
 }
 
 function coinParts(copper) {
@@ -93,22 +96,114 @@ function coinParts(copper) {
   return [gold ? `${gold}g` : '', silver ? `${silver}s` : '', bronze || (!gold && !silver) ? `${bronze}c` : ''].filter(Boolean)
 }
 
+function clientTooltipLines(item) {
+  const source = Array.isArray(item?.tooltipLines)
+    ? item.tooltipLines
+    : Array.isArray(item?.tooltip?.lines)
+      ? item.tooltip.lines
+      : []
+  const name = String(item?.name || '').trim().toLowerCase()
+  const itemLevel = Number(item?.itemLevel)
+
+  return source.filter((line) => {
+    const left = String(line?.left || line?.leftText || line?.text || '').trim()
+    const right = String(line?.right || line?.rightText || '').trim()
+    if (!left && !right) return false
+    if (name && !right && left.toLowerCase() === name) return false
+    if (itemLevel && !right && new RegExp(`^item level\\s+${itemLevel}$`, 'i').test(left)) return false
+    return true
+  })
+}
+
+function tooltipColorStyle(value) {
+  if (!value || typeof value !== 'object') return undefined
+  const channels = ['r', 'g', 'b'].map((key) => Number(value[key]))
+  if (!channels.every(Number.isFinite)) return undefined
+  const normalized = channels.map((channel) => Math.round(Math.max(0, Math.min(1, channel)) * 255))
+  const alpha = Number(value.a)
+  const opacity = Number.isFinite(alpha) ? Math.max(0, Math.min(1, alpha)) : 1
+  return { color: `rgba(${normalized[0]}, ${normalized[1]}, ${normalized[2]}, ${opacity})` }
+}
+
+function ClientTooltip({ item, limit = 40 }) {
+  const lines = clientTooltipLines(item).slice(0, limit)
+  if (!lines.length) return null
+
+  return (
+    <div className="item-tooltip__client-lines">
+      {lines.map((line, index) => {
+        const left = String(line?.left || line?.leftText || line?.text || '').trim()
+        const right = String(line?.right || line?.rightText || '').trim()
+        return (
+          <div className="item-tooltip__client-line" key={`${left}:${right}:${index}`}>
+            <span style={tooltipColorStyle(line?.leftColor || line?.color)}>{left}</span>
+            {right ? <span style={tooltipColorStyle(line?.rightColor)}>{right}</span> : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function statLabel(value) {
+  return String(value || '')
+    .replace(/^ITEM_MOD_/, '')
+    .replace(/_SHORT$/, '')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+function structuredStats(item) {
+  return Object.entries(item?.stats && typeof item.stats === 'object' ? item.stats : {})
+    .filter(([, value]) => Number.isFinite(Number(value)))
+    .slice(0, 24)
+}
+
+function StatLines({ item }) {
+  const stats = structuredStats(item)
+  if (!stats.length) return null
+  return (
+    <div className="item-tooltip__stats">
+      {stats.map(([key, value]) => (
+        <span key={key}>{Number(value) > 0 ? '+' : ''}{Number(value)} {statLabel(key)}</span>
+      ))}
+    </div>
+  )
+}
+
+function DurabilityLine({ item }) {
+  const current = Number(item?.durability?.current)
+  const max = Number(item?.durability?.max)
+  if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return null
+  return <span>Durability {current} / {max}</span>
+}
+
 function TooltipBody({ item, compact = false }) {
   const enchant = enchantLabel(item?.enchant)
   const type = itemType(item)
   const price = coinParts(item?.sellPrice)
   const description = String(item?.description || '').trim()
+  const richLines = clientTooltipLines(item)
+  const hasClientTooltip = richLines.length > 0
 
   return (
     <>
-      <strong className={`item-tooltip__name item-quality-${Number(item?.quality) || 0}`}>
+      <strong className={`item-tooltip__name item-quality-${Number(item?.quality ?? item?.qualityId) || 0}`}>
         {item?.name || `Item ${item?.itemId || ''}`.trim() || 'Unknown item'}
       </strong>
       {item?.itemLevel ? <span className="item-tooltip__level">Item Level {item.itemLevel}</span> : null}
-      {type ? <span>{type}</span> : null}
-      {item?.requiredLevel ? <span>Requires Level {item.requiredLevel}</span> : null}
-      {enchant ? <span className="item-tooltip__enchant">Enhancement: {enchant}</span> : null}
-      {description && !compact ? <p>{description}</p> : null}
+      {hasClientTooltip ? <ClientTooltip item={item} limit={compact ? 12 : 40} /> : (
+        <>
+          {type ? <span>{type}</span> : null}
+          {item?.requiredLevel ? <span>Requires Level {item.requiredLevel}</span> : null}
+          {enchant ? <span className="item-tooltip__enchant">Enhancement: {enchant}</span> : null}
+          <StatLines item={item} />
+          <DurabilityLine item={item} />
+          {item?.spell?.name ? <span className="item-tooltip__effect">Effect: {item.spell.name}</span> : null}
+          {description && !compact ? <p>{description}</p> : null}
+        </>
+      )}
       {price.length && !compact ? <span>Sell price: {price.join(' ')}</span> : null}
       {item?.itemId && !compact ? <small>Item #{item.itemId}</small> : null}
     </>
@@ -140,29 +235,40 @@ export function ItemDetailCard({ item, compact = false }) {
   const type = itemType(item)
   const enchant = enchantLabel(item.enchant)
   const price = coinParts(item.sellPrice)
-  const gemCount = Array.isArray(item.gemIds) ? item.gemIds.filter(Boolean).length : 0
+  const gemCount = Array.isArray(item.gemIds || item.gemItemIds) ? (item.gemIds || item.gemItemIds).filter(Boolean).length : 0
   const bonusCount = Array.isArray(item.bonusIds) ? item.bonusIds.filter(Boolean).length : 0
+  const richLines = clientTooltipLines(item)
+  const durabilityCurrent = Number(item?.durability?.current)
+  const durabilityMax = Number(item?.durability?.max)
+  const hasDurability = Number.isFinite(durabilityCurrent) && Number.isFinite(durabilityMax) && durabilityMax > 0
 
   return (
-    <article className={`item-detail item-detail--quality-${Number(item.quality) || 0}${compact ? ' item-detail--compact' : ''}`}>
+    <article className={`item-detail item-detail--quality-${Number(item.quality ?? item.qualityId) || 0}${compact ? ' item-detail--compact' : ''}`}>
       <div className="item-detail__eyebrow">Selected equipment</div>
       <div className="item-detail__topline">
         <ItemIcon item={item} size={compact ? 40 : 64} />
         <div>
-          <strong className={`item-detail__name item-quality-${Number(item.quality) || 0}`}>
+          <strong className={`item-detail__name item-quality-${Number(item.quality ?? item.qualityId) || 0}`}>
             {item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item'}
           </strong>
           <span>{item.slot || 'Equipment'}</span>
           {item.itemLevel ? <b>Item Level {item.itemLevel}</b> : null}
         </div>
       </div>
-      {item.description ? <p className="item-detail__description">{item.description}</p> : null}
+      {richLines.length ? <ClientTooltip item={item} /> : (
+        <>
+          <StatLines item={item} />
+          {item.description ? <p className="item-detail__description">{item.description}</p> : null}
+        </>
+      )}
       <dl>
         {item.requiredLevel ? <><dt>Requires</dt><dd>Level {item.requiredLevel}</dd></> : null}
         {type ? <><dt>Type</dt><dd>{type}</dd></> : null}
         {enchant ? <><dt>Enchant</dt><dd className="item-detail__positive">{enchant}</dd></> : null}
         {gemCount ? <><dt>Gems</dt><dd>{gemCount} socketed</dd></> : null}
         {bonusCount ? <><dt>Bonuses</dt><dd>{bonusCount} modifiers</dd></> : null}
+        {hasDurability ? <><dt>Durability</dt><dd>{durabilityCurrent} / {durabilityMax}</dd></> : null}
+        {item?.spell?.name ? <><dt>Effect</dt><dd className="item-detail__positive">{item.spell.name}</dd></> : null}
         {price.length ? <><dt>Sell</dt><dd>{price.join(' ')}</dd></> : null}
         {item.itemId ? <><dt>Item ID</dt><dd>{item.itemId}</dd></> : null}
       </dl>
