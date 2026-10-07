@@ -74,6 +74,19 @@ function preferredCharacterId(snapshot) {
   return "";
 }
 
+function characterIdentity(snapshot) {
+  const firstName = text(snapshot?.firstName ?? snapshot?.name, 32);
+  const lastName = text(snapshot?.lastName ?? snapshot?.surname, 48);
+  const explicitDisplayName = text(snapshot?.displayName, 96);
+  const displayName = explicitDisplayName || [firstName, lastName].filter(Boolean).join(" ");
+
+  return {
+    firstName,
+    lastName,
+    displayName: displayName || firstName,
+  };
+}
+
 export async function syncGuildweaverCharacter({
   memberId,
   snapshot,
@@ -83,7 +96,7 @@ export async function syncGuildweaverCharacter({
   receivedAt = new Date().toISOString(),
 }) {
   const normalizedMemberId = text(memberId, 96);
-  const name = text(snapshot?.name, 32);
+  const identity = characterIdentity(snapshot);
   const race = text(snapshot?.race?.name ?? snapshot?.race, 32);
   const className = text(snapshot?.class?.name ?? snapshot?.class, 32);
   const spec = text(
@@ -91,8 +104,9 @@ export async function syncGuildweaverCharacter({
     48,
   );
   const professions = professionNames(snapshot?.professions);
+  const preferredId = preferredCharacterId(snapshot);
 
-  if (!normalizedMemberId || !name) {
+  if (!normalizedMemberId || !identity.displayName) {
     return { status: "invalid", character: null, snapshot: null };
   }
 
@@ -105,17 +119,36 @@ export async function syncGuildweaverCharacter({
       return { status: "member-not-found", character: null, snapshot: null };
     }
 
-    const existing = db
-      .prepare(
-        `
-          SELECT id, is_main, sort_order
-          FROM characters
-          WHERE member_id = ? AND name = ? COLLATE NOCASE
-          ORDER BY sort_order, id
-          LIMIT 1
-        `,
-      )
-      .get(normalizedMemberId, name);
+    let existing = null;
+
+    // Stable collector identity wins. Never collapse two Guildweaver characters
+    // merely because they share a first/display name.
+    if (preferredId) {
+      existing = db
+        .prepare(
+          `
+            SELECT id, is_main, sort_order
+            FROM characters
+            WHERE member_id = ? AND id = ?
+            LIMIT 1
+          `,
+        )
+        .get(normalizedMemberId, preferredId);
+    } else {
+      // Name fallback is retained only for legacy/manual payloads that have no
+      // anonymous character identity at all.
+      existing = db
+        .prepare(
+          `
+            SELECT id, is_main, sort_order
+            FROM characters
+            WHERE member_id = ? AND name = ? COLLATE NOCASE
+            ORDER BY sort_order, id
+            LIMIT 1
+          `,
+        )
+        .get(normalizedMemberId, identity.displayName);
+    }
 
     const existingCount = Number(
       db
@@ -129,7 +162,7 @@ export async function syncGuildweaverCharacter({
         )
         .get(normalizedMemberId)?.sort_order || 0,
     );
-    const characterId = existing?.id || preferredCharacterId(snapshot);
+    const characterId = existing?.id || preferredId;
 
     if (!characterId) {
       return { status: "invalid", character: null, snapshot: null };
@@ -164,7 +197,7 @@ export async function syncGuildweaverCharacter({
     ).run(
       characterId,
       normalizedMemberId,
-      name,
+      identity.displayName,
       race,
       className,
       spec,
@@ -244,7 +277,10 @@ export async function syncGuildweaverCharacter({
       status,
       character: {
         id: characterId,
-        name,
+        name: identity.displayName,
+        firstName: identity.firstName,
+        lastName: identity.lastName,
+        displayName: identity.displayName,
         race,
         className,
         spec,
