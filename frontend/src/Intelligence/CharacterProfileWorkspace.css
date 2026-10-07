@@ -1,0 +1,368 @@
+.modal__panel--armory {
+  --armory-header-height: auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: min(94svh, 64rem);
+  max-height: 94svh;
+}
+
+.modal__panel--armory .modal__header {
+  min-height: 0;
+  padding: clamp(1.1rem, 1.8vw, 1.65rem) clamp(1.4rem, 3vw, 3.2rem) clamp(.95rem, 1.5vw, 1.3rem);
+}
+
+.modal__panel--armory .modal__eyebrow {
+  margin-bottom: .35rem;
+  font-size: .62rem;
+}
+
+.modal__panel--armory .modal__header h1 {
+  font-size: clamp(2.15rem, 3.6vw, 3.45rem);
+  line-height: .95;
+}
+
+.modal__panel--armory .modal__intro {
+  margin-top: .55rem;
+  font-size: clamp(.78rem, 1vw, .9rem);
+  line-height: 1.35;
+}
+
+.modal__panel--armory .modal__body {
+  display: block;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+  scrollbar-gutter: auto;
+}
+
+.character-profile-modal,
+.character-profile--modal {
+  height: 100%;
+  min-height: 0;
+}
+
+.character-profile--modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.character-profile--modal .armory-tabs {
+  position: relative;
+  top: auto;
+  flex: 0 0 auto;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.018), 0 .45rem 1.1rem rgba(0,0,0,.12);
+}
+
+.character-profile--modal .armory-tabs button {
+  min-height: 3.15rem;
+}
+
+.character-profile--modal .armory-content {
+  min-height: 0;
+  height: 100%;
+  padding-top: clamp(.9rem, 1.5vw, 1.35rem);
+  padding-bottom: clamp(.85rem, 1.4vw, 1.2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.character-profile--modal .armory-content::-webkit-scrollbar,
+.character-profile--modal .character-sheet__stats::-webkit-scrollbar,
+.character-profile--modal .character-sheet__stats .character-stats::-webkit-scrollbar {
+  width: .48rem;
+  height: .48rem;
+}
+
+.character-profile--modal .armory-content::-webkit-scrollbar-thumb,
+.character-profile--modal .character-sheet__stats::-webkit-scrollbar-thumb,
+.character-profile--modal .character-sheet__stats .character-stats::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(196, 166, 103, .32);
+  background-clip: padding-box;
+}
+
+.character-profile--modal .armory-content--equipment {
+  display: flex;
+  overflow: hidden;
+}
+
+.character-profile--modal .armory-content--equipment > .character-sheet {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.character-profile--modal .character-sheet {
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 22rem);
+  gap: .85rem;
+  align-items: stretch;
+}
+
+.character-profile--modal .character-sheet__equipment,
+.character-profile--modal .character-sheet__stats {
+  height: 100%;
+  min-height: 0;
+  border-radius: .8rem;
+}
+
+.character-profile--modal .character-sheet__equipment {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: visible;
+  padding: .8rem;
+}
+
+.character-profile--modal .character-sheet__stats {
+  position: static;
+  top: auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: .55rem;
+  overflow: hidden;
+  padding: .8rem .55rem .8rem .8rem;
+}
+
+.character-profile--modal .character-sheet__section-heading {
+  margin-bottom: .55rem;
+}
+
+.character-profile--modal .character-sheet__section-heading h2 {
+  font-size: 1.08rem;
+}
+
+.character-profile--modal .character-sheet__section-heading span {
+  font-size: .56rem;
+}
+
+.character-profile--modal .character-sheet__section-heading--stats {
+  padding: 0 .25rem .55rem 0;
+}
+
+.character-profile--modal .character-sheet__section-heading p {
+  margin-top: .15rem;
+  font-size: .6rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.character-profile--modal .character-sheet .paper-doll__layout {
+  height: 100%;
+  min-height: 0;
+  padding: .58rem;
+  grid-template-columns: minmax(10rem, 1fr) minmax(7.5rem, .55fr) minmax(10rem, 1fr);
+  gap: .5rem;
+  border-radius: .68rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__column {
+  align-content: stretch;
+  gap: .26rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__slot {
+  min-height: 0;
+  height: 100%;
+  padding: .28rem .36rem;
+  border-radius: .55rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__empty-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: .48rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__slot-copy {
+  gap: 0;
+}
+
+.character-profile--modal .character-sheet .paper-doll__slot-copy small,
+.character-profile--modal .character-sheet .paper-doll__slot-copy em {
+  font-size: .56rem;
+  line-height: 1.1;
+}
+
+.character-profile--modal .character-sheet .paper-doll__slot-copy strong {
+  font-size: .69rem;
+  line-height: 1.18;
+}
+
+.character-profile--modal .character-sheet .paper-doll__figure {
+  padding-inline: .5rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__crest {
+  font-size: 3.8rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__figure strong {
+  font-size: 1rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__gear-summary {
+  margin-top: .45rem;
+  gap: .25rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__gear-summary div {
+  padding: .32rem .18rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__gear-summary b {
+  font-size: .85rem;
+}
+
+.character-profile--modal .character-sheet .paper-doll__weapons {
+  gap: .26rem;
+  padding-top: .3rem;
+}
+
+.character-profile--modal .character-sheet .item-detail {
+  position: absolute;
+  z-index: 12;
+  right: .75rem;
+  bottom: .75rem;
+  width: min(22rem, calc(100% - 1.5rem));
+  max-height: 48%;
+  margin: 0;
+  overflow: auto;
+  border-color: rgba(196, 166, 103, .34);
+  background: rgba(2, 8, 15, .97);
+  box-shadow: 0 1.2rem 3rem rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.character-profile--modal .character-sheet__stats .character-stats {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: .25rem;
+  scrollbar-gutter: stable;
+}
+
+.character-profile--modal .character-sheet__stats .character-stats__group {
+  padding: .58rem .68rem;
+  border-radius: .5rem;
+}
+
+.character-profile--modal .character-sheet__stats .character-stat-row,
+.character-profile--modal .character-sheet__stats .character-stat-row:nth-child(odd),
+.character-profile--modal .character-sheet__stats .character-stat-row:nth-child(even) {
+  padding: .34rem 0;
+}
+
+.character-profile--modal .character-sheet__stats .character-stat-row dt {
+  font-size: .63rem;
+}
+
+.character-profile--modal .character-sheet__stats .character-stat-row strong {
+  font-size: .73rem;
+}
+
+.character-profile--modal .character-sheet__stats .character-stat-row small {
+  font-size: .52rem;
+}
+
+.character-profile--modal .armory-content--overview .armory-overview {
+  align-content: start;
+}
+
+.character-profile--modal .armory-content--talents,
+.character-profile--modal .armory-content--professions,
+.character-profile--modal .armory-content--recipes,
+.character-profile--modal .armory-content--overview {
+  padding-right: max(.35rem, env(safe-area-inset-right));
+}
+
+.character-profile--modal .armory-panel {
+  border-radius: .78rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.02), 0 .6rem 1.5rem rgba(0,0,0,.1);
+}
+
+@media (max-width: 78rem) {
+  .character-profile--modal .armory-content--equipment {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .character-profile--modal .character-sheet {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .character-profile--modal .character-sheet__equipment,
+  .character-profile--modal .character-sheet__stats {
+    height: auto;
+    overflow: visible;
+  }
+
+  .character-profile--modal .character-sheet .paper-doll,
+  .character-profile--modal .character-sheet .paper-doll__layout {
+    height: auto;
+  }
+
+  .character-profile--modal .character-sheet .item-detail {
+    position: static;
+    width: auto;
+    max-height: none;
+    margin-top: .65rem;
+  }
+
+  .character-profile--modal .character-sheet__stats .character-stats {
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 58rem) {
+  .modal__panel--armory {
+    height: calc(100svh - 1.3rem);
+    max-height: calc(100svh - 1.3rem);
+  }
+
+  .modal__panel--armory .modal__header {
+    padding: 1rem 4.25rem .8rem 1.15rem;
+  }
+
+  .modal__panel--armory .modal__header h1 {
+    font-size: clamp(2rem, 8vw, 2.75rem);
+  }
+
+  .character-profile--modal .armory-content {
+    padding-top: .8rem;
+  }
+}
+
+@media (max-width: 36rem) {
+  .modal__panel--armory {
+    height: 100svh;
+    max-height: 100svh;
+  }
+
+  .modal__panel--armory .modal__header {
+    padding: 1rem 3.9rem .75rem .9rem;
+  }
+
+  .modal__panel--armory .modal__eyebrow {
+    display: none;
+  }
+
+  .modal__panel--armory .modal__intro {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .character-profile--modal .armory-content--equipment {
+    overflow-y: auto;
+  }
+}

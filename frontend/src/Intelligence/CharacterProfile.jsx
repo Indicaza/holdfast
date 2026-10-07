@@ -76,7 +76,10 @@ export default function CharacterProfile({
   const activeTab = characterProfileTabs.some(([value]) => value === requestedTab) ? requestedTab : 'overview'
 
   return (
-    <div className={`character-profile${className ? ` ${className}` : ''}`}>
+    <div
+      className={`character-profile${className ? ` ${className}` : ''}`}
+      data-active-tab={activeTab}
+    >
       {showHero ? <CharacterHero character={character} /> : null}
 
       <nav className="armory-tabs" aria-label="Character profile sections">
@@ -93,7 +96,7 @@ export default function CharacterProfile({
         ))}
       </nav>
 
-      <section className="armory-content">
+      <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
         {activeTab === 'overview' ? <Overview armory={armory} /> : null}
         {activeTab === 'equipment' ? (
           <CharacterEquipmentSheet

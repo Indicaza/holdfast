@@ -22,6 +22,7 @@ export default function CharacterEquipmentSheet({
           showDetail
           selectOnLoad={false}
           compactDetail
+          compact
         />
       </section>
 
