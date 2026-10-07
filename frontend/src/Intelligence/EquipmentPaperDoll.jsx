@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
-import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { canonicalEquipmentSlot } from './model.js'
 import './CharacterArmoryV2.css'
 
@@ -24,22 +23,25 @@ function classKey(value) {
   return String(value || 'adventurer').toLowerCase().replace(/[^a-z]+/g, '-')
 }
 
-function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', iconSize = 48 }) {
+function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', iconSize = 48, sheet = false }) {
+  const quality = Number(item?.quality ?? item?.qualityId) || 0
   const button = (
     <button
       type="button"
-      className={`paper-doll__slot${item ? ' paper-doll__slot--filled' : ''}${active ? ' paper-doll__slot--active' : ''}`}
+      className={`paper-doll__slot${sheet ? ' paper-doll__slot--sheet' : ''}${item ? ` paper-doll__slot--filled paper-doll__slot--quality-${quality}` : ''}${active ? ' paper-doll__slot--active' : ''}`}
       onClick={() => item && onSelect(item)}
       disabled={!item}
-      title={item?.name || undefined}
+      title={item?.name || slotLabel(slot)}
       aria-label={item ? `${slotLabel(slot)}: ${item.name || `item ${item.itemId || ''}`}` : `${slotLabel(slot)} empty`}
     >
       {item ? <ItemIcon item={item} size={iconSize} /> : <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>}
-      <span className="paper-doll__slot-copy">
-        <small>{slotLabel(slot)}</small>
-        <strong className={item ? `item-quality-${Number(item.quality) || 0}` : ''}>{item?.name || 'Empty'}</strong>
-        {item?.itemLevel ? <em>ilvl {item.itemLevel}</em> : null}
-      </span>
+      {!sheet ? (
+        <span className="paper-doll__slot-copy">
+          <small>{slotLabel(slot)}</small>
+          <strong className={item ? `item-quality-${quality}` : ''}>{item?.name || 'Empty'}</strong>
+          {item?.itemLevel ? <em>ilvl {item.itemLevel}</em> : null}
+        </span>
+      ) : null}
     </button>
   )
 
@@ -73,6 +75,7 @@ export default function EquipmentPaperDoll({
   selectOnLoad = true,
   compactDetail = false,
   compact = false,
+  variant = 'default',
 }) {
   const bySlot = useMemo(() => {
     const result = new Map()
@@ -87,31 +90,38 @@ export default function EquipmentPaperDoll({
     [bySlot],
   )
   const [active, setActive] = useState(selectOnLoad ? orderedEquipment[0] || null : null)
-  const iconSize = compact ? 40 : 48
+  const sheet = variant === 'sheet'
+  const iconSize = sheet ? 44 : compact ? 40 : 48
 
   useEffect(() => {
     setActive(selectOnLoad ? orderedEquipment[0] || null : null)
   }, [orderedEquipment, selectOnLoad])
 
-  if (!equipment.length) {
-    return <EmptyTelemetry title="No equipment snapshot yet.">The paper doll will populate when Guildweaver submits equipped item data.</EmptyTelemetry>
-  }
+  const slotProps = (slot, tooltipSide) => ({
+    slot,
+    item: bySlot.get(slot),
+    active: active === bySlot.get(slot),
+    onSelect: setActive,
+    tooltipSide,
+    iconSize,
+    sheet,
+  })
 
   return (
-    <div className={`paper-doll${showDetail ? '' : ' paper-doll--layout-only'}${compact ? ' paper-doll--compact' : ''}`}>
+    <div className={`paper-doll${showDetail ? '' : ' paper-doll--layout-only'}${compact ? ' paper-doll--compact' : ''}${sheet ? ' paper-doll--sheet' : ''}`}>
       <div className="paper-doll__layout">
         <div className="paper-doll__column paper-doll__column--left">
-          {leftSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="right" iconSize={iconSize} />)}
+          {leftSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'right')} />)}
         </div>
-        <GearSummary equipment={equipment} className={className} race={race} />
+        {sheet ? <div className="paper-doll__figure paper-doll__figure--empty" aria-hidden="true" /> : <GearSummary equipment={equipment} className={className} race={race} />}
         <div className="paper-doll__column paper-doll__column--right">
-          {rightSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="left" iconSize={iconSize} />)}
+          {rightSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'left')} />)}
         </div>
         <div className="paper-doll__weapons">
-          {weaponSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="top" iconSize={iconSize} />)}
+          {weaponSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'top')} />)}
         </div>
       </div>
-      {showDetail && active ? <ItemDetailCard item={active} compact={compactDetail} /> : null}
+      {!sheet && showDetail && active ? <ItemDetailCard item={active} compact={compactDetail} /> : null}
     </div>
   )
 }

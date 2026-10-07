@@ -9,6 +9,8 @@ function Modal({
   align = 'center',
   onClose,
   children,
+  hideHeader = false,
+  ariaLabel,
 }) {
   const panelRef = useRef(null)
   const onCloseRef = useRef(onClose)
@@ -78,15 +80,18 @@ function Modal({
     }
   }
 
+  const dialogLabel = ariaLabel || title || 'Dialog'
+
   return (
     <div className={`modal modal--${size}`} role="presentation" onMouseDown={handleBackdrop}>
       <section
         ref={panelRef}
-        className={`modal__panel modal__panel--${size} modal__panel--${align}`}
+        className={`modal__panel modal__panel--${size} modal__panel--${align}${hideHeader ? ' modal__panel--headerless' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={intro ? introId : undefined}
+        aria-labelledby={hideHeader ? undefined : titleId}
+        aria-label={hideHeader ? dialogLabel : undefined}
+        aria-describedby={!hideHeader && intro ? introId : undefined}
         tabIndex="-1"
       >
         {onClose ? (
@@ -100,15 +105,17 @@ function Modal({
           </button>
         ) : null}
 
-        <header className="modal__header">
-          {eyebrow ? <p className="modal__eyebrow">{eyebrow}</p> : null}
-          <h1 id={titleId}>{title}</h1>
-          {intro ? (
-            <p id={introId} className="modal__intro">
-              {intro}
-            </p>
-          ) : null}
-        </header>
+        {!hideHeader ? (
+          <header className="modal__header">
+            {eyebrow ? <p className="modal__eyebrow">{eyebrow}</p> : null}
+            <h1 id={titleId}>{title}</h1>
+            {intro ? (
+              <p id={introId} className="modal__intro">
+                {intro}
+              </p>
+            ) : null}
+          </header>
+        ) : null}
 
         <div className="modal__body">{children}</div>
       </section>
