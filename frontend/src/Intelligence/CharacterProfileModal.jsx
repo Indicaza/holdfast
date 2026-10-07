@@ -4,10 +4,24 @@ import { apiJson } from '../Api/apiClient.js'
 import Modal from '../Modal/Modal.jsx'
 import CharacterProfile from './CharacterProfile.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
-import { formatSyncAge, normalizeArmory } from './model.js'
+import { normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
 import './CharacterProfileModalFullBleed.css'
 import './CharacterProfileWorkspace.css'
+
+function PlayerFramePlaceholder() {
+  return (
+    <div className="armory-player-frame" aria-hidden="true">
+      <div className="armory-player-frame__portrait">
+        <span className="armory-player-frame__level" />
+      </div>
+      <div className="armory-player-frame__bars">
+        <span />
+        <span />
+      </div>
+    </div>
+  )
+}
 
 export default function CharacterProfileModal({ characterId, onClose }) {
   const [status, setStatus] = useState('loading')
@@ -42,20 +56,11 @@ export default function CharacterProfileModal({ characterId, onClose }) {
 
   const character = armory.character
   const title = status === 'ready' ? character.name : 'Character profile'
-  const intro = status === 'ready'
-    ? [
-        character.level ? `Level ${character.level}` : null,
-        character.race || null,
-        character.spec || character.className || null,
-        character.guildName || character.organization?.name || null,
-        character.realm || null,
-        formatSyncAge(character.lastSeenAt),
-      ].filter(Boolean).join(' · ')
-    : 'Opening the latest Guildweaver snapshot.'
 
   return (
-    <Modal eyebrow="GuildOS Armory" title={title} intro={intro} size="armory" align="left" onClose={onClose}>
+    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={onClose}>
       <div className="character-profile-modal">
+        <PlayerFramePlaceholder />
         {status === 'loading' ? <p className="armory-state">Opening the latest character snapshot…</p> : null}
         {status === 'error' ? <EmptyTelemetry title="The profile could not be loaded.">Guildweaver telemetry is temporarily unavailable.</EmptyTelemetry> : null}
         {status === 'missing' ? <EmptyTelemetry title="Character not found.">This character may not have synced yet, or its telemetry was removed.</EmptyTelemetry> : null}
