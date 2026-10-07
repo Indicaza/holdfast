@@ -27,6 +27,12 @@ services:
         value: "2592000"
       - key: DISCORD_PRUNE_MIN_AGE_DAYS
         value: "7"
+      - key: BLIZZARD_REGION
+        value: us
+      - key: BLIZZARD_LOCALE
+        value: en_US
+      - key: BLIZZARD_STATIC_NAMESPACES
+        value: static-classic1x-us,static-classic-us
       - key: SESSION_SECRET
         generateValue: true
       - key: DISCORD_CLIENT_ID
@@ -38,4 +44,8 @@ services:
       - key: DISCORD_BOT_TOKEN
         sync: false
       - key: GUILD_OWNER_DISCORD_IDS
+        sync: false
+      - key: BLIZZARD_CLIENT_ID
+        sync: false
+      - key: BLIZZARD_CLIENT_SECRET
         sync: false

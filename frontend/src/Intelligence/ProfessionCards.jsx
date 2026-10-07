@@ -15,7 +15,12 @@ export default function ProfessionCards({ professions = [] }) {
         return (
           <article className="profession-card" key={profession.key || profession.id || profession.name}>
             <div className="profession-card__heading">
-              <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={54} />
+              <WowIcon
+                src={profession.mediaUrl || profession.catalog?.metadata?.mediaUrl}
+                iconFileId={profession.iconFileId}
+                label={profession.name}
+                size={54}
+              />
               <div>
                 <h3>{profession.name || 'Profession'}</h3>
                 <span>{current}{maximum ? ` / ${maximum}` : ''}{profession.modifier ? ` +${profession.modifier}` : ''}</span>
@@ -24,7 +29,7 @@ export default function ProfessionCards({ professions = [] }) {
             <div className="profession-card__track" aria-label={`${profession.name} skill ${current} of ${maximum || current}`}>
               <span style={{ width: `${percent}%` }} />
             </div>
-            {profession.specialization ? <p>{typeof profession.specialization === 'string' ? profession.specialization : 'Specialization data available'}</p> : <p>No specialization telemetry yet.</p>}
+            {profession.specialization ? <p>{typeof profession.specialization === 'string' ? profession.specialization : 'Specialization data available'}</p> : <p>{profession.description || 'No specialization telemetry yet.'}</p>}
           </article>
         )
       })}

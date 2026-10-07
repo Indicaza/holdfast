@@ -45,6 +45,7 @@ export function TalentNode({ node, position, active, onSelect }) {
       title={entry?.description || entry?.name || `Talent ${node.id}`}
     >
       <WowIcon
+        src={entry?.mediaUrl || entry?.catalog?.metadata?.mediaUrl}
         iconFileId={entry?.iconFileId}
         spellId={entry?.spellId}
         label={entry?.name || String(node.id)}
@@ -128,7 +129,13 @@ export default function TalentTree({ talents }) {
         {activeNode ? (
           <>
             <div className="talent-tree__detail-heading">
-              <WowIcon iconFileId={entry?.iconFileId} spellId={entry?.spellId} label={entry?.name || String(activeNode.id)} size={52} />
+              <WowIcon
+                src={entry?.mediaUrl || entry?.catalog?.metadata?.mediaUrl}
+                iconFileId={entry?.iconFileId}
+                spellId={entry?.spellId}
+                label={entry?.name || String(activeNode.id)}
+                size={52}
+              />
               <div>
                 <strong>{entry?.name || `Talent node ${activeNode.id}`}</strong>
                 <span>{activeNode.selected || entry?.selected ? 'Selected' : 'Available'}{activeRank ? ` · Rank ${activeRank}/${activeMaxRank}` : ''}</span>

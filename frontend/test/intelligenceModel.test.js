@@ -62,7 +62,11 @@ test('armory enriches canonical IDs from shared game data while character state 
           name: 'Golem Skull Helm',
           iconFileId: 132767,
           qualityId: 3,
-          metadata: { itemLevel: 35, requiredLevel: 25 },
+          metadata: {
+            itemLevel: 35,
+            requiredLevel: 25,
+            mediaUrl: 'https://render.worldofwarcraft.com/us/icons/56/inv_helmet_25.jpg',
+          },
         },
         3860: {
           id: '3860',
@@ -76,7 +80,10 @@ test('armory enriches canonical IDs from shared game data while character state 
           id: '12975',
           name: 'Last Stand',
           iconFileId: 135871,
-          metadata: { description: 'Temporarily increases maximum health.' },
+          metadata: {
+            description: 'Temporarily increases maximum health.',
+            mediaUrl: 'https://render.worldofwarcraft.com/us/icons/56/spell_holy_ashestoashes.jpg',
+          },
         },
       },
       professions: {
@@ -109,8 +116,10 @@ test('armory enriches canonical IDs from shared game data while character state 
   assert.equal(armory.equipment[0].quality, 3)
   assert.equal(armory.equipment[0].requiredLevel, 25)
   assert.equal(armory.equipment[0].itemLevel, 36)
+  assert.equal(armory.equipment[0].mediaUrl, 'https://render.worldofwarcraft.com/us/icons/56/inv_helmet_25.jpg')
   assert.equal(armory.talents.nodes[0].entries[0].name, 'Last Stand')
   assert.equal(armory.talents.nodes[0].entries[0].description, 'Temporarily increases maximum health.')
+  assert.equal(armory.talents.nodes[0].entries[0].mediaUrl, 'https://render.worldofwarcraft.com/us/icons/56/spell_holy_ashestoashes.jpg')
   assert.equal(armory.professions[0].name, 'Blacksmithing')
   assert.equal(armory.recipes[0].name, 'Mithril Spurs')
   assert.equal(armory.recipes[0].reagents[0].name, 'Mithril Bar')
