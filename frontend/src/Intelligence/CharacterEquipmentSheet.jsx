@@ -19,7 +19,9 @@ export default function CharacterEquipmentSheet({
           equipment={equipment}
           className={className}
           race={race}
-          showDetail={false}
+          showDetail
+          selectOnLoad={false}
+          compactDetail
         />
       </section>
 
