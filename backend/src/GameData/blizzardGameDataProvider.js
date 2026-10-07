@@ -59,10 +59,6 @@ function array(value) {
   return Array.isArray(value) ? value : [];
 }
 
-function object(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-
 function normalizeRegion(value) {
   const region = text(value || "us", 8).toLowerCase();
   return ["us", "eu", "kr", "tw"].includes(region) ? region : "us";
@@ -187,12 +183,12 @@ function spellMetadata(payload, media, namespace) {
   };
 }
 
-function normalizedEntries(type, id, payload, mediaPayload, namespace, locale, observedAt) {
+function normalizedEntries(type, id, payload, mediaPayload, namespace, locale, gameBuild, observedAt) {
   const media = mediaDescriptor(mediaPayload);
   const base = {
     type,
     id,
-    gameBuild: "",
+    gameBuild,
     locale,
     name: text(payload?.name, 160),
     iconFileId: media.iconFileId,
@@ -223,7 +219,7 @@ function normalizedEntries(type, id, payload, mediaPayload, namespace, locale, o
       entries.push({
         type: "item",
         id: metadata.craftedItemId,
-        gameBuild: "",
+        gameBuild,
         locale,
         name: metadata.craftedItemName,
         source: "blizzard",
@@ -235,7 +231,7 @@ function normalizedEntries(type, id, payload, mediaPayload, namespace, locale, o
       entries.push({
         type: "item",
         id: reagent.itemId,
-        gameBuild: "",
+        gameBuild,
         locale,
         name: reagent.name,
         source: "blizzard",
@@ -371,7 +367,7 @@ export function createBlizzardGameDataProvider({
     }
   }
 
-  async function fetchEntity(type, id) {
+  async function fetchEntity(type, id, gameBuild) {
     const entity = ENTITY_CONFIG[type];
     if (!entity) return { status: "unsupported", entries: [] };
     const failureKey = `${type}:${id}:${config.locale}`;
@@ -379,24 +375,22 @@ export function createBlizzardGameDataProvider({
     if (failedUntil > now()) return { status: "cached-miss", entries: [] };
 
     for (const namespace of config.namespaces) {
-      const resource = await requestJson(entity.resourcePath(id), namespace);
-      if (!resource.payload) continue;
-      let media = { payload: null };
-      try {
-        media = await requestJson(entity.mediaPath(id), namespace);
-      } catch {
-        media = { payload: null };
-      }
+      const [resourceResult, mediaResult] = await Promise.all([
+        requestJson(entity.resourcePath(id), namespace),
+        requestJson(entity.mediaPath(id), namespace).catch(() => ({ payload: null })),
+      ]);
+      if (!resourceResult.payload) continue;
       return {
         status: "ok",
         namespace,
         entries: normalizedEntries(
           type,
           id,
-          resource.payload,
-          media.payload,
+          resourceResult.payload,
+          mediaResult.payload,
           namespace,
           config.locale,
+          text(gameBuild, 64),
           new Date(now()).toISOString(),
         ),
       };
@@ -411,9 +405,10 @@ export function createBlizzardGameDataProvider({
       return { ...publicStatus(), attempted: 0, hydrated: 0, failed: 0 };
     }
 
+    const normalizedBuild = text(gameBuild, 64);
     const bundle = withGuildDatabase((db) =>
       resolveGameDataBundleInDatabase(db, references, {
-        gameBuild,
+        gameBuild: normalizedBuild,
         locale: config.locale,
       }),
     );
@@ -424,7 +419,7 @@ export function createBlizzardGameDataProvider({
 
     const results = await mapConcurrent(candidates, config.concurrency, async ({ type, id }) => {
       try {
-        return await fetchEntity(type, id);
+        return await fetchEntity(type, id, normalizedBuild);
       } catch {
         return { status: "error", entries: [] };
       }
