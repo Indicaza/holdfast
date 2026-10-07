@@ -27,6 +27,7 @@ async function pairBridge(request) {
 }
 
 function snapshot({ characterId, name, className, level, capturedAt }) {
+  const classId = className === "Mage" ? 8 : className === "Druid" ? 11 : 4;
   return {
     schemaVersion: 3,
     capturedAt,
@@ -37,14 +38,14 @@ function snapshot({ characterId, name, className, level, capturedAt }) {
     region: "US",
     level,
     race: { id: 1, name: "Human", token: "Human" },
-    class: { id: className === "Mage" ? 8 : 4, name: className, token: className.toUpperCase() },
+    class: { id: classId, name: className, token: className.toUpperCase() },
     guild: { name: "Holdfast", realm: "Classic Beta PvE 2" },
     professions: [],
     equipment: [],
   };
 }
 
-test("bridge endpoint accepts schema v3 and keeps multiple characters for one member", async () => {
+test("schema v3 keeps multiple characters and generic telemetry can populate the Armory", async () => {
   await withHttpApp(async ({ request }) => {
     const deviceToken = await pairBridge(request);
     const headers = { Authorization: `Bearer ${deviceToken}` };
@@ -83,16 +84,51 @@ test("bridge endpoint accepts schema v3 and keeps multiple characters for one me
     assert.equal(mage.status, 201);
     assert.equal(mage.json.character.name, "Quill");
 
+    const druidSnapshot = snapshot({
+      characterId: "character-kumo",
+      name: "Kumo",
+      className: "Druid",
+      level: 12,
+      capturedAt: 1791320646,
+    });
+    const telemetry = await request("/api/bridge/telemetry", {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Idempotency-Key": "gw-schema-v3-character-kumo-rev-2",
+      },
+      body: {
+        streamKey: "character_snapshot:character-kumo",
+        kind: "state",
+        revision: 2,
+        envelope: {
+          schemaVersion: 1,
+          eventType: "character_snapshot",
+          capturedAt: druidSnapshot.capturedAt,
+          characterId: druidSnapshot.characterId,
+          realm: druidSnapshot.realm,
+          region: druidSnapshot.region,
+          payload: druidSnapshot,
+        },
+      },
+    });
+    assert.equal(telemetry.status, 201);
+    assert.equal(telemetry.json.characterStatus, "created");
+
     const summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
-    assert.equal(summary.json.summary.characterCount, 2);
+    assert.equal(summary.json.summary.characterCount, 3);
     assert.deepEqual(
       new Set(summary.json.characters.map((character) => character.name)),
-      new Set(["Rook", "Quill"]),
+      new Set(["Rook", "Quill", "Kumo"]),
     );
     assert.deepEqual(
       new Set(summary.json.characters.map((character) => character.id)),
-      new Set(["guildweaver-id:character-rook", "guildweaver-id:character-quill"]),
+      new Set([
+        "guildweaver-id:character-rook",
+        "guildweaver-id:character-quill",
+        "guildweaver-id:character-kumo",
+      ]),
     );
 
     const future = await request("/api/bridge/characters/snapshot", {
