@@ -18,6 +18,10 @@ function number(value, fallback = null) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function optionalBoolean(value) {
+  return typeof value === "boolean" ? value : null;
+}
+
 function parseJson(value) {
   try {
     return JSON.parse(value || "{}");
@@ -194,6 +198,17 @@ function latestTalentDefinitions(db, memberId, treeIds) {
   return treeIds.map((treeId) => found.get(treeId)).filter(Boolean);
 }
 
+function normalizeTalentConditions(value) {
+  return array(value).map((condition) => ({
+    id: number(condition?.id),
+    type: condition?.type ?? null,
+    isMet: optionalBoolean(condition?.isMet),
+    isGate: optionalBoolean(condition?.isGate),
+    isSufficient: optionalBoolean(condition?.isSufficient),
+    ranksGranted: number(condition?.ranksGranted),
+  }));
+}
+
 function normalizeTalents(db, armory, snapshot) {
   const state = object(snapshot?.talents);
   const treeIds = array(state.treeIds).map((value) => number(value)).filter(Number.isFinite);
@@ -202,6 +217,11 @@ function normalizeTalents(db, armory, snapshot) {
   const allocations = new Map(
     array(state.allocations)
       .map((allocation) => [number(allocation?.nodeId), allocation])
+      .filter(([nodeId]) => Number.isFinite(nodeId)),
+  );
+  const nodeStates = new Map(
+    array(state.nodeStates)
+      .map((nodeState) => [number(nodeState?.nodeId), nodeState])
       .filter(([nodeId]) => Number.isFinite(nodeId)),
   );
   const definitions = latestTalentDefinitions(db, armory.character.memberId, treeIds);
@@ -224,10 +244,16 @@ function normalizeTalents(db, armory, snapshot) {
     for (const node of array(definition.nodes)) {
       const nodeId = number(node?.nodeId);
       const allocation = allocations.get(nodeId);
+      const nodeState = object(nodeStates.get(nodeId));
       const rank = number(allocation?.rank ?? allocation?.ranksPurchased, 0);
       const activeEntryId = number(allocation?.activeEntryId);
       const activeEntryRank = number(allocation?.activeEntryRank, rank);
       const entries = array(node?.entries);
+      const entryStates = new Map(
+        array(nodeState.entries)
+          .map((entryState) => [number(entryState?.entryId), entryState])
+          .filter(([entryId]) => Number.isFinite(entryId)),
+      );
 
       nodes.push({
         id: nodeId,
@@ -238,15 +264,27 @@ function normalizeTalents(db, armory, snapshot) {
         rank,
         maxRank: number(node?.maxRanks, 0),
         selected: rank > 0,
+        isAvailable: optionalBoolean(nodeState.isAvailable),
+        isVisible: optionalBoolean(nodeState.isVisible),
+        meetsEdgeRequirements: optionalBoolean(nodeState.meetsEdgeRequirements),
+        conditions: normalizeTalentConditions(nodeState.conditions),
         entries: entries.map((entry) => {
           const entryId = number(entry?.entryId);
+          const entryState = object(entryStates.get(entryId));
           const selected = activeEntryId === entryId || (activeEntryId === null && rank > 0 && entries.length === 1);
+          const tooltip = object(entry?.tooltip);
           return {
             id: entryId,
             definitionId: number(entry?.definitionId),
             spellId: number(entry?.spellId),
             name: text(entry?.name, 160),
             iconFileId: number(entry?.iconFileDataId),
+            description: text(entry?.description, 4000),
+            spellLink: text(entry?.spellLink, 2000),
+            tooltip,
+            tooltipLines: array(tooltip.lines).map((line) => ({ ...object(line) })),
+            isAvailable: optionalBoolean(entryState.isAvailable),
+            isActiveEntry: optionalBoolean(entryState.isActiveEntry),
             selected,
             rank: selected ? activeEntryRank : 0,
             maxRank: number(entry?.maxRanks, 0),
@@ -259,7 +297,18 @@ function normalizeTalents(db, armory, snapshot) {
       const from = number(edge?.sourceNodeId);
       const to = number(edge?.targetNodeId);
       if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-      edges.push({ treeId, from, to, type: edge?.type ?? null, required: true, active: null });
+      const sourceRank = number(allocations.get(from)?.rank ?? allocations.get(from)?.ranksPurchased, 0);
+      const targetRank = number(allocations.get(to)?.rank ?? allocations.get(to)?.ranksPurchased, 0);
+      const targetAvailable = optionalBoolean(object(nodeStates.get(to)).isAvailable);
+      edges.push({
+        treeId,
+        from,
+        to,
+        type: edge?.type ?? null,
+        visualStyle: edge?.visualStyle ?? null,
+        required: true,
+        active: sourceRank > 0 && (targetRank > 0 || targetAvailable === true),
+      });
     }
   }
 
