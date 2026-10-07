@@ -105,7 +105,7 @@ test("Blizzard icon media resolver turns FileDataID into a CDN URL and caches it
   assert.equal(second, first);
   assert.equal(requests.length, 2);
   assert.match(requests[1], /assets\.file_data_id=273088/);
-  assert.match(requests[1], /namespace=static-us/);
+  assert.match(requests[1], /namespace=static-classic1x-us/);
   assert.equal(resolver.status().configured, true);
 });
 
