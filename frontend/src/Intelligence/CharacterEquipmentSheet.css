@@ -1,6 +1,6 @@
 .character-sheet {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(24rem, .85fr);
+  grid-template-columns: minmax(0, 1fr) minmax(31rem, .72fr);
   gap: var(--space-4);
   align-items: start;
 }
@@ -95,7 +95,7 @@
 .character-sheet__stats .character-stats {
   display: grid;
   grid-template-columns: 1fr;
-  gap: .55rem;
+  gap: .7rem;
 }
 
 .character-sheet__stats .character-stats__item-level {
@@ -120,11 +120,12 @@
 }
 
 .character-sheet__stats .character-stats__primary {
+  grid-template-columns: 1fr;
   gap: .7rem;
 }
 
 .character-sheet__stats .character-stats__group {
-  padding: .7rem .8rem;
+  padding: .85rem 1rem;
   border: 1px solid rgba(255, 255, 255, .065);
   border-radius: .55rem;
   background: rgba(255, 255, 255, .018);
@@ -135,7 +136,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
-  padding-bottom: .45rem;
+  padding-bottom: .5rem;
   border-bottom: 1px solid rgba(255, 255, 255, .05);
 }
 
@@ -145,41 +146,44 @@
 
 .character-sheet__stats .armory-panel__heading h2 {
   margin: 0;
-  font-size: .92rem;
+  font-size: 1rem;
 }
 
 .character-sheet__stats .character-stats__rows {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.character-sheet__stats .character-stat-row,
-.character-sheet__stats .character-stat-row:nth-child(odd),
+.character-sheet__stats .character-stat-row {
+  padding: .5rem 0;
+}
+
+.character-sheet__stats .character-stat-row:nth-child(odd) {
+  padding-right: .85rem;
+}
+
 .character-sheet__stats .character-stat-row:nth-child(even) {
-  padding: .42rem 0;
-  border-left: 0;
-}
-
-.character-sheet__stats .character-stat-row:last-child {
-  border-bottom: 0;
+  padding-left: .85rem;
+  border-left: 1px solid rgba(255, 255, 255, .055);
 }
 
 .character-sheet__stats .character-stat-row dt {
-  font-size: .68rem;
+  font-size: .72rem;
 }
 
 .character-sheet__stats .character-stat-row strong {
-  font-size: .78rem;
+  font-size: .84rem;
 }
 
 .character-sheet__stats .character-stat-row small {
-  max-width: 9rem;
-  font-size: .56rem;
+  max-width: 12rem;
+  font-size: .59rem;
 }
 
 .character-sheet__stats .character-stats__advanced summary {
-  display: block;
-  min-height: 3.4rem;
-  padding: .75rem 3rem .75rem .9rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 3.75rem;
+  padding: .85rem 3.25rem .85rem 1rem;
 }
 
 .character-sheet__stats .character-stats__advanced summary span,
@@ -192,13 +196,15 @@
 }
 
 .character-sheet__stats .character-stats__advanced summary small {
-  margin-top: .16rem;
+  margin-top: .18rem;
+  max-width: 17rem;
   padding-right: 0;
-  line-height: 1.3;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .character-sheet__stats .character-stats__advanced summary::after {
-  right: .9rem;
+  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -213,7 +219,13 @@
   background: transparent;
 }
 
-@media (max-width: 78rem) {
+@media (max-width: 86rem) {
+  .character-sheet {
+    grid-template-columns: minmax(0, 1fr) minmax(28rem, .8fr);
+  }
+}
+
+@media (max-width: 72rem) {
   .character-sheet {
     grid-template-columns: 1fr;
   }
@@ -230,6 +242,10 @@
   .character-sheet__stats .character-stats__more {
     grid-column: 1 / -1;
   }
+
+  .character-sheet__stats .character-stats__primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 52rem) {
@@ -242,7 +258,25 @@
     min-height: auto;
   }
 
-  .character-sheet__stats .character-stats {
+  .character-sheet__stats .character-stats,
+  .character-sheet__stats .character-stats__primary,
+  .character-sheet__stats .character-stats__rows {
     grid-template-columns: 1fr;
+  }
+
+  .character-sheet__stats .character-stat-row:nth-child(odd),
+  .character-sheet__stats .character-stat-row:nth-child(even) {
+    padding-right: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .character-sheet__stats .character-stats__advanced summary {
+    display: block;
+  }
+
+  .character-sheet__stats .character-stats__advanced summary small {
+    max-width: none;
+    text-align: left;
   }
 }
