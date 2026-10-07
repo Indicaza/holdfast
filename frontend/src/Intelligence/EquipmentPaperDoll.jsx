@@ -103,7 +103,6 @@ export default function EquipmentPaperDoll({
   }
 
   const slotProps = (slot, tooltipSide) => ({
-    key: slot,
     slot,
     item: bySlot.get(slot),
     active: active === bySlot.get(slot),
@@ -117,14 +116,14 @@ export default function EquipmentPaperDoll({
     <div className={`paper-doll${showDetail ? '' : ' paper-doll--layout-only'}${compact ? ' paper-doll--compact' : ''}${sheet ? ' paper-doll--sheet' : ''}`}>
       <div className="paper-doll__layout">
         <div className="paper-doll__column paper-doll__column--left">
-          {leftSlots.map((slot) => <EquipmentSlot {...slotProps(slot, 'right')} />)}
+          {leftSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'right')} />)}
         </div>
         {sheet ? <div className="paper-doll__figure paper-doll__figure--empty" aria-hidden="true" /> : <GearSummary equipment={equipment} className={className} race={race} />}
         <div className="paper-doll__column paper-doll__column--right">
-          {rightSlots.map((slot) => <EquipmentSlot {...slotProps(slot, 'left')} />)}
+          {rightSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'left')} />)}
         </div>
         <div className="paper-doll__weapons">
-          {weaponSlots.map((slot) => <EquipmentSlot {...slotProps(slot, 'top')} />)}
+          {weaponSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'top')} />)}
         </div>
       </div>
       {!sheet && showDetail && active ? <ItemDetailCard item={active} compact={compactDetail} /> : null}
