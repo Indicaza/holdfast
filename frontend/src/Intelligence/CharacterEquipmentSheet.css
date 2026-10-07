@@ -1,14 +1,16 @@
 .character-sheet {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(26rem, 1fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(29rem, .95fr);
   gap: 1rem;
   align-items: stretch;
-  height: min(44rem, calc(94svh - 11.75rem));
-  min-height: 34rem;
+  height: clamp(24rem, calc(94svh - 11.75rem), 44rem);
+  min-height: 0;
+  max-height: 100%;
 }
 
 .character-sheet__equipment,
 .character-sheet__stats {
+  box-sizing: border-box;
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -16,7 +18,9 @@
 
 .character-sheet__equipment {
   display: grid;
-  padding: .7rem;
+  align-items: stretch;
+  justify-items: stretch;
+  padding: .85rem;
   border: 1px solid rgba(196, 166, 103, .2);
   border-radius: .55rem;
   background:
@@ -25,14 +29,35 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .018);
 }
 
-.character-sheet__equipment > .paper-doll {
-  min-height: 0;
+/* CharacterArmory.css is imported after the sheet component and defines the
+   generic two-column paper-doll. Pin the sheet variant explicitly so the
+   unused item-detail column can never steal half of this pane again. */
+.character-sheet__equipment > .paper-doll.paper-doll--sheet {
+  display: block;
+  width: 100%;
+  max-width: none;
   height: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.character-sheet__equipment > .paper-doll.paper-doll--sheet > .paper-doll__layout {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .character-sheet__stats {
   overflow-y: auto;
-  padding: .85rem 1rem 1rem;
+  overscroll-behavior: contain;
+  padding: .9rem 1.1rem 1rem;
   border: 1px solid rgba(196, 166, 103, .24);
   border-radius: .55rem;
   background:
@@ -41,6 +66,7 @@
   box-shadow:
     inset 1px 0 0 rgba(196, 166, 103, .1),
     inset 0 1px 0 rgba(255, 255, 255, .02);
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(196, 166, 103, .35) transparent;
 }
@@ -62,7 +88,7 @@
 
 @media (max-width: 82rem) {
   .character-sheet {
-    grid-template-columns: minmax(0, 1.35fr) minmax(23rem, 1fr);
+    grid-template-columns: minmax(0, 1.35fr) minmax(27rem, .9fr);
   }
 }
 
@@ -70,12 +96,18 @@
   .character-sheet {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: 0;
+    max-height: none;
   }
 
   .character-sheet__equipment,
   .character-sheet__stats {
     height: auto;
+  }
+
+  .character-sheet__equipment > .paper-doll.paper-doll--sheet,
+  .character-sheet__equipment > .paper-doll.paper-doll--sheet > .paper-doll__layout {
+    height: auto;
+    max-height: none;
   }
 
   .character-sheet__stats {
