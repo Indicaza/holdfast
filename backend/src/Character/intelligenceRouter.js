@@ -92,19 +92,17 @@ export function createIntelligenceRouter({ gameDataProvider } = {}) {
     res.json(provider.status());
   });
 
-  router.post("/game-data/resolve", requireAuthenticated, async (req, res) => {
+  router.post("/game-data/resolve", requireAuthenticated, (req, res) => {
     try {
       const references = req.body?.references && typeof req.body.references === "object"
         ? req.body.references
         : {};
-      const gameBuild = req.body?.gameBuild;
-      const providerStatus = await hydrateSafely(provider, references, { gameBuild });
       const gameData = resolveGameDataBundle(references, {
-        gameBuild,
+        gameBuild: req.body?.gameBuild,
         locale: req.body?.locale,
       });
       res.set("Cache-Control", "private, max-age=300");
-      res.json({ ...gameData, provider: providerStatus });
+      res.json({ ...gameData, provider: provider.status() });
     } catch (error) {
       console.error("Unable to resolve game data", error);
       res.status(500).json({ error: "game_data_unavailable" });
