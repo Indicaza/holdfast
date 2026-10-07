@@ -27,11 +27,6 @@ export default function CharacterEquipmentSheet({
       </section>
 
       <aside className="character-sheet__stats" aria-label="Character stats">
-        <div className="character-sheet__section-heading character-sheet__section-heading--stats">
-          <span>Character sheet</span>
-          <h2>Stats</h2>
-          <p>Live values reported by the game client. Unsupported values are omitted.</p>
-        </div>
         <CharacterStats stats={stats} variant="sheet" />
       </aside>
     </div>
