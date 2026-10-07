@@ -1,14 +1,16 @@
 .paper-doll--sheet {
   display: block;
+  height: 100%;
 }
 
 .paper-doll--sheet .paper-doll__layout {
   display: grid;
-  grid-template-columns: 3.35rem minmax(12rem, 1fr) 3.35rem;
+  grid-template-columns: 3.55rem minmax(12rem, 1fr) 3.55rem;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: .55rem .75rem;
-  min-height: 34rem;
-  padding: .8rem;
+  gap: .7rem .9rem;
+  min-height: 0;
+  height: 100%;
+  padding: .9rem;
   overflow: visible;
   border: 1px solid rgba(196, 166, 103, .22);
   border-radius: .45rem;
@@ -24,7 +26,8 @@
   position: relative;
   z-index: 3;
   display: grid;
-  align-content: start;
+  align-content: space-between;
+  min-height: 0;
   gap: .38rem;
 }
 
@@ -42,7 +45,8 @@
   position: relative;
   grid-column: 2;
   grid-row: 1;
-  min-height: 29rem;
+  min-height: 0;
+  height: 100%;
   border: 0;
   background:
     radial-gradient(ellipse at 50% 48%, rgba(196, 166, 103, .055), transparent 42%),
@@ -52,7 +56,7 @@
 .paper-doll--sheet .paper-doll__figure--empty::before {
   content: '';
   position: absolute;
-  inset: 7% 15% 5%;
+  inset: 5% 14% 3%;
   border: 1px solid rgba(196, 166, 103, .055);
   border-radius: 48% 48% 35% 35% / 26% 26% 64% 64%;
   opacity: .45;
@@ -64,24 +68,24 @@
   grid-column: 1 / -1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: repeat(3, 3.35rem);
+  grid-template-columns: repeat(3, 3.55rem);
   justify-content: center;
-  gap: .55rem;
-  padding-top: .65rem;
+  gap: .7rem;
+  padding-top: .8rem;
   border-top: 1px solid rgba(196, 166, 103, .12);
 }
 
 .paper-doll--sheet .item-hover-card {
   position: relative;
   display: inline-block;
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 3.55rem;
+  height: 3.55rem;
 }
 
 .paper-doll--sheet .paper-doll__slot {
   display: grid;
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 3.55rem;
+  height: 3.55rem;
   min-height: 0;
   padding: .18rem;
   place-items: center;
@@ -149,8 +153,17 @@
 }
 
 @media (max-width: 64rem) {
+  .paper-doll--sheet,
+  .paper-doll--sheet .paper-doll__layout {
+    height: auto;
+  }
+
   .paper-doll--sheet .paper-doll__layout {
     min-height: 31rem;
+  }
+
+  .paper-doll--sheet .paper-doll__column {
+    align-content: start;
   }
 
   .paper-doll--sheet .paper-doll__figure--empty {

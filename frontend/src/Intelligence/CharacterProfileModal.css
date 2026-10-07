@@ -17,6 +17,7 @@
 }
 
 .modal__panel--armory .modal__close {
+  z-index: 20;
   top: 1.35rem;
   right: 1.35rem;
   width: 2.9rem;
