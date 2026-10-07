@@ -107,7 +107,7 @@ function TooltipBody({ item, compact = false }) {
       {item?.itemLevel ? <span className="item-tooltip__level">Item Level {item.itemLevel}</span> : null}
       {type ? <span>{type}</span> : null}
       {item?.requiredLevel ? <span>Requires Level {item.requiredLevel}</span> : null}
-      {enchant ? <span className="item-tooltip__enchant">Enchanted: {enchant}</span> : null}
+      {enchant ? <span className="item-tooltip__enchant">Enhancement: {enchant}</span> : null}
       {description && !compact ? <p>{description}</p> : null}
       {price.length && !compact ? <span>Sell price: {price.join(' ')}</span> : null}
       {item?.itemId && !compact ? <small>Item #{item.itemId}</small> : null}
