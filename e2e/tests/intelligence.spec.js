@@ -53,6 +53,47 @@ async function seedArmory(page, context) {
       specialization: { index: 1, id: 73, name: 'Protection', icon: 132341, role: 'TANK' },
       guild: { name: 'Holdfast', rankName: 'Member', rankIndex: 5, realm: 'Classic Beta PvE 2' },
       gameBuild: { version: '1.60.1', build: '60001', buildDate: 'Oct 5 2026', interface: 16001 },
+      stats: {
+        schemaVersion: 1,
+        resources: {
+          health: { current: 1210, max: 1210 },
+          power: { token: 'RAGE', current: 35, max: 100 },
+          powerRegen: { inactive: 0, active: 0 },
+        },
+        attributes: {
+          strength: { current: 94, effective: 102, positive: 8, negative: 0 },
+          agility: { current: 48, effective: 48, positive: 0, negative: 0 },
+          stamina: { current: 110, effective: 118, positive: 8, negative: 0 },
+          intellect: { current: 28, effective: 28, positive: 0, negative: 0 },
+          spirit: { current: 32, effective: 32, positive: 0, negative: 0 },
+        },
+        offense: {
+          attackPower: { base: 245, effective: 262 },
+          meleeDamage: { min: 74.2, max: 101.8 },
+          attackSpeed: { mainHand: 2.9 },
+          crit: { melee: 8.4 },
+          hit: { melee: 2 },
+          haste: { melee: 0 },
+          expertise: { mainHand: 3, mainHandPercent: 0.75 },
+          weaponSkills: [{ name: 'Axes', current: 150, max: 150, modifier: 5 }],
+        },
+        defense: {
+          armor: { base: 2110, effective: 2240 },
+          defenseSkill: { base: 150, effective: 153 },
+          dodge: 6.25,
+          parry: 5.1,
+          block: 8.9,
+          resistances: { fire: { base: 10, total: 15 } },
+        },
+        ratings: {
+          criticalStrike: { rating: 18, bonus: 1.25 },
+        },
+        utility: {
+          itemLevel: { overall: 39, equipped: 38, pvp: 40 },
+          movement: { runYardsPerSecond: 7, currentYardsPerSecond: 7 },
+          experience: { current: 12000, max: 24000, rested: 6000 },
+        },
+      },
       equipment: [
         {
           slot: 'HeadSlot',
@@ -218,6 +259,13 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   await profile.getByRole('button', { name: 'Equipment' }).click()
   await expect(profile.getByText('Golem Skull Helm', { exact: true }).first()).toBeVisible()
   await expect(profile.getByText('ilvl 35')).toBeVisible()
+  await expect(profile.getByText('Item Level', { exact: true })).toBeVisible()
+  await expect(profile.getByText('38', { exact: true })).toBeVisible()
+  await expect(profile.getByText('Rage', { exact: true })).toBeVisible()
+  await expect(profile.getByText('RAGE', { exact: true })).toHaveCount(0)
+  const ratings = profile.locator('details').filter({ hasText: 'Ratings & Secondary Stats' })
+  await expect(ratings).toBeVisible()
+  await expect(ratings).not.toHaveAttribute('open', '')
   await profile.getByTitle('Golem Skull Helm').click()
   await expect(profile.getByText('Enchant', { exact: true })).toBeVisible()
   await expect(profile.getByText('17', { exact: true })).toBeVisible()
