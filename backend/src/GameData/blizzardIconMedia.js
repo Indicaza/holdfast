@@ -35,7 +35,9 @@ export function createBlizzardIconMediaResolver({
   now = () => Date.now(),
 } = {}) {
   const config = blizzardGameDataConfig(env);
-  const namespace = String(env.BLIZZARD_MEDIA_NAMESPACE || `static-${config.region}`).trim();
+  const namespace = String(
+    env.BLIZZARD_MEDIA_NAMESPACE || config.namespaces?.[0] || `static-${config.region}`,
+  ).trim();
   const cache = new Map();
   let token = "";
   let tokenExpiresAt = 0;
