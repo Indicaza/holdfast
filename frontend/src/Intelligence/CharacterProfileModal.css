@@ -96,27 +96,76 @@
   position: sticky;
   z-index: 6;
   top: 0;
-  gap: .25rem;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
   margin: 0;
-  padding: .8rem 0;
+  padding: 0;
+  overflow-x: auto;
   border: 0;
-  border-bottom: 1px solid rgba(196, 166, 103, .14);
+  border-bottom: 1px solid rgba(196, 166, 103, .18);
   border-radius: 0;
-  background: rgba(3, 10, 18, .94);
-  box-shadow: 0 .75rem 1.5rem rgba(0, 0, 0, .14);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background:
+    linear-gradient(180deg, rgba(7, 17, 29, .985), rgba(3, 10, 18, .965));
+  box-shadow: 0 .8rem 1.8rem rgba(0, 0, 0, .16);
+  scrollbar-width: none;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.character-profile--modal .armory-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .character-profile--modal .armory-tabs button {
-  min-height: 3rem;
-  padding-inline: clamp(.85rem, 1.8vw, 1.4rem);
-  border-radius: .65rem;
-  font-size: .82rem;
+  position: relative;
+  min-height: 3.65rem;
+  flex: 0 0 auto;
+  padding: 0 clamp(1rem, 2vw, 1.65rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: rgba(203, 213, 225, .66);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .065em;
+  text-transform: uppercase;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
+}
+
+.character-profile--modal .armory-tabs button::after {
+  content: '';
+  position: absolute;
+  right: clamp(1rem, 2vw, 1.65rem);
+  bottom: -1px;
+  left: clamp(1rem, 2vw, 1.65rem);
+  height: 2px;
+  background: linear-gradient(90deg, rgba(196, 166, 103, .32), #e8cc8c, rgba(196, 166, 103, .32));
+  box-shadow: 0 0 .7rem rgba(232, 204, 140, .28);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+
+.character-profile--modal .armory-tabs button:hover,
+.character-profile--modal .armory-tabs button:focus-visible {
+  background: linear-gradient(180deg, transparent, rgba(196, 166, 103, .055)) !important;
+  color: rgba(244, 231, 199, .9) !important;
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active {
+  background: linear-gradient(180deg, transparent 30%, rgba(196, 166, 103, .075)) !important;
+  color: #f0d99e !important;
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active::after {
+  transform: scaleX(1);
 }
 
 .character-profile--modal .armory-content {
-  padding-top: clamp(1.5rem, 2.5vw, 2.35rem);
+  padding-top: clamp(1.8rem, 2.8vw, 2.6rem);
   padding-bottom: .5rem;
 }
 
@@ -234,10 +283,6 @@
   .modal__panel--armory .modal__body {
     padding-inline: 1rem;
   }
-
-  .character-profile--modal .armory-tabs {
-    margin-inline: -.15rem;
-  }
 }
 
 @media (max-width: 48rem) {
@@ -250,7 +295,7 @@
   }
 
   .character-profile--modal .armory-content {
-    padding-top: 1.25rem;
+    padding-top: 1.45rem;
   }
 }
 
@@ -293,10 +338,17 @@
 
   .character-profile--modal .armory-tabs {
     margin-inline: -.8rem;
-    padding-inline: .8rem;
+    padding-inline: .15rem;
   }
 
   .character-profile--modal .armory-tabs button {
-    min-height: 2.8rem;
+    min-height: 3.35rem;
+    padding-inline: 1rem;
+    font-size: .69rem;
+  }
+
+  .character-profile--modal .armory-tabs button::after {
+    right: 1rem;
+    left: 1rem;
   }
 }
