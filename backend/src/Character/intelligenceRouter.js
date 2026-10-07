@@ -1,10 +1,12 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { publicWebsiteUrl } from "../Config/environment.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
+import { readStructuredCharacterStats } from "./armoryStatsProjection.js";
 import { adaptArmoryV3 } from "./armoryV3Adapter.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
@@ -74,7 +76,11 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         return;
       }
 
-      const armory = adaptArmoryV3(storedArmory);
+      const adaptedArmory = adaptArmoryV3(storedArmory);
+      const structuredStats = readStructuredCharacterStats(adaptedArmory.character?.id);
+      const armory = Object.keys(structuredStats).length
+        ? { ...adaptedArmory, stats: structuredStats }
+        : adaptedArmory;
       const references = armoryReferences(armory);
       const gameBuild = armoryBuildKey(armory);
       const providerStatus = await hydrateSafely(provider, references, { gameBuild });
