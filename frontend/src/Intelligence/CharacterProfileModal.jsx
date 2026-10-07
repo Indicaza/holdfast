@@ -8,6 +8,7 @@ import { normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
 import './CharacterProfileModalFullBleed.css'
 import './CharacterProfileWorkspace.css'
+import './CharacterProfileModalGame.css'
 
 function PlayerFramePlaceholder() {
   return (
