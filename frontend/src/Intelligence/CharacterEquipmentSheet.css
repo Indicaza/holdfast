@@ -86,20 +86,20 @@
   font-size: .76rem;
 }
 
-.character-stats--sheet {
+.character-sheet__stats .character-stats {
   display: grid;
   grid-template-columns: 1fr;
   gap: .55rem;
 }
 
-.character-stats--sheet .character-stats__group {
+.character-sheet__stats .character-stats__group {
   padding: .7rem .8rem;
   border: 1px solid rgba(255, 255, 255, .065);
   border-radius: .55rem;
   background: rgba(255, 255, 255, .018);
 }
 
-.character-stats--sheet .armory-panel__heading {
+.character-sheet__stats .armory-panel__heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -108,39 +108,39 @@
   border-bottom: 1px solid rgba(255, 255, 255, .05);
 }
 
-.character-stats--sheet .armory-panel__heading span {
+.character-sheet__stats .armory-panel__heading span {
   font-size: .56rem;
 }
 
-.character-stats--sheet .armory-panel__heading h2 {
+.character-sheet__stats .armory-panel__heading h2 {
   margin: 0;
   font-size: .92rem;
 }
 
-.character-stats--sheet .character-stats__rows {
+.character-sheet__stats .character-stats__rows {
   grid-template-columns: 1fr;
 }
 
-.character-stats--sheet .character-stat-row,
-.character-stats--sheet .character-stat-row:nth-child(odd),
-.character-stats--sheet .character-stat-row:nth-child(even) {
+.character-sheet__stats .character-stat-row,
+.character-sheet__stats .character-stat-row:nth-child(odd),
+.character-sheet__stats .character-stat-row:nth-child(even) {
   padding: .42rem 0;
   border-left: 0;
 }
 
-.character-stats--sheet .character-stat-row:last-child {
+.character-sheet__stats .character-stat-row:last-child {
   border-bottom: 0;
 }
 
-.character-stats--sheet .character-stat-row dt {
+.character-sheet__stats .character-stat-row dt {
   font-size: .68rem;
 }
 
-.character-stats--sheet .character-stat-row strong {
+.character-sheet__stats .character-stat-row strong {
   font-size: .78rem;
 }
 
-.character-stats--sheet .character-stat-row small {
+.character-sheet__stats .character-stat-row small {
   max-width: 9rem;
   font-size: .56rem;
 }
@@ -160,7 +160,7 @@
     position: static;
   }
 
-  .character-stats--sheet {
+  .character-sheet__stats .character-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -175,7 +175,7 @@
     min-height: auto;
   }
 
-  .character-stats--sheet {
+  .character-sheet__stats .character-stats {
     grid-template-columns: 1fr;
   }
 }
