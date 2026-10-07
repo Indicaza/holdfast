@@ -79,13 +79,7 @@ export function createBlizzardIconMediaResolver({
     }
   }
 
-  async function resolve(fileDataId) {
-    const id = positiveInteger(fileDataId);
-    if (!id || !config.configured) return "";
-
-    const cached = cache.get(id);
-    if (cached && cached.expiresAt > now()) return cached.url;
-
+  async function resolveRemote(id, retryAuth = true) {
     const bearer = await accessToken();
     const url = new URL(`${config.apiBaseUrl}/data/wow/search/media`);
     url.searchParams.set("namespace", namespace);
@@ -101,27 +95,33 @@ export function createBlizzardIconMediaResolver({
         headers: { Authorization: `Bearer ${bearer}` },
         signal: controller.signal,
       });
-      if (response.status === 401) {
+      if (response.status === 401 && retryAuth) {
         token = "";
         tokenExpiresAt = 0;
         await accessToken(true);
-        cache.delete(id);
-        return resolve(id);
+        return resolveRemote(id, false);
       }
-      if (!response.ok) {
-        cache.set(id, { url: "", expiresAt: now() + 15 * 60_000 });
-        return "";
-      }
-      const mediaUrl = mediaUrlFromSearch(await response.json(), id);
-      cache.set(id, {
-        url: mediaUrl,
-        expiresAt: now() + (mediaUrl ? 24 * 60 * 60_000 : 15 * 60_000),
-      });
-      if (cache.size > 1000) cache.delete(cache.keys().next().value);
-      return mediaUrl;
+      if (!response.ok) return "";
+      return mediaUrlFromSearch(await response.json(), id);
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  async function resolve(fileDataId) {
+    const id = positiveInteger(fileDataId);
+    if (!id || !config.configured) return "";
+
+    const cached = cache.get(id);
+    if (cached && cached.expiresAt > now()) return cached.url;
+
+    const mediaUrl = await resolveRemote(id);
+    cache.set(id, {
+      url: mediaUrl,
+      expiresAt: now() + (mediaUrl ? 24 * 60 * 60_000 : 15 * 60_000),
+    });
+    if (cache.size > 1000) cache.delete(cache.keys().next().value);
+    return mediaUrl;
   }
 
   return {
