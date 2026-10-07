@@ -29,6 +29,7 @@ test('armory parsing degrades incomplete telemetry into stable empty collections
   assert.deepEqual(armory.professions, [])
   assert.deepEqual(armory.recipes, [])
   assert.deepEqual(armory.stats, {})
+  assert.deepEqual(armory.gameData.items, {})
 })
 
 test('armory parsing retains reconstructed tree metadata', () => {
@@ -49,6 +50,70 @@ test('armory parsing retains reconstructed tree metadata', () => {
   assert.deepEqual(armory.talents.treeIds, [20001, 20002])
   assert.equal(armory.talents.pointsSpent, 10)
   assert.equal(armory.talents.pointsAvailable, 1)
+})
+
+test('armory enriches canonical IDs from shared game data while character state wins', () => {
+  const armory = normalizeArmory({
+    character: { name: 'Rook' },
+    gameData: {
+      items: {
+        11746: {
+          id: '11746',
+          name: 'Golem Skull Helm',
+          iconFileId: 132767,
+          qualityId: 3,
+          metadata: { itemLevel: 35, requiredLevel: 25 },
+        },
+        3860: {
+          id: '3860',
+          name: 'Mithril Bar',
+          iconFileId: 134579,
+          metadata: {},
+        },
+      },
+      spells: {
+        12975: {
+          id: '12975',
+          name: 'Last Stand',
+          iconFileId: 135871,
+          metadata: { description: 'Temporarily increases maximum health.' },
+        },
+      },
+      professions: {
+        164: {
+          id: '164',
+          name: 'Blacksmithing',
+          iconFileId: 136241,
+          metadata: {},
+        },
+      },
+      recipes: {
+        9789: {
+          id: '9789',
+          name: 'Mithril Spurs',
+          iconFileId: 132307,
+          metadata: {},
+        },
+      },
+    },
+    equipment: [{ itemId: 11746, slot: 'HEAD', itemLevel: 36 }],
+    talents: {
+      nodes: [{ id: 1, entries: [{ spellId: 12975 }] }],
+    },
+    professions: [{ id: 164, current: 225, max: 225 }],
+    recipes: [{ id: 9789, reagents: [{ itemId: 3860, quantity: 4 }] }],
+  })
+
+  assert.equal(armory.equipment[0].name, 'Golem Skull Helm')
+  assert.equal(armory.equipment[0].iconFileId, 132767)
+  assert.equal(armory.equipment[0].quality, 3)
+  assert.equal(armory.equipment[0].requiredLevel, 25)
+  assert.equal(armory.equipment[0].itemLevel, 36)
+  assert.equal(armory.talents.nodes[0].entries[0].name, 'Last Stand')
+  assert.equal(armory.talents.nodes[0].entries[0].description, 'Temporarily increases maximum health.')
+  assert.equal(armory.professions[0].name, 'Blacksmithing')
+  assert.equal(armory.recipes[0].name, 'Mithril Spurs')
+  assert.equal(armory.recipes[0].reagents[0].name, 'Mithril Bar')
 })
 
 test('Blizzard equipment slot names map onto the paper doll', () => {
