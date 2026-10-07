@@ -1,15 +1,14 @@
-import EquipmentPaperDoll from './EquipmentPaperDoll.jsx'
+import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
 import ProfessionCards from './ProfessionCards.jsx'
 import RecipeBrowser from './RecipeBrowser.jsx'
 import TalentTree from './TalentTree.jsx'
-import CharacterStats, { CharacterStatHighlights } from './CharacterStats.jsx'
+import { CharacterStatHighlights } from './CharacterStats.jsx'
 import { formatSyncAge } from './model.js'
 import './CharacterArmory.css'
 
 const characterProfileTabs = [
   ['overview', 'Overview'],
   ['equipment', 'Equipment'],
-  ['stats', 'Stats'],
   ['talents', 'Talents'],
   ['professions', 'Professions'],
   ['recipes', 'Recipes'],
@@ -73,7 +72,8 @@ export default function CharacterProfile({
   className = '',
 }) {
   const character = armory.character
-  const activeTab = characterProfileTabs.some(([value]) => value === tab) ? tab : 'overview'
+  const requestedTab = tab === 'stats' ? 'equipment' : tab
+  const activeTab = characterProfileTabs.some(([value]) => value === requestedTab) ? requestedTab : 'overview'
 
   return (
     <div className={`character-profile${className ? ` ${className}` : ''}`}>
@@ -95,8 +95,14 @@ export default function CharacterProfile({
 
       <section className="armory-content">
         {activeTab === 'overview' ? <Overview armory={armory} /> : null}
-        {activeTab === 'equipment' ? <EquipmentPaperDoll equipment={armory.equipment} className={character.className} race={character.race} /> : null}
-        {activeTab === 'stats' ? <CharacterStats stats={armory.stats} /> : null}
+        {activeTab === 'equipment' ? (
+          <CharacterEquipmentSheet
+            equipment={armory.equipment}
+            stats={armory.stats}
+            className={character.className}
+            race={character.race}
+          />
+        ) : null}
         {activeTab === 'talents' ? <TalentTree talents={armory.talents} /> : null}
         {activeTab === 'professions' ? <ProfessionCards professions={armory.professions} /> : null}
         {activeTab === 'recipes' ? <RecipeBrowser recipes={armory.recipes} /> : null}
