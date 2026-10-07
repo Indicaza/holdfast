@@ -1,0 +1,282 @@
+.character-profile .paper-doll--armory {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.character-profile .paper-doll__layout {
+  position: relative;
+  overflow: visible;
+  gap: .65rem 1rem;
+  padding: clamp(.85rem, 1.6vw, 1.25rem);
+  border-color: rgba(196, 166, 103, .3);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(196, 166, 103, .105), transparent 30%),
+    radial-gradient(circle at 50% 58%, rgba(39, 88, 139, .075), transparent 43%),
+    linear-gradient(160deg, rgba(6, 14, 26, .96), rgba(2, 7, 13, .98));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .035),
+    inset 0 0 4rem rgba(0, 0, 0, .24),
+    0 1rem 2.7rem rgba(0, 0, 0, .25);
+}
+
+.character-profile .paper-doll__layout::before {
+  content: '';
+  position: absolute;
+  inset: .75rem;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid rgba(196, 166, 103, .055);
+  border-radius: calc(var(--radius-lg) - .45rem);
+}
+
+.character-profile .paper-doll__column,
+.character-profile .paper-doll__figure,
+.character-profile .paper-doll__weapons {
+  position: relative;
+  z-index: 1;
+}
+
+.character-profile .paper-doll__hover {
+  display: block;
+}
+
+.character-profile .paper-doll__hover .paper-doll__slot {
+  width: 100%;
+}
+
+.character-profile .paper-doll__slot {
+  min-height: 4.35rem;
+  gap: .7rem;
+  padding: .5rem .55rem;
+  overflow: visible;
+  border-color: rgba(255, 255, 255, .075);
+  background: linear-gradient(105deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, .008));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .025);
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.character-profile .paper-doll__slot--filled:hover,
+.character-profile .paper-doll__slot--filled:focus-visible {
+  z-index: 6;
+  transform: translateY(-1px);
+  border-color: rgba(196, 166, 103, .52);
+  background: linear-gradient(105deg, rgba(196, 166, 103, .08), rgba(255, 255, 255, .012));
+  box-shadow: 0 .55rem 1.4rem rgba(0, 0, 0, .22), inset 0 1px rgba(255, 255, 255, .035);
+}
+
+.character-profile .paper-doll__slot--active {
+  border-color: rgba(214, 182, 111, .68);
+  background: linear-gradient(105deg, rgba(196, 166, 103, .11), rgba(255, 255, 255, .015));
+  box-shadow: inset 3px 0 rgba(214, 182, 111, .72), 0 .4rem 1.2rem rgba(0, 0, 0, .2);
+}
+
+.character-profile .paper-doll__slot--quality-2 { border-color: rgba(95, 211, 95, .22); }
+.character-profile .paper-doll__slot--quality-3 { border-color: rgba(109, 162, 255, .28); }
+.character-profile .paper-doll__slot--quality-4 { border-color: rgba(180, 106, 255, .3); }
+.character-profile .paper-doll__slot--quality-5 { border-color: rgba(255, 155, 55, .32); }
+
+.character-profile .paper-doll__slot--empty {
+  opacity: .58;
+  background: rgba(255, 255, 255, .008);
+}
+
+.character-profile .paper-doll__slot-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.character-profile .paper-doll__slot-copy small,
+.character-profile .paper-doll__slot-copy em,
+.character-profile .paper-doll__slot-type {
+  color: rgba(221, 215, 203, .48);
+  font-size: .62rem;
+  line-height: 1.15;
+}
+
+.character-profile .paper-doll__slot-copy strong {
+  font-size: .79rem;
+  line-height: 1.2;
+}
+
+.character-profile .paper-doll__slot-type {
+  min-height: .72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-profile .paper-doll__empty-icon {
+  background: rgba(255, 255, 255, .008);
+}
+
+.character-profile .paper-doll__figure {
+  margin-block: .25rem;
+  padding: 1.25rem .75rem;
+  overflow: hidden;
+  border-inline-color: rgba(196, 166, 103, .18);
+  border-radius: .8rem;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(196, 166, 103, .1), transparent 34%),
+    linear-gradient(rgba(255,255,255,.012), rgba(255,255,255,0));
+}
+
+.character-profile .paper-doll__figure::after {
+  content: '';
+  position: absolute;
+  inset: 8% 14%;
+  z-index: -1;
+  border: 1px solid rgba(196, 166, 103, .08);
+  border-radius: 50% 50% 42% 42%;
+  box-shadow: inset 0 0 3rem rgba(196, 166, 103, .035);
+}
+
+.character-profile .paper-doll__figure-label,
+.character-profile .paper-doll__detail-label {
+  color: var(--color-accent-bright);
+  font-size: .58rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.character-profile .paper-doll__crest {
+  margin-block: .35rem;
+  color: rgba(196, 166, 103, .5);
+  font-size: clamp(4rem, 7vw, 6rem);
+  filter: drop-shadow(0 .7rem 1.2rem rgba(0,0,0,.3));
+}
+
+.character-profile .paper-doll__loadout-stats {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .45rem;
+  margin-top: .7rem;
+}
+
+.character-profile .paper-doll__loadout-stats > div {
+  display: grid;
+  gap: .08rem;
+  padding: .45rem .35rem;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: .55rem;
+  background: rgba(255,255,255,.018);
+}
+
+.character-profile .paper-doll__loadout-stats b {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: .95rem;
+}
+
+.character-profile .paper-doll__loadout-stats small,
+.character-profile .paper-doll__hint {
+  color: rgba(221, 215, 203, .48);
+  font-size: .58rem;
+}
+
+.character-profile .paper-doll__hint {
+  max-width: 13rem;
+  margin-top: .55rem;
+  line-height: 1.45;
+}
+
+.character-profile .paper-doll__weapons {
+  padding-top: .35rem;
+  border-top: 1px solid rgba(196, 166, 103, .1);
+}
+
+.character-profile .paper-doll__detail-rail {
+  display: grid;
+  gap: .5rem;
+  min-width: 0;
+}
+
+.character-profile .paper-doll__detail-label {
+  padding-left: .2rem;
+}
+
+/* Tooltips open inward so they stay inside the Armory's scrollable modal. */
+.character-profile .paper-doll__column--left .wow-item-tooltip {
+  left: calc(100% + .65rem);
+  right: auto;
+}
+
+.character-profile .paper-doll__column--right .wow-item-tooltip {
+  right: calc(100% + .65rem);
+  left: auto;
+  transform: translate(-.35rem, -50%) scale(.985);
+  transform-origin: right center;
+}
+
+.character-profile .paper-doll__column--right .item-hover-target:hover .wow-item-tooltip,
+.character-profile .paper-doll__column--right .item-hover-target:focus-within .wow-item-tooltip {
+  transform: translate(0, -50%) scale(1);
+}
+
+.character-profile .paper-doll__weapons .wow-item-tooltip {
+  top: auto;
+  bottom: calc(100% + .55rem);
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, .35rem) scale(.985);
+  transform-origin: bottom center;
+}
+
+.character-profile .paper-doll__weapons .item-hover-target:hover .wow-item-tooltip,
+.character-profile .paper-doll__weapons .item-hover-target:focus-within .wow-item-tooltip {
+  transform: translate(-50%, 0) scale(1);
+}
+
+.modal__panel--armory .paper-doll__layout,
+.modal__panel--armory .paper-doll__slot,
+.modal__panel--armory .paper-doll__hover {
+  overflow: visible;
+}
+
+@media (max-width: 70rem) {
+  .character-profile .paper-doll--armory {
+    grid-template-columns: 1fr;
+  }
+
+  .character-profile .paper-doll__detail-rail {
+    grid-row: 1;
+  }
+
+  .character-profile .paper-doll__column .wow-item-tooltip,
+  .character-profile .paper-doll__weapons .wow-item-tooltip {
+    top: calc(100% + .5rem);
+    right: .15rem;
+    bottom: auto;
+    left: auto;
+    transform: translateY(.3rem) scale(.985);
+    transform-origin: top right;
+  }
+
+  .character-profile .paper-doll__column .item-hover-target:hover .wow-item-tooltip,
+  .character-profile .paper-doll__column .item-hover-target:focus-within .wow-item-tooltip,
+  .character-profile .paper-doll__weapons .item-hover-target:hover .wow-item-tooltip,
+  .character-profile .paper-doll__weapons .item-hover-target:focus-within .wow-item-tooltip {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 48rem) {
+  .character-profile .paper-doll__layout {
+    gap: .5rem;
+  }
+
+  .character-profile .paper-doll__slot {
+    min-height: 4rem;
+  }
+
+  .character-profile .paper-doll__slot-type {
+    display: none;
+  }
+}
