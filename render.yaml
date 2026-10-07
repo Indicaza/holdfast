@@ -32,7 +32,7 @@ services:
       - key: BLIZZARD_LOCALE
         value: en_US
       - key: BLIZZARD_STATIC_NAMESPACES
-        value: static-classic1x-us,static-classic-us,static-us
+        value: static-classic1x-us,static-classic-us
       - key: SESSION_SECRET
         generateValue: true
       - key: DISCORD_CLIENT_ID
