@@ -4,6 +4,11 @@ import assert from "node:assert/strict";
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { ensureTelemetryProjectionSchema } from "../src/Character/telemetryProjection.js";
 import { withGuildDatabase } from "../src/Data/database.js";
+import {
+  ensureGameDataCatalogSchema,
+  resolveGameDataBundleInDatabase,
+  upsertGameDataEntityInDatabase,
+} from "../src/GameData/gameDataCatalog.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
 function richSnapshot() {
@@ -177,6 +182,32 @@ test("character intelligence projects rich snapshots and remains idempotent", as
     assert.equal(armory.json.professions.find((entry) => entry.name === "Blacksmithing").current, 225);
     assert.equal(armory.json.recipes[0].name, "Mithril Spurs");
     assert.equal(armory.json.recipes[0].reagents[0].quantity, 4);
+    assert.equal(armory.json.gameData.items["11746"].name, "Golem Skull Helm");
+    assert.equal(armory.json.gameData.items["11746"].iconFileId, 132767);
+    assert.equal(armory.json.gameData.items["11746"].qualityId, 3);
+    assert.equal(armory.json.gameData.items["3860"].name, "Mithril Bar");
+    assert.equal(armory.json.gameData.spells["12975"].name, "Last Stand");
+    assert.equal(armory.json.gameData.professions["164"].name, "Blacksmithing");
+    assert.equal(armory.json.gameData.recipes["9789"].name, "Mithril Spurs");
+
+    const resolveAnonymous = await request("/api/intelligence/game-data/resolve", {
+      method: "POST",
+      body: { references: { items: [11746] }, gameBuild: "Forever Beta 1.0.0" },
+    });
+    assert.equal(resolveAnonymous.status, 401);
+
+    const resolved = await request("/api/intelligence/game-data/resolve", {
+      persona: "member",
+      method: "POST",
+      body: {
+        gameBuild: "Forever Beta 1.0.0",
+        references: { items: [11746], spells: [12975], recipes: [9789] },
+      },
+    });
+    assert.equal(resolved.status, 200);
+    assert.equal(resolved.json.items["11746"].name, "Golem Skull Helm");
+    assert.equal(resolved.json.spells["12975"].iconFileId, 135871);
+    assert.equal(resolved.json.recipes["9789"].metadata.craftedItemId, 7969);
 
     const recipes = await request("/api/intelligence/recipes?q=mithril", { persona: "member" });
     assert.equal(recipes.status, 200);
@@ -193,11 +224,54 @@ test("character intelligence projects rich snapshots and remains idempotent", as
   });
 });
 
+test("game data catalog lets authoritative metadata replace telemetry without later regression", async () => {
+  await withHttpApp(async () => {
+    withGuildDatabase((db) => {
+      ensureGameDataCatalogSchema(db);
+      upsertGameDataEntityInDatabase(db, {
+        type: "item",
+        id: 11746,
+        gameBuild: "70235",
+        name: "Telemetry Helm",
+        iconFileId: 111,
+        source: "telemetry",
+      });
+      upsertGameDataEntityInDatabase(db, {
+        type: "item",
+        id: 11746,
+        gameBuild: "70235",
+        name: "Authoritative Golem Skull Helm",
+        iconFileId: 132767,
+        source: "blizzard",
+      });
+      upsertGameDataEntityInDatabase(db, {
+        type: "item",
+        id: 11746,
+        gameBuild: "70235",
+        name: "Stale telemetry name",
+        iconFileId: 222,
+        source: "telemetry",
+      });
+
+      const resolved = resolveGameDataBundleInDatabase(
+        db,
+        { items: [11746] },
+        { gameBuild: "70235" },
+      );
+      assert.equal(resolved.items["11746"].name, "Authoritative Golem Skull Helm");
+      assert.equal(resolved.items["11746"].iconFileId, 132767);
+      assert.equal(resolved.items["11746"].source, "blizzard");
+    });
+  });
+});
+
 test("character intelligence tolerates incomplete old telemetry and schema bootstrap is repeatable", async () => {
   await withHttpApp(async ({ request }) => {
     withGuildDatabase((db) => {
       ensureTelemetryProjectionSchema(db);
       ensureTelemetryProjectionSchema(db);
+      ensureGameDataCatalogSchema(db);
+      ensureGameDataCatalogSchema(db);
       const tables = new Set(
         db
           .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
@@ -207,6 +281,7 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
       assert.equal(tables.has("telemetry_characters"), true);
       assert.equal(tables.has("telemetry_professions"), true);
       assert.equal(tables.has("telemetry_recipes"), true);
+      assert.equal(tables.has("game_data_catalog"), true);
     });
 
     const result = await syncGuildweaverCharacter({
@@ -231,6 +306,7 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
     assert.deepEqual(armory.json.talents.edges, []);
     assert.deepEqual(armory.json.professions, []);
     assert.deepEqual(armory.json.recipes, []);
+    assert.deepEqual(armory.json.gameData.items, {});
 
     const missing = await request("/api/intelligence/characters/not-real", { persona: "member" });
     assert.equal(missing.status, 404);
