@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { ItemDetailCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
+import { ItemDetailCard, ItemHoverTarget, ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { canonicalEquipmentSlot } from './model.js'
+import './ArmoryPolish.css'
 
 const leftSlots = ['HEAD', 'NECK', 'SHOULDER', 'BACK', 'CHEST', 'SHIRT', 'TABARD', 'WRIST']
 const rightSlots = ['HANDS', 'WAIST', 'LEGS', 'FEET', 'FINGER1', 'FINGER2', 'TRINKET1', 'TRINKET2']
@@ -22,21 +23,48 @@ function classKey(value) {
 }
 
 function EquipmentSlot({ item, slot, active, onSelect }) {
+  const label = slotLabel(slot)
+
+  if (!item) {
+    return (
+      <button
+        type="button"
+        className="paper-doll__slot paper-doll__slot--empty"
+        disabled
+        aria-label={`${label} empty`}
+      >
+        <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>
+        <span className="paper-doll__slot-copy">
+          <small>{label}</small>
+          <strong>Empty</strong>
+        </span>
+      </button>
+    )
+  }
+
+  const quality = Number(item.quality) || 0
   return (
-    <button
-      type="button"
-      className={`paper-doll__slot${item ? ' paper-doll__slot--filled' : ''}${active ? ' paper-doll__slot--active' : ''}`}
-      onClick={() => item && onSelect(item)}
-      disabled={!item}
-      title={item?.name || `${slotLabel(slot)} empty`}
-    >
-      {item ? <ItemIcon item={item} size={46} /> : <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>}
-      <span className="paper-doll__slot-copy">
-        <small>{slotLabel(slot)}</small>
-        <strong className={item ? `item-quality-${Number(item.quality) || 0}` : ''}>{item?.name || 'Empty'}</strong>
-        {item?.itemLevel ? <em>ilvl {item.itemLevel}</em> : null}
-      </span>
-    </button>
+    <ItemHoverTarget item={item} className="paper-doll__hover">
+      {(tooltipId) => (
+        <button
+          type="button"
+          className={`paper-doll__slot paper-doll__slot--filled paper-doll__slot--quality-${quality}${active ? ' paper-doll__slot--active' : ''}`}
+          onClick={() => onSelect(item)}
+          aria-describedby={tooltipId}
+          aria-pressed={active}
+        >
+          <ItemIcon item={item} size={48} />
+          <span className="paper-doll__slot-copy">
+            <span className="paper-doll__slot-kicker">
+              <small>{label}</small>
+              {item.itemLevel ? <em>ilvl {item.itemLevel}</em> : null}
+            </span>
+            <strong className={`item-quality-${quality}`}>{item.name || `Item ${item.itemId || ''}`}</strong>
+            <span className="paper-doll__slot-type">{item.itemSubclassName || item.subclass || item.itemClassName || ''}</span>
+          </span>
+        </button>
+      )}
+    </ItemHoverTarget>
   )
 }
 
@@ -55,20 +83,33 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
     setActive(equipment[0] || null)
   }, [equipment])
 
+  const itemLevels = equipment
+    .map((item) => Number(item.itemLevel))
+    .filter((value) => Number.isFinite(value) && value > 0)
+  const averageItemLevel = itemLevels.length
+    ? Math.round(itemLevels.reduce((sum, value) => sum + value, 0) / itemLevels.length)
+    : null
+
   if (!equipment.length) {
     return <EmptyTelemetry title="No equipment snapshot yet.">The paper doll will populate when Guildweaver submits equipped item data.</EmptyTelemetry>
   }
 
   return (
-    <div className="paper-doll">
+    <div className="paper-doll paper-doll--armory">
       <div className="paper-doll__layout">
         <div className="paper-doll__column paper-doll__column--left">
           {leftSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} />)}
         </div>
         <div className="paper-doll__figure" data-class={classKey(className)}>
+          <span className="paper-doll__figure-label">Current loadout</span>
           <span className="paper-doll__crest" aria-hidden="true">♜</span>
           <strong>{className || 'Adventurer'}</strong>
           <span>{race || 'Character'}</span>
+          <div className="paper-doll__loadout-stats">
+            <div><b>{equipment.length}</b><small>equipped</small></div>
+            <div><b>{averageItemLevel || '—'}</b><small>avg ilvl</small></div>
+          </div>
+          <small className="paper-doll__hint">Hover gear for the in-game tooltip. Click to pin details.</small>
         </div>
         <div className="paper-doll__column paper-doll__column--right">
           {rightSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} />)}
@@ -77,7 +118,10 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
           {weaponSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} />)}
         </div>
       </div>
-      <ItemDetailCard item={active} />
+      <div className="paper-doll__detail-rail">
+        <span className="paper-doll__detail-label">Selected gear</span>
+        <ItemDetailCard item={active} />
+      </div>
     </div>
   )
 }
