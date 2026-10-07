@@ -77,13 +77,10 @@ function StatGroup({ title, children, wide = false }) {
   )
 }
 
-function AdvancedGroup({ title, description, children }) {
+function AdvancedGroup({ title, children }) {
   return (
     <details className="character-stats__advanced armory-panel">
-      <summary>
-        <span>{title}</span>
-        {description ? <small>{description}</small> : null}
-      </summary>
+      <summary><span>{title}</span></summary>
       <dl className="character-stats__rows character-stats__rows--advanced">{children}</dl>
     </details>
   )
@@ -104,17 +101,27 @@ function ItemLevelSummary({ utility = {} }) {
   const headline = itemLevel.overall ?? itemLevel.equipped ?? itemLevel.pvp
   if (headline === null || headline === undefined) return null
 
+  const headlineNumber = number(headline)
+  const secondary = [
+    ['Equipped', itemLevel.equipped],
+    ['Overall', itemLevel.overall],
+    ['PvP', itemLevel.pvp],
+  ].filter(([, value]) => {
+    const parsed = number(value)
+    return parsed !== null && parsed !== headlineNumber
+  })
+
   return (
     <section className="character-stats__item-level armory-panel">
-      <div>
+      <div className="character-stats__item-level-main">
         <span>Item Level</span>
         <strong>{formatNumber(headline)}</strong>
       </div>
-      <dl>
-        <StatRow name="Equipped" value={formatNumber(itemLevel.equipped)} />
-        <StatRow name="Overall" value={formatNumber(itemLevel.overall)} />
-        <StatRow name="PvP" value={formatNumber(itemLevel.pvp)} />
-      </dl>
+      {secondary.length ? (
+        <dl>
+          {secondary.map(([name, value]) => <StatRow key={name} name={name} value={formatNumber(value)} />)}
+        </dl>
+      ) : null}
     </section>
   )
 }
@@ -151,10 +158,10 @@ function Offense({ offense = {} }) {
   return (
     <StatGroup title="Offense">
       <StatRow name="Attack Power" value={formatNumber(offense.attackPower?.effective ?? offense.attackPower?.base)} />
-      <StatRow name="Melee Damage" value={damageRange(offense.meleeDamage?.min, offense.meleeDamage?.max)} />
+      <StatRow name="Damage" value={damageRange(offense.meleeDamage?.min, offense.meleeDamage?.max)} />
       <StatRow name="Attack Speed" value={formatNumber(offense.attackSpeed?.mainHand)} hint={offense.attackSpeed?.mainHand !== undefined ? 'seconds' : null} />
-      <StatRow name="Melee Critical Strike" value={formatPercent(offense.crit?.melee)} />
-      <StatRow name="Melee Hit" value={formatPercent(offense.hit?.melee)} />
+      <StatRow name="Critical Strike" value={formatPercent(offense.crit?.melee)} />
+      <StatRow name="Hit" value={formatPercent(offense.hit?.melee)} />
       <StatRow name="Expertise" value={formatNumber(offense.expertise?.mainHand)} hint={offense.expertise?.mainHandPercent !== undefined ? `${formatPercent(offense.expertise.mainHandPercent)} dodge/parry reduction` : null} />
       <StatRow name="Armor Penetration" value={formatPercent(offense.armorPenetration)} />
     </StatGroup>
@@ -217,7 +224,7 @@ function CombatDetails({ offense = {} }) {
   if (!hasAnyValue(values)) return null
 
   return (
-    <AdvancedGroup title="Combat Details" description="Ranged, spell, haste, and weapon-skill telemetry">
+    <AdvancedGroup title="Combat Details">
       <StatRow name="Ranged Attack Power" value={formatNumber(offense.rangedAttackPower?.effective ?? offense.rangedAttackPower?.base)} />
       <StatRow name="Ranged Damage" value={damageRange(offense.rangedDamage?.min, offense.rangedDamage?.max)} />
       <StatRow name="Off Hand Speed" value={formatNumber(offense.attackSpeed?.offHand)} hint={offense.attackSpeed?.offHand !== undefined ? 'seconds' : null} />
@@ -242,7 +249,7 @@ function CombatDetails({ offense = {} }) {
 function Ratings({ ratings = {} }) {
   if (!hasGroup(ratings)) return null
   return (
-    <AdvancedGroup title="Ratings & Conversions" description="Raw combat ratings reported by the game client">
+    <AdvancedGroup title="Ratings">
       {Object.entries(ratings).map(([key, rating]) => (
         <StatRow key={key} name={label(key)} value={formatNumber(rating?.rating)} hint={rating?.bonus !== undefined ? `${formatPercent(rating.bonus)} bonus` : null} />
       ))}
@@ -254,7 +261,7 @@ function Resistances({ defense = {} }) {
   const resistances = defense.resistances || {}
   if (!hasGroup(resistances)) return null
   return (
-    <AdvancedGroup title="Resistances" description="School-specific defensive values">
+    <AdvancedGroup title="Resistances">
       {Object.entries(resistances).map(([key, resistance]) => (
         <StatRow key={`resistance-${key}`} name={label(key)} value={formatNumber(resistance?.total ?? resistance?.base)} />
       ))}
@@ -284,7 +291,7 @@ function CharacterDetails({ resources = {}, utility = {}, defense = {} }) {
   if (!hasAnyValue(values)) return null
 
   return (
-    <AdvancedGroup title="Character Details" description="Regeneration, movement, experience, and tertiary stats">
+    <AdvancedGroup title="More Stats">
       <StatRow name="Power Regeneration" value={formatNumber(resources.powerRegen?.inactive)} hint={resources.powerRegen?.active !== undefined ? `${formatNumber(resources.powerRegen.active)} active` : null} />
       <StatRow name="Mana Regeneration" value={formatNumber(resources.manaRegen?.inactive)} hint={resources.manaRegen?.active !== undefined ? `${formatNumber(resources.manaRegen.active)} while casting` : null} />
       <StatRow name="Run Speed" value={formatNumber(movement.runYardsPerSecond)} hint="yards / second" />
