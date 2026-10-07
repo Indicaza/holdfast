@@ -1,0 +1,92 @@
+.modal__panel--armory {
+  --armory-content-gutter: clamp(1.25rem, 3vw, 3.25rem);
+}
+
+.modal__panel--armory .modal__body {
+  padding-inline: var(--armory-content-gutter);
+}
+
+.character-profile--modal .armory-tabs {
+  width: calc(100% + var(--armory-content-gutter) + var(--armory-content-gutter));
+  margin-inline: calc(var(--armory-content-gutter) * -1);
+  padding-inline: var(--armory-content-gutter);
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255, 255, 255, .025);
+  border-bottom-color: rgba(196, 166, 103, .22);
+  background:
+    linear-gradient(180deg, rgba(8, 19, 32, .99), rgba(3, 10, 18, .985));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .018),
+    0 .8rem 1.8rem rgba(0, 0, 0, .16);
+}
+
+.character-profile--modal .armory-tabs button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 3.7rem;
+  padding-inline: .9rem;
+  color: rgba(211, 220, 231, .68);
+  font-size: .8rem;
+  font-weight: 650;
+  letter-spacing: .01em;
+  text-transform: none;
+}
+
+.character-profile--modal .armory-tabs button::after {
+  right: 18%;
+  left: 18%;
+  height: 2px;
+}
+
+.character-profile--modal .armory-tabs button + button {
+  border-left: 1px solid rgba(255, 255, 255, .028);
+}
+
+.character-profile--modal .armory-tabs button:hover,
+.character-profile--modal .armory-tabs button:focus-visible {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .018), rgba(196, 166, 103, .045)) !important;
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active {
+  background: linear-gradient(180deg, rgba(196, 166, 103, .035), rgba(196, 166, 103, .075)) !important;
+}
+
+.character-profile--modal .armory-content {
+  padding-top: clamp(2rem, 3vw, 2.8rem);
+}
+
+@media (max-width: 58rem) {
+  .modal__panel--armory {
+    --armory-content-gutter: 1rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .character-profile--modal .armory-tabs button {
+    flex: 0 0 auto;
+    min-width: 7.75rem;
+    padding-inline: 1rem;
+  }
+
+  .character-profile--modal .armory-tabs button::after {
+    right: 1rem;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 36rem) {
+  .modal__panel--armory {
+    --armory-content-gutter: .8rem;
+  }
+
+  .character-profile--modal .armory-tabs {
+    margin-inline: calc(var(--armory-content-gutter) * -1);
+    padding-inline: var(--armory-content-gutter);
+  }
+
+  .character-profile--modal .armory-tabs button {
+    min-height: 3.35rem;
+    min-width: 7rem;
+    font-size: .74rem;
+  }
+}
