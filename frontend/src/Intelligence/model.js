@@ -162,6 +162,9 @@ export function normalizeArmory(payload) {
   const character = object(source.character)
   const talents = object(source.talents)
   const gameData = normalizeGameData(source.gameData)
+  const firstName = text(character.firstName)
+  const lastName = text(character.lastName)
+  const displayName = text(character.displayName) || text(character.name) || [firstName, lastName].filter(Boolean).join(' ')
 
   return {
     character: {
@@ -169,7 +172,10 @@ export function normalizeArmory(payload) {
       memberId: text(character.memberId),
       memberName: text(character.memberName),
       memberRank: text(character.memberRank),
-      name: text(character.name) || 'Unknown adventurer',
+      name: displayName || 'Unknown adventurer',
+      firstName,
+      lastName,
+      displayName: displayName || 'Unknown adventurer',
       race: text(character.race),
       className: text(character.className),
       spec: text(character.spec),
