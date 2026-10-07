@@ -8,6 +8,7 @@ import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import WowIcon from '../WowAssets/WowIcon.jsx'
+import CharacterProfileModal from './CharacterProfileModal.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
@@ -45,9 +46,15 @@ function freshSyncCount(characters, hours = 24) {
   }).length
 }
 
-function CharacterCard({ character }) {
+function CharacterCard({ character, onOpen }) {
+  function handleClick(event) {
+    if (!onOpen || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    event.preventDefault()
+    onOpen(character.id)
+  }
+
   return (
-    <a className="intel-character-card" href={`/armory/${encodeURIComponent(character.id)}`}>
+    <a className="intel-character-card" href={`/armory/${encodeURIComponent(character.id)}`} onClick={handleClick}>
       <div className="intel-character-card__crest" aria-hidden="true">♜</div>
       <div className="intel-character-card__identity">
         <strong>{character.name}</strong>
@@ -62,7 +69,7 @@ function CharacterCard({ character }) {
   )
 }
 
-function RecentCharacters({ characters, limit = 6 }) {
+function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
   const recent = characters.slice(0, limit)
 
   return (
@@ -77,7 +84,7 @@ function RecentCharacters({ characters, limit = 6 }) {
       </div>
       {recent.length ? (
         <div className="intel-character-grid">
-          {recent.map((character) => <CharacterCard character={character} key={character.id} />)}
+          {recent.map((character) => <CharacterCard character={character} key={character.id} onOpen={onOpenCharacter} />)}
         </div>
       ) : (
         <EmptyTelemetry title="No characters synced yet.">
@@ -88,7 +95,7 @@ function RecentCharacters({ characters, limit = 6 }) {
   )
 }
 
-function Overview({ availableViews, data, freshCharacters, onSelectView }) {
+function Overview({ availableViews, data, freshCharacters, onOpenCharacter, onSelectView }) {
   const canAudit = availableViews.some((view) => view.id === 'audit')
   const canInspectGuildweaver = availableViews.some((view) => view.id === 'guildweaver')
 
@@ -102,7 +109,7 @@ function Overview({ availableViews, data, freshCharacters, onSelectView }) {
       </section>
 
       <div className="intelligence-overview-grid">
-        <RecentCharacters characters={data.characters} />
+        <RecentCharacters characters={data.characters} onOpenCharacter={onOpenCharacter} />
 
         <section className="intelligence-overview-tools" aria-labelledby="intelligence-tools-title">
           <span>Workspaces</span>
@@ -138,7 +145,7 @@ function Overview({ availableViews, data, freshCharacters, onSelectView }) {
   )
 }
 
-function CharacterBrowser({ characters }) {
+function CharacterBrowser({ characters, onOpenCharacter }) {
   const [query, setQuery] = useState('')
   const normalized = query.trim().toLowerCase()
   const filtered = useMemo(() => {
@@ -178,7 +185,7 @@ function CharacterBrowser({ characters }) {
         </EmptyTelemetry>
       ) : filtered.length ? (
         <div className="intel-character-grid">
-          {filtered.map((character) => <CharacterCard character={character} key={character.id} />)}
+          {filtered.map((character) => <CharacterCard character={character} key={character.id} onOpen={onOpenCharacter} />)}
         </div>
       ) : (
         <EmptyTelemetry title="No characters match.">
@@ -281,13 +288,13 @@ function CraftFinder() {
   )
 }
 
-function Workspace({ activeView, availableViews, data, freshCharacters, onSelectView, session }) {
+function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCharacter, onSelectView, session }) {
   if (activeView === 'roster') return <RosterComposition data={data} />
-  if (activeView === 'characters') return <CharacterBrowser characters={data.characters} />
+  if (activeView === 'characters') return <CharacterBrowser characters={data.characters} onOpenCharacter={onOpenCharacter} />
   if (activeView === 'craft') return <CraftFinder />
   if (activeView === 'audit' && session.hasPermission('audit.view')) return <AuditLog />
   if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <GuildweaverConsole />
-  return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onSelectView={onSelectView} />
+  return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
 }
 
 export default function GuildIntelligence() {
@@ -295,6 +302,7 @@ export default function GuildIntelligence() {
   const [status, setStatus] = useState('loading')
   const [data, setData] = useState(() => normalizeIntelligence({}))
   const [activeView, setActiveView] = useState('overview')
+  const [selectedCharacterId, setSelectedCharacterId] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -376,28 +384,32 @@ export default function GuildIntelligence() {
   }
 
   return (
-    <IntelligenceAppShell
-      activeView={activeView}
-      collapsed={collapsed}
-      freshCharacters={freshCharacters}
-      mobileOpen={mobileOpen}
-      onSelectView={selectView}
-      onToggleCollapsed={() => setCollapsed((value) => !value)}
-      onToggleMobile={setMobileOpen}
-      views={availableViews}
-    >
-      {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
-      {status === 'error' ? <p className="intel-error">GuildOS could not be loaded.</p> : null}
-      {status === 'ready' ? (
-        <Workspace
-          activeView={activeView}
-          availableViews={availableViews}
-          data={data}
-          freshCharacters={freshCharacters}
-          onSelectView={selectView}
-          session={session}
-        />
-      ) : null}
-    </IntelligenceAppShell>
+    <>
+      <IntelligenceAppShell
+        activeView={activeView}
+        collapsed={collapsed}
+        freshCharacters={freshCharacters}
+        mobileOpen={mobileOpen}
+        onSelectView={selectView}
+        onToggleCollapsed={() => setCollapsed((value) => !value)}
+        onToggleMobile={setMobileOpen}
+        views={availableViews}
+      >
+        {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
+        {status === 'error' ? <p className="intel-error">GuildOS could not be loaded.</p> : null}
+        {status === 'ready' ? (
+          <Workspace
+            activeView={activeView}
+            availableViews={availableViews}
+            data={data}
+            freshCharacters={freshCharacters}
+            onOpenCharacter={setSelectedCharacterId}
+            onSelectView={selectView}
+            session={session}
+          />
+        ) : null}
+      </IntelligenceAppShell>
+      <CharacterProfileModal characterId={selectedCharacterId} onClose={() => setSelectedCharacterId('')} />
+    </>
   )
 }

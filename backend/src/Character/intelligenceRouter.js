@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
@@ -8,6 +9,35 @@ import {
   readCharacterArmory,
   searchRecipes,
 } from "./telemetryProjection.js";
+
+function referenceIds(values) {
+  return [...new Set(values.filter((value) => Number.isFinite(Number(value)) && Number(value) > 0).map((value) => Number(value)))];
+}
+
+function armoryReferences(armory) {
+  const equipment = Array.isArray(armory?.equipment) ? armory.equipment : [];
+  const professions = Array.isArray(armory?.professions) ? armory.professions : [];
+  const recipes = Array.isArray(armory?.recipes) ? armory.recipes : [];
+  const talentNodes = Array.isArray(armory?.talents?.nodes) ? armory.talents.nodes : [];
+
+  return {
+    items: referenceIds([
+      ...equipment.map((item) => item?.itemId),
+      ...recipes.map((recipe) => recipe?.craftedItemId),
+      ...recipes.flatMap((recipe) => (Array.isArray(recipe?.reagents) ? recipe.reagents : []).map((reagent) => reagent?.itemId)),
+    ]),
+    spells: referenceIds(
+      talentNodes.flatMap((node) => (Array.isArray(node?.entries) ? node.entries : []).map((entry) => entry?.spellId)),
+    ),
+    recipes: referenceIds(recipes.map((recipe) => recipe?.id)),
+    professions: referenceIds(professions.map((profession) => profession?.id)),
+  };
+}
+
+function armoryBuildKey(armory) {
+  const label = String(armory?.character?.gameBuild || "").trim();
+  return label.match(/\bbuild\s+([^·\s]+)/i)?.[1] || label;
+}
 
 export function createIntelligenceRouter() {
   const router = Router();
@@ -29,11 +59,33 @@ export function createIntelligenceRouter() {
         res.status(404).json({ error: "character_not_found" });
         return;
       }
+
+      const gameData = resolveGameDataBundle(armoryReferences(armory), {
+        gameBuild: armoryBuildKey(armory),
+      });
+
       res.set("Cache-Control", "no-store");
-      res.json(sanitizeArmoryPayload(armory));
+      res.json(sanitizeArmoryPayload({ ...armory, gameData }));
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
+    }
+  });
+
+  router.post("/game-data/resolve", requireAuthenticated, (req, res) => {
+    try {
+      const references = req.body?.references && typeof req.body.references === "object"
+        ? req.body.references
+        : {};
+      const gameData = resolveGameDataBundle(references, {
+        gameBuild: req.body?.gameBuild,
+        locale: req.body?.locale,
+      });
+      res.set("Cache-Control", "private, max-age=300");
+      res.json(gameData);
+    } catch (error) {
+      console.error("Unable to resolve game data", error);
+      res.status(500).json({ error: "game_data_unavailable" });
     }
   });
 

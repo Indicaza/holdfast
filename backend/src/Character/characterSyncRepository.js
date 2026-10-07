@@ -1,4 +1,5 @@
 import { withGuildTransaction } from "../Data/database.js";
+import { learnGameDataFromSnapshotInDatabase } from "../GameData/gameDataCatalog.js";
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import {
   ensureCharacterSnapshotObservabilitySchema,
@@ -232,6 +233,11 @@ export async function syncGuildweaverCharacter({
       snapshotId: storedSnapshot.id,
       snapshot,
       capturedAt: storedSnapshot.capturedAt,
+    });
+
+    learnGameDataFromSnapshotInDatabase(db, snapshot, {
+      source: "telemetry",
+      observedAt: storedSnapshot.capturedAt,
     });
 
     return {
