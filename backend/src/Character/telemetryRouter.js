@@ -1,9 +1,15 @@
 import { Router } from "express";
 
 import { authenticateGuildweaverDevice } from "./guildweaverDeviceRepository.js";
+import { syncGuildweaverCharacter } from "./characterSyncRepository.js";
 import { recordTelemetry } from "./telemetryRecordRepository.js";
 
 const SUPPORTED_TELEMETRY_SCHEMAS = new Set([1]);
+const SUPPORTED_CHARACTER_PAYLOAD_SCHEMAS = new Set([1, 2, 3]);
+const CHARACTER_EVENT_TYPES = new Set([
+  "character_snapshot",
+  "character_session_checkpoint",
+]);
 
 function bearerToken(req) {
   const authorization = String(req.get("Authorization") || "");
@@ -26,10 +32,25 @@ function requireGuildweaverDevice(req, res, next) {
   }
 }
 
+async function projectCharacterTelemetry(record, device) {
+  if (!record || !CHARACTER_EVENT_TYPES.has(record.eventType)) return null;
+  const snapshot = record.payload;
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
+  if (!SUPPORTED_CHARACTER_PAYLOAD_SCHEMAS.has(Number(snapshot.schemaVersion))) return null;
+
+  return syncGuildweaverCharacter({
+    memberId: device.memberId,
+    snapshot,
+    deviceId: device.id,
+    bridgeRevision: record.revision,
+    receivedAt: record.receivedAt,
+  });
+}
+
 export function createTelemetryRouter() {
   const router = Router();
 
-  router.post("/telemetry", requireGuildweaverDevice, (req, res) => {
+  router.post("/telemetry", requireGuildweaverDevice, async (req, res) => {
     try {
       const streamKey = String(req.body?.streamKey || "").trim();
       const kind = req.body?.kind === "event" ? "event" : "state";
@@ -74,12 +95,18 @@ export function createTelemetryRouter() {
         return;
       }
 
+      const projection = await projectCharacterTelemetry(
+        result.record,
+        req.guildweaverDevice,
+      );
+
       res.set("Cache-Control", "no-store");
       res.status(result.status === "created" ? 201 : 200).json({
         status: result.status,
         recordId: result.record?.id || null,
         streamKey: result.record?.streamKey || streamKey,
         revision: result.record?.revision || revision,
+        characterStatus: projection?.status || null,
       });
     } catch (error) {
       console.error("Unable to ingest Guildweaver telemetry", error);
