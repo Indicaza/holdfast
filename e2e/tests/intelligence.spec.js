@@ -272,9 +272,23 @@ test('guild intelligence behaves like a fixed app with switchable workspaces', a
 
   await rail.getByRole('button', { name: /^Characters\b/ }).click()
   await expect(topbar.getByRole('heading', { name: 'Characters' })).toBeVisible()
-  await page.getByPlaceholder('Name, class, spec, realm…').fill('Protection')
-  await expect(page.getByText('Armorytest', { exact: true })).toBeVisible()
-  await page.getByPlaceholder('Name, class, spec, realm…').fill('Mage')
+  const characterSearch = page.getByPlaceholder('Name, class, spec, realm…')
+  await characterSearch.fill('Protection')
+  const characterCard = page.locator('.intel-character-card').filter({ hasText: 'Armorytest' })
+  await expect(characterCard).toBeVisible()
+  await characterCard.click()
+
+  const profile = page.getByRole('dialog')
+  await expect(profile.getByRole('heading', { name: 'Armorytest' })).toBeVisible()
+  await expect(profile).toContainText('GuildOS Armory')
+  await expect(profile).toContainText('Classic Beta PvE 2')
+  await profile.getByRole('button', { name: 'Equipment' }).click()
+  await expect(profile.getByText('Golem Skull Helm', { exact: true }).first()).toBeVisible()
+  await expect(profile.getByText('ilvl 35')).toBeVisible()
+  await profile.getByRole('button', { name: 'Close' }).click()
+  await expect(profile).toHaveCount(0)
+
+  await characterSearch.fill('Mage')
   await expect(page.getByRole('heading', { name: 'No characters match.' })).toBeVisible()
 
   await rail.getByRole('button', { name: /^Craft Finder\b/ }).click()
