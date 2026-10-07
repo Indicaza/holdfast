@@ -236,3 +236,52 @@ test("schema v3 character snapshots retain Armory data and rejoin talent definit
     assert.equal(craftFinder.json.results[0].crafters[0].professionSkill, 94);
   });
 });
+
+test("schema v3 Armory keeps compact talent state while its definition is still pending", async () => {
+  await withHttpApp(async ({ request }) => {
+    const snapshot = v3Snapshot();
+    snapshot.characterId = "character-v3-pending-definition";
+    snapshot.characterKey = "classic beta pve 2:quill riftward";
+    snapshot.firstName = "Quill";
+    snapshot.lastName = "Riftward";
+    snapshot.fullName = "Quill Riftward";
+    snapshot.name = "Quill Riftward";
+    snapshot.class = { id: 8, name: "Mage", token: "MAGE" };
+    snapshot.equipment = [];
+    snapshot.professions = [];
+    snapshot.talents = {
+      api: "traits",
+      kind: "combat",
+      configId: 444,
+      treeIds: [2222],
+      pointsSpent: 3,
+      pointsAvailable: 1,
+      allocations: [{ nodeId: 901, rank: 3, ranksPurchased: 3, activeEntryId: 9901, activeEntryRank: 3 }],
+    };
+
+    const synced = await syncGuildweaverCharacter({
+      memberId: memberIds.member,
+      snapshot,
+      deviceId: "device-v3-pending-definition",
+      bridgeRevision: 1,
+    });
+    assert.equal(synced.status, "created");
+
+    const armory = await request(
+      `/api/intelligence/characters/${encodeURIComponent(synced.character.id)}`,
+      { persona: "member" },
+    );
+
+    assert.equal(armory.status, 200);
+    assert.equal(armory.json.character.name, "Quill Riftward");
+    assert.equal(armory.json.talents.configId, 444);
+    assert.equal(armory.json.talents.treeId, 2222);
+    assert.deepEqual(armory.json.talents.treeIds, [2222]);
+    assert.equal(armory.json.talents.pointsSpent, 3);
+    assert.equal(armory.json.talents.pointsAvailable, 1);
+    assert.deepEqual(armory.json.talents.nodes, []);
+    assert.deepEqual(armory.json.talents.edges, []);
+    assert.deepEqual(armory.json.equipment, []);
+    assert.deepEqual(armory.json.professions, []);
+  });
+});
