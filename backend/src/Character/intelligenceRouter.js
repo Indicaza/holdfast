@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
@@ -39,8 +40,18 @@ function armoryBuildKey(armory) {
   return label.match(/\bbuild\s+([^·\s]+)/i)?.[1] || label;
 }
 
-export function createIntelligenceRouter() {
+async function hydrateSafely(provider, references, options) {
+  try {
+    return await provider.hydrateReferences(references, options);
+  } catch (error) {
+    console.warn("Unable to hydrate Blizzard game data", error?.message || error);
+    return { ...provider.status(), attempted: 0, hydrated: 0, failed: 1 };
+  }
+}
+
+export function createIntelligenceRouter({ gameDataProvider } = {}) {
   const router = Router();
+  const provider = gameDataProvider || createBlizzardGameDataProvider();
 
   router.get("/", requireAuthenticated, (req, res) => {
     try {
@@ -52,7 +63,7 @@ export function createIntelligenceRouter() {
     }
   });
 
-  router.get("/characters/:characterId", requireAuthenticated, (req, res) => {
+  router.get("/characters/:characterId", requireAuthenticated, async (req, res) => {
     try {
       const armory = readCharacterArmory(req.params.characterId);
       if (!armory) {
@@ -60,29 +71,40 @@ export function createIntelligenceRouter() {
         return;
       }
 
-      const gameData = resolveGameDataBundle(armoryReferences(armory), {
-        gameBuild: armoryBuildKey(armory),
-      });
+      const references = armoryReferences(armory);
+      const gameBuild = armoryBuildKey(armory);
+      const providerStatus = await hydrateSafely(provider, references, { gameBuild });
+      const gameData = resolveGameDataBundle(references, { gameBuild });
 
       res.set("Cache-Control", "no-store");
-      res.json(sanitizeArmoryPayload({ ...armory, gameData }));
+      res.json(sanitizeArmoryPayload({
+        ...armory,
+        gameData: { ...gameData, provider: providerStatus },
+      }));
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
     }
   });
 
-  router.post("/game-data/resolve", requireAuthenticated, (req, res) => {
+  router.get("/game-data/provider", requireAuthenticated, (req, res) => {
+    res.set("Cache-Control", "private, max-age=60");
+    res.json(provider.status());
+  });
+
+  router.post("/game-data/resolve", requireAuthenticated, async (req, res) => {
     try {
       const references = req.body?.references && typeof req.body.references === "object"
         ? req.body.references
         : {};
+      const gameBuild = req.body?.gameBuild;
+      const providerStatus = await hydrateSafely(provider, references, { gameBuild });
       const gameData = resolveGameDataBundle(references, {
-        gameBuild: req.body?.gameBuild,
+        gameBuild,
         locale: req.body?.locale,
       });
       res.set("Cache-Control", "private, max-age=300");
-      res.json(gameData);
+      res.json({ ...gameData, provider: providerStatus });
     } catch (error) {
       console.error("Unable to resolve game data", error);
       res.status(500).json({ error: "game_data_unavailable" });
