@@ -9,16 +9,25 @@ function configuredTemplate() {
   return typeof runtime === 'string' && runtime ? runtime : typeof build === 'string' ? build : ''
 }
 
-export function resolveWowIconAsset({ iconFileId, itemId, spellId, recipeId, size = 64 } = {}) {
-  const template = configuredTemplate()
-  if (!template) return null
+function sameOriginIcon(fileDataId) {
+  const id = positiveInteger(fileDataId)
+  return id ? `/api/intelligence/media/icon/${id}` : null
+}
 
-  const id = positiveInteger(iconFileId) || positiveInteger(itemId) || positiveInteger(spellId) || positiveInteger(recipeId)
+export function resolveWowIconAsset({ iconFileId, itemId, spellId, recipeId, size = 64 } = {}) {
+  const normalizedIconFileId = positiveInteger(iconFileId)
+  const template = configuredTemplate()
+
+  if (!template) {
+    return sameOriginIcon(normalizedIconFileId)
+  }
+
+  const id = normalizedIconFileId || positiveInteger(itemId) || positiveInteger(spellId) || positiveInteger(recipeId)
   if (!id) return null
 
   const replacements = {
     '{id}': id,
-    '{iconFileID}': positiveInteger(iconFileId) || id,
+    '{iconFileID}': normalizedIconFileId || id,
     '{itemID}': positiveInteger(itemId) || id,
     '{spellID}': positiveInteger(spellId) || id,
     '{recipeID}': positiveInteger(recipeId) || id,

@@ -32,6 +32,7 @@ function normalizeGameData(payload) {
     professions: object(source.professions),
     talents: object(source.talents),
     missing: array(source.missing).map((entry) => ({ ...object(entry) })),
+    provider: object(source.provider),
   }
 }
 
@@ -103,10 +104,11 @@ function enrichTalentEntry(entry, gameData) {
 }
 
 export function canonicalEquipmentSlot(value) {
-  const normalized = String(value || '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .replace(/SLOT$/, '')
+  const original = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const hadSlotSuffix = original.endsWith('SLOT')
+  const normalized = original.replace(/SLOT$/, '')
+
+  if (!hadSlotSuffix) return normalized
 
   const aliases = {
     FINGER0: 'FINGER1',
@@ -132,7 +134,10 @@ export function normalizeIntelligence(payload) {
     characters: array(source.characters).map((character) => ({
       ...object(character),
       id: text(character?.id),
-      name: text(character?.name) || 'Unknown adventurer',
+      name: text(character?.fullName) || text(character?.name) || 'Unknown adventurer',
+      firstName: text(character?.firstName),
+      lastName: text(character?.lastName),
+      fullName: text(character?.fullName) || text(character?.name),
       className: text(character?.className),
       spec: text(character?.spec),
       race: text(character?.race),
@@ -162,6 +167,9 @@ export function normalizeArmory(payload) {
   const character = object(source.character)
   const talents = object(source.talents)
   const gameData = normalizeGameData(source.gameData)
+  const firstName = text(character.firstName)
+  const lastName = text(character.lastName)
+  const fullName = text(character.fullName) || text(character.name) || [firstName, lastName].filter(Boolean).join(' ')
 
   return {
     character: {
@@ -169,7 +177,10 @@ export function normalizeArmory(payload) {
       memberId: text(character.memberId),
       memberName: text(character.memberName),
       memberRank: text(character.memberRank),
-      name: text(character.name) || 'Unknown adventurer',
+      name: fullName || 'Unknown adventurer',
+      firstName,
+      lastName,
+      fullName,
       race: text(character.race),
       className: text(character.className),
       spec: text(character.spec),

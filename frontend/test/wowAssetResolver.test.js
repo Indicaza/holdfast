@@ -6,14 +6,15 @@ import {
   wowAssetDescriptor,
 } from '../src/WowAssets/assetResolver.js'
 
-test('WoW asset resolver stays provider-agnostic when no template is configured', () => {
+test('WoW asset resolver uses Holdfast FileDataID media when no template is configured', () => {
   const previous = globalThis.__HOLDFAST_WOW_ASSET_TEMPLATE__
   delete globalThis.__HOLDFAST_WOW_ASSET_TEMPLATE__
   try {
     const descriptor = wowAssetDescriptor({ iconFileID: '132767', itemID: 11746 })
     assert.equal(descriptor.iconFileId, 132767)
     assert.equal(descriptor.itemId, 11746)
-    assert.equal(descriptor.src, null)
+    assert.equal(descriptor.src, '/api/intelligence/media/icon/132767')
+    assert.equal(resolveWowIconAsset({ itemId: 11746 }), null)
   } finally {
     if (previous === undefined) delete globalThis.__HOLDFAST_WOW_ASSET_TEMPLATE__
     else globalThis.__HOLDFAST_WOW_ASSET_TEMPLATE__ = previous

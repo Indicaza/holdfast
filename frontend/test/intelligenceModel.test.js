@@ -32,6 +32,22 @@ test('armory parsing degrades incomplete telemetry into stable empty collections
   assert.deepEqual(armory.gameData.items, {})
 })
 
+test('armory prefers explicit full character names while preserving first and last names', () => {
+  const armory = normalizeArmory({
+    character: {
+      name: 'Rook',
+      firstName: 'Rook',
+      lastName: 'Ravenstar',
+      fullName: 'Rook Ravenstar',
+    },
+  })
+
+  assert.equal(armory.character.name, 'Rook Ravenstar')
+  assert.equal(armory.character.firstName, 'Rook')
+  assert.equal(armory.character.lastName, 'Ravenstar')
+  assert.equal(armory.character.fullName, 'Rook Ravenstar')
+})
+
 test('armory parsing retains reconstructed tree metadata', () => {
   const armory = normalizeArmory({
     talents: {
@@ -125,7 +141,7 @@ test('armory enriches canonical IDs from shared game data while character state 
   assert.equal(armory.recipes[0].reagents[0].name, 'Mithril Bar')
 })
 
-test('Blizzard equipment slot names map onto the paper doll', () => {
+test('Blizzard equipment slot names map onto the paper doll without remapping canonical slots', () => {
   assert.equal(canonicalEquipmentSlot('HeadSlot'), 'HEAD')
   assert.equal(canonicalEquipmentSlot('MainHandSlot'), 'MAINHAND')
   assert.equal(canonicalEquipmentSlot('SecondaryHandSlot'), 'OFFHAND')
@@ -133,6 +149,10 @@ test('Blizzard equipment slot names map onto the paper doll', () => {
   assert.equal(canonicalEquipmentSlot('Finger1Slot'), 'FINGER2')
   assert.equal(canonicalEquipmentSlot('Trinket0Slot'), 'TRINKET1')
   assert.equal(canonicalEquipmentSlot('Trinket1Slot'), 'TRINKET2')
+  assert.equal(canonicalEquipmentSlot('FINGER1'), 'FINGER1')
+  assert.equal(canonicalEquipmentSlot('FINGER2'), 'FINGER2')
+  assert.equal(canonicalEquipmentSlot('TRINKET1'), 'TRINKET1')
+  assert.equal(canonicalEquipmentSlot('TRINKET2'), 'TRINKET2')
 })
 
 test('intelligence parsing ignores malformed collection fields and normalizes counts', () => {
