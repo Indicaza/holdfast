@@ -1,16 +1,27 @@
-.paper-doll--sheet {
+.paper-doll.paper-doll--sheet {
   display: block;
+  width: 100%;
+  max-width: none;
   height: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
-.paper-doll--sheet .paper-doll__layout {
+.paper-doll.paper-doll--sheet .paper-doll__layout {
+  --paper-doll-sheet-slot: clamp(3rem, 6.2svh, 4rem);
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 3.55rem minmax(12rem, 1fr) 3.55rem;
+  grid-template-columns: var(--paper-doll-sheet-slot) minmax(0, 1fr) var(--paper-doll-sheet-slot);
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: .7rem .9rem;
-  min-height: 0;
+  gap: clamp(.55rem, 1.2vw, .85rem) clamp(.85rem, 1.6vw, 1.35rem);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 100%;
-  padding: .9rem;
+  max-height: 100%;
+  min-height: 0;
+  padding: clamp(.8rem, 1.35vw, 1.1rem);
   overflow: visible;
   border: 1px solid rgba(196, 166, 103, .22);
   border-radius: .45rem;
@@ -27,8 +38,11 @@
   z-index: 3;
   display: grid;
   align-content: space-between;
+  justify-items: center;
+  min-width: 0;
   min-height: 0;
-  gap: .38rem;
+  height: 100%;
+  gap: .28rem;
 }
 
 .paper-doll--sheet .paper-doll__column--left {
@@ -45,8 +59,11 @@
   position: relative;
   grid-column: 2;
   grid-row: 1;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
   height: 100%;
+  place-self: stretch;
   border: 0;
   background:
     radial-gradient(ellipse at 50% 48%, rgba(196, 166, 103, .055), transparent 42%),
@@ -56,7 +73,7 @@
 .paper-doll--sheet .paper-doll__figure--empty::before {
   content: '';
   position: absolute;
-  inset: 5% 14% 3%;
+  inset: 4% 19% 2%;
   border: 1px solid rgba(196, 166, 103, .055);
   border-radius: 48% 48% 35% 35% / 26% 26% 64% 64%;
   opacity: .45;
@@ -68,24 +85,27 @@
   grid-column: 1 / -1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: repeat(3, 3.55rem);
+  grid-template-columns: repeat(3, var(--paper-doll-sheet-slot));
   justify-content: center;
-  gap: .7rem;
-  padding-top: .8rem;
+  align-items: center;
+  gap: clamp(.55rem, 1vw, .8rem);
+  min-width: 0;
+  padding-top: clamp(.6rem, 1vh, .85rem);
   border-top: 1px solid rgba(196, 166, 103, .12);
 }
 
 .paper-doll--sheet .item-hover-card {
   position: relative;
   display: inline-block;
-  width: 3.55rem;
-  height: 3.55rem;
+  width: var(--paper-doll-sheet-slot);
+  height: var(--paper-doll-sheet-slot);
 }
 
 .paper-doll--sheet .paper-doll__slot {
   display: grid;
-  width: 3.55rem;
-  height: 3.55rem;
+  width: var(--paper-doll-sheet-slot);
+  height: var(--paper-doll-sheet-slot);
+  min-width: 0;
   min-height: 0;
   padding: .18rem;
   place-items: center;
@@ -152,18 +172,21 @@
     0 0 .75rem rgba(216, 188, 117, .2);
 }
 
-@media (max-width: 64rem) {
-  .paper-doll--sheet,
-  .paper-doll--sheet .paper-doll__layout {
+@media (max-width: 62rem) {
+  .paper-doll.paper-doll--sheet,
+  .paper-doll.paper-doll--sheet .paper-doll__layout {
     height: auto;
+    max-height: none;
   }
 
-  .paper-doll--sheet .paper-doll__layout {
+  .paper-doll.paper-doll--sheet .paper-doll__layout {
+    --paper-doll-sheet-slot: 3.55rem;
     min-height: 31rem;
   }
 
   .paper-doll--sheet .paper-doll__column {
     align-content: start;
+    height: auto;
   }
 
   .paper-doll--sheet .paper-doll__figure--empty {
@@ -172,21 +195,16 @@
 }
 
 @media (max-width: 42rem) {
-  .paper-doll--sheet .paper-doll__layout {
-    grid-template-columns: 3rem minmax(8rem, 1fr) 3rem;
+  .paper-doll.paper-doll--sheet .paper-doll__layout {
+    --paper-doll-sheet-slot: 3rem;
+    grid-template-columns: var(--paper-doll-sheet-slot) minmax(0, 1fr) var(--paper-doll-sheet-slot);
     gap: .45rem .5rem;
     min-height: 28rem;
     padding: .65rem;
   }
 
-  .paper-doll--sheet .item-hover-card,
-  .paper-doll--sheet .paper-doll__slot {
-    width: 3rem;
-    height: 3rem;
-  }
-
   .paper-doll--sheet .paper-doll__weapons {
-    grid-template-columns: repeat(3, 3rem);
+    grid-template-columns: repeat(3, var(--paper-doll-sheet-slot));
   }
 
   .paper-doll--sheet .paper-doll__figure--empty {
