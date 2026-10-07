@@ -65,7 +65,7 @@ function GearSummary({ equipment, className, race }) {
   )
 }
 
-export default function EquipmentPaperDoll({ equipment = [], className = '', race = '' }) {
+export default function EquipmentPaperDoll({ equipment = [], className = '', race = '', showDetail = true }) {
   const bySlot = useMemo(() => {
     const result = new Map()
     for (const item of equipment) {
@@ -89,7 +89,7 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
   }
 
   return (
-    <div className="paper-doll">
+    <div className={`paper-doll${showDetail ? '' : ' paper-doll--layout-only'}`}>
       <div className="paper-doll__layout">
         <div className="paper-doll__column paper-doll__column--left">
           {leftSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="right" />)}
@@ -102,7 +102,7 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
           {weaponSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="top" />)}
         </div>
       </div>
-      <ItemDetailCard item={active} />
+      {showDetail ? <ItemDetailCard item={active} /> : null}
     </div>
   )
 }
