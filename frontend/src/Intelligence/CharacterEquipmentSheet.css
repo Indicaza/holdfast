@@ -1,6 +1,6 @@
 .character-sheet {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(19rem, .65fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(24rem, .85fr);
   gap: var(--space-4);
   align-items: start;
 }
@@ -98,6 +98,31 @@
   gap: .55rem;
 }
 
+.character-sheet__stats .character-stats__item-level {
+  grid-template-columns: 1fr;
+  gap: .5rem;
+  padding: .8rem;
+}
+
+.character-sheet__stats .character-stats__item-level > div {
+  padding-right: 0;
+  padding-bottom: .55rem;
+  border-right: 0;
+  border-bottom: 1px solid rgba(196, 166, 103, .18);
+}
+
+.character-sheet__stats .character-stats__item-level > div strong {
+  font-size: 2.35rem;
+}
+
+.character-sheet__stats .character-stats__item-level .character-stat-row {
+  padding: .45rem .35rem;
+}
+
+.character-sheet__stats .character-stats__primary {
+  gap: .7rem;
+}
+
 .character-sheet__stats .character-stats__group {
   padding: .7rem .8rem;
   border: 1px solid rgba(255, 255, 255, .065);
@@ -151,6 +176,37 @@
   font-size: .56rem;
 }
 
+.character-sheet__stats .character-stats__advanced summary {
+  display: block;
+  min-height: 3.4rem;
+  padding: .75rem 3rem .75rem .9rem;
+}
+
+.character-sheet__stats .character-stats__advanced summary span,
+.character-sheet__stats .character-stats__advanced summary small {
+  display: block;
+}
+
+.character-sheet__stats .character-stats__advanced summary span {
+  line-height: 1.2;
+}
+
+.character-sheet__stats .character-stats__advanced summary small {
+  margin-top: .16rem;
+  padding-right: 0;
+  line-height: 1.3;
+}
+
+.character-sheet__stats .character-stats__advanced summary::after {
+  right: .9rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.character-sheet__stats .character-stats__advanced[open] summary::after {
+  transform: translateY(-50%) rotate(45deg);
+}
+
 .character-sheet__stats .talent-empty {
   padding: var(--space-5) var(--space-3);
   border: 0;
@@ -168,6 +224,11 @@
 
   .character-sheet__stats .character-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .character-sheet__stats .character-stats__item-level,
+  .character-sheet__stats .character-stats__more {
+    grid-column: 1 / -1;
   }
 }
 
