@@ -77,10 +77,15 @@ function StatRow({ name, value, hint, emphasis = false, hideZero = false }) {
 
 function StatGroup({ title, children }) {
   return (
-    <section className="character-stats__group">
-      <div className="character-stats__heading"><h2>{title}</h2></div>
+    <details className="character-stats__group" open>
+      <summary className="character-stats__heading">
+        <span className="character-stats__heading-line" aria-hidden="true" />
+        <span className="character-stats__heading-title">{title}</span>
+        <span className="character-stats__heading-line" aria-hidden="true" />
+        <span className="character-stats__chevron" aria-hidden="true">›</span>
+      </summary>
       <dl className="character-stats__rows">{children}</dl>
-    </section>
+    </details>
   )
 }
 
