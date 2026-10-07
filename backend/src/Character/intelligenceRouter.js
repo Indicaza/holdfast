@@ -4,12 +4,10 @@ import { requireAuthenticated } from "../Auth/permissions.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
+import { readEnrichedCharacterArmory } from "./armoryEnrichmentRepository.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
-import {
-  readCharacterArmory,
-  searchRecipes,
-} from "./telemetryProjection.js";
+import { searchRecipes } from "./telemetryProjection.js";
 
 function referenceIds(values) {
   return [...new Set(values.filter((value) => Number.isFinite(Number(value)) && Number(value) > 0).map((value) => Number(value)))];
@@ -65,7 +63,7 @@ export function createIntelligenceRouter({ gameDataProvider } = {}) {
 
   router.get("/characters/:characterId", requireAuthenticated, async (req, res) => {
     try {
-      const armory = readCharacterArmory(req.params.characterId);
+      const armory = readEnrichedCharacterArmory(req.params.characterId);
       if (!armory) {
         res.status(404).json({ error: "character_not_found" });
         return;
