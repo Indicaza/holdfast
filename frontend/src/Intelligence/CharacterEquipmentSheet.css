@@ -1,11 +1,15 @@
 .character-sheet {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(29rem, .95fr);
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: clamp(.7rem, 1.25cqi, 1rem);
   align-items: stretch;
-  height: clamp(24rem, calc(94svh - 11.75rem), 44rem);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
+  height: 100%;
   max-height: 100%;
+  overflow: hidden;
 }
 
 .character-sheet__equipment,
@@ -13,33 +17,38 @@
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
+  width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .character-sheet__equipment {
   display: grid;
   align-items: stretch;
   justify-items: stretch;
-  padding: .85rem;
+  padding: clamp(.65rem, 1.3cqi, .95rem);
   border: 1px solid rgba(196, 166, 103, .2);
   border-radius: .55rem;
   background:
     radial-gradient(circle at 50% 38%, rgba(196, 166, 103, .045), transparent 34%),
     linear-gradient(180deg, rgba(5, 13, 23, .94), rgba(2, 7, 13, .96));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .018);
+  container-name: paper-doll-pane;
+  container-type: size;
 }
 
-/* CharacterArmory.css is imported after the sheet component and defines the
-   generic two-column paper-doll. Pin the sheet variant explicitly so the
-   unused item-detail column can never steal half of this pane again. */
+/* The sheet variant owns the entire equipment pane. The generic paper-doll
+   component has an optional detail column, so pin this variant to one box. */
 .character-sheet__equipment > .paper-doll.paper-doll--sheet {
   display: block;
+  box-sizing: border-box;
   width: 100%;
-  max-width: none;
-  height: 100%;
-  max-height: 100%;
   min-width: 0;
+  max-width: 100%;
+  height: 100%;
   min-height: 0;
+  max-height: 100%;
   align-self: stretch;
   justify-self: stretch;
 }
@@ -47,17 +56,18 @@
 .character-sheet__equipment > .paper-doll.paper-doll--sheet > .paper-doll__layout {
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   max-width: 100%;
   height: 100%;
-  max-height: 100%;
-  min-width: 0;
   min-height: 0;
+  max-height: 100%;
 }
 
 .character-sheet__stats {
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: .9rem 1.1rem 1rem;
+  padding: clamp(.75rem, 1.2cqi, 1rem) clamp(.85rem, 1.45cqi, 1.2rem);
   border: 1px solid rgba(196, 166, 103, .24);
   border-radius: .55rem;
   background:
@@ -69,6 +79,10 @@
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(196, 166, 103, .35) transparent;
+}
+
+.character-sheet__stats > * {
+  max-width: 100%;
 }
 
 .character-sheet__stats::-webkit-scrollbar {
@@ -86,22 +100,25 @@
   background: transparent;
 }
 
-@media (max-width: 82rem) {
+/* This is intentionally a container query, not a viewport breakpoint. The
+   character sheet stacks whenever the space it is actually given becomes too
+   narrow, even inside a resized modal or some future embedded surface. */
+@container armory-equipment (max-width: 58rem) {
   .character-sheet {
-    grid-template-columns: minmax(0, 1.35fr) minmax(27rem, .9fr);
-  }
-}
-
-@media (max-width: 62rem) {
-  .character-sheet {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
     max-height: none;
+    overflow: visible;
   }
 
   .character-sheet__equipment,
   .character-sheet__stats {
     height: auto;
+    max-height: none;
+  }
+
+  .character-sheet__equipment {
+    container-type: inline-size;
   }
 
   .character-sheet__equipment > .paper-doll.paper-doll--sheet,
@@ -112,12 +129,5 @@
 
   .character-sheet__stats {
     overflow-y: visible;
-  }
-}
-
-@media (max-width: 42rem) {
-  .character-sheet__equipment,
-  .character-sheet__stats {
-    padding: .55rem;
   }
 }
