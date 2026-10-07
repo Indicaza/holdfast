@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { wowAssetDescriptor } from './assetResolver.js'
 import './WowIcon.css'
@@ -10,7 +10,20 @@ function fallbackText(label, descriptor) {
   return id ? String(id).slice(-2) : '✦'
 }
 
+function safeImageSource(value) {
+  const source = String(value || '').trim()
+  if (!source) return ''
+  try {
+    const browserOrigin = globalThis.window?.location?.origin || 'https://holdfast.invalid'
+    const parsed = new URL(source, browserOrigin)
+    return parsed.protocol === 'https:' || parsed.origin === browserOrigin ? parsed.toString() : ''
+  } catch {
+    return ''
+  }
+}
+
 export function WowIcon({
+  src = '',
   iconFileId,
   itemId,
   spellId,
@@ -21,8 +34,13 @@ export function WowIcon({
   className = '',
 }) {
   const descriptor = wowAssetDescriptor({ iconFileId, itemId, spellId, recipeId, size })
+  const imageSource = safeImageSource(src) || descriptor.src
   const [failed, setFailed] = useState(false)
   const qualityClass = Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
+
+  useEffect(() => {
+    setFailed(false)
+  }, [imageSource])
 
   return (
     <span
@@ -31,8 +49,8 @@ export function WowIcon({
       aria-hidden="true"
       data-icon-file-id={descriptor.iconFileId || undefined}
     >
-      {descriptor.src && !failed ? (
-        <img src={descriptor.src} alt="" width={size} height={size} loading="lazy" onError={() => setFailed(true)} />
+      {imageSource && !failed ? (
+        <img src={imageSource} alt="" width={size} height={size} loading="lazy" onError={() => setFailed(true)} />
       ) : (
         <span className="wow-icon__fallback">{fallbackText(label, descriptor)}</span>
       )}
@@ -43,6 +61,7 @@ export function WowIcon({
 export function ItemIcon({ item, size = 48, className = '' }) {
   return (
     <WowIcon
+      src={item?.mediaUrl || item?.catalog?.metadata?.mediaUrl}
       iconFileId={item?.iconFileId ?? item?.iconFileID}
       itemId={item?.itemId ?? item?.itemID}
       label={item?.name || item?.slot}
@@ -76,6 +95,8 @@ export function ItemDetailCard({ item, compact = false }) {
       </div>
       <dl>
         {item.itemLevel ? <><dt>Item level</dt><dd>{item.itemLevel}</dd></> : null}
+        {item.requiredLevel ? <><dt>Requires level</dt><dd>{item.requiredLevel}</dd></> : null}
+        {item.itemSubclassName ? <><dt>Type</dt><dd>{item.itemSubclassName}</dd></> : null}
         {item.itemId ? <><dt>Item ID</dt><dd>{item.itemId}</dd></> : null}
         {enchantLabel(item.enchant) ? <><dt>Enchant</dt><dd>{enchantLabel(item.enchant)}</dd></> : null}
       </dl>
