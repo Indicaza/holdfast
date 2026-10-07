@@ -29,10 +29,10 @@ export default function CharacterEquipmentSheet({
       <aside className="character-sheet__stats" aria-label="Character stats">
         <div className="character-sheet__section-heading character-sheet__section-heading--stats">
           <span>Character sheet</span>
-          <h2>Stats</h2>
-          <p>Live values reported by the game client. Unsupported values are omitted.</p>
+          <h2>Attributes</h2>
+          <p>Core combat values first. Open More Stats for detailed ratings, resistances, weapon skills, and utility.</p>
         </div>
-        <CharacterStats stats={stats} variant="sheet" />
+        <CharacterStats stats={stats} />
       </aside>
     </div>
   )
