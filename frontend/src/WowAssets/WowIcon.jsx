@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 import { wowAssetDescriptor } from './assetResolver.js'
 import './WowIcon.css'
@@ -79,28 +79,93 @@ function enchantLabel(enchant) {
   return String(enchant.name || enchant.text || enchant.description || enchant.id || '')
 }
 
-export function ItemDetailCard({ item, compact = false }) {
-  if (!item) return null
+function itemType(item) {
+  return [item?.itemSubclassName || item?.subclass, item?.equipLocation].filter(Boolean).join(' · ')
+}
+
+function coinParts(copper) {
+  const value = Number(copper)
+  if (!Number.isFinite(value) || value <= 0) return []
+  const total = Math.floor(value)
+  const gold = Math.floor(total / 10000)
+  const silver = Math.floor((total % 10000) / 100)
+  const bronze = total % 100
+  return [gold ? `${gold}g` : '', silver ? `${silver}s` : '', bronze || (!gold && !silver) ? `${bronze}c` : ''].filter(Boolean)
+}
+
+function TooltipBody({ item, compact = false }) {
+  const enchant = enchantLabel(item?.enchant)
+  const type = itemType(item)
+  const price = coinParts(item?.sellPrice)
+  const description = String(item?.description || '').trim()
 
   return (
-    <article className={`item-detail${compact ? ' item-detail--compact' : ''}`}>
+    <>
+      <strong className={`item-tooltip__name item-quality-${Number(item?.quality) || 0}`}>
+        {item?.name || `Item ${item?.itemId || ''}`.trim() || 'Unknown item'}
+      </strong>
+      {item?.itemLevel ? <span className="item-tooltip__level">Item Level {item.itemLevel}</span> : null}
+      {type ? <span>{type}</span> : null}
+      {item?.requiredLevel ? <span>Requires Level {item.requiredLevel}</span> : null}
+      {enchant ? <span className="item-tooltip__enchant">Enchanted: {enchant}</span> : null}
+      {description && !compact ? <p>{description}</p> : null}
+      {price.length && !compact ? <span>Sell price: {price.join(' ')}</span> : null}
+      {item?.itemId && !compact ? <small>Item #{item.itemId}</small> : null}
+    </>
+  )
+}
+
+export function ItemTooltip({ item, side = 'right', id, compact = false }) {
+  if (!item) return null
+  return (
+    <div id={id} className={`item-tooltip item-tooltip--${side}`} role="tooltip">
+      <TooltipBody item={item} compact={compact} />
+    </div>
+  )
+}
+
+export function ItemHoverCard({ item, children, side = 'right', className = '' }) {
+  const tooltipId = useId()
+  if (!item) return children
+  return (
+    <span className={`item-hover-card${className ? ` ${className}` : ''}`} aria-describedby={tooltipId}>
+      {children}
+      <ItemTooltip item={item} side={side} id={tooltipId} />
+    </span>
+  )
+}
+
+export function ItemDetailCard({ item, compact = false }) {
+  if (!item) return null
+  const type = itemType(item)
+  const enchant = enchantLabel(item.enchant)
+  const price = coinParts(item.sellPrice)
+  const gemCount = Array.isArray(item.gemIds) ? item.gemIds.filter(Boolean).length : 0
+  const bonusCount = Array.isArray(item.bonusIds) ? item.bonusIds.filter(Boolean).length : 0
+
+  return (
+    <article className={`item-detail item-detail--quality-${Number(item.quality) || 0}${compact ? ' item-detail--compact' : ''}`}>
+      <div className="item-detail__eyebrow">Selected equipment</div>
       <div className="item-detail__topline">
-        <ItemIcon item={item} size={compact ? 40 : 56} />
+        <ItemIcon item={item} size={compact ? 40 : 64} />
         <div>
           <strong className={`item-detail__name item-quality-${Number(item.quality) || 0}`}>
             {item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item'}
           </strong>
           <span>{item.slot || 'Equipment'}</span>
+          {item.itemLevel ? <b>Item Level {item.itemLevel}</b> : null}
         </div>
       </div>
+      {item.description ? <p className="item-detail__description">{item.description}</p> : null}
       <dl>
-        {item.itemLevel ? <><dt>Item level</dt><dd>{item.itemLevel}</dd></> : null}
-        {item.requiredLevel ? <><dt>Requires level</dt><dd>{item.requiredLevel}</dd></> : null}
-        {item.itemSubclassName ? <><dt>Type</dt><dd>{item.itemSubclassName}</dd></> : null}
+        {item.requiredLevel ? <><dt>Requires</dt><dd>Level {item.requiredLevel}</dd></> : null}
+        {type ? <><dt>Type</dt><dd>{type}</dd></> : null}
+        {enchant ? <><dt>Enchant</dt><dd className="item-detail__positive">{enchant}</dd></> : null}
+        {gemCount ? <><dt>Gems</dt><dd>{gemCount} socketed</dd></> : null}
+        {bonusCount ? <><dt>Bonuses</dt><dd>{bonusCount} modifiers</dd></> : null}
+        {price.length ? <><dt>Sell</dt><dd>{price.join(' ')}</dd></> : null}
         {item.itemId ? <><dt>Item ID</dt><dd>{item.itemId}</dd></> : null}
-        {enchantLabel(item.enchant) ? <><dt>Enchant</dt><dd>{enchantLabel(item.enchant)}</dd></> : null}
       </dl>
-      {item.itemLink ? <code>{item.itemLink}</code> : null}
     </article>
   )
 }
