@@ -38,6 +38,10 @@ function damageRange(min, max) {
   return first && second ? `${first}–${second}` : first || second
 }
 
+function hasGroup(value) {
+  return value && typeof value === 'object' && Object.keys(value).length > 0
+}
+
 function StatRow({ name, value, hint }) {
   if (value === null || value === undefined || value === '') return null
   return (
@@ -174,7 +178,7 @@ function Utility({ utility = {} }) {
 }
 
 function hasStats(stats) {
-  return stats && typeof stats === 'object' && Object.keys(stats).some((key) => key !== 'schemaVersion' && stats[key] && typeof stats[key] === 'object' && Object.keys(stats[key]).length)
+  return stats && typeof stats === 'object' && Object.keys(stats).some((key) => key !== 'schemaVersion' && hasGroup(stats[key]))
 }
 
 export function CharacterStatHighlights({ stats = {} }) {
@@ -208,12 +212,12 @@ export default function CharacterStats({ stats = {} }) {
 
   return (
     <div className="character-stats">
-      <Resources resources={stats.resources} />
-      <Attributes attributes={stats.attributes} />
-      <Offense offense={stats.offense} />
-      <Defense defense={stats.defense} />
-      <Ratings ratings={stats.ratings} />
-      <Utility utility={stats.utility} />
+      {hasGroup(stats.resources) ? <Resources resources={stats.resources} /> : null}
+      {hasGroup(stats.attributes) ? <Attributes attributes={stats.attributes} /> : null}
+      {hasGroup(stats.offense) ? <Offense offense={stats.offense} /> : null}
+      {hasGroup(stats.defense) ? <Defense defense={stats.defense} /> : null}
+      {hasGroup(stats.ratings) ? <Ratings ratings={stats.ratings} /> : null}
+      {hasGroup(stats.utility) ? <Utility utility={stats.utility} /> : null}
     </div>
   )
 }
