@@ -2,12 +2,14 @@ import EquipmentPaperDoll from './EquipmentPaperDoll.jsx'
 import ProfessionCards from './ProfessionCards.jsx'
 import RecipeBrowser from './RecipeBrowser.jsx'
 import TalentTree from './TalentTree.jsx'
+import CharacterStats, { CharacterStatHighlights } from './CharacterStats.jsx'
 import { formatSyncAge } from './model.js'
 import './CharacterArmory.css'
 
 const characterProfileTabs = [
   ['overview', 'Overview'],
   ['equipment', 'Equipment'],
+  ['stats', 'Stats'],
   ['talents', 'Talents'],
   ['professions', 'Professions'],
   ['recipes', 'Recipes'],
@@ -17,14 +19,7 @@ function classKey(value) {
   return String(value || 'adventurer').toLowerCase().replace(/[^a-z]+/g, '-')
 }
 
-function formatValue(value) {
-  if (typeof value === 'number') return new Intl.NumberFormat().format(value)
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  return String(value)
-}
-
 function Overview({ armory }) {
-  const statEntries = Object.entries(armory.stats).slice(0, 12)
   return (
     <div className="armory-overview">
       <section className="armory-panel">
@@ -38,11 +33,7 @@ function Overview({ armory }) {
       </section>
       <section className="armory-panel">
         <div className="armory-panel__heading"><span>Stats</span><h2>Snapshot</h2></div>
-        {statEntries.length ? (
-          <dl className="armory-stats">
-            {statEntries.map(([key, value]) => <div key={key}><dt>{key.replace(/([A-Z])/g, ' $1')}</dt><dd>{formatValue(value)}</dd></div>)}
-          </dl>
-        ) : <p className="armory-muted">No combat stats were included in this snapshot.</p>}
+        <CharacterStatHighlights stats={armory.stats} />
       </section>
       <section className="armory-panel armory-panel--wide">
         <div className="armory-panel__heading"><span>Professions</span><h2>Craft</h2></div>
@@ -105,6 +96,7 @@ export default function CharacterProfile({
       <section className="armory-content">
         {activeTab === 'overview' ? <Overview armory={armory} /> : null}
         {activeTab === 'equipment' ? <EquipmentPaperDoll equipment={armory.equipment} className={character.className} race={character.race} /> : null}
+        {activeTab === 'stats' ? <CharacterStats stats={armory.stats} /> : null}
         {activeTab === 'talents' ? <TalentTree talents={armory.talents} /> : null}
         {activeTab === 'professions' ? <ProfessionCards professions={armory.professions} /> : null}
         {activeTab === 'recipes' ? <RecipeBrowser recipes={armory.recipes} /> : null}
