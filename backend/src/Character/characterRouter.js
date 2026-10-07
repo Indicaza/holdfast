@@ -16,7 +16,7 @@ import {
 } from "./guildweaverDeviceRepository.js";
 import { createTelemetryRouter } from "./telemetryRouter.js";
 
-const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2]);
+const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2, 3]);
 
 function bearerToken(req) {
   const authorization = String(req.get("Authorization") || "");
