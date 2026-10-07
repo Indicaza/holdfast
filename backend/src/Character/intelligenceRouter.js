@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
+import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
@@ -49,9 +50,10 @@ async function hydrateSafely(provider, references, options) {
   }
 }
 
-export function createIntelligenceRouter({ gameDataProvider } = {}) {
+export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver } = {}) {
   const router = Router();
   const provider = gameDataProvider || createBlizzardGameDataProvider();
+  const icons = iconMediaResolver || createBlizzardIconMediaResolver();
 
   router.get("/", requireAuthenticated, (req, res) => {
     try {
@@ -79,7 +81,7 @@ export function createIntelligenceRouter({ gameDataProvider } = {}) {
       res.set("Cache-Control", "no-store");
       res.json(sanitizeArmoryPayload({
         ...armory,
-        gameData: { ...gameData, provider: providerStatus },
+        gameData: { ...gameData, provider: providerStatus, iconMedia: icons.status() },
       }));
     } catch (error) {
       console.error("Unable to read character armory", error);
@@ -87,9 +89,31 @@ export function createIntelligenceRouter({ gameDataProvider } = {}) {
     }
   });
 
+  router.get("/media/icon/:fileDataId", requireAuthenticated, async (req, res) => {
+    try {
+      const fileDataId = Number(req.params.fileDataId);
+      if (!Number.isInteger(fileDataId) || fileDataId < 1) {
+        res.status(400).json({ error: "invalid_icon_file_data_id" });
+        return;
+      }
+
+      const mediaUrl = await icons.resolve(fileDataId);
+      if (!mediaUrl) {
+        res.status(404).json({ error: "icon_media_not_found" });
+        return;
+      }
+
+      res.set("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+      res.redirect(302, mediaUrl);
+    } catch (error) {
+      console.warn("Unable to resolve Blizzard icon media", error?.message || error);
+      res.status(404).json({ error: "icon_media_not_found" });
+    }
+  });
+
   router.get("/game-data/provider", requireAuthenticated, (req, res) => {
     res.set("Cache-Control", "private, max-age=60");
-    res.json(provider.status());
+    res.json({ ...provider.status(), iconMedia: icons.status() });
   });
 
   router.post("/game-data/resolve", requireAuthenticated, (req, res) => {
