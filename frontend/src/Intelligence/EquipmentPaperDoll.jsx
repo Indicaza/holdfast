@@ -43,6 +43,7 @@ function EquipmentSlot({ item, slot, active, onSelect }) {
   }
 
   const quality = Number(item.quality) || 0
+  const itemName = item.name || `Item ${item.itemId || ''}`
   return (
     <ItemHoverTarget item={item} className="paper-doll__hover">
       {(tooltipId) => (
@@ -52,6 +53,7 @@ function EquipmentSlot({ item, slot, active, onSelect }) {
           onClick={() => onSelect(item)}
           aria-describedby={tooltipId}
           aria-pressed={active}
+          title={itemName}
         >
           <ItemIcon item={item} size={48} />
           <span className="paper-doll__slot-copy">
@@ -59,7 +61,7 @@ function EquipmentSlot({ item, slot, active, onSelect }) {
               <small>{label}</small>
               {item.itemLevel ? <em>ilvl {item.itemLevel}</em> : null}
             </span>
-            <strong className={`item-quality-${quality}`}>{item.name || `Item ${item.itemId || ''}`}</strong>
+            <strong className={`item-quality-${quality}`}>{itemName}</strong>
             <span className="paper-doll__slot-type">{item.itemSubclassName || item.subclass || item.itemClassName || ''}</span>
           </span>
         </button>
