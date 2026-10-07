@@ -57,16 +57,8 @@
 }
 
 .character-sheet__section-heading--stats {
-  padding-bottom: .75rem;
+  padding-bottom: .65rem;
   border-bottom: 1px solid rgba(196, 166, 103, .16);
-}
-
-.character-sheet__section-heading p {
-  max-width: 28rem;
-  margin-top: .25rem;
-  color: var(--color-text-muted);
-  font-size: .68rem;
-  line-height: 1.45;
 }
 
 .character-sheet .paper-doll {
@@ -93,62 +85,7 @@
 }
 
 .character-sheet__stats .character-stats {
-  display: grid;
   grid-template-columns: 1fr;
-  gap: .55rem;
-}
-
-.character-sheet__stats .character-stats__group {
-  padding: .7rem .8rem;
-  border: 1px solid rgba(255, 255, 255, .065);
-  border-radius: .55rem;
-  background: rgba(255, 255, 255, .018);
-}
-
-.character-sheet__stats .armory-panel__heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-bottom: .45rem;
-  border-bottom: 1px solid rgba(255, 255, 255, .05);
-}
-
-.character-sheet__stats .armory-panel__heading span {
-  font-size: .56rem;
-}
-
-.character-sheet__stats .armory-panel__heading h2 {
-  margin: 0;
-  font-size: .92rem;
-}
-
-.character-sheet__stats .character-stats__rows {
-  grid-template-columns: 1fr;
-}
-
-.character-sheet__stats .character-stat-row,
-.character-sheet__stats .character-stat-row:nth-child(odd),
-.character-sheet__stats .character-stat-row:nth-child(even) {
-  padding: .42rem 0;
-  border-left: 0;
-}
-
-.character-sheet__stats .character-stat-row:last-child {
-  border-bottom: 0;
-}
-
-.character-sheet__stats .character-stat-row dt {
-  font-size: .68rem;
-}
-
-.character-sheet__stats .character-stat-row strong {
-  font-size: .78rem;
-}
-
-.character-sheet__stats .character-stat-row small {
-  max-width: 9rem;
-  font-size: .56rem;
 }
 
 .character-sheet__stats .talent-empty {
@@ -165,10 +102,6 @@
   .character-sheet__stats {
     position: static;
   }
-
-  .character-sheet__stats .character-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 52rem) {
@@ -179,9 +112,5 @@
 
   .character-sheet .paper-doll__layout {
     min-height: auto;
-  }
-
-  .character-sheet__stats .character-stats {
-    grid-template-columns: 1fr;
   }
 }
