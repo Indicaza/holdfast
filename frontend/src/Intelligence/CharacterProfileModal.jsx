@@ -7,6 +7,7 @@ import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { formatSyncAge, normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
 import './CharacterProfileModalFullBleed.css'
+import './CharacterProfileWorkspace.css'
 
 export default function CharacterProfileModal({ characterId, onClose }) {
   const [status, setStatus] = useState('loading')
