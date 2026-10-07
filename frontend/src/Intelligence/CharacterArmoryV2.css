@@ -1,0 +1,109 @@
+.paper-doll__layout {
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(196, 166, 103, .12), transparent 31%),
+    linear-gradient(180deg, rgba(8, 17, 30, .9), rgba(3, 8, 15, .92));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1.2rem 3rem rgba(0,0,0,.16);
+}
+
+.paper-doll__column,
+.paper-doll__weapons {
+  position: relative;
+  z-index: 2;
+}
+
+.paper-doll .item-hover-card {
+  display: block;
+  width: 100%;
+  position: relative;
+}
+
+.paper-doll__slot {
+  width: 100%;
+  min-height: 4.45rem;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.paper-doll__slot--filled:hover,
+.paper-doll__slot--filled:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 .45rem 1.2rem rgba(0, 0, 0, .22);
+}
+
+.paper-doll__slot--active {
+  box-shadow: inset 3px 0 0 rgba(219, 186, 111, .72), 0 .45rem 1.2rem rgba(0,0,0,.18);
+}
+
+.paper-doll__slot-copy small {
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.paper-doll__slot-copy strong {
+  font-size: .82rem;
+}
+
+.paper-doll__figure {
+  position: relative;
+  z-index: 1;
+  align-content: center;
+  padding-inline: .8rem;
+  background: radial-gradient(circle at 50% 45%, rgba(196, 166, 103, .075), transparent 46%);
+}
+
+.paper-doll__figure::before,
+.paper-doll__figure::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 54%;
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(196,166,103,.3), transparent);
+}
+
+.paper-doll__figure::before { top: 24%; }
+.paper-doll__figure::after { bottom: 24%; }
+
+.paper-doll__crest {
+  filter: drop-shadow(0 .5rem .9rem rgba(0,0,0,.4));
+}
+
+.paper-doll__gear-summary {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .35rem;
+  margin-top: .8rem;
+}
+
+.paper-doll__gear-summary div {
+  display: grid;
+  gap: .08rem;
+  padding: .48rem .25rem;
+  border: 1px solid rgba(196,166,103,.14);
+  border-radius: .55rem;
+  background: rgba(0,0,0,.18);
+}
+
+.paper-doll__gear-summary b {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.paper-doll__gear-summary small {
+  color: var(--color-text-muted);
+  font-size: .56rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.paper-doll__weapons {
+  padding-top: .4rem;
+  border-top: 1px solid rgba(196,166,103,.12);
+}
+
+@media (max-width: 70rem) {
+  .paper-doll__gear-summary { display: none; }
+}
