@@ -5,6 +5,7 @@ import {
   ensureCharacterSnapshotObservabilitySchema,
   recordCharacterSnapshotInDatabase,
 } from "./characterSnapshotRepository.js";
+import { projectionSnapshot } from "./schemaV3Projection.js";
 import { projectTelemetrySnapshotInDatabase } from "./telemetryProjection.js";
 
 function text(value, maxLength) {
@@ -256,15 +257,17 @@ export async function syncGuildweaverCharacter({
       });
     }
 
+    const projectedSnapshot = projectionSnapshot(snapshot);
+
     projectTelemetrySnapshotInDatabase({
       db,
       characterId,
       snapshotId: storedSnapshot.id,
-      snapshot,
+      snapshot: projectedSnapshot,
       capturedAt: storedSnapshot.capturedAt,
     });
 
-    learnGameDataFromSnapshotInDatabase(db, snapshot, {
+    learnGameDataFromSnapshotInDatabase(db, projectedSnapshot, {
       source: "telemetry",
       observedAt: storedSnapshot.capturedAt,
     });
