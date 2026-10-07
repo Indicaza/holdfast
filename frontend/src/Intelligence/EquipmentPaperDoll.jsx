@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { canonicalEquipmentSlot } from './model.js'
+import './CharacterArmoryV2.css'
 
 const leftSlots = ['HEAD', 'NECK', 'SHOULDER', 'BACK', 'CHEST', 'SHIRT', 'TABARD', 'WRIST']
 const rightSlots = ['HANDS', 'WAIST', 'LEGS', 'FEET', 'FINGER1', 'FINGER2', 'TRINKET1', 'TRINKET2']
