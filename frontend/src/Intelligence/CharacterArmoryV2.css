@@ -1,7 +1,8 @@
 .paper-doll.paper-doll--sheet {
   display: block;
+  box-sizing: border-box;
   width: 100%;
-  max-width: none;
+  max-width: 100%;
   height: 100%;
   max-height: 100%;
   min-width: 0;
@@ -9,19 +10,23 @@
 }
 
 .paper-doll.paper-doll--sheet .paper-doll__layout {
-  --paper-doll-sheet-slot: clamp(3rem, 6.2svh, 4rem);
+  /* Size the equipment slots from the pane they actually live in. There is no
+     viewport-derived slot size here, so a resized modal simply recomputes. */
+  --paper-doll-sheet-slot: min(4.75rem, 9.25cqh, 11cqw);
+  --paper-doll-sheet-gap-y: min(.38rem, .9cqh);
+  --paper-doll-sheet-gap-x: min(1.25rem, 1.8cqw);
   box-sizing: border-box;
   display: grid;
   grid-template-columns: var(--paper-doll-sheet-slot) minmax(0, 1fr) var(--paper-doll-sheet-slot);
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: clamp(.55rem, 1.2vw, .85rem) clamp(.85rem, 1.6vw, 1.35rem);
+  grid-template-rows: minmax(0, 1fr) var(--paper-doll-sheet-slot);
+  gap: min(.85rem, 1.4cqh) var(--paper-doll-sheet-gap-x);
   width: 100%;
   max-width: 100%;
   min-width: 0;
   height: 100%;
   max-height: 100%;
   min-height: 0;
-  padding: clamp(.8rem, 1.35vw, 1.1rem);
+  padding: min(1.1rem, 2cqh) min(1.1rem, 2cqw);
   overflow: visible;
   border: 1px solid rgba(196, 166, 103, .22);
   border-radius: .45rem;
@@ -37,12 +42,13 @@
   position: relative;
   z-index: 3;
   display: grid;
-  align-content: space-between;
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  align-items: center;
   justify-items: center;
   min-width: 0;
   min-height: 0;
   height: 100%;
-  gap: .28rem;
+  gap: var(--paper-doll-sheet-gap-y);
 }
 
 .paper-doll--sheet .paper-doll__column--left {
@@ -88,27 +94,37 @@
   grid-template-columns: repeat(3, var(--paper-doll-sheet-slot));
   justify-content: center;
   align-items: center;
-  gap: clamp(.55rem, 1vw, .8rem);
+  gap: min(.8rem, 1.25cqw);
   min-width: 0;
-  padding-top: clamp(.6rem, 1vh, .85rem);
+  min-height: 0;
+  height: var(--paper-doll-sheet-slot);
+  padding-top: min(.7rem, 1.25cqh);
   border-top: 1px solid rgba(196, 166, 103, .12);
 }
 
 .paper-doll--sheet .item-hover-card {
   position: relative;
   display: inline-block;
+  box-sizing: border-box;
   width: var(--paper-doll-sheet-slot);
+  max-width: 100%;
   height: var(--paper-doll-sheet-slot);
+  max-height: 100%;
+  place-self: center;
 }
 
 .paper-doll--sheet .paper-doll__slot {
   display: grid;
+  box-sizing: border-box;
   width: var(--paper-doll-sheet-slot);
+  max-width: 100%;
   height: var(--paper-doll-sheet-slot);
+  max-height: 100%;
   min-width: 0;
   min-height: 0;
   padding: .18rem;
   place-items: center;
+  place-self: center;
   border: 2px solid rgba(106, 106, 106, .56);
   border-radius: .28rem;
   background:
@@ -172,7 +188,9 @@
     0 0 .75rem rgba(216, 188, 117, .2);
 }
 
-@media (max-width: 62rem) {
+/* When the component itself becomes narrow, let its contents define height.
+   Slot size is then driven by the pane width rather than a viewport breakpoint. */
+@container armory-equipment (max-width: 58rem) {
   .paper-doll.paper-doll--sheet,
   .paper-doll.paper-doll--sheet .paper-doll__layout {
     height: auto;
@@ -180,34 +198,18 @@
   }
 
   .paper-doll.paper-doll--sheet .paper-doll__layout {
-    --paper-doll-sheet-slot: 3.55rem;
-    min-height: 31rem;
+    --paper-doll-sheet-slot: min(4.25rem, 11cqw);
+    --paper-doll-sheet-gap-y: min(.4rem, 1.4cqw);
+    grid-template-rows: auto var(--paper-doll-sheet-slot);
   }
 
   .paper-doll--sheet .paper-doll__column {
-    align-content: start;
+    grid-template-rows: repeat(8, var(--paper-doll-sheet-slot));
     height: auto;
   }
 
   .paper-doll--sheet .paper-doll__figure--empty {
-    min-height: 26rem;
-  }
-}
-
-@media (max-width: 42rem) {
-  .paper-doll.paper-doll--sheet .paper-doll__layout {
-    --paper-doll-sheet-slot: 3rem;
-    grid-template-columns: var(--paper-doll-sheet-slot) minmax(0, 1fr) var(--paper-doll-sheet-slot);
-    gap: .45rem .5rem;
-    min-height: 28rem;
-    padding: .65rem;
-  }
-
-  .paper-doll--sheet .paper-doll__weapons {
-    grid-template-columns: repeat(3, var(--paper-doll-sheet-slot));
-  }
-
-  .paper-doll--sheet .paper-doll__figure--empty {
-    min-height: 23rem;
+    height: auto;
+    min-height: 100%;
   }
 }
