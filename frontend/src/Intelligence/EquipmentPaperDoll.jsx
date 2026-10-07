@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
-import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { canonicalEquipmentSlot } from './model.js'
 import './CharacterArmoryV2.css'
 
@@ -97,10 +96,6 @@ export default function EquipmentPaperDoll({
   useEffect(() => {
     setActive(selectOnLoad ? orderedEquipment[0] || null : null)
   }, [orderedEquipment, selectOnLoad])
-
-  if (!equipment.length) {
-    return <EmptyTelemetry title="No equipment snapshot yet.">The paper doll will populate when Guildweaver submits equipped item data.</EmptyTelemetry>
-  }
 
   const slotProps = (slot, tooltipSide) => ({
     slot,
