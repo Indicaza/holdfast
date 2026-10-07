@@ -5,7 +5,7 @@ import TalentTree from './TalentTree.jsx'
 import { formatSyncAge } from './model.js'
 import './CharacterArmory.css'
 
-export const characterProfileTabs = [
+const characterProfileTabs = [
   ['overview', 'Overview'],
   ['equipment', 'Equipment'],
   ['talents', 'Talents'],
