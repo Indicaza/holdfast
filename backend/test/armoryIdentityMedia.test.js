@@ -109,6 +109,64 @@ test("Blizzard icon media resolver turns FileDataID into a CDN URL and caches it
   assert.equal(resolver.status().configured, true);
 });
 
+test("Blizzard icon media resolver accepts alternate media payload shapes and fallbacks", async () => {
+  const responses = new Map([
+    [101, {
+      results: [{
+        assets: [{ key: "icon", file_data_id: 999, value: "https://render.worldofwarcraft.com/us/icons/56/icon-key.jpg" }],
+      }],
+    }],
+    [102, {
+      results: [{
+        data: {
+          assets: [{ key: "alternate", fileDataId: 998, value: "https://render.worldofwarcraft.com/us/icons/56/first-asset.jpg" }],
+        },
+      }],
+    }],
+    [103, {
+      results: [{
+        data: {
+          assets: [{ key: "icon", file_data_id: 103, value: "not a valid absolute url" }],
+        },
+      }],
+    }],
+  ]);
+
+  const fetchImpl = async (url) => {
+    if (String(url).includes("oauth.battle.net")) {
+      return new Response(JSON.stringify({ access_token: "token", expires_in: 3600 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const id = Number(new URL(String(url)).searchParams.get("assets.file_data_id"));
+    return new Response(JSON.stringify(responses.get(id) || { results: null }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  const resolver = createBlizzardIconMediaResolver({
+    env: {
+      BLIZZARD_CLIENT_ID: "client",
+      BLIZZARD_CLIENT_SECRET: "secret",
+      BLIZZARD_REGION: "us",
+    },
+    fetchImpl,
+  });
+
+  assert.equal(
+    await resolver.resolve(101),
+    "https://render.worldofwarcraft.com/us/icons/56/icon-key.jpg",
+  );
+  assert.equal(
+    await resolver.resolve(102),
+    "https://render.worldofwarcraft.com/us/icons/56/first-asset.jpg",
+  );
+  assert.equal(await resolver.resolve(103), "");
+  assert.equal(await resolver.resolve(104), "");
+});
+
 test("Blizzard icon media resolver is inert without credentials or a valid FileDataID", async () => {
   let requests = 0;
   const resolver = createBlizzardIconMediaResolver({
