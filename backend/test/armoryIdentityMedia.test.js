@@ -106,4 +106,96 @@ test("Blizzard icon media resolver turns FileDataID into a CDN URL and caches it
   assert.equal(requests.length, 2);
   assert.match(requests[1], /assets\.file_data_id=273088/);
   assert.match(requests[1], /namespace=static-us/);
+  assert.equal(resolver.status().configured, true);
+});
+
+test("Blizzard icon media resolver is inert without credentials or a valid FileDataID", async () => {
+  let requests = 0;
+  const resolver = createBlizzardIconMediaResolver({
+    env: {},
+    fetchImpl: async () => {
+      requests += 1;
+      throw new Error("should not fetch");
+    },
+  });
+
+  assert.equal(await resolver.resolve(273088), "");
+  assert.equal(await resolver.resolve(0), "");
+  assert.equal(await resolver.resolve("not-an-id"), "");
+  assert.equal(requests, 0);
+  assert.equal(resolver.status().configured, false);
+});
+
+test("Blizzard icon media resolver refreshes one expired token and caches misses", async () => {
+  let oauthCalls = 0;
+  let mediaCalls = 0;
+  const fetchImpl = async (url) => {
+    if (String(url).includes("oauth.battle.net")) {
+      oauthCalls += 1;
+      return new Response(JSON.stringify({ access_token: `token-${oauthCalls}`, expires_in: 3600 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    mediaCalls += 1;
+    if (mediaCalls === 1) {
+      return new Response(JSON.stringify({ error: "expired" }), { status: 401 });
+    }
+    return new Response(JSON.stringify({ results: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  const resolver = createBlizzardIconMediaResolver({
+    env: {
+      BLIZZARD_CLIENT_ID: "client",
+      BLIZZARD_CLIENT_SECRET: "secret",
+      BLIZZARD_REGION: "us",
+      BLIZZARD_MEDIA_NAMESPACE: "static-us",
+    },
+    fetchImpl,
+    now: () => 1791330000000,
+  });
+
+  assert.equal(await resolver.resolve(999999), "");
+  assert.equal(await resolver.resolve(999999), "");
+  assert.equal(oauthCalls, 2);
+  assert.equal(mediaCalls, 2);
+});
+
+test("Blizzard icon media resolver rejects unsafe asset URLs and HTTP failures", async () => {
+  let mediaResponse = "unsafe";
+  const fetchImpl = async (url) => {
+    if (String(url).includes("oauth.battle.net")) {
+      return new Response(JSON.stringify({ access_token: "token", expires_in: 3600 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (mediaResponse === "failure") {
+      return new Response(JSON.stringify({ error: "nope" }), { status: 503 });
+    }
+
+    return new Response(JSON.stringify({
+      results: [{ data: { assets: [{ key: "icon", file_data_id: 777, value: "http://unsafe.example/icon.jpg" }] } }],
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  const resolver = createBlizzardIconMediaResolver({
+    env: {
+      BLIZZARD_CLIENT_ID: "client",
+      BLIZZARD_CLIENT_SECRET: "secret",
+    },
+    fetchImpl,
+  });
+
+  assert.equal(await resolver.resolve(777), "");
+  mediaResponse = "failure";
+  assert.equal(await resolver.resolve(778), "");
 });
