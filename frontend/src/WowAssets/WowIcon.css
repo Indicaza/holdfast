@@ -51,16 +51,16 @@
   position: absolute;
   z-index: 80;
   display: none;
-  width: min(19rem, 72vw);
+  width: min(22rem, 78vw);
   gap: .28rem;
-  padding: .8rem .9rem;
+  padding: .9rem 1rem;
   border: 1px solid rgba(196, 166, 103, .42);
   border-radius: .6rem;
-  background: linear-gradient(155deg, rgba(5, 10, 19, .99), rgba(2, 6, 12, .99));
+  background: linear-gradient(155deg, rgba(5, 10, 19, .995), rgba(2, 6, 12, .995));
   box-shadow: 0 1.1rem 2.8rem rgba(0, 0, 0, .58), inset 0 0 0 1px rgba(255, 255, 255, .025);
   color: #e8e2d4;
   font-size: .72rem;
-  line-height: 1.35;
+  line-height: 1.4;
   pointer-events: none;
   text-align: left;
 }
@@ -76,9 +76,47 @@
 .item-tooltip--bottom { left: 50%; top: calc(100% + .65rem); transform: translateX(-50%); }
 .item-tooltip__name { font-family: var(--font-display); font-size: .95rem; line-height: 1.15; }
 .item-tooltip__level { color: #ffd36a; }
-.item-tooltip__enchant { color: #66d96a; }
+.item-tooltip__enchant,
+.item-tooltip__effect { color: #66d96a; }
 .item-tooltip p { margin: .28rem 0 0; color: #e8e2d4; }
 .item-tooltip small { margin-top: .2rem; color: rgba(232, 226, 212, .52); }
+
+.item-tooltip__client-lines,
+.item-tooltip__stats {
+  display: grid;
+  gap: .14rem;
+}
+
+.item-tooltip__client-lines {
+  margin-top: .15rem;
+}
+
+.item-tooltip__client-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .8rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.item-tooltip__client-line > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.item-tooltip__client-line > span:last-child:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.item-tooltip__stats {
+  color: #f1f0eb;
+}
+
+.item-tooltip__stats span {
+  display: block;
+}
 
 .item-detail {
   position: sticky;
@@ -143,6 +181,15 @@
   color: var(--color-text-strong);
   font-size: var(--font-size-sm);
   line-height: 1.55;
+}
+
+.item-detail > .item-tooltip__client-lines,
+.item-detail > .item-tooltip__stats {
+  padding: .9rem 0;
+  border-block: 1px solid rgba(255, 255, 255, .055);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
 }
 
 .item-detail dl {
