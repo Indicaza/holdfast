@@ -8,10 +8,13 @@ function number(value) {
 }
 
 function label(value) {
-  return String(value || '')
+  let text = String(value || '')
+    .trim()
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+
+  if (text && text === text.toUpperCase()) text = text.toLowerCase()
+  return text.replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
 function formatNumber(value) {
@@ -42,6 +45,10 @@ function hasGroup(value) {
   return value && typeof value === 'object' && Object.keys(value).length > 0
 }
 
+function cleanRows(rows) {
+  return rows.filter((row) => row?.value !== null && row?.value !== undefined && row?.value !== '')
+}
+
 function StatRow({ name, value, hint }) {
   if (value === null || value === undefined || value === '') return null
   return (
@@ -55,12 +62,41 @@ function StatRow({ name, value, hint }) {
   )
 }
 
-function StatGroup({ eyebrow, title, children }) {
+function StatRows({ rows }) {
+  const visible = cleanRows(rows)
+  if (!visible.length) return null
   return (
-    <section className="character-stats__group armory-panel">
-      <div className="armory-panel__heading"><span>{eyebrow}</span><h2>{title}</h2></div>
-      <dl className="character-stats__rows">{children}</dl>
+    <dl className="character-stats__rows">
+      {visible.map((row) => <StatRow key={row.name} {...row} />)}
+    </dl>
+  )
+}
+
+function StatSection({ title, rows }) {
+  const visible = cleanRows(rows)
+  if (!visible.length) return null
+  return (
+    <section className="character-stats__section">
+      <h3>{title}</h3>
+      <StatRows rows={visible} />
     </section>
+  )
+}
+
+function AdvancedSection({ title, rows, children }) {
+  const visible = rows ? cleanRows(rows) : []
+  if (!visible.length && !children) return null
+  return (
+    <details className="character-stats__advanced">
+      <summary>
+        <span>{title}</span>
+        <span className="character-stats__chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div className="character-stats__advanced-body">
+        {visible.length ? <StatRows rows={visible} /> : null}
+        {children}
+      </div>
+    </details>
   )
 }
 
@@ -74,106 +110,57 @@ function attributeHint(attribute) {
   return parts.join(' · ') || null
 }
 
-function Resources({ resources = {} }) {
-  const health = resources.health || {}
-  const power = resources.power || {}
-  return (
-    <StatGroup eyebrow="Vitals" title="Resources">
-      <StatRow name="Health" value={currentMax(health.current, health.max)} />
-      <StatRow name={power.token ? label(power.token) : 'Power'} value={currentMax(power.current, power.max)} />
-      <StatRow name="Power regen" value={formatNumber(resources.powerRegen?.inactive)} hint={resources.powerRegen?.active !== undefined ? `${formatNumber(resources.powerRegen.active)} active` : null} />
-      <StatRow name="Mana regen" value={formatNumber(resources.manaRegen?.inactive)} hint={resources.manaRegen?.active !== undefined ? `${formatNumber(resources.manaRegen.active)} while casting` : null} />
-    </StatGroup>
-  )
+function attributeRows(attributes = {}) {
+  const ordered = ['strength', 'agility', 'stamina', 'intellect', 'spirit']
+  const seen = new Set()
+  const rows = []
+
+  for (const key of ordered) {
+    const stat = attributes[key]
+    if (!stat) continue
+    seen.add(key)
+    rows.push({
+      name: label(key),
+      value: formatNumber(stat?.effective ?? stat?.current),
+      hint: attributeHint(stat),
+    })
+  }
+
+  for (const [key, stat] of Object.entries(attributes)) {
+    if (seen.has(key)) continue
+    rows.push({
+      name: label(key),
+      value: formatNumber(stat?.effective ?? stat?.current),
+      hint: attributeHint(stat),
+    })
+  }
+
+  return rows
 }
 
-function Attributes({ attributes = {} }) {
-  return (
-    <StatGroup eyebrow="Core" title="Attributes">
-      {Object.entries(attributes).map(([key, stat]) => (
-        <StatRow key={key} name={label(key)} value={formatNumber(stat?.effective ?? stat?.current)} hint={attributeHint(stat)} />
-      ))}
-    </StatGroup>
-  )
+function bestSpellValue(schools = {}, field) {
+  const values = Object.values(schools)
+    .map((school) => number(school?.[field]))
+    .filter((value) => value !== null)
+  return values.length ? Math.max(...values) : null
 }
 
-function Offense({ offense = {} }) {
-  const spell = offense.spell || {}
-  return (
-    <StatGroup eyebrow="Combat" title="Offense">
-      <StatRow name="Attack power" value={formatNumber(offense.attackPower?.effective ?? offense.attackPower?.base)} />
-      <StatRow name="Ranged attack power" value={formatNumber(offense.rangedAttackPower?.effective ?? offense.rangedAttackPower?.base)} />
-      <StatRow name="Melee damage" value={damageRange(offense.meleeDamage?.min, offense.meleeDamage?.max)} />
-      <StatRow name="Ranged damage" value={damageRange(offense.rangedDamage?.min, offense.rangedDamage?.max)} />
-      <StatRow name="Main-hand speed" value={formatNumber(offense.attackSpeed?.mainHand)} hint="seconds" />
-      <StatRow name="Off-hand speed" value={formatNumber(offense.attackSpeed?.offHand)} hint="seconds" />
-      <StatRow name="Melee crit" value={formatPercent(offense.crit?.melee)} />
-      <StatRow name="Ranged crit" value={formatPercent(offense.crit?.ranged)} />
-      <StatRow name="Melee hit" value={formatPercent(offense.hit?.melee)} />
-      <StatRow name="Ranged hit" value={formatPercent(offense.hit?.ranged)} />
-      <StatRow name="Melee haste" value={formatPercent(offense.haste?.melee)} />
-      <StatRow name="Ranged haste" value={formatPercent(offense.haste?.ranged)} />
-      <StatRow name="Expertise" value={formatNumber(offense.expertise?.mainHand)} hint={offense.expertise?.mainHandPercent !== undefined ? `${formatPercent(offense.expertise.mainHandPercent)} dodge/parry reduction` : null} />
-      <StatRow name="Armor penetration" value={formatPercent(offense.armorPenetration)} />
-      <StatRow name="Spell healing" value={formatNumber(spell.healing)} />
-      <StatRow name="Spell hit" value={formatPercent(spell.hit)} />
-      <StatRow name="Spell penetration" value={formatNumber(spell.penetration)} />
-      <StatRow name="Spell haste" value={formatPercent(spell.haste)} />
-      {Object.entries(spell.schools || {}).map(([key, school]) => (
-        <StatRow key={`spell-${key}`} name={`${label(key)} spell`} value={formatNumber(school?.damage)} hint={school?.crit !== undefined ? `${formatPercent(school.crit)} crit` : null} />
-      ))}
-      {(offense.weaponSkills || []).map((skill) => (
-        <StatRow key={`weapon-${skill.name}`} name={skill.name} value={currentMax(skill.current, skill.max)} hint={skill.modifier ? `+${formatNumber(skill.modifier)} modifier` : null} />
-      ))}
-    </StatGroup>
-  )
-}
-
-function Defense({ defense = {} }) {
-  return (
-    <StatGroup eyebrow="Survival" title="Defense">
-      <StatRow name="Armor" value={formatNumber(defense.armor?.effective ?? defense.armor?.armor ?? defense.armor?.base)} />
-      <StatRow name="Defense skill" value={formatNumber(defense.defenseSkill?.effective ?? defense.defenseSkill?.base)} />
-      <StatRow name="Dodge" value={formatPercent(defense.dodge)} />
-      <StatRow name="Parry" value={formatPercent(defense.parry)} />
-      <StatRow name="Block" value={formatPercent(defense.block)} />
-      <StatRow name="Shield block" value={formatNumber(defense.shieldBlock)} />
-      <StatRow name="Avoidance" value={formatPercent(defense.avoidance)} />
-      <StatRow name="Resilience" value={formatPercent(defense.resilience)} />
-      {Object.entries(defense.resistances || {}).map(([key, resistance]) => (
-        <StatRow key={`resistance-${key}`} name={`${label(key)} resistance`} value={formatNumber(resistance?.total ?? resistance?.base)} />
-      ))}
-    </StatGroup>
-  )
-}
-
-function Ratings({ ratings = {} }) {
-  return (
-    <StatGroup eyebrow="Conversion" title="Ratings">
-      {Object.entries(ratings).map(([key, rating]) => (
-        <StatRow key={key} name={label(key)} value={formatNumber(rating?.rating)} hint={rating?.bonus !== undefined ? `${formatPercent(rating.bonus)} bonus` : null} />
-      ))}
-    </StatGroup>
-  )
-}
-
-function Utility({ utility = {} }) {
-  const movement = utility.movement || {}
+function ItemLevelSummary({ utility = {} }) {
   const itemLevel = utility.itemLevel || {}
-  const experience = utility.experience || {}
+  const equipped = formatNumber(itemLevel.equipped)
+  const overall = formatNumber(itemLevel.overall)
+  const pvp = formatNumber(itemLevel.pvp)
+  const primary = equipped || overall || '—'
+  const meta = []
+  if (overall && overall !== primary) meta.push(`Overall ${overall}`)
+  if (pvp && pvp !== primary) meta.push(`PvP ${pvp}`)
+
   return (
-    <StatGroup eyebrow="Character" title="Utility">
-      <StatRow name="Equipped item level" value={formatNumber(itemLevel.equipped)} />
-      <StatRow name="Overall item level" value={formatNumber(itemLevel.overall)} />
-      <StatRow name="PvP item level" value={formatNumber(itemLevel.pvp)} />
-      <StatRow name="Run speed" value={formatNumber(movement.runYardsPerSecond)} hint="yards / second" />
-      <StatRow name="Current speed" value={formatNumber(movement.currentYardsPerSecond)} hint="yards / second" />
-      <StatRow name="Experience" value={currentMax(experience.current, experience.max)} hint={experience.rested ? `${formatNumber(experience.rested)} rested XP` : null} />
-      <StatRow name="Mastery" value={formatPercent(utility.mastery)} />
-      <StatRow name="Versatility" value={formatPercent(utility.versatility)} />
-      <StatRow name="Leech" value={formatPercent(utility.leech)} />
-      <StatRow name="Avoidance" value={formatPercent(utility.avoidance)} />
-    </StatGroup>
+    <section className="character-power-card" aria-label="Item level">
+      <span>Item Level</span>
+      <strong>{primary}</strong>
+      <small>{meta.length ? meta.join(' · ') : equipped ? 'Equipped' : 'Not reported'}</small>
+    </section>
   )
 }
 
@@ -210,14 +197,125 @@ export default function CharacterStats({ stats = {} }) {
     return <section className="talent-empty"><span aria-hidden="true">◆</span><h3>No character-sheet telemetry yet.</h3><p>Sync this character with the current Guildweaver addon to populate live stats.</p></section>
   }
 
+  const resources = stats.resources || {}
+  const attributes = stats.attributes || {}
+  const offense = stats.offense || {}
+  const defense = stats.defense || {}
+  const ratings = stats.ratings || {}
+  const utility = stats.utility || {}
+  const power = resources.power || {}
+  const spell = offense.spell || {}
+  const spellSchools = spell.schools || {}
+  const movement = utility.movement || {}
+  const experience = utility.experience || {}
+
+  const vitals = [
+    {
+      name: 'Health',
+      value: formatNumber(resources.health?.max ?? resources.health?.current),
+      hint: resources.health?.current !== undefined && resources.health?.max !== undefined && resources.health.current !== resources.health.max
+        ? `${formatNumber(resources.health.current)} current`
+        : null,
+    },
+    {
+      name: power.token ? label(power.token) : 'Power',
+      value: formatNumber(power.max ?? power.current),
+      hint: power.current !== undefined && power.max !== undefined && power.current !== power.max
+        ? `${formatNumber(power.current)} current`
+        : null,
+    },
+  ]
+
+  const meleeCrit = offense.crit?.melee ?? offense.crit?.ranged
+  const meleeHit = offense.hit?.melee ?? offense.hit?.ranged
+  const meleeHaste = offense.haste?.melee ?? offense.haste?.ranged
+  const spellPower = bestSpellValue(spellSchools, 'damage')
+  const spellCrit = bestSpellValue(spellSchools, 'crit')
+
+  const offenseRows = [
+    { name: 'Damage', value: damageRange(offense.meleeDamage?.min, offense.meleeDamage?.max) || damageRange(offense.rangedDamage?.min, offense.rangedDamage?.max) },
+    { name: 'Attack Power', value: formatNumber(offense.attackPower?.effective ?? offense.attackPower?.base ?? offense.rangedAttackPower?.effective ?? offense.rangedAttackPower?.base) },
+    { name: 'Spell Power', value: formatNumber(spellPower) },
+    { name: 'Healing', value: formatNumber(spell.healing) },
+    { name: 'Attack Speed', value: formatNumber(offense.attackSpeed?.mainHand), hint: offense.attackSpeed?.mainHand !== undefined ? 'seconds' : null },
+    { name: 'Critical Strike', value: meleeCrit !== undefined ? formatPercent(meleeCrit) : spellCrit !== null ? formatPercent(spellCrit) : null },
+    { name: 'Hit', value: meleeHit !== undefined ? formatPercent(meleeHit) : spell.hit !== undefined ? formatPercent(spell.hit) : null },
+    { name: 'Haste', value: meleeHaste !== undefined ? formatPercent(meleeHaste) : spell.haste !== undefined ? formatPercent(spell.haste) : null },
+  ]
+
+  const defenseRows = [
+    { name: 'Armor', value: formatNumber(defense.armor?.effective ?? defense.armor?.armor ?? defense.armor?.base) },
+    { name: 'Defense', value: formatNumber(defense.defenseSkill?.effective ?? defense.defenseSkill?.base) },
+    { name: 'Dodge', value: formatPercent(defense.dodge) },
+    { name: 'Parry', value: formatPercent(defense.parry) },
+    { name: 'Block', value: formatPercent(defense.block) },
+  ]
+
+  const spellRows = [
+    { name: 'Healing', value: formatNumber(spell.healing) },
+    { name: 'Spell Hit', value: formatPercent(spell.hit) },
+    { name: 'Spell Penetration', value: formatNumber(spell.penetration) },
+    { name: 'Spell Haste', value: formatPercent(spell.haste) },
+    ...Object.entries(spellSchools).flatMap(([key, school]) => [
+      { name: `${label(key)} Power`, value: formatNumber(school?.damage) },
+      { name: `${label(key)} Crit`, value: formatPercent(school?.crit) },
+    ]),
+  ]
+
+  const weaponRows = (offense.weaponSkills || []).map((skill) => ({
+    name: skill.name || 'Weapon Skill',
+    value: currentMax(skill.current, skill.max),
+    hint: skill.modifier ? `+${formatNumber(skill.modifier)} modifier` : null,
+  }))
+
+  const ratingRows = [
+    { name: 'Expertise', value: formatNumber(offense.expertise?.mainHand), hint: offense.expertise?.mainHandPercent !== undefined ? `${formatPercent(offense.expertise.mainHandPercent)} dodge/parry reduction` : null },
+    { name: 'Armor Penetration', value: formatPercent(offense.armorPenetration) },
+    { name: 'Avoidance', value: formatPercent(defense.avoidance ?? utility.avoidance) },
+    { name: 'Resilience', value: formatPercent(defense.resilience) },
+    { name: 'Mastery', value: formatPercent(utility.mastery) },
+    { name: 'Versatility', value: formatPercent(utility.versatility) },
+    { name: 'Leech', value: formatPercent(utility.leech) },
+    ...Object.entries(ratings).map(([key, rating]) => ({
+      name: label(key),
+      value: formatNumber(rating?.rating),
+      hint: rating?.bonus !== undefined ? `${formatPercent(rating.bonus)} bonus` : null,
+    })),
+  ]
+
+  const resistanceRows = Object.entries(defense.resistances || {}).map(([key, resistance]) => ({
+    name: label(key),
+    value: formatNumber(resistance?.total ?? resistance?.base),
+  }))
+
+  const utilityRows = [
+    { name: 'Shield Block', value: formatNumber(defense.shieldBlock) },
+    { name: 'Off-hand Speed', value: formatNumber(offense.attackSpeed?.offHand), hint: offense.attackSpeed?.offHand !== undefined ? 'seconds' : null },
+    { name: 'Ranged Damage', value: damageRange(offense.rangedDamage?.min, offense.rangedDamage?.max) },
+    { name: 'Ranged Attack Power', value: formatNumber(offense.rangedAttackPower?.effective ?? offense.rangedAttackPower?.base) },
+    { name: 'Run Speed', value: formatNumber(movement.runYardsPerSecond), hint: movement.runYardsPerSecond !== undefined ? 'yards / second' : null },
+    { name: 'Current Speed', value: formatNumber(movement.currentYardsPerSecond), hint: movement.currentYardsPerSecond !== undefined ? 'yards / second' : null },
+    { name: 'Experience', value: currentMax(experience.current, experience.max), hint: experience.rested ? `${formatNumber(experience.rested)} rested XP` : null },
+    { name: 'Power Regen', value: formatNumber(resources.powerRegen?.inactive), hint: resources.powerRegen?.active !== undefined ? `${formatNumber(resources.powerRegen.active)} active` : null },
+    { name: 'Mana Regen', value: formatNumber(resources.manaRegen?.inactive), hint: resources.manaRegen?.active !== undefined ? `${formatNumber(resources.manaRegen.active)} while casting` : null },
+  ]
+
   return (
     <div className="character-stats">
-      {hasGroup(stats.resources) ? <Resources resources={stats.resources} /> : null}
-      {hasGroup(stats.attributes) ? <Attributes attributes={stats.attributes} /> : null}
-      {hasGroup(stats.offense) ? <Offense offense={stats.offense} /> : null}
-      {hasGroup(stats.defense) ? <Defense defense={stats.defense} /> : null}
-      {hasGroup(stats.ratings) ? <Ratings ratings={stats.ratings} /> : null}
-      {hasGroup(stats.utility) ? <Utility utility={stats.utility} /> : null}
+      <ItemLevelSummary utility={utility} />
+      <StatSection title="Vitals" rows={vitals} />
+      <StatSection title="Attributes" rows={attributeRows(attributes)} />
+      <StatSection title="Offense" rows={offenseRows} />
+      <StatSection title="Defense" rows={defenseRows} />
+
+      <div className="character-stats__advanced-stack">
+        <p>Advanced</p>
+        <AdvancedSection title="Spell Details" rows={spellRows} />
+        <AdvancedSection title="Weapon Skills" rows={weaponRows} />
+        <AdvancedSection title="Ratings & Secondary Stats" rows={ratingRows} />
+        <AdvancedSection title="Resistances" rows={resistanceRows} />
+        <AdvancedSection title="Utility & Movement" rows={utilityRows} />
+      </div>
     </div>
   )
 }
