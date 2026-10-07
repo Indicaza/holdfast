@@ -1,0 +1,112 @@
+.modal__panel--armory.modal__panel--headerless {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.modal__panel--armory.modal__panel--headerless .modal__body {
+  padding-top: 0;
+}
+
+.armory-player-frame {
+  display: flex;
+  width: min(21rem, calc(100% - 4rem));
+  min-height: 5.25rem;
+  align-items: center;
+  gap: .8rem;
+  padding: .8rem 0 .7rem;
+}
+
+.armory-player-frame__portrait {
+  position: relative;
+  width: 4.25rem;
+  height: 4.25rem;
+  flex: 0 0 auto;
+  border: 2px solid rgba(196, 166, 103, .42);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 34%, rgba(255, 255, 255, .055), transparent 36%),
+    rgba(5, 12, 20, .92);
+  box-shadow:
+    inset 0 0 0 .28rem rgba(0, 0, 0, .28),
+    0 .35rem .8rem rgba(0, 0, 0, .3);
+}
+
+.armory-player-frame__level {
+  position: absolute;
+  right: -.2rem;
+  bottom: -.2rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid rgba(196, 166, 103, .42);
+  border-radius: 50%;
+  background: #06101b;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .36);
+}
+
+.armory-player-frame__bars {
+  display: grid;
+  width: 14rem;
+  gap: .32rem;
+}
+
+.armory-player-frame__bars span {
+  display: block;
+  height: .78rem;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, .78);
+  border-radius: .18rem;
+  background: rgba(255, 255, 255, .035);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .04),
+    0 0 0 1px rgba(196, 166, 103, .12);
+}
+
+.armory-player-frame__bars span:first-child {
+  background: linear-gradient(180deg, rgba(52, 113, 57, .18), rgba(27, 70, 34, .12));
+}
+
+.armory-player-frame__bars span:last-child {
+  width: 78%;
+  background: linear-gradient(180deg, rgba(183, 156, 40, .16), rgba(102, 82, 18, .1));
+}
+
+.character-profile--modal .armory-content {
+  padding-top: 1rem;
+}
+
+.character-profile--modal .paper-doll:not(.paper-doll--sheet) .paper-doll__layout {
+  padding: clamp(1rem, 2vw, 1.6rem);
+}
+
+@media (max-width: 58rem) {
+  .armory-player-frame {
+    width: min(19rem, calc(100% - 3.5rem));
+    min-height: 4.7rem;
+    padding-top: .65rem;
+  }
+
+  .armory-player-frame__portrait {
+    width: 3.7rem;
+    height: 3.7rem;
+  }
+
+  .armory-player-frame__bars {
+    width: 12rem;
+  }
+}
+
+@media (max-width: 36rem) {
+  .armory-player-frame {
+    width: calc(100% - 3.7rem);
+    min-height: 4.25rem;
+    gap: .6rem;
+  }
+
+  .armory-player-frame__portrait {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .armory-player-frame__bars {
+    width: min(10rem, 58vw);
+  }
+}
