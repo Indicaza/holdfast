@@ -6,6 +6,10 @@ const DOMAIN_ADAPTERS = {
     label: 'Character',
     summaryKeys: ['name', 'realm', 'level', 'class', 'race', 'specialization'],
   },
+  character_session: {
+    label: 'Session Checkpoint',
+    summaryKeys: ['name', 'checkpoint', 'level', 'class', 'specialization', 'sessionId'],
+  },
   talent_tree: {
     label: 'Talent Tree',
     summaryKeys: ['class', 'treeId', 'sourceApi', 'kind', 'gameBuild'],
@@ -19,6 +23,8 @@ const FIELD_LABELS = {
   bonusIds: 'Bonus IDs',
   characterId: 'Character ID',
   characterKey: 'Character Key',
+  checkpoint: 'Checkpoint',
+  checkpointReason: 'Checkpoint Reason',
   classId: 'Class ID',
   configId: 'Config ID',
   craftedItemId: 'Crafted Item ID',
@@ -35,6 +41,7 @@ const FIELD_LABELS = {
   rawItemString: 'Raw Item String',
   recipeId: 'Recipe ID',
   schemaVersion: 'Schema Version',
+  sessionId: 'Session ID',
   skillLineAbilityId: 'Skill Line Ability ID',
   skillLineId: 'Skill Line ID',
   specializationId: 'Specialization ID',
@@ -53,6 +60,10 @@ const OVERVIEW_KEYS = [
   'bodyType',
   'sex',
   'specialization',
+  'sessionId',
+  'checkpoint',
+  'checkpointReason',
+  'reason',
   'addonVersion',
   'schemaVersion',
   'capturedAt',
@@ -60,6 +71,12 @@ const OVERVIEW_KEYS = [
   'characterId',
   'gameBuild',
 ]
+
+const CHECKPOINT_LABELS = {
+  start: 'Session start',
+  end: 'Session end',
+  manual: 'Manual checkpoint',
+}
 
 export function humanizeTelemetryName(value) {
   const key = String(value || 'unknown')
@@ -76,6 +93,24 @@ export function telemetryDomainDescriptor(record) {
     domain,
     label: adapter?.label || humanizeTelemetryName(domain),
     summaryKeys: adapter?.summaryKeys || [],
+  }
+}
+
+export function telemetrySessionInfo(record) {
+  const payload = record?.payload && typeof record.payload === 'object' ? record.payload : {}
+  const envelope = record?.envelope && typeof record.envelope === 'object' ? record.envelope : {}
+  const streamParts = String(record?.streamKey || '').split(':')
+  const streamCheckpoint = record?.eventType === 'character_session_checkpoint'
+    ? streamParts[streamParts.length - 1]
+    : ''
+  const sessionId = String(envelope.sessionId || payload.sessionId || '').trim()
+  const checkpoint = String(envelope.checkpoint || payload.checkpoint || streamCheckpoint || '').trim()
+
+  return {
+    sessionId,
+    checkpoint,
+    checkpointLabel: CHECKPOINT_LABELS[checkpoint] || (checkpoint ? humanizeTelemetryName(checkpoint) : ''),
+    reason: String(payload.checkpointReason || payload.reason || '').trim(),
   }
 }
 
@@ -192,6 +227,7 @@ export function telemetryExternalReferences(record) {
 }
 
 function shareMetadata(record) {
+  const session = telemetrySessionInfo(record)
   return {
     recordId: record?.id ?? null,
     streamKey: record?.streamKey || '',
@@ -207,6 +243,8 @@ function shareMetadata(record) {
     region: record?.region || '',
     capturedAt: record?.capturedAt || null,
     receivedAt: record?.receivedAt || null,
+    sessionId: session.sessionId,
+    checkpoint: session.checkpoint,
   }
 }
 

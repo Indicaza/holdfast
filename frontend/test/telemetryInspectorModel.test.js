@@ -8,6 +8,7 @@ import {
   telemetryDomainDescriptor,
   telemetryExternalReferences,
   telemetryPayloadSections,
+  telemetrySessionInfo,
   telemetrySummaryEntries,
 } from '../src/Admin/telemetryInspectorModel.js'
 
@@ -26,9 +27,29 @@ test('telemetry inspector supports unknown domains without bespoke UI', () => {
 
 test('normalized telemetry uses semantic labels', () => {
   assert.equal(telemetryDomainDescriptor({ domain: 'talent_tree' }).label, 'Talent Tree')
+  assert.equal(telemetryDomainDescriptor({ domain: 'character_session' }).label, 'Session Checkpoint')
   assert.equal(humanizeTelemetryName('iconFileDataId'), 'Icon FileDataID')
   assert.equal(humanizeTelemetryName('qualityId'), 'Quality ID')
   assert.equal(humanizeTelemetryName('rawItemString'), 'Raw Item String')
+})
+
+test('session checkpoint metadata is readable from summaries and full payloads', () => {
+  const summary = telemetrySessionInfo({
+    eventType: 'character_session_checkpoint',
+    streamKey: 'character_session:rook:session-abc:start',
+  })
+  assert.equal(summary.checkpoint, 'start')
+  assert.equal(summary.checkpointLabel, 'Session start')
+
+  const detail = telemetrySessionInfo({
+    eventType: 'character_session_checkpoint',
+    streamKey: 'character_session:rook:session-abc:end',
+    envelope: { sessionId: 'session-abc', checkpoint: 'end' },
+    payload: { sessionId: 'session-abc', checkpoint: 'end', checkpointReason: 'PLAYER_LOGOUT' },
+  })
+  assert.equal(detail.sessionId, 'session-abc')
+  assert.equal(detail.checkpointLabel, 'Session end')
+  assert.equal(detail.reason, 'PLAYER_LOGOUT')
 })
 
 test('share bundle is self-describing and retains the canonical envelope', () => {
@@ -84,6 +105,22 @@ test('character schema v3 is split into compact overview and focused sections', 
   assert.equal(sections[0].value.name, 'Rook')
   assert.equal(sections[0].value.class.token, 'ROGUE')
   assert.equal(sections[3].value.treeIds[0], 1111)
+})
+
+test('session fields stay in the overview instead of creating noisy payload tabs', () => {
+  const sections = telemetryPayloadSections({
+    payload: {
+      name: 'Rook',
+      sessionId: 'session-abc',
+      checkpoint: 'start',
+      checkpointReason: 'SESSION_START',
+      equipment: [],
+    },
+  })
+
+  assert.deepEqual(sections.map((section) => section.key), ['overview', 'equipment'])
+  assert.equal(sections[0].value.sessionId, 'session-abc')
+  assert.equal(sections[0].value.checkpoint, 'start')
 })
 
 test('normalized ids are ready for later WoW API enrichment', () => {
