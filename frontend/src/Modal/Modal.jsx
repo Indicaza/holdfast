@@ -79,7 +79,7 @@ function Modal({
   }
 
   return (
-    <div className="modal" role="presentation" onMouseDown={handleBackdrop}>
+    <div className={`modal modal--${size}`} role="presentation" onMouseDown={handleBackdrop}>
       <section
         ref={panelRef}
         className={`modal__panel modal__panel--${size} modal__panel--${align}`}

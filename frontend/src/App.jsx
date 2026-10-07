@@ -12,7 +12,6 @@ import {
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const GuildweaverAdmin = lazy(() => import('./Admin/GuildweaverAdmin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
-const CharacterArmory = lazy(() => import('./Intelligence/CharacterArmory.jsx'))
 const GuildIntelligence = lazy(() => import('./Intelligence/GuildIntelligence.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
@@ -143,23 +142,9 @@ function memberProfileRoute(pathname) {
   }
 }
 
-function characterArmoryRoute(pathname) {
-  const match = pathname.match(/^\/armory\/([^/]+)$/)
-  if (!match) return null
-  const characterId = decodedSegment(match[1])
-  return {
-    component: CharacterArmory,
-    path: pathname,
-    title: 'Character Armory | Holdfast',
-    description: 'View a synced World of Warcraft character armory.',
-    robots: 'noindex,nofollow',
-    props: { characterId },
-  }
-}
-
 function App() {
   const requestedPathname = normalizePathname(window.location.pathname)
-  const dynamicRoute = memberProfileRoute(requestedPathname) ?? characterArmoryRoute(requestedPathname)
+  const dynamicRoute = memberProfileRoute(requestedPathname)
   const pathname = resolvePathname(requestedPathname, Object.keys(routes))
   const route = dynamicRoute ?? (pathname
     ? routes[pathname]
