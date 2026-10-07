@@ -65,7 +65,14 @@ function GearSummary({ equipment, className, race }) {
   )
 }
 
-export default function EquipmentPaperDoll({ equipment = [], className = '', race = '', showDetail = true }) {
+export default function EquipmentPaperDoll({
+  equipment = [],
+  className = '',
+  race = '',
+  showDetail = true,
+  selectOnLoad = true,
+  compactDetail = false,
+}) {
   const bySlot = useMemo(() => {
     const result = new Map()
     for (const item of equipment) {
@@ -78,11 +85,11 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
     () => allSlots.map((slot) => bySlot.get(slot)).filter(Boolean),
     [bySlot],
   )
-  const [active, setActive] = useState(orderedEquipment[0] || null)
+  const [active, setActive] = useState(selectOnLoad ? orderedEquipment[0] || null : null)
 
   useEffect(() => {
-    setActive(orderedEquipment[0] || null)
-  }, [orderedEquipment])
+    setActive(selectOnLoad ? orderedEquipment[0] || null : null)
+  }, [orderedEquipment, selectOnLoad])
 
   if (!equipment.length) {
     return <EmptyTelemetry title="No equipment snapshot yet.">The paper doll will populate when Guildweaver submits equipped item data.</EmptyTelemetry>
@@ -102,7 +109,7 @@ export default function EquipmentPaperDoll({ equipment = [], className = '', rac
           {weaponSlots.map((slot) => <EquipmentSlot key={slot} slot={slot} item={bySlot.get(slot)} active={active === bySlot.get(slot)} onSelect={setActive} tooltipSide="top" />)}
         </div>
       </div>
-      {showDetail ? <ItemDetailCard item={active} /> : null}
+      {showDetail && active ? <ItemDetailCard item={active} compact={compactDetail} /> : null}
     </div>
   )
 }
