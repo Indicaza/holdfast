@@ -41,7 +41,14 @@ export default function CharacterProfileModal({ characterId, onClose }) {
   const character = armory.character
   const title = status === 'ready' ? character.name : 'Character profile'
   const intro = status === 'ready'
-    ? `${character.level ? `Level ${character.level} · ` : ''}${character.race || 'Race unknown'} · ${character.spec || character.className || 'Class unknown'} · ${formatSyncAge(character.lastSeenAt)}`
+    ? [
+        character.level ? `Level ${character.level}` : null,
+        character.race || null,
+        character.spec || character.className || null,
+        character.guildName || character.organization?.name || null,
+        character.realm || null,
+        formatSyncAge(character.lastSeenAt),
+      ].filter(Boolean).join(' · ')
     : 'Opening the latest Guildweaver snapshot.'
 
   return (
@@ -51,14 +58,13 @@ export default function CharacterProfileModal({ characterId, onClose }) {
         {status === 'error' ? <EmptyTelemetry title="The profile could not be loaded.">Guildweaver telemetry is temporarily unavailable.</EmptyTelemetry> : null}
         {status === 'missing' ? <EmptyTelemetry title="Character not found.">This character may not have synced yet, or its telemetry was removed.</EmptyTelemetry> : null}
         {status === 'ready' ? (
-          <>
-            <div className="character-profile-modal__meta">
-              <span>{character.guildName || character.organization?.name || 'No guild reported'}</span>
-              <span>{character.realm || 'Realm unknown'}</span>
-              <a href={`/armory/${encodeURIComponent(character.id)}`}>Open full profile ↗</a>
-            </div>
-            <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} showHero={false} />
-          </>
+          <CharacterProfile
+            armory={armory}
+            tab={tab}
+            onTabChange={setTab}
+            showHero={false}
+            className="character-profile--modal"
+          />
         ) : null}
       </div>
     </Modal>
