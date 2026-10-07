@@ -77,6 +77,14 @@
   padding: clamp(1rem, 2vw, 1.6rem);
 }
 
+.character-profile--modal .paper-doll--sheet .paper-doll__layout {
+  padding: .8rem;
+  border-color: rgba(196, 166, 103, .22);
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(34, 54, 72, .28), transparent 48%),
+    linear-gradient(180deg, rgba(3, 9, 16, .98), rgba(1, 5, 10, .98));
+}
+
 @media (max-width: 58rem) {
   .armory-player-frame {
     width: min(19rem, calc(100% - 3.5rem));
@@ -108,5 +116,9 @@
 
   .armory-player-frame__bars {
     width: min(10rem, 58vw);
+  }
+
+  .character-profile--modal .paper-doll--sheet .paper-doll__layout {
+    padding: .65rem;
   }
 }
