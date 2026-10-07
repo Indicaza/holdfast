@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
+import { createBlizzardIconMediaProvider } from "../GameData/blizzardIconMediaProvider.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { readEnrichedCharacterArmory } from "./armoryEnrichmentRepository.js";
@@ -47,9 +48,45 @@ async function hydrateSafely(provider, references, options) {
   }
 }
 
-export function createIntelligenceRouter({ gameDataProvider } = {}) {
+function catalogItemMedia(gameData, itemId) {
+  const entry = gameData?.items?.[String(itemId || "")];
+  return String(entry?.metadata?.mediaUrl || "").trim();
+}
+
+async function enrichEquipmentMedia(armory, gameData, iconProvider) {
+  const equipment = Array.isArray(armory?.equipment) ? armory.equipment : [];
+  const missingIconFileIds = referenceIds(
+    equipment
+      .filter(
+        (item) =>
+          !String(item?.mediaUrl || "").trim() &&
+          !catalogItemMedia(gameData, item?.itemId),
+      )
+      .map((item) => item?.iconFileId),
+  );
+
+  let iconMedia = {};
+  if (missingIconFileIds.length) {
+    try {
+      iconMedia = await iconProvider.resolve(missingIconFileIds);
+    } catch (error) {
+      console.warn("Unable to resolve Blizzard icon media", error?.message || error);
+    }
+  }
+
+  return equipment.map((item) => ({
+    ...item,
+    mediaUrl:
+      String(item?.mediaUrl || "").trim() ||
+      catalogItemMedia(gameData, item?.itemId) ||
+      String(iconMedia[String(item?.iconFileId || "")] || "").trim(),
+  }));
+}
+
+export function createIntelligenceRouter({ gameDataProvider, iconMediaProvider } = {}) {
   const router = Router();
   const provider = gameDataProvider || createBlizzardGameDataProvider();
+  const iconProvider = iconMediaProvider || createBlizzardIconMediaProvider();
 
   router.get("/", requireAuthenticated, (req, res) => {
     try {
@@ -73,10 +110,12 @@ export function createIntelligenceRouter({ gameDataProvider } = {}) {
       const gameBuild = armoryBuildKey(armory);
       const providerStatus = await hydrateSafely(provider, references, { gameBuild });
       const gameData = resolveGameDataBundle(references, { gameBuild });
+      const equipment = await enrichEquipmentMedia(armory, gameData, iconProvider);
 
       res.set("Cache-Control", "no-store");
       res.json(sanitizeArmoryPayload({
         ...armory,
+        equipment,
         gameData: { ...gameData, provider: providerStatus },
       }));
     } catch (error) {
