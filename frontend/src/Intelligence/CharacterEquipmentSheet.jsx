@@ -11,23 +11,19 @@ export default function CharacterEquipmentSheet({
   return (
     <div className="character-sheet">
       <section className="character-sheet__equipment" aria-label="Equipped items">
-        <div className="character-sheet__section-heading">
-          <span>Character</span>
-          <h2>Equipment</h2>
-        </div>
         <EquipmentPaperDoll
           equipment={equipment}
           className={className}
           race={race}
-          showDetail
+          showDetail={false}
           selectOnLoad={false}
-          compactDetail
           compact
+          variant="sheet"
         />
       </section>
 
       <aside className="character-sheet__stats" aria-label="Character stats">
-        <CharacterStats stats={stats} variant="sheet" />
+        <CharacterStats stats={stats} />
       </aside>
     </div>
   )
