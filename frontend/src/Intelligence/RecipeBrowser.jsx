@@ -40,7 +40,13 @@ export default function RecipeBrowser({ recipes = [] }) {
       <div className="recipe-list">
         {visible.map((recipe) => (
           <article className="recipe-row" key={recipe.key || recipe.id || `${recipe.professionName}-${recipe.name}`}>
-            <WowIcon iconFileId={recipe.iconFileId} recipeId={recipe.id} label={recipe.name} size={46} />
+            <WowIcon
+              src={recipe.mediaUrl || recipe.catalog?.metadata?.mediaUrl}
+              iconFileId={recipe.iconFileId}
+              recipeId={recipe.id}
+              label={recipe.name}
+              size={46}
+            />
             <div className="recipe-row__identity">
               <strong>{recipe.name || 'Unknown recipe'}</strong>
               <span>{recipe.professionName || 'Profession unknown'}{recipe.requiredSkill ? ` · Requires ${recipe.requiredSkill}` : ''}</span>
