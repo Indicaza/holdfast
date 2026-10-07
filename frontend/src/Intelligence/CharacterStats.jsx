@@ -95,7 +95,6 @@ function Accordion({ title, subtitle, children }) {
 
 function PrimaryPower({ stats }) {
   const resources = stats.resources || {}
-  const attributes = stats.attributes || {}
   const offense = stats.offense || {}
   const defense = stats.defense || {}
   const utility = stats.utility || {}
@@ -119,10 +118,15 @@ function PrimaryPower({ stats }) {
           ? 'Healing Power'
           : 'Power'
   const crit = offense.crit?.melee ?? offense.crit?.ranged ?? spellSchools.find((school) => school?.crit !== undefined)?.crit
-  const itemLevelValue = itemLevel.equipped ?? itemLevel.overall
+  const itemLevelValue = itemLevel.overall ?? itemLevel.equipped
+  const itemLevelHint = itemLevel.equipped !== undefined && itemLevel.overall !== itemLevel.equipped
+    ? `${formatNumber(itemLevel.equipped)} equipped`
+    : itemLevel.equipped !== undefined
+      ? 'equipped'
+      : null
 
   const cards = [
-    ['Item Level', formatNumber(itemLevelValue), itemLevel.equipped !== undefined ? 'equipped' : null, 'item-level'],
+    ['Item Level', formatNumber(itemLevelValue), itemLevelHint, 'item-level'],
     ['Health', formatNumber(resources.health?.max ?? resources.health?.current), null, 'health'],
     [power.token ? label(power.token) : 'Power', currentMax(power.current, power.max), null, 'resource'],
     ['Armor', formatNumber(defense.armor?.effective ?? defense.armor?.armor ?? defense.armor?.base), null, 'armor'],
@@ -333,7 +337,7 @@ export function CharacterStatHighlights({ stats = {} }) {
   const resources = stats.resources || {}
   const utility = stats.utility || {}
   const rows = [
-    ['Item Level', utility.itemLevel?.equipped ?? utility.itemLevel?.overall],
+    ['Item Level', utility.itemLevel?.overall ?? utility.itemLevel?.equipped],
     ['Health', resources.health?.max],
     ['Strength', attributes.strength?.effective ?? attributes.strength?.current],
     ['Agility', attributes.agility?.effective ?? attributes.agility?.current],
