@@ -11,6 +11,18 @@ function text(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
+function characterNames(snapshot) {
+  const firstName = text(snapshot?.firstName ?? snapshot?.name, 40);
+  const lastName = text(snapshot?.lastName, 40);
+  const reportedFullName = text(snapshot?.fullName, 96);
+  const fullName = reportedFullName || [firstName, lastName].filter(Boolean).join(" ");
+  return {
+    firstName,
+    lastName,
+    fullName: fullName || firstName,
+  };
+}
+
 function professionNames(value) {
   if (!Array.isArray(value)) {
     return [];
@@ -83,7 +95,8 @@ export async function syncGuildweaverCharacter({
   receivedAt = new Date().toISOString(),
 }) {
   const normalizedMemberId = text(memberId, 96);
-  const name = text(snapshot?.name, 32);
+  const names = characterNames(snapshot);
+  const name = names.fullName;
   const race = text(snapshot?.race?.name ?? snapshot?.race, 32);
   const className = text(snapshot?.class?.name ?? snapshot?.class, 32);
   const spec = text(
@@ -105,17 +118,33 @@ export async function syncGuildweaverCharacter({
       return { status: "member-not-found", character: null, snapshot: null };
     }
 
-    const existing = db
-      .prepare(
-        `
-          SELECT id, is_main, sort_order
-          FROM characters
-          WHERE member_id = ? AND name = ? COLLATE NOCASE
-          ORDER BY sort_order, id
-          LIMIT 1
-        `,
-      )
-      .get(normalizedMemberId, name);
+    const preferredId = preferredCharacterId(snapshot);
+    let existing = preferredId
+      ? db
+          .prepare(
+            `
+              SELECT id, is_main, sort_order
+              FROM characters
+              WHERE id = ? AND member_id = ?
+              LIMIT 1
+            `,
+          )
+          .get(preferredId, normalizedMemberId)
+      : null;
+
+    if (!existing) {
+      existing = db
+        .prepare(
+          `
+            SELECT id, is_main, sort_order
+            FROM characters
+            WHERE member_id = ? AND name = ? COLLATE NOCASE
+            ORDER BY sort_order, id
+            LIMIT 1
+          `,
+        )
+        .get(normalizedMemberId, name);
+    }
 
     const existingCount = Number(
       db
@@ -129,7 +158,7 @@ export async function syncGuildweaverCharacter({
         )
         .get(normalizedMemberId)?.sort_order || 0,
     );
-    const characterId = existing?.id || preferredCharacterId(snapshot);
+    const characterId = existing?.id || preferredId;
 
     if (!characterId) {
       return { status: "invalid", character: null, snapshot: null };
@@ -245,6 +274,9 @@ export async function syncGuildweaverCharacter({
       character: {
         id: characterId,
         name,
+        firstName: names.firstName,
+        lastName: names.lastName,
+        fullName: names.fullName,
         race,
         className,
         spec,
