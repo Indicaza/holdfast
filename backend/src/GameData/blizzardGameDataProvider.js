@@ -37,7 +37,7 @@ const QUALITY_IDS = Object.freeze({
 
 const DEFAULT_REFRESH_MS = 30 * 24 * 60 * 60 * 1000;
 const DEFAULT_FAILURE_TTL_MS = 60 * 60 * 1000;
-const DEFAULT_MAX_ENTITIES = 32;
+const DEFAULT_MAX_ENTITIES = 24;
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_TIMEOUT_MS = 8000;
 
@@ -72,7 +72,6 @@ function namespacesFromEnv(env, region) {
   const defaults = [
     `static-classic1x-${region}`,
     `static-classic-${region}`,
-    `static-${region}`,
   ];
   return [...new Set(configured.length ? configured : defaults)];
 }
@@ -295,6 +294,7 @@ export function createBlizzardGameDataProvider({
   const config = blizzardGameDataConfig(env);
   let token = "";
   let tokenExpiresAt = 0;
+  let tokenPromise = null;
   const failures = new Map();
 
   function publicStatus() {
@@ -309,11 +309,8 @@ export function createBlizzardGameDataProvider({
     };
   }
 
-  async function accessToken(force = false) {
-    if (!config.configured) return "";
+  async function loadToken() {
     const nowMs = now();
-    if (!force && token && tokenExpiresAt - 60_000 > nowMs) return token;
-
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), config.timeoutMs);
     try {
@@ -336,6 +333,20 @@ export function createBlizzardGameDataProvider({
       return token;
     } finally {
       clearTimeout(timer);
+    }
+  }
+
+  async function accessToken(force = false) {
+    if (!config.configured) return "";
+    const nowMs = now();
+    if (!force && token && tokenExpiresAt - 60_000 > nowMs) return token;
+    if (!force && tokenPromise) return tokenPromise;
+
+    tokenPromise = loadToken();
+    try {
+      return await tokenPromise;
+    } finally {
+      tokenPromise = null;
     }
   }
 
