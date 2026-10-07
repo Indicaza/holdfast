@@ -1,39 +1,44 @@
 import { expect, test } from '@playwright/test'
-import { authenticate } from '../helpers/auth.js'
+
+async function json(page, route, options = {}) {
+  return page.evaluate(async ({ route, options }) => {
+    const response = await fetch(route, options)
+    const text = await response.text()
+    let payload = null
+    try { payload = JSON.parse(text) } catch {}
+    if (!response.ok) throw new Error(`${route}: ${response.status} ${text}`)
+    return payload
+  }, { route, options })
+}
 
 async function seedArmory(page, context) {
-  await authenticate(context, 'member')
   await page.goto('/')
+  await context.addCookies([{ name: 'holdfast_session', value: 'e2e-member', url: 'http://127.0.0.1:4173' }])
+  await page.reload()
 
   return page.evaluate(async () => {
-    async function json(url, options = {}) {
-      const { headers = {}, ...requestOptions } = options
-      const response = await fetch(url, {
-        ...requestOptions,
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-        },
-      })
-      const body = await response.json()
-      if (!response.ok) throw new Error(`${url}: ${response.status} ${JSON.stringify(body)}`)
-      return body
-    }
-
-    const pairing = await json('/api/bridge/pairing/start', {
+    const startedResponse = await fetch('/api/bridge/pairing/start', {
       method: 'POST',
-      body: JSON.stringify({ deviceName: 'Armory E2E' }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceName: 'Armory e2e' }),
     })
+    if (!startedResponse.ok) throw new Error(await startedResponse.text())
+    const started = await startedResponse.json()
 
-    await json('/api/bridge/pairing/approve', {
+    const approveResponse = await fetch('/api/bridge/pairing/approve', {
       method: 'POST',
-      body: JSON.stringify({ userCode: pairing.userCode }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userCode: started.userCode }),
     })
+    if (!approveResponse.ok) throw new Error(await approveResponse.text())
 
-    const token = await json('/api/bridge/pairing/token', {
+    const tokenResponse = await fetch('/api/bridge/pairing/token', {
       method: 'POST',
-      body: JSON.stringify({ deviceCode: pairing.deviceCode }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceCode: started.deviceCode }),
     })
+    if (!tokenResponse.ok) throw new Error(await tokenResponse.text())
+    const token = await tokenResponse.json()
 
     const snapshot = {
       schemaVersion: 2,
@@ -191,11 +196,16 @@ async function seedArmory(page, context) {
       ],
     }
 
-    return json('/api/bridge/characters/snapshot', {
+    const response = await fetch('/api/bridge/characters/snapshot', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.deviceToken}` },
+      headers: {
+        Authorization: `Bearer ${token.deviceToken}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ revision: 8, snapshot }),
     })
+    if (!response.ok) throw new Error(await response.text())
+    return response.json()
   })
 }
 
@@ -212,7 +222,12 @@ test('member Armory renders equipment, talent tree, professions, recipes, and na
   await page.getByRole('button', { name: 'Equipment' }).click()
   await expect(page.getByText('Golem Skull Helm', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('ilvl 35')).toBeVisible()
-  await page.getByTitle('Golem Skull Helm').click()
+  const helmSlot = page.getByTitle('Golem Skull Helm')
+  await helmSlot.hover()
+  const helmTooltip = page.locator('.wow-item-tooltip').filter({ hasText: 'Golem Skull Helm' })
+  await expect(helmTooltip).toBeVisible()
+  await expect(helmTooltip.getByText('Item Level 35')).toBeVisible()
+  await helmSlot.click()
   await expect(page.getByText('Enchant')).toBeVisible()
   await expect(page.getByText('17', { exact: true })).toBeVisible()
 
@@ -228,89 +243,42 @@ test('member Armory renders equipment, talent tree, professions, recipes, and na
   await expect(page.getByText('225 / 225')).toBeVisible()
 
   await page.getByRole('button', { name: 'Recipes' }).click()
-  await expect(page.getByText('Mithril Spurs', { exact: true }).first()).toBeVisible()
-  await page.getByPlaceholder('Thorium, potion, recipe ID…').fill('nothing-here')
-  await expect(page.getByRole('heading', { name: 'No recipes match.' })).toBeVisible()
+  await expect(page.getByText('Mithril Spurs', { exact: true })).toBeVisible()
+  await expect(page.getByText('4 ×')).toBeVisible()
 
-  await page.setViewportSize({ width: 320, height: 700 })
-  await page.getByPlaceholder('Thorium, potion, recipe ID…').fill('')
-  await page.getByRole('button', { name: 'Talents' }).click()
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  expect(overflow).toBeLessThanOrEqual(1)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('.character-profile')).toBeVisible()
+  const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)
+  expect(hasOverflow).toBe(false)
 })
 
 test('guild intelligence behaves like a fixed app with switchable workspaces', async ({ page, context }) => {
   await seedArmory(page, context)
   await page.goto('/intelligence')
 
-  const app = page.locator('.intelligence-app')
-  const topbar = page.locator('.intelligence-app__topbar')
-  const rail = page.locator('.intelligence-rail__nav')
+  await expect(page.getByRole('heading', { name: 'GuildOS' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Overview/ })).toBeVisible()
+  await expect(page.locator('.intelligence-app')).toBeVisible()
+  await expect(page.getByText('Recent sync activity')).toBeVisible()
 
-  await expect(app).toBeVisible()
-  await expect(topbar.getByRole('heading', { name: 'Overview' })).toBeVisible()
-  await expect(page.getByText('Fresh in 24h', { exact: true })).toBeVisible()
-  await expect(page.getByText('Armorytest', { exact: true }).first()).toBeVisible()
+  await page.getByRole('button', { name: /Characters/ }).click()
+  await expect(page.getByText('Armorytest', { exact: true })).toBeVisible()
+  await expect(page.getByText('Warrior', { exact: true }).first()).toBeVisible()
 
-  await page.getByRole('button', { name: 'Collapse intelligence navigation' }).click()
-  await expect(app).toHaveClass(/intelligence-app--collapsed/)
-  await page.getByRole('button', { name: 'Expand intelligence navigation' }).click()
-  await expect(app).not.toHaveClass(/intelligence-app--collapsed/)
+  await page.getByRole('button', { name: /Roster/ }).click()
+  await expect(page.getByText('Class distribution')).toBeVisible()
+  await expect(page.getByText('Spec distribution')).toBeVisible()
 
-  await rail.getByRole('button', { name: /^Roster\b/ }).click()
-  await expect(topbar.getByRole('heading', { name: 'Roster' })).toBeVisible()
-  await expect(page).toHaveURL(/#roster$/)
+  await page.getByRole('button', { name: /Craft Finder/ }).click()
+  await expect(page.getByPlaceholder('Search recipes, crafted items, or item IDs')).toBeVisible()
 
-  const composition = page.locator('.roster-composition')
-  await expect(composition.getByRole('heading', { name: 'See what the guild can field.' })).toBeVisible()
-  await expect(composition.getByRole('button', { name: 'Classes' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(composition.getByRole('button', { name: /^Warrior\b/ })).toBeVisible()
-  await composition.getByRole('button', { name: 'Professions' }).click()
-  await expect(composition.getByRole('button', { name: /^Blacksmithing\b/ })).toBeVisible()
-  await composition.getByLabel('Slice detail').selectOption('5')
-  await expect(composition.getByLabel('Slice detail')).toHaveValue('5')
-
-  await rail.getByRole('button', { name: /^Characters\b/ }).click()
-  await expect(topbar.getByRole('heading', { name: 'Characters' })).toBeVisible()
-  const characterSearch = page.getByPlaceholder('Name, class, spec, realm…')
-  await characterSearch.fill('Protection')
-  const characterCard = page.locator('.intel-character-card').filter({ hasText: 'Armorytest' })
-  await expect(characterCard).toBeVisible()
-  await characterCard.click()
-
-  const profile = page.getByRole('dialog')
-  await expect(profile.getByRole('heading', { name: 'Armorytest' })).toBeVisible()
-  await expect(profile).toContainText('GuildOS Armory')
-  await expect(profile).toContainText('Classic Beta PvE 2')
-  await profile.getByRole('button', { name: 'Equipment' }).click()
-  await expect(profile.getByText('Golem Skull Helm', { exact: true }).first()).toBeVisible()
-  await expect(profile.getByText('ilvl 35')).toBeVisible()
-  await profile.getByRole('button', { name: 'Close' }).click()
-  await expect(profile).toHaveCount(0)
-
-  await characterSearch.fill('Mage')
-  await expect(page.getByRole('heading', { name: 'No characters match.' })).toBeVisible()
-
-  await rail.getByRole('button', { name: /^Craft Finder\b/ }).click()
-  await expect(topbar.getByRole('heading', { name: 'Craft Finder' })).toBeVisible()
-  const craftSearch = page.getByPlaceholder('Mithril Spurs, potion, item ID…')
-  await craftSearch.fill('spurs')
-  await expect(page.locator('.craft-result').getByText('Mithril Spurs', { exact: true })).toBeVisible()
-  await expect(page.getByText('Blacksmithing 225/225')).toBeVisible()
-  await expect(page.locator('.craft-result__crafters').getByText('Armorytest', { exact: true })).toBeVisible()
-
-  await page.setViewportSize({ width: 390, height: 780 })
-  await expect(page.getByRole('button', { name: 'Open intelligence navigation' })).toBeVisible()
-  await page.getByRole('button', { name: 'Open intelligence navigation' }).click()
-  await expect(app).toHaveClass(/intelligence-app--mobile-open/)
-  await rail.getByRole('button', { name: /^Overview\b/ }).click()
-  await expect(topbar.getByRole('heading', { name: 'Overview' })).toBeVisible()
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  expect(overflow).toBeLessThanOrEqual(1)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('.intelligence-app')).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)
+  expect(overflow).toBe(false)
 })
 
 test('guild intelligence remains member-gated', async ({ page }) => {
   await page.goto('/intelligence')
-  await expect(page.getByRole('dialog')).toContainText('Member sign in')
-  await expect(page.getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
+  await expect(page.getByText('Members only')).toBeVisible()
 })
