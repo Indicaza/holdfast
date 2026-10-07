@@ -5,6 +5,7 @@ import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProv
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
+import { adaptArmoryV3 } from "./armoryV3Adapter.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
 import {
@@ -67,12 +68,13 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
 
   router.get("/characters/:characterId", requireAuthenticated, async (req, res) => {
     try {
-      const armory = readCharacterArmory(req.params.characterId);
-      if (!armory) {
+      const storedArmory = readCharacterArmory(req.params.characterId);
+      if (!storedArmory) {
         res.status(404).json({ error: "character_not_found" });
         return;
       }
 
+      const armory = adaptArmoryV3(storedArmory);
       const references = armoryReferences(armory);
       const gameBuild = armoryBuildKey(armory);
       const providerStatus = await hydrateSafely(provider, references, { gameBuild });
