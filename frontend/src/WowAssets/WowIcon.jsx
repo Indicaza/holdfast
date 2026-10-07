@@ -127,7 +127,6 @@ export function ItemTooltip({ item, id }) {
   if (!item) return null
   const quality = Number(item.quality) || 0
   const lines = tooltipLines(item)
-  const enchant = enchantLabel(item.enchant)
 
   return (
     <div className="wow-item-tooltip" id={id} role="tooltip">
@@ -148,7 +147,6 @@ export function ItemTooltip({ item, id }) {
           ))}
         </div>
       ) : null}
-      {enchant ? <div className="wow-item-tooltip__enchant">Enchant: {cleanWowText(enchant)}</div> : null}
       {item.requiredLevel ? <div className="wow-item-tooltip__requirement">Requires level {item.requiredLevel}</div> : null}
       <small>Item {item.itemId || 'unknown'} · {qualityNames[quality] || 'Unknown quality'}</small>
     </div>
