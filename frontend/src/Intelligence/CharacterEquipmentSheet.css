@@ -69,7 +69,7 @@
   line-height: 1.45;
 }
 
-.character-sheet .paper-doll--layout-only {
+.character-sheet .paper-doll {
   display: block;
 }
 
@@ -84,6 +84,12 @@
 
 .character-sheet .paper-doll__slot-copy strong {
   font-size: .76rem;
+}
+
+.character-sheet .item-detail {
+  margin-top: var(--space-3);
+  border-color: rgba(196, 166, 103, .2);
+  background: rgba(3, 8, 15, .78);
 }
 
 .character-sheet__stats .character-stats {
