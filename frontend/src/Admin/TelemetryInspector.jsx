@@ -6,6 +6,7 @@ import {
   stringifyTelemetryShareBundle,
   telemetryDomainDescriptor,
   telemetryPayloadSections,
+  telemetrySessionInfo,
 } from './telemetryInspectorModel.js'
 
 const PAGE_SIZE = 40
@@ -33,6 +34,12 @@ function formatBytes(value) {
   const bytes = Number(value) || 0
   if (bytes < 1024) return `${bytes} B`
   return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`
+}
+
+function shortId(value) {
+  const text = String(value || '')
+  if (!text) return '—'
+  return text.length > 18 ? `${text.slice(0, 10)}…${text.slice(-6)}` : text
 }
 
 async function getJson(url) {
@@ -72,6 +79,7 @@ export default function TelemetryInspector() {
     () => payloadSections.find((section) => section.key === selectedSectionKey) || payloadSections[0] || null,
     [payloadSections, selectedSectionKey],
   )
+  const selectedSession = useMemo(() => telemetrySessionInfo(selected), [selected])
 
   const activeFilterCount = Number(Boolean(domain)) + Number(Boolean(kind))
 
@@ -224,6 +232,7 @@ export default function TelemetryInspector() {
             <div className="gw-admin-history-list">
               {records.map((record) => {
                 const itemDescriptor = telemetryDomainDescriptor(record)
+                const session = telemetrySessionInfo(record)
                 return (
                   <button
                     key={record.id}
@@ -236,7 +245,7 @@ export default function TelemetryInspector() {
                       <span>rev {record.revision}</span>
                     </div>
                     <div className="gw-admin-history-meta">
-                      <span>{record.eventType}</span>
+                      <span>{session.checkpointLabel || record.eventType}</span>
                       <span>{formatBytes(record.payloadBytes)}</span>
                     </div>
                     <div className="gw-admin-history-time">
@@ -259,9 +268,12 @@ export default function TelemetryInspector() {
               <>
                 <div className="gw-admin-detail-header">
                   <div>
-                    <span>{descriptor.label} · {selected.eventType}</span>
+                    <span>{descriptor.label} · {selectedSession.checkpointLabel || selected.eventType}</span>
                     <h2>{displayName}</h2>
-                    <p>{selected.realm || 'Unknown realm'} · rev {selected.revision} · {formatBytes(selected.payloadBytes)} · received {relativeTime(selected.receivedAt)}</p>
+                    <p>
+                      {selected.realm || 'Unknown realm'} · rev {selected.revision} · {formatBytes(selected.payloadBytes)} · received {relativeTime(selected.receivedAt)}
+                      {selectedSession.sessionId ? ` · session ${shortId(selectedSession.sessionId)}` : ''}
+                    </p>
                   </div>
                   {detailLoading ? <small>Loading payload…</small> : null}
                 </div>
@@ -305,6 +317,9 @@ export default function TelemetryInspector() {
                       <div><dt>Kind</dt><dd>{selected.kind}</dd></div>
                       <div><dt>Schema</dt><dd>{selected.schemaVersion}</dd></div>
                       <div><dt>Character</dt><dd title={selected.characterId}>{selected.characterId || '—'}</dd></div>
+                      <div><dt>Session</dt><dd title={selectedSession.sessionId}>{shortId(selectedSession.sessionId)}</dd></div>
+                      <div><dt>Checkpoint</dt><dd>{selectedSession.checkpointLabel || '—'}</dd></div>
+                      <div><dt>Reason</dt><dd>{selectedSession.reason || '—'}</dd></div>
                       <div><dt>Install</dt><dd title={selected.installationId}>{selected.installationId || '—'}</dd></div>
                       <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId || '—'}</dd></div>
                       <div><dt>Stream</dt><dd title={selected.streamKey}>{selected.streamKey || '—'}</dd></div>
