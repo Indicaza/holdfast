@@ -1,6 +1,8 @@
 .modal__panel--armory {
   --armory-header-height: auto;
   grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
   height: min(94svh, 64rem);
   max-height: 94svh;
 }
@@ -27,28 +29,39 @@
 }
 
 .modal__panel--armory .modal__body {
-  display: block;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   padding-bottom: 0;
   scrollbar-gutter: auto;
 }
 
-.character-profile-modal,
-.character-profile--modal {
-  height: 100%;
+/* The player frame and profile are siblings. Give each an explicit grid row so
+   the profile receives only the space left after the player frame instead of
+   adding a 100%-tall child below it. */
+.character-profile-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .character-profile--modal {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
 .character-profile--modal .armory-tabs {
   position: relative;
   top: auto;
+  min-width: 0;
   flex: 0 0 auto;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.018), 0 .45rem 1.1rem rgba(0,0,0,.12);
 }
@@ -58,8 +71,10 @@
 }
 
 .character-profile--modal .armory-content {
+  box-sizing: border-box;
+  min-width: 0;
   min-height: 0;
-  height: 100%;
+  height: auto;
   padding-top: clamp(.9rem, 1.5vw, 1.35rem);
   padding-bottom: clamp(.85rem, 1.4vw, 1.2rem);
   overflow: auto;
@@ -79,14 +94,16 @@
   background-clip: padding-box;
 }
 
-/* Equipment owns its own sizing. Keep this layer responsible only for fitting
-   the sheet into the modal workspace; do not restyle the paper doll or stats
-   internals here. */
+/* Equipment is a layout container. Descendants react to this component's
+   actual width rather than the browser viewport. */
 .character-profile--modal .armory-content--equipment {
   display: flex;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  container-name: armory-equipment;
+  container-type: inline-size;
 }
 
 .character-profile--modal .armory-content--equipment > .character-sheet {
@@ -96,19 +113,10 @@
   flex: 1 1 auto;
 }
 
-.character-profile--modal .character-sheet {
-  height: 100%;
-  min-height: 0;
-}
-
 .character-profile--modal .character-sheet__equipment,
 .character-profile--modal .character-sheet__stats {
   min-width: 0;
   min-height: 0;
-}
-
-.character-profile--modal .character-sheet__equipment {
-  overflow: visible;
 }
 
 .character-profile--modal .character-sheet__stats {
@@ -130,13 +138,6 @@
 .character-profile--modal .armory-panel {
   border-radius: .78rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.02), 0 .6rem 1.5rem rgba(0,0,0,.1);
-}
-
-@media (max-width: 62rem) {
-  .character-profile--modal .armory-content--equipment {
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
 }
 
 @media (max-width: 58rem) {
@@ -177,9 +178,5 @@
     max-width: 100%;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .character-profile--modal .armory-content--equipment {
-    overflow-y: auto;
   }
 }
