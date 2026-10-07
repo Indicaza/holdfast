@@ -1,7 +1,6 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
-import { publicWebsiteUrl } from "../Config/environment.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
