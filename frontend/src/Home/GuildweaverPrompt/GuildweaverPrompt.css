@@ -1,0 +1,90 @@
+.guildweaver-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  border-radius: var(--radius-lg);
+  background: rgba(7, 13, 24, 0.72);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+}
+
+.guildweaver-prompt__copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.guildweaver-prompt__copy > span {
+  flex: 0 0 auto;
+  color: var(--color-accent-bright);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.guildweaver-prompt__copy > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.guildweaver-prompt__copy strong {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.guildweaver-prompt__copy p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.guildweaver-prompt button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-5);
+  border: var(--border-accent);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-accent-bright);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.guildweaver-prompt button:hover,
+.guildweaver-prompt button:focus-visible {
+  background: var(--color-accent-bright);
+  color: var(--color-background);
+}
+
+@media (max-width: 44rem) {
+  .guildweaver-prompt {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .guildweaver-prompt__copy {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .guildweaver-prompt button {
+    width: 100%;
+  }
+}

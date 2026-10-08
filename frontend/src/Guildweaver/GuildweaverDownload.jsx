@@ -1,6 +1,5 @@
 import { useState } from 'react'
 
-import Modal from '../Modal/Modal.jsx'
 import {
   detectGuildweaverOs,
   guildweaverDownloads,
@@ -8,7 +7,11 @@ import {
 } from './downloads.js'
 import './GuildweaverDownload.css'
 
-export default function GuildweaverDownload({ compact = false, navigatorLike = globalThis.navigator }) {
+export default function GuildweaverDownload({
+  compact = false,
+  showLead = true,
+  navigatorLike = globalThis.navigator,
+}) {
   const [showAllDownloads, setShowAllDownloads] = useState(false)
   const [downloadStarted, setDownloadStarted] = useState(false)
   const detectedOs = detectGuildweaverOs(navigatorLike)
@@ -39,19 +42,21 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
   }
 
   return (
-    <section className="guildweaver-download" aria-labelledby="guildweaver-download-title">
-      <div className="guildweaver-download__lead">
-        <h2 id="guildweaver-download-title">
-          {nativeInstaller ? 'Install Guildweaver' : recommended ? `Guildweaver for ${recommended.label}` : 'Get Guildweaver'}
-        </h2>
-        <p>
-          {nativeInstaller
-            ? 'One installer sets up Guildweaver, finds WoW, installs the addon, and keeps everything updated.'
-            : detectedOs === 'linux'
-              ? 'Linux is still a manual package for now. Windows and macOS use one-click installers.'
-              : 'Choose the platform for this computer.'}
-        </p>
-      </div>
+    <section className="guildweaver-download" aria-labelledby={showLead ? 'guildweaver-download-title' : undefined}>
+      {showLead ? (
+        <div className="guildweaver-download__lead">
+          <h2 id="guildweaver-download-title">
+            {nativeInstaller ? 'Install Guildweaver' : recommended ? `Guildweaver for ${recommended.label}` : 'Get Guildweaver'}
+          </h2>
+          <p>
+            {nativeInstaller
+              ? 'One installer sets up Guildweaver, finds WoW, installs the addon, and keeps everything updated.'
+              : detectedOs === 'linux'
+                ? 'Linux is still a manual package for now. Windows and macOS use one-click installers.'
+                : 'Choose the platform for this computer.'}
+          </p>
+        </div>
+      ) : null}
 
       <div className="guildweaver-download__actions">
         {recommended ? (
@@ -62,9 +67,10 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
         <button
           className="guildweaver-download__secondary"
           type="button"
-          onClick={() => setShowAllDownloads(true)}
+          aria-expanded={showAllDownloads}
+          onClick={() => setShowAllDownloads((current) => !current)}
         >
-          Other platforms
+          {showAllDownloads ? 'Hide platforms' : 'Other platforms'}
         </button>
       </div>
 
@@ -77,30 +83,22 @@ export default function GuildweaverDownload({ compact = false, navigatorLike = g
       ) : null}
 
       {showAllDownloads ? (
-        <Modal
-          eyebrow="Downloads"
-          title="Other platforms"
-          intro="Windows and macOS use native installers. Linux packages remain manual for now."
-          size="wide"
-          onClose={() => setShowAllDownloads(false)}
-        >
-          <div className="guildweaver-download__platforms" aria-label="All Guildweaver downloads">
-            {guildweaverDownloads.map((download) => (
-              <div className="guildweaver-download__platform" key={download.id}>
-                <div>
-                  <strong>{download.label}</strong>
-                  <span>{download.detail}</span>
-                </div>
-                <div className="guildweaver-download__platform-actions">
-                  <a href={download.href} onClick={() => setDownloadStarted(true)}>
-                    {download.os === 'windows' || download.os === 'macos' ? 'Installer' : 'Download'}
-                  </a>
-                  <a href={download.checksumHref}>Checksum</a>
-                </div>
+        <div className="guildweaver-download__platforms" aria-label="All Guildweaver downloads">
+          {guildweaverDownloads.map((download) => (
+            <div className="guildweaver-download__platform" key={download.id}>
+              <div>
+                <strong>{download.label}</strong>
+                <span>{download.detail}</span>
               </div>
-            ))}
-          </div>
-        </Modal>
+              <div className="guildweaver-download__platform-actions">
+                <a href={download.href} onClick={beginDownload}>
+                  {download.os === 'windows' || download.os === 'macos' ? 'Installer' : 'Download'}
+                </a>
+                <a href={download.checksumHref}>Checksum</a>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : null}
     </section>
   )

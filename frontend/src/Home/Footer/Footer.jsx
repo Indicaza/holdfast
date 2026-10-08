@@ -22,6 +22,7 @@ function Footer() {
 
       <div className="footer__meta">
         <nav className="footer__links" aria-label="Footer links">
+          <a href="/guildweaver">Guildweaver</a>
           <a href="/privacy">Privacy</a>
           <a href={sourceRepositoryUrl} target="_blank" rel="noreferrer">
             Source

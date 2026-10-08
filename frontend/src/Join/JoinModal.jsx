@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import GuildweaverDownload from '../Guildweaver/GuildweaverDownload.jsx'
 import Modal from '../Modal/Modal.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import './Join.css'
@@ -74,9 +73,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
           setDiscordTarget(target)
         }
       })
-      .catch(() => {
-        // The generic Discord app/web destinations remain a safe fallback.
-      })
+      .catch(() => undefined)
 
     return () => {
       active = false
@@ -137,7 +134,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
         <Modal
           eyebrow="Welcome to Holdfast"
           title="You're in."
-          intro="Discord is the next stop. Meet the crew, find a group, and get into the game. Guildweaver can connect WoW when you're ready."
+          intro="Discord is connected. Meet the crew, finish your profile, and get into the game."
           onClose={onClose}
         >
           <ol className="join-onboarding">
@@ -150,19 +147,10 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
               <span>Find the crew, ask questions, or jump into a group.</span>
             </li>
             <li>
-              <strong>Connect the game when you want.</strong>
-              <span>Guildweaver can install the addon and keep supported character data in sync automatically.</span>
+              <strong>Finish your profile.</strong>
+              <span>Add whatever details you want the guild to see.</span>
             </li>
           </ol>
-
-          <div className="join-guildweaver">
-            <div>
-              <strong>Bring Holdfast into WoW.</strong>
-              <span>Recommended, not required. Guildweaver is open source and can be installed now or any time later.</span>
-            </div>
-            <GuildweaverDownload compact />
-            <a href="/guildweaver">How Guildweaver works · source, privacy & all downloads</a>
-          </div>
 
           <div className="join-actions">
             <button

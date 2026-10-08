@@ -21,10 +21,13 @@ test('recruitment preserves the public page, scroll position, and keyboard focus
 test('footer exposes utility links and direct join links return to their source', async ({ page }) => {
   await page.goto('/privacy')
   const footer = page.locator('footer')
+  const guildweaver = footer.getByRole('link', { name: 'Guildweaver' })
   const privacy = footer.getByRole('link', { name: 'Privacy' })
   const source = footer.getByRole('link', { name: 'Source' })
+  await expect(guildweaver).toBeVisible()
   await expect(privacy).toBeVisible()
   await expect(source).toBeVisible()
+  expect(await guildweaver.getAttribute('href')).toBe('/guildweaver')
   expect(await privacy.getAttribute('href')).toBe('/privacy')
   expect(await source.getAttribute('href')).toBe('https://github.com/Indicaza/holdfast')
 
@@ -76,8 +79,8 @@ test('Discord onboarding returns a member to the intended objective without auto
     if (new URL(request.url()).pathname === '/api/quests/member/signup') mutations += 1
   })
   await page.goto(`/join?${new URLSearchParams({ auth: 'connected', returnTo: destination })}`)
-  await expect(page.getByRole('dialog')).toContainText("You're in.")
-  await page.getByRole('link', { name: 'Continue to objective' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Bring Holdfast into WoW.')
+  await page.getByRole('button', { name: 'Continue to objective' }).click()
   await expect(page.getByRole('dialog')).toContainText('Scout the roads')
   await expect(page.getByRole('button', { name: 'Sign me up' })).toBeVisible()
   expect(mutations).toBe(0)
