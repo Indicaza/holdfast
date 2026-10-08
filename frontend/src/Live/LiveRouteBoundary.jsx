@@ -3,6 +3,8 @@ import { useSession } from '../Auth/sessionContext.js'
 import { matchesLiveTopics, routeTopics } from './liveRouteTopics.js'
 import { useLiveUpdates } from './liveUpdatesContext.js'
 
+const LIVE_REFRESH_DEBOUNCE_MS = 200
+
 export default function LiveRouteBoundary({ children }) {
   const session = useSession()
   const { event } = useLiveUpdates()
@@ -12,15 +14,19 @@ export default function LiveRouteBoundary({ children }) {
   const topics = useMemo(() => routeTopics(pathname, hash), [pathname, hash])
 
   useEffect(() => {
-    if (!event || !matchesLiveTopics(event.topics, topics)) return
-    if (event.actorId && event.actorId === session.user?.id) return
+    if (!event || !matchesLiveTopics(event.topics, topics)) return undefined
+    if (event.actorId && event.actorId === session.user?.id) return undefined
 
     if (pathname === '/quests') {
       window.dispatchEvent(new Event('holdfast:quests-changed'))
-      return
+      return undefined
     }
 
-    setVersion((current) => current + 1)
+    const timer = window.setTimeout(() => {
+      setVersion((current) => current + 1)
+    }, LIVE_REFRESH_DEBOUNCE_MS)
+
+    return () => window.clearTimeout(timer)
   }, [event, pathname, session.user?.id, topics])
 
   return <Fragment key={version}>{children}</Fragment>
