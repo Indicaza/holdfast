@@ -5,8 +5,21 @@ import {
   ensureCharacterSnapshotObservabilitySchema,
   recordCharacterSnapshotInDatabase,
 } from "./characterSnapshotRepository.js";
+import {
+  ensureGuildweaverCharacterIdentitySchema,
+  recordGuildweaverCharacterAliasInDatabase,
+  resolveGuildweaverCharacterIdentityInDatabase,
+} from "./characterIdentityRepository.js";
+import {
+  isOlderSnapshot,
+  mergeCharacterSnapshot,
+  snapshotCapturedAt,
+} from "./characterSnapshotIntegrity.js";
 import { projectionSnapshot } from "./schemaV3Projection.js";
-import { projectTelemetrySnapshotInDatabase } from "./telemetryProjection.js";
+import {
+  ensureTelemetryProjectionSchema,
+  projectTelemetrySnapshotInDatabase,
+} from "./telemetryProjection.js";
 
 function text(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
@@ -25,66 +38,112 @@ function characterNames(snapshot) {
 }
 
 function professionNames(value) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
+  if (!Array.isArray(value)) return [];
   const names = [];
   const seen = new Set();
 
   for (const profession of value) {
     const name = text(profession?.name, 40);
-
-    if (!name || seen.has(name.toLowerCase())) {
-      continue;
-    }
-
+    if (!name || seen.has(name.toLowerCase())) continue;
     seen.add(name.toLowerCase());
     names.push(name);
-
-    if (names.length >= 6) {
-      break;
-    }
+    if (names.length >= 6) break;
   }
 
   return names;
 }
 
-function capturedAt(snapshot) {
-  const numericTimestamp = Number(snapshot?.capturedAt);
-
-  if (Number.isFinite(numericTimestamp) && numericTimestamp > 0) {
-    return new Date(numericTimestamp * 1000).toISOString();
-  }
-
-  if (typeof snapshot?.capturedAt === "string") {
-    const parsed = new Date(snapshot.capturedAt);
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
-  }
-
-  return new Date().toISOString();
-}
-
 function preferredCharacterId(snapshot) {
   const anonymousCharacterId = text(snapshot?.characterId, 128);
-
-  if (anonymousCharacterId) {
-    return `guildweaver-id:${anonymousCharacterId}`;
-  }
+  if (anonymousCharacterId) return `guildweaver-id:${anonymousCharacterId}`;
 
   const guid = text(snapshot?.guid, 96);
-
-  if (guid) {
-    return guid;
-  }
+  if (guid) return guid;
 
   const key = text(snapshot?.characterKey, 160);
-
-  if (key) {
-    return `guildweaver:${key}`;
-  }
+  if (key) return `guildweaver:${key}`;
 
   return "";
+}
+
+function parsePayload(value) {
+  try {
+    return JSON.parse(value || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function projectionState(db, characterId) {
+  return db
+    .prepare(`
+      SELECT t.latest_snapshot_id, t.last_seen_at, s.payload_json
+      FROM telemetry_characters t
+      LEFT JOIN character_snapshots s ON s.id = t.latest_snapshot_id
+      WHERE t.character_id = ?
+      LIMIT 1
+    `)
+    .get(characterId);
+}
+
+function duplicateSnapshot(db, characterId, capturedAt, payload) {
+  return db
+    .prepare(`
+      SELECT s.id, s.captured_at, i.received_at, i.bridge_revision
+      FROM character_snapshots s
+      LEFT JOIN character_snapshot_ingests i ON i.snapshot_id = s.id
+      WHERE s.character_id = ? AND s.captured_at = ? AND s.payload_json = ?
+      ORDER BY s.id DESC
+      LIMIT 1
+    `)
+    .get(characterId, capturedAt, JSON.stringify(payload ?? {}));
+}
+
+function storedDuplicate(duplicate, characterId, source, payload) {
+  return {
+    id: Number(duplicate.id),
+    characterId,
+    source,
+    capturedAt: duplicate.captured_at,
+    receivedAt: duplicate.received_at || duplicate.captured_at,
+    bridgeRevision:
+      duplicate.bridge_revision === null || duplicate.bridge_revision === undefined
+        ? null
+        : Number(duplicate.bridge_revision),
+    payload,
+  };
+}
+
+function currentCharacterResult(db, characterId, incomingNames) {
+  const row = db
+    .prepare(`
+      SELECT name, race, class_name, spec, professions_json, is_main
+      FROM characters
+      WHERE id = ?
+      LIMIT 1
+    `)
+    .get(characterId);
+  if (!row) return null;
+
+  let professions = [];
+  try {
+    professions = JSON.parse(row.professions_json || "[]");
+  } catch {
+    professions = [];
+  }
+
+  return {
+    id: characterId,
+    name: row.name,
+    firstName: incomingNames.firstName,
+    lastName: incomingNames.lastName,
+    fullName: row.name,
+    race: row.race,
+    className: row.class_name,
+    spec: row.spec,
+    professions: Array.isArray(professions) ? professions : [],
+    isMain: Boolean(row.is_main),
+  };
 }
 
 export async function syncGuildweaverCharacter({
@@ -96,17 +155,10 @@ export async function syncGuildweaverCharacter({
   receivedAt = new Date().toISOString(),
 }) {
   const normalizedMemberId = text(memberId, 96);
-  const names = characterNames(snapshot);
-  const name = names.fullName;
-  const race = text(snapshot?.race?.name ?? snapshot?.race, 32);
-  const className = text(snapshot?.class?.name ?? snapshot?.class, 32);
-  const spec = text(
-    snapshot?.specialization?.name ?? snapshot?.spec?.name ?? snapshot?.spec,
-    48,
-  );
-  const professions = professionNames(snapshot?.professions);
+  const incomingNames = characterNames(snapshot);
+  const incomingName = incomingNames.fullName;
 
-  if (!normalizedMemberId || !name) {
+  if (!normalizedMemberId || !incomingName) {
     return { status: "invalid", character: null, snapshot: null };
   }
 
@@ -114,38 +166,28 @@ export async function syncGuildweaverCharacter({
     const member = db
       .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
       .get(normalizedMemberId);
-
     if (!member) {
       return { status: "member-not-found", character: null, snapshot: null };
     }
 
-    const preferredId = preferredCharacterId(snapshot);
-    let existing = preferredId
-      ? db
-          .prepare(
-            `
-              SELECT id, is_main, sort_order
-              FROM characters
-              WHERE id = ? AND member_id = ?
-              LIMIT 1
-            `,
-          )
-          .get(preferredId, normalizedMemberId)
-      : null;
+    ensureTelemetryProjectionSchema(db);
+    ensureCharacterSnapshotObservabilitySchema(db);
+    ensureGuildweaverCharacterIdentitySchema(db);
 
-    if (!existing) {
-      existing = db
-        .prepare(
-          `
-            SELECT id, is_main, sort_order
-            FROM characters
-            WHERE member_id = ? AND name = ? COLLATE NOCASE
-            ORDER BY sort_order, id
-            LIMIT 1
-          `,
-        )
-        .get(normalizedMemberId, name);
-    }
+    const preferredId = preferredCharacterId(snapshot);
+    const rawCharacterId = text(snapshot?.characterId, 200);
+    const realm = text(snapshot?.realm ?? snapshot?.realmName, 120);
+    const region = text(snapshot?.region, 32);
+    let existing = resolveGuildweaverCharacterIdentityInDatabase({
+      db,
+      memberId: normalizedMemberId,
+      deviceId,
+      rawCharacterId,
+      preferredCharacterId: preferredId,
+      characterName: incomingName,
+      realm,
+      region,
+    });
 
     const existingCount = Number(
       db
@@ -160,38 +202,77 @@ export async function syncGuildweaverCharacter({
         .get(normalizedMemberId)?.sort_order || 0,
     );
     const characterId = existing?.id || preferredId;
-
     if (!characterId) {
       return { status: "invalid", character: null, snapshot: null };
     }
 
     const isMain = existing ? Boolean(existing.is_main) : existingCount === 0;
     const sortOrder = existing ? Number(existing.sort_order) : nextSortOrder;
+    const captured = snapshotCapturedAt(snapshot);
+    const currentProjection = existing ? projectionState(db, characterId) : null;
 
-    db.prepare(
-      `
-        INSERT INTO characters (
-          id,
-          member_id,
-          name,
-          race,
-          class_name,
-          spec,
-          professions_json,
-          is_main,
-          sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          member_id = excluded.member_id,
-          name = excluded.name,
-          race = excluded.race,
-          class_name = excluded.class_name,
-          spec = excluded.spec,
-          professions_json = excluded.professions_json,
-          is_main = excluded.is_main,
-          sort_order = excluded.sort_order
-      `,
-    ).run(
+    if (existing && currentProjection?.last_seen_at && isOlderSnapshot(captured, currentProjection.last_seen_at)) {
+      const staleSnapshot = recordCharacterSnapshotInDatabase({
+        db,
+        characterId,
+        source,
+        capturedAt: captured,
+        receivedAt,
+        deviceId,
+        bridgeRevision,
+        payload: snapshot,
+      });
+
+      recordGuildweaverCharacterAliasInDatabase({
+        db,
+        memberId: normalizedMemberId,
+        deviceId,
+        installationId: snapshot?.installationId,
+        rawCharacterId,
+        characterId,
+        characterName: incomingName,
+        realm,
+        region,
+        observedAt: receivedAt,
+      });
+
+      return {
+        status: "stale",
+        character: currentCharacterResult(db, characterId, incomingNames),
+        snapshot: staleSnapshot,
+        preservedSections: [],
+      };
+    }
+
+    const previousPayload = parsePayload(currentProjection?.payload_json);
+    const merged = mergeCharacterSnapshot(previousPayload, snapshot);
+    const materializedSnapshot = merged.snapshot;
+    const names = characterNames(materializedSnapshot);
+    const name = names.fullName || incomingName;
+    const race = text(materializedSnapshot?.race?.name ?? materializedSnapshot?.race, 32);
+    const className = text(materializedSnapshot?.class?.name ?? materializedSnapshot?.class, 32);
+    const spec = text(
+      materializedSnapshot?.specialization?.name ??
+        materializedSnapshot?.spec?.name ??
+        materializedSnapshot?.spec,
+      48,
+    );
+    const professions = professionNames(materializedSnapshot?.professions);
+
+    db.prepare(`
+      INSERT INTO characters (
+        id, member_id, name, race, class_name, spec, professions_json, is_main, sort_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        member_id = excluded.member_id,
+        name = excluded.name,
+        race = excluded.race,
+        class_name = excluded.class_name,
+        spec = excluded.spec,
+        professions_json = excluded.professions_json,
+        is_main = excluded.is_main,
+        sort_order = excluded.sort_order
+    `).run(
       characterId,
       normalizedMemberId,
       name,
@@ -203,46 +284,32 @@ export async function syncGuildweaverCharacter({
       sortOrder,
     );
 
+    recordGuildweaverCharacterAliasInDatabase({
+      db,
+      memberId: normalizedMemberId,
+      deviceId,
+      installationId: materializedSnapshot?.installationId,
+      rawCharacterId,
+      characterId,
+      characterName: name,
+      realm: text(materializedSnapshot?.realm ?? materializedSnapshot?.realmName, 120),
+      region: text(materializedSnapshot?.region, 32),
+      observedAt: receivedAt,
+    });
+
     const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE members
+      SET profile_updated_at = ?, updated_at = ?
+      WHERE id = ?
+    `).run(now, now, normalizedMemberId);
 
-    db.prepare(
-      `
-        UPDATE members
-        SET profile_updated_at = ?, updated_at = ?
-        WHERE id = ?
-      `,
-    ).run(now, now, normalizedMemberId);
-
-    const captured = capturedAt(snapshot);
-    const payloadJson = JSON.stringify(snapshot ?? {});
-    ensureCharacterSnapshotObservabilitySchema(db);
-    const duplicate = db
-      .prepare(`
-      SELECT s.id, s.captured_at, i.received_at, i.bridge_revision
-      FROM character_snapshots s
-      LEFT JOIN character_snapshot_ingests i ON i.snapshot_id = s.id
-      WHERE s.character_id = ? AND s.captured_at = ? AND s.payload_json = ?
-      ORDER BY s.id DESC
-      LIMIT 1
-    `)
-      .get(characterId, captured, payloadJson);
-
+    const duplicate = duplicateSnapshot(db, characterId, captured, materializedSnapshot);
     let storedSnapshot;
     let status = existing ? "updated" : "created";
 
     if (duplicate) {
-      storedSnapshot = {
-        id: Number(duplicate.id),
-        characterId,
-        source,
-        capturedAt: duplicate.captured_at,
-        receivedAt: duplicate.received_at || duplicate.captured_at,
-        bridgeRevision:
-          duplicate.bridge_revision === null
-            ? null
-            : Number(duplicate.bridge_revision),
-        payload: snapshot,
-      };
+      storedSnapshot = storedDuplicate(duplicate, characterId, source, materializedSnapshot);
       status = "unchanged";
     } else {
       storedSnapshot = recordCharacterSnapshotInDatabase({
@@ -253,12 +320,11 @@ export async function syncGuildweaverCharacter({
         receivedAt,
         deviceId,
         bridgeRevision,
-        payload: snapshot,
+        payload: materializedSnapshot,
       });
     }
 
-    const projectedSnapshot = projectionSnapshot(snapshot);
-
+    const projectedSnapshot = projectionSnapshot(materializedSnapshot);
     projectTelemetrySnapshotInDatabase({
       db,
       characterId,
@@ -287,6 +353,7 @@ export async function syncGuildweaverCharacter({
         isMain,
       },
       snapshot: storedSnapshot,
+      preservedSections: merged.preservedSections,
     };
   });
 
