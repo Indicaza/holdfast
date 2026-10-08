@@ -53,6 +53,13 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(armory.json.equipment.every((item) => item.itemId && item.iconFileId && item.tooltipLines.length));
     assert.ok(armory.json.stats.attributes.strength.effective > 100);
 
+    // Classes without a real capture use synthetic trees built from Classic Era data.
+    const mage = await request("/api/intelligence/characters/guildweaver-id:character-dev-mirelle", { persona: "member" });
+    assert.equal(mage.status, 200);
+    assert.equal(mage.json.talents.pointsSpent, 51);
+    assert.equal(mage.json.talents.name, "Fire");
+    assert.ok(mage.json.talents.nodes.some((node) => node.selected && node.entries.some((entry) => entry.name === "Combustion")));
+
     const icon = await request("/api/intelligence/media/icon/133138", { persona: "member" });
     assert.equal(icon.status, 302);
     assert.match(icon.headers.get("location"), /^https:\/\/wow\.zamimg\.com\/images\/wow\/icons\/large\/.+\.jpg$/);

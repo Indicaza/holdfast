@@ -82,7 +82,8 @@ const SLOT_IDS = {
 };
 const QUALITY_HEX = ["9d9d9d", "ffffff", "1eff00", "0070dd", "a335ee", "ff8000"];
 
-// Warrior talent priorities by build; the allocator respects tier gates and edges.
+// Hand-tuned Warrior builds for the captured tree; other classes use the generic
+// allocator in talentsFor. Both respect tier gates and prerequisite edges.
 const TALENT_BUILDS = {
   arms: [
     "Improved Heroic Strike", "Deflection", "Improved Charge", "Improved Tactical Mastery", "Anger Management",
@@ -104,53 +105,53 @@ const TALENT_BUILDS = {
 const ROSTER = [
   { id: "dev-roster-01", name: "Brannoc", rank: "Major", tz: "America/Chicago", characters: [
     ["Brannoc", "Dwarf", "Warrior", 60, "warrior_prot_60", "prot", ["Mining", "Blacksmithing"]],
-    ["Stoutmug", "Dwarf", "Priest", 41, "cloth_40", null, ["Herbalism", "Alchemy"]],
+    ["Stoutmug", "Dwarf", "Priest", 41, "cloth_40", "Holy", ["Herbalism", "Alchemy"]],
   ] },
   { id: "dev-roster-02", name: "Seraphine", rank: "Captain", tz: "America/New_York", characters: [
-    ["Seraphine", "Human", "Priest", 60, "priest_60", null, ["Tailoring", "Enchanting"]],
+    ["Seraphine", "Human", "Priest", 60, "priest_60", "Holy", ["Tailoring", "Enchanting"]],
   ] },
   { id: "dev-roster-03", name: "Kaelthorn", rank: "Lieutenant", tz: "America/Denver", characters: [
-    ["Kaelthorn", "Night Elf", "Druid", 60, "druid_60", null, ["Herbalism", "Alchemy"]],
-    ["Thistlewhip", "Night Elf", "Hunter", 27, "leather_25", null, ["Skinning", "Leatherworking"]],
+    ["Kaelthorn", "Night Elf", "Druid", 60, "druid_60", "Restoration", ["Herbalism", "Alchemy"]],
+    ["Thistlewhip", "Night Elf", "Hunter", 27, "leather_25", "Beast Mastery", ["Skinning", "Leatherworking"]],
   ] },
   { id: "dev-roster-04", name: "Vexis", rank: "Sergeant Major", tz: "America/Los_Angeles", characters: [
-    ["Vexis", "Human", "Rogue", 60, "rogue_60", null, ["Skinning", "Leatherworking"]],
+    ["Vexis", "Human", "Rogue", 60, "rogue_60", "Combat", ["Skinning", "Leatherworking"]],
   ] },
   { id: "dev-roster-05", name: "Ironhide", rank: "Master Sergeant", tz: "America/Chicago", characters: [
     ["Ironhide", "Human", "Warrior", 60, "warrior_fury_60", "fury", ["Mining", "Engineering"]],
-    ["Pyrelight", "Gnome", "Mage", 38, "cloth_40", null, ["Tailoring", "Enchanting"]],
+    ["Pyrelight", "Gnome", "Mage", 38, "cloth_40", "Frost", ["Tailoring", "Enchanting"]],
   ] },
   { id: "dev-roster-06", name: "Lunara", rank: "Sergeant", tz: "Europe/London", characters: [
-    ["Lunara", "Night Elf", "Hunter", 60, "hunter_60", null, ["Skinning", "Leatherworking"]],
+    ["Lunara", "Night Elf", "Hunter", 60, "hunter_60", "Marksmanship", ["Skinning", "Leatherworking"]],
   ] },
   { id: "dev-roster-07", name: "Fizzwick", rank: "Sergeant", tz: "America/New_York", characters: [
-    ["Fizzwick", "Gnome", "Warlock", 60, "warlock_60", null, ["Tailoring", "Enchanting"]],
+    ["Fizzwick", "Gnome", "Warlock", 60, "warlock_60", "Affliction", ["Tailoring", "Enchanting"]],
     ["Gearlock", "Gnome", "Warrior", 34, "mail_plate_40", "fury", ["Mining", "Engineering"]],
   ] },
   { id: "dev-roster-08", name: "Aldric", rank: "Corporal", tz: "America/Detroit", characters: [
-    ["Aldric", "Human", "Paladin", 60, "paladin_60", null, ["Mining", "Blacksmithing"]],
+    ["Aldric", "Human", "Paladin", 60, "paladin_60", "Holy", ["Mining", "Blacksmithing"]],
   ] },
   { id: "dev-roster-09", name: "Mirelle", rank: "Corporal", tz: "America/Phoenix", characters: [
-    ["Mirelle", "Human", "Mage", 60, "mage_60", null, ["Tailoring", "Alchemy"]],
-    ["Ashvane", "Human", "Warlock", 22, "cloth_20", null, ["Herbalism", "Alchemy"]],
+    ["Mirelle", "Human", "Mage", 60, "mage_60", "Fire", ["Tailoring", "Alchemy"]],
+    ["Ashvane", "Human", "Warlock", 22, "cloth_20", "Destruction", ["Herbalism", "Alchemy"]],
   ] },
   { id: "dev-roster-10", name: "Grimbeard", rank: "Corporal", tz: "America/Chicago", characters: [
-    ["Grimbeard", "Dwarf", "Hunter", 52, "hunter_60", null, ["Mining", "Engineering"]],
+    ["Grimbeard", "Dwarf", "Hunter", 52, "hunter_60", "Beast Mastery", ["Mining", "Engineering"]],
   ] },
   { id: "dev-roster-11", name: "Sylvaine", rank: "Private", tz: "America/New_York", characters: [
-    ["Sylvaine", "Night Elf", "Rogue", 44, "leather_25", null, ["Herbalism", "Alchemy"]],
+    ["Sylvaine", "Night Elf", "Rogue", 44, "leather_25", "Assassination", ["Herbalism", "Alchemy"]],
   ] },
   { id: "dev-roster-12", name: "Torvald", rank: "Private", tz: "America/Denver", characters: [
     ["Torvald", "Human", "Warrior", 58, "warrior_arms_60", "arms", ["Mining", "Blacksmithing"]],
   ] },
   { id: "dev-roster-13", name: "Wren", rank: "Private", tz: "America/Los_Angeles", characters: [
-    ["Wrenna", "Night Elf", "Priest", 29, "cloth_20", null, ["Tailoring", "Enchanting"]],
+    ["Wrenna", "Night Elf", "Priest", 29, "cloth_20", "Shadow", ["Tailoring", "Enchanting"]],
   ] },
   { id: "dev-roster-14", name: "Hollis", rank: "Recruit", tz: "America/Chicago", characters: [
-    ["Hollis", "Dwarf", "Paladin", 19, "plate_mail_20", null, ["Mining", "Blacksmithing"]],
+    ["Hollis", "Dwarf", "Paladin", 19, "plate_mail_20", "Retribution", ["Mining", "Blacksmithing"]],
   ] },
   { id: "dev-roster-15", name: "Nym", rank: "Recruit", tz: "Australia/Sydney", characters: [
-    ["Nymbleweave", "Gnome", "Mage", 24, "cloth_20", null, ["Tailoring", "Enchanting"]],
+    ["Nymbleweave", "Gnome", "Mage", 24, "cloth_20", "Arcane", ["Tailoring", "Enchanting"]],
   ] },
   { id: "dev-roster-16", name: "Corwin", rank: "Private", tz: "Europe/Berlin", characters: [
     ["Corwin", "Human", "Warrior", 46, "mail_plate_40", "arms", ["Skinning", "Leatherworking"]],
@@ -159,11 +160,11 @@ const ROSTER = [
 
 // The existing login personas also get characters so "my characters" views have data.
 const PERSONA_CHARACTERS = {
-  "dev-member": [["Mira", "Human", "Rogue", 31, "leather_25", null, ["Skinning", "Leatherworking"]]],
-  "dev-officer": [["Owen", "Dwarf", "Paladin", 60, "paladin_60", null, ["Mining", "Blacksmithing"]]],
+  "dev-member": [["Mira", "Human", "Rogue", 31, "leather_25", "Combat", ["Skinning", "Leatherworking"]]],
+  "dev-officer": [["Owen", "Dwarf", "Paladin", 60, "paladin_60", "Protection", ["Mining", "Blacksmithing"]]],
   "dev-commander": [
     ["Casey", "Night Elf", "Warrior", 60, "warrior_prot_60", "prot", ["Mining", "Engineering"]],
-    ["Caseyheals", "Night Elf", "Druid", 48, "leather_25", null, ["Herbalism", "Alchemy"]],
+    ["Caseyheals", "Night Elf", "Druid", 48, "leather_25", "Restoration", ["Herbalism", "Alchemy"]],
   ],
 };
 
@@ -396,52 +397,89 @@ function statsFor({ className, raceName, level, equipment }) {
   };
 }
 
+// Tab order matches the Classic TalentTab OrderIndex used by captured and synthetic trees.
+const TAB_NAMES = {
+  Warrior: ["Arms", "Fury", "Protection"],
+  Paladin: ["Holy", "Protection", "Retribution"],
+  Hunter: ["Beast Mastery", "Marksmanship", "Survival"],
+  Rogue: ["Assassination", "Combat", "Subtlety"],
+  Priest: ["Discipline", "Holy", "Shadow"],
+  Mage: ["Arcane", "Fire", "Frost"],
+  Warlock: ["Affliction", "Demonology", "Destruction"],
+  Druid: ["Balance", "Feral Combat", "Restoration"],
+};
+const NAMED_BUILD_TABS = { arms: 0, fury: 1, prot: 2 };
+const HEALER_SPECS = new Set(["Paladin:Holy", "Priest:Discipline", "Priest:Holy", "Druid:Restoration"]);
+const TANK_SPECS = new Set(["Warrior:Protection", "Paladin:Protection", "Druid:Feral Combat"]);
+
 function tierOf(node) {
   return Math.round((node.position.y - 2130) / 600) + 1;
 }
 
-function treeColumnOf(node) {
+function tabOf(node) {
   const x = node.position.x;
-  return x < 4000 ? "arms" : x < 8000 ? "fury" : "prot";
+  return x < 4000 ? 0 : x < 8000 ? 1 : 2;
 }
 
-function talentsFor(className, level, buildName, definition) {
+function specName(className, buildName) {
+  if (buildName in NAMED_BUILD_TABS) return TAB_NAMES[className][NAMED_BUILD_TABS[buildName]];
+  return buildName;
+}
+
+function talentsFor(className, level, buildName, definition, random) {
   if (!definition || !buildName) return undefined;
 
   const nodes = definition.payload.nodes;
   const byName = new Map(nodes.map((node) => [node.entries[0].name, node]));
+  const byId = new Map(nodes.map((node) => [node.nodeId, node]));
   const prerequisites = new Map(definition.payload.edges.map((edge) => [edge.targetNodeId, edge.sourceNodeId]));
   const ranks = new Map();
-  const spentInColumn = { arms: 0, fury: 0, prot: 0 };
+  const spentInTab = [0, 0, 0];
   const totalPoints = Math.max(0, level - 9);
+  const primaryTab = Math.max(0, TAB_NAMES[className].indexOf(specName(className, buildName)));
+  const otherTabs = [0, 1, 2].filter((tab) => tab !== primaryTab);
+  const secondaryTab = otherTabs[Math.floor(random() * otherTabs.length)];
   let points = totalPoints;
 
   const canTake = (node) => {
     const rank = ranks.get(node.nodeId) || 0;
     if (rank >= node.maxRanks) return false;
-    if (spentInColumn[treeColumnOf(node)] < (tierOf(node) - 1) * 5) return false;
+    if (spentInTab[tabOf(node)] < (tierOf(node) - 1) * 5) return false;
     const prerequisite = prerequisites.get(node.nodeId);
-    if (prerequisite) {
-      const source = nodes.find((candidate) => candidate.nodeId === prerequisite);
-      if ((ranks.get(prerequisite) || 0) < source.maxRanks) return false;
-    }
+    if (prerequisite && (ranks.get(prerequisite) || 0) < byId.get(prerequisite).maxRanks) return false;
     return true;
   };
   const take = (node) => {
     ranks.set(node.nodeId, (ranks.get(node.nodeId) || 0) + 1);
-    spentInColumn[treeColumnOf(node)] += 1;
+    spentInTab[tabOf(node)] += 1;
     points -= 1;
   };
+  // Generic builds push the main tree toward its capstone (deepest available tier
+  // first, ties broken at random), then spend the rest in one secondary tree.
+  const deepest = (tab) => {
+    const candidates = nodes.filter((node) => tabOf(node) === tab && canTake(node));
+    if (!candidates.length) return null;
+    const tier = Math.max(...candidates.map(tierOf));
+    const atTier = candidates.filter((node) => tierOf(node) === tier);
+    return atTier[Math.floor(random() * atTier.length)];
+  };
 
-  const priorities = TALENT_BUILDS[buildName].map((name) => byName.get(name)).filter(Boolean);
+  // Generic builds target the main tree's capstone, so its prerequisite chain comes first.
+  const capstoneChain = [];
+  const primaryNodes = nodes.filter((node) => tabOf(node) === primaryTab);
+  const capstone = primaryNodes.sort((a, b) => tierOf(b) - tierOf(a))[0];
+  for (let node = capstone; node; node = byId.get(prerequisites.get(node.nodeId))) capstoneChain.unshift(node);
+  const priorities = TALENT_BUILDS[buildName]
+    ? TALENT_BUILDS[buildName].map((name) => byName.get(name)).filter(Boolean)
+    : capstoneChain;
   while (points > 0) {
-    const preferred = priorities.find(canTake);
-    // Filler keeps tier gates satisfiable: lowest available tier in the build's own column first.
-    const filler = preferred || nodes
-      .filter(canTake)
-      .sort((a, b) => (treeColumnOf(a) === buildName ? 0 : 1) - (treeColumnOf(b) === buildName ? 0 : 1) || tierOf(a) - tierOf(b))[0];
-    if (!filler) break;
-    take(filler);
+    const next = priorities.find(canTake)
+      || (spentInTab[primaryTab] < 31 ? deepest(primaryTab) : null)
+      || deepest(secondaryTab)
+      || deepest(primaryTab)
+      || nodes.find(canTake);
+    if (!next) break;
+    take(next);
   }
 
   const allocations = nodes
@@ -475,7 +513,7 @@ function talentsFor(className, level, buildName, definition) {
     api: definition.payload.sourceApi,
     kind: definition.payload.kind,
     configId: 10000 + (hash(`${className}${level}${buildName}`) % 89999),
-    name: buildName.charAt(0).toUpperCase() + buildName.slice(1),
+    name: specName(className, buildName),
     treeIds: [treeId],
     pointsSpent: spent,
     pointsAvailable: points,
@@ -508,11 +546,14 @@ function professionsFor(names, level, random) {
   });
 }
 
-function specializationFor(className, definition) {
-  if (definition?.payload?.specialization) return definition.payload.specialization;
-  const classInfo = CLASSES[className];
-  const role = className === "Priest" ? "HEALER" : "DAMAGER";
-  return { index: 1, name: className, iconFileDataId: classInfo.icon, role };
+// This game build reports one class-level specialization (see the Warrior
+// capture); the role follows the character's main talent tree.
+function specializationFor(className, buildName, definition) {
+  const spec = specName(className, buildName);
+  const role = HEALER_SPECS.has(`${className}:${spec}`) ? "HEALER" : TANK_SPECS.has(`${className}:${spec}`) ? "TANK" : "DAMAGER";
+  const captured = definition?.payload?.specialization;
+  if (captured && !definition.synthetic) return captured;
+  return { index: 1, name: className, iconFileDataId: CLASSES[className].icon, role };
 }
 
 function snapshotFor(member, row, capturedAt) {
@@ -542,8 +583,8 @@ function snapshotFor(member, row, capturedAt) {
     race: { id: race.id, name: raceName, token: race.token },
     class: { id: classInfo.id, name: className, token: classInfo.token },
     guild: { name: "Holdfast", rankName: member.rank, rankIndex: 9 - (member.rankOrder ?? 1), realm: REALM },
-    specialization: specializationFor(className, definition),
-    talents: talentsFor(className, level, buildName, definition),
+    specialization: specializationFor(className, buildName, definition),
+    talents: talentsFor(className, level, buildName, definition, random),
     professions: professionsFor(professions, level, random),
     equipment,
     stats: statsFor({ className, raceName, level, equipment }),
@@ -606,7 +647,7 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
     ...ROSTER.map((entry) => [entry.id, entry.characters]),
     ...Object.entries(PERSONA_CHARACTERS),
   ];
-  const counts = { created: 0, unchanged: 0, trees: 0 };
+  const counts = { created: 0, updated: 0, unchanged: 0, trees: 0 };
 
   for (const [memberId, characters] of owners) {
     const exists = withGuildTransaction((db) => Boolean(db.prepare("SELECT 1 FROM members WHERE id = ? AND status = 'active'").get(memberId)));
@@ -646,12 +687,12 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
       if (result.status === "invalid" || result.status === "member-not-found") {
         throw new Error(`Unable to seed ${row[0]} for ${memberId}: ${result.status}`);
       }
-      counts[result.status === "created" ? "created" : "unchanged"] += 1;
+      counts[result.status in counts ? result.status : "unchanged"] += 1;
     }
   }
 
   logger.log(
-    `Seeded ${members.length} roster members; ${counts.created} character snapshots created, ${counts.unchanged} unchanged; ${counts.trees} talent trees recorded.`,
+    `Seeded ${members.length} roster members; character snapshots: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged; ${counts.trees} talent trees recorded.`,
   );
   return counts;
 }

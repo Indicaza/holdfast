@@ -1,0 +1,2885 @@
+{
+  "schemaVersion": 1,
+  "eventType": "talent_tree_definition",
+  "synthetic": true,
+  "syntheticSource": "Classic Era Talent/TalentTab via wago.tools; tooltips via Wowhead Classic",
+  "capturedAt": 1791430710,
+  "gameBuild": {
+    "interface": 16001,
+    "buildDate": "Oct  5 2026",
+    "version": "1.60.1",
+    "build": "70245"
+  },
+  "realm": "Classic Beta PvE 2",
+  "region": null,
+  "installationId": "install-dev-synthetic",
+  "characterId": null,
+  "guildId": null,
+  "payload": {
+    "treeHash": [
+      5,
+      108,
+      60,
+      62,
+      114,
+      139,
+      138,
+      134,
+      48,
+      34,
+      195,
+      104,
+      118,
+      132,
+      210,
+      124
+    ],
+    "class": {
+      "id": 5,
+      "name": "Priest",
+      "token": "PRIEST"
+    },
+    "schemaVersion": 3,
+    "specialization": {
+      "role": "DAMAGER",
+      "index": 1,
+      "iconFileDataId": 626004,
+      "name": "Priest"
+    },
+    "locale": "enUS",
+    "edges": [
+      {
+        "sourceNodeId": 900347,
+        "targetNodeId": 900351,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901201,
+        "targetNodeId": 900322,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901181,
+        "targetNodeId": 900403,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901561,
+        "targetNodeId": 901637,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900542,
+        "targetNodeId": 900541,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900484,
+        "targetNodeId": 901638,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900484,
+        "targetNodeId": 900521,
+        "type": 2,
+        "visualStyle": 1
+      }
+    ],
+    "treeId": 9005,
+    "nodes": [
+      {
+        "nodeId": 900342,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135995,
+            "definitionId": 980342,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Unbreakable Will",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your chance to resist Stun, Fear, and Silence effects by an additional 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14522:0|h[Unbreakable Will]|h|r",
+            "name": "Unbreakable Will",
+            "entryId": 950342,
+            "description": "Increases your chance to resist Stun, Fear, and Silence effects by an additional 3%.",
+            "spellId": 14522
+          }
+        ]
+      },
+      {
+        "nodeId": 900345,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135463,
+            "definitionId": 980345,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Wand Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your damage with Wands by 5%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14524:0|h[Wand Specialization]|h|r",
+            "name": "Wand Specialization",
+            "entryId": 950345,
+            "description": "Increases your damage with Wands by 5%.",
+            "spellId": 14524
+          }
+        ]
+      },
+      {
+        "nodeId": 900352,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136053,
+            "definitionId": 980352,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Silent Resolve",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the threat generated by your spells by 4%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14523:0|h[Silent Resolve]|h|r",
+            "name": "Silent Resolve",
+            "entryId": 950352,
+            "description": "Reduces the threat generated by your spells by 4%.",
+            "spellId": 14523
+          }
+        ]
+      },
+      {
+        "nodeId": 900344,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135987,
+            "definitionId": 980344,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Power Word: Fortitude",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of your Power Word: Fortitude and Prayer of Fortitude spells by 15%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14749:0|h[Improved Power Word: Fortitude]|h|r",
+            "name": "Improved Power Word: Fortitude",
+            "entryId": 950344,
+            "description": "Increases the effect of your Power Word: Fortitude and Prayer of Fortitude spells by 15%.",
+            "spellId": 14749
+          }
+        ]
+      },
+      {
+        "nodeId": 900343,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135940,
+            "definitionId": 980343,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Power Word: Shield",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage absorbed by your Power Word: Shield by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14748:0|h[Improved Power Word: Shield]|h|r",
+            "name": "Improved Power Word: Shield",
+            "entryId": 950343,
+            "description": "Increases the damage absorbed by your Power Word: Shield by 5%.",
+            "spellId": 14748
+          }
+        ]
+      },
+      {
+        "nodeId": 900321,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136107,
+            "definitionId": 980321,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Martyrdom",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 50% chance to gain the Focused Casting effect that lasts for 6 sec after being the victim of a melee or ranged critical strike. The Focused Casting effect prevents you from losing casting time when taking damage and increases resistance to Interrupt effects by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14531:0|h[Martyrdom]|h|r",
+            "name": "Martyrdom",
+            "entryId": 950321,
+            "description": "Gives you a 50% chance to gain the Focused Casting effect that lasts for 6 sec after being the victim of a melee or ranged critical strike. The Focused Casting effect prevents you from losing casting time when taking damage and increases resistance to Interrupt effects by 10%.",
+            "spellId": 14531
+          }
+        ]
+      },
+      {
+        "nodeId": 900348,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135863,
+            "definitionId": 980348,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Inner Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, reduces the Mana cost of your next spell by 100% and increases its critical effect chance by 25% if it is capable of a critical effect."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:14751:0|h[Inner Focus]|h|r",
+            "name": "Inner Focus",
+            "entryId": 950348,
+            "description": "When activated, reduces the Mana cost of your next spell by 100% and increases its critical effect chance by 25% if it is capable of a critical effect.",
+            "spellId": 14751
+          }
+        ]
+      },
+      {
+        "nodeId": 900347,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136090,
+            "definitionId": 980347,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Meditation",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Allows 5% of your Mana regeneration to continue while casting."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14521:0|h[Meditation]|h|r",
+            "name": "Meditation",
+            "entryId": 950347,
+            "description": "Allows 5% of your Mana regeneration to continue while casting.",
+            "spellId": 14521
+          }
+        ]
+      },
+      {
+        "nodeId": 900346,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135926,
+            "definitionId": 980346,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Inner Fire",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Armor bonus of your Inner Fire spell by 10%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14747:0|h[Improved Inner Fire]|h|r",
+            "name": "Improved Inner Fire",
+            "entryId": 950346,
+            "description": "Increases the Armor bonus of your Inner Fire spell by 10%.",
+            "spellId": 14747
+          }
+        ]
+      },
+      {
+        "nodeId": 900341,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132156,
+            "definitionId": 980341,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Mental Agility",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the mana cost of your instant cast spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14520:0|h[Mental Agility]|h|r",
+            "name": "Mental Agility",
+            "entryId": 950341,
+            "description": "Reduces the mana cost of your instant cast spells by 2%.",
+            "spellId": 14520
+          }
+        ]
+      },
+      {
+        "nodeId": 900350,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136170,
+            "definitionId": 980350,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Mana Burn",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the casting time of your Mana Burn spell by 0.25 secs."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14750:0|h[Improved Mana Burn]|h|r",
+            "name": "Improved Mana Burn",
+            "entryId": 950350,
+            "description": "Reduces the casting time of your Mana Burn spell by 0.25 secs.",
+            "spellId": 14750
+          }
+        ]
+      },
+      {
+        "nodeId": 901201,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136031,
+            "definitionId": 981201,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Mental Strength",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your maximum Mana by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:18551:0|h[Mental Strength]|h|r",
+            "name": "Mental Strength",
+            "entryId": 951201,
+            "description": "Increases your maximum Mana by 2%.",
+            "spellId": 18551
+          }
+        ]
+      },
+      {
+        "nodeId": 900351,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135898,
+            "definitionId": 980351,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Divine Spirit",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "285 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Holy power infuses the target, increasing their Spirit by 17 for 30 min."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:14752:0|h[Divine Spirit]|h|r",
+            "name": "Divine Spirit",
+            "entryId": 950351,
+            "description": "Holy power infuses the target, increasing their Spirit by 17 for 30 min.",
+            "spellId": 14752
+          }
+        ]
+      },
+      {
+        "nodeId": 901202,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136092,
+            "definitionId": 981202,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Force of Will",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your spell damage by 1% and the critical strike chance of your offensive spells by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:18544:0|h[Force of Will]|h|r",
+            "name": "Force of Will",
+            "entryId": 951202,
+            "description": "Increases your spell damage by 1% and the critical strike chance of your offensive spells by 1%.",
+            "spellId": 18544
+          }
+        ]
+      },
+      {
+        "nodeId": 900322,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135939,
+            "definitionId": 980322,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Power Infusion",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "20% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Infuses the target with power, increasing their spell damage and healing by 20%. Lasts 15 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:10060:0|h[Power Infusion]|h|r",
+            "name": "Power Infusion",
+            "entryId": 950322,
+            "description": "Infuses the target with power, increasing their spell damage and healing by 20%. Lasts 15 sec.",
+            "spellId": 10060
+          }
+        ]
+      },
+      {
+        "nodeId": 900410,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135918,
+            "definitionId": 980410,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Healing Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 35% chance to avoid interruption caused by damage while casting any healing spell."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14913:0|h[Healing Focus]|h|r",
+            "name": "Healing Focus",
+            "entryId": 950410,
+            "description": "Gives you a 35% chance to avoid interruption caused by damage while casting any healing spell.",
+            "spellId": 14913
+          }
+        ]
+      },
+      {
+        "nodeId": 900406,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135953,
+            "definitionId": 980406,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Renew",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the amount healed by your Renew spell by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14908:0|h[Improved Renew]|h|r",
+            "name": "Improved Renew",
+            "entryId": 950406,
+            "description": "Increases the amount healed by your Renew spell by 5%.",
+            "spellId": 14908
+          }
+        ]
+      },
+      {
+        "nodeId": 900401,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135967,
+            "definitionId": 980401,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical effect chance of your Holy spells by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14889:0|h[Holy Specialization]|h|r",
+            "name": "Holy Specialization",
+            "entryId": 950401,
+            "description": "Increases the critical effect chance of your Holy spells by 1%.",
+            "spellId": 14889
+          }
+        ]
+      },
+      {
+        "nodeId": 900411,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135976,
+            "definitionId": 980411,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spell Warding",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces all spell damage taken by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:27900:0|h[Spell Warding]|h|r",
+            "name": "Spell Warding",
+            "entryId": 950411,
+            "description": "Reduces all spell damage taken by 2%.",
+            "spellId": 27900
+          }
+        ]
+      },
+      {
+        "nodeId": 901181,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135971,
+            "definitionId": 981181,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Divine Fury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the casting time of your Smite, Holy Fire, Heal and Greater Heal spells by 0.1 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:18530:0|h[Divine Fury]|h|r",
+            "name": "Divine Fury",
+            "entryId": 951181,
+            "description": "Reduces the casting time of your Smite, Holy Fire, Heal and Greater Heal spells by 0.1 sec.",
+            "spellId": 18530
+          }
+        ]
+      },
+      {
+        "nodeId": 900442,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135922,
+            "definitionId": 980442,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Nova",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "185 Mana\nInstant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Causes an explosion of holy light around the caster, causing 29 to 34 Holy damage to all enemy targets within 10 yards and healing all party members within 10 yards for 54 to 63. These effects cause no threat."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:15237:0|h[Holy Nova]|h|r",
+            "name": "Holy Nova",
+            "entryId": 950442,
+            "description": "Causes an explosion of holy light around the caster, causing 29 to 34 Holy damage to all enemy targets within 10 yards and healing all party members within 10 yards for 54 to 63. These effects cause no threat.",
+            "spellId": 15237
+          }
+        ]
+      },
+      {
+        "nodeId": 901636,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135877,
+            "definitionId": 981636,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blessed Recovery",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "After being struck by a melee or ranged critical hit, heal 8% of the damage taken over 6 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:27811:0|h[Blessed Recovery]|h|r",
+            "name": "Blessed Recovery",
+            "entryId": 951636,
+            "description": "After being struck by a melee or ranged critical hit, heal 8% of the damage taken over 6 sec.",
+            "spellId": 27811
+          }
+        ]
+      },
+      {
+        "nodeId": 900361,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135928,
+            "definitionId": 980361,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Inspiration",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your target's armor by 8% for 15 sec after getting a critical effect from your Flash Heal, Heal, Greater Heal, or Prayer of Healing spell."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14892:0|h[Inspiration]|h|r",
+            "name": "Inspiration",
+            "entryId": 950361,
+            "description": "Increases your target's armor by 8% for 15 sec after getting a critical effect from your Flash Heal, Heal, Greater Heal, or Prayer of Healing spell.",
+            "spellId": 14892
+          }
+        ]
+      },
+      {
+        "nodeId": 901635,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135949,
+            "definitionId": 981635,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Reach",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your Smite and Holy Fire spells and the radius of your Prayer of Healing and Holy Nova spells by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:27789:0|h[Holy Reach]|h|r",
+            "name": "Holy Reach",
+            "entryId": 951635,
+            "description": "Increases the range of your Smite and Holy Fire spells and the radius of your Prayer of Healing and Holy Nova spells by 10%.",
+            "spellId": 27789
+          }
+        ]
+      },
+      {
+        "nodeId": 900408,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135916,
+            "definitionId": 980408,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Healing",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Mana cost of your Lesser Heal, Heal, and Greater Heal spells by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:14912:0|h[Improved Healing]|h|r",
+            "name": "Improved Healing",
+            "entryId": 950408,
+            "description": "Reduces the Mana cost of your Lesser Heal, Heal, and Greater Heal spells by 5%.",
+            "spellId": 14912
+          }
+        ]
+      },
+      {
+        "nodeId": 900403,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135973,
+            "definitionId": 980403,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Searing Light",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage of your Smite and Holy Fire spells by 5%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14909:0|h[Searing Light]|h|r",
+            "name": "Searing Light",
+            "entryId": 950403,
+            "description": "Increases the damage of your Smite and Holy Fire spells by 5%.",
+            "spellId": 14909
+          }
+        ]
+      },
+      {
+        "nodeId": 900413,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135943,
+            "definitionId": 980413,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Prayer of Healing",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Mana cost of your Prayer of Healing spell by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:14911:0|h[Improved Prayer of Healing]|h|r",
+            "name": "Improved Prayer of Healing",
+            "entryId": 950413,
+            "description": "Reduces the Mana cost of your Prayer of Healing spell by 10%.",
+            "spellId": 14911
+          }
+        ]
+      },
+      {
+        "nodeId": 901561,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132864,
+            "definitionId": 981561,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spirit of Redemption",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Upon death, the priest becomes the Spirit of Redemption for 10 sec. The Spirit of Redemption cannot move, attack, be attacked or targeted by any spells or effects. While in this form the priest can cast any healing spell free of cost. When the effect ends, the priest dies."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20711:0|h[Spirit of Redemption]|h|r",
+            "name": "Spirit of Redemption",
+            "entryId": 951561,
+            "description": "Upon death, the priest becomes the Spirit of Redemption for 10 sec. The Spirit of Redemption cannot move, attack, be attacked or targeted by any spells or effects. While in this form the priest can cast any healing spell free of cost. When the effect ends, the priest dies.",
+            "spellId": 20711
+          }
+        ]
+      },
+      {
+        "nodeId": 900402,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135977,
+            "definitionId": 980402,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spiritual Guidance",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases spell damage and healing by up to 5% of your total Spirit."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14901:0|h[Spiritual Guidance]|h|r",
+            "name": "Spiritual Guidance",
+            "entryId": 950402,
+            "description": "Increases spell damage and healing by up to 5% of your total Spirit.",
+            "spellId": 14901
+          }
+        ]
+      },
+      {
+        "nodeId": 900404,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136057,
+            "definitionId": 980404,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spiritual Healing",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the amount healed by your healing spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:14898:0|h[Spiritual Healing]|h|r",
+            "name": "Spiritual Healing",
+            "entryId": 950404,
+            "description": "Increases the amount healed by your healing spells by 2%.",
+            "spellId": 14898
+          }
+        ]
+      },
+      {
+        "nodeId": 901637,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135980,
+            "definitionId": 981637,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Lightwell",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "225 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "1.5 sec cast",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "10 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Creates a holy Lightwell near the priest. Members of your raid or party can click the Lightwell to restore 800 health over 10 sec. Being attacked cancels the effect. Lightwell lasts for 3 min or 5 charges."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:724:0|h[Lightwell]|h|r",
+            "name": "Lightwell",
+            "entryId": 951637,
+            "description": "Creates a holy Lightwell near the priest. Members of your raid or party can click the Lightwell to restore 800 health over 10 sec. Being attacked cancels the effect. Lightwell lasts for 3 min or 5 charges.",
+            "spellId": 724
+          }
+        ]
+      },
+      {
+        "nodeId": 900465,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136188,
+            "definitionId": 980465,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spirit Tap",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 20% chance to gain a 100% bonus to your Spirit after killing a target that yields experience. For the duration, your Mana will regenerate at a 50% rate while casting. Lasts 15 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15270:0|h[Spirit Tap]|h|r",
+            "name": "Spirit Tap",
+            "entryId": 950465,
+            "description": "Gives you a 20% chance to gain a 100% bonus to your Spirit after killing a target that yields experience. For the duration, your Mana will regenerate at a 50% rate while casting. Lasts 15 sec.",
+            "spellId": 15270
+          }
+        ]
+      },
+      {
+        "nodeId": 900464,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136160,
+            "definitionId": 980464,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blackout",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Shadow damage spells a 2% chance to stun the target for 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15268:0|h[Blackout]|h|r",
+            "name": "Blackout",
+            "entryId": 950464,
+            "description": "Gives your Shadow damage spells a 2% chance to stun the target for 3 sec.",
+            "spellId": 15268
+          }
+        ]
+      },
+      {
+        "nodeId": 900466,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136205,
+            "definitionId": 980466,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shadow Affinity",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the threat generated by your Shadow spells by 8%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:15318:0|h[Shadow Affinity]|h|r",
+            "name": "Shadow Affinity",
+            "entryId": 950466,
+            "description": "Reduces the threat generated by your Shadow spells by 8%.",
+            "spellId": 15318
+          }
+        ]
+      },
+      {
+        "nodeId": 900482,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136207,
+            "definitionId": 980482,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Shadow Word: Pain",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the duration of your Shadow Word: Pain spell by 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:15275:0|h[Improved Shadow Word: Pain]|h|r",
+            "name": "Improved Shadow Word: Pain",
+            "entryId": 950482,
+            "description": "Increases the duration of your Shadow Word: Pain spell by 3 sec.",
+            "spellId": 15275
+          }
+        ]
+      },
+      {
+        "nodeId": 900463,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136126,
+            "definitionId": 980463,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shadow Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces your target's chance to resist your Shadow spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15260:0|h[Shadow Focus]|h|r",
+            "name": "Shadow Focus",
+            "entryId": 950463,
+            "description": "Reduces your target's chance to resist your Shadow spells by 2%.",
+            "spellId": 15260
+          }
+        ]
+      },
+      {
+        "nodeId": 900542,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136184,
+            "definitionId": 980542,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Psychic Scream",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Psychic Scream spell by 2 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:15392:0|h[Improved Psychic Scream]|h|r",
+            "name": "Improved Psychic Scream",
+            "entryId": 950542,
+            "description": "Reduces the cooldown of your Psychic Scream spell by 2 sec.",
+            "spellId": 15392
+          }
+        ]
+      },
+      {
+        "nodeId": 900481,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136224,
+            "definitionId": 980481,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Mind Blast",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Mind Blast spell by 0.5 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15273:0|h[Improved Mind Blast]|h|r",
+            "name": "Improved Mind Blast",
+            "entryId": 950481,
+            "description": "Reduces the cooldown of your Mind Blast spell by 0.5 sec.",
+            "spellId": 15273
+          }
+        ]
+      },
+      {
+        "nodeId": 900501,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136208,
+            "definitionId": 980501,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Mind Flay",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "45 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "20 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Channeled (3 sec cast)",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Assault the target's mind with Shadow energy, causing 75 Shadow damage over 3 sec and slowing their movement speed by 50%."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:15407:0|h[Mind Flay]|h|r",
+            "name": "Mind Flay",
+            "entryId": 950501,
+            "description": "Assault the target's mind with Shadow energy, causing 75 Shadow damage over 3 sec and slowing their movement speed by 50%.",
+            "spellId": 15407
+          }
+        ]
+      },
+      {
+        "nodeId": 900483,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135994,
+            "definitionId": 980483,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Fade",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decreases the cooldown of your Fade ability by 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:15274:0|h[Improved Fade]|h|r",
+            "name": "Improved Fade",
+            "entryId": 950483,
+            "description": "Decreases the cooldown of your Fade ability by 3 sec.",
+            "spellId": 15274
+          }
+        ]
+      },
+      {
+        "nodeId": 900881,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136130,
+            "definitionId": 980881,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shadow Reach",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your Shadow damage spells by 6%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:17322:0|h[Shadow Reach]|h|r",
+            "name": "Shadow Reach",
+            "entryId": 950881,
+            "description": "Increases the range of your Shadow damage spells by 6%.",
+            "spellId": 17322
+          }
+        ]
+      },
+      {
+        "nodeId": 900461,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136123,
+            "definitionId": 980461,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shadow Weaving",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Your Shadow damage spells have a 20% chance to cause your target to be vulnerable to Shadow damage. This vulnerability increases the Shadow damage dealt to your target by 3% and lasts 15 sec. Stacks up to 5 times."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15257:0|h[Shadow Weaving]|h|r",
+            "name": "Shadow Weaving",
+            "entryId": 950461,
+            "description": "Your Shadow damage spells have a 20% chance to cause your target to be vulnerable to Shadow damage. This vulnerability increases the Shadow damage dealt to your target by 3% and lasts 15 sec. Stacks up to 5 times.",
+            "spellId": 15257
+          }
+        ]
+      },
+      {
+        "nodeId": 900541,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136164,
+            "definitionId": 980541,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Silence",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "225 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "20 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "45 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Silences the target, preventing them from casting spells for 5 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:15487:0|h[Silence]|h|r",
+            "name": "Silence",
+            "entryId": 950541,
+            "description": "Silences the target, preventing them from casting spells for 5 sec.",
+            "spellId": 15487
+          }
+        ]
+      },
+      {
+        "nodeId": 900484,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136230,
+            "definitionId": 980484,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Vampiric Embrace",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "40 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "10 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Afflicts your target with Shadow energy that causes all party members to be healed for 20% of any Shadow spell damage you deal for 1 min."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:15286:0|h[Vampiric Embrace]|h|r",
+            "name": "Vampiric Embrace",
+            "entryId": 950484,
+            "description": "Afflicts your target with Shadow energy that causes all party members to be healed for 20% of any Shadow spell damage you deal for 1 min.",
+            "spellId": 15286
+          }
+        ]
+      },
+      {
+        "nodeId": 901638,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136165,
+            "definitionId": 981638,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Vampiric Embrace",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the percentage healed by Vampiric Embrace by an additional 5%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:27839:0|h[Improved Vampiric Embrace]|h|r",
+            "name": "Improved Vampiric Embrace",
+            "entryId": 951638,
+            "description": "Increases the percentage healed by Vampiric Embrace by an additional 5%.",
+            "spellId": 27839
+          }
+        ]
+      },
+      {
+        "nodeId": 900462,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136223,
+            "definitionId": 980462,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Darkness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Shadow spell damage by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:15259:0|h[Darkness]|h|r",
+            "name": "Darkness",
+            "entryId": 950462,
+            "description": "Increases your Shadow spell damage by 2%.",
+            "spellId": 15259
+          }
+        ]
+      },
+      {
+        "nodeId": 900521,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136200,
+            "definitionId": 980521,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shadowform",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "40% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "1.5 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Assume a Shadowform, increasing your Shadow damage by 15%"
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:15473:0|h[Shadowform]|h|r",
+            "name": "Shadowform",
+            "entryId": 950521,
+            "description": "Assume a Shadowform, increasing your Shadow damage by 15%",
+            "spellId": 15473
+          }
+        ]
+      }
+    ],
+    "sourceApi": "traits",
+    "kind": "combat",
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Oct  5 2026",
+      "version": "1.60.1",
+      "build": "70245"
+    }
+  }
+}

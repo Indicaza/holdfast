@@ -1,0 +1,2925 @@
+{
+  "schemaVersion": 1,
+  "eventType": "talent_tree_definition",
+  "synthetic": true,
+  "syntheticSource": "Classic Era Talent/TalentTab via wago.tools; tooltips via Wowhead Classic",
+  "capturedAt": 1791430710,
+  "gameBuild": {
+    "interface": 16001,
+    "buildDate": "Oct  5 2026",
+    "version": "1.60.1",
+    "build": "70245"
+  },
+  "realm": "Classic Beta PvE 2",
+  "region": null,
+  "installationId": "install-dev-synthetic",
+  "characterId": null,
+  "guildId": null,
+  "payload": {
+    "treeHash": [
+      204,
+      25,
+      63,
+      34,
+      250,
+      55,
+      141,
+      91,
+      27,
+      30,
+      193,
+      124,
+      88,
+      63,
+      44,
+      155
+    ],
+    "class": {
+      "id": 11,
+      "name": "Druid",
+      "token": "DRUID"
+    },
+    "schemaVersion": 3,
+    "specialization": {
+      "role": "DAMAGER",
+      "index": 1,
+      "iconFileDataId": 625999,
+      "name": "Druid"
+    },
+    "locale": "enUS",
+    "edges": [
+      {
+        "sourceNodeId": 900761,
+        "targetNodeId": 900921,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900791,
+        "targetNodeId": 900788,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900763,
+        "targetNodeId": 900792,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900789,
+        "targetNodeId": 900790,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900798,
+        "targetNodeId": 900800,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900798,
+        "targetNodeId": 900801,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900803,
+        "targetNodeId": 900808,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900824,
+        "targetNodeId": 900831,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900827,
+        "targetNodeId": 900828,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900843,
+        "targetNodeId": 900844,
+        "type": 2,
+        "visualStyle": 1
+      }
+    ],
+    "treeId": 9011,
+    "nodes": [
+      {
+        "nodeId": 900762,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136006,
+            "definitionId": 980762,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Wrath",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cast time of your Wrath spell by 0.1 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16814:0|h[Improved Wrath]|h|r",
+            "name": "Improved Wrath",
+            "entryId": 950762,
+            "description": "Reduces the cast time of your Wrath spell by 0.1 sec.",
+            "spellId": 16814
+          }
+        ]
+      },
+      {
+        "nodeId": 900761,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136063,
+            "definitionId": 980761,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Nature's Grasp",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "50 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "1 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1). Only useable outdoors. 1 charge. Lasts 45 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:16689:0|h[Nature's Grasp]|h|r",
+            "name": "Nature's Grasp",
+            "entryId": 950761,
+            "description": "While active, any time an enemy strikes the caster they have a 35% chance to become afflicted by Entangling Roots (Rank 1). Only useable outdoors. 1 charge. Lasts 45 sec.",
+            "spellId": 16689
+          }
+        ]
+      },
+      {
+        "nodeId": 900921,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 4,
+        "entries": [
+          {
+            "iconFileDataId": 136063,
+            "definitionId": 980921,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Nature's Grasp",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the chance for your Nature's Grasp to entangle an enemy by 15%."
+                }
+              ]
+            },
+            "maxRanks": 4,
+            "spellLink": "|cff71d5ff|Hspell:17245:0|h[Improved Nature's Grasp]|h|r",
+            "name": "Improved Nature's Grasp",
+            "entryId": 950921,
+            "description": "Increases the chance for your Nature's Grasp to entangle an enemy by 15%.",
+            "spellId": 17245
+          }
+        ]
+      },
+      {
+        "nodeId": 900787,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136100,
+            "definitionId": 980787,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Entangling Roots",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 40% chance to avoid interruption caused by damage while casting Entangling Roots."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16918:0|h[Improved Entangling Roots]|h|r",
+            "name": "Improved Entangling Roots",
+            "entryId": 950787,
+            "description": "Gives you a 40% chance to avoid interruption caused by damage while casting Entangling Roots.",
+            "spellId": 16918
+          }
+        ]
+      },
+      {
+        "nodeId": 900763,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136096,
+            "definitionId": 980763,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Moonfire",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage and critical strike chance of your Moonfire spell by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16821:0|h[Improved Moonfire]|h|r",
+            "name": "Improved Moonfire",
+            "entryId": 950763,
+            "description": "Increases the damage and critical strike chance of your Moonfire spell by 2%.",
+            "spellId": 16821
+          }
+        ]
+      },
+      {
+        "nodeId": 900791,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135138,
+            "definitionId": 980791,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Natural Weapons",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage you deal with physical attacks in all forms by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16902:0|h[Natural Weapons]|h|r",
+            "name": "Natural Weapons",
+            "entryId": 950791,
+            "description": "Increases the damage you deal with physical attacks in all forms by 2%.",
+            "spellId": 16902
+          }
+        ]
+      },
+      {
+        "nodeId": 900781,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136116,
+            "definitionId": 980781,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Natural Shapeshifter",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the mana cost of all shapeshifting by 10%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16833:0|h[Natural Shapeshifter]|h|r",
+            "name": "Natural Shapeshifter",
+            "entryId": 950781,
+            "description": "Reduces the mana cost of all shapeshifting by 10%.",
+            "spellId": 16833
+          }
+        ]
+      },
+      {
+        "nodeId": 900782,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136104,
+            "definitionId": 980782,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Thorns",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases damage caused by your Thorns spell by 25%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16836:0|h[Improved Thorns]|h|r",
+            "name": "Improved Thorns",
+            "entryId": 950782,
+            "description": "Increases damage caused by your Thorns spell by 25%.",
+            "spellId": 16836
+          }
+        ]
+      },
+      {
+        "nodeId": 900788,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136017,
+            "definitionId": 980788,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Omen of Clarity",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "120 Mana\nInstant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Imbues the Druid with natural energy. Each of the Druid's melee attacks"
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:16864:0|h[Omen of Clarity]|h|r",
+            "name": "Omen of Clarity",
+            "entryId": 950788,
+            "description": "Imbues the Druid with natural energy. Each of the Druid's melee attacks",
+            "spellId": 16864
+          }
+        ]
+      },
+      {
+        "nodeId": 900764,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136065,
+            "definitionId": 980764,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Nature's Reach",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, and Hurricane spells by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16819:0|h[Nature's Reach]|h|r",
+            "name": "Nature's Reach",
+            "entryId": 950764,
+            "description": "Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, and Hurricane spells by 10%.",
+            "spellId": 16819
+          }
+        ]
+      },
+      {
+        "nodeId": 900792,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136075,
+            "definitionId": 980792,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Vengeance",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 20%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16909:0|h[Vengeance]|h|r",
+            "name": "Vengeance",
+            "entryId": 950792,
+            "description": "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 20%.",
+            "spellId": 16909
+          }
+        ]
+      },
+      {
+        "nodeId": 900784,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135753,
+            "definitionId": 980784,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Starfire",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cast time of Starfire by 0.1 sec and has a 3% chance to stun the target for 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16850:0|h[Improved Starfire]|h|r",
+            "name": "Improved Starfire",
+            "entryId": 950784,
+            "description": "Reduces the cast time of Starfire by 0.1 sec and has a 3% chance to stun the target for 3 sec.",
+            "spellId": 16850
+          }
+        ]
+      },
+      {
+        "nodeId": 900789,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136062,
+            "definitionId": 980789,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Nature's Grace",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:16880:0|h[Nature's Grace]|h|r",
+            "name": "Nature's Grace",
+            "entryId": 950789,
+            "description": "All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec.",
+            "spellId": 16880
+          }
+        ]
+      },
+      {
+        "nodeId": 900783,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136087,
+            "definitionId": 980783,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Moonglow",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Healing Touch, Regrowth and Rejuvenation spells by 3%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16845:0|h[Moonglow]|h|r",
+            "name": "Moonglow",
+            "entryId": 950783,
+            "description": "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Healing Touch, Regrowth and Rejuvenation spells by 3%.",
+            "spellId": 16845
+          }
+        ]
+      },
+      {
+        "nodeId": 900790,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136057,
+            "definitionId": 980790,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Moonfury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Starfire, Moonfire and Wrath spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16896:0|h[Moonfury]|h|r",
+            "name": "Moonfury",
+            "entryId": 950790,
+            "description": "Increases the damage done by your Starfire, Moonfire and Wrath spells by 2%.",
+            "spellId": 16896
+          }
+        ]
+      },
+      {
+        "nodeId": 900793,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136036,
+            "definitionId": 980793,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Moonkin Form",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "35% of base mana\nInstant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Transforms the Druid into Moonkin Form. While in this form the armor contribution from items is increased by 360% The Moonkin can only cast Balance spells while shapeshifted. [Reduces all threat from Arcane and Nature spells by 0% while in this form] The act of shapeshifting frees the caster of Polymorph and Movement Impairing effects."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:24858:0|h[Moonkin Form]|h|r",
+            "name": "Moonkin Form",
+            "entryId": 950793,
+            "description": "Transforms the Druid into Moonkin Form. While in this form the armor contribution from items is increased by 360% The Moonkin can only cast Balance spells while shapeshifted. [Reduces all threat from Arcane and Nature spells by 0% while in this form] The act of shapeshifting frees the caster of Polymorph and Movement Impairing effects.",
+            "spellId": 24858
+          }
+        ]
+      },
+      {
+        "nodeId": 900796,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132190,
+            "definitionId": 980796,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ferocity",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cost of your Maul, Swipe, Claw, and Rake abilities by 1 Rage or Energy."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16934:0|h[Ferocity]|h|r",
+            "name": "Ferocity",
+            "entryId": 950796,
+            "description": "Reduces the cost of your Maul, Swipe, Claw, and Rake abilities by 1 Rage or Energy.",
+            "spellId": 16934
+          }
+        ]
+      },
+      {
+        "nodeId": 900795,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132121,
+            "definitionId": 980795,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Feral Aggression",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Attack Power reduction of your Demoralizing Roar by 8% and the damage caused by your Ferocious Bite by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16858:0|h[Feral Aggression]|h|r",
+            "name": "Feral Aggression",
+            "entryId": 950795,
+            "description": "Increases the Attack Power reduction of your Demoralizing Roar by 8% and the damage caused by your Ferocious Bite by 3%.",
+            "spellId": 16858
+          }
+        ]
+      },
+      {
+        "nodeId": 900799,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132089,
+            "definitionId": 980799,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Feral Instinct",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Cat Form, Bear Form, Dire Bear Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases threat caused in Bear and Dire Bear Form by 3% and reduces the chance enemies have to detect you while Prowling."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16947:0|h[Feral Instinct]|h|r",
+            "name": "Feral Instinct",
+            "entryId": 950799,
+            "description": "Increases threat caused in Bear and Dire Bear Form by 3% and reduces the chance enemies have to detect you while Prowling.",
+            "spellId": 16947
+          }
+        ]
+      },
+      {
+        "nodeId": 900797,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132114,
+            "definitionId": 980797,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Brutal Impact",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the stun duration of your Bash and Pounce abilities by 0.5 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16940:0|h[Brutal Impact]|h|r",
+            "name": "Brutal Impact",
+            "entryId": 950797,
+            "description": "Increases the stun duration of your Bash and Pounce abilities by 0.5 sec.",
+            "spellId": 16940
+          }
+        ]
+      },
+      {
+        "nodeId": 900794,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 134355,
+            "definitionId": 980794,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Thick Hide",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Armor contribution from items by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:16929:0|h[Thick Hide]|h|r",
+            "name": "Thick Hide",
+            "entryId": 950794,
+            "description": "Increases your Armor contribution from items by 2%.",
+            "spellId": 16929
+          }
+        ]
+      },
+      {
+        "nodeId": 900807,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136095,
+            "definitionId": 980807,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Feline Swiftness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Cat Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your movement speed by 15% in Cat Form and increases your chance to dodge while in Cat Form by 2%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:17002:0|h[Feline Swiftness]|h|r",
+            "name": "Feline Swiftness",
+            "entryId": 950807,
+            "description": "Increases your movement speed by 15% in Cat Form and increases your chance to dodge while in Cat Form by 2%.",
+            "spellId": 17002
+          }
+        ]
+      },
+      {
+        "nodeId": 900804,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132183,
+            "definitionId": 980804,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Feral Charge",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "5 Rage",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "8 - 25 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant cast",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "15 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Bear Form, Dire Bear Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:16979:0|h[Feral Charge]|h|r",
+            "name": "Feral Charge",
+            "entryId": 950804,
+            "description": "Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec.",
+            "spellId": 16979
+          }
+        ]
+      },
+      {
+        "nodeId": 900798,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 134297,
+            "definitionId": 980798,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Sharpened Claws",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Cat Form, Bear Form, Dire Bear Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16942:0|h[Sharpened Claws]|h|r",
+            "name": "Sharpened Claws",
+            "entryId": 950798,
+            "description": "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 2%.",
+            "spellId": 16942
+          }
+        ]
+      },
+      {
+        "nodeId": 900802,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136231,
+            "definitionId": 980802,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Shred",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Energy cost of your Shred ability by 6."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16966:0|h[Improved Shred]|h|r",
+            "name": "Improved Shred",
+            "entryId": 950802,
+            "description": "Reduces the Energy cost of your Shred ability by 6.",
+            "spellId": 16966
+          }
+        ]
+      },
+      {
+        "nodeId": 900803,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132185,
+            "definitionId": 980803,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Predatory Strikes",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your melee attack power in Cat, Bear and Dire Bear Forms by 50% of your level."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:16972:0|h[Predatory Strikes]|h|r",
+            "name": "Predatory Strikes",
+            "entryId": 950803,
+            "description": "Increases your melee attack power in Cat, Bear and Dire Bear Forms by 50% of your level.",
+            "spellId": 16972
+          }
+        ]
+      },
+      {
+        "nodeId": 900800,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132152,
+            "definitionId": 980800,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blood Frenzy",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Cat Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Your critical strikes from Cat Form abilities that add combo points have a 50% chance to add an additional combo point."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16952:0|h[Blood Frenzy]|h|r",
+            "name": "Blood Frenzy",
+            "entryId": 950800,
+            "description": "Your critical strikes from Cat Form abilities that add combo points have a 50% chance to add an additional combo point.",
+            "spellId": 16952
+          }
+        ]
+      },
+      {
+        "nodeId": 900801,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132278,
+            "definitionId": 980801,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Primal Fury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Bear Form, Dire Bear Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 50% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16958:0|h[Primal Fury]|h|r",
+            "name": "Primal Fury",
+            "entryId": 950801,
+            "description": "Gives you a 50% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form.",
+            "spellId": 16958
+          }
+        ]
+      },
+      {
+        "nodeId": 900805,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132141,
+            "definitionId": 980805,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Savage Fury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage caused by your Claw, Rake, Maul and Swipe abilities by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16998:0|h[Savage Fury]|h|r",
+            "name": "Savage Fury",
+            "entryId": 950805,
+            "description": "Increases the damage caused by your Claw, Rake, Maul and Swipe abilities by 10%.",
+            "spellId": 16998
+          }
+        ]
+      },
+      {
+        "nodeId": 901162,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136033,
+            "definitionId": 981162,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Faerie Fire (Feral)",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "30 yd range",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "6 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Cat Form, Bear Form, Dire Bear Form"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decrease the armor of the target by 175 for 40 sec. While affected, the target cannot stealth or turn invisible."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:16857:0|h[Faerie Fire (Feral)]|h|r",
+            "name": "Faerie Fire (Feral)",
+            "entryId": 951162,
+            "description": "Decrease the armor of the target by 175 for 40 sec. While affected, the target cannot stealth or turn invisible.",
+            "spellId": 16857
+          }
+        ]
+      },
+      {
+        "nodeId": 900808,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135879,
+            "definitionId": 980808,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Heart of the Wild",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Intellect by 4%. In addition, while in Bear or Dire Bear Form your Stamina is increased by 4% and while in Cat Form your Strength is increased by 4%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17003:0|h[Heart of the Wild]|h|r",
+            "name": "Heart of the Wild",
+            "entryId": 950808,
+            "description": "Increases your Intellect by 4%. In addition, while in Bear or Dire Bear Form your Stamina is increased by 4% and while in Cat Form your Strength is increased by 4%.",
+            "spellId": 17003
+          }
+        ]
+      },
+      {
+        "nodeId": 900809,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136112,
+            "definitionId": 980809,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Leader of the Pack",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "While in Cat, Bear or Dire Bear Form, the Leader of the Pack increases ranged and melee critical chance of all party members within 45 yards by 3%."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:17007:0|h[Leader of the Pack]|h|r",
+            "name": "Leader of the Pack",
+            "entryId": 950809,
+            "description": "While in Cat, Bear or Dire Bear Form, the Leader of the Pack increases ranged and melee critical chance of all party members within 45 yards by 3%.",
+            "spellId": 17007
+          }
+        ]
+      },
+      {
+        "nodeId": 900821,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136078,
+            "definitionId": 980821,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Mark of the Wild",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 7%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17050:0|h[Improved Mark of the Wild]|h|r",
+            "name": "Improved Mark of the Wild",
+            "entryId": 950821,
+            "description": "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 7%.",
+            "spellId": 17050
+          }
+        ]
+      },
+      {
+        "nodeId": 900822,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135881,
+            "definitionId": 980822,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Furor",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you 20% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17056:0|h[Furor]|h|r",
+            "name": "Furor",
+            "entryId": 950822,
+            "description": "Gives you 20% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+            "spellId": 17056
+          }
+        ]
+      },
+      {
+        "nodeId": 900824,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136041,
+            "definitionId": 980824,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Healing Touch",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cast time of your Healing Touch spell by 0.1 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17069:0|h[Improved Healing Touch]|h|r",
+            "name": "Improved Healing Touch",
+            "entryId": 950824,
+            "description": "Reduces the cast time of your Healing Touch spell by 0.1 sec.",
+            "spellId": 17069
+          }
+        ]
+      },
+      {
+        "nodeId": 900823,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136042,
+            "definitionId": 980823,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Nature's Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 14% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth and Tranquility spells."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17063:0|h[Nature's Focus]|h|r",
+            "name": "Nature's Focus",
+            "entryId": 950823,
+            "description": "Gives you a 14% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth and Tranquility spells.",
+            "spellId": 17063
+          }
+        ]
+      },
+      {
+        "nodeId": 900826,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132126,
+            "definitionId": 980826,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Enrage",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "The Enrage ability now instantly generates 5 Rage."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:17079:0|h[Improved Enrage]|h|r",
+            "name": "Improved Enrage",
+            "entryId": 950826,
+            "description": "The Enrage ability now instantly generates 5 Rage.",
+            "spellId": 17079
+          }
+        ]
+      },
+      {
+        "nodeId": 900829,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135863,
+            "definitionId": 980829,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Reflection",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Allows 5% of your Mana regeneration to continue while casting."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:17106:0|h[Reflection]|h|r",
+            "name": "Reflection",
+            "entryId": 950829,
+            "description": "Allows 5% of your Mana regeneration to continue while casting.",
+            "spellId": 17106
+          }
+        ]
+      },
+      {
+        "nodeId": 900827,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136045,
+            "definitionId": 980827,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Insect Swarm",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "45 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "The enemy target is swarmed by insects, decreasing their chance to hit by 2% and causing 66 Nature damage over 12 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:5570:0|h[Insect Swarm]|h|r",
+            "name": "Insect Swarm",
+            "entryId": 950827,
+            "description": "The enemy target is swarmed by insects, decreasing their chance to hit by 2% and causing 66 Nature damage over 12 sec.",
+            "spellId": 5570
+          }
+        ]
+      },
+      {
+        "nodeId": 900841,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132150,
+            "definitionId": 980841,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Subtlety",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the threat generated by your Healing spells by 4%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17118:0|h[Subtlety]|h|r",
+            "name": "Subtlety",
+            "entryId": 950841,
+            "description": "Reduces the threat generated by your Healing spells by 4%.",
+            "spellId": 17118
+          }
+        ]
+      },
+      {
+        "nodeId": 900843,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135900,
+            "definitionId": 980843,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Tranquil Spirit",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the mana cost of your Healing Touch and Tranquility spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:24968:0|h[Tranquil Spirit]|h|r",
+            "name": "Tranquil Spirit",
+            "entryId": 950843,
+            "description": "Reduces the mana cost of your Healing Touch and Tranquility spells by 2%.",
+            "spellId": 24968
+          }
+        ]
+      },
+      {
+        "nodeId": 900830,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136081,
+            "definitionId": 980830,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Rejuvenation",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of your Rejuvenation spell by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:17111:0|h[Improved Rejuvenation]|h|r",
+            "name": "Improved Rejuvenation",
+            "entryId": 950830,
+            "description": "Increases the effect of your Rejuvenation spell by 5%.",
+            "spellId": 17111
+          }
+        ]
+      },
+      {
+        "nodeId": 900831,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136076,
+            "definitionId": 980831,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Nature's Swiftness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, your next Nature spell becomes an instant cast spell."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:17116:0|h[Nature's Swiftness]|h|r",
+            "name": "Nature's Swiftness",
+            "entryId": 950831,
+            "description": "When activated, your next Nature spell becomes an instant cast spell.",
+            "spellId": 17116
+          }
+        ]
+      },
+      {
+        "nodeId": 900828,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136074,
+            "definitionId": 980828,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Gift of Nature",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of all healing spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17104:0|h[Gift of Nature]|h|r",
+            "name": "Gift of Nature",
+            "entryId": 950828,
+            "description": "Increases the effect of all healing spells by 2%.",
+            "spellId": 17104
+          }
+        ]
+      },
+      {
+        "nodeId": 900842,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136107,
+            "definitionId": 980842,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Tranquility",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces threat caused by Tranquility by 50%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:17123:0|h[Improved Tranquility]|h|r",
+            "name": "Improved Tranquility",
+            "entryId": 950842,
+            "description": "Reduces threat caused by Tranquility by 50%.",
+            "spellId": 17123
+          }
+        ]
+      },
+      {
+        "nodeId": 900825,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136085,
+            "definitionId": 980825,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Regrowth",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical effect chance of your Regrowth spell by 10%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:17074:0|h[Improved Regrowth]|h|r",
+            "name": "Improved Regrowth",
+            "entryId": 950825,
+            "description": "Increases the critical effect chance of your Regrowth spell by 10%.",
+            "spellId": 17074
+          }
+        ]
+      },
+      {
+        "nodeId": 900844,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 134914,
+            "definitionId": 980844,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Swiftmend",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "20% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "40 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "15 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation or 18 sec. of Regrowth."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:18562:0|h[Swiftmend]|h|r",
+            "name": "Swiftmend",
+            "entryId": 950844,
+            "description": "Consumes a Rejuvenation or Regrowth effect on a friendly target to instantly heal them an amount equal to 12 sec. of Rejuvenation or 18 sec. of Regrowth.",
+            "spellId": 18562
+          }
+        ]
+      }
+    ],
+    "sourceApi": "traits",
+    "kind": "combat",
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Oct  5 2026",
+      "version": "1.60.1",
+      "build": "70245"
+    }
+  }
+}

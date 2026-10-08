@@ -1,0 +1,2711 @@
+{
+  "schemaVersion": 1,
+  "eventType": "talent_tree_definition",
+  "synthetic": true,
+  "syntheticSource": "Classic Era Talent/TalentTab via wago.tools; tooltips via Wowhead Classic",
+  "capturedAt": 1791430710,
+  "gameBuild": {
+    "interface": 16001,
+    "buildDate": "Oct  5 2026",
+    "version": "1.60.1",
+    "build": "70245"
+  },
+  "realm": "Classic Beta PvE 2",
+  "region": null,
+  "installationId": "install-dev-synthetic",
+  "characterId": null,
+  "guildId": null,
+  "payload": {
+    "treeHash": [
+      70,
+      9,
+      19,
+      147,
+      64,
+      136,
+      65,
+      181,
+      45,
+      42,
+      97,
+      63,
+      59,
+      29,
+      127,
+      249
+    ],
+    "class": {
+      "id": 2,
+      "name": "Paladin",
+      "token": "PALADIN"
+    },
+    "schemaVersion": 3,
+    "specialization": {
+      "role": "DAMAGER",
+      "index": 1,
+      "iconFileDataId": 626003,
+      "name": "Paladin"
+    },
+    "locale": "enUS",
+    "edges": [
+      {
+        "sourceNodeId": 901461,
+        "targetNodeId": 901433,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901433,
+        "targetNodeId": 901502,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901421,
+        "targetNodeId": 901424,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901431,
+        "targetNodeId": 901430,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901411,
+        "targetNodeId": 901402,
+        "type": 2,
+        "visualStyle": 1
+      }
+    ],
+    "treeId": 9002,
+    "nodes": [
+      {
+        "nodeId": 901450,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132154,
+            "definitionId": 981450,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Divine Strength",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Strength by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20262:0|h[Divine Strength]|h|r",
+            "name": "Divine Strength",
+            "entryId": 951450,
+            "description": "Increases your Strength by 2%.",
+            "spellId": 20262
+          }
+        ]
+      },
+      {
+        "nodeId": 901449,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136090,
+            "definitionId": 981449,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Divine Intellect",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your total Intellect by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20257:0|h[Divine Intellect]|h|r",
+            "name": "Divine Intellect",
+            "entryId": 951449,
+            "description": "Increases your total Intellect by 2%.",
+            "spellId": 20257
+          }
+        ]
+      },
+      {
+        "nodeId": 901432,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135736,
+            "definitionId": 981432,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spiritual Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Flash of Light and Holy Light spells a 14% chance to not lose casting time when you take damage."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20205:0|h[Spiritual Focus]|h|r",
+            "name": "Spiritual Focus",
+            "entryId": 951432,
+            "description": "Gives your Flash of Light and Holy Light spells a 14% chance to not lose casting time when you take damage.",
+            "spellId": 20205
+          }
+        ]
+      },
+      {
+        "nodeId": 901463,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132325,
+            "definitionId": 981463,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Seal of Righteousness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20224:0|h[Improved Seal of Righteousness]|h|r",
+            "name": "Improved Seal of Righteousness",
+            "entryId": 951463,
+            "description": "Increases the damage done by your Seal of Righteousness and Judgement of Righteousness by 3%.",
+            "spellId": 20224
+          }
+        ]
+      },
+      {
+        "nodeId": 901444,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135920,
+            "definitionId": 981444,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Healing Light",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the amount healed by your Holy Light and Flash of Light spells by 4%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20237:0|h[Healing Light]|h|r",
+            "name": "Healing Light",
+            "entryId": 951444,
+            "description": "Increases the amount healed by your Holy Light and Flash of Light spells by 4%.",
+            "spellId": 20237
+          }
+        ]
+      },
+      {
+        "nodeId": 901435,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135926,
+            "definitionId": 981435,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Consecration",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "135 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "8 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Consecrates the land beneath Paladin, doing 64 Holy damage over 8 sec to enemies who enter the area."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:26573:0|h[Consecration]|h|r",
+            "name": "Consecration",
+            "entryId": 951435,
+            "description": "Consecrates the land beneath Paladin, doing 64 Holy damage over 8 sec to enemies who enter the area.",
+            "spellId": 26573
+          }
+        ]
+      },
+      {
+        "nodeId": 901443,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135928,
+            "definitionId": 981443,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Lay on Hands",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives the target of your Lay on Hands spell a 15% bonus to their armor value from items for 2 min. In addition, the cooldown for your Lay on Hands spell is reduced by 10 min."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:20234:0|h[Improved Lay on Hands]|h|r",
+            "name": "Improved Lay on Hands",
+            "entryId": 951443,
+            "description": "Gives the target of your Lay on Hands spell a 15% bonus to their armor value from items for 2 min. In addition, the cooldown for your Lay on Hands spell is reduced by 10 min.",
+            "spellId": 20234
+          }
+        ]
+      },
+      {
+        "nodeId": 901628,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135984,
+            "definitionId": 981628,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Unyielding Faith",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your chance to resist Fear and Disorient effects by an additional 5%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:9453:0|h[Unyielding Faith]|h|r",
+            "name": "Unyielding Faith",
+            "entryId": 951628,
+            "description": "Increases your chance to resist Fear and Disorient effects by an additional 5%.",
+            "spellId": 9453
+          }
+        ]
+      },
+      {
+        "nodeId": 901461,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135913,
+            "definitionId": 981461,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Illumination",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, gives you a 20% chance to gain Mana equal to the base cost of the spell."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20210:0|h[Illumination]|h|r",
+            "name": "Illumination",
+            "entryId": 951461,
+            "description": "After getting a critical effect from your Flash of Light, Holy Light, or Holy Shock heal spell, gives you a 20% chance to gain Mana equal to the base cost of the spell.",
+            "spellId": 20210
+          }
+        ]
+      },
+      {
+        "nodeId": 901446,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135970,
+            "definitionId": 981446,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Blessing of Wisdom",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of your Blessing of Wisdom spell by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:20244:0|h[Improved Blessing of Wisdom]|h|r",
+            "name": "Improved Blessing of Wisdom",
+            "entryId": 951446,
+            "description": "Increases the effect of your Blessing of Wisdom spell by 10%.",
+            "spellId": 20244
+          }
+        ]
+      },
+      {
+        "nodeId": 901433,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135915,
+            "definitionId": 981433,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Divine Favor",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "4% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "2 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, gives your next Flash of Light, Holy Light, or Holy Shock spell a 100% critical effect chance."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20216:0|h[Divine Favor]|h|r",
+            "name": "Divine Favor",
+            "entryId": 951433,
+            "description": "When activated, gives your next Flash of Light, Holy Light, or Holy Shock spell a 100% critical effect chance.",
+            "spellId": 20216
+          }
+        ]
+      },
+      {
+        "nodeId": 901465,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135917,
+            "definitionId": 981465,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Lasting Judgement",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the duration of your Judgement of Light and Judgement of Wisdom by 10 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20359:0|h[Lasting Judgement]|h|r",
+            "name": "Lasting Judgement",
+            "entryId": 951465,
+            "description": "Increases the duration of your Judgement of Light and Judgement of Wisdom by 10 sec.",
+            "spellId": 20359
+          }
+        ]
+      },
+      {
+        "nodeId": 901627,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135938,
+            "definitionId": 981627,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Power",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical effect chance of your Holy spells by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:5923:0|h[Holy Power]|h|r",
+            "name": "Holy Power",
+            "entryId": 951627,
+            "description": "Increases the critical effect chance of your Holy spells by 1%.",
+            "spellId": 5923
+          }
+        ]
+      },
+      {
+        "nodeId": 901502,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135972,
+            "definitionId": 981502,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Shock",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "225 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "20 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Blasts the target with Holy energy, causing 204 to 220 Holy damage to an enemy, or 204 to 220 healing to an ally."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20473:0|h[Holy Shock]|h|r",
+            "name": "Holy Shock",
+            "entryId": 951502,
+            "description": "Blasts the target with Holy energy, causing 204 to 220 Holy damage to an enemy, or 204 to 220 healing to an ally.",
+            "spellId": 20473
+          }
+        ]
+      },
+      {
+        "nodeId": 901422,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135893,
+            "definitionId": 981422,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Devotion Aura",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the armor bonus of your Devotion Aura by 5%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20138:0|h[Improved Devotion Aura]|h|r",
+            "name": "Improved Devotion Aura",
+            "entryId": 951422,
+            "description": "Increases the armor bonus of your Devotion Aura by 5%.",
+            "spellId": 20138
+          }
+        ]
+      },
+      {
+        "nodeId": 901421,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132110,
+            "definitionId": 981421,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Redoubt",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your chance to block attacks with your shield by 6% after being the victim of a critical strike. Lasts 10 sec or 5 blocks."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20127:0|h[Redoubt]|h|r",
+            "name": "Redoubt",
+            "entryId": 951421,
+            "description": "Increases your chance to block attacks with your shield by 6% after being the victim of a critical strike. Lasts 10 sec or 5 blocks.",
+            "spellId": 20127
+          }
+        ]
+      },
+      {
+        "nodeId": 901630,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132282,
+            "definitionId": 981630,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Precision",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your chance to hit with melee weapons by 1%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20189:0|h[Precision]|h|r",
+            "name": "Precision",
+            "entryId": 951630,
+            "description": "Increases your chance to hit with melee weapons by 1%.",
+            "spellId": 20189
+          }
+        ]
+      },
+      {
+        "nodeId": 901425,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135964,
+            "definitionId": 981425,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Guardian's Favor",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Blessing of Protection by 60 sec and increases the duration of your Blessing of Freedom by 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:20174:0|h[Guardian's Favor]|h|r",
+            "name": "Guardian's Favor",
+            "entryId": 951425,
+            "description": "Reduces the cooldown of your Blessing of Protection by 60 sec and increases the duration of your Blessing of Freedom by 3 sec.",
+            "spellId": 20174
+          }
+        ]
+      },
+      {
+        "nodeId": 901423,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135892,
+            "definitionId": 981423,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Toughness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your armor value from items by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20143:0|h[Toughness]|h|r",
+            "name": "Toughness",
+            "entryId": 951423,
+            "description": "Increases your armor value from items by 2%.",
+            "spellId": 20143
+          }
+        ]
+      },
+      {
+        "nodeId": 901442,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135995,
+            "definitionId": 981442,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blessing of Kings",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "8% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Places a Blessing on the friendly target, increasing total stats by 10% for 5 min. Players may only have one Blessing on them per Paladin at any one time."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20217:0|h[Blessing of Kings]|h|r",
+            "name": "Blessing of Kings",
+            "entryId": 951442,
+            "description": "Places a Blessing on the friendly target, increasing total stats by 10% for 5 min. Players may only have one Blessing on them per Paladin at any one time.",
+            "spellId": 20217
+          }
+        ]
+      },
+      {
+        "nodeId": 901501,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135962,
+            "definitionId": 981501,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Righteous Fury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the amount of threat generated by your Righteous Fury spell by 16%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20468:0|h[Improved Righteous Fury]|h|r",
+            "name": "Improved Righteous Fury",
+            "entryId": 951501,
+            "description": "Increases the amount of threat generated by your Righteous Fury spell by 16%.",
+            "spellId": 20468
+          }
+        ]
+      },
+      {
+        "nodeId": 901424,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 134952,
+            "definitionId": 981424,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shield Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the amount of damage absorbed by your shield by 10%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20148:0|h[Shield Specialization]|h|r",
+            "name": "Shield Specialization",
+            "entryId": 951424,
+            "description": "Increases the amount of damage absorbed by your shield by 10%.",
+            "spellId": 20148
+          }
+        ]
+      },
+      {
+        "nodeId": 901629,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135994,
+            "definitionId": 981629,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Anticipation",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Defense skill by 2."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20096:0|h[Anticipation]|h|r",
+            "name": "Anticipation",
+            "entryId": 951629,
+            "description": "Increases your Defense skill by 2.",
+            "spellId": 20096
+          }
+        ]
+      },
+      {
+        "nodeId": 901521,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135963,
+            "definitionId": 981521,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Hammer of Justice",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decreases the cooldown of your Hammer of Justice spell by 5 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20487:0|h[Improved Hammer of Justice]|h|r",
+            "name": "Improved Hammer of Justice",
+            "entryId": 951521,
+            "description": "Decreases the cooldown of your Hammer of Justice spell by 5 sec.",
+            "spellId": 20487
+          }
+        ]
+      },
+      {
+        "nodeId": 901626,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135933,
+            "definitionId": 981626,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Concentration Aura",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of your Concentration Aura by an additional 5% and gives all group members affected by the aura an additional 5% chance to resist Silence and Interrupt effects."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20254:0|h[Improved Concentration Aura]|h|r",
+            "name": "Improved Concentration Aura",
+            "entryId": 951626,
+            "description": "Increases the effect of your Concentration Aura by an additional 5% and gives all group members affected by the aura an additional 5% chance to resist Silence and Interrupt effects.",
+            "spellId": 20254
+          }
+        ]
+      },
+      {
+        "nodeId": 901431,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136051,
+            "definitionId": 981431,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blessing of Sanctuary",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "60 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Places a Blessing on the friendly target, reducing damage dealt from all sources by up to 10 for 5 min. In addition, when the target blocks a melee attack the attacker will take 14 Holy damage. Players may only have one Blessing on them per Paladin at any one time."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20911:0|h[Blessing of Sanctuary]|h|r",
+            "name": "Blessing of Sanctuary",
+            "entryId": 951431,
+            "description": "Places a Blessing on the friendly target, reducing damage dealt from all sources by up to 10 for 5 min. In addition, when the target blocks a melee attack the attacker will take 14 Holy damage. Players may only have one Blessing on them per Paladin at any one time.",
+            "spellId": 20911
+          }
+        ]
+      },
+      {
+        "nodeId": 901426,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135882,
+            "definitionId": 981426,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Reckoning",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 20% chance to gain an extra attack after being the victim of a critical strike."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20177:0|h[Reckoning]|h|r",
+            "name": "Reckoning",
+            "entryId": 951426,
+            "description": "Gives you a 20% chance to gain an extra attack after being the victim of a critical strike.",
+            "spellId": 20177
+          }
+        ]
+      },
+      {
+        "nodeId": 901429,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135321,
+            "definitionId": 981429,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "One-Handed Weapon Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage you deal with one-handed melee weapons by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20196:0|h[One-Handed Weapon Specialization]|h|r",
+            "name": "One-Handed Weapon Specialization",
+            "entryId": 951429,
+            "description": "Increases the damage you deal with one-handed melee weapons by 2%.",
+            "spellId": 20196
+          }
+        ]
+      },
+      {
+        "nodeId": 901430,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135880,
+            "definitionId": 981430,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Holy Shield",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "150 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "10 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases chance to block by 30% for 10 sec, and deals 65 Holy damage for each attack blocked while active. Damage caused by Holy Shield causes 20% additional threat."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20925:0|h[Holy Shield]|h|r",
+            "name": "Holy Shield",
+            "entryId": 951430,
+            "description": "Increases chance to block by 30% for 10 sec, and deals 65 Holy damage for each attack blocked while active. Damage caused by Holy Shield causes 20% additional threat.",
+            "spellId": 20925
+          }
+        ]
+      },
+      {
+        "nodeId": 901401,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135906,
+            "definitionId": 981401,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Blessing of Might",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the melee attack power bonus of your Blessing of Might by 4%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20042:0|h[Improved Blessing of Might]|h|r",
+            "name": "Improved Blessing of Might",
+            "entryId": 951401,
+            "description": "Increases the melee attack power bonus of your Blessing of Might by 4%.",
+            "spellId": 20042
+          }
+        ]
+      },
+      {
+        "nodeId": 901407,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135863,
+            "definitionId": 981407,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Benediction",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Mana cost of your Judgement and Seal spells by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20101:0|h[Benediction]|h|r",
+            "name": "Benediction",
+            "entryId": 951407,
+            "description": "Reduces the Mana cost of your Judgement and Seal spells by 3%.",
+            "spellId": 20101
+          }
+        ]
+      },
+      {
+        "nodeId": 901631,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135959,
+            "definitionId": 981631,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Judgement",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decreases the cooldown of your Judgement spell by 1 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:25956:0|h[Improved Judgement]|h|r",
+            "name": "Improved Judgement",
+            "entryId": 951631,
+            "description": "Decreases the cooldown of your Judgement spell by 1 sec.",
+            "spellId": 25956
+          }
+        ]
+      },
+      {
+        "nodeId": 901464,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135924,
+            "definitionId": 981464,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Seal of the Crusader",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20335:0|h[Improved Seal of the Crusader]|h|r",
+            "name": "Improved Seal of the Crusader",
+            "entryId": 951464,
+            "description": "Increases the melee attack power bonus of your Seal of the Crusader and the Holy damage increase of your Judgement of the Crusader by 5%.",
+            "spellId": 20335
+          }
+        ]
+      },
+      {
+        "nodeId": 901403,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132269,
+            "definitionId": 981403,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Deflection",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Parry chance by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20060:0|h[Deflection]|h|r",
+            "name": "Deflection",
+            "entryId": 951403,
+            "description": "Increases your Parry chance by 1%.",
+            "spellId": 20060
+          }
+        ]
+      },
+      {
+        "nodeId": 901633,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135985,
+            "definitionId": 981633,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Vindication",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives the Paladin's damaging melee attacks a chance to reduce the target's Strength and Agility by 5% 10 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:9452:0|h[Vindication]|h|r",
+            "name": "Vindication",
+            "entryId": 951633,
+            "description": "Gives the Paladin's damaging melee attacks a chance to reduce the target's Strength and Agility by 5% 10 sec.",
+            "spellId": 9452
+          }
+        ]
+      },
+      {
+        "nodeId": 901411,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135957,
+            "definitionId": 981411,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Conviction",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Melee Weapon"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your chance to get a critical strike with melee weapons by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20117:0|h[Conviction]|h|r",
+            "name": "Conviction",
+            "entryId": 951411,
+            "description": "Increases your chance to get a critical strike with melee weapons by 1%.",
+            "spellId": 20117
+          }
+        ]
+      },
+      {
+        "nodeId": 901481,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132347,
+            "definitionId": 981481,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Seal of Command",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "65 Mana\nInstant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives the Paladin a chance to deal additional Holy damage equal to 70% of normal weapon damage. Only one Seal can be active on the Paladin at any one time. Lasts 30 sec. Unleashing this Seal's energy will judge an enemy, instantly causing 68 to 73 Holy damage, 137 to 146 if the target is stunned or incapacitated."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20375:0|h[Seal of Command]|h|r",
+            "name": "Seal of Command",
+            "entryId": 951481,
+            "description": "Gives the Paladin a chance to deal additional Holy damage equal to 70% of normal weapon damage. Only one Seal can be active on the Paladin at any one time. Lasts 30 sec. Unleashing this Seal's energy will judge an enemy, instantly causing 68 to 73 Holy damage, 137 to 146 if the target is stunned or incapacitated.",
+            "spellId": 20375
+          }
+        ]
+      },
+      {
+        "nodeId": 901634,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135937,
+            "definitionId": 981634,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Pursuit of Justice",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases movement and mounted movement speed by 4%. This does not stack with other movement speed increasing effects."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:26022:0|h[Pursuit of Justice]|h|r",
+            "name": "Pursuit of Justice",
+            "entryId": 951634,
+            "description": "Increases movement and mounted movement speed by 4%. This does not stack with other movement speed increasing effects.",
+            "spellId": 26022
+          }
+        ]
+      },
+      {
+        "nodeId": 901632,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135904,
+            "definitionId": 981632,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Eye for an Eye",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "All spell criticals against you cause 15% of the damage taken to the caster as well. The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:9799:0|h[Eye for an Eye]|h|r",
+            "name": "Eye for an Eye",
+            "entryId": 951632,
+            "description": "All spell criticals against you cause 15% of the damage taken to the caster as well. The damage caused by Eye for an Eye will not exceed 50% of the Paladin's total health.",
+            "spellId": 9799
+          }
+        ]
+      },
+      {
+        "nodeId": 901405,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135873,
+            "definitionId": 981405,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Retribution Aura",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Retribution Aura by 25%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:20091:0|h[Improved Retribution Aura]|h|r",
+            "name": "Improved Retribution Aura",
+            "entryId": 951405,
+            "description": "Increases the damage done by your Retribution Aura by 25%.",
+            "spellId": 20091
+          }
+        ]
+      },
+      {
+        "nodeId": 901410,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 133041,
+            "definitionId": 981410,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Two-Handed Weapon Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage you deal with two-handed melee weapons by 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:20111:0|h[Two-Handed Weapon Specialization]|h|r",
+            "name": "Two-Handed Weapon Specialization",
+            "entryId": 951410,
+            "description": "Increases the damage you deal with two-handed melee weapons by 2%.",
+            "spellId": 20111
+          }
+        ]
+      },
+      {
+        "nodeId": 901409,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135934,
+            "definitionId": 981409,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Sanctity Aura",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases Holy damage done by party members within 30 yards by 10%. Players may only have one Aura on them per Paladin at any one time."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20218:0|h[Sanctity Aura]|h|r",
+            "name": "Sanctity Aura",
+            "entryId": 951409,
+            "description": "Increases Holy damage done by party members within 30 yards by 10%. Players may only have one Aura on them per Paladin at any one time.",
+            "spellId": 20218
+          }
+        ]
+      },
+      {
+        "nodeId": 901402,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132275,
+            "definitionId": 981402,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Vengeance",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 3% bonus to Physical and Holy damage you deal for 8 sec after dealing a critical strike from a weapon swing, spell, or ability."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:20049:0|h[Vengeance]|h|r",
+            "name": "Vengeance",
+            "entryId": 951402,
+            "description": "Gives you a 3% bonus to Physical and Holy damage you deal for 8 sec after dealing a critical strike from a weapon swing, spell, or ability.",
+            "spellId": 20049
+          }
+        ]
+      },
+      {
+        "nodeId": 901441,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135942,
+            "definitionId": 981441,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Repentance",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "60 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "20 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "1 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Puts the enemy target in a state of meditation, incapacitating them for up to 6 sec. Any damage caused will awaken the target. Only works against Humanoids."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:20066:0|h[Repentance]|h|r",
+            "name": "Repentance",
+            "entryId": 951441,
+            "description": "Puts the enemy target in a state of meditation, incapacitating them for up to 6 sec. Any damage caused will awaken the target. Only works against Humanoids.",
+            "spellId": 20066
+          }
+        ]
+      }
+    ],
+    "sourceApi": "traits",
+    "kind": "combat",
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Oct  5 2026",
+      "version": "1.60.1",
+      "build": "70245"
+    }
+  }
+}

@@ -1,0 +1,2950 @@
+{
+  "schemaVersion": 1,
+  "eventType": "talent_tree_definition",
+  "synthetic": true,
+  "syntheticSource": "Classic Era Talent/TalentTab via wago.tools; tooltips via Wowhead Classic",
+  "capturedAt": 1791430710,
+  "gameBuild": {
+    "interface": 16001,
+    "buildDate": "Oct  5 2026",
+    "version": "1.60.1",
+    "build": "70245"
+  },
+  "realm": "Classic Beta PvE 2",
+  "region": null,
+  "installationId": "install-dev-synthetic",
+  "characterId": null,
+  "guildId": null,
+  "payload": {
+    "treeHash": [
+      16,
+      124,
+      131,
+      6,
+      198,
+      48,
+      150,
+      206,
+      37,
+      26,
+      124,
+      11,
+      97,
+      209,
+      51,
+      37
+    ],
+    "class": {
+      "id": 8,
+      "name": "Mage",
+      "token": "MAGE"
+    },
+    "schemaVersion": 3,
+    "specialization": {
+      "role": "DAMAGER",
+      "index": 1,
+      "iconFileDataId": 626001,
+      "name": "Mage"
+    },
+    "locale": "enUS",
+    "edges": [
+      {
+        "sourceNodeId": 900085,
+        "targetNodeId": 900077,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900086,
+        "targetNodeId": 900421,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900421,
+        "targetNodeId": 900087,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900029,
+        "targetNodeId": 900032,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900033,
+        "targetNodeId": 900036,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900062,
+        "targetNodeId": 900067,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 900072,
+        "targetNodeId": 900071,
+        "type": 2,
+        "visualStyle": 1
+      }
+    ],
+    "treeId": 9008,
+    "nodes": [
+      {
+        "nodeId": 900074,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135894,
+            "definitionId": 980074,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Subtlety",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces your target's resistance to all your spells by 5 and reduces the threat caused by your Arcane spells by 20%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11210:0|h[Arcane Subtlety]|h|r",
+            "name": "Arcane Subtlety",
+            "entryId": 950074,
+            "description": "Reduces your target's resistance to all your spells by 5 and reduces the threat caused by your Arcane spells by 20%.",
+            "spellId": 11210
+          }
+        ]
+      },
+      {
+        "nodeId": 900076,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135892,
+            "definitionId": 980076,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Focus",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the chance that the opponent can resist your Arcane spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11222:0|h[Arcane Focus]|h|r",
+            "name": "Arcane Focus",
+            "entryId": 950076,
+            "description": "Reduces the chance that the opponent can resist your Arcane spells by 2%.",
+            "spellId": 11222
+          }
+        ]
+      },
+      {
+        "nodeId": 900080,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136096,
+            "definitionId": 980080,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Arcane Missiles",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 20% chance to avoid interruption caused by damage while channeling Arcane Missiles"
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11237:0|h[Improved Arcane Missiles]|h|r",
+            "name": "Improved Arcane Missiles",
+            "entryId": 950080,
+            "description": "Gives you a 20% chance to avoid interruption caused by damage while channeling Arcane Missiles",
+            "spellId": 11237
+          }
+        ]
+      },
+      {
+        "nodeId": 900078,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135463,
+            "definitionId": 980078,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Wand Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your damage with Wands by 13%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:6057:0|h[Wand Specialization]|h|r",
+            "name": "Wand Specialization",
+            "entryId": 950078,
+            "description": "Increases your damage with Wands by 13%.",
+            "spellId": 6057
+          }
+        ]
+      },
+      {
+        "nodeId": 901650,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136011,
+            "definitionId": 981650,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Magic Absorption",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases all resistances by 2 and causes all spells you fully resist to restore 1% of your total mana. 1 sec. cooldown."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:29441:0|h[Magic Absorption]|h|r",
+            "name": "Magic Absorption",
+            "entryId": 951650,
+            "description": "Increases all resistances by 2 and causes all spells you fully resist to restore 1% of your total mana. 1 sec. cooldown.",
+            "spellId": 29441
+          }
+        ]
+      },
+      {
+        "nodeId": 900075,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136170,
+            "definitionId": 980075,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Concentration",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives you a 2% chance of entering a Clearcasting state after any damage spell hits a target. The Clearcasting state reduces the mana cost of your next damage spell by 100%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11213:0|h[Arcane Concentration]|h|r",
+            "name": "Arcane Concentration",
+            "entryId": 950075,
+            "description": "Gives you a 2% chance of entering a Clearcasting state after any damage spell hits a target. The Clearcasting state reduces the mana cost of your next damage spell by 100%.",
+            "spellId": 11213
+          }
+        ]
+      },
+      {
+        "nodeId": 900082,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136006,
+            "definitionId": 980082,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Magic Attunement",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the effect of your Amplify Magic and Dampen Magic spells by 25%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11247:0|h[Magic Attunement]|h|r",
+            "name": "Magic Attunement",
+            "entryId": 950082,
+            "description": "Increases the effect of your Amplify Magic and Dampen Magic spells by 25%.",
+            "spellId": 11247
+          }
+        ]
+      },
+      {
+        "nodeId": 900081,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136116,
+            "definitionId": 980081,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Arcane Explosion",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of your Arcane Explosion spell by an additional 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11242:0|h[Improved Arcane Explosion]|h|r",
+            "name": "Improved Arcane Explosion",
+            "entryId": 950081,
+            "description": "Increases the critical strike chance of your Arcane Explosion spell by an additional 2%.",
+            "spellId": 11242
+          }
+        ]
+      },
+      {
+        "nodeId": 900085,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135733,
+            "definitionId": 980085,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Resilience",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your armor by an amount equal to 50% of your Intellect."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:28574:0|h[Arcane Resilience]|h|r",
+            "name": "Arcane Resilience",
+            "entryId": 950085,
+            "description": "Increases your armor by an amount equal to 50% of your Intellect.",
+            "spellId": 28574
+          }
+        ]
+      },
+      {
+        "nodeId": 900083,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136153,
+            "definitionId": 980083,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Mana Shield",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decreases the mana lost per point of damage taken when Mana Shield is active by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11252:0|h[Improved Mana Shield]|h|r",
+            "name": "Improved Mana Shield",
+            "entryId": 950083,
+            "description": "Decreases the mana lost per point of damage taken when Mana Shield is active by 10%.",
+            "spellId": 11252
+          }
+        ]
+      },
+      {
+        "nodeId": 900088,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135856,
+            "definitionId": 980088,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Counterspell",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Counterspell a 50% chance to silence the target for 4 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11255:0|h[Improved Counterspell]|h|r",
+            "name": "Improved Counterspell",
+            "entryId": 950088,
+            "description": "Gives your Counterspell a 50% chance to silence the target for 4 sec.",
+            "spellId": 11255
+          }
+        ]
+      },
+      {
+        "nodeId": 901142,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136208,
+            "definitionId": 981142,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Meditation",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Allows 5% of your Mana regeneration to continue while casting."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:18462:0|h[Arcane Meditation]|h|r",
+            "name": "Arcane Meditation",
+            "entryId": 951142,
+            "description": "Allows 5% of your Mana regeneration to continue while casting.",
+            "spellId": 18462
+          }
+        ]
+      },
+      {
+        "nodeId": 900086,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136031,
+            "definitionId": 980086,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Presence of Mind",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, your next Mage spell with a casting time less than 10 sec becomes an instant cast spell."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:12043:0|h[Presence of Mind]|h|r",
+            "name": "Presence of Mind",
+            "entryId": 950086,
+            "description": "When activated, your next Mage spell with a casting time less than 10 sec becomes an instant cast spell.",
+            "spellId": 12043
+          }
+        ]
+      },
+      {
+        "nodeId": 900077,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136129,
+            "definitionId": 980077,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Mind",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your maximum Mana by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11232:0|h[Arcane Mind]|h|r",
+            "name": "Arcane Mind",
+            "entryId": 950077,
+            "description": "Increases your maximum Mana by 2%.",
+            "spellId": 11232
+          }
+        ]
+      },
+      {
+        "nodeId": 900421,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136222,
+            "definitionId": 980421,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Instability",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your spell damage and critical strike chance by 1%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:15058:0|h[Arcane Instability]|h|r",
+            "name": "Arcane Instability",
+            "entryId": 950421,
+            "description": "Increases your spell damage and critical strike chance by 1%.",
+            "spellId": 15058
+          }
+        ]
+      },
+      {
+        "nodeId": 900087,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 136048,
+            "definitionId": 980087,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arcane Power",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, your spells deal 30% more damage while costing 30% more mana to cast. This effect lasts 15 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:12042:0|h[Arcane Power]|h|r",
+            "name": "Arcane Power",
+            "entryId": 950087,
+            "description": "When activated, your spells deal 30% more damage while costing 30% more mana to cast. This effect lasts 15 sec.",
+            "spellId": 12042
+          }
+        ]
+      },
+      {
+        "nodeId": 900026,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135812,
+            "definitionId": 980026,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Fireball",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the casting time of your Fireball spell by 0.1 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11069:0|h[Improved Fireball]|h|r",
+            "name": "Improved Fireball",
+            "entryId": 950026,
+            "description": "Reduces the casting time of your Fireball spell by 0.1 sec.",
+            "spellId": 11069
+          }
+        ]
+      },
+      {
+        "nodeId": 900030,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135821,
+            "definitionId": 980030,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Impact",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Fire spells a 2% chance to stun the target for 2 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11103:0|h[Impact]|h|r",
+            "name": "Impact",
+            "entryId": 950030,
+            "description": "Gives your Fire spells a 2% chance to stun the target for 2 sec.",
+            "spellId": 11103
+          }
+        ]
+      },
+      {
+        "nodeId": 900034,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135818,
+            "definitionId": 980034,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ignite",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Your critical strikes from Fire damage spells cause the target to burn for an additional 8% of your spell's damage over 4 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11119:0|h[Ignite]|h|r",
+            "name": "Ignite",
+            "entryId": 950034,
+            "description": "Your critical strikes from Fire damage spells cause the target to burn for an additional 8% of your spell's damage over 4 sec.",
+            "spellId": 11119
+          }
+        ]
+      },
+      {
+        "nodeId": 900028,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135815,
+            "definitionId": 980028,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Flame Throwing",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your Fire spells by 3 yards."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11100:0|h[Flame Throwing]|h|r",
+            "name": "Flame Throwing",
+            "entryId": 950028,
+            "description": "Increases the range of your Fire spells by 3 yards.",
+            "spellId": 11100
+          }
+        ]
+      },
+      {
+        "nodeId": 900027,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135807,
+            "definitionId": 980027,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Fire Blast",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Fire Blast spell by 0.5 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11078:0|h[Improved Fire Blast]|h|r",
+            "name": "Improved Fire Blast",
+            "entryId": 950027,
+            "description": "Reduces the cooldown of your Fire Blast spell by 0.5 sec.",
+            "spellId": 11078
+          }
+        ]
+      },
+      {
+        "nodeId": 901141,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135813,
+            "definitionId": 981141,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Incinerate",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of your Fire Blast and Scorch spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:18459:0|h[Incinerate]|h|r",
+            "name": "Incinerate",
+            "entryId": 951141,
+            "description": "Increases the critical strike chance of your Fire Blast and Scorch spells by 2%.",
+            "spellId": 18459
+          }
+        ]
+      },
+      {
+        "nodeId": 900031,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135826,
+            "definitionId": 980031,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Flamestrike",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of your Flamestrike spell by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11108:0|h[Improved Flamestrike]|h|r",
+            "name": "Improved Flamestrike",
+            "entryId": 950031,
+            "description": "Increases the critical strike chance of your Flamestrike spell by 5%.",
+            "spellId": 11108
+          }
+        ]
+      },
+      {
+        "nodeId": 900029,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135808,
+            "definitionId": 980029,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Pyroblast",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "125 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "35 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "6 sec cast",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Hurls an immense fiery boulder that causes 148 to 195 Fire damage and an additional 56 Fire damage over 12 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:11366:0|h[Pyroblast]|h|r",
+            "name": "Pyroblast",
+            "entryId": 950029,
+            "description": "Hurls an immense fiery boulder that causes 148 to 195 Fire damage and an additional 56 Fire damage over 12 sec.",
+            "spellId": 11366
+          }
+        ]
+      },
+      {
+        "nodeId": 900023,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135805,
+            "definitionId": 980023,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Burning Soul",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Fire spells a 35% chance to not lose casting time when you take damage and reduces the threat caused by your Fire spells by 15%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11083:0|h[Burning Soul]|h|r",
+            "name": "Burning Soul",
+            "entryId": 950023,
+            "description": "Gives your Fire spells a 35% chance to not lose casting time when you take damage and reduces the threat caused by your Fire spells by 15%.",
+            "spellId": 11083
+          }
+        ]
+      },
+      {
+        "nodeId": 900025,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135827,
+            "definitionId": 980025,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Scorch",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Your Scorch spells have a 33% chance to cause your target to be vulnerable to Fire damage. This vulnerability increases the Fire damage dealt to your target by 3% and lasts 30 sec. Stacks up to 5 times."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11095:0|h[Improved Scorch]|h|r",
+            "name": "Improved Scorch",
+            "entryId": 950025,
+            "description": "Your Scorch spells have a 33% chance to cause your target to be vulnerable to Fire damage. This vulnerability increases the Fire damage dealt to your target by 3% and lasts 30 sec. Stacks up to 5 times.",
+            "spellId": 11095
+          }
+        ]
+      },
+      {
+        "nodeId": 900024,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135806,
+            "definitionId": 980024,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Fire Ward",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Causes your Fire Ward to have a 10% chance to reflect Fire spells while active."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11094:0|h[Improved Fire Ward]|h|r",
+            "name": "Improved Fire Ward",
+            "entryId": 950024,
+            "description": "Causes your Fire Ward to have a 10% chance to reflect Fire spells while active.",
+            "spellId": 11094
+          }
+        ]
+      },
+      {
+        "nodeId": 901639,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135820,
+            "definitionId": 981639,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Master of Elements",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Your Fire and Frost spell criticals will refund 10% of their base mana cost."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:29074:0|h[Master of Elements]|h|r",
+            "name": "Master of Elements",
+            "entryId": 951639,
+            "description": "Your Fire and Frost spell criticals will refund 10% of their base mana cost.",
+            "spellId": 29074
+          }
+        ]
+      },
+      {
+        "nodeId": 900033,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 136115,
+            "definitionId": 980033,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Critical Mass",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of your Fire spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11115:0|h[Critical Mass]|h|r",
+            "name": "Critical Mass",
+            "entryId": 950033,
+            "description": "Increases the critical strike chance of your Fire spells by 2%.",
+            "spellId": 11115
+          }
+        ]
+      },
+      {
+        "nodeId": 900032,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135903,
+            "definitionId": 980032,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Blast Wave",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "215 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "45 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "A wave of flame radiates outward from the caster, damaging all enemies caught within the blast for 160 to 192 Fire damage, and dazing them for 6 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:11113:0|h[Blast Wave]|h|r",
+            "name": "Blast Wave",
+            "entryId": 950032,
+            "description": "A wave of flame radiates outward from the caster, damaging all enemies caught within the blast for 160 to 192 Fire damage, and dazing them for 6 sec.",
+            "spellId": 11113
+          }
+        ]
+      },
+      {
+        "nodeId": 900035,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135817,
+            "definitionId": 980035,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Fire Power",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Fire spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11124:0|h[Fire Power]|h|r",
+            "name": "Fire Power",
+            "entryId": 950035,
+            "description": "Increases the damage done by your Fire spells by 2%.",
+            "spellId": 11124
+          }
+        ]
+      },
+      {
+        "nodeId": 900036,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135824,
+            "definitionId": 980036,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Combustion",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "3 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, this spell causes each of your Fire damage spell hits to increase your critical strike chance with Fire damage spells by 10%. This effect lasts until you have caused 3 critical strikes with Fire spells."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:11129:0|h[Combustion]|h|r",
+            "name": "Combustion",
+            "entryId": 950036,
+            "description": "When activated, this spell causes each of your Fire damage spell hits to increase your critical strike chance with Fire damage spells by 10%. This effect lasts until you have caused 3 critical strikes with Fire spells.",
+            "spellId": 11129
+          }
+        ]
+      },
+      {
+        "nodeId": 900070,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135850,
+            "definitionId": 980070,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Frost Warding",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the armor and resistances given by your Frost Armor and Ice Armor spells by 15%. In addition, gives your Frost Ward a 10% chance to reflect Frost spells and effects while active."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11189:0|h[Frost Warding]|h|r",
+            "name": "Frost Warding",
+            "entryId": 950070,
+            "description": "Increases the armor and resistances given by your Frost Armor and Ice Armor spells by 15%. In addition, gives your Frost Ward a 10% chance to reflect Frost spells and effects while active.",
+            "spellId": 11189
+          }
+        ]
+      },
+      {
+        "nodeId": 900037,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135846,
+            "definitionId": 980037,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Frostbolt",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the casting time of your Frostbolt spell by 0.1 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11070:0|h[Improved Frostbolt]|h|r",
+            "name": "Improved Frostbolt",
+            "entryId": 950037,
+            "description": "Reduces the casting time of your Frostbolt spell by 0.1 sec.",
+            "spellId": 11070
+          }
+        ]
+      },
+      {
+        "nodeId": 901649,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135989,
+            "definitionId": 981649,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Elemental Precision",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the chance that the opponent can resist your Frost and Fire spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:29438:0|h[Elemental Precision]|h|r",
+            "name": "Elemental Precision",
+            "entryId": 951649,
+            "description": "Reduces the chance that the opponent can resist your Frost and Fire spells by 2%.",
+            "spellId": 29438
+          }
+        ]
+      },
+      {
+        "nodeId": 900073,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135855,
+            "definitionId": 980073,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ice Shards",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike damage bonus of your Frost spells by 20%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11207:0|h[Ice Shards]|h|r",
+            "name": "Ice Shards",
+            "entryId": 950073,
+            "description": "Increases the critical strike damage bonus of your Frost spells by 20%.",
+            "spellId": 11207
+          }
+        ]
+      },
+      {
+        "nodeId": 900038,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135842,
+            "definitionId": 980038,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Frostbite",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Chill effects a 5% chance to freeze the target for 5 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11071:0|h[Frostbite]|h|r",
+            "name": "Frostbite",
+            "entryId": 950038,
+            "description": "Gives your Chill effects a 5% chance to freeze the target for 5 sec.",
+            "spellId": 11071
+          }
+        ]
+      },
+      {
+        "nodeId": 900062,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 135840,
+            "definitionId": 980062,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Frost Nova",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Frost Nova spell by 2 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:11165:0|h[Improved Frost Nova]|h|r",
+            "name": "Improved Frost Nova",
+            "entryId": 950062,
+            "description": "Reduces the cooldown of your Frost Nova spell by 2 sec.",
+            "spellId": 11165
+          }
+        ]
+      },
+      {
+        "nodeId": 900065,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135864,
+            "definitionId": 980065,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Permafrost",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the duration of your Chill effects by 1 sec and reduces the target's speed by an additional 4%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11175:0|h[Permafrost]|h|r",
+            "name": "Permafrost",
+            "entryId": 950065,
+            "description": "Increases the duration of your Chill effects by 1 sec and reduces the target's speed by an additional 4%.",
+            "spellId": 11175
+          }
+        ]
+      },
+      {
+        "nodeId": 900061,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135845,
+            "definitionId": 980061,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Piercing Ice",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Frost spells by 2%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11151:0|h[Piercing Ice]|h|r",
+            "name": "Piercing Ice",
+            "entryId": 950061,
+            "description": "Increases the damage done by your Frost spells by 2%.",
+            "spellId": 11151
+          }
+        ]
+      },
+      {
+        "nodeId": 900069,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135865,
+            "definitionId": 980069,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Cold Snap",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "10 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, this spell finishes the cooldown on all of your Frost spells."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:12472:0|h[Cold Snap]|h|r",
+            "name": "Cold Snap",
+            "entryId": 950069,
+            "description": "When activated, this spell finishes the cooldown on all of your Frost spells.",
+            "spellId": 12472
+          }
+        ]
+      },
+      {
+        "nodeId": 900063,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135857,
+            "definitionId": 980063,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Blizzard",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Adds a chill effect to your Blizzard spell. This effect lowers the target's movement speed by 30%. Lasts 1.50 sec."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11185:0|h[Improved Blizzard]|h|r",
+            "name": "Improved Blizzard",
+            "entryId": 950063,
+            "description": "Adds a chill effect to your Blizzard spell. This effect lowers the target's movement speed by 30%. Lasts 1.50 sec.",
+            "spellId": 11185
+          }
+        ]
+      },
+      {
+        "nodeId": 900741,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136141,
+            "definitionId": 980741,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Arctic Reach",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your Frostbolt and Blizzard spells and the radius of your Frost Nova and Cone of Cold spells by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:16757:0|h[Arctic Reach]|h|r",
+            "name": "Arctic Reach",
+            "entryId": 950741,
+            "description": "Increases the range of your Frostbolt and Blizzard spells and the radius of your Frost Nova and Cone of Cold spells by 10%.",
+            "spellId": 16757
+          }
+        ]
+      },
+      {
+        "nodeId": 900066,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135860,
+            "definitionId": 980066,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Frost Channeling",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the mana cost of your Frost spells by 5% and reduces the threat caused by your Frost spells by 10%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11160:0|h[Frost Channeling]|h|r",
+            "name": "Frost Channeling",
+            "entryId": 950066,
+            "description": "Reduces the mana cost of your Frost spells by 5% and reduces the threat caused by your Frost spells by 10%.",
+            "spellId": 11160
+          }
+        ]
+      },
+      {
+        "nodeId": 900067,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135849,
+            "definitionId": 980067,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Shatter",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of all your spells against frozen targets by 10%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11170:0|h[Shatter]|h|r",
+            "name": "Shatter",
+            "entryId": 950067,
+            "description": "Increases the critical strike chance of all your spells against frozen targets by 10%.",
+            "spellId": 11170
+          }
+        ]
+      },
+      {
+        "nodeId": 900072,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135841,
+            "definitionId": 980072,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ice Block",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "15 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "5 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "You become encased in a block of ice, protecting you from all physical attacks and spells for 10 sec, but during that time you cannot attack, move or cast spells."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:11958:0|h[Ice Block]|h|r",
+            "name": "Ice Block",
+            "entryId": 950072,
+            "description": "You become encased in a block of ice, protecting you from all physical attacks and spells for 10 sec, but during that time you cannot attack, move or cast spells.",
+            "spellId": 11958
+          }
+        ]
+      },
+      {
+        "nodeId": 900064,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135852,
+            "definitionId": 980064,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Cone of Cold",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage dealt by your Cone of Cold spell by 15%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:11190:0|h[Improved Cone of Cold]|h|r",
+            "name": "Improved Cone of Cold",
+            "entryId": 950064,
+            "description": "Increases the damage dealt by your Cone of Cold spell by 15%.",
+            "spellId": 11190
+          }
+        ]
+      },
+      {
+        "nodeId": 900068,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135836,
+            "definitionId": 980068,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Winter's Chill",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Frost damage spells a 20% chance to apply the Winter's Chill effect, which increases the chance a Frost spell will critically hit the target by 2% for 15 sec. Stacks up to 5 times."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:11180:0|h[Winter's Chill]|h|r",
+            "name": "Winter's Chill",
+            "entryId": 950068,
+            "description": "Gives your Frost damage spells a 20% chance to apply the Winter's Chill effect, which increases the chance a Frost spell will critically hit the target by 2% for 15 sec. Stacks up to 5 times.",
+            "spellId": 11180
+          }
+        ]
+      },
+      {
+        "nodeId": 900071,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135988,
+            "definitionId": 980071,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ice Barrier",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "305 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "30 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Instantly shields you, absorbing 455 damage. Lasts 1 min. While the shield holds, spells will not be interrupted."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:11426:0|h[Ice Barrier]|h|r",
+            "name": "Ice Barrier",
+            "entryId": 950071,
+            "description": "Instantly shields you, absorbing 455 damage. Lasts 1 min. While the shield holds, spells will not be interrupted.",
+            "spellId": 11426
+          }
+        ]
+      }
+    ],
+    "sourceApi": "traits",
+    "kind": "combat",
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Oct  5 2026",
+      "version": "1.60.1",
+      "build": "70245"
+    }
+  }
+}
