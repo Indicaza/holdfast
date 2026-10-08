@@ -219,7 +219,7 @@
   padding: var(--space-3);
 }
 
-@media (hover: none) {
+@media (hover: none) and (pointer: coarse) {
   .item-tooltip { display: none !important; }
 }
 
