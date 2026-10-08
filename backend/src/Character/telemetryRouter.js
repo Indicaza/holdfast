@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import { authenticateGuildweaverDevice } from "./guildweaverDeviceRepository.js";
 import { associateTelemetryRecordCharacter } from "./telemetryCharacterAssociation.js";
 import { recordTelemetry } from "./telemetryRecordRepository.js";
@@ -81,6 +82,28 @@ export function createTelemetryRouter() {
         deviceId: req.guildweaverDevice.id,
         rawCharacterId: result.record?.characterId,
       });
+
+      if (result.status === "created") {
+        publishLiveUpdate({
+          topics: ["guildweaver"],
+          source: "guildweaver.telemetry.persisted",
+          entityId: result.record?.id,
+          permission: "site.admin",
+        });
+
+        if (
+          kind === "state" &&
+          (canonicalCharacterId ||
+            result.record?.characterId ||
+            envelope.eventType === "talent_tree_definition")
+        ) {
+          publishLiveUpdate({
+            topics: ["intelligence", "armory"],
+            source: "guildweaver.telemetry.persisted",
+            entityId: canonicalCharacterId || result.record?.characterId || null,
+          });
+        }
+      }
 
       res.set("Cache-Control", "no-store");
       res.status(result.status === "created" ? 201 : 200).json({
