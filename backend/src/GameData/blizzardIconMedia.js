@@ -34,8 +34,10 @@ function mediaNamespaces(env, config) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+
+  if (configured.length) return [...new Set(configured)];
+
   return [...new Set([
-    ...configured,
     ...(Array.isArray(config.namespaces) ? config.namespaces : []),
     `static-${config.region}`,
   ].filter(Boolean))];
