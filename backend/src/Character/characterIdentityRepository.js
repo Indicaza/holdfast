@@ -2,6 +2,14 @@ function text(value, maxLength = 160) {
   return String(value ?? "").trim().slice(0, maxLength);
 }
 
+function tableExists(db, name) {
+  return Boolean(
+    db
+      .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1")
+      .get(String(name)),
+  );
+}
+
 export function ensureGuildweaverCharacterIdentitySchema(db) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS guildweaver_character_aliases (
@@ -63,38 +71,7 @@ export function readGuildweaverCharacterAliasInDatabase({
   return uniqueAcrossDevices?.character_id || null;
 }
 
-export function resolveGuildweaverCharacterIdentityInDatabase({
-  db,
-  memberId,
-  deviceId = "",
-  rawCharacterId = "",
-  preferredCharacterId = "",
-  characterName = "",
-  realm = "",
-  region = "",
-}) {
-  ensureGuildweaverCharacterIdentitySchema(db);
-
-  const aliased = readGuildweaverCharacterAliasInDatabase({
-    db,
-    memberId,
-    deviceId,
-    rawCharacterId,
-  });
-  if (aliased) {
-    return db
-      .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")
-      .get(aliased, text(memberId, 160));
-  }
-
-  const preferred = text(preferredCharacterId, 200);
-  if (preferred) {
-    const direct = db
-      .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")
-      .get(preferred, text(memberId, 160));
-    if (direct) return direct;
-  }
-
+function characterByStableIdentity(db, { memberId, characterName, realm, region }) {
   const name = text(characterName, 96);
   if (!name) return null;
 
@@ -122,6 +99,53 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
     );
 }
 
+export function resolveGuildweaverCharacterIdentityInDatabase({
+  db,
+  memberId,
+  deviceId = "",
+  rawCharacterId = "",
+  preferredCharacterId = "",
+  characterName = "",
+  realm = "",
+  region = "",
+}) {
+  ensureGuildweaverCharacterIdentitySchema(db);
+
+  const aliased = readGuildweaverCharacterAliasInDatabase({
+    db,
+    memberId,
+    deviceId,
+    rawCharacterId,
+  });
+  if (aliased) {
+    return db
+      .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")
+      .get(aliased, text(memberId, 160));
+  }
+
+  // A local anonymous character ID belongs to an installation. The stable
+  // cross-device identity is the member + realm + full character name. Prefer
+  // an existing stable identity before accepting a second machine's local ID.
+  const stable = characterByStableIdentity(db, {
+    memberId,
+    characterName,
+    realm,
+    region,
+  });
+  if (stable) return stable;
+
+  // Keep GUID/legacy/direct IDs working for characters that predate the alias
+  // ledger or whose name/realm is temporarily unavailable.
+  const preferred = text(preferredCharacterId, 200);
+  if (preferred) {
+    return db
+      .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")
+      .get(preferred, text(memberId, 160));
+  }
+
+  return null;
+}
+
 export function recordGuildweaverCharacterAliasInDatabase({
   db,
   memberId,
@@ -137,6 +161,10 @@ export function recordGuildweaverCharacterAliasInDatabase({
   const raw = text(rawCharacterId, 200);
   if (!raw || !characterId) return false;
   ensureGuildweaverCharacterIdentitySchema(db);
+
+  const member = text(memberId, 160);
+  const device = text(deviceId, 160);
+  const canonical = text(characterId, 200);
 
   db.prepare(`
     INSERT INTO guildweaver_character_aliases (
@@ -154,17 +182,27 @@ export function recordGuildweaverCharacterAliasInDatabase({
       region = excluded.region,
       last_seen_at = excluded.last_seen_at
   `).run(
-    text(memberId, 160),
-    text(deviceId, 160),
+    member,
+    device,
     text(installationId, 200),
     raw,
-    text(characterId, 200),
+    canonical,
     text(characterName, 96),
     text(realm, 120),
     text(region, 32),
     String(observedAt),
     String(observedAt),
   );
+
+  // Repair already-ingested debug telemetry as soon as we learn the alias.
+  // The immutable envelope still contains the original raw character ID.
+  if (tableExists(db, "guildweaver_telemetry_records")) {
+    db.prepare(`
+      UPDATE guildweaver_telemetry_records
+      SET character_id = ?
+      WHERE member_id = ? AND device_id = ? AND character_id = ?
+    `).run(canonical, member, device, raw);
+  }
 
   return true;
 }
