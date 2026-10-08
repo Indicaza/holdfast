@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import WowIcon from '../WowAssets/WowIcon.jsx'
-import { resolveWowIconAsset } from '../WowAssets/assetResolver.js'
+import { resolveWowFileAsset } from '../WowAssets/assetResolver.js'
 import './TalentTreeBackdrop.css'
 
 const QUADRANTS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
 
 function TalentTexture({ texture }) {
   const fileDataId = Number(texture?.fileDataId)
-  const src = useMemo(
-    () => resolveWowIconAsset({ iconFileId: fileDataId, size: 512 }),
-    [fileDataId],
-  )
+  const src = useMemo(() => resolveWowFileAsset(fileDataId), [fileDataId])
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
