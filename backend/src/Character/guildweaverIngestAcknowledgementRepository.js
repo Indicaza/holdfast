@@ -74,6 +74,12 @@ export function acknowledgeGuildweaverIngestInDatabase({
   return true;
 }
 
+export function acknowledgeGuildweaverIngest(options) {
+  return withGuildDatabase((db) =>
+    acknowledgeGuildweaverIngestInDatabase({ db, ...options }),
+  );
+}
+
 function normalizeManifest(values, limit) {
   if (!Array.isArray(values)) return [];
   const seen = new Set();
