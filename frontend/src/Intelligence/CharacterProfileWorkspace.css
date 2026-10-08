@@ -53,9 +53,18 @@
 
 .character-profile--modal {
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.character-profile--modal .armory-tabbed-surface {
+  display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -129,7 +138,22 @@
   align-content: start;
 }
 
-.character-profile--modal .armory-content--talents,
+.character-profile--modal .armory-content--talents {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(.55rem, 1vw, .85rem) max(.35rem, env(safe-area-inset-right)) clamp(.55rem, 1vw, .8rem) 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
+.character-profile--modal .armory-content--talents > .talent-tree {
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
 .character-profile--modal .armory-content--professions,
 .character-profile--modal .armory-content--recipes,
 .character-profile--modal .armory-content--overview {
@@ -179,5 +203,10 @@
     max-width: 100%;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .character-profile--modal .armory-content--talents {
+    padding-top: .5rem;
+    padding-bottom: .45rem;
   }
 }

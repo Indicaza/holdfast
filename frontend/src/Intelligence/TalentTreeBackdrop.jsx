@@ -20,7 +20,7 @@ function TalentTexture({ texture }) {
       <span
         className="talent-backdrop__missing-tile"
         data-file-data-id={fileDataId > 0 ? fileDataId : undefined}
-        data-client-path={texture?.path || undefined}
+        data-client-path={texture?.resolvedPath || texture?.path || undefined}
       />
     )
   }
@@ -33,7 +33,7 @@ function TalentTexture({ texture }) {
       loading="lazy"
       decoding="async"
       data-file-data-id={fileDataId}
-      data-client-path={texture?.path || undefined}
+      data-client-path={texture?.resolvedPath || texture?.path || undefined}
       onError={() => setFailed(true)}
     />
   )
@@ -44,11 +44,12 @@ function TalentBackgroundPanel({ tab, index }) {
     ? tab.backgroundTextures
     : {}
   const resolvedCount = QUADRANTS.filter((key) => Number(textures?.[key]?.fileDataId) > 0).length
-  const hasIdentity = Boolean(tab?.name || tab?.iconFileDataId || tab?.background)
+  const points = Number(tab?.pointsSpent)
+  const hasPoints = Number.isFinite(points)
 
   return (
     <section
-      className={`talent-backdrop__panel${resolvedCount ? ' talent-backdrop__panel--art' : ''}${hasIdentity ? '' : ' talent-backdrop__panel--anonymous'}`}
+      className={`talent-backdrop__panel${resolvedCount ? ' talent-backdrop__panel--art' : ''}${tab?.unresolvedName ? ' talent-backdrop__panel--unresolved' : ''}`}
       data-background-token={tab?.background || undefined}
       data-background-assets={resolvedCount}
     >
@@ -60,36 +61,30 @@ function TalentBackgroundPanel({ tab, index }) {
         {tab?.iconFileDataId ? (
           <WowIcon
             iconFileId={tab.iconFileDataId}
-            label={tab?.name || `Talent tree ${index + 1}`}
-            size={34}
+            label={tab?.name || `Specialization ${index + 1}`}
+            size={38}
           />
         ) : null}
-        <div>
-          <strong>{tab?.name || `Tree ${index + 1}`}</strong>
-          {tab?.pointsSpent !== null && tab?.pointsSpent !== undefined
-            ? <span>{tab.pointsSpent} {Number(tab.pointsSpent) === 1 ? 'point' : 'points'}</span>
-            : null}
+        <div className="talent-backdrop__identity">
+          <strong>{tab?.name || `Specialization ${index + 1}`}</strong>
+          <span>{hasPoints ? `${points} ${points === 1 ? 'point' : 'points'} spent` : 'Points unavailable'}</span>
         </div>
       </div>
     </section>
   )
 }
 
-export default function TalentTreeBackdrop({ art, fallbackPanelCount = 3 }) {
-  const sourceTabs = Array.isArray(art?.talentTabs) ? art.talentTabs.filter(Boolean).slice(0, 6) : []
-  const panelCount = sourceTabs.length || Math.max(1, Math.min(6, Number(fallbackPanelCount) || 1))
-  const tabs = sourceTabs.length
-    ? sourceTabs
-    : Array.from({ length: panelCount }, (_, index) => ({ id: `fallback-${index}` }))
+export default function TalentTreeBackdrop({ tabs = [] }) {
+  const panels = Array.isArray(tabs) && tabs.length ? tabs : [{ id: 'fallback', name: 'Talents', pointsSpent: 0 }]
 
   return (
     <div
       className="talent-backdrop"
-      style={{ '--talent-panel-count': tabs.length }}
+      style={{ '--talent-panel-count': panels.length }}
       aria-hidden="true"
-      data-has-client-art={sourceTabs.some((tab) => QUADRANTS.some((key) => Number(tab?.backgroundTextures?.[key]?.fileDataId) > 0)) ? 'true' : 'false'}
+      data-has-client-art={panels.some((tab) => QUADRANTS.some((key) => Number(tab?.backgroundTextures?.[key]?.fileDataId) > 0)) ? 'true' : 'false'}
     >
-      {tabs.map((tab, index) => (
+      {panels.map((tab, index) => (
         <TalentBackgroundPanel key={`${tab?.id ?? tab?.index ?? index}-${tab?.name || index}`} tab={tab} index={index} />
       ))}
     </div>
