@@ -97,18 +97,24 @@
   position: sticky;
   z-index: 6;
   top: 0;
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(7.75rem, 1fr);
   align-items: stretch;
-  gap: 0;
+  gap: .35rem;
   margin: 0;
-  padding: 0;
+  padding: .35rem;
   overflow-x: auto;
-  border: 0;
-  border-bottom: 1px solid rgba(196, 166, 103, .18);
-  border-radius: 0;
+  overflow-y: hidden;
+  border: 1px solid rgba(196, 166, 103, .16);
+  border-radius: .65rem;
   background:
-    linear-gradient(180deg, rgba(7, 17, 29, .985), rgba(3, 10, 18, .965));
-  box-shadow: 0 .8rem 1.8rem rgba(0, 0, 0, .16);
+    linear-gradient(180deg, rgba(10, 22, 36, .985), rgba(3, 10, 18, .98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .025),
+    inset 0 -1px 0 rgba(0, 0, 0, .4),
+    0 .6rem 1.5rem rgba(0, 0, 0, .16);
+  isolation: isolate;
   scrollbar-width: none;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -120,59 +126,99 @@
 
 .character-profile--modal .armory-tabs button {
   position: relative;
-  min-height: 3.65rem;
-  flex: 0 0 auto;
-  padding: 0 clamp(1rem, 2vw, 1.65rem);
-  border: 0;
-  border-radius: 0;
+  z-index: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 3.35rem;
+  padding: .35rem 1rem;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: .42rem;
   background: transparent !important;
-  color: rgba(203, 213, 225, .66);
-  font-size: .74rem;
+  color: rgba(203, 213, 225, .68);
+  box-shadow: inset 0 0 0 1px transparent;
+  font-size: .78rem;
   font-weight: 700;
-  letter-spacing: .065em;
-  text-transform: uppercase;
+  letter-spacing: .035em;
+  text-transform: none;
+  cursor: pointer;
+  isolation: isolate;
   transition:
     color 140ms ease,
-    background 140ms ease;
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.character-profile--modal .armory-tabs button::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 110%, rgba(214, 184, 113, .12), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, .018), transparent 45%);
+  opacity: 0;
+  transition: opacity 140ms ease;
 }
 
 .character-profile--modal .armory-tabs button::after {
   content: '';
   position: absolute;
-  right: clamp(1rem, 2vw, 1.65rem);
-  bottom: -1px;
-  left: clamp(1rem, 2vw, 1.65rem);
+  right: .8rem;
+  bottom: .2rem;
+  left: .8rem;
   height: 2px;
-  background: linear-gradient(90deg, rgba(196, 166, 103, .32), #e8cc8c, rgba(196, 166, 103, .32));
-  box-shadow: 0 0 .7rem rgba(232, 204, 140, .28);
-  transform: scaleX(0);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #e8cc8c, transparent);
+  box-shadow: 0 0 .65rem rgba(232, 204, 140, .3);
+  opacity: 0;
+  transform: scaleX(.55);
   transform-origin: center;
-  transition: transform 160ms ease;
+  transition: opacity 140ms ease, transform 160ms ease;
 }
 
 .character-profile--modal .armory-tabs button:hover,
 .character-profile--modal .armory-tabs button:focus-visible {
-  background: linear-gradient(180deg, transparent, rgba(196, 166, 103, .055)) !important;
-  color: rgba(244, 231, 199, .9) !important;
+  border-color: rgba(196, 166, 103, .18);
+  background: rgba(196, 166, 103, .035) !important;
+  color: rgba(244, 231, 199, .94) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .018);
+}
+
+.character-profile--modal .armory-tabs button:hover::before,
+.character-profile--modal .armory-tabs button:focus-visible::before {
+  opacity: 1;
+}
+
+.character-profile--modal .armory-tabs button:focus-visible {
+  outline: 1px solid rgba(232, 204, 140, .52);
+  outline-offset: -3px;
 }
 
 .character-profile--modal .armory-tabs .armory-tabs__active {
-  background: linear-gradient(180deg, transparent 30%, rgba(196, 166, 103, .075)) !important;
-  color: #f0d99e !important;
+  z-index: 1;
+  border-color: rgba(196, 166, 103, .32);
+  background:
+    linear-gradient(180deg, rgba(196, 166, 103, .085), rgba(196, 166, 103, .035)) !important;
+  color: #f2d998 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    inset 0 0 .9rem rgba(196, 166, 103, .035);
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active::before {
+  opacity: 1;
 }
 
 .character-profile--modal .armory-tabs .armory-tabs__active::after {
+  opacity: 1;
   transform: scaleX(1);
 }
 
 .character-profile--modal .armory-content {
   padding-top: clamp(1.8rem, 2.8vw, 2.6rem);
   padding-bottom: .5rem;
-}
-
-.character-profile--modal .armory-overview {
-  align-items: start;
-  gap: clamp(1rem, 2vw, 1.6rem);
 }
 
 .character-profile--modal .armory-panel {
@@ -338,18 +384,20 @@
   }
 
   .character-profile--modal .armory-tabs {
-    margin-inline: -.8rem;
-    padding-inline: .15rem;
+    grid-auto-columns: minmax(6.75rem, 1fr);
+    gap: .25rem;
+    margin-inline: 0;
+    padding: .25rem;
   }
 
   .character-profile--modal .armory-tabs button {
-    min-height: 3.35rem;
-    padding-inline: 1rem;
-    font-size: .69rem;
+    min-height: 3rem;
+    padding-inline: .75rem;
+    font-size: .7rem;
   }
 
   .character-profile--modal .armory-tabs button::after {
-    right: 1rem;
-    left: 1rem;
+    right: .65rem;
+    left: .65rem;
   }
 }
