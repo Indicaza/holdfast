@@ -9,6 +9,7 @@ import './CharacterProfileModal.css'
 import './CharacterProfileModalFullBleed.css'
 import './CharacterProfileWorkspace.css'
 import './CharacterProfileModalGame.css'
+import './CharacterProfileChrome.css'
 
 function PlayerFramePlaceholder() {
   return (

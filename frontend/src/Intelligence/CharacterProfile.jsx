@@ -57,17 +57,21 @@ export default function CharacterProfile({
       {showHero ? <CharacterHero character={character} /> : null}
 
       <nav className="armory-tabs" aria-label="Character profile sections">
-        {characterProfileTabs.map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className={activeTab === value ? 'armory-tabs__active' : ''}
-            aria-pressed={activeTab === value}
-            onClick={() => onTabChange?.(value)}
-          >
-            {label}
-          </button>
-        ))}
+        {characterProfileTabs.map(([value, label]) => {
+          const isActive = activeTab === value
+          return (
+            <button
+              key={value}
+              type="button"
+              className={isActive ? 'armory-tabs__active' : ''}
+              aria-pressed={isActive}
+              aria-current={isActive ? 'page' : undefined}
+              onClick={() => onTabChange?.(value)}
+            >
+              {label}
+            </button>
+          )
+        })}
       </nav>
 
       <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
