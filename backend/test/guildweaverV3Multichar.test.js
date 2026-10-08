@@ -45,7 +45,7 @@ function snapshot({ characterId, name, className, level, capturedAt }) {
   };
 }
 
-test("schema v3 keeps multiple characters and generic telemetry can populate the Armory", async () => {
+test("schema v3 keeps multiple characters while generic telemetry remains evidence-only", async () => {
   await withHttpApp(async ({ request }) => {
     const deviceToken = await pairBridge(request);
     const headers = { Authorization: `Bearer ${deviceToken}` };
@@ -113,9 +113,28 @@ test("schema v3 keeps multiple characters and generic telemetry can populate the
       },
     });
     assert.equal(telemetry.status, 201);
-    assert.equal(telemetry.json.characterStatus, "created");
+    assert.equal(telemetry.json.characterStatus, null);
 
-    const summary = await request("/api/intelligence", { persona: "member" });
+    let summary = await request("/api/intelligence", { persona: "member" });
+    assert.equal(summary.status, 200);
+    assert.equal(summary.json.summary.characterCount, 2);
+    assert.deepEqual(
+      new Set(summary.json.characters.map((character) => character.name)),
+      new Set(["Rook", "Quill"]),
+    );
+
+    const druid = await request("/api/bridge/characters/snapshot", {
+      method: "POST",
+      headers,
+      body: {
+        revision: 2,
+        snapshot: druidSnapshot,
+      },
+    });
+    assert.equal(druid.status, 201);
+    assert.equal(druid.json.character.name, "Kumo");
+
+    summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
     assert.equal(summary.json.summary.characterCount, 3);
     assert.deepEqual(
