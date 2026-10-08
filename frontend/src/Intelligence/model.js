@@ -117,6 +117,28 @@ function normalizeTreeDefinition(value) {
   }
 }
 
+function normalizeTalentArt(talents) {
+  const direct = object(talents?.art)
+  const directTabs = array(direct.talentTabs).filter(Boolean)
+  if (directTabs.length) return { ...direct, talentTabs: directTabs }
+
+  for (const definition of array(talents?.treeDefinitions)) {
+    const definitionArt = object(definition?.art)
+    const definitionTabs = array(definitionArt.talentTabs).filter(Boolean)
+    if (!definitionTabs.length) continue
+
+    return {
+      ...definitionArt,
+      ...direct,
+      specialization: Object.keys(object(direct.specialization)).length ? direct.specialization : definitionArt.specialization,
+      trees: Object.keys(object(direct.trees)).length ? direct.trees : definitionArt.trees,
+      talentTabs: definitionTabs,
+    }
+  }
+
+  return direct
+}
+
 export function canonicalEquipmentSlot(value) {
   const original = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
   const hadSlotSuffix = original.endsWith('SLOT')
@@ -216,7 +238,7 @@ export function normalizeArmory(payload) {
       treeIds: array(talents.treeIds),
       treeHashes: array(talents.treeHashes).map((entry) => ({ ...object(entry) })),
       treeDefinitions: array(talents.treeDefinitions).map(normalizeTreeDefinition),
-      art: object(talents.art),
+      art: normalizeTalentArt(talents),
       specId: talents.specId ?? null,
       name: text(talents.name),
       pointsSpent: talents.pointsSpent == null ? null : number(talents.pointsSpent),
