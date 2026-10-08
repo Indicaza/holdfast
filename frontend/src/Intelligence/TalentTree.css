@@ -5,6 +5,8 @@
 
 .talent-tree__stage {
   position: relative;
+  display: grid;
+  gap: .45rem;
 }
 
 .talent-tree__viewport {
@@ -185,18 +187,14 @@
 }
 
 .talent-tree__zoom {
-  position: absolute;
-  z-index: 8;
-  right: .72rem;
-  bottom: .72rem;
+  z-index: 2;
   display: inline-flex;
+  justify-self: end;
   gap: .35rem;
-  padding: .32rem;
-  border: 1px solid rgba(196, 166, 103, .2);
+  padding: .24rem;
+  border: 1px solid rgba(196, 166, 103, .16);
   border-radius: 999px;
-  background: rgba(3, 9, 17, .78);
-  box-shadow: 0 .5rem 1.4rem rgba(0, 0, 0, .38);
-  backdrop-filter: blur(8px);
+  background: rgba(3, 9, 17, .58);
 }
 
 .talent-tree__zoom button {
