@@ -46,11 +46,11 @@ test('commander can use audit and Guildweaver consoles inside GuildOS', async ({
   await expect(page).toHaveURL(/#guildweaver$/)
   await expect(topbar.getByRole('heading', { name: 'Guildweaver' })).toBeVisible()
   await expect(page.getByLabel('Guildweaver telemetry workspace')).toBeVisible()
-  await expect(page.getByLabel('Search Guildweaver telemetry')).toBeVisible()
-
-  await page.getByText(/^Filters/).click()
-  await expect(page.getByLabel('Filter telemetry domain')).toBeVisible()
-  await expect(page.getByLabel('Filter telemetry kind')).toBeVisible()
+  await expect(page.getByLabel('Filter telemetry by character')).toBeVisible()
+  await expect(page.getByLabel('Filter telemetry by payload type')).toBeVisible()
+  await expect(page.getByLabel('Filter telemetry by received time')).toBeVisible()
+  await expect(page.getByText('Latest activity', { exact: true })).toBeVisible()
+  await expect(page.getByText(/^Filters/)).toHaveCount(0)
 
   await page.locator('.navbar__account-button').click()
   const accountLinks = page.locator('.navbar__account-links')

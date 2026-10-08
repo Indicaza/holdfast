@@ -2,19 +2,59 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   humanizeTelemetryName,
+  sortTelemetryRecordsNewest,
   stringifyTelemetrySectionShareBundle,
   stringifyTelemetryShareBundle,
   telemetryDomainDescriptor,
+  telemetryPayloadLabel,
   telemetryPayloadSections,
   telemetrySessionInfo,
+  telemetrySinceForWindow,
+  telemetrySourceInfo,
 } from './telemetryInspectorModel.js'
 
 const PAGE_SIZE = 40
+const CHARACTER_RESULT_LIMIT = 12
+const DEBOUNCE_MS = 280
+const TIME_WINDOWS = [
+  ['', 'Any time'],
+  ['15m', 'Last 15 minutes'],
+  ['1h', 'Last hour'],
+  ['6h', 'Last 6 hours'],
+  ['24h', 'Last 24 hours'],
+  ['7d', 'Last 7 days'],
+  ['30d', 'Last 30 days'],
+]
+
+function useDebouncedValue(value, delay = DEBOUNCE_MS) {
+  const [debounced, setDebounced] = useState(value)
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebounced(value), delay)
+    return () => window.clearTimeout(timeout)
+  }, [delay, value])
+
+  return debounced
+}
 
 function formatTime(value) {
   if (!value) return '—'
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString()
+}
+
+function formatClock(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+}
+
+function formatDate(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
 function relativeTime(value) {
@@ -53,15 +93,36 @@ async function copyText(value) {
   await navigator.clipboard.writeText(value)
 }
 
+function CharacterOption({ option, onSelect }) {
+  const context = [option.memberName, option.className, option.spec, option.realm].filter(Boolean).join(' · ')
+  return (
+    <button
+      type="button"
+      className="gw-admin-character-option"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => onSelect(option)}
+    >
+      <span>
+        <strong>{option.characterName || option.characterId}</strong>
+        {context ? <small>{context}</small> : null}
+      </span>
+      <small>{relativeTime(option.lastReceivedAt)}</small>
+    </button>
+  )
+}
+
 export default function TelemetryInspector() {
   const [summary, setSummary] = useState(null)
   const [records, setRecords] = useState([])
   const [selected, setSelected] = useState(null)
   const [selectedSectionKey, setSelectedSectionKey] = useState('overview')
-  const [query, setQuery] = useState('')
-  const [submittedQuery, setSubmittedQuery] = useState('')
-  const [domain, setDomain] = useState('')
-  const [kind, setKind] = useState('')
+  const [characterInput, setCharacterInput] = useState('')
+  const [characterId, setCharacterId] = useState('')
+  const [characterOptions, setCharacterOptions] = useState([])
+  const [characterOptionsOpen, setCharacterOptionsOpen] = useState(false)
+  const [characterOptionsLoading, setCharacterOptionsLoading] = useState(false)
+  const [payloadInput, setPayloadInput] = useState('')
+  const [timeWindow, setTimeWindow] = useState('')
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -69,33 +130,42 @@ export default function TelemetryInspector() {
   const [error, setError] = useState('')
   const [copyState, setCopyState] = useState('')
 
-  const domains = useMemo(() => {
-    const names = new Set((summary?.domains || []).map((entry) => entry.domain).filter(Boolean))
-    return [...names].sort()
-  }, [summary])
-
+  const debouncedCharacter = useDebouncedValue(characterInput.trim())
+  const debouncedPayload = useDebouncedValue(payloadInput.trim().replace(/\s+/g, '_'))
+  const debouncedTimeWindow = useDebouncedValue(timeWindow, 180)
+  const orderedRecords = useMemo(() => sortTelemetryRecordsNewest(records), [records])
   const payloadSections = useMemo(() => telemetryPayloadSections(selected), [selected])
   const selectedSection = useMemo(
     () => payloadSections.find((section) => section.key === selectedSectionKey) || payloadSections[0] || null,
     [payloadSections, selectedSectionKey],
   )
   const selectedSession = useMemo(() => telemetrySessionInfo(selected), [selected])
+  const selectedSource = useMemo(() => telemetrySourceInfo(selected), [selected])
+  const descriptor = telemetryDomainDescriptor(selected)
+  const selectedPayloadLabel = telemetryPayloadLabel(selected)
+  const activeFilters = Boolean(characterInput.trim() || payloadInput.trim() || timeWindow)
 
-  const activeFilterCount = Number(Boolean(domain)) + Number(Boolean(kind))
+  const loadSummary = useCallback(async () => {
+    try {
+      const body = await getJson('/api/admin/guildweaver/telemetry/summary')
+      setSummary(body.summary)
+    } catch (loadError) {
+      setError(loadError.message || 'Unable to load Guildweaver telemetry summary.')
+    }
+  }, [])
 
-  const load = useCallback(async () => {
+  const loadHistory = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
-      if (submittedQuery) params.set('q', submittedQuery)
-      if (domain) params.set('domain', domain)
-      if (kind) params.set('kind', kind)
-      const [summaryBody, historyBody] = await Promise.all([
-        getJson('/api/admin/guildweaver/telemetry/summary'),
-        getJson(`/api/admin/guildweaver/telemetry?${params}`),
-      ])
-      setSummary(summaryBody.summary)
+      const since = telemetrySinceForWindow(debouncedTimeWindow)
+      if (characterId) params.set('characterId', characterId)
+      else if (debouncedCharacter) params.set('character', debouncedCharacter)
+      if (debouncedPayload) params.set('payloadType', debouncedPayload)
+      if (since) params.set('since', since)
+
+      const historyBody = await getJson(`/api/admin/guildweaver/telemetry?${params}`)
       setRecords(historyBody.records || [])
       setHasMore(Boolean(historyBody.pagination?.hasMore))
     } catch (loadError) {
@@ -103,7 +173,12 @@ export default function TelemetryInspector() {
     } finally {
       setLoading(false)
     }
-  }, [domain, kind, offset, submittedQuery])
+  }, [characterId, debouncedCharacter, debouncedPayload, debouncedTimeWindow, offset])
+
+  const refresh = useCallback(() => {
+    loadSummary()
+    loadHistory()
+  }, [loadHistory, loadSummary])
 
   const selectRecord = useCallback(async (record) => {
     setSelected(record)
@@ -120,17 +195,42 @@ export default function TelemetryInspector() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { loadSummary() }, [loadSummary])
+  useEffect(() => { loadHistory() }, [loadHistory])
 
   useEffect(() => {
-    if (!records.length) {
+    if (characterId || !debouncedCharacter) {
+      setCharacterOptions([])
+      setCharacterOptionsLoading(false)
+      return undefined
+    }
+
+    let cancelled = false
+    setCharacterOptionsLoading(true)
+    const params = new URLSearchParams({ q: debouncedCharacter, limit: String(CHARACTER_RESULT_LIMIT) })
+    getJson(`/api/admin/guildweaver/telemetry/characters?${params}`)
+      .then((body) => {
+        if (!cancelled) setCharacterOptions(body.characters || [])
+      })
+      .catch(() => {
+        if (!cancelled) setCharacterOptions([])
+      })
+      .finally(() => {
+        if (!cancelled) setCharacterOptionsLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [characterId, debouncedCharacter])
+
+  useEffect(() => {
+    if (!orderedRecords.length) {
       setSelected(null)
       return
     }
-    if (!selected || !records.some((record) => record.id === selected.id)) {
-      selectRecord(records[0])
+    if (!selected || !orderedRecords.some((record) => record.id === selected.id)) {
+      selectRecord(orderedRecords[0])
     }
-  }, [records, selected, selectRecord])
+  }, [orderedRecords, selected, selectRecord])
 
   useEffect(() => {
     if (!payloadSections.length) return
@@ -138,6 +238,22 @@ export default function TelemetryInspector() {
       setSelectedSectionKey(payloadSections[0].key)
     }
   }, [payloadSections, selectedSectionKey])
+
+  const selectCharacter = (option) => {
+    setCharacterInput(option.characterName || option.characterId)
+    setCharacterId(option.characterId)
+    setCharacterOptionsOpen(false)
+    setOffset(0)
+  }
+
+  const clearFilters = () => {
+    setCharacterInput('')
+    setCharacterId('')
+    setCharacterOptions([])
+    setPayloadInput('')
+    setTimeWindow('')
+    setOffset(0)
+  }
 
   const performCopy = async (mode) => {
     if (!selected?.envelope) return
@@ -156,100 +272,119 @@ export default function TelemetryInspector() {
     window.setTimeout(() => setCopyState(''), 1600)
   }
 
-  const clearFilters = () => {
-    setQuery('')
-    setSubmittedQuery('')
-    setDomain('')
-    setKind('')
-    setOffset(0)
-  }
-
-  const descriptor = telemetryDomainDescriptor(selected)
-  const displayName = selected?.payload?.name || descriptor.label
-
   return (
     <div className="guildweaver-console-embed">
       <section className="gw-admin-console" aria-label="Guildweaver telemetry workspace">
-        <header className="gw-admin-toolbar">
-          <form
-            className="gw-admin-search"
-            onSubmit={(event) => {
-              event.preventDefault()
-              setOffset(0)
-              setSubmittedQuery(query.trim())
-            }}
-          >
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search telemetry…" aria-label="Search Guildweaver telemetry" />
-            <button type="submit">Search</button>
-            {(submittedQuery || domain || kind) ? <button type="button" onClick={clearFilters}>Clear</button> : null}
-          </form>
+        <header className="gw-admin-toolbar gw-admin-debug-toolbar">
+          <label className="gw-admin-filter-field gw-admin-character-filter">
+            <span>Character</span>
+            <div className="gw-admin-character-combobox">
+              <input
+                value={characterInput}
+                onChange={(event) => {
+                  setCharacterInput(event.target.value)
+                  setCharacterId('')
+                  setCharacterOptionsOpen(true)
+                  setOffset(0)
+                }}
+                onFocus={() => setCharacterOptionsOpen(true)}
+                onBlur={() => window.setTimeout(() => setCharacterOptionsOpen(false), 120)}
+                placeholder="Type a character name…"
+                aria-label="Filter telemetry by character"
+                autoComplete="off"
+              />
+              {characterOptionsOpen && characterInput.trim() && !characterId ? (
+                <div className="gw-admin-character-options" role="listbox" aria-label="Matching characters">
+                  {characterOptionsLoading ? <p>Finding characters…</p> : null}
+                  {!characterOptionsLoading && characterOptions.map((option) => (
+                    <CharacterOption key={option.characterId} option={option} onSelect={selectCharacter} />
+                  ))}
+                  {!characterOptionsLoading && debouncedCharacter && !characterOptions.length ? <p>No matching characters yet.</p> : null}
+                </div>
+              ) : null}
+            </div>
+          </label>
 
-          <div className="gw-admin-toolbar-status" aria-label="Guildweaver telemetry summary">
-            <strong>{summary?.records ?? 0}</strong>
-            <span>records</span>
-            <i aria-hidden="true">·</i>
-            <strong>{summary?.streams ?? 0}</strong>
-            <span>streams</span>
-            <i aria-hidden="true">·</i>
-            <span>{relativeTime(summary?.lastReceivedAt)}</span>
+          <label className="gw-admin-filter-field">
+            <span>Payload</span>
+            <input
+              value={payloadInput}
+              onChange={(event) => { setPayloadInput(event.target.value); setOffset(0) }}
+              placeholder="Talent tree, character…"
+              aria-label="Filter telemetry by payload type"
+              list="gw-payload-types"
+            />
+            <datalist id="gw-payload-types">
+              {(summary?.eventTypes || []).map((entry) => (
+                <option key={entry.eventType} value={entry.eventType}>{humanizeTelemetryName(entry.eventType)}</option>
+              ))}
+            </datalist>
+          </label>
+
+          <label className="gw-admin-filter-field gw-admin-time-filter">
+            <span>Received</span>
+            <select
+              value={timeWindow}
+              onChange={(event) => { setTimeWindow(event.target.value); setOffset(0) }}
+              aria-label="Filter telemetry by received time"
+            >
+              {TIME_WINDOWS.map(([value, label]) => <option key={value || 'all'} value={value}>{label}</option>)}
+            </select>
+          </label>
+
+          <div className="gw-admin-toolbar-actions">
+            {activeFilters ? <button type="button" className="gw-admin-clear" onClick={clearFilters}>Clear</button> : null}
+            <button className="gw-admin-refresh" type="button" onClick={refresh} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
           </div>
 
-          <details className="gw-admin-filter-menu">
-            <summary>Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</summary>
-            <div>
-              <label>
-                <span>Domain</span>
-                <select value={domain} onChange={(event) => { setDomain(event.target.value); setOffset(0) }} aria-label="Filter telemetry domain">
-                  <option value="">All domains</option>
-                  {domains.map((name) => <option key={name} value={name}>{humanizeTelemetryName(name)}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Kind</span>
-                <select value={kind} onChange={(event) => { setKind(event.target.value); setOffset(0) }} aria-label="Filter telemetry kind">
-                  <option value="">State + events</option>
-                  <option value="state">State</option>
-                  <option value="event">Events</option>
-                </select>
-              </label>
-            </div>
-          </details>
-
-          <button className="gw-admin-refresh" type="button" onClick={load} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
+          <div className="gw-admin-toolbar-status" aria-label="Guildweaver telemetry summary">
+            <strong>{summary?.records ?? 0}</strong><span>records</span>
+            <i aria-hidden="true">·</i>
+            <strong>{summary?.characters ?? 0}</strong><span>characters</span>
+            <i aria-hidden="true">·</i>
+            <span>last received {relativeTime(summary?.lastReceivedAt)}</span>
+          </div>
         </header>
 
         {error ? <p className="gw-admin-error">{error}</p> : null}
 
         <div className="gw-admin-workspace">
-          <section className="gw-admin-history" aria-label="Telemetry history">
+          <section className="gw-admin-history" aria-label="Latest telemetry activity">
             <div className="gw-admin-pane-heading">
-              <div><span>History</span><strong>{records.length ? `${offset + 1}–${offset + records.length}` : '0'}</strong></div>
+              <div>
+                <span>Latest activity</span>
+                <strong>{orderedRecords.length ? `${offset + 1}–${offset + orderedRecords.length}` : '0'}</strong>
+              </div>
+              <small>Newest first</small>
             </div>
 
-            {loading && !records.length ? <p className="gw-admin-empty">Loading telemetry…</p> : null}
-            {!loading && !records.length ? <p className="gw-admin-empty">No telemetry has reached the server for this view yet.</p> : null}
+            {loading && !orderedRecords.length ? <p className="gw-admin-empty">Loading telemetry…</p> : null}
+            {!loading && !orderedRecords.length ? <p className="gw-admin-empty">Nothing has arrived for these filters yet.</p> : null}
 
             <div className="gw-admin-history-list">
-              {records.map((record) => {
-                const itemDescriptor = telemetryDomainDescriptor(record)
-                const session = telemetrySessionInfo(record)
+              {orderedRecords.map((record) => {
+                const source = telemetrySourceInfo(record)
+                const payloadLabel = telemetryPayloadLabel(record)
                 return (
                   <button
                     key={record.id}
                     type="button"
-                    className={`gw-admin-history-item${selected?.id === record.id ? ' is-selected' : ''}`}
+                    className={`gw-admin-history-item gw-admin-activity-card${selected?.id === record.id ? ' is-selected' : ''}`}
                     onClick={() => selectRecord(record)}
                   >
-                    <div className="gw-admin-history-title">
-                      <strong>{itemDescriptor.label}</strong>
-                      <span>rev {record.revision}</span>
+                    <div className="gw-admin-activity-topline">
+                      <strong>{payloadLabel}</strong>
+                      <time dateTime={record.receivedAt} title={formatTime(record.receivedAt)}>
+                        <b>{formatClock(record.receivedAt)}</b>
+                        <span>{formatDate(record.receivedAt)}</span>
+                      </time>
                     </div>
-                    <div className="gw-admin-history-meta">
-                      <span>{session.checkpointLabel || record.eventType}</span>
-                      <span>{formatBytes(record.payloadBytes)}</span>
+                    <div className="gw-admin-activity-source">
+                      <span>From</span>
+                      <strong>{source.primary}</strong>
                     </div>
-                    <div className="gw-admin-history-time">
-                      <span>{record.realm || 'Unknown realm'}</span>
+                    <div className="gw-admin-activity-context">
+                      <span>{source.secondary || record.realm || 'No source details'}</span>
                       <span>{relativeTime(record.receivedAt)}</span>
                     </div>
                   </button>
@@ -264,14 +399,16 @@ export default function TelemetryInspector() {
           </section>
 
           <section className="gw-admin-detail" aria-label="Telemetry detail">
-            {!selected ? <p className="gw-admin-empty">Select a telemetry record to inspect it.</p> : (
+            {!selected ? <p className="gw-admin-empty">Select an activity card to inspect its payload.</p> : (
               <>
-                <div className="gw-admin-detail-header">
+                <div className="gw-admin-detail-header gw-admin-debug-detail-header">
                   <div>
-                    <span>{descriptor.label} · {selectedSession.checkpointLabel || selected.eventType}</span>
-                    <h2>{displayName}</h2>
+                    <span>{descriptor.label}</span>
+                    <h2>{selectedPayloadLabel}</h2>
+                    <p className="gw-admin-detail-source">From <strong>{selectedSource.primary}</strong>{selectedSource.secondary ? ` · ${selectedSource.secondary}` : ''}</p>
                     <p>
-                      {selected.realm || 'Unknown realm'} · rev {selected.revision} · {formatBytes(selected.payloadBytes)} · received {relativeTime(selected.receivedAt)}
+                      Received {formatTime(selected.receivedAt)} ({relativeTime(selected.receivedAt)})
+                      {' · '}rev {selected.revision} · {formatBytes(selected.payloadBytes)}
                       {selectedSession.sessionId ? ` · session ${shortId(selectedSession.sessionId)}` : ''}
                     </p>
                   </div>
@@ -310,23 +447,25 @@ export default function TelemetryInspector() {
 
                 <div className="gw-admin-advanced-row">
                   <details className="gw-admin-record-details">
-                    <summary>Record details</summary>
+                    <summary>Technical details</summary>
                     <dl className="gw-admin-facts">
-                      <div><dt>Captured</dt><dd title={formatTime(selected.capturedAt)}>{relativeTime(selected.capturedAt)}</dd></div>
-                      <div><dt>Received</dt><dd title={formatTime(selected.receivedAt)}>{relativeTime(selected.receivedAt)}</dd></div>
+                      <div><dt>Captured</dt><dd title={formatTime(selected.capturedAt)}>{formatTime(selected.capturedAt)}</dd></div>
+                      <div><dt>Received</dt><dd title={formatTime(selected.receivedAt)}>{formatTime(selected.receivedAt)}</dd></div>
+                      <div><dt>Character</dt><dd title={selected.characterId}>{selected.characterName || selected.characterId || '—'}</dd></div>
+                      <div><dt>Member</dt><dd title={selected.memberId}>{selected.memberName || selected.memberId || '—'}</dd></div>
+                      <div><dt>Event</dt><dd>{selected.eventType}</dd></div>
                       <div><dt>Kind</dt><dd>{selected.kind}</dd></div>
                       <div><dt>Schema</dt><dd>{selected.schemaVersion}</dd></div>
-                      <div><dt>Character</dt><dd title={selected.characterId}>{selected.characterId || '—'}</dd></div>
                       <div><dt>Session</dt><dd title={selectedSession.sessionId}>{shortId(selectedSession.sessionId)}</dd></div>
                       <div><dt>Checkpoint</dt><dd>{selectedSession.checkpointLabel || '—'}</dd></div>
                       <div><dt>Reason</dt><dd>{selectedSession.reason || '—'}</dd></div>
-                      <div><dt>Install</dt><dd title={selected.installationId}>{selected.installationId || '—'}</dd></div>
-                      <div><dt>Device</dt><dd title={selected.deviceId}>{selected.deviceId || '—'}</dd></div>
+                      <div><dt>Install</dt><dd title={selected.installationId}>{shortId(selected.installationId)}</dd></div>
+                      <div><dt>Device</dt><dd title={selected.deviceId}>{shortId(selected.deviceId)}</dd></div>
                       <div><dt>Stream</dt><dd title={selected.streamKey}>{selected.streamKey || '—'}</dd></div>
                     </dl>
                     <div className="gw-admin-advanced-actions">
                       <button type="button" onClick={() => performCopy('payload')} disabled={!selected.payload}>{copyState === 'payload' ? 'Payload copied' : 'Copy payload'}</button>
-                      <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Bundle copied' : 'Copy full bundle'}</button>
+                      <button type="button" onClick={() => performCopy('share')} disabled={!selected.envelope}>{copyState === 'share' ? 'Bundle copied' : 'Copy debug bundle'}</button>
                     </div>
                   </details>
 

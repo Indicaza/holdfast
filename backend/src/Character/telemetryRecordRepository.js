@@ -53,6 +53,12 @@ function text(value, maxLength = 256) {
   return String(value ?? "").trim().slice(0, maxLength);
 }
 
+function isoDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
 function capturedAt(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
     const millis = value < 100000000000 ? value * 1000 : value;
@@ -107,11 +113,28 @@ export function ensureTelemetryRecordSchema(db) {
   `);
 }
 
+function payloadFromRow(row) {
+  const envelope = parseJson(row?.envelope_json);
+  return envelope?.payload && typeof envelope.payload === "object" && !Array.isArray(envelope.payload)
+    ? envelope.payload
+    : {};
+}
+
 function rowSummary(row) {
+  const payload = payloadFromRow(row);
+  const characterName = text(row.character_name || payload.name, 96);
+  const memberName = text(row.member_name, 96);
+  const className = text(row.class_name || payload.class?.name || payload.class, 48);
+  const spec = text(row.spec || payload.specialization?.name || payload.spec?.name || payload.spec, 64);
+
   return {
     id: Number(row.id),
     deviceId: row.device_id,
     memberId: row.member_id,
+    memberName,
+    characterName,
+    className,
+    spec,
     streamKey: row.stream_key,
     kind: row.kind,
     revision: Number(row.revision),
@@ -120,8 +143,8 @@ function rowSummary(row) {
     schemaVersion: Number(row.schema_version),
     characterId: row.character_id || "",
     installationId: row.installation_id || "",
-    realm: row.realm || "",
-    region: row.region || "",
+    realm: row.realm || payload.realm || "",
+    region: row.region || payload.region || "",
     capturedAt: row.captured_at,
     receivedAt: row.received_at,
     payloadBytes: Buffer.byteLength(row.envelope_json || "", "utf8"),
@@ -136,6 +159,23 @@ function rowDetail(row) {
     envelope,
     payload: envelope?.payload && typeof envelope.payload === "object" ? envelope.payload : {},
   };
+}
+
+function telemetrySelect() {
+  return `
+    SELECT
+      r.*,
+      m.display_name AS member_name,
+      COALESCE(c_direct.name, c_anonymous.name, '') AS character_name,
+      COALESCE(c_direct.class_name, c_anonymous.class_name, '') AS class_name,
+      COALESCE(c_direct.spec, c_anonymous.spec, '') AS spec
+    FROM guildweaver_telemetry_records r
+    LEFT JOIN members m ON m.id = r.member_id
+    LEFT JOIN characters c_direct
+      ON c_direct.id = r.character_id AND c_direct.member_id = r.member_id
+    LEFT JOIN characters c_anonymous
+      ON c_anonymous.id = ('guildweaver-id:' || r.character_id) AND c_anonymous.member_id = r.member_id
+  `;
 }
 
 export function recordTelemetry({
@@ -199,33 +239,72 @@ export function recordTelemetry({
   });
 }
 
-function listFilters({ q = "", domain = "", kind = "", eventType = "", characterId = "" } = {}) {
+function listFilters({
+  q = "",
+  domain = "",
+  kind = "",
+  eventType = "",
+  characterId = "",
+  character = "",
+  payloadType = "",
+  since = "",
+} = {}) {
   const clauses = [];
   const params = [];
 
   if (domain) {
-    clauses.push("domain = ?");
+    clauses.push("r.domain = ?");
     params.push(text(domain, 120).toLowerCase());
   }
   if (kind === "state" || kind === "event") {
-    clauses.push("kind = ?");
+    clauses.push("r.kind = ?");
     params.push(kind);
   }
   if (eventType) {
-    clauses.push("event_type = ?");
+    clauses.push("r.event_type = ?");
     params.push(text(eventType, 120));
   }
   if (characterId) {
-    clauses.push("character_id = ?");
+    clauses.push("r.character_id = ?");
     params.push(text(characterId, 200));
   }
+
+  const characterQuery = text(character, 120).toLowerCase();
+  if (characterQuery) {
+    const like = `%${characterQuery}%`;
+    clauses.push(`(
+      LOWER(r.character_id) LIKE ? OR
+      LOWER(COALESCE(c_direct.name, c_anonymous.name, '')) LIKE ? OR
+      LOWER(COALESCE(m.display_name, '')) LIKE ? OR
+      LOWER(r.envelope_json) LIKE ?
+    )`);
+    params.push(like, like, like, like);
+  }
+
+  const payloadQuery = text(payloadType, 120).toLowerCase();
+  if (payloadQuery) {
+    const like = `%${payloadQuery}%`;
+    clauses.push(`(
+      LOWER(r.event_type) LIKE ? OR
+      LOWER(r.domain) LIKE ? OR
+      LOWER(r.stream_key) LIKE ?
+    )`);
+    params.push(like, like, like);
+  }
+
+  const sinceDate = isoDate(since);
+  if (sinceDate) {
+    clauses.push("r.received_at >= ?");
+    params.push(sinceDate);
+  }
+
   const query = text(q, 200).toLowerCase();
   if (query) {
     const like = `%${query}%`;
     clauses.push(`(
-      LOWER(stream_key) LIKE ? OR LOWER(event_type) LIKE ? OR LOWER(domain) LIKE ? OR
-      LOWER(character_id) LIKE ? OR LOWER(device_id) LIKE ? OR LOWER(realm) LIKE ? OR
-      LOWER(envelope_json) LIKE ?
+      LOWER(r.stream_key) LIKE ? OR LOWER(r.event_type) LIKE ? OR LOWER(r.domain) LIKE ? OR
+      LOWER(r.character_id) LIKE ? OR LOWER(r.device_id) LIKE ? OR LOWER(r.realm) LIKE ? OR
+      LOWER(r.envelope_json) LIKE ?
     )`);
     params.push(like, like, like, like, like, like, like);
   }
@@ -240,9 +319,9 @@ export function readTelemetryHistory(options = {}) {
     const offset = integer(options.offset, 0, 0, 1000000);
     const where = listFilters(options);
     const rows = db.prepare(`
-      SELECT * FROM guildweaver_telemetry_records
+      ${telemetrySelect()}
       ${where.sql}
-      ORDER BY received_at DESC, id DESC
+      ORDER BY r.received_at DESC, r.id DESC
       LIMIT ? OFFSET ?
     `).all(...where.params, limit + 1, offset);
     const hasMore = rows.length > limit;
@@ -257,8 +336,55 @@ export function readTelemetryRecord(id) {
   return withGuildDatabase((db) => {
     ensureTelemetryRecordSchema(db);
     return rowDetail(
-      db.prepare("SELECT * FROM guildweaver_telemetry_records WHERE id = ? LIMIT 1").get(Number(id)),
+      db.prepare(`${telemetrySelect()} WHERE r.id = ? LIMIT 1`).get(Number(id)),
     );
+  });
+}
+
+export function readTelemetryCharacters(options = {}) {
+  return withGuildDatabase((db) => {
+    ensureTelemetryRecordSchema(db);
+    const limit = integer(options.limit, 12, 1, 30);
+    const query = text(options.q, 120).toLowerCase();
+    const rows = db.prepare(`
+      ${telemetrySelect()}
+      INNER JOIN (
+        SELECT character_id, MAX(id) AS latest_id
+        FROM guildweaver_telemetry_records
+        WHERE character_id <> ''
+        GROUP BY character_id
+      ) latest ON latest.latest_id = r.id
+      ORDER BY r.received_at DESC, r.id DESC
+      LIMIT 1000
+    `).all();
+
+    const characters = rows
+      .map((row) => {
+        const summary = rowSummary(row);
+        return {
+          characterId: summary.characterId,
+          characterName: summary.characterName || summary.characterId,
+          memberName: summary.memberName,
+          className: summary.className,
+          spec: summary.spec,
+          realm: summary.realm,
+          lastReceivedAt: summary.receivedAt,
+        };
+      })
+      .filter((character) => {
+        if (!query) return true;
+        return [
+          character.characterName,
+          character.memberName,
+          character.characterId,
+          character.className,
+          character.spec,
+          character.realm,
+        ].some((value) => String(value || "").toLowerCase().includes(query));
+      })
+      .slice(0, limit);
+
+    return { characters };
   });
 }
 
@@ -287,6 +413,17 @@ export function readTelemetrySummary() {
       count: Number(row.count),
       lastReceivedAt: row.last_received_at,
     }));
+    const eventTypes = db.prepare(`
+      SELECT event_type, domain, COUNT(*) AS count, MAX(received_at) AS last_received_at
+      FROM guildweaver_telemetry_records
+      GROUP BY event_type, domain
+      ORDER BY MAX(received_at) DESC, event_type
+    `).all().map((row) => ({
+      eventType: row.event_type,
+      domain: row.domain,
+      count: Number(row.count),
+      lastReceivedAt: row.last_received_at,
+    }));
 
     return {
       records: Number(totals?.records || 0),
@@ -296,6 +433,7 @@ export function readTelemetrySummary() {
       last24h: Number(totals?.last_24h || 0),
       lastReceivedAt: totals?.last_received_at || null,
       domains,
+      eventTypes,
     };
   });
 }
