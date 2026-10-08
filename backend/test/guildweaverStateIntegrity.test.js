@@ -86,6 +86,18 @@ async function pairDevice(request, name = "Integrity test") {
   return exchanged.json;
 }
 
+function projectedPayload(characterId) {
+  return withGuildDatabase((db) => {
+    const row = db.prepare(`
+      SELECT s.payload_json
+      FROM telemetry_characters t
+      JOIN character_snapshots s ON s.id = t.latest_snapshot_id
+      WHERE t.character_id = ?
+    `).get(characterId);
+    return JSON.parse(row?.payload_json || "{}");
+  });
+}
+
 test("partial teardown snapshots cannot erase known-good Armory sections", async () => {
   await withHttpApp(async ({ request }) => {
     const first = await syncGuildweaverCharacter({
@@ -135,8 +147,8 @@ test("partial teardown snapshots cannot erase known-good Armory sections", async
     assert.equal(current.equipment[0].name, "Whirlwind Axe");
     assert.equal(current.professions.length, 1);
     assert.equal(current.professions[0].name, "Blacksmithing");
-    assert.equal(current.talents.allocations.length, 1);
     assert.equal(current.stats.strength, 91);
+    assert.equal(projectedPayload(first.character.id).talents.allocations.length, 1);
   });
 });
 
@@ -203,10 +215,86 @@ test("Mac and PC observations converge on one character and stale devices cannot
   });
 });
 
+test("a device that has not opened its trade skill UI cannot erase recipes learned on another device", async () => {
+  await withHttpApp(async ({ request }) => {
+    const pcProfession = {
+      id: 164,
+      name: "Blacksmithing",
+      skillLevel: 225,
+      maxSkillLevel: 225,
+      recipes: [
+        {
+          recipeId: 9789,
+          name: "Mithril Spurs",
+          known: true,
+          professionId: 164,
+          professionName: "Blacksmithing",
+          craftedItemId: 7969,
+        },
+      ],
+      recipeSnapshotAt: 1791450400,
+      recipeSource: "C_TradeSkillUI",
+    };
+    const pc = await syncGuildweaverCharacter({
+      memberId: memberIds.member,
+      deviceId: "device-pc",
+      bridgeRevision: 30,
+      snapshot: snapshot({
+        characterId: "rook-pc-recipes",
+        capturedAt: 1791450400,
+        professions: [pcProfession],
+      }),
+    });
+    assert.equal(pc.status, "created");
+
+    let current = await armory(request, pc.character.id);
+    assert.equal(current.recipes.length, 1);
+    assert.equal(current.recipes[0].name, "Mithril Spurs");
+
+    const macProfession = {
+      id: 164,
+      name: "Blacksmithing",
+      skillLevel: 226,
+      maxSkillLevel: 225,
+    };
+    const mac = await syncGuildweaverCharacter({
+      memberId: memberIds.member,
+      deviceId: "device-mac",
+      bridgeRevision: 1,
+      snapshot: snapshot({
+        characterId: "rook-mac-recipes",
+        capturedAt: 1791450500,
+        professions: [macProfession],
+        capture: {
+          integrityVersion: 1,
+          reason: "SKILL_LINES_CHANGED",
+          sections: {
+            stats: "complete",
+            equipment: "complete",
+            talents: "complete",
+            professions: "complete",
+            recipes: "partial",
+            guild: "complete",
+            specialization: "complete",
+          },
+        },
+      }),
+    });
+    assert.equal(mac.status, "updated");
+    assert.equal(mac.character.id, pc.character.id);
+    assert.ok(mac.preservedSections.includes("recipes"));
+
+    current = await armory(request, pc.character.id);
+    assert.equal(current.professions[0].current, 226);
+    assert.equal(current.recipes.length, 1);
+    assert.equal(current.recipes[0].name, "Mithril Spurs");
+  });
+});
+
 test("generic telemetry and logout checkpoints are append-only evidence, never an Armory mutation path", async () => {
   await withHttpApp(async ({ request }) => {
     const device = await pairDevice(request);
-    const baseline = snapshot({ characterId: "rook-route", capturedAt: 1791450400, level: 30 });
+    const baseline = snapshot({ characterId: "rook-route", capturedAt: 1791450600, level: 30 });
     const ingest = await request("/api/bridge/characters/snapshot", {
       method: "POST",
       headers: { Authorization: `Bearer ${device.deviceToken}` },
@@ -217,7 +305,7 @@ test("generic telemetry and logout checkpoints are append-only evidence, never a
 
     const checkpointPayload = snapshot({
       characterId: "rook-route",
-      capturedAt: 1791450460,
+      capturedAt: 1791450660,
       level: 1,
       equipment: [],
       professions: [],
@@ -249,7 +337,7 @@ test("generic telemetry and logout checkpoints are append-only evidence, never a
         envelope: {
           schemaVersion: 1,
           eventType: "character_session_checkpoint",
-          capturedAt: 1791450460,
+          capturedAt: 1791450660,
           characterId: "rook-route",
           installationId: "install-pc",
           realm: "Classic Beta PvE 2",
