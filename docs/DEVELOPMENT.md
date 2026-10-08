@@ -109,6 +109,23 @@ If you already have valuable local data, back it up before intentionally using `
 
 ## Running the app
 
+From the repository root, start the backend and frontend together:
+
+```bash
+npm run dev
+```
+
+The launcher (`scripts/dev.mjs`, Node built-ins only) will:
+
+- run `npm ci` in `backend/` and `frontend/` when `node_modules` is missing or older than `package-lock.json`
+- create `backend/.env` from `.env.example` with `SESSION_SECRET` and `HOLDFAST_DEV_AUTH=true` filled in for the sandbox — an existing `.env` is never modified
+- run `npm run dev:seed` when it just created `.env`, or when passed `--seed` (`npm run dev -- --seed`)
+- start both dev servers with `[backend]` / `[frontend]` prefixed output; Ctrl+C stops both
+
+`npm run setup` performs the install, `.env`, and seed steps without starting servers.
+
+To run the servers separately instead:
+
 Backend:
 
 ```bash

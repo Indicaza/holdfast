@@ -1,0 +1,11 @@
+{
+  "name": "holdfast",
+  "private": true,
+  "description": "Holdfast workspace scripts. Backend and frontend keep their own package.json files.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "setup": "node scripts/dev.mjs --setup-only"
+  }
+}
