@@ -103,6 +103,20 @@ function enrichTalentEntry(entry, gameData) {
   }
 }
 
+function normalizeTreeDefinition(value) {
+  const source = object(value)
+  return {
+    ...source,
+    treeId: optionalNumber(source.treeId),
+    treeHash: text(source.treeHash),
+    locale: text(source.locale),
+    name: text(source.name),
+    iconFileDataId: optionalNumber(source.iconFileDataId ?? source.iconFileID),
+    metadata: object(source.metadata),
+    art: object(source.art),
+  }
+}
+
 export function canonicalEquipmentSlot(value) {
   const original = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
   const hadSlotSuffix = original.endsWith('SLOT')
@@ -200,6 +214,9 @@ export function normalizeArmory(payload) {
       configId: talents.configId ?? null,
       treeId: talents.treeId ?? null,
       treeIds: array(talents.treeIds),
+      treeHashes: array(talents.treeHashes).map((entry) => ({ ...object(entry) })),
+      treeDefinitions: array(talents.treeDefinitions).map(normalizeTreeDefinition),
+      art: object(talents.art),
       specId: talents.specId ?? null,
       name: text(talents.name),
       pointsSpent: talents.pointsSpent == null ? null : number(talents.pointsSpent),

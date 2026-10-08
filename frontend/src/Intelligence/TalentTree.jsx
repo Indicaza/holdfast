@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import WowIcon from '../WowAssets/WowIcon.jsx'
+import TalentTreeBackdrop from './TalentTreeBackdrop.jsx'
 import './TalentTree.css'
 
 function selectedEntry(node) {
@@ -181,6 +182,7 @@ export default function TalentTree({ talents }) {
 
       <div className="talent-tree__viewport">
         <div className="talent-tree__canvas" style={{ '--talent-zoom': zoom }}>
+          <TalentTreeBackdrop art={talents?.art} />
           <svg className="talent-tree__edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {edges.map((edge, index) => {
               const from = positions.get(edge.from)

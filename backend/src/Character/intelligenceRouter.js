@@ -6,6 +6,7 @@ import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.j
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { adaptArmoryV3 } from "./armoryV3Adapter.js";
+import { decorateArmoryTalentArt } from "./talentArmoryArt.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
 import {
@@ -74,7 +75,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         return;
       }
 
-      const armory = adaptArmoryV3(storedArmory);
+      const armory = decorateArmoryTalentArt(adaptArmoryV3(storedArmory));
       const references = armoryReferences(armory);
       const gameBuild = armoryBuildKey(armory);
       const providerStatus = await hydrateSafely(provider, references, { gameBuild });

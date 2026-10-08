@@ -29,15 +29,27 @@ function mediaUrlFromSearch(payload, fileDataId) {
   return "";
 }
 
+function mediaNamespaces(env, config) {
+  const configured = String(env.BLIZZARD_MEDIA_NAMESPACE || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (configured.length) return [...new Set(configured)];
+
+  return [...new Set([
+    ...(Array.isArray(config.namespaces) ? config.namespaces : []),
+    `static-${config.region}`,
+  ].filter(Boolean))];
+}
+
 export function createBlizzardIconMediaResolver({
   env = process.env,
   fetchImpl = globalThis.fetch,
   now = () => Date.now(),
 } = {}) {
   const config = blizzardGameDataConfig(env);
-  const namespace = String(
-    env.BLIZZARD_MEDIA_NAMESPACE || config.namespaces?.[0] || `static-${config.region}`,
-  ).trim();
+  const namespaces = mediaNamespaces(env, config);
   const cache = new Map();
   let token = "";
   let tokenExpiresAt = 0;
@@ -81,7 +93,7 @@ export function createBlizzardIconMediaResolver({
     }
   }
 
-  async function resolveRemote(id, retryAuth = true) {
+  async function requestNamespace(id, namespace, retryAuth = true) {
     const bearer = await accessToken();
     const url = new URL(`${config.apiBaseUrl}/data/wow/search/media`);
     url.searchParams.set("namespace", namespace);
@@ -101,13 +113,21 @@ export function createBlizzardIconMediaResolver({
         token = "";
         tokenExpiresAt = 0;
         await accessToken(true);
-        return resolveRemote(id, false);
+        return requestNamespace(id, namespace, false);
       }
       if (!response.ok) return "";
       return mediaUrlFromSearch(await response.json(), id);
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  async function resolveRemote(id) {
+    for (const namespace of namespaces) {
+      const mediaUrl = await requestNamespace(id, namespace);
+      if (mediaUrl) return mediaUrl;
+    }
+    return "";
   }
 
   async function resolve(fileDataId) {
@@ -133,7 +153,8 @@ export function createBlizzardIconMediaResolver({
         configured: config.configured,
         provider: "blizzard-media-search",
         region: config.region,
-        namespace,
+        namespace: namespaces[0] || "",
+        namespaces,
       };
     },
   };
