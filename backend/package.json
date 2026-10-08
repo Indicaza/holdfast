@@ -8,6 +8,7 @@
     "test:db-safety": "node --test test/databaseSafety.test.js test/migrationSafety.test.js test/startupBackup.test.js test/legacyJsonImport.test.js test/frozenRelease.test.js test/offsiteBackup.test.js",
     "test:auth": "node --test --experimental-test-coverage --test-coverage-include=src/Auth/*.js --test-coverage-lines=95 --test-coverage-branches=85 --test-coverage-functions=93 test/discordAuthConfig.test.js test/discordAuthFlow.test.js test/discordSession.test.js test/oauthReturnTo.test.js test/permissions.test.js test/session.test.js",
     "test:discord": "node --test --experimental-test-coverage --test-coverage-include=src/Discord/provisioning.js --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=90 test/discordProvisioning.test.js",
+    "test:notifications": "node --test --experimental-test-coverage --test-coverage-include=src/Notification/*.js --test-coverage-lines=100 --test-coverage-branches=94 --test-coverage-functions=100 test/notificationAudience.test.js test/notificationMigration.test.js test/notificationRepository.test.js test/notificationRouter.test.js test/notificationWorkflows.test.js test/notifications.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
     "dev:seed": "node scripts/seedDevelopment.js",
     "start": "node src/index.js",
