@@ -190,7 +190,7 @@
 
 /* When the component itself becomes narrow, let its contents define height.
    Slot size is then driven by the pane width rather than a viewport breakpoint. */
-@container armory-equipment (max-width: 58rem) {
+@container armory-equipment (max-width: 46rem) {
   .paper-doll.paper-doll--sheet,
   .paper-doll.paper-doll--sheet .paper-doll__layout {
     height: auto;

@@ -47,6 +47,14 @@
   display: contents;
 }
 
+.item-tooltip.item-tooltip--floating {
+  position: fixed;
+  z-index: 10000;
+  display: grid;
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+}
+
 .item-tooltip {
   position: absolute;
   z-index: 80;
@@ -211,7 +219,10 @@
   padding: var(--space-3);
 }
 
-@media (max-width: 70rem) {
+@media (hover: none) {
   .item-tooltip { display: none !important; }
+}
+
+@media (max-width: 70rem) {
   .item-detail { position: static; }
 }

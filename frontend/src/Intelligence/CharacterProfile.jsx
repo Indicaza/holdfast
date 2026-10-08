@@ -1,94 +1,126 @@
+import { useId, useRef } from 'react'
+
 import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
 import ProfessionCards from './ProfessionCards.jsx'
 import RecipeBrowser from './RecipeBrowser.jsx'
 import TalentTree from './TalentTree.jsx'
-import { formatSyncAge } from './model.js'
+import { CharacterFacts, SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
 import './CharacterArmory.css'
 
-const characterProfileTabs = [
-  ['equipment', 'Equipment'],
-  ['talents', 'Talents'],
-  ['professions', 'Professions'],
-  ['recipes', 'Recipes'],
-]
-
-function classKey(value) {
-  return String(value || 'adventurer').toLowerCase().replace(/[^a-z]+/g, '-')
+function talentPoints(talents) {
+  const nodes = Array.isArray(talents?.nodes) ? talents.nodes : []
+  return nodes.reduce((sum, node) => sum + (Number(node?.rank) || 0), 0)
 }
 
-function CharacterHero({ character }) {
-  return (
-    <header className="armory-hero" data-class={classKey(character.className)}>
-      <div className="armory-hero__portrait" aria-hidden="true"><span>♜</span></div>
-      <div className="armory-hero__identity">
-        <p>{character.isMain ? 'Main character' : 'Synced character'}</p>
-        <h2>{character.name}</h2>
-        <div>
-          <span>Level {character.level || '?'}</span>
-          <span>{character.race || 'Race unknown'}</span>
-          <span>{character.spec || character.className || 'Class unknown'}</span>
+// Each tab is one entry: add a section by adding a row here.
+const characterProfileTabs = [
+  {
+    id: 'equipment',
+    label: 'Equipment',
+    render: ({ armory, character }) => (
+      <CharacterEquipmentSheet equipment={armory.equipment} stats={armory.stats} className={character.className} race={character.race} level={character.level} />
+    ),
+  },
+  {
+    id: 'talents',
+    label: 'Talents',
+    badge: (armory) => talentPoints(armory.talents) || null,
+    render: ({ armory, character }) => <TalentTree talents={armory.talents} className={character.className} level={character.level} />,
+  },
+  {
+    id: 'professions',
+    label: 'Professions',
+    badge: (armory) => armory.professions.length || null,
+    render: ({ armory }) => <ProfessionCards professions={armory.professions} />,
+  },
+  {
+    id: 'recipes',
+    label: 'Recipes',
+    badge: (armory) => armory.recipes.length || null,
+    render: ({ armory }) => <RecipeBrowser recipes={armory.recipes} />,
+  },
+]
+
+export function CharacterHeader({ character, stats, loading = false }) {
+  if (loading) {
+    return (
+      <header className="armory-header armory-header--loading" aria-hidden="true">
+        <div className="unit-frame">
+          <span className="unit-frame__portrait" />
+          <div className="unit-frame__body">
+            <div className="unit-frame__nameplate"><span className="character-skeleton" /></div>
+            <div className="unit-frame__bars" />
+          </div>
         </div>
-      </div>
-      <div className="armory-hero__guild">
-        <strong>{character.guildName || character.organization?.name || 'No guild reported'}</strong>
-        <span>{character.memberRank ? `${character.memberRank} · ` : ''}{character.memberName || 'Guild member'}</span>
-        <small>{formatSyncAge(character.lastSeenAt)}</small>
-      </div>
+      </header>
+    )
+  }
+
+  return (
+    <header className="armory-header">
+      <UnitFrame character={character} health={stats?.resources?.health} power={stats?.resources?.power} />
+      <CharacterFacts character={character} />
+      <SyncBadge lastSeenAt={character.lastSeenAt} showLabel focusable />
     </header>
   )
 }
 
-export default function CharacterProfile({
-  armory,
-  tab = 'equipment',
-  onTabChange,
-  showHero = true,
-  className = '',
-}) {
+export default function CharacterProfile({ armory, tab = 'equipment', onTabChange }) {
   const character = armory.character
+  const baseId = useId()
+  const tabRefs = useRef(new Map())
   const requestedTab = tab === 'stats' || tab === 'overview' ? 'equipment' : tab
-  const activeTab = characterProfileTabs.some(([value]) => value === requestedTab) ? requestedTab : 'equipment'
+  const active = characterProfileTabs.find((entry) => entry.id === requestedTab) || characterProfileTabs[0]
+
+  function focusTab(index) {
+    const next = characterProfileTabs[(index + characterProfileTabs.length) % characterProfileTabs.length]
+    onTabChange?.(next.id)
+    tabRefs.current.get(next.id)?.focus()
+  }
+
+  function handleKeyDown(event) {
+    const index = characterProfileTabs.findIndex((entry) => entry.id === active.id)
+    const moves = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: characterProfileTabs.length - 1 }
+    if (!(event.key in moves)) return
+    event.preventDefault()
+    focusTab(moves[event.key])
+  }
 
   return (
-    <div
-      className={`character-profile${className ? ` ${className}` : ''}`}
-      data-active-tab={activeTab}
-    >
-      {showHero ? <CharacterHero character={character} /> : null}
-
-      <div className="armory-tabbed-surface">
-        <nav className="armory-tabs" aria-label="Character profile sections">
-          {characterProfileTabs.map(([value, label]) => {
-            const isActive = activeTab === value
-            return (
-              <button
-                key={value}
-                type="button"
-                className={isActive ? 'armory-tabs__active' : ''}
-                aria-pressed={isActive}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={() => onTabChange?.(value)}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </nav>
-
-        <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
-          {activeTab === 'equipment' ? (
-            <CharacterEquipmentSheet
-              equipment={armory.equipment}
-              stats={armory.stats}
-              className={character.className}
-              race={character.race}
-            />
-          ) : null}
-          {activeTab === 'talents' ? <TalentTree talents={armory.talents} /> : null}
-          {activeTab === 'professions' ? <ProfessionCards professions={armory.professions} /> : null}
-          {activeTab === 'recipes' ? <RecipeBrowser recipes={armory.recipes} /> : null}
-        </section>
+    <div className="character-profile" data-active-tab={active.id}>
+      <div className="armory-tabs" role="tablist" aria-label="Character sections" onKeyDown={handleKeyDown}>
+        {characterProfileTabs.map((entry) => {
+          const selected = entry.id === active.id
+          const badge = entry.badge?.(armory)
+          return (
+            <button
+              key={entry.id}
+              ref={(element) => (element ? tabRefs.current.set(entry.id, element) : tabRefs.current.delete(entry.id))}
+              id={`${baseId}-tab-${entry.id}`}
+              type="button"
+              role="tab"
+              className="armory-tabs__tab"
+              aria-selected={selected}
+              aria-controls={`${baseId}-panel`}
+              tabIndex={selected ? 0 : -1}
+              onClick={() => onTabChange?.(entry.id)}
+            >
+              <span>{entry.label}</span>
+              {badge !== null && badge !== undefined ? <span className="armory-tabs__badge">{badge}</span> : null}
+            </button>
+          )
+        })}
       </div>
+
+      <section
+        id={`${baseId}-panel`}
+        className={`armory-content armory-content--${active.id}`}
+        role="tabpanel"
+        aria-labelledby={`${baseId}-tab-${active.id}`}
+        data-tab={active.id}
+      >
+        {active.render({ armory, character })}
+      </section>
     </div>
   )
 }

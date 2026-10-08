@@ -2,44 +2,6 @@
 .armory-page .page-shell__header { max-width: 58rem; }
 .armory-state,.armory-muted { color: var(--color-text-muted); }
 
-.armory-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0,1fr) auto;
-  align-items: center;
-  gap: var(--space-6);
-  overflow: hidden;
-  padding: clamp(1.35rem,3vw,2.4rem);
-  border: 1px solid rgba(196,166,103,.3);
-  border-radius: calc(var(--radius-lg) * 1.15);
-  background: radial-gradient(circle at 18% 28%,rgba(196,166,103,.13),transparent 33%),linear-gradient(120deg,rgba(8,17,31,.98),rgba(3,8,16,.97));
-  box-shadow: var(--shadow-soft);
-}
-.armory-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg,transparent,rgba(255,255,255,.025),transparent); }
-.armory-hero__portrait { display:grid; width:6.2rem; aspect-ratio:1; place-items:center; border:1px solid rgba(196,166,103,.45); border-radius:50%; background:radial-gradient(circle,rgba(196,166,103,.18),rgba(6,13,24,.92) 62%); box-shadow:inset 0 0 0 .45rem rgba(0,0,0,.2); }
-.armory-hero__portrait span { color:var(--color-accent-bright); font-size:2.8rem; }
-.armory-hero__identity { min-width:0; }
-.armory-hero__identity p,.armory-hero__identity h2,.armory-hero__guild small { margin:0; }
-.armory-hero__identity p { color:var(--color-accent-bright); font-size:var(--font-size-xs); letter-spacing:var(--letter-spacing-wide); text-transform:uppercase; }
-.armory-hero__identity h2 { margin:.2rem 0 .55rem; color:var(--color-text-strong); font-family:var(--font-display); font-size:clamp(2rem,6vw,4.3rem); line-height:.95; }
-.armory-hero__identity div { display:flex; flex-wrap:wrap; gap:.45rem .9rem; color:var(--color-text-muted); }
-.armory-hero__guild { display:grid; justify-items:end; gap:.25rem; text-align:right; }
-.armory-hero__guild strong { color:var(--color-text-strong); font-family:var(--font-display); }
-.armory-hero__guild span,.armory-hero__guild small { color:var(--color-text-muted); }
-.armory-hero[data-class="warrior"] { box-shadow:inset 4px 0 0 #c69b6d,var(--shadow-soft); }
-.armory-hero[data-class="mage"] { box-shadow:inset 4px 0 0 #3fc7eb,var(--shadow-soft); }
-.armory-hero[data-class="rogue"] { box-shadow:inset 4px 0 0 #fff468,var(--shadow-soft); }
-.armory-hero[data-class="druid"] { box-shadow:inset 4px 0 0 #ff7c0a,var(--shadow-soft); }
-.armory-hero[data-class="priest"] { box-shadow:inset 4px 0 0 #fff,var(--shadow-soft); }
-.armory-hero[data-class="paladin"] { box-shadow:inset 4px 0 0 #f48cba,var(--shadow-soft); }
-.armory-hero[data-class="hunter"] { box-shadow:inset 4px 0 0 #aad372,var(--shadow-soft); }
-.armory-hero[data-class="warlock"] { box-shadow:inset 4px 0 0 #8788ee,var(--shadow-soft); }
-.armory-hero[data-class="shaman"] { box-shadow:inset 4px 0 0 #0070dd,var(--shadow-soft); }
-
-.armory-tabs { display:flex; gap:.3rem; overflow-x:auto; padding:.4rem; border:var(--border-subtle); border-radius:999px; background:rgba(4,10,18,.72); scrollbar-width:none; }
-.armory-tabs::-webkit-scrollbar { display:none; }
-.armory-tabs button { min-height:2.7rem; flex:0 0 auto; padding:0 var(--space-5); border:0; border-radius:999px; background:transparent; color:var(--color-text-muted); font:inherit; font-size:var(--font-size-sm); font-weight:var(--font-weight-semibold); cursor:pointer; }
-.armory-tabs button:hover,.armory-tabs button:focus-visible,.armory-tabs__active { background:rgba(196,166,103,.13)!important; color:var(--color-accent-bright)!important; }
 .armory-content { min-width:0; }
 .armory-overview { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-5); }
 .armory-panel { min-width:0; padding:var(--space-6); border:var(--border-subtle); border-radius:var(--radius-lg); background:rgba(6,13,23,.72); }
@@ -105,9 +67,6 @@
   .paper-doll__weapons { grid-column:1/-1; }
 }
 @media (max-width:48rem) {
-  .armory-hero { grid-template-columns:auto 1fr; }
-  .armory-hero__guild { grid-column:1/-1; justify-items:start; text-align:left; padding-top:var(--space-3); border-top:var(--border-subtle); }
-  .armory-hero__portrait { width:4.6rem; }
   .armory-overview,.armory-facts,.armory-stats,.recipe-browser__tools { grid-template-columns:1fr; }
   .paper-doll__layout { grid-template-columns:1fr; padding:var(--space-3); }
   .paper-doll__weapons { grid-template-columns:1fr; }

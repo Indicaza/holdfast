@@ -1,308 +1,158 @@
-.character-stats {
+/* In-game character pane styling: metal header plates, yellow labels, white
+   values (green buffed, red debuffed), and square resistance icons. */
+
+.wow-stats {
   display: grid;
-  align-content: start;
-  gap: .25rem;
-  min-height: 100%;
+  gap: .7rem;
+  font-size: .82rem;
 }
 
-.character-stats__item-level {
+.wow-stats__section {
   display: grid;
   gap: .3rem;
-  padding: .45rem .35rem .7rem;
-  border-bottom: 1px solid rgba(196, 166, 103, .28);
 }
 
-.character-stats__item-level-main {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1.25rem;
-}
-
-.character-stats__item-level-main span {
-  color: #d9bb72;
-  font-size: .82rem;
-  font-weight: 700;
-  letter-spacing: .055em;
-}
-
-.character-stats__item-level-main strong {
-  color: #f2e7cf;
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.character-stats__item-level > dl {
-  display: grid;
-  gap: 0;
-  margin: 0;
-}
-
-.character-stats__item-level .character-stat-row {
-  padding: .25rem .1rem;
-}
-
-.character-stats__group {
-  min-width: 0;
-  margin: 0;
-  border-bottom: 1px solid rgba(196, 166, 103, .1);
-}
-
-.character-stats__heading {
-  display: grid;
-  grid-template-columns: minmax(1rem, 1fr) auto minmax(1rem, 1fr) 1.2rem;
-  align-items: center;
-  gap: .7rem;
-  min-height: 2.65rem;
-  padding: .3rem .2rem;
-  color: #d9c69a;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-
-.character-stats__heading::-webkit-details-marker {
-  display: none;
-}
-
-.character-stats__heading:hover,
-.character-stats__heading:focus-visible {
-  color: #f0d99e;
-}
-
-.character-stats__heading-line {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(196, 166, 103, .58));
-}
-
-.character-stats__heading-line:nth-of-type(3) {
-  background: linear-gradient(90deg, rgba(196, 166, 103, .58), transparent);
-}
-
-.character-stats__heading-title {
-  color: currentColor;
-  font-family: var(--font-display);
-  font-size: .92rem;
-  font-weight: 500;
-  letter-spacing: .015em;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.character-stats__chevron {
-  color: #d9bb72;
-  font-size: 1.15rem;
-  line-height: 1;
-  text-align: center;
-  transition: transform 130ms ease;
-}
-
-.character-stats__group[open] .character-stats__chevron {
-  transform: rotate(90deg);
-}
-
-.character-stats__rows {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  margin: 0;
-  padding: 0 .25rem .5rem;
-}
-
-.character-stat-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1.25rem;
-  min-width: 0;
-  padding: .46rem .2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, .045);
-}
-
-.character-stat-row:last-child {
-  border-bottom: 0;
-}
-
-.character-stat-row dt {
-  min-width: 0;
-  color: rgba(217, 196, 150, .82);
-  font-size: .78rem;
-  line-height: 1.3;
-}
-
-.character-stat-row dd {
-  display: grid;
-  justify-items: end;
-  gap: .08rem;
-  min-width: 0;
-  margin: 0;
-  color: #f2e7cf;
-  text-align: right;
-}
-
-.character-stat-row strong {
-  color: inherit;
-  font-size: .84rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.character-stat-row--emphasis strong {
-  color: #f4d36f;
-}
-
-.character-stat-row small {
-  max-width: 17rem;
-  color: rgba(226, 232, 240, .48);
-  font-size: .62rem;
-  line-height: 1.25;
-}
-
-.character-stat-row--icon {
-  align-items: center;
-  min-height: 2.35rem;
-}
-
-.character-stat-row--icon dt {
-  display: flex;
-  align-items: center;
-  gap: .65rem;
-}
-
-.character-resistance-icon {
-  display: grid;
-  width: 1.65rem;
-  height: 1.65rem;
-  flex: 0 0 auto;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid rgba(230, 219, 188, .34);
-  border-radius: .2rem;
-  background: rgba(2, 7, 13, .94);
-  box-shadow:
-    inset 0 0 .5rem rgba(0, 0, 0, .55),
-    0 .1rem .25rem rgba(0, 0, 0, .28);
-}
-
-.character-resistance-icon svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: currentColor;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .65));
-}
-
-.character-resistance-icon--arcane {
-  color: #d394ff;
-  background: radial-gradient(circle, rgba(174, 82, 255, .34), rgba(31, 12, 48, .94));
-}
-
-.character-resistance-icon--fire {
-  color: #ffb052;
-  background: radial-gradient(circle, rgba(255, 101, 31, .35), rgba(55, 16, 7, .94));
-}
-
-.character-resistance-icon--frost {
-  color: #aeeaff;
-  background: radial-gradient(circle, rgba(79, 186, 255, .34), rgba(7, 35, 57, .94));
-}
-
-.character-resistance-icon--nature {
-  color: #9fe66d;
-  background: radial-gradient(circle, rgba(90, 187, 67, .32), rgba(15, 45, 13, .94));
-}
-
-.character-resistance-icon--shadow {
-  color: #b7a1ff;
-  background: radial-gradient(circle, rgba(91, 63, 170, .38), rgba(24, 13, 52, .96));
-}
-
-.character-stats__advanced {
-  margin-top: .2rem;
-  overflow: hidden;
-  border-top: 1px solid rgba(196, 166, 103, .18);
-}
-
-.character-stats__advanced summary {
+.wow-stats__plate {
   position: relative;
-  padding: .85rem 2.25rem .85rem .35rem;
-  color: #d9c69a;
-  cursor: pointer;
+  margin: 0;
+  padding: .32rem .6rem;
+  border: 1px solid #6b604a;
+  border-radius: .2rem;
+  background: linear-gradient(180deg, #33302b 0%, #1d1b18 55%, #141210 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px #000, 0 1px 2px rgba(0, 0, 0, .6);
+  color: #f2e8cf;
   font-family: var(--font-display);
   font-size: .9rem;
-  list-style: none;
-  user-select: none;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-align: center;
+  text-shadow: 0 1px 1px #000;
 }
 
-.character-stats__advanced summary::-webkit-details-marker {
-  display: none;
+.wow-stats__ilvl {
+  padding: .35rem .6rem .45rem;
+  border: 1px solid rgba(107, 96, 74, .55);
+  border-radius: .2rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(163, 53, 238, .18), transparent 70%), #08070a;
+  color: #c27cff;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 0 0 .6rem rgba(163, 53, 238, .45), 0 1px 1px #000;
+  font-variant-numeric: tabular-nums;
 }
 
-.character-stats__advanced summary::after {
-  content: '›';
-  position: absolute;
-  top: 50%;
-  right: .45rem;
-  color: #d9bb72;
-  font-size: 1.25rem;
-  transform: translateY(-50%);
-  transition: transform 130ms ease;
-}
-
-.character-stats__advanced[open] summary::after {
-  transform: translateY(-50%) rotate(90deg);
-}
-
-.character-stats__advanced summary:hover,
-.character-stats__advanced summary:focus-visible {
-  color: #f0d99e;
-}
-
-.character-stats__advanced-body {
+.wow-stats dl {
   display: grid;
-  gap: 1rem;
-  padding: .1rem .2rem .8rem;
+  margin: 0;
+  padding: 0 .35rem;
 }
 
-.character-stats__advanced-body section {
-  min-width: 0;
+.wow-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .14rem 0;
+  cursor: default;
 }
 
-.character-stats__advanced-body h3 {
-  margin: 0 0 .3rem;
-  color: rgba(217, 196, 150, .72);
-  font-size: .68rem;
+.wow-stat:hover {
+  background: linear-gradient(90deg, transparent, rgba(255, 209, 0, .06), transparent);
+}
+
+.wow-stat dt {
+  color: #ffd100;
+  text-shadow: 0 1px 1px #000;
+}
+
+.wow-stat dd {
+  margin: 0;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 1px #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.wow-stat__value--buffed { color: #1eff00 !important; }
+.wow-stat__value--debuffed { color: #ff2020 !important; }
+
+/* Resistance rows carry the in-game school icon before the label. */
+
+.wow-stat--icon {
+  align-items: center;
+}
+
+.wow-stat--icon dt {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.wow-stat__icon {
+  width: 1.45rem;
+  height: auto;
+  aspect-ratio: 32 / 29;
+  image-rendering: auto;
+}
+
+.wow-stat[tabindex] {
+  border-radius: .15rem;
+  outline: none;
+}
+
+.wow-stat[tabindex]:focus-visible {
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 0, .5);
+}
+
+.wow-stats__ilvl[tabindex] {
+  cursor: default;
+  outline: none;
+}
+
+/* GameTooltip: white title, yellow description, label/value pairs. */
+
+.item-tooltip.stat-tooltip-frame {
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 24px));
+  padding: .6rem .75rem;
+}
+
+.stat-tooltip {
+  display: grid;
+  gap: .3rem;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.stat-tooltip__title {
+  color: #fff;
+  font-size: .86rem;
   font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
 }
 
-@media (max-width: 48rem) {
-  .character-stats__item-level-main strong {
-    font-size: 1.55rem;
-  }
+.stat-tooltip__line {
+  margin: 0;
+  color: #ffd100;
+  white-space: pre-line;
+}
 
-  .character-stats__heading-title {
-    font-size: .86rem;
-  }
+.stat-tooltip__pairs {
+  display: grid;
+  gap: .1rem;
+  margin: 0;
+}
 
-  .character-stat-row {
-    padding-block: .42rem;
-  }
+.stat-tooltip__pairs div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
 
-  .character-stat-row dt {
-    font-size: .74rem;
-  }
-
-  .character-stat-row strong {
-    font-size: .8rem;
-  }
-
-  .character-resistance-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
+.stat-tooltip__pairs dt,
+.stat-tooltip__pairs dd {
+  margin: 0;
+  color: #ffd100;
 }

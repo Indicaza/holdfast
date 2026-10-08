@@ -2,40 +2,13 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import WowIcon from '../WowAssets/WowIcon.jsx'
-import TalentTreeBackdrop from './TalentTreeBackdrop.jsx'
+import catalog from './talentCatalog.json'
+import { buildTalentLayout } from './talentLayout.js'
 import './TalentTree.css'
 
-function selectedEntry(node) {
-  return node?.entries?.find((entry) => entry.selected) || node?.entries?.find((entry) => entry.isActiveEntry) || node?.entries?.[0] || null
-}
-
-function talentState(node, entry = selectedEntry(node)) {
-  if (node?.selected || entry?.selected || Number(node?.rank) > 0 || Number(entry?.rank) > 0) return 'selected'
-  if (node?.isAvailable === false || entry?.isAvailable === false || node?.meetsEdgeRequirements === false) return 'locked'
-  return 'available'
-}
-
-function bounds(nodes) {
-  if (!nodes.length) return { minX: 0, maxX: 1, minY: 0, maxY: 1 }
-  const xs = nodes.map((node) => Number(node.x) || 0)
-  const ys = nodes.map((node) => Number(node.y) || 0)
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
-  return {
-    minX,
-    maxX: maxX === minX ? minX + 1 : maxX,
-    minY,
-    maxY: maxY === minY ? minY + 1 : maxY,
-  }
-}
-
-function point(node, frame) {
-  const x = 5.5 + (((Number(node.x) || 0) - frame.minX) / (frame.maxX - frame.minX)) * 89
-  const y = 14 + (((Number(node.y) || 0) - frame.minY) / (frame.maxY - frame.minY)) * 80
-  return { x, y }
-}
+// Icon footprint inside a grid cell, in cell units. Arrows start and end at the
+// icon edge.
+const ICON_HALF = 0.33
 
 function tooltipTextColor(color) {
   if (!color || typeof color !== 'object') return undefined
@@ -44,129 +17,78 @@ function tooltipTextColor(color) {
   return `rgba(${channel(color.r)}, ${channel(color.g)}, ${channel(color.b)}, ${alpha})`
 }
 
+// Client tooltips render the talent description as a gold line. When the
+// catalog has per-rank text, it replaces those lines so the tooltip always
+// describes the rank the character actually has.
+function isDescriptionLine(line) {
+  const color = line?.leftColor
+  return !line?.right && Number(color?.r) > 0.95 && Number(color?.g) > 0.7 && Number(color?.g) < 0.9 && Number(color?.b) < 0.1
+}
+
 function TalentTooltip({ hover }) {
   if (!hover || typeof document === 'undefined' || typeof window === 'undefined') return null
-  const { node, rect } = hover
-  const entry = selectedEntry(node)
-  const state = talentState(node, entry)
-  const rank = Number(entry?.rank ?? node?.rank) || 0
-  const maxRank = Number(entry?.maxRank ?? node?.maxRank) || rank || 1
+  const { talent, panelName, rect } = hover
+  const { entry, node, rank, maxRank, state, requirements, currentRankText, nextRankText } = talent
   const rawLines = Array.isArray(entry?.tooltipLines) ? entry.tooltipLines : Array.isArray(entry?.tooltip?.lines) ? entry.tooltip.lines : []
-  const lines = rawLines.filter((line, index) => !(index === 0 && String(line?.left || '').trim().toLowerCase() === String(entry?.name || '').trim().toLowerCase()))
+  const rankText = rank > 0 ? currentRankText : nextRankText
+  const lines = rawLines
+    .filter((line, index) => !(index === 0 && String(line?.left || '').trim().toLowerCase() === String(entry?.name || '').trim().toLowerCase()))
+    .filter((line) => !(rankText && isDescriptionLine(line)))
+  const description = rankText || (lines.some(isDescriptionLine) ? '' : entry?.description)
   const width = 330
   const useRight = rect.right + width + 18 < window.innerWidth
-  const left = useRight ? rect.right + 12 : Math.max(12, rect.left - width - 12)
-  const top = Math.max(12, Math.min(rect.top - 18, window.innerHeight - 320))
-  const unmet = (node?.conditions || []).filter((condition) => condition?.isMet === false)
+  const left = useRight ? rect.right + 10 : Math.max(12, rect.left - width - 10)
+  const top = Math.max(12, Math.min(rect.top - 6, window.innerHeight - 340))
 
   return createPortal(
     <aside className={`talent-tooltip talent-tooltip--${state}`} style={{ left, top, width }} role="tooltip">
-      <div className="talent-tooltip__heading">
-        <WowIcon
-          src={entry?.mediaUrl || entry?.catalog?.metadata?.mediaUrl}
-          iconFileId={entry?.iconFileId}
-          spellId={entry?.spellId}
-          label={entry?.name || String(node.id)}
-          size={48}
-        />
-        <div>
-          <strong>{entry?.name || `Talent node ${node.id}`}</strong>
-          <span>{state === 'selected' ? `Rank ${rank}/${maxRank}` : state === 'locked' ? 'Locked' : `Available${maxRank > 1 ? ` · ${maxRank} ranks` : ''}`}</span>
-        </div>
-      </div>
+      <header className="talent-tooltip__heading">
+        <strong>{entry?.name || `Talent node ${node.id}`}</strong>
+        <span className="talent-tooltip__rank">Rank {rank}/{maxRank}</span>
+      </header>
       {lines.length ? (
         <div className="talent-tooltip__lines">
           {lines.map((line, index) => (
             <div className="talent-tooltip__line" key={`${line?.left || ''}-${line?.right || ''}-${index}`}>
-              {line?.left ? <span style={{ color: tooltipTextColor(line.leftColor) }}>{line.left}</span> : <span />}
-              {line?.right ? <span style={{ color: tooltipTextColor(line.rightColor) }}>{line.right}</span> : null}
+              <span style={{ color: tooltipTextColor(line?.leftColor) }}>{line?.left || ''}</span>
+              {line?.right ? <span className="talent-tooltip__right" style={{ color: tooltipTextColor(line.rightColor) }}>{line.right}</span> : null}
             </div>
           ))}
         </div>
-      ) : entry?.description ? <p>{entry.description}</p> : <p className="talent-tooltip__muted">No client tooltip was included in this snapshot.</p>}
-      {unmet.length ? <small className="talent-tooltip__requirement">Requirements not met</small> : null}
+      ) : null}
+      {description ? <p className="talent-tooltip__description">{description}</p> : null}
+      {!lines.length && !description ? <p className="talent-tooltip__muted">No client tooltip was included in this snapshot.</p> : null}
+      {rank > 0 && nextRankText ? (
+        <div className="talent-tooltip__next">
+          <span>Next rank:</span>
+          <p className="talent-tooltip__description">{nextRankText}</p>
+        </div>
+      ) : null}
+      {requirements.length ? (
+        <ul className="talent-tooltip__requirements">
+          {requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}
+        </ul>
+      ) : null}
+      <footer className="talent-tooltip__footer">{panelName}</footer>
     </aside>,
     document.body,
   )
 }
 
-function edgeVisualState(edge, nodesById) {
-  if (edge?.active) return 'selected'
-  const from = nodesById.get(edge?.from)
-  const to = nodesById.get(edge?.to)
-  if (from && to && talentState(from) === 'selected' && talentState(to) === 'selected') return 'selected'
-  if (to && talentState(to) === 'locked') return 'locked'
-  return 'available'
-}
-
-function talentTabsFrom(talents) {
-  const direct = Array.isArray(talents?.art?.talentTabs) ? talents.art.talentTabs.filter(Boolean) : []
-  if (direct.length) return direct
-
-  for (const definition of Array.isArray(talents?.treeDefinitions) ? talents.treeDefinitions : []) {
-    const tabs = Array.isArray(definition?.art?.talentTabs) ? definition.art.talentTabs.filter(Boolean) : []
-    if (tabs.length) return tabs
-  }
-
-  return []
-}
-
-function panelIndex(node, frame, count) {
-  if (count <= 1) return 0
-  const normalized = ((Number(node?.x) || 0) - frame.minX) / (frame.maxX - frame.minX)
-  return Math.max(0, Math.min(count - 1, Math.floor(normalized * count)))
-}
-
-function nodePoints(node) {
-  const entry = selectedEntry(node)
-  return Math.max(0, Number(entry?.rank ?? node?.rank) || 0)
-}
-
-function panelDescriptors(talents, nodes, frame) {
-  const sourceTabs = talentTabsFrom(talents)
-  const count = sourceTabs.length || (nodes.length >= 12 ? 3 : 1)
-  const derivedPoints = Array.from({ length: count }, () => 0)
-
-  nodes.forEach((node) => {
-    derivedPoints[panelIndex(node, frame, count)] += nodePoints(node)
-  })
-
-  const definitions = Array.isArray(talents?.treeDefinitions) ? talents.treeDefinitions : []
-
-  return Array.from({ length: count }, (_, index) => {
-    const source = sourceTabs[index] || {}
-    const definition = definitions.length === count ? definitions[index] : null
-    const fallbackName = count === 1
-      ? talents?.name || definition?.name || 'Talents'
-      : definition?.name || `Specialization ${index + 1}`
-
-    return {
-      ...source,
-      id: source.id ?? source.index ?? definition?.treeId ?? `panel-${index}`,
-      name: source.name || fallbackName,
-      pointsSpent: source.pointsSpent ?? derivedPoints[index],
-      unresolvedName: !source.name && !definition?.name,
-    }
-  })
-}
-
-export function TalentNode({ node, position, onHover, onLeave }) {
-  const entry = selectedEntry(node)
-  const state = talentState(node, entry)
-  const rank = Number(entry?.rank ?? node.rank) || 0
-  const maxRank = Number(entry?.maxRank ?? node.maxRank) || 0
-  const showTooltip = (target) => onHover?.(node, target.getBoundingClientRect())
+export function TalentNode({ talent, onHover, onLeave }) {
+  const { entry, node, rank, maxRank, state, row, col } = talent
+  const showTooltip = (target) => onHover?.(talent, target.getBoundingClientRect())
 
   return (
     <button
       className={`talent-node talent-node--${state}`}
-      style={{ left: `${position.x}%`, top: `${position.y}%` }}
+      style={{ gridRow: row + 1, gridColumn: col + 1 }}
       type="button"
       onMouseEnter={(event) => showTooltip(event.currentTarget)}
       onMouseLeave={onLeave}
       onFocus={(event) => showTooltip(event.currentTarget)}
       onBlur={onLeave}
-      aria-label={`${entry?.name || `Talent ${node.id}`}, ${state}${maxRank || rank ? `, rank ${rank} of ${maxRank || rank}` : ''}`}
+      aria-label={`${entry?.name || `Talent ${node.id}`}, rank ${rank} of ${maxRank}${state === 'locked' ? ', locked' : ''}`}
     >
       <span className="talent-node__icon">
         <WowIcon
@@ -177,21 +99,82 @@ export function TalentNode({ node, position, onHover, onLeave }) {
           size={64}
         />
       </span>
-      {maxRank || rank ? <span className="talent-node__rank">{rank}/{maxRank || rank}</span> : null}
+      <span className="talent-node__rank">{rank}/{maxRank}</span>
     </button>
   )
 }
 
-export default function TalentTree({ talents }) {
-  const nodes = Array.isArray(talents?.nodes) ? talents.nodes.filter((node) => node?.isVisible !== false) : []
-  const edges = Array.isArray(talents?.edges) ? talents.edges : []
-  const [hover, setHover] = useState(null)
-  const frame = useMemo(() => bounds(nodes), [nodes])
-  const positions = useMemo(() => new Map(nodes.map((node) => [node.id, point(node, frame)])), [frame, nodes])
-  const nodesById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
-  const panels = useMemo(() => panelDescriptors(talents, nodes, frame), [frame, nodes, talents])
+function arrowPath({ from, to }) {
+  const sx = from.col + 0.5
+  const sy = from.row + 0.5
+  const tx = to.col + 0.5
+  const ty = to.row + 0.5
+  if (from.col === to.col) {
+    const dir = Math.sign(ty - sy) || 1
+    return `M${sx} ${sy + dir * ICON_HALF} L${tx} ${ty - dir * (ICON_HALF + 0.04)}`
+  }
+  if (from.row === to.row) {
+    const dir = Math.sign(tx - sx)
+    return `M${sx + dir * ICON_HALF} ${sy} L${tx - dir * (ICON_HALF + 0.04)} ${ty}`
+  }
+  // Across then down, like the in-game elbow arrows.
+  const dir = Math.sign(tx - sx)
+  return `M${sx + dir * ICON_HALF} ${sy} L${tx} ${sy} L${tx} ${ty - (ICON_HALF + 0.04)}`
+}
 
-  if (!nodes.length) {
+function TalentPanel({ panel, rows, pointsTotal, onHover, onLeave }) {
+  const markerId = `talent-arrow-${panel.key}`
+  return (
+    <section
+      className={`talent-panel${panel.points ? ' talent-panel--invested' : ''}`}
+      style={panel.background ? { '--talent-art': `url(${panel.background})` } : undefined}
+      aria-label={`${panel.name} talents, ${panel.points} points`}
+    >
+      <header className="talent-panel__header">
+        <span className="talent-panel__icon">
+          {panel.icon ? <img src={panel.icon} alt="" /> : <span aria-hidden="true">✦</span>}
+        </span>
+        <h3>{panel.name}</h3>
+        <span className="talent-panel__points">
+          <b>{panel.points}</b>{pointsTotal !== null ? ` / ${pointsTotal}` : ''}
+        </span>
+      </header>
+      <div className="talent-panel__board" style={{ '--talent-rows': rows }}>
+        <svg className="talent-tree__edges" viewBox={`0 0 4 ${rows}`} aria-hidden="true">
+          <defs>
+            {['active', 'inactive'].map((variant) => (
+              <marker key={variant} id={`${markerId}-${variant}`} viewBox="0 0 10 10" refX="4" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" className={`talent-arrow__head talent-arrow__head--${variant}`} />
+              </marker>
+            ))}
+          </defs>
+          {panel.edges.map((edge) => (
+            <path
+              key={edge.key}
+              className={`talent-arrow talent-arrow--${edge.active ? 'active' : 'inactive'}`}
+              d={arrowPath(edge)}
+              markerEnd={`url(#${markerId}-${edge.active ? 'active' : 'inactive'})`}
+            />
+          ))}
+        </svg>
+        {panel.nodes.map((talent) => (
+          <TalentNode
+            key={talent.node.id}
+            talent={talent}
+            onHover={(hovered, rect) => onHover({ talent: hovered, panelName: panel.name, rect })}
+            onLeave={onLeave}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+export default function TalentTree({ talents, className, level }) {
+  const [hover, setHover] = useState(null)
+  const layout = useMemo(() => buildTalentLayout(talents, { className, level, catalog }), [talents, className, level])
+
+  if (!layout) {
     return (
       <section className="talent-empty">
         <span aria-hidden="true">✦</span>
@@ -201,34 +184,31 @@ export default function TalentTree({ talents }) {
     )
   }
 
+  const build = layout.panels.map((panel) => panel.points).join(' / ')
+
   return (
-    <div className="talent-tree" style={{ '--talent-panel-count': panels.length }}>
-      <div className="talent-tree__stage">
-        <div className="talent-tree__viewport">
-          <div className="talent-tree__canvas">
-            <TalentTreeBackdrop tabs={panels} />
-            <svg className="talent-tree__edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {edges.map((edge, index) => {
-                const from = positions.get(edge.from)
-                const to = positions.get(edge.to)
-                if (!from || !to) return null
-                const state = edgeVisualState(edge, nodesById)
-                return <line className={`talent-tree__edge talent-tree__edge--${state}`} key={`${edge.from}-${edge.to}-${index}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />
-              })}
-            </svg>
-            {nodes.map((node) => (
-              <TalentNode
-                key={node.id}
-                node={node}
-                position={positions.get(node.id)}
-                onHover={(hovered, rect) => setHover({ node: hovered, rect })}
-                onLeave={() => setHover(null)}
-              />
-            ))}
-          </div>
+    <div className="talent-tree">
+      <div className="talent-tree__viewport">
+        <div className="talent-tree__panels" style={{ '--talent-rows': layout.rows }}>
+          {layout.panels.map((panel) => (
+            <TalentPanel
+              key={panel.key}
+              panel={panel}
+              rows={layout.rows}
+              pointsTotal={layout.pointsTotal}
+              onHover={setHover}
+              onLeave={() => setHover(null)}
+            />
+          ))}
         </div>
       </div>
-
+      <footer className="talent-tree__summary">
+        <span>{layout.className ? `${layout.className} talents` : 'Talents'}</span>
+        <b className="talent-tree__build">{build}</b>
+        {layout.pointsLeft !== null ? (
+          <span>Unspent points: <b className={layout.pointsLeft ? 'talent-tree__left' : ''}>{layout.pointsLeft}</b></span>
+        ) : null}
+      </footer>
       <TalentTooltip hover={hover} />
     </div>
   )

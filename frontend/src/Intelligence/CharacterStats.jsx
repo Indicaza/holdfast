@@ -1,419 +1,406 @@
+import { useState } from 'react'
+
+import { FloatingTooltip } from '../WowAssets/WowIcon.jsx'
 import './CharacterStats.css'
 
-const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 })
+// Mirrors the WoW Forever character stat pane (Blizzard UI source, "Camelot"
+// flavor: PaperDollFrameConstants.lua PAPERDOLL_STATCATEGORIES and
+// CharacterFrame.lua RESISTANCE_STAT_ENTRIES): Item Level, then General,
+// Primary Attributes, Weapons, Modifiers, Defense, Resistance — same rows,
+// same order, same hide-at-zero rules. Tooltip text uses the game's own
+// GlobalStrings (Classic Era build) and the same formulas.
+
+const ATTACK_POWER_PER_DPS = 14 // ATTACK_POWER_MAGIC_NUMBER
 const BASE_RUN_SPEED = 7
 
-const LABEL_OVERRIDES = {
-  pvp: 'PvP',
-  xp: 'XP',
+const STAT_TOOLTIPS = {
+  STRENGTH: {
+    DEFAULT: 'Increases attack power with melee weapons.',
+    WARRIOR: 'Increases attack power with melee weapons.\nIncreases the amount of damage that can be blocked with a shield.',
+    PALADIN: 'Increases attack power with melee weapons.\nIncreases the amount of damage that can be blocked with a shield.',
+    SHAMAN: 'Increases attack power with melee weapons.\nIncreases the amount of damage that can be blocked with a shield.',
+  },
+  AGILITY: {
+    DEFAULT: 'Increases attack power with ranged weapons.\nImproves chance to score a critical hit with all weapons.\nIncreases armor and chance to dodge attacks.',
+    HUNTER: 'Increases attack power with both melee and ranged weapons, and improves chance to score a critical hit with all weapons.\nIncreases armor and chance to dodge attacks.',
+    ROGUE: 'Increases attack power with both melee and ranged weapons, and improves the chance to score a critical hit with all weapons.\nIncreases armor and chance to dodge attacks.',
+  },
+  STAMINA: { DEFAULT: 'Increases health points.' },
+  INTELLECT: {
+    DEFAULT: 'Increases the rate at which weapon skills improve.',
+    CASTER: 'Increases mana points and chance to score a critical hit with spells.\nIncreases the rate at which weapon skills improve.',
+  },
+  SPIRIT: { DEFAULT: 'Increases health and mana regeneration rates.' },
+}
+const INTELLECT_CASTERS = new Set(['DRUID', 'HUNTER', 'MAGE', 'PALADIN', 'PRIEST', 'SHAMAN', 'WARLOCK'])
+
+const POWER_TOOLTIPS = {
+  MANA: ['Mana', 'Maximum mana.  Mana is used to cast spells.'],
+  RAGE: ['Rage', 'Maximum rage.  Rage is consumed when using abilities and is restored by attacking enemies or being damaged in combat.'],
+  ENERGY: ['Energy', 'Maximum energy.  Energy is consumed when using abilities and is restored automatically over time.'],
+  FOCUS: ['Focus', 'Maximum focus.  Focus is consumed when using abilities and is restored automatically over time.'],
 }
 
-const ATTRIBUTE_ORDER = ['strength', 'agility', 'stamina', 'intellect', 'spirit']
-const RESISTANCE_ORDER = ['arcane', 'fire', 'frost', 'nature', 'shadow']
+const RESISTANCES = [
+  ['arcane', 'Arcane'],
+  ['fire', 'Fire'],
+  ['frost', 'Frost'],
+  ['nature', 'Nature'],
+  ['shadow', 'Shadow'],
+]
+
+const thousands = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 
 function number(value) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function label(value) {
-  return String(value || '')
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .trim()
-    .toLowerCase()
-    .replace(/\b\w+/g, (word) => LABEL_OVERRIDES[word] || `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-}
-
-function formatNumber(value) {
+function big(value) {
   const parsed = number(value)
-  return parsed === null ? null : numberFormat.format(parsed)
+  return parsed === null ? null : thousands.format(parsed)
 }
 
-function formatPercent(value) {
+function percent(value, digits = 1) {
   const parsed = number(value)
-  return parsed === null ? null : `${numberFormat.format(parsed)}%`
+  return parsed === null ? null : `${parsed.toFixed(digits)}%`
 }
 
-function currentMax(current, max) {
-  const currentValue = formatNumber(current)
-  const maxValue = formatNumber(max)
-  if (!currentValue && !maxValue) return null
-  return currentValue && maxValue ? `${currentValue} / ${maxValue}` : currentValue || maxValue
-}
-
-function damageRange(min, max) {
-  const first = formatNumber(min)
-  const second = formatNumber(max)
-  if (!first && !second) return null
-  return first && second ? `${first}–${second}` : first || second
+function maxOf(...values) {
+  const parsed = values.flat(Infinity).map(number).filter((value) => value !== null)
+  return parsed.length ? Math.max(...parsed) : null
 }
 
 function hasGroup(value) {
   return value && typeof value === 'object' && Object.keys(value).length > 0
 }
 
-function hasAnyValue(values) {
-  return values.some((value) => value !== null && value !== undefined && value !== '')
+function buffTone(positive, negative) {
+  if ((number(negative) || 0) < 0) return 'debuffed'
+  if ((number(positive) || 0) > 0) return 'buffed'
+  return null
 }
 
-function isNonZero(value) {
-  const parsed = number(value)
-  return parsed !== null && parsed !== 0
+// PaperDollFormatStat: "Name total (base +bonus -penalty)".
+function statHeadline(name, effective, positive = 0, negative = 0) {
+  const pos = number(positive) || 0
+  const neg = number(negative) || 0
+  if (!pos && !neg) return [{ text: `${name} ${big(effective)}` }]
+  const parts = [{ text: `${name} ${big(effective)} (${big(effective - pos - neg)}` }]
+  if (pos) parts.push({ text: ` +${big(pos)}`, tone: 'buffed' })
+  if (neg) parts.push({ text: ` ${big(neg)}`, tone: 'debuffed' })
+  parts.push({ text: ')' })
+  return parts
 }
 
-function maxNumber(...values) {
-  const parsed = values.flat(Infinity).map(number).filter((value) => value !== null)
-  return parsed.length ? Math.max(...parsed) : null
+function damageSpan(damage) {
+  const min = number(damage?.min)
+  const max = number(damage?.max)
+  if (!min && !max) return null
+  return { min: Math.max(Math.floor(min ?? max), 1), max: Math.max(Math.ceil(max ?? min), 1) }
 }
 
-function damageRangeHasValue(damage = {}) {
-  return isNonZero(damage?.min) || isNonZero(damage?.max)
-}
-
-function resistanceValue(resistances = {}, key) {
-  const entry = resistances[key]
-  if (entry === null || entry === undefined) return 0
-  if (typeof entry !== 'object') return number(entry) ?? 0
-  return number(entry.total ?? entry.effective ?? entry.current ?? entry.base) ?? 0
-}
-
-function StatRow({ name, value, hint, emphasis = false, hideZero = false, icon = null }) {
-  if (value === null || value === undefined || value === '') return null
-  if (hideZero && !isNonZero(String(value).replace('%', ''))) return null
+function Tooltip({ title, lines = [], pairs = [] }) {
   return (
-    <div className={`character-stat-row${emphasis ? ' character-stat-row--emphasis' : ''}${icon ? ' character-stat-row--icon' : ''}`}>
-      <dt>
-        {icon}
-        <span>{name}</span>
-      </dt>
-      <dd>
-        <strong>{value}</strong>
-        {hint ? <small>{hint}</small> : null}
-      </dd>
+    <div className="stat-tooltip">
+      <strong className="stat-tooltip__title">
+        {(Array.isArray(title) ? title : [{ text: title }]).map((part, index) => (
+          <span key={index} className={part.tone ? `wow-stat__value--${part.tone}` : undefined}>{part.text}</span>
+        ))}
+      </strong>
+      {pairs.length ? (
+        <dl className="stat-tooltip__pairs">
+          {pairs.map(([label, value]) => <div key={label}><dt>{label}:</dt><dd>{value}</dd></div>)}
+        </dl>
+      ) : null}
+      {lines.filter(Boolean).map((line, index) => <p key={index} className="stat-tooltip__line">{line}</p>)}
     </div>
   )
 }
 
-function StatGroup({ title, children }) {
+function StatRow({ label, value, tone = null, icon = null, tooltip = null }) {
+  const [anchor, setAnchor] = useState(null)
+  const show = (event) => setAnchor(event.currentTarget.getBoundingClientRect())
+  const hide = () => setAnchor(null)
   return (
-    <details className="character-stats__group" open>
-      <summary className="character-stats__heading">
-        <span className="character-stats__heading-line" aria-hidden="true" />
-        <span className="character-stats__heading-title">{title}</span>
-        <span className="character-stats__heading-line" aria-hidden="true" />
-        <span className="character-stats__chevron" aria-hidden="true">›</span>
-      </summary>
-      <dl className="character-stats__rows">{children}</dl>
-    </details>
+    <div
+      className={`wow-stat${icon ? ' wow-stat--icon' : ''}`}
+      tabIndex={tooltip ? 0 : undefined}
+      onMouseEnter={tooltip ? show : undefined}
+      onMouseLeave={tooltip ? hide : undefined}
+      onFocus={tooltip ? show : undefined}
+      onBlur={tooltip ? hide : undefined}
+    >
+      <dt>
+        {icon ? <img className="wow-stat__icon" src={icon} alt="" /> : null}
+        <span>{label}:</span>
+      </dt>
+      <dd className={tone ? `wow-stat__value--${tone}` : undefined}>{value}</dd>
+      {anchor && tooltip ? <FloatingTooltip anchor={anchor} side="left" className="stat-tooltip-frame">{tooltip}</FloatingTooltip> : null}
+    </div>
   )
 }
 
-function ResistanceIcon({ school }) {
+function Category({ title, children }) {
+  const rows = (Array.isArray(children) ? children.flat() : [children]).filter(Boolean)
+  if (!rows.length) return null
   return (
-    <span className={`character-resistance-icon character-resistance-icon--${school}`} aria-hidden="true">
-      <svg viewBox="0 0 24 24" focusable="false">
-        {school === 'arcane' ? <path d="M12 2.5l1.8 6.1 5.7-2.8-3.5 5.3 5.5 2.2-6.3.8.8 6.4-4-5-4 5 .8-6.4-6.3-.8 5.5-2.2-3.5-5.3 5.7 2.8z" /> : null}
-        {school === 'fire' ? <path d="M13.8 2.2c.8 4.4-2.9 5.8-1.3 9.1 1.1-1.8 2.9-2.9 4.7-3.4.2 1.2.3 2.2.3 3.2 0 5.5-3 9.7-7.1 9.7-3.3 0-5.9-2.6-5.9-6.1 0-3 1.8-5.5 4.5-7.7-.1 2.6.5 4.2 1.6 5.2-.4-4.1 1.3-7.4 3.2-10z" /> : null}
-        {school === 'frost' ? <path d="M11 2h2v7.1l4.9-4.9 1.4 1.4-4.9 4.9H22v2h-7.6l4.9 4.9-1.4 1.4-4.9-4.9V22h-2v-8.1l-4.9 4.9-1.4-1.4 4.9-4.9H2v-2h7.6L4.7 5.6l1.4-1.4L11 9.1z" /> : null}
-        {school === 'nature' ? <path d="M20.6 3.4C13 3.2 7.2 5.4 4.4 9.8c-2.2 3.5-1.3 7.2.6 9.6 1.8-4.5 5.2-8.1 10.3-10.8-4 3.4-6.7 7.1-8.1 11.2 3.3.8 7.2-.4 9.3-3.4 2.6-3.7 2.2-8.3 4.1-13z" /> : null}
-        {school === 'shadow' ? <path d="M17.8 3.1a9.4 9.4 0 1 0 2.9 14.3 8 8 0 1 1-2.9-14.3zm-2.1 5.1 1.2 2.4 2.7.4-1.9 1.9.4 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z" /> : null}
-      </svg>
-    </span>
-  )
-}
-
-function attributeHint(attribute) {
-  if (!attribute || typeof attribute !== 'object') return null
-  const positive = number(attribute.positive)
-  const negative = number(attribute.negative)
-  const parts = []
-  if (positive) parts.push(`+${formatNumber(positive)} bonus`)
-  if (negative) parts.push(`${formatNumber(negative)} penalty`)
-  return parts.join(' · ') || null
-}
-
-function movementPercent(movement = {}) {
-  const direct = number(movement.percent ?? movement.speedPercent ?? movement.runPercent)
-  if (direct !== null) return formatPercent(direct)
-  const runSpeed = number(movement.runYardsPerSecond)
-  if (runSpeed === null) return null
-  return formatPercent((runSpeed / BASE_RUN_SPEED) * 100)
-}
-
-function ItemLevelSummary({ utility = {} }) {
-  const itemLevel = utility.itemLevel || {}
-  const headline = itemLevel.overall ?? itemLevel.equipped ?? itemLevel.pvp
-  if (headline === null || headline === undefined) return null
-
-  const headlineNumber = number(headline)
-  const secondary = [
-    ['Equipped', itemLevel.equipped],
-    ['PvP', itemLevel.pvp],
-  ].filter(([, value]) => {
-    const parsed = number(value)
-    return parsed !== null && parsed !== headlineNumber
-  })
-
-  return (
-    <section className="character-stats__item-level">
-      <div className="character-stats__item-level-main">
-        <span>iLvl</span>
-        <strong>{formatNumber(headline)}</strong>
-      </div>
-      {secondary.length ? (
-        <dl>
-          {secondary.map(([name, value]) => <StatRow key={name} name={name} value={formatNumber(value)} />)}
-        </dl>
-      ) : null}
+    <section className="wow-stats__section">
+      <h3 className="wow-stats__plate">{title}</h3>
+      <dl>{rows}</dl>
     </section>
   )
 }
 
-function General({ resources = {}, utility = {} }) {
-  const health = resources.health || {}
-  const power = resources.power || {}
-  const powerName = power.token ? label(power.token) : 'Power'
-
-  return (
-    <StatGroup title="General">
-      <StatRow name="Health" value={formatNumber(health.max ?? health.current)} emphasis />
-      <StatRow name={powerName} value={formatNumber(power.max ?? power.current)} emphasis />
-      <StatRow name="Movement Speed" value={movementPercent(utility.movement)} />
-    </StatGroup>
+function ItemLevel({ utility = {} }) {
+  const [anchor, setAnchor] = useState(null)
+  const itemLevel = utility.itemLevel || {}
+  const equipped = number(itemLevel.equipped ?? itemLevel.overall)
+  if (equipped === null) return null
+  const overall = number(itemLevel.overall) ?? equipped
+  const display = Math.floor(equipped * 10) / 10
+  const pvp = number(itemLevel.pvp)
+  const tooltip = (
+    <Tooltip
+      title={`Item Level ${Math.floor(overall)}${Math.floor(equipped) !== Math.floor(overall) ? `  (Equipped ${Math.floor(equipped)})` : ''}`}
+      lines={['The average item level of your equipment.', pvp !== null ? `PvP Item Level: ${Math.floor(pvp)}` : null]}
+    />
   )
-}
-
-function Attributes({ attributes = {} }) {
-  const ordered = ATTRIBUTE_ORDER
-    .filter((key) => attributes[key])
-    .map((key) => [key, attributes[key]])
-  const remaining = Object.entries(attributes).filter(([key]) => !ATTRIBUTE_ORDER.includes(key))
-
   return (
-    <StatGroup title="Primary Attributes">
-      {[...ordered, ...remaining].map(([key, stat]) => (
-        <StatRow key={key} name={label(key)} value={formatNumber(stat?.effective ?? stat?.current)} hint={attributeHint(stat)} />
-      ))}
-    </StatGroup>
-  )
-}
-
-function Weapons({ offense = {} }) {
-  const mainHand = offense.mainHandDamage || offense.mainhandDamage || offense.meleeDamage || {}
-  const offHand = offense.offHandDamage || offense.offhandDamage || offense.meleeDamage?.offHand || offense.meleeDamage?.offhand || {}
-  const ranged = offense.rangedDamage || {}
-
-  return (
-    <StatGroup title="Weapons">
-      <StatRow name="Main Hand" value={damageRange(mainHand.min, mainHand.max)} />
-      {damageRangeHasValue(offHand) ? <StatRow name="Off Hand" value={damageRange(offHand.min, offHand.max)} /> : null}
-      {damageRangeHasValue(ranged) ? <StatRow name="Ranged" value={damageRange(ranged.min, ranged.max)} /> : null}
-      <StatRow name="Attack Power" value={formatNumber(offense.attackPower?.effective ?? offense.attackPower?.base)} hideZero />
-      <StatRow name="Ranged Attack Power" value={formatNumber(offense.rangedAttackPower?.effective ?? offense.rangedAttackPower?.base)} hideZero />
-    </StatGroup>
-  )
-}
-
-function Modifiers({ offense = {} }) {
-  const spell = offense.spell || {}
-  const schoolValues = Object.values(spell.schools || {})
-  const hit = maxNumber(offense.hit?.melee, offense.hit?.ranged, offense.hit?.spell, spell.hit)
-  const crit = maxNumber(offense.crit?.melee, offense.crit?.ranged, offense.crit?.spell, schoolValues.map((school) => school?.crit))
-  const haste = maxNumber(offense.haste?.melee, offense.haste?.ranged, offense.haste?.spell, spell.haste)
-  const spellPower = maxNumber(spell.power, spell.damage, schoolValues.map((school) => school?.damage))
-
-  return (
-    <StatGroup title="Modifiers">
-      <StatRow name="Hit Chance" value={formatPercent(hit)} hideZero />
-      <StatRow name="Critical Strike" value={formatPercent(crit)} hideZero />
-      <StatRow name="Haste" value={formatPercent(haste)} hideZero />
-      <StatRow name="Expertise" value={formatNumber(offense.expertise?.mainHand ?? offense.expertise?.effective)} hideZero />
-      <StatRow name="Armor Penetration" value={formatPercent(offense.armorPenetration)} hideZero />
-      <StatRow name="Spell Power" value={formatNumber(spellPower)} hideZero />
-      <StatRow name="Spell Healing" value={formatNumber(spell.healing)} hideZero />
-      <StatRow name="Spell Penetration" value={formatNumber(spell.penetration)} hideZero />
-    </StatGroup>
-  )
-}
-
-function Defense({ defense = {} }) {
-  return (
-    <StatGroup title="Defense">
-      <StatRow name="Defense" value={formatNumber(defense.defenseSkill?.effective ?? defense.defenseSkill?.base ?? defense.defense)} />
-      <StatRow name="Dodge" value={formatPercent(defense.dodge)} hideZero />
-      <StatRow name="Block" value={formatPercent(defense.block)} hideZero />
-      <StatRow name="Parry" value={formatPercent(defense.parry)} hideZero />
-      <StatRow name="Armor" value={formatNumber(defense.armor?.effective ?? defense.armor?.armor ?? defense.armor?.base)} />
-    </StatGroup>
-  )
-}
-
-function Resistances({ resistances = {} }) {
-  return (
-    <StatGroup title="Resistances">
-      {RESISTANCE_ORDER.map((school) => (
-        <StatRow
-          key={school}
-          name={label(school)}
-          value={formatNumber(resistanceValue(resistances, school))}
-          icon={<ResistanceIcon school={school} />}
-        />
-      ))}
-    </StatGroup>
-  )
-}
-
-function MoreStats({ stats = {} }) {
-  const offense = stats.offense || {}
-  const defense = stats.defense || {}
-  const resources = stats.resources || {}
-  const utility = stats.utility || {}
-  const ratings = stats.ratings || {}
-  const spell = offense.spell || {}
-  const movement = utility.movement || {}
-  const experience = utility.experience || {}
-
-  const hasCombat = hasAnyValue([
-    offense.attackSpeed?.mainHand,
-    offense.attackSpeed?.offHand,
-    offense.crit?.ranged,
-    offense.hit?.ranged,
-    offense.haste?.ranged,
-    ...(offense.weaponSkills || []).map((skill) => skill?.current),
-    ...Object.values(spell.schools || {}).flatMap((school) => [school?.damage, school?.crit]),
-  ])
-  const hasOther = hasAnyValue([
-    utility.mastery,
-    utility.versatility,
-    utility.leech,
-    utility.avoidance ?? defense.avoidance,
-    defense.shieldBlock,
-    defense.resilience,
-  ])
-  const hasCharacter = hasAnyValue([
-    resources.powerRegen?.inactive,
-    resources.powerRegen?.active,
-    resources.manaRegen?.inactive,
-    resources.manaRegen?.active,
-    movement.runYardsPerSecond,
-    movement.currentYardsPerSecond,
-    experience.current,
-    experience.max,
-    experience.rested,
-  ])
-
-  if (!hasCombat && !hasGroup(ratings) && !hasOther && !hasCharacter) return null
-
-  return (
-    <details className="character-stats__advanced">
-      <summary>More Stats</summary>
-      <div className="character-stats__advanced-body">
-        {hasCombat ? (
-          <section>
-            <h3>Combat Details</h3>
-            <dl className="character-stats__rows">
-              <StatRow name="Main Hand Speed" value={formatNumber(offense.attackSpeed?.mainHand)} />
-              <StatRow name="Off Hand Speed" value={formatNumber(offense.attackSpeed?.offHand)} hideZero />
-              <StatRow name="Ranged Critical Strike" value={formatPercent(offense.crit?.ranged)} />
-              <StatRow name="Ranged Hit" value={formatPercent(offense.hit?.ranged)} />
-              <StatRow name="Ranged Haste" value={formatPercent(offense.haste?.ranged)} />
-              {Object.entries(spell.schools || {}).map(([key, school]) => (
-                <StatRow key={`spell-${key}`} name={`${label(key)} Spell`} value={formatNumber(school?.damage)} hint={school?.crit !== undefined ? `${formatPercent(school.crit)} crit` : null} />
-              ))}
-              {(offense.weaponSkills || []).map((skill) => (
-                <StatRow key={`weapon-${skill.name}`} name={skill.name} value={currentMax(skill.current, skill.max)} hint={skill.modifier ? `+${formatNumber(skill.modifier)} modifier` : null} />
-              ))}
-            </dl>
-          </section>
-        ) : null}
-
-        {hasGroup(ratings) ? (
-          <section>
-            <h3>Ratings</h3>
-            <dl className="character-stats__rows">
-              {Object.entries(ratings).map(([key, rating]) => (
-                <StatRow key={key} name={label(key)} value={formatNumber(rating?.rating)} hint={rating?.bonus !== undefined ? `${formatPercent(rating.bonus)} bonus` : null} />
-              ))}
-            </dl>
-          </section>
-        ) : null}
-
-        {hasOther ? (
-          <section>
-            <h3>Other</h3>
-            <dl className="character-stats__rows">
-              <StatRow name="Mastery" value={formatPercent(utility.mastery)} hideZero />
-              <StatRow name="Versatility" value={formatPercent(utility.versatility)} hideZero />
-              <StatRow name="Leech" value={formatPercent(utility.leech)} hideZero />
-              <StatRow name="Avoidance" value={formatPercent(utility.avoidance ?? defense.avoidance)} hideZero />
-              <StatRow name="Block Value" value={formatNumber(defense.shieldBlock)} hideZero />
-              <StatRow name="Resilience" value={formatPercent(defense.resilience)} hideZero />
-            </dl>
-          </section>
-        ) : null}
-
-        {hasCharacter ? (
-          <section>
-            <h3>Character</h3>
-            <dl className="character-stats__rows">
-              <StatRow name="Power Regeneration" value={formatNumber(resources.powerRegen?.inactive)} hint={resources.powerRegen?.active !== undefined ? `${formatNumber(resources.powerRegen.active)} active` : null} />
-              <StatRow name="Mana Regeneration" value={formatNumber(resources.manaRegen?.inactive)} hint={resources.manaRegen?.active !== undefined ? `${formatNumber(resources.manaRegen.active)} while casting` : null} />
-              <StatRow name="Run Speed" value={formatNumber(movement.runYardsPerSecond)} hint="yards / second" />
-              <StatRow name="Current Speed" value={formatNumber(movement.currentYardsPerSecond)} hint="yards / second" />
-              <StatRow name="Experience" value={currentMax(experience.current, experience.max)} hint={experience.rested ? `${formatNumber(experience.rested)} rested XP` : null} />
-            </dl>
-          </section>
-        ) : null}
+    <section className="wow-stats__section">
+      <h3 className="wow-stats__plate">Item Level</h3>
+      <div
+        className="wow-stats__ilvl"
+        tabIndex={0}
+        onMouseEnter={(event) => setAnchor(event.currentTarget.getBoundingClientRect())}
+        onMouseLeave={() => setAnchor(null)}
+        onFocus={(event) => setAnchor(event.currentTarget.getBoundingClientRect())}
+        onBlur={() => setAnchor(null)}
+      >
+        {display}
+        {anchor ? <FloatingTooltip anchor={anchor} side="left" className="stat-tooltip-frame">{tooltip}</FloatingTooltip> : null}
       </div>
-    </details>
+    </section>
   )
 }
 
-function hasStats(stats) {
-  return stats && typeof stats === 'object' && Object.keys(stats).some((key) => key !== 'schemaVersion' && hasGroup(stats[key]))
-}
+export default function CharacterStats({ stats = {}, className = '', level = null }) {
+  const attributes = stats?.attributes || {}
+  const offense = stats?.offense || {}
+  const defense = stats?.defense || {}
+  const resources = stats?.resources || {}
+  const utility = stats?.utility || {}
+  const spell = offense.spell || {}
+  const classToken = String(className || '').toUpperCase().replace(/[^A-Z]/g, '')
+  const unitLevel = number(level) || 60
 
-export function CharacterStatHighlights({ stats = {} }) {
-  if (!hasStats(stats)) return <p className="armory-muted">No character-sheet stats were included in this snapshot.</p>
-  const attributes = stats.attributes || {}
-  const offense = stats.offense || {}
-  const defense = stats.defense || {}
-  const resources = stats.resources || {}
-  const itemLevel = stats.utility?.itemLevel || {}
-  const rows = [
-    ['Item Level', itemLevel.overall ?? itemLevel.equipped],
-    ['Health', resources.health?.max],
-    ['Strength', attributes.strength?.effective ?? attributes.strength?.current],
-    ['Agility', attributes.agility?.effective ?? attributes.agility?.current],
-    ['Stamina', attributes.stamina?.effective ?? attributes.stamina?.current],
-    ['Attack Power', offense.attackPower?.effective ?? offense.attackPower?.base],
-    ['Armor', defense.armor?.effective ?? defense.armor?.armor],
-    ['Melee Crit', offense.crit?.melee !== undefined ? formatPercent(offense.crit.melee) : null],
-  ].filter(([, value]) => value !== null && value !== undefined)
-
-  return (
-    <dl className="armory-stats">
-      {rows.slice(0, 8).map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{typeof value === 'string' ? value : formatNumber(value)}</dd></div>)}
-    </dl>
-  )
-}
-
-export default function CharacterStats({ stats = {} }) {
-  if (!hasStats(stats)) {
+  if (!hasGroup(attributes) && !hasGroup(offense) && !hasGroup(defense)) {
     return <section className="talent-empty"><span aria-hidden="true">◆</span><h3>No character-sheet telemetry yet.</h3><p>Sync this character with the current Guildweaver addon to populate live stats.</p></section>
   }
 
+  // General
+  const health = number(resources.health?.max ?? resources.health?.current)
+  const powerToken = String(resources.power?.token || '').toUpperCase()
+  const [powerName, powerTooltip] = POWER_TOOLTIPS[powerToken] || ['Power', null]
+  const power = number(resources.power?.max ?? resources.power?.current)
+  const movement = utility.movement || {}
+  const runPercent = number(movement.runYardsPerSecond) !== null ? (movement.runYardsPerSecond / BASE_RUN_SPEED) * 100 : null
+  const swimPercent = number(movement.swimYardsPerSecond) !== null ? (movement.swimYardsPerSecond / BASE_RUN_SPEED) * 100 : null
+  const flightPercent = number(movement.flightYardsPerSecond) !== null ? (movement.flightYardsPerSecond / BASE_RUN_SPEED) * 100 : null
+
+  // Primary attributes, in UNITSTAT order.
+  const attributeRows = [['STRENGTH', 'Strength'], ['AGILITY', 'Agility'], ['STAMINA', 'Stamina'], ['INTELLECT', 'Intellect'], ['SPIRIT', 'Spirit']]
+    .map(([key, label]) => {
+      const stat = attributes[key.toLowerCase()]
+      if (!stat) return null
+      const effective = number(stat.effective ?? stat.current)
+      const texts = STAT_TOOLTIPS[key]
+      const description = key === 'INTELLECT'
+        ? (INTELLECT_CASTERS.has(classToken) ? texts.CASTER : texts.DEFAULT)
+        : texts[classToken] || texts.DEFAULT
+      return (
+        <StatRow
+          key={key}
+          label={label}
+          value={big(effective)}
+          tone={buffTone(stat.positive, stat.negative)}
+          tooltip={<Tooltip title={statHeadline(label, effective, stat.positive, stat.negative)} lines={[description]} />}
+        />
+      )
+    })
+
+  // Weapons
+  const mainHand = damageSpan(offense.mainHandDamage || offense.mainhandDamage || offense.meleeDamage)
+  const offHand = damageSpan(offense.offHandDamage || offense.offhandDamage)
+  const ranged = damageSpan(offense.rangedDamage)
+  const weaponRow = (key, label, span, speed) => {
+    if (!span) return null
+    const dps = number(speed) ? ((span.min + span.max) / 2 / speed).toFixed(1) : null
+    return (
+      <StatRow
+        key={key}
+        label={`${label} Damage`}
+        value={`${span.min} - ${span.max}`}
+        tooltip={<Tooltip title={label} pairs={[['Attack Speed (seconds)', number(speed) ? speed.toFixed(2) : '—'], ['Damage', `${span.min} - ${span.max}`], ...(dps ? [['DPS', dps]] : [])]} />}
+      />
+    )
+  }
+  const attackPower = offense.attackPower || {}
+  const ap = number(attackPower.effective ?? attackPower.base)
+  const rangedAttackPower = offense.rangedAttackPower || {}
+  const rap = number(rangedAttackPower.effective ?? rangedAttackPower.base)
+
+  // Modifiers (all hidden at 0)
+  const schools = Object.entries(spell.schools || {})
+  const hit = maxOf(offense.hit?.melee, offense.hit?.ranged, offense.hit?.spell, spell.hit)
+  const crit = maxOf(offense.crit?.melee, offense.crit?.ranged, offense.crit?.spell, schools.map(([, school]) => school?.crit))
+  const spellCrit = maxOf(offense.crit?.spell, schools.map(([, school]) => school?.crit))
+  const haste = maxOf(offense.haste?.melee, offense.haste?.ranged, offense.haste?.spell, spell.haste)
+  const expertise = number(offense.expertise?.mainHand ?? offense.expertise?.effective)
+  const armorPen = number(offense.armorPenetration)
+  const schoolDamage = schools.map(([, school]) => number(school?.damage)).filter((value) => value !== null)
+  const spellPower = schoolDamage.length ? Math.min(...schoolDamage) : number(spell.power ?? spell.damage)
+  const spellHealing = number(spell.healing)
+  const spellPen = number(spell.penetration)
+
+  // Defense
+  const defenseSkill = defense.defenseSkill || {}
+  const defenseValue = number(defenseSkill.effective ?? defenseSkill.base ?? defense.defense)
+  const armor = defense.armor || {}
+  const armorValue = number(armor.effective ?? armor.armor ?? armor.base)
+  const armorReduction = armorValue !== null ? (armorValue / (armorValue + 400 + 85 * unitLevel)) * 100 : null
+
   return (
-    <div className="character-stats">
-      <ItemLevelSummary utility={stats.utility} />
-      {hasGroup(stats.resources) || hasGroup(stats.utility?.movement) ? <General resources={stats.resources} utility={stats.utility} /> : null}
-      {hasGroup(stats.attributes) ? <Attributes attributes={stats.attributes} /> : null}
-      {hasGroup(stats.offense) ? <Weapons offense={stats.offense} /> : null}
-      {hasGroup(stats.offense) ? <Modifiers offense={stats.offense} /> : null}
-      {hasGroup(stats.defense) ? <Defense defense={stats.defense} /> : null}
-      <Resistances resistances={stats.defense?.resistances} />
-      <MoreStats stats={stats} />
+    <div className="wow-stats">
+      <ItemLevel utility={utility} />
+
+      <Category title="General">
+        {health !== null ? <StatRow key="health" label="Health" value={big(health)} tooltip={<Tooltip title={`Health ${big(health)}`} lines={['Maximum health.  If your health reaches zero, you will die.']} />} /> : null}
+        {power !== null ? <StatRow key="power" label={powerName} value={big(power)} tooltip={<Tooltip title={`${powerName} ${big(power)}`} lines={[powerTooltip]} />} /> : null}
+        {runPercent !== null ? (
+          <StatRow
+            key="movement"
+            label="Movement Speed"
+            value={`${Math.round(runPercent)}%`}
+            tooltip={<Tooltip title={`Movement Speed ${Math.round(runPercent)}%`} lines={[`Run Speed: ${Math.round(runPercent)}%`, flightPercent ? `Flight Speed: ${Math.round(flightPercent)}%` : null, swimPercent !== null ? `Swim Speed: ${Math.round(swimPercent)}%` : null]} />}
+          />
+        ) : null}
+      </Category>
+
+      <Category title="Primary Attributes">{attributeRows}</Category>
+
+      <Category title="Weapons">
+        {weaponRow('mainhand', 'Main Hand', mainHand, number(offense.attackSpeed?.mainHand))}
+        {weaponRow('offhand', 'Off Hand', offHand, number(offense.attackSpeed?.offHand))}
+        {weaponRow('ranged', 'Ranged', ranged, number(offense.attackSpeed?.ranged))}
+        {ap ? (
+          <StatRow
+            key="ap"
+            label="Attack Power"
+            value={big(ap)}
+            tone={buffTone(attackPower.positive, attackPower.negative)}
+            tooltip={<Tooltip title={statHeadline('Melee Attack Power', ap, attackPower.positive, attackPower.negative)} lines={[`Increases damage with melee weapons by ${(Math.max(ap, 0) / ATTACK_POWER_PER_DPS).toFixed(1)} damage per second.`]} />}
+          />
+        ) : null}
+        {rap ? (
+          <StatRow
+            key="rap"
+            label="Ranged Attack Power"
+            value={big(rap)}
+            tone={buffTone(rangedAttackPower.positive, rangedAttackPower.negative)}
+            tooltip={<Tooltip title={statHeadline('Ranged Attack Power', rap, rangedAttackPower.positive, rangedAttackPower.negative)} lines={[`Increases damage with ranged weapons by ${(Math.max(rap, 0) / ATTACK_POWER_PER_DPS).toFixed(1)} damage per second.`]} />}
+          />
+        ) : null}
+      </Category>
+
+      <Category title="Modifiers">
+        {hit ? (
+          <StatRow
+            key="hit"
+            label="Hit Chance"
+            value={percent(hit)}
+            tooltip={<Tooltip title={`Hit Chance ${percent(hit)}`} lines={[
+              offense.hit?.melee != null ? `Increases your melee chance to hit a target of level ${unitLevel} by ${percent(offense.hit.melee, 2)}.` : null,
+              offense.hit?.ranged != null ? `Increases your ranged chance to hit a target of level ${unitLevel} by ${percent(offense.hit.ranged, 2)}.` : null,
+              (spell.hit ?? offense.hit?.spell) != null ? `Increases your spell chance to hit a target of level ${unitLevel} by ${percent(spell.hit ?? offense.hit?.spell, 2)}.` : null,
+            ]} />}
+          />
+        ) : null}
+        {crit ? (
+          <StatRow
+            key="crit"
+            label="Critical Strike"
+            value={percent(crit)}
+            tooltip={<Tooltip title={`Critical Strike ${percent(crit)}`} pairs={[
+              ...(offense.crit?.melee != null ? [['Melee', percent(offense.crit.melee, 2)]] : []),
+              ...(offense.crit?.ranged != null ? [['Ranged', percent(offense.crit.ranged, 2)]] : []),
+              ...(spellCrit != null ? [['Spell', percent(spellCrit, 2)]] : []),
+            ]} lines={['Chance of attacks doing extra damage.']} />}
+          />
+        ) : null}
+        {haste ? <StatRow key="haste" label="Haste" value={percent(haste)} tooltip={<Tooltip title={`Haste ${percent(haste)}`} lines={['Increases attack speed and spell casting speed.']} />} /> : null}
+        {expertise ? <StatRow key="expertise" label="Expertise" value={big(expertise)} tooltip={<Tooltip title={`Expertise ${big(expertise)}`} />} /> : null}
+        {armorPen ? <StatRow key="armorpen" label="Armor Penetration" value={percent(armorPen)} tooltip={<Tooltip title={`Armor Penetration ${percent(armorPen)}`} />} /> : null}
+        {spellPower ? (
+          <StatRow
+            key="spellpower"
+            label="Spell Power"
+            value={big(spellPower)}
+            tooltip={<Tooltip
+              title={`Spell Power ${big(spellPower)}`}
+              pairs={schools.filter(([, school]) => number(school?.damage) !== spellPower).map(([name, school]) => [`${name[0].toUpperCase()}${name.slice(1)}`, big(school.damage)])}
+              lines={['Increases the damage and healing of spells.']}
+            />}
+          />
+        ) : null}
+        {spellHealing ? <StatRow key="spellhealing" label="Spell Healing" value={big(spellHealing)} tooltip={<Tooltip title={`Spell Healing ${big(spellHealing)}`} lines={['Increases the power of healing spells.']} />} /> : null}
+        {spellPen ? <StatRow key="spellpen" label="Spell Penetration" value={big(spellPen)} tooltip={<Tooltip title={`Spell Penetration ${big(spellPen)}`} lines={[`Spell Penetration ${big(spellPen)} (Reduces enemy resistances by ${big(spellPen)})`]} />} /> : null}
+      </Category>
+
+      <Category title="Defense">
+        {defenseValue !== null ? (
+          <StatRow
+            key="defense"
+            label="Defense"
+            value={big(defenseValue)}
+            tone={number(defenseSkill.modifier) > 0 ? 'buffed' : number(defenseSkill.modifier) < 0 ? 'debuffed' : null}
+            tooltip={<Tooltip title={statHeadline('Defense', defenseValue, Math.max(number(defenseSkill.modifier) || 0, 0), Math.min(number(defenseSkill.modifier) || 0, 0))} />}
+          />
+        ) : null}
+        {number(defense.dodge) ? <StatRow key="dodge" label="Dodge" value={percent(defense.dodge)} tooltip={<Tooltip title={`Dodge Chance ${percent(defense.dodge, 2)}`} />} /> : null}
+        {number(defense.block) ? <StatRow key="block" label="Block" value={percent(defense.block)} tooltip={<Tooltip title={`Block Chance ${percent(defense.block)}`} lines={number(defense.shieldBlock) ? [`Your block stops ${big(defense.shieldBlock)} damage.`] : []} />} /> : null}
+        {number(defense.parry) ? <StatRow key="parry" label="Parry" value={percent(defense.parry)} tooltip={<Tooltip title={`Parry Chance ${percent(defense.parry, 2)}`} />} /> : null}
+        {armorValue !== null ? (
+          <StatRow
+            key="armor"
+            label="Armor"
+            value={big(armorValue)}
+            tone={buffTone(armor.positive, armor.negative)}
+            tooltip={<Tooltip title={`Armor ${big(armorValue)}`} lines={[`Physical Damage Reduction: ${armorReduction.toFixed(2)}%`]} />}
+          />
+        ) : null}
+      </Category>
+
+      <Category title="Resistance">
+        {RESISTANCES.map(([school, label]) => {
+          const entry = defense.resistances?.[school]
+          const total = number(typeof entry === 'object' ? entry?.total ?? entry?.base : entry) ?? 0
+          const bonus = number(entry?.bonus) || 0
+          const negative = number(entry?.negative) || 0
+          // ExpectedSpellResistance: average mitigation is 75% of resistance / (level * 5).
+          const expected = Math.floor(Math.min(0.75, (0.75 * total) / (unitLevel * 5)) * 100)
+          return (
+            <StatRow
+              key={school}
+              label={label}
+              value={big(total)}
+              icon={`/armory-art/resist-${school}.png`}
+              tone={Math.abs(negative) > bonus ? 'debuffed' : bonus > Math.abs(negative) ? 'buffed' : null}
+              tooltip={<Tooltip title={`${label} ${big(total)}`} lines={[`Increases the ability to resist ${school}-based attacks, spells and abilities.`, `Resistance against level ${unitLevel}: ${expected}%`]} />}
+            />
+          )
+        })}
+      </Category>
     </div>
   )
 }

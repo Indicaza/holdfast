@@ -102,6 +102,17 @@ const TALENT_BUILDS = {
   ],
 };
 
+// WoW Forever characters carry a surname (UnitFullName's second value in that
+// client). Give each development character one so name layouts are exercised.
+const SURNAMES = {
+  Mira: "Ashford", Owen: "Stonehelm", Brannoc: "Ironvein", Stoutmug: "Barrelgut", Seraphine: "Dawnward",
+  Kaelthorn: "Moonbrook", Thistlewhip: "Briarwood", Vexis: "Nightshade", Ironhide: "Blackforge",
+  Pyrelight: "Cogsworth", Lunara: "Silverleaf", Fizzwick: "Sparkspanner", Gearlock: "Tinkerfuse",
+  Aldric: "Brightmantle", Mirelle: "Embervale", Ashvane: "Grimward", Grimbeard: "Deepdelve",
+  Sylvaine: "Starwhisper", Torvald: "Greymane", Wrenna: "Mistglade", Hollis: "Copperhearth",
+  Nymbleweave: "Fizzlecrank", Corwin: "Hartwell",
+};
+
 const ROSTER = [
   { id: "dev-roster-01", name: "Brannoc", rank: "Major", tz: "America/Chicago", characters: [
     ["Brannoc", "Dwarf", "Warrior", 60, "warrior_prot_60", "prot", ["Mining", "Blacksmithing"]],
@@ -574,6 +585,9 @@ function snapshotFor(member, row, capturedAt) {
     characterKey: `${REALM.toLowerCase()}:${name.toLowerCase()}`,
     characterId,
     name,
+    firstName: name,
+    lastName: SURNAMES[name] || "",
+    fullName: SURNAMES[name] ? `${name} ${SURNAMES[name]}` : name,
     realm: REALM,
     region: "US",
     gameBuild: GAME_BUILD,

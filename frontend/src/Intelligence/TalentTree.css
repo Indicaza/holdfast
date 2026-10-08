@@ -1,272 +1,362 @@
 .talent-tree {
+  --talent-green: #40d01a;
+  --talent-gold: #ffd100;
+  --talent-grey: #5d6066;
+  --talent-red: #ff3b30;
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: clamp(34rem, 68vh, 48rem);
+  min-height: clamp(30rem, 66vh, 46rem);
+  flex-direction: column;
+  gap: .7rem;
 }
 
-.talent-tree__stage {
+/* Build summary: a slim strip under the trees, like the in-game footer. */
+
+.talent-tree__summary {
   display: flex;
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: .3rem 1.1rem;
+  color: rgba(232, 226, 212, .62);
+  font-size: .82rem;
 }
+
+.talent-tree__summary b {
+  color: #f1ece0;
+  font-variant-numeric: tabular-nums;
+}
+
+.talent-tree__summary .talent-tree__build {
+  color: var(--talent-gold);
+  letter-spacing: .04em;
+}
+
+.talent-tree__summary .talent-tree__left {
+  color: var(--talent-green);
+}
+
+/* Panels: sized so all rows fit the available height, and three trees fit the
+   width. Narrow containers show one tree at a time with horizontal snapping. */
 
 .talent-tree__viewport {
   position: relative;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: inherit;
-  overflow: hidden;
-  border: 1px solid rgba(196, 166, 103, .28);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 50% 24%, rgba(196, 166, 103, .07), transparent 34%),
-    linear-gradient(180deg, rgba(8, 17, 30, .99), rgba(2, 7, 14, .995));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .022),
-    0 1rem 2.6rem rgba(0, 0, 0, .2);
-  container-type: size;
-  overscroll-behavior: contain;
-}
-
-.talent-tree__canvas {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  container-type: size;
+}
+
+.talent-tree__panels {
+  --talent-visible: 3;
+  --talent-gap: .75rem;
+  --talent-header: 3.6rem;
+  /* Whole pixels keep node borders crisp and even on every side. */
+  --talent-cell: round(down, min(
+    calc((100cqw - (var(--talent-visible) - 1) * var(--talent-gap)) / var(--talent-visible) / 4.5),
+    calc((100cqh - var(--talent-header) - .9rem) / (var(--talent-rows, 7) + .5)),
+    6.25rem
+  ), 2px);
+  display: flex;
+  height: 100%;
+  justify-content: safe center;
+  gap: var(--talent-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+@container (max-width: 640px) {
+  .talent-tree__panels {
+    --talent-visible: 1;
+    --talent-gap: .5rem;
+  }
+}
+
+.talent-panel {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  flex-direction: column;
+  width: calc(var(--talent-cell) * 4.5);
+  overflow: hidden;
+  border: 1px solid rgba(120, 128, 140, .38);
+  border-radius: .45rem;
+  background: #05080e;
+  box-shadow: 0 .8rem 2rem rgba(0, 0, 0, .45);
+  scroll-snap-align: center;
+}
+
+.talent-panel--invested {
+  border-color: rgba(222, 190, 110, .55);
+}
+
+.talent-panel__header {
+  display: flex;
+  height: var(--talent-header);
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .65rem;
+  padding: 0 .85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  background: linear-gradient(180deg, #1b1f27, #10131a);
+}
+
+.talent-panel__icon {
+  display: grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgba(232, 160, 60, .85);
+  border-radius: 50%;
+  background: #0b0e14;
+  color: var(--talent-gold);
+  box-shadow: 0 0 .6rem rgba(0, 0, 0, .6);
+}
+
+.talent-panel__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+}
+
+.talent-panel__header h3 {
+  min-width: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  overflow: hidden;
+  color: #f4f1ea;
+  font-size: clamp(.95rem, 1.6cqw, 1.18rem);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.talent-panel__points {
+  flex: 0 0 auto;
+  color: rgba(232, 226, 212, .6);
+  font-size: clamp(.9rem, 1.4cqw, 1.08rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.talent-panel__points b {
+  color: #f4f1ea;
+}
+
+.talent-panel--invested .talent-panel__points b {
+  color: var(--talent-gold);
+}
+
+.talent-panel__board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, var(--talent-cell));
+  grid-template-rows: repeat(var(--talent-rows, 7), var(--talent-cell));
+  padding: calc(var(--talent-cell) * .25);
+  background-color: #0a0d12;
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, .18), rgba(0, 0, 0, .08) 40%, rgba(0, 0, 0, .35)),
+    var(--talent-art, none);
+  background-position: center;
+  background-size: cover;
 }
 
 .talent-tree__edges {
   position: absolute;
-  inset: 0;
+  top: calc(var(--talent-cell) * .25);
+  left: calc(var(--talent-cell) * .25);
   z-index: 1;
-  width: 100%;
-  height: 100%;
+  width: calc(var(--talent-cell) * 4);
+  height: calc(var(--talent-cell) * var(--talent-rows, 7));
+  overflow: visible;
   pointer-events: none;
 }
 
-.talent-tree__edge {
-  vector-effect: non-scaling-stroke;
-  transition: stroke .16s ease, opacity .16s ease;
+.talent-arrow {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-width: .085;
 }
 
-.talent-tree__edge--selected {
-  stroke: rgba(232, 199, 111, .96);
-  stroke-width: .8;
-  opacity: 1;
-  filter: drop-shadow(0 0 .28rem rgba(212, 175, 86, .46));
+.talent-arrow--active {
+  stroke: var(--talent-gold);
+  filter: drop-shadow(0 0 .04px rgba(0, 0, 0, .9));
 }
 
-.talent-tree__edge--available {
-  stroke: rgba(95, 126, 154, .16);
-  stroke-width: .34;
-  opacity: .68;
+.talent-arrow--inactive {
+  stroke: #8d9097;
+  opacity: .8;
 }
 
-.talent-tree__edge--locked {
-  stroke: rgba(95, 104, 114, .08);
-  stroke-width: .3;
-  opacity: .42;
-}
+.talent-arrow__head--active { fill: var(--talent-gold); }
+.talent-arrow__head--inactive { fill: #8d9097; }
+
+/* Nodes */
 
 .talent-node {
-  --talent-node-size: clamp(3.5rem, 5.6cqw, 5rem);
-  position: absolute;
+  --talent-node-color: var(--talent-grey);
+  --talent-node-size: round(nearest, calc(var(--talent-cell) * .66), 2px);
+  --talent-node-radius: 6px;
+  position: relative;
   z-index: 2;
-  display: grid;
   width: var(--talent-node-size);
   height: var(--talent-node-size);
-  padding: clamp(3px, .3cqw, 5px);
-  transform: translate(-50%, -50%);
-  place-items: center;
-  border: 2px solid rgba(75, 83, 94, .58);
-  border-radius: clamp(.52rem, .8cqw, .78rem);
-  background: linear-gradient(145deg, rgba(17, 25, 36, .98), rgba(3, 8, 16, .99));
-  box-shadow:
-    0 .55rem 1.3rem rgba(0, 0, 0, .56),
-    inset 0 0 0 1px rgba(255, 255, 255, .02);
+  padding: 0;
+  place-self: center;
+  border: 0;
+  /* Opt out of the global button radius and hover lift (index.css) so the
+     frame keeps its shape and nodes stay on their arrows. */
+  --interactive-radius: var(--talent-node-radius);
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  background: #000;
+  box-shadow: 0 .3rem .7rem rgba(0, 0, 0, .65);
   cursor: default;
-  transition:
-    border-color .14s ease,
-    box-shadow .14s ease,
-    filter .14s ease,
-    opacity .14s ease,
-    transform .14s ease;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* The state frame is one ring drawn over the icon, sharing the icon's clip
+   shape, so it is the same thickness everywhere including the corners. */
+.talent-node::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 2px solid var(--talent-node-color);
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .55);
+  content: '';
+  pointer-events: none;
 }
 
 .talent-node:hover,
 .talent-node:focus-visible {
   z-index: 5;
-  transform: translate(-50%, -50%) scale(1.045);
   outline: 0;
+  box-shadow: 0 0 .8rem color-mix(in srgb, var(--talent-node-color) 60%, transparent);
+  transform: scale(1.06);
 }
 
 .talent-node__icon {
-  display: grid;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-  border-radius: .52rem;
-}
-
-.talent-node__icon .wow-icon,
-.talent-node__icon .wow-icon img,
-.talent-node__icon .wow-icon__fallback {
-  width: 100%;
-  height: 100%;
+  border-radius: inherit;
 }
 
 .talent-node__icon .wow-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
   border: 0;
-  border-radius: .52rem;
+  border-radius: 0;
+  background: #000;
   box-shadow: none;
 }
 
+/* Blizzard icons ship with a dark bevel baked into the image; crop it so the
+   state color is the only frame. */
 .talent-node__icon .wow-icon img {
   display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transform: scale(1.12);
 }
 
-.talent-node--selected {
-  border-color: #e0bd61;
-  background: linear-gradient(145deg, rgba(58, 46, 20, .98), rgba(10, 8, 3, .99));
-  box-shadow:
-    0 0 0 1px rgba(255, 231, 157, .18),
-    0 0 1.7rem rgba(213, 174, 74, .4),
-    0 .55rem 1.3rem rgba(0, 0, 0, .56),
-    inset 0 0 .8rem rgba(255, 218, 117, .08);
-}
-
-.talent-node--selected .talent-node__icon {
-  filter: saturate(1.08) brightness(1.08) contrast(1.03);
-}
-
-.talent-node--selected:hover,
-.talent-node--selected:focus-visible {
-  border-color: #f1d37b;
-  box-shadow:
-    0 0 0 1px rgba(255, 239, 187, .26),
-    0 0 2rem rgba(224, 184, 82, .52),
-    0 .55rem 1.3rem rgba(0, 0, 0, .58);
-}
-
-.talent-node--available {
-  border-color: rgba(83, 112, 139, .4);
-  filter: saturate(.5) brightness(.66);
-  opacity: .82;
-}
-
-.talent-node--available:hover,
-.talent-node--available:focus-visible {
-  border-color: rgba(111, 151, 188, .68);
-  filter: saturate(.76) brightness(.88);
-  opacity: .98;
-  box-shadow:
-    0 0 .9rem rgba(70, 111, 151, .17),
-    0 .55rem 1.3rem rgba(0, 0, 0, .56);
-}
-
-.talent-node--locked {
-  border-color: rgba(67, 72, 78, .42);
-  filter: grayscale(.86) saturate(.08) brightness(.34);
-  opacity: .62;
-}
-
-.talent-node--locked:hover,
-.talent-node--locked:focus-visible {
-  filter: grayscale(.66) saturate(.2) brightness(.54);
-  opacity: .84;
+.talent-node__icon .wow-icon__fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
 }
 
 .talent-node__rank {
   position: absolute;
-  right: -.42rem;
-  bottom: -.42rem;
-  min-width: 1.9rem;
-  padding: .22rem .4rem;
-  border: 1px solid rgba(116, 124, 132, .45);
-  border-radius: 999px;
-  background: rgba(5, 12, 21, .97);
-  color: rgba(229, 225, 216, .68);
-  font-size: clamp(.62rem, .85cqw, .74rem);
+  right: round(calc(var(--talent-cell) * -.13), 1px);
+  bottom: round(calc(var(--talent-cell) * -.11), 1px);
+  min-width: calc(var(--talent-cell) * .36);
+  padding: .08rem .28rem;
+  border: 1px solid color-mix(in srgb, var(--talent-node-color) 55%, #000);
+  border-radius: .3rem;
+  background: rgba(0, 0, 0, .9);
+  color: var(--talent-node-color);
+  font-size: max(.62rem, calc(var(--talent-cell) * .15));
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.15;
+  text-align: center;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 .18rem .45rem rgba(0, 0, 0, .5);
+  z-index: 2;
 }
 
-.talent-node--selected .talent-node__rank {
-  border-color: rgba(229, 194, 104, .9);
-  background: rgba(24, 18, 5, .99);
-  color: #ffe6a0;
-  box-shadow: 0 0 .6rem rgba(213, 174, 74, .28), 0 .18rem .45rem rgba(0, 0, 0, .5);
+.talent-node--available,
+.talent-node--partial {
+  --talent-node-color: var(--talent-green);
+}
+
+.talent-node--maxed {
+  --talent-node-color: var(--talent-gold);
+}
+
+.talent-node--locked .talent-node__icon {
+  filter: grayscale(1) brightness(.55);
 }
 
 .talent-node--locked .talent-node__rank {
-  border-color: rgba(91, 96, 102, .34);
-  color: rgba(220, 216, 207, .4);
+  color: #9a9da3;
 }
+
+/* Tooltip */
 
 .talent-tooltip {
   position: fixed;
   z-index: 9999;
   display: grid;
-  gap: .55rem;
+  gap: .45rem;
   max-width: calc(100vw - 24px);
-  padding: .8rem .9rem;
-  border: 1px solid rgba(196, 166, 103, .4);
-  border-radius: .55rem;
-  background: linear-gradient(155deg, rgba(5, 10, 19, .995), rgba(1, 4, 9, .995));
-  box-shadow: 0 1rem 2.8rem rgba(0, 0, 0, .64), inset 0 0 0 1px rgba(255, 255, 255, .025);
-  color: #e8e2d4;
-  font-size: .74rem;
-  line-height: 1.35;
+  padding: .7rem .85rem .65rem;
+  border: 1px solid rgba(132, 150, 186, .45);
+  border-radius: .4rem;
+  background: rgba(4, 8, 22, .97);
+  box-shadow: 0 .8rem 2.4rem rgba(0, 0, 0, .7);
+  color: #fff;
+  font-size: .8rem;
+  line-height: 1.4;
   pointer-events: none;
 }
 
-.talent-tooltip--selected { border-color: rgba(224, 189, 97, .82); }
-.talent-tooltip--available { border-color: rgba(87, 117, 145, .54); }
-.talent-tooltip--locked { border-color: rgba(86, 91, 98, .5); }
-
 .talent-tooltip__heading {
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  padding-bottom: .55rem;
-  border-bottom: 1px solid rgba(255, 255, 255, .075);
-}
-
-.talent-tooltip__heading > div {
   display: grid;
-  gap: .12rem;
+  gap: .05rem;
 }
 
 .talent-tooltip__heading strong {
-  color: #f3cf6f;
-  font-family: var(--font-display);
-  font-size: .94rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.talent-tooltip--available .talent-tooltip__heading strong {
-  color: rgba(218, 226, 234, .9);
+.talent-tooltip__rank {
+  color: rgba(255, 255, 255, .78);
+  font-size: .76rem;
 }
 
-.talent-tooltip--locked .talent-tooltip__heading strong {
-  color: rgba(232, 226, 212, .72);
-}
-
-.talent-tooltip__heading span {
-  color: rgba(232, 226, 212, .56);
-  font-size: .68rem;
-}
+.talent-tooltip--maxed .talent-tooltip__rank { color: var(--talent-gold, #ffd100); }
+.talent-tooltip--partial .talent-tooltip__rank,
+.talent-tooltip--available .talent-tooltip__rank { color: #40d01a; }
 
 .talent-tooltip__lines {
   display: grid;
-  gap: .22rem;
+  gap: .15rem;
 }
 
 .talent-tooltip__line {
@@ -275,23 +365,54 @@
   gap: .8rem;
 }
 
-.talent-tooltip__line > span:last-child {
+.talent-tooltip__line > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.talent-tooltip__right {
+  flex: 0 0 auto;
   text-align: right;
 }
 
 .talent-tooltip p {
   margin: 0;
-  color: #e8e2d4;
+}
+
+.talent-tooltip__description {
+  color: #ffd100;
+  white-space: pre-line;
+}
+
+.talent-tooltip__next {
+  display: grid;
+  gap: .1rem;
+}
+
+.talent-tooltip__next > span {
+  color: #fff;
 }
 
 .talent-tooltip__muted {
-  color: rgba(232, 226, 212, .55) !important;
+  color: rgba(232, 226, 212, .55);
 }
 
-.talent-tooltip__requirement {
-  color: #e7a84f;
+.talent-tooltip__requirements {
+  display: grid;
+  gap: .1rem;
+  margin: 0;
+  padding: 0;
+  color: #ff3b30;
+  list-style: none;
+}
+
+.talent-tooltip__footer {
+  color: rgba(255, 255, 255, .42);
   font-size: .7rem;
 }
+
+/* Empty state */
 
 .talent-empty {
   display: grid;
@@ -319,22 +440,6 @@
 
 .talent-empty p {
   color: var(--color-text-muted);
-}
-
-@container (max-width: 720px) {
-  .talent-node {
-    --talent-node-size: clamp(2.15rem, 11cqw, 3.2rem);
-    padding: 2px;
-    border-width: 1px;
-  }
-
-  .talent-node__rank {
-    right: -.25rem;
-    bottom: -.28rem;
-    min-width: 1.45rem;
-    padding: .16rem .26rem;
-    font-size: .54rem;
-  }
 }
 
 @media (max-width: 46rem) {

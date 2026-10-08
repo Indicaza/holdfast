@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { wowAssetDescriptor } from './assetResolver.js'
 import './WowIcon.css'
@@ -219,13 +220,76 @@ export function ItemTooltip({ item, side = 'right', id, compact = false }) {
   )
 }
 
+const TOOLTIP_GAP = 10
+const VIEWPORT_MARGIN = 12
+
+// Places a tooltip beside its anchor on the preferred side, flips when that
+// side has no room, and clamps it inside the viewport. Rendered into
+// document.body so no scrolling or clipping ancestor can cut it off.
+export function FloatingTooltip({ anchor, side = 'right', id, className = '', children }) {
+  const ref = useRef(null)
+  const [position, setPosition] = useState(null)
+
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element) return
+    const { width, height } = element.getBoundingClientRect()
+    const maxLeft = window.innerWidth - width - VIEWPORT_MARGIN
+    const maxTop = window.innerHeight - height - VIEWPORT_MARGIN
+    let left
+    let top
+    if (side === 'top') {
+      left = anchor.left + anchor.width / 2 - width / 2
+      top = anchor.top - height - TOOLTIP_GAP
+      if (top < VIEWPORT_MARGIN) top = anchor.bottom + TOOLTIP_GAP
+    } else {
+      const right = anchor.right + TOOLTIP_GAP
+      const leftSide = anchor.left - width - TOOLTIP_GAP
+      const fitsRight = right + width <= window.innerWidth - VIEWPORT_MARGIN
+      const fitsLeft = leftSide >= VIEWPORT_MARGIN
+      left = side === 'left' ? (fitsLeft || !fitsRight ? leftSide : right) : (fitsRight || !fitsLeft ? right : leftSide)
+      top = anchor.top
+    }
+    setPosition({
+      left: Math.max(VIEWPORT_MARGIN, Math.min(left, maxLeft)),
+      top: Math.max(VIEWPORT_MARGIN, Math.min(top, maxTop)),
+    })
+  }, [anchor, side])
+
+  return createPortal(
+    <div
+      ref={ref}
+      id={id}
+      className={`item-tooltip item-tooltip--floating${className ? ` ${className}` : ''}`}
+      role="tooltip"
+      style={position ? { left: position.left, top: position.top } : { left: 0, top: 0, visibility: 'hidden' }}
+    >
+      {children}
+    </div>,
+    document.body,
+  )
+}
+
 export function ItemHoverCard({ item, children, side = 'right', className = '' }) {
   const tooltipId = useId()
+  const [anchor, setAnchor] = useState(null)
   if (!item) return children
+  // The wrapper is display: contents (no box), so measure the trigger inside it.
+  const show = (event) => setAnchor((event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect())
+  const hide = () => setAnchor(null)
   return (
-    <span className={`item-hover-card${className ? ` ${className}` : ''}`} aria-describedby={tooltipId}>
+    <span
+      className={`item-hover-card${className ? ` ${className}` : ''}`}
+      aria-describedby={anchor ? tooltipId : undefined}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
       {children}
-      <ItemTooltip item={item} side={side} id={tooltipId} />
+      {anchor && typeof document !== 'undefined' ? (
+        <FloatingTooltip anchor={anchor} side={side} id={tooltipId}><TooltipBody item={item} /></FloatingTooltip>
+      ) : null}
     </span>
   )
 }

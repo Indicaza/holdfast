@@ -41,7 +41,7 @@ test("development character seed produces armory-ready characters idempotently",
 
     const summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
-    assert.ok(summary.json.characters.some((character) => character.name === "Ironhide"));
+    assert.ok(summary.json.characters.some((character) => character.firstName === "Ironhide" && character.name === "Ironhide Blackforge"));
 
     const armory = await request("/api/intelligence/characters/guildweaver-id:character-dev-ironhide", { persona: "member" });
     assert.equal(armory.status, 200);

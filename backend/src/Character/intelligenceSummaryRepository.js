@@ -47,6 +47,17 @@ function distribution(characters, key) {
   );
 }
 
+// Max health and primary power from the snapshot's character-sheet stats, so
+// the character list can draw a unit frame without loading full armories.
+function snapshotVitals(snapshot) {
+  const resources = snapshot?.stats?.resources;
+  if (!resources || typeof resources !== "object") return null;
+  const healthMax = Number(resources.health?.max ?? resources.health?.current) || null;
+  const powerMax = Number(resources.power?.max ?? resources.power?.current) || null;
+  const powerToken = typeof resources.power?.token === "string" ? resources.power.token.slice(0, 24) : null;
+  return healthMax || powerMax ? { healthMax, powerMax, powerToken } : null;
+}
+
 export function readSyncedIntelligenceSummary() {
   return withGuildDatabase((db) => {
     // Projection tables are useful caches, but durable character snapshots are the
@@ -133,6 +144,8 @@ export function readSyncedIntelligenceSummary() {
       return {
         id: row.id,
         name: row.name,
+        firstName: typeof snapshot.firstName === "string" ? snapshot.firstName.slice(0, 40) : "",
+        lastName: typeof snapshot.lastName === "string" ? snapshot.lastName.slice(0, 40) : "",
         race,
         className,
         spec,
@@ -144,6 +157,7 @@ export function readSyncedIntelligenceSummary() {
         memberRank: row.member_rank,
         lastSeenAt: lastSeenAt || null,
         isMain: Boolean(row.is_main),
+        vitals: snapshotVitals(snapshot),
       };
     });
 

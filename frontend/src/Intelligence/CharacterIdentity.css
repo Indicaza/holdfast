@@ -1,0 +1,353 @@
+/* Character identity pieces shared by the Armory modal header and the
+   character list cards: the WoW-style unit frame, the class/guild/rank facts,
+   and the last-sync badge. Colors fall back to the Armory palette when used
+   outside the modal. */
+
+.unit-frame {
+  --portrait: 4.4rem;
+  --tuck: calc(var(--portrait) * .5);
+  --plate: 12.5rem;
+  --ring: #c9a24e;
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+/* Portrait: thin gold ring with a dark outer edge. */
+.unit-frame__portrait {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: var(--portrait);
+  height: var(--portrait);
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #000;
+  color: #ffd100;
+  box-shadow:
+    inset 0 0 .6rem rgba(0, 0, 0, .7),
+    0 0 0 2px var(--ring),
+    0 0 0 3px #2a1d0a,
+    0 .3rem .8rem rgba(0, 0, 0, .55);
+}
+
+.unit-frame__portrait .wow-icon {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.unit-frame__portrait .wow-icon img {
+  transform: scale(1.15);
+}
+
+/* Level: its own bubble at the portrait's bottom left, white numerals. */
+.unit-frame__level {
+  position: absolute;
+  z-index: 4;
+  bottom: -.2rem;
+  left: -.3rem;
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, #242424, #050505 70%);
+  color: #fff;
+  font-size: .74rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 3px #000, 0 .15rem .3rem rgba(0, 0, 0, .6);
+}
+
+/* Frame body: tucked behind the portrait; the portrait covers its left end. */
+.unit-frame__body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* A fixed track, so long names truncate instead of widening the frame. */
+  grid-template-columns: minmax(0, 1fr);
+  width: calc(var(--plate) + var(--tuck));
+  margin-left: calc(var(--tuck) * -1);
+}
+
+/* Name strip: translucent band (reaction-tinted in game; dark for players). */
+.unit-frame__nameplate {
+  display: flex;
+  height: 1.05rem;
+  align-items: center;
+  padding: 0 .4rem 0 calc(var(--tuck) + .35rem);
+  border-radius: 0 .35rem 0 0;
+  background: linear-gradient(180deg, rgba(58, 40, 20, .78), rgba(26, 18, 9, .78));
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, .12), inset 0 0 0 1px rgba(0, 0, 0, .55);
+}
+
+.unit-frame__name {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #ffd100;
+  font-family: var(--font-body, inherit);
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px #000, 0 0 2px #000;
+  white-space: nowrap;
+}
+
+/* Bar group: bronze edge, black inner line, rounded right end. */
+.unit-frame__bars {
+  display: grid;
+  gap: 1px;
+  padding: 2px 3px 2px calc(var(--tuck) - .1rem);
+  border: 1px solid #8a6a35;
+  border-left: 0;
+  border-radius: 0 .4rem .4rem 0;
+  background: #070605;
+  box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(0, 0, 0, .7), 0 .25rem .6rem rgba(0, 0, 0, .5);
+}
+
+.unit-frame__bar {
+  position: relative;
+  height: 1.15rem;
+  overflow: hidden;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #3a3128, #221c16);
+}
+
+.unit-frame__bar:last-child {
+  height: .55rem;
+}
+
+.unit-frame__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--bar-color);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -1px 0 rgba(0, 0, 0, .35);
+}
+
+.unit-frame__bar--health { --bar-color: linear-gradient(180deg, #8dff6a 0%, #2fdc22 30%, #18b511 70%, #0f8f0b 100%); }
+.unit-frame__bar--mana { --bar-color: linear-gradient(180deg, #6fa2ff 0%, #2366f0 35%, #1048d0 100%); }
+.unit-frame__bar--rage { --bar-color: linear-gradient(180deg, #ff7a7a 0%, #e81e1e 35%, #a50d0d 100%); }
+.unit-frame__bar--energy { --bar-color: linear-gradient(180deg, #fff59a 0%, #f5df1c 35%, #c2ad00 100%); }
+.unit-frame__bar--focus { --bar-color: linear-gradient(180deg, #ffc08a 0%, #ff8a2a 35%, #c95e10 100%); }
+
+/* Status text: hidden until the frame is hovered, like the game. */
+.unit-frame__bar-text {
+  position: relative;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 .3rem;
+  color: #fff;
+  font-size: .66rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000, 0 0 2px #000;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+
+.unit-frame__bar:last-child .unit-frame__bar-text {
+  font-size: .5rem;
+}
+
+.unit-frame:hover .unit-frame__bar-text,
+a:hover .unit-frame__bar-text,
+a:focus-visible .unit-frame__bar-text {
+  opacity: 1;
+}
+
+.character-facts {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-content: center;
+  gap: .35rem;
+  padding-left: .4rem;
+}
+
+.character-facts__class {
+  margin: 0;
+  color: var(--armory-class-color, var(--armory-ink, #ece6d6));
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px #000;
+}
+
+.character-facts__list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .15rem .7rem;
+  margin: 0;
+  font-size: .84rem;
+}
+
+.character-facts__list div {
+  display: contents;
+}
+
+.character-facts__list dt {
+  color: var(--armory-muted, rgba(220, 214, 200, .62));
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.character-facts__list dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--armory-ink, #ece6d6);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sync badge: the in-game latency meter (three bars) beside the sync age.
+   Green within a day, yellow within a week, red after that. */
+
+.sync-badge {
+  --sync-color: #e8433a;
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: .25rem;
+  align-self: center;
+  cursor: default;
+  outline: none;
+}
+
+.sync-badge--fresh { --sync-color: #3ddc5a; }
+.sync-badge--recent { --sync-color: #f4c430; }
+
+.sync-badge:focus-visible {
+  border-radius: .3rem;
+  box-shadow: 0 0 0 2px rgba(255, 209, 0, .45);
+}
+
+.sync-badge__label {
+  color: var(--armory-muted, rgba(220, 214, 200, .62));
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sync-badge__value {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--armory-ink, #ece6d6);
+  font-size: .92rem;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sync-badge__meter {
+  display: inline-flex;
+  height: .95rem;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.sync-badge__meter i {
+  width: .26rem;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, .14);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .5);
+}
+
+.sync-badge__meter i:nth-child(1) { height: 40%; }
+.sync-badge__meter i:nth-child(2) { height: 70%; }
+.sync-badge__meter i:nth-child(3) { height: 100%; }
+
+.sync-badge__meter i.is-lit {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sync-color) 70%, #fff), var(--sync-color));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35), 0 0 .35rem color-mix(in srgb, var(--sync-color) 55%, transparent);
+}
+
+.item-tooltip.sync-tooltip {
+  display: grid;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 24px));
+  gap: .2rem;
+  padding: .6rem .75rem;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.sync-tooltip__title {
+  color: #fff;
+  font-size: .86rem;
+}
+
+.sync-tooltip__time { color: #fff; }
+.sync-tooltip__detail { color: #ffd100; }
+.sync-tooltip__hint { color: rgba(255, 255, 255, .5); font-size: .72rem; }
+
+/* Mains wear a gold star pinned to the portrait's top left. */
+
+.unit-frame__main {
+  position: absolute;
+  z-index: 4;
+  top: -.45rem;
+  left: -.4rem;
+  color: #ffd100;
+  font-size: 1.35rem;
+  line-height: 1;
+  pointer-events: auto;
+  text-shadow:
+    0 0 .45rem rgba(255, 209, 0, .55),
+    0 0 1px #000, 0 1px 2px #000, 1px 0 1px #000, -1px 0 1px #000;
+}
+
+/* Guild and rank: a small tab hanging from the bar group, part of the frame. */
+
+.unit-frame__affiliation {
+  justify-self: start;
+  max-width: calc(100% - var(--tuck) - .4rem);
+  margin: -1px 0 0 calc(var(--tuck) + .2rem);
+  padding: .14rem .55rem .2rem;
+  overflow: hidden;
+  border: 1px solid #8a6a35;
+  border-top: 0;
+  border-radius: 0 0 .35rem .35rem;
+  background: linear-gradient(180deg, #120e09, #1f1810);
+  box-shadow: inset 0 0 0 1px #000, 0 .2rem .4rem rgba(0, 0, 0, .45);
+  color: #e9dcb8;
+  font-size: .68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px #000;
+  white-space: nowrap;
+}
+
+.character-skeleton {
+  display: block;
+  width: 8rem;
+  height: .8rem;
+  border-radius: .3rem;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .12), rgba(255, 255, 255, .05));
+  background-size: 200% 100%;
+  animation: armory-shimmer 1.4s linear infinite;
+}
+
+@keyframes armory-shimmer {
+  to { background-position: -200% 0; }
+}

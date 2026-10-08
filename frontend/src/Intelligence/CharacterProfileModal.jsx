@@ -2,27 +2,11 @@ import { useEffect, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
 import Modal from '../Modal/Modal.jsx'
-import CharacterProfile from './CharacterProfile.jsx'
+import CharacterProfile, { CharacterHeader } from './CharacterProfile.jsx'
+import { classIdentity } from './classIdentity.js'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
-import './CharacterProfileWorkspace.css'
-import './CharacterProfileModalGame.css'
-import './CharacterProfileChrome.css'
-
-function PlayerFramePlaceholder() {
-  return (
-    <div className="armory-player-frame" aria-hidden="true">
-      <div className="armory-player-frame__portrait">
-        <span className="armory-player-frame__level" />
-      </div>
-      <div className="armory-player-frame__bars">
-        <span />
-        <span />
-      </div>
-    </div>
-  )
-}
 
 export default function CharacterProfileModal({ characterId, onClose }) {
   const [status, setStatus] = useState('loading')
@@ -60,20 +44,15 @@ export default function CharacterProfileModal({ characterId, onClose }) {
 
   return (
     <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={onClose}>
-      <div className="character-profile-modal">
-        <PlayerFramePlaceholder />
-        {status === 'loading' ? <p className="armory-state">Opening the latest character snapshot…</p> : null}
-        {status === 'error' ? <EmptyTelemetry title="The profile could not be loaded.">Guildweaver telemetry is temporarily unavailable.</EmptyTelemetry> : null}
-        {status === 'missing' ? <EmptyTelemetry title="Character not found.">This character may not have synced yet, or its telemetry was removed.</EmptyTelemetry> : null}
-        {status === 'ready' ? (
-          <CharacterProfile
-            armory={armory}
-            tab={tab}
-            onTabChange={setTab}
-            showHero={false}
-            className="character-profile--modal"
-          />
-        ) : null}
+      <div className="armory-shell" style={status === 'ready' ? { '--armory-class-color': classIdentity(character.className).color } : undefined}>
+        <CharacterHeader character={character} stats={armory.stats} loading={status !== 'ready'} />
+        {status === 'ready' ? <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} /> : (
+          <div className="armory-shell__state">
+            {status === 'loading' ? <p className="armory-state">Opening the latest character snapshot…</p> : null}
+            {status === 'error' ? <EmptyTelemetry title="The profile could not be loaded.">Guildweaver telemetry is temporarily unavailable.</EmptyTelemetry> : null}
+            {status === 'missing' ? <EmptyTelemetry title="Character not found.">This character may not have synced yet, or its telemetry was removed.</EmptyTelemetry> : null}
+          </div>
+        )}
       </div>
     </Modal>
   )
