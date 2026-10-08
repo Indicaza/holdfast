@@ -2,12 +2,10 @@ import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
 import ProfessionCards from './ProfessionCards.jsx'
 import RecipeBrowser from './RecipeBrowser.jsx'
 import TalentTree from './TalentTree.jsx'
-import { CharacterStatHighlights } from './CharacterStats.jsx'
 import { formatSyncAge } from './model.js'
 import './CharacterArmory.css'
 
 const characterProfileTabs = [
-  ['overview', 'Overview'],
   ['equipment', 'Equipment'],
   ['talents', 'Talents'],
   ['professions', 'Professions'],
@@ -16,30 +14,6 @@ const characterProfileTabs = [
 
 function classKey(value) {
   return String(value || 'adventurer').toLowerCase().replace(/[^a-z]+/g, '-')
-}
-
-function Overview({ armory }) {
-  return (
-    <div className="armory-overview">
-      <section className="armory-panel">
-        <div className="armory-panel__heading"><span>Character</span><h2>At a glance</h2></div>
-        <dl className="armory-facts">
-          <div><dt>Realm</dt><dd>{armory.character.realm || 'Unknown'}</dd></div>
-          <div><dt>Guild</dt><dd>{armory.character.guildName || 'No guild reported'}</dd></div>
-          <div><dt>Game build</dt><dd>{armory.character.gameBuild || 'Not reported'}</dd></div>
-          <div><dt>Telemetry</dt><dd>{formatSyncAge(armory.character.lastSeenAt)}</dd></div>
-        </dl>
-      </section>
-      <section className="armory-panel">
-        <div className="armory-panel__heading"><span>Stats</span><h2>Snapshot</h2></div>
-        <CharacterStatHighlights stats={armory.stats} />
-      </section>
-      <section className="armory-panel armory-panel--wide">
-        <div className="armory-panel__heading"><span>Professions</span><h2>Craft</h2></div>
-        <ProfessionCards professions={armory.professions} />
-      </section>
-    </div>
-  )
 }
 
 function CharacterHero({ character }) {
@@ -66,14 +40,14 @@ function CharacterHero({ character }) {
 
 export default function CharacterProfile({
   armory,
-  tab = 'overview',
+  tab = 'equipment',
   onTabChange,
   showHero = true,
   className = '',
 }) {
   const character = armory.character
-  const requestedTab = tab === 'stats' ? 'equipment' : tab
-  const activeTab = characterProfileTabs.some(([value]) => value === requestedTab) ? requestedTab : 'overview'
+  const requestedTab = tab === 'stats' || tab === 'overview' ? 'equipment' : tab
+  const activeTab = characterProfileTabs.some(([value]) => value === requestedTab) ? requestedTab : 'equipment'
 
   return (
     <div
@@ -97,7 +71,6 @@ export default function CharacterProfile({
       </nav>
 
       <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
-        {activeTab === 'overview' ? <Overview armory={armory} /> : null}
         {activeTab === 'equipment' ? (
           <CharacterEquipmentSheet
             equipment={armory.equipment}
