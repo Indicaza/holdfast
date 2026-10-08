@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
-import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
+import { ItemDetailCard, ItemHoverCard, ItemIcon, ItemTooltip } from '../WowAssets/WowIcon.jsx'
 import { canonicalEquipmentSlot } from './model.js'
 import './CharacterArmoryV2.css'
 
@@ -24,6 +24,7 @@ function classKey(value) {
 }
 
 function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', iconSize = 48, sheet = false }) {
+  const tooltipId = useId()
   const quality = Number(item?.quality ?? item?.qualityId) || 0
   const button = (
     <button
@@ -33,6 +34,7 @@ function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', ic
       disabled={!item}
       title={item ? undefined : slotLabel(slot)}
       aria-label={item ? `${slotLabel(slot)}: ${item.name || `item ${item.itemId || ''}`}` : `${slotLabel(slot)} empty`}
+      aria-describedby={item && sheet ? tooltipId : undefined}
     >
       {item ? <ItemIcon item={item} size={iconSize} /> : <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>}
       {!sheet ? (
@@ -45,7 +47,18 @@ function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', ic
     </button>
   )
 
-  return item ? <ItemHoverCard item={item} side={tooltipSide}>{button}</ItemHoverCard> : button
+  if (!item) return button
+
+  if (sheet) {
+    return (
+      <span className="item-hover-card" aria-hidden="false">
+        {button}
+        <ItemTooltip item={item} side={tooltipSide} id={tooltipId} />
+      </span>
+    )
+  }
+
+  return <ItemHoverCard item={item} side={tooltipSide}>{button}</ItemHoverCard>
 }
 
 function GearSummary({ equipment, className, race }) {
