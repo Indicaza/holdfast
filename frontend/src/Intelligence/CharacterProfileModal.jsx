@@ -27,14 +27,14 @@ function PlayerFramePlaceholder() {
 export default function CharacterProfileModal({ characterId, onClose }) {
   const [status, setStatus] = useState('loading')
   const [armory, setArmory] = useState(() => normalizeArmory({}))
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState('equipment')
 
   useEffect(() => {
     if (!characterId) return undefined
     const controller = new AbortController()
     let active = true
     setStatus('loading')
-    setTab('overview')
+    setTab('equipment')
 
     apiJson(`/api/intelligence/characters/${encodeURIComponent(characterId)}`, { signal: controller.signal })
       .then((payload) => {
