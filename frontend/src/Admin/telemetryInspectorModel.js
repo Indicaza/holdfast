@@ -114,6 +114,66 @@ export function telemetrySessionInfo(record) {
   }
 }
 
+export function telemetryPayloadLabel(record) {
+  const session = telemetrySessionInfo(record)
+  if (session.checkpointLabel) return session.checkpointLabel
+  return humanizeTelemetryName(record?.eventType || record?.domain || 'payload')
+}
+
+export function telemetrySourceInfo(record) {
+  const payload = record?.payload && typeof record.payload === 'object' ? record.payload : {}
+  const characterName = String(record?.characterName || payload.name || '').trim()
+  const memberName = String(record?.memberName || '').trim()
+  const className = String(record?.className || payload.class?.name || '').trim()
+  const realm = String(record?.realm || payload.realm || '').trim()
+
+  if (characterName) {
+    return {
+      primary: characterName,
+      secondary: [memberName, className, realm].filter(Boolean).join(' · '),
+      kind: 'character',
+    }
+  }
+
+  if (memberName) {
+    return {
+      primary: memberName,
+      secondary: [className, realm].filter(Boolean).join(' · '),
+      kind: 'member',
+    }
+  }
+
+  return {
+    primary: 'Unknown source',
+    secondary: realm || String(record?.deviceId || '').trim(),
+    kind: 'unknown',
+  }
+}
+
+export function sortTelemetryRecordsNewest(records) {
+  return [...(Array.isArray(records) ? records : [])].sort((left, right) => {
+    const leftTime = new Date(left?.receivedAt || 0).getTime()
+    const rightTime = new Date(right?.receivedAt || 0).getTime()
+    if (Number.isFinite(leftTime) && Number.isFinite(rightTime) && leftTime !== rightTime) {
+      return rightTime - leftTime
+    }
+    return Number(right?.id || 0) - Number(left?.id || 0)
+  })
+}
+
+export function telemetrySinceForWindow(windowKey, now = Date.now()) {
+  const durations = {
+    '15m': 15 * 60 * 1000,
+    '1h': 60 * 60 * 1000,
+    '6h': 6 * 60 * 60 * 1000,
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+  }
+  const duration = durations[windowKey]
+  return duration ? new Date(now - duration).toISOString() : ''
+}
+
 export function telemetryPreview(value) {
   if (value === null) return 'null'
   if (value === undefined) return '—'
