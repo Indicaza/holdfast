@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import WowIcon from '../WowAssets/WowIcon.jsx'
@@ -32,8 +32,8 @@ function bounds(nodes) {
 }
 
 function point(node, frame) {
-  const x = 8 + (((Number(node.x) || 0) - frame.minX) / (frame.maxX - frame.minX)) * 84
-  const y = 8 + (((Number(node.y) || 0) - frame.minY) / (frame.maxY - frame.minY)) * 84
+  const x = 7 + (((Number(node.x) || 0) - frame.minX) / (frame.maxX - frame.minX)) * 86
+  const y = 16 + (((Number(node.y) || 0) - frame.minY) / (frame.maxY - frame.minY)) * 76
   return { x, y }
 }
 
@@ -90,7 +90,16 @@ function TalentTooltip({ hover }) {
   )
 }
 
-export function TalentNode({ node, position, active, onSelect, onHover, onLeave }) {
+function edgeVisualState(edge, nodesById) {
+  if (edge?.active) return 'selected'
+  const from = nodesById.get(edge?.from)
+  const to = nodesById.get(edge?.to)
+  if (from && to && talentState(from) === 'selected' && talentState(to) === 'selected') return 'selected'
+  if (to && talentState(to) === 'locked') return 'locked'
+  return 'available'
+}
+
+export function TalentNode({ node, position, onHover, onLeave }) {
   const entry = selectedEntry(node)
   const state = talentState(node, entry)
   const rank = Number(entry?.rank ?? node.rank) || 0
@@ -99,15 +108,13 @@ export function TalentNode({ node, position, active, onSelect, onHover, onLeave 
 
   return (
     <button
-      className={`talent-node talent-node--${state}${active ? ' talent-node--active' : ''}`}
+      className={`talent-node talent-node--${state}`}
       style={{ left: `${position.x}%`, top: `${position.y}%` }}
       type="button"
-      onClick={() => onSelect(node)}
       onMouseEnter={(event) => showTooltip(event.currentTarget)}
       onMouseLeave={onLeave}
       onFocus={(event) => showTooltip(event.currentTarget)}
       onBlur={onLeave}
-      aria-pressed={active}
       aria-label={`${entry?.name || `Talent ${node.id}`}, ${state}${maxRank || rank ? `, rank ${rank} of ${maxRank || rank}` : ''}`}
     >
       <span className="talent-node__icon">
@@ -127,29 +134,14 @@ export function TalentNode({ node, position, active, onSelect, onHover, onLeave 
 export default function TalentTree({ talents }) {
   const nodes = Array.isArray(talents?.nodes) ? talents.nodes.filter((node) => node?.isVisible !== false) : []
   const edges = Array.isArray(talents?.edges) ? talents.edges : []
-  const [activeId, setActiveId] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [hover, setHover] = useState(null)
   const frame = useMemo(() => bounds(nodes), [nodes])
   const positions = useMemo(() => new Map(nodes.map((node) => [node.id, point(node, frame)])), [frame, nodes])
-  const activeNode = nodes.find((node) => node.id === activeId) || nodes[0] || null
-  const entry = selectedEntry(activeNode)
-  const activeRank = Number(entry?.rank ?? activeNode?.rank) || 0
-  const activeMaxRank = Number(entry?.maxRank ?? activeNode?.maxRank) || activeRank || 1
-  const activeState = talentState(activeNode, entry)
-  const activeTooltipLines = Array.isArray(entry?.tooltipLines) ? entry.tooltipLines : []
-  const activeDescription = entry?.description || activeTooltipLines.find((line, index) => index > 0 && line?.left)?.left
-
-  useEffect(() => {
-    if (!nodes.length) {
-      if (activeId !== null) setActiveId(null)
-      return
-    }
-
-    if (!nodes.some((node) => node.id === activeId)) {
-      setActiveId(nodes[0].id)
-    }
-  }, [activeId, nodes])
+  const nodesById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
+  const panelCount = Array.isArray(talents?.art?.talentTabs) && talents.art.talentTabs.length
+    ? talents.art.talentTabs.length
+    : nodes.length >= 12 ? 3 : 1
 
   if (!nodes.length) {
     return (
@@ -163,71 +155,38 @@ export default function TalentTree({ talents }) {
 
   return (
     <div className="talent-tree">
-      <div className="talent-tree__toolbar">
-        <div>
-          <strong>{talents?.name || 'Talent configuration'}</strong>
-          <span>{talents?.pointsSpent !== null && talents?.pointsSpent !== undefined ? `${talents.pointsSpent} spent${talents?.pointsAvailable ? ` · ${talents.pointsAvailable} available` : ''}` : talents?.configId ? `Config ${talents.configId}` : 'Live character build'}</span>
+      <div className="talent-tree__stage">
+        <div className="talent-tree__viewport">
+          <div className="talent-tree__canvas" style={{ '--talent-zoom': zoom }}>
+            <TalentTreeBackdrop art={talents?.art} fallbackPanelCount={panelCount} />
+            <svg className="talent-tree__edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {edges.map((edge, index) => {
+                const from = positions.get(edge.from)
+                const to = positions.get(edge.to)
+                if (!from || !to) return null
+                const state = edgeVisualState(edge, nodesById)
+                return <line className={`talent-tree__edge talent-tree__edge--${state}`} key={`${edge.from}-${edge.to}-${index}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />
+              })}
+            </svg>
+            {nodes.map((node) => (
+              <TalentNode
+                key={node.id}
+                node={node}
+                position={positions.get(node.id)}
+                onHover={(hovered, rect) => setHover({ node: hovered, rect })}
+                onLeave={() => setHover(null)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="talent-tree__legend" aria-label="Talent state legend">
-          <span><i className="talent-tree__legend-dot talent-tree__legend-dot--selected" /> Selected</span>
-          <span><i className="talent-tree__legend-dot talent-tree__legend-dot--available" /> Available</span>
-          <span><i className="talent-tree__legend-dot talent-tree__legend-dot--locked" /> Locked</span>
-        </div>
-        <div className="talent-tree__zoom" aria-label="Talent tree zoom">
-          <button type="button" onClick={() => setZoom((value) => Math.max(0.8, value - 0.1))} aria-label="Zoom out">−</button>
-          <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={() => setZoom((value) => Math.min(1.4, value + 0.1))} aria-label="Zoom in">+</button>
-        </div>
-      </div>
 
-      <div className="talent-tree__viewport">
-        <div className="talent-tree__canvas" style={{ '--talent-zoom': zoom }}>
-          <TalentTreeBackdrop art={talents?.art} />
-          <svg className="talent-tree__edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {edges.map((edge, index) => {
-              const from = positions.get(edge.from)
-              const to = positions.get(edge.to)
-              if (!from || !to) return null
-              return <line className={edge.active ? 'talent-tree__edge--active' : ''} key={`${edge.from}-${edge.to}-${index}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />
-            })}
-          </svg>
-          {nodes.map((node) => (
-            <TalentNode
-              key={node.id}
-              node={node}
-              position={positions.get(node.id)}
-              active={node.id === activeNode?.id}
-              onSelect={(selected) => setActiveId(selected.id)}
-              onHover={(hovered, rect) => setHover({ node: hovered, rect })}
-              onLeave={() => setHover(null)}
-            />
-          ))}
+        <div className="talent-tree__zoom" aria-label="Talent tree zoom">
+          <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} aria-label="Zoom out" title="Zoom out">−</button>
+          <button type="button" onClick={() => setZoom((value) => Math.min(1.4, Number((value + 0.1).toFixed(1))))} aria-label="Zoom in" title="Zoom in">+</button>
         </div>
       </div>
 
       <TalentTooltip hover={hover} />
-
-      <aside className={`talent-tree__detail talent-tree__detail--${activeState}`} aria-live="polite">
-        {activeNode ? (
-          <>
-            <div className="talent-tree__detail-heading">
-              <WowIcon
-                src={entry?.mediaUrl || entry?.catalog?.metadata?.mediaUrl}
-                iconFileId={entry?.iconFileId}
-                spellId={entry?.spellId}
-                label={entry?.name || String(activeNode.id)}
-                size={56}
-              />
-              <div>
-                <strong>{entry?.name || `Talent node ${activeNode.id}`}</strong>
-                <span>{activeState === 'selected' ? 'Selected' : activeState === 'locked' ? 'Locked' : 'Available'}{activeRank ? ` · Rank ${activeRank}/${activeMaxRank}` : ''}</span>
-              </div>
-            </div>
-            <p>{activeDescription || 'No description was included in this telemetry snapshot.'}</p>
-            {(activeNode.conditions || []).some((condition) => condition?.isMet === false) ? <small className="talent-tree__detail-requirement">Requirements not met for this node.</small> : null}
-          </>
-        ) : null}
-      </aside>
     </div>
   )
 }
