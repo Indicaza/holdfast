@@ -1,0 +1,348 @@
+.character-profile-modal {
+  container-name: armory-profile;
+  container-type: inline-size;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.006), transparent 8rem),
+    transparent;
+}
+
+/* Top player-frame rail --------------------------------------------------- */
+.armory-player-frame {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 5.45rem;
+  align-items: center;
+  gap: .9rem;
+  padding:
+    .78rem
+    clamp(4.6rem, 6cqi, 5.75rem)
+    .78rem
+    clamp(.8rem, 1.4cqi, 1.25rem);
+  overflow: hidden;
+  border-bottom: 1px solid rgba(196, 166, 103, .2);
+  background:
+    radial-gradient(circle at 4.5rem 48%, rgba(196, 166, 103, .085), transparent 7.5rem),
+    linear-gradient(180deg, rgba(13, 28, 45, .95), rgba(5, 14, 24, .97));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .025),
+    inset 0 -1px 0 rgba(0, 0, 0, .48);
+}
+
+.armory-player-frame::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(196, 166, 103, .035), transparent 30%),
+    linear-gradient(115deg, transparent 0 58%, rgba(255,255,255,.012) 58.5% 59%, transparent 59.5%);
+}
+
+.armory-player-frame::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  right: clamp(4.8rem, 6.5cqi, 6rem);
+  left: clamp(19rem, 31cqi, 24rem);
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(196, 166, 103, .2), rgba(196, 166, 103, .045) 46%, transparent);
+}
+
+.armory-player-frame__portrait {
+  width: 4.35rem;
+  height: 4.35rem;
+  border: 1px solid rgba(232, 204, 140, .56);
+  background:
+    radial-gradient(circle at 40% 30%, rgba(255,255,255,.07), transparent 32%),
+    radial-gradient(circle at 50% 62%, rgba(31, 58, 83, .34), transparent 60%),
+    rgba(3, 10, 18, .98);
+  box-shadow:
+    inset 0 0 0 2px rgba(1, 5, 9, .92),
+    inset 0 0 0 4px rgba(196, 166, 103, .11),
+    0 0 0 1px rgba(0, 0, 0, .72),
+    0 .35rem .9rem rgba(0, 0, 0, .28);
+}
+
+.armory-player-frame__portrait::after {
+  content: '';
+  position: absolute;
+  inset: .24rem;
+  border: 1px solid rgba(255,255,255,.028);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.armory-player-frame__level {
+  right: -.1rem;
+  bottom: -.1rem;
+  width: 1.42rem;
+  height: 1.42rem;
+  border-color: rgba(232, 204, 140, .6);
+  background: linear-gradient(180deg, #0b1a29, #030a11);
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, .55),
+    0 0 0 1px rgba(0, 0, 0, .75),
+    0 .15rem .35rem rgba(0, 0, 0, .45);
+}
+
+.armory-player-frame__bars {
+  width: clamp(11rem, 18cqi, 15rem);
+  gap: .34rem;
+}
+
+.armory-player-frame__bars span {
+  height: .72rem;
+  border: 1px solid rgba(0, 0, 0, .86);
+  border-radius: .14rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.005)),
+    rgba(3, 9, 15, .94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .025),
+    inset 0 -1px 0 rgba(0, 0, 0, .5),
+    0 0 0 1px rgba(196, 166, 103, .14);
+}
+
+/* Close control belongs to the same chrome, not a floating utility button. */
+.modal__panel--armory .modal__close {
+  top: .82rem;
+  right: clamp(.8rem, 1.3vw, 1.2rem);
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 1px solid rgba(196, 166, 103, .28);
+  border-radius: .48rem;
+  background:
+    linear-gradient(180deg, rgba(17, 34, 51, .92), rgba(4, 12, 21, .96));
+  color: rgba(224, 216, 197, .72);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 -1px 0 rgba(0,0,0,.42),
+    0 .35rem .8rem rgba(0,0,0,.2);
+  transform: none;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.modal__panel--armory .modal__close:hover,
+.modal__panel--armory .modal__close:focus-visible {
+  border-color: rgba(232, 204, 140, .52);
+  background:
+    linear-gradient(180deg, rgba(29, 49, 68, .96), rgba(7, 17, 28, .98));
+  color: #f0d99e;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 0 0 1px rgba(232,204,140,.05),
+    0 .35rem .8rem rgba(0,0,0,.22);
+  transform: none;
+}
+
+/* Navigation rail -------------------------------------------------------- */
+.character-profile--modal .armory-tabs {
+  position: relative;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .22rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: .38rem clamp(.45rem, .8cqi, .7rem) .42rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0;
+  border-bottom: 1px solid rgba(196, 166, 103, .22);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 20, 33, .99), rgba(3, 10, 18, .99));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.022),
+    inset 0 -1px 0 rgba(0,0,0,.55);
+  isolation: isolate;
+  scrollbar-width: none;
+}
+
+.character-profile--modal .armory-tabs::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(196, 166, 103, .045), transparent 58%),
+    linear-gradient(90deg, transparent, rgba(255,255,255,.012), transparent);
+}
+
+.character-profile--modal .armory-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.character-profile--modal .armory-tabs button {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 3.2rem;
+  padding: .35rem .85rem .48rem;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.025);
+  border-radius: .34rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.012), rgba(255,255,255,.003)) !important;
+  color: rgba(202, 210, 219, .68);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.014),
+    inset 0 -1px 0 rgba(0,0,0,.32);
+  font-family: var(--font-display);
+  font-size: clamp(.82rem, 1cqi, .94rem);
+  font-weight: 600;
+  letter-spacing: .012em;
+  line-height: 1;
+  text-transform: none;
+  text-shadow: 0 1px 0 rgba(0,0,0,.65);
+  cursor: pointer;
+  transform: none;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.character-profile--modal .armory-tabs button::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 118%, rgba(196, 166, 103, .105), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.026), transparent 48%);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.character-profile--modal .armory-tabs button::after {
+  content: '';
+  position: absolute;
+  right: .72rem;
+  bottom: .24rem;
+  left: .72rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #d8b966 18%, #f2dda3 50%, #d8b966 82%, transparent);
+  opacity: 0;
+  transform: scaleX(.62);
+  transform-origin: center;
+  transition: opacity 140ms ease, transform 160ms ease;
+}
+
+.character-profile--modal .armory-tabs button:hover,
+.character-profile--modal .armory-tabs button:focus-visible {
+  border-color: rgba(196, 166, 103, .16);
+  background:
+    linear-gradient(180deg, rgba(196,166,103,.04), rgba(196,166,103,.012)) !important;
+  color: rgba(240, 231, 210, .94) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 0 0 1px rgba(196,166,103,.025),
+    inset 0 -1px 0 rgba(0,0,0,.35);
+  transform: none;
+}
+
+.character-profile--modal .armory-tabs button:hover::before,
+.character-profile--modal .armory-tabs button:focus-visible::before {
+  opacity: 1;
+}
+
+.character-profile--modal .armory-tabs button:focus-visible {
+  outline: 1px solid rgba(232, 204, 140, .58);
+  outline-offset: -3px;
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active {
+  border-color: rgba(216, 185, 102, .36);
+  background:
+    linear-gradient(180deg, rgba(47, 49, 44, .42), rgba(196, 166, 103, .055) 68%, rgba(196, 166, 103, .02)) !important;
+  color: #f4dfa6 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 0 0 1px rgba(196,166,103,.055),
+    inset 0 -1px 0 rgba(0,0,0,.42);
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active::before {
+  opacity: 1;
+}
+
+.character-profile--modal .armory-tabs .armory-tabs__active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* Keep the content visually attached to the tab rail. */
+.character-profile--modal .armory-content {
+  padding-top: clamp(.8rem, 1.2cqi, 1.15rem);
+}
+
+@container armory-profile (max-width: 38rem) {
+  .armory-player-frame {
+    min-height: 4.85rem;
+    gap: .7rem;
+    padding-left: .7rem;
+  }
+
+  .armory-player-frame::after {
+    display: none;
+  }
+
+  .armory-player-frame__portrait {
+    width: 3.7rem;
+    height: 3.7rem;
+  }
+
+  .armory-player-frame__bars {
+    width: min(12.5rem, calc(100cqi - 9rem));
+  }
+
+  .character-profile--modal .armory-tabs {
+    grid-template-columns: repeat(4, minmax(max-content, 1fr));
+    justify-content: start;
+  }
+
+  .character-profile--modal .armory-tabs button {
+    min-width: 6.6rem;
+    min-height: 3rem;
+    padding-inline: .7rem;
+    font-size: .8rem;
+  }
+}
+
+@container armory-profile (max-width: 25rem) {
+  .armory-player-frame {
+    min-height: 4.35rem;
+    gap: .55rem;
+    padding-right: 3.85rem;
+  }
+
+  .armory-player-frame__portrait {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .armory-player-frame__bars {
+    width: min(9.75rem, calc(100cqi - 8rem));
+  }
+
+  .modal__panel--armory .modal__close {
+    top: .62rem;
+    right: .62rem;
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  .character-profile--modal .armory-tabs {
+    padding-inline: .3rem;
+  }
+}
