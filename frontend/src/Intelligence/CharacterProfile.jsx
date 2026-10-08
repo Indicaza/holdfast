@@ -56,37 +56,39 @@ export default function CharacterProfile({
     >
       {showHero ? <CharacterHero character={character} /> : null}
 
-      <nav className="armory-tabs" aria-label="Character profile sections">
-        {characterProfileTabs.map(([value, label]) => {
-          const isActive = activeTab === value
-          return (
-            <button
-              key={value}
-              type="button"
-              className={isActive ? 'armory-tabs__active' : ''}
-              aria-pressed={isActive}
-              aria-current={isActive ? 'page' : undefined}
-              onClick={() => onTabChange?.(value)}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </nav>
+      <div className="armory-tabbed-surface">
+        <nav className="armory-tabs" aria-label="Character profile sections">
+          {characterProfileTabs.map(([value, label]) => {
+            const isActive = activeTab === value
+            return (
+              <button
+                key={value}
+                type="button"
+                className={isActive ? 'armory-tabs__active' : ''}
+                aria-pressed={isActive}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={() => onTabChange?.(value)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </nav>
 
-      <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
-        {activeTab === 'equipment' ? (
-          <CharacterEquipmentSheet
-            equipment={armory.equipment}
-            stats={armory.stats}
-            className={character.className}
-            race={character.race}
-          />
-        ) : null}
-        {activeTab === 'talents' ? <TalentTree talents={armory.talents} /> : null}
-        {activeTab === 'professions' ? <ProfessionCards professions={armory.professions} /> : null}
-        {activeTab === 'recipes' ? <RecipeBrowser recipes={armory.recipes} /> : null}
-      </section>
+        <section className={`armory-content armory-content--${activeTab}`} data-tab={activeTab}>
+          {activeTab === 'equipment' ? (
+            <CharacterEquipmentSheet
+              equipment={armory.equipment}
+              stats={armory.stats}
+              className={character.className}
+              race={character.race}
+            />
+          ) : null}
+          {activeTab === 'talents' ? <TalentTree talents={armory.talents} /> : null}
+          {activeTab === 'professions' ? <ProfessionCards professions={armory.professions} /> : null}
+          {activeTab === 'recipes' ? <RecipeBrowser recipes={armory.recipes} /> : null}
+        </section>
+      </div>
     </div>
   )
 }
