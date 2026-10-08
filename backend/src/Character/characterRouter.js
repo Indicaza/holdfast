@@ -14,6 +14,10 @@ import {
   exchangeGuildweaverPairing,
   startGuildweaverPairing,
 } from "./guildweaverDeviceRepository.js";
+import {
+  acknowledgeGuildweaverIngest,
+  readGuildweaverIngestReconciliation,
+} from "./guildweaverIngestAcknowledgementRepository.js";
 import { createTelemetryRouter } from "./telemetryRouter.js";
 
 const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2, 3]);
@@ -63,8 +67,34 @@ export function createCharacterRouter() {
     windowMs: 10 * 60 * 1000,
     max: 300,
   });
+  const reconcileRateLimit = createRateLimiter({
+    name: "guildweaver-ingest-reconcile",
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+  });
 
   router.use(createTelemetryRouter());
+
+  router.post(
+    "/sync-state",
+    reconcileRateLimit,
+    requireGuildweaverDevice,
+    (req, res) => {
+      try {
+        const result = readGuildweaverIngestReconciliation({
+          deviceId: req.guildweaverDevice.id,
+          memberId: req.guildweaverDevice.memberId,
+          characters: req.body?.characters,
+          telemetry: req.body?.telemetry,
+        });
+        res.set("Cache-Control", "no-store");
+        res.json(result);
+      } catch (error) {
+        console.error("Unable to reconcile Guildweaver ingest state", error);
+        res.status(500).json({ error: "guildweaver_sync_state_unavailable" });
+      }
+    },
+  );
 
   router.post("/pairing/start", pairingStartRateLimit, (req, res) => {
     try {
@@ -201,6 +231,7 @@ export function createCharacterRouter() {
         const memberId = req.guildweaverDevice.memberId;
         const snapshot = req.body?.snapshot;
         const revision = Number(req.body?.revision);
+        const streamKey = String(req.body?.streamKey || "").trim().slice(0, 240);
 
         if (!snapshot || typeof snapshot !== "object") {
           res.status(400).json({ error: "invalid_character_snapshot" });
@@ -231,6 +262,16 @@ export function createCharacterRouter() {
           return;
         }
 
+        if (streamKey && Number.isInteger(revision) && revision > 0) {
+          acknowledgeGuildweaverIngest({
+            deviceId: req.guildweaverDevice.id,
+            memberId,
+            kind: "character",
+            streamKey,
+            revision,
+          });
+        }
+
         res.set("Cache-Control", "no-store");
         res.status(result.status === "created" ? 201 : 200).json({
           status: result.status,
@@ -241,6 +282,7 @@ export function createCharacterRouter() {
           capturedAt: result.snapshot.capturedAt,
           receivedAt: result.snapshot.receivedAt,
           revision: result.snapshot.bridgeRevision,
+          streamKey: streamKey || null,
         });
       } catch (error) {
         console.error("Unable to ingest Guildweaver character snapshot", error);
