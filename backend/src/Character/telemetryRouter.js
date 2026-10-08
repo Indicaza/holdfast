@@ -1,6 +1,8 @@
 import { Router } from "express";
 
+import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import { authenticateGuildweaverDevice } from "./guildweaverDeviceRepository.js";
+import { acknowledgeGuildweaverIngest } from "./guildweaverIngestAcknowledgementRepository.js";
 import { associateTelemetryRecordCharacter } from "./telemetryCharacterAssociation.js";
 import { recordTelemetry } from "./telemetryRecordRepository.js";
 
@@ -50,7 +52,8 @@ export function createTelemetryRouter() {
         res.status(400).json({ error: "unsupported_telemetry_schema" });
         return;
       }
-      if (!String(envelope.eventType || "").trim()) {
+      const eventType = String(envelope.eventType || "").trim();
+      if (!eventType) {
         res.status(400).json({ error: "telemetry_event_type_required" });
         return;
       }
@@ -81,6 +84,34 @@ export function createTelemetryRouter() {
         deviceId: req.guildweaverDevice.id,
         rawCharacterId: result.record?.characterId,
       });
+
+      // The acknowledgement is deliberately written only after the telemetry
+      // record is durable. If this process dies between these two operations,
+      // reconciliation causes a harmless replay instead of data loss.
+      acknowledgeGuildweaverIngest({
+        deviceId: req.guildweaverDevice.id,
+        memberId: req.guildweaverDevice.memberId,
+        kind: "telemetry",
+        streamKey,
+        revision,
+      });
+
+      if (result.status === "created") {
+        publishLiveUpdate({
+          topics: ["guildweaver"],
+          source: "guildweaver.telemetry",
+          entityId: canonicalCharacterId || result.record?.characterId || result.record?.id,
+          permission: "site.admin",
+        });
+
+        if (eventType === "talent_tree_definition") {
+          publishLiveUpdate({
+            topics: ["intelligence", "armory"],
+            source: "guildweaver.telemetry",
+            entityId: canonicalCharacterId || result.record?.characterId || null,
+          });
+        }
+      }
 
       res.set("Cache-Control", "no-store");
       res.status(result.status === "created" ? 201 : 200).json({
