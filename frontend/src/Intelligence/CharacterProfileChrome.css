@@ -147,7 +147,8 @@
 }
 
 /* Conventional tab geometry: the tab list sits one pixel over the panel edge.
-   The panel owns the border; the selected tab masks only the segment beneath it. */
+   The panel owns the border; the selected tab masks only the segment beneath it.
+   Top padding gives hover/focus decoration room without changing outer geometry. */
 .character-profile--modal .armory-tabs {
   position: relative;
   z-index: 2;
@@ -159,9 +160,9 @@
   justify-content: flex-start;
   gap: .22rem;
   margin: 0 0 -1px;
-  padding: 0 .55rem;
+  padding: .32rem .55rem 0;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -193,7 +194,9 @@
   overflow: hidden;
   border: 1px solid rgba(196, 166, 103, .1);
   border-bottom-color: var(--armory-border);
-  border-radius: .38rem .38rem 0 0;
+  border-radius: .38rem .38rem 0 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   background: var(--armory-surface-muted) !important;
   color: var(--armory-text-muted);
   box-shadow: none;
@@ -219,6 +222,8 @@
 .character-profile--modal .armory-tabs button:focus-visible {
   border-color: rgba(196, 166, 103, .2);
   border-bottom-color: var(--armory-border);
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   background: var(--armory-surface-hover) !important;
   color: rgba(240, 231, 210, .92) !important;
   box-shadow: none;
@@ -236,6 +241,8 @@
   z-index: 4;
   border-color: var(--armory-border);
   border-bottom-color: var(--armory-surface);
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   background: var(--armory-surface) !important;
   color: var(--armory-text-active) !important;
   box-shadow: inset 0 2px 0 rgba(232, 204, 140, .28);
@@ -300,7 +307,7 @@
   }
 
   .character-profile--modal .armory-tabs {
-    padding-inline: .35rem;
+    padding: .28rem .35rem 0;
   }
 
   .character-profile--modal .armory-tabs button {
@@ -339,7 +346,7 @@
   }
 
   .character-profile--modal .armory-tabs {
-    padding-inline: .25rem;
+    padding: .24rem .25rem 0;
   }
 
   .character-profile--modal .armory-tabs button {
