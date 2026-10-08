@@ -14,6 +14,7 @@ import {
   createDevelopmentAuthRouter,
   developmentAuthEnabled,
 } from "./Development/developmentAuth.js";
+import { createDevelopmentIconMediaResolver } from "./Development/developmentIconMedia.js";
 import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { createGuildweaverQuestRouter } from "./Quest/guildweaverQuestRouter.js";
@@ -167,7 +168,14 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
   app.use("/api/guild/members", createMemberRouter());
   app.use("/api/guild/billets", createBilletRouter());
   app.use("/api/guild/authority", createAuthorityRouter());
-  app.use("/api/intelligence", createIntelligenceRouter());
+  app.use(
+    "/api/intelligence",
+    createIntelligenceRouter(
+      developmentAuthEnabled(developmentEnv)
+        ? { iconMediaResolver: createDevelopmentIconMediaResolver() }
+        : {},
+    ),
+  );
   app.use("/api/admin/audit", createAuditRouter());
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
 

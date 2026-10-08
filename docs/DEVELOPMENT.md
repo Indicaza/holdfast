@@ -91,6 +91,19 @@ The development auth surface is defense-in-depth guarded:
 
 Do not add development identities, bypasses, or fixtures to production-specific code paths.
 
+### Character data
+
+`npm run dev:seed` also seeds a fake roster for the Intelligence and armory views (`npm run dev:seed:characters` runs just that part). The people and character names are invented, but the game data is real so the UI renders like production telemetry:
+
+- `backend/scripts/devData/kits.js` — equipment kits by class and level, using real Classic item IDs
+- `backend/seed/devData/items.json` — recorded item names, stats, tooltips, and icon FileDataIDs
+- `backend/seed/devData/talentTrees/*.json` — captured `talent_tree_definition` envelopes; characters of a class get talent allocations only when its tree is present
+- `backend/seed/devData/icons.json` — FileDataID → icon name, used by a development-only icon fallback when Blizzard API credentials are not configured
+
+Snapshots go through the same pairing, sync, and telemetry repositories as the Guildweaver bridge. Seeding is idempotent within a day.
+
+To add a class's talent tree, save a captured `talent_tree_definition` envelope into `seed/devData/talentTrees/`, then re-run `node scripts/devData/recordGameData.mjs <community-listfile.csv>` (from [wowdev/wow-listfile](https://github.com/wowdev/wow-listfile/releases)) to refresh item and icon data, and `npm run dev:seed`.
+
 ## Real Discord development
 
 `backend/.env.example` documents every supported backend variable.

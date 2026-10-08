@@ -8,6 +8,7 @@ import {
   importQuestsIntoDatabase,
   readQuestsFromDatabase,
 } from "../src/Quest/questRepository.js";
+import { seedDevelopmentCharacters } from "./seedDevelopmentCharacters.js";
 
 dotenv.config();
 
@@ -182,6 +183,8 @@ async function run() {
       questAction = resetQuests ? "reset quests to development fixtures" : "added sample quests";
     }
   });
+
+  await seedDevelopmentCharacters();
 
   console.log(`Development data ready in ${runtimeDataDirectory()}`);
   console.log(`Seeded ${developmentMembers.length} local personas and ${questAction}.`);
