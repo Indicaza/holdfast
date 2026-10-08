@@ -226,9 +226,10 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   await profile.getByRole('button', { name: 'Talents' }).click()
   await expect(profile.locator('.talent-node')).toHaveCount(2)
   await expect(profile.locator('.talent-tree__edges line')).toHaveCount(1)
-  await expect(profile.getByText('Last Stand', { exact: true })).toBeVisible()
-  await profile.locator('.talent-node').nth(1).click()
-  await expect(profile.getByText('Shield Mastery', { exact: true })).toBeVisible()
+  await profile.locator('.talent-node').nth(0).hover()
+  await expect(page.getByRole('tooltip').filter({ hasText: 'Last Stand' })).toBeVisible()
+  await profile.locator('.talent-node').nth(1).hover()
+  await expect(page.getByRole('tooltip').filter({ hasText: 'Shield Mastery' })).toBeVisible()
 
   await profile.getByRole('button', { name: 'Professions' }).click()
   await expect(profile.getByRole('heading', { name: 'Blacksmithing' })).toBeVisible()
