@@ -7,6 +7,7 @@ import {
   readGuildweaverSnapshotHistory,
 } from "./guildweaverAdminRepository.js";
 import {
+  readTelemetryCharacters,
   readTelemetryHistory,
   readTelemetryRecord,
   readTelemetrySummary,
@@ -37,6 +38,16 @@ export function createGuildweaverAdminRouter() {
     }
   });
 
+  router.get("/telemetry/characters", (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json(readTelemetryCharacters({ q: req.query.q, limit: req.query.limit }));
+    } catch (error) {
+      console.error("Unable to read Guildweaver telemetry characters", error);
+      res.status(500).json({ error: "guildweaver_telemetry_characters_unavailable" });
+    }
+  });
+
   router.get("/telemetry", (req, res) => {
     try {
       const result = readTelemetryHistory({
@@ -45,6 +56,9 @@ export function createGuildweaverAdminRouter() {
         kind: req.query.kind,
         eventType: req.query.eventType,
         characterId: req.query.characterId,
+        character: req.query.character,
+        payloadType: req.query.payloadType,
+        since: req.query.since,
         limit: req.query.limit,
         offset: req.query.offset,
       });
