@@ -9,9 +9,13 @@ function configuredTemplate() {
   return typeof runtime === 'string' && runtime ? runtime : typeof build === 'string' ? build : ''
 }
 
-function sameOriginIcon(fileDataId) {
+function sameOriginMedia(fileDataId) {
   const id = positiveInteger(fileDataId)
   return id ? `/api/intelligence/media/icon/${id}` : null
+}
+
+export function resolveWowFileAsset(fileDataId) {
+  return sameOriginMedia(fileDataId)
 }
 
 export function resolveWowIconAsset({ iconFileId, itemId, spellId, recipeId, size = 64 } = {}) {
@@ -19,7 +23,7 @@ export function resolveWowIconAsset({ iconFileId, itemId, spellId, recipeId, siz
   const template = configuredTemplate()
 
   if (!template) {
-    return sameOriginIcon(normalizedIconFileId)
+    return sameOriginMedia(normalizedIconFileId)
   }
 
   const id = normalizedIconFileId || positiveInteger(itemId) || positiveInteger(spellId) || positiveInteger(recipeId)
