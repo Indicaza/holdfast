@@ -32,8 +32,8 @@ function bounds(nodes) {
 }
 
 function point(node, frame) {
-  const x = 7 + (((Number(node.x) || 0) - frame.minX) / (frame.maxX - frame.minX)) * 86
-  const y = 16 + (((Number(node.y) || 0) - frame.minY) / (frame.maxY - frame.minY)) * 76
+  const x = 5.5 + (((Number(node.x) || 0) - frame.minX) / (frame.maxX - frame.minX)) * 89
+  const y = 14 + (((Number(node.y) || 0) - frame.minY) / (frame.maxY - frame.minY)) * 80
   return { x, y }
 }
 
@@ -99,6 +99,57 @@ function edgeVisualState(edge, nodesById) {
   return 'available'
 }
 
+function talentTabsFrom(talents) {
+  const direct = Array.isArray(talents?.art?.talentTabs) ? talents.art.talentTabs.filter(Boolean) : []
+  if (direct.length) return direct
+
+  for (const definition of Array.isArray(talents?.treeDefinitions) ? talents.treeDefinitions : []) {
+    const tabs = Array.isArray(definition?.art?.talentTabs) ? definition.art.talentTabs.filter(Boolean) : []
+    if (tabs.length) return tabs
+  }
+
+  return []
+}
+
+function panelIndex(node, frame, count) {
+  if (count <= 1) return 0
+  const normalized = ((Number(node?.x) || 0) - frame.minX) / (frame.maxX - frame.minX)
+  return Math.max(0, Math.min(count - 1, Math.floor(normalized * count)))
+}
+
+function nodePoints(node) {
+  const entry = selectedEntry(node)
+  return Math.max(0, Number(entry?.rank ?? node?.rank) || 0)
+}
+
+function panelDescriptors(talents, nodes, frame) {
+  const sourceTabs = talentTabsFrom(talents)
+  const count = sourceTabs.length || (nodes.length >= 12 ? 3 : 1)
+  const derivedPoints = Array.from({ length: count }, () => 0)
+
+  nodes.forEach((node) => {
+    derivedPoints[panelIndex(node, frame, count)] += nodePoints(node)
+  })
+
+  const definitions = Array.isArray(talents?.treeDefinitions) ? talents.treeDefinitions : []
+
+  return Array.from({ length: count }, (_, index) => {
+    const source = sourceTabs[index] || {}
+    const definition = definitions.length === count ? definitions[index] : null
+    const fallbackName = count === 1
+      ? talents?.name || definition?.name || 'Talents'
+      : definition?.name || `Specialization ${index + 1}`
+
+    return {
+      ...source,
+      id: source.id ?? source.index ?? definition?.treeId ?? `panel-${index}`,
+      name: source.name || fallbackName,
+      pointsSpent: source.pointsSpent ?? derivedPoints[index],
+      unresolvedName: !source.name && !definition?.name,
+    }
+  })
+}
+
 export function TalentNode({ node, position, onHover, onLeave }) {
   const entry = selectedEntry(node)
   const state = talentState(node, entry)
@@ -123,7 +174,7 @@ export function TalentNode({ node, position, onHover, onLeave }) {
           iconFileId={entry?.iconFileId}
           spellId={entry?.spellId}
           label={entry?.name || String(node.id)}
-          size={50}
+          size={64}
         />
       </span>
       {maxRank || rank ? <span className="talent-node__rank">{rank}/{maxRank || rank}</span> : null}
@@ -134,14 +185,11 @@ export function TalentNode({ node, position, onHover, onLeave }) {
 export default function TalentTree({ talents }) {
   const nodes = Array.isArray(talents?.nodes) ? talents.nodes.filter((node) => node?.isVisible !== false) : []
   const edges = Array.isArray(talents?.edges) ? talents.edges : []
-  const [zoom, setZoom] = useState(1)
   const [hover, setHover] = useState(null)
   const frame = useMemo(() => bounds(nodes), [nodes])
   const positions = useMemo(() => new Map(nodes.map((node) => [node.id, point(node, frame)])), [frame, nodes])
   const nodesById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
-  const panelCount = Array.isArray(talents?.art?.talentTabs) && talents.art.talentTabs.length
-    ? talents.art.talentTabs.length
-    : nodes.length >= 12 ? 3 : 1
+  const panels = useMemo(() => panelDescriptors(talents, nodes, frame), [frame, nodes, talents])
 
   if (!nodes.length) {
     return (
@@ -154,11 +202,11 @@ export default function TalentTree({ talents }) {
   }
 
   return (
-    <div className="talent-tree">
+    <div className="talent-tree" style={{ '--talent-panel-count': panels.length }}>
       <div className="talent-tree__stage">
         <div className="talent-tree__viewport">
-          <div className="talent-tree__canvas" style={{ '--talent-zoom': zoom }}>
-            <TalentTreeBackdrop art={talents?.art} fallbackPanelCount={panelCount} />
+          <div className="talent-tree__canvas">
+            <TalentTreeBackdrop tabs={panels} />
             <svg className="talent-tree__edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {edges.map((edge, index) => {
                 const from = positions.get(edge.from)
@@ -178,11 +226,6 @@ export default function TalentTree({ talents }) {
               />
             ))}
           </div>
-        </div>
-
-        <div className="talent-tree__zoom" aria-label="Talent tree zoom">
-          <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} aria-label="Zoom out" title="Zoom out">−</button>
-          <button type="button" onClick={() => setZoom((value) => Math.min(1.4, Number((value + 0.1).toFixed(1))))} aria-label="Zoom in" title="Zoom in">+</button>
         </div>
       </div>
 
