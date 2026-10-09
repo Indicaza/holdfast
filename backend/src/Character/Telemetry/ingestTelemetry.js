@@ -6,7 +6,6 @@ import {
   advanceTelemetryStreamHead,
   pruneRawTelemetryHistory,
   storeLatestTelemetryState,
-  telemetryStreamAlreadyProcessed,
 } from "./telemetryStateRepository.js";
 
 export function ingestTelemetry({
@@ -25,23 +24,6 @@ export function ingestTelemetry({
   const domainValidation = validateTelemetryDomain(incoming);
   if (!domainValidation.ok) {
     return { status: "invalid", error: domainValidation.error };
-  }
-
-  if (
-    telemetryStreamAlreadyProcessed({
-      deviceId,
-      streamKey: incoming.streamKey,
-      revision: incoming.revision,
-      idempotencyKey: incoming.idempotencyKey,
-    })
-  ) {
-    return {
-      status: "duplicate",
-      record: null,
-      canonicalCharacterId: null,
-      rawCharacterId: String(incoming.envelope.characterId || ""),
-      handlerName: domainValidation.handler?.eventType || "opaque",
-    };
   }
 
   const result = recordTelemetry({
