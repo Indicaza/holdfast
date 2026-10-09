@@ -1,5 +1,7 @@
-/* In-game character pane styling: metal header plates, yellow labels, white
-   values (green buffed, red debuffed), and square resistance icons. */
+/* In-game character pane styling: the stat category title banner, the item
+   level banner and alternating row bands (UI-Character-Info-Title,
+   -ItemLevel-Bounce, -Line-Bounce), yellow labels, white values (green
+   buffed, red debuffed), and square resistance icons. */
 
 .wow-stats {
   display: grid;
@@ -15,12 +17,11 @@
 .wow-stats__plate {
   position: relative;
   margin: 0;
-  padding: .32rem .6rem;
-  border: 1px solid #6b604a;
-  border-radius: .2rem;
-  background: linear-gradient(180deg, #33302b 0%, #1d1b18 55%, #141210 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px #000, 0 1px 2px rgba(0, 0, 0, .6);
-  color: #f2e8cf;
+  padding: .5rem .8rem;
+  border: 0;
+  background: url("/armory-art/stat-title.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 .15rem .25rem rgba(0, 0, 0, .55));
+  color: #fff;
   font-family: var(--font-display);
   font-size: .9rem;
   font-weight: 600;
@@ -30,10 +31,10 @@
 }
 
 .wow-stats__ilvl {
-  padding: .35rem .6rem .45rem;
-  border: 1px solid rgba(107, 96, 74, .55);
-  border-radius: .2rem;
-  background: radial-gradient(ellipse at 50% 0%, rgba(163, 53, 238, .18), transparent 70%), #08070a;
+  padding: .3rem .6rem .4rem;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(163, 53, 238, .16), transparent 65%),
+    url("/armory-art/item-level.webp") center / 100% 100% no-repeat;
   color: #c27cff;
   font-family: var(--font-display);
   font-size: 1.6rem;
@@ -47,7 +48,7 @@
 .wow-stats dl {
   display: grid;
   margin: 0;
-  padding: 0 .35rem;
+  padding: 0 .2rem;
 }
 
 .wow-stat {
@@ -55,8 +56,19 @@
   align-items: baseline;
   justify-content: space-between;
   gap: .75rem;
-  padding: .14rem 0;
+  padding: .16rem .45rem;
   cursor: default;
+}
+
+/* Every second row carries the game's faded row band. */
+.wow-stats dl > .wow-stat:nth-child(even) {
+  background: url("/armory-art/stat-line.webp") center / 100% 100% no-repeat;
+}
+
+.wow-stats dl > .wow-stat:nth-child(even):hover {
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 209, 0, .06), transparent),
+    url("/armory-art/stat-line.webp") center / 100% 100% no-repeat;
 }
 
 .wow-stat:hover {

@@ -38,7 +38,7 @@ export function CharacterHeader({ character, stats, loading = false }) {
   if (loading) {
     return (
       <header className="armory-header armory-header--loading" aria-hidden="true">
-        <div className="unit-frame">
+        <div className="unit-frame unit-frame--card">
           <span className="unit-frame__portrait" />
           <div className="unit-frame__body">
             <div className="unit-frame__nameplate"><span className="character-skeleton" /></div>
@@ -51,7 +51,14 @@ export function CharacterHeader({ character, stats, loading = false }) {
 
   return (
     <header className="armory-header">
-      <UnitFrame character={character} health={stats?.resources?.health} power={stats?.resources?.power} />
+      {/* The same frame as the character list cards, guild and rank along the bottom. */}
+      <UnitFrame
+        character={character}
+        health={stats?.resources?.health}
+        power={stats?.resources?.power}
+        className="unit-frame--card"
+        showAffiliation
+      />
       <CharacterFacts character={character} />
       <SyncBadge lastSeenAt={character.lastSeenAt} showLabel focusable />
     </header>

@@ -28,14 +28,14 @@
   min-height: 0;
   padding: min(1.1rem, 2cqh) min(1.1rem, 2cqw);
   overflow: visible;
-  border: 1px solid rgba(196, 166, 103, .22);
+  border: 1px solid rgba(196, 166, 103, .32);
   border-radius: .45rem;
-  background:
-    radial-gradient(ellipse at 50% 45%, rgba(34, 54, 72, .28), transparent 48%),
-    linear-gradient(180deg, rgba(3, 9, 16, .98), rgba(1, 5, 10, .98));
+  /* UI-Character-Info-General-BG: the character sheet's stone backdrop. */
+  background: #0d0b09 url("/armory-art/sheet-background.webp") center / cover no-repeat;
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, .55),
-    inset 0 1px 0 rgba(255, 255, 255, .025);
+    inset 0 0 0 1px rgba(0, 0, 0, .7),
+    inset 0 0 2.5rem rgba(0, 0, 0, .55),
+    0 .35rem .9rem rgba(0, 0, 0, .45);
 }
 
 .paper-doll--sheet .paper-doll__column {
@@ -62,6 +62,8 @@
 }
 
 .paper-doll--sheet .paper-doll__figure--empty {
+  /* Stays visible on narrow screens, where the generic paper doll hides its figure. */
+  display: block;
   position: relative;
   grid-column: 2;
   grid-row: 1;
@@ -70,19 +72,17 @@
   min-height: 0;
   height: 100%;
   place-self: stretch;
-  border: 0;
+  border: 1px solid rgba(0, 0, 0, .85);
+  border-radius: .35rem;
+  /* The character's race backdrop (DressUpBackground-<Race>), vignetted the
+     way the paper doll frames it, over a plain dark fallback. */
   background:
-    radial-gradient(ellipse at 50% 48%, rgba(196, 166, 103, .055), transparent 42%),
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, .012), transparent);
-}
-
-.paper-doll--sheet .paper-doll__figure--empty::before {
-  content: '';
-  position: absolute;
-  inset: 4% 19% 2%;
-  border: 1px solid rgba(196, 166, 103, .055);
-  border-radius: 48% 48% 35% 35% / 26% 26% 64% 64%;
-  opacity: .45;
+    radial-gradient(ellipse 70% 62% at 50% 42%, transparent 55%, rgba(0, 0, 0, .7) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, .05) 55%, rgba(0, 0, 0, .55)),
+    var(--paper-doll-scene, linear-gradient(180deg, #14110d, #070605)) center bottom / cover no-repeat;
+  box-shadow:
+    0 0 0 1px rgba(196, 166, 103, .28),
+    inset 0 0 1.6rem rgba(0, 0, 0, .65);
 }
 
 .paper-doll--sheet .paper-doll__weapons {
@@ -99,7 +99,7 @@
   min-height: 0;
   height: var(--paper-doll-sheet-slot);
   padding-top: min(.7rem, 1.25cqh);
-  border-top: 1px solid rgba(196, 166, 103, .12);
+  border-top: 1px solid rgba(196, 166, 103, .2);
 }
 
 .paper-doll--sheet .item-hover-card {
@@ -122,18 +122,17 @@
   max-height: 100%;
   min-width: 0;
   min-height: 0;
-  padding: .18rem;
+  /* UI-Character-Info-GearSlot: bronze frame around a dark winged plate;
+     the item sits in its opening, 15% in from each edge. */
+  --slot-quality: transparent;
+  padding: 15%;
   place-items: center;
   place-self: center;
-  border: 2px solid rgba(106, 106, 106, .56);
-  border-radius: .28rem;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, .045), transparent 45%),
-    rgba(6, 10, 14, .96);
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, .85),
-    0 .15rem .35rem rgba(0, 0, 0, .35);
-  transition: border-color 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+  border: 0;
+  border-radius: .2rem;
+  background: url("/armory-art/gear-slot.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 .2rem .45rem rgba(0, 0, 0, .55);
+  transition: box-shadow 120ms ease, filter 120ms ease;
 }
 
 .paper-doll--sheet .paper-doll__slot:disabled {
@@ -146,26 +145,29 @@
 
 .paper-doll--sheet .paper-doll__slot--filled:hover,
 .paper-doll--sheet .paper-doll__slot--filled:focus-visible {
-  filter: brightness(1.08);
+  outline: none;
+  filter: brightness(1.12);
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, .8),
-    0 0 .75rem rgba(216, 188, 117, .24);
+    0 .2rem .45rem rgba(0, 0, 0, .55),
+    0 0 .8rem rgba(255, 209, 0, .35);
 }
 
-.paper-doll--sheet .paper-doll__slot--quality-1 { border-color: rgba(232, 232, 232, .7); }
-.paper-doll--sheet .paper-doll__slot--quality-2 { border-color: rgba(54, 196, 70, .9); }
-.paper-doll--sheet .paper-doll__slot--quality-3 { border-color: rgba(55, 134, 255, .92); }
-.paper-doll--sheet .paper-doll__slot--quality-4 { border-color: rgba(174, 79, 255, .94); }
-.paper-doll--sheet .paper-doll__slot--quality-5 { border-color: rgba(255, 128, 0, .94); }
-.paper-doll--sheet .paper-doll__slot--quality-6 { border-color: rgba(226, 40, 40, .92); }
-.paper-doll--sheet .paper-doll__slot--quality-7 { border-color: rgba(31, 177, 255, .92); }
+/* Item quality: a colored ring and glow around the icon, as in game. */
+.paper-doll--sheet .paper-doll__slot--quality-0 { --slot-quality: rgba(157, 157, 157, .7); }
+.paper-doll--sheet .paper-doll__slot--quality-1 { --slot-quality: rgba(232, 232, 232, .55); }
+.paper-doll--sheet .paper-doll__slot--quality-2 { --slot-quality: rgba(30, 255, 0, .85); }
+.paper-doll--sheet .paper-doll__slot--quality-3 { --slot-quality: rgba(0, 112, 221, .95); }
+.paper-doll--sheet .paper-doll__slot--quality-4 { --slot-quality: rgba(163, 53, 238, .95); }
+.paper-doll--sheet .paper-doll__slot--quality-5 { --slot-quality: rgba(255, 128, 0, .95); }
+.paper-doll--sheet .paper-doll__slot--quality-6 { --slot-quality: rgba(229, 204, 128, .95); }
+.paper-doll--sheet .paper-doll__slot--quality-7 { --slot-quality: rgba(0, 204, 255, .95); }
 
 .paper-doll--sheet .wow-icon {
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: .14rem;
-  box-shadow: none;
+  border-radius: .12rem;
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--slot-quality), 0 0 .5rem var(--slot-quality);
 }
 
 .paper-doll--sheet .paper-doll__empty-icon {
@@ -175,17 +177,23 @@
   place-items: center;
   border: 0;
   border-radius: .12rem;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, .035), transparent 64%),
-    rgba(255, 255, 255, .012);
   color: rgba(196, 166, 103, .15);
   font-size: 1.05rem;
 }
 
+/* Empty slots show the game's slot outline (UI-PaperDoll-Slot-*), faded. */
+.paper-doll--sheet .paper-doll__empty-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: .12rem;
+  opacity: .8;
+  filter: saturate(.7);
+}
+
 .paper-doll--sheet .paper-doll__slot--active {
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, .8),
-    0 0 .75rem rgba(216, 188, 117, .2);
+    0 .2rem .45rem rgba(0, 0, 0, .55),
+    0 0 .8rem rgba(255, 209, 0, .3);
 }
 
 /* When the component itself becomes narrow, let its contents define height.

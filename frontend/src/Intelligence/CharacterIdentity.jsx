@@ -81,15 +81,11 @@ export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = '
   )
 }
 
+// Race and class beside the unit frame; guild and rank live on the frame.
 export function CharacterFacts({ character, classAs: ClassName = 'h3' }) {
-  const guild = character?.guildName || character?.organization?.name || character?.organizationName
   return (
     <div className="character-facts">
       <ClassName className="character-facts__class">{[character?.race, character?.spec || character?.className].filter(Boolean).join(' ') || 'Unknown class'}</ClassName>
-      <dl className="character-facts__list">
-        {guild ? <div><dt>Guild</dt><dd>{guild}</dd></div> : null}
-        {character?.memberRank ? <div><dt>Rank</dt><dd>{character.memberRank}</dd></div> : null}
-      </dl>
     </div>
   )
 }

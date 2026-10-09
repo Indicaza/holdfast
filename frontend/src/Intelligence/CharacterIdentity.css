@@ -187,36 +187,6 @@ a:focus-visible .unit-frame__bar-text {
   text-shadow: 0 1px 2px #000;
 }
 
-.character-facts__list {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: .15rem .7rem;
-  margin: 0;
-  font-size: .84rem;
-}
-
-.character-facts__list div {
-  display: contents;
-}
-
-.character-facts__list dt {
-  color: var(--armory-muted, rgba(220, 214, 200, .62));
-  font-size: .7rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-  line-height: 1.6;
-  text-transform: uppercase;
-}
-
-.character-facts__list dd {
-  margin: 0;
-  overflow: hidden;
-  color: var(--armory-ink, #ece6d6);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Sync badge: the in-game latency meter (three bars) beside the sync age.
    Green within a day, yellow within a week, red after that. */
 
