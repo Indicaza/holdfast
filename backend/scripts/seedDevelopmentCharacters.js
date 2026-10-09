@@ -3,7 +3,9 @@
 // People are invented (dev-roster-* members, made-up character names), but the
 // game data is real: Classic item IDs with recorded tooltips and icon
 // FileDataIDs (seed/devData/items.json), captured talent tree definitions
-// (seed/devData/talentTrees/*.json), and stats derived from the equipped gear.
+// (seed/devData/talentTrees/*.json), recipe books recorded from the client's
+// DB2 tables (seed/devData/recipes.json), and stats derived from the equipped
+// gear.
 // Snapshots go through the same pairing, sync, and telemetry repositories as
 // the addon bridge, so projections and the armory adapter run unchanged.
 //
@@ -26,12 +28,15 @@ import {
   readGuildweaverDevices,
   startGuildweaverPairing,
 } from "../src/Character/guildweaverDeviceRepository.js";
+import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
 import { recordTelemetry } from "../src/Character/telemetryRecordRepository.js";
 import { importMembersIntoDatabase } from "../src/Guild/memberRepository.js";
 import { KITS } from "./devData/kits.js";
 
 const seedDir = join(dirname(fileURLToPath(import.meta.url)), "..", "seed", "devData");
 const ITEMS = JSON.parse(readFileSync(join(seedDir, "items.json"), "utf8")).items;
+const RECIPE_BOOKS = JSON.parse(readFileSync(join(seedDir, "recipes.json"), "utf8")).professions;
+const RECIPE_TOOLTIPS = JSON.parse(readFileSync(join(seedDir, "recipeTooltips.json"), "utf8")).items;
 const TALENT_TREES = readdirSync(join(seedDir, "talentTrees"))
   .filter((file) => file.endsWith(".json"))
   .map((file) => JSON.parse(readFileSync(join(seedDir, "talentTrees", file), "utf8")));
@@ -557,6 +562,73 @@ function professionsFor(names, level, random) {
   });
 }
 
+function recipeDifficulty(skill, level) {
+  if (level < skill.yellow) return "optimal";
+  if (level < skill.green) return "medium";
+  if (level < skill.grey) return "easy";
+  return "trivial";
+}
+
+// Guildweaver's profession_snapshot: every profession's skill, plus the whole
+// recipe book for crafting professions (C_TradeSkillUI lists unlearned recipes
+// too). Most recipes at or below the character's skill are known; the rest
+// stand in for drops and vendor patterns nobody bought yet.
+function professionSnapshotFor(snapshot) {
+  const random = seededRandom(`${snapshot.characterId}:recipes`);
+  const capturedAt = snapshot.capturedAt;
+  const professions = snapshot.professions.map((profession) => {
+    const book = RECIPE_BOOKS[profession.skillLineId];
+    if (!book) return profession;
+    const recipes = book.map((recipe) => {
+      const known = recipe.skill.learn <= profession.skillLevel && random() < 0.85;
+      const onCooldown = known && recipe.cooldownSeconds && random() < 0.5;
+      return {
+        recipeId: recipe.spellId,
+        spellId: recipe.spellId,
+        name: recipe.name,
+        iconFileDataId: recipe.iconFileDataId,
+        known,
+        difficulty: recipeDifficulty(recipe.skill, profession.skillLevel),
+        skillUps: recipe.skillUps,
+        maxTrivialLevel: recipe.skill.grey,
+        professionSkillLineId: profession.skillLineId,
+        description: recipe.description,
+        tools: recipe.tools.map((name) => ({ name, available: random() < 0.75 })),
+        cooldown: onCooldown
+          ? { readyAt: capturedAt + Math.round(random() * recipe.cooldownSeconds), isDayCooldown: recipe.cooldownSeconds >= 86400 }
+          : undefined,
+        // Guildweaver only reads the crafted item's tooltip for known recipes.
+        crafted: known && recipe.crafted ? { ...recipe.crafted, ...RECIPE_TOOLTIPS[recipe.crafted.itemId] } : recipe.crafted,
+        reagents: recipe.reagents.map((reagent, index) => ({ ...reagent, required: true, slotIndex: index + 1 })),
+      };
+    });
+    return {
+      ...profession,
+      recipeBook: {
+        source: "C_TradeSkillUI",
+        capturedAt,
+        recipeCount: recipes.length,
+        knownCount: recipes.filter((recipe) => recipe.known).length,
+      },
+      recipes,
+    };
+  });
+
+  return {
+    schemaVersion: 1,
+    eventType: "profession_snapshot",
+    capturedAt,
+    gameBuild: { version: GAME_BUILD.version, build: GAME_BUILD.build, interface: GAME_BUILD.interface },
+    realm: snapshot.realm,
+    region: snapshot.region,
+    installationId: snapshot.installationId,
+    characterId: snapshot.characterId,
+    addon: { name: "Guildweaver", version: ADDON_VERSION },
+    payloadSchemaVersion: 1,
+    payload: { schemaVersion: 1, professions },
+  };
+}
+
 // This game build reports one class-level specialization (see the Warrior
 // capture); the role follows the character's main talent tree.
 function specializationFor(className, buildName, definition) {
@@ -661,7 +733,7 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
     ...ROSTER.map((entry) => [entry.id, entry.characters]),
     ...Object.entries(PERSONA_CHARACTERS),
   ];
-  const counts = { created: 0, updated: 0, unchanged: 0, trees: 0 };
+  const counts = { created: 0, updated: 0, unchanged: 0, trees: 0, recipeBooks: 0 };
 
   for (const [memberId, characters] of owners) {
     const exists = withGuildTransaction((db) => Boolean(db.prepare("SELECT 1 FROM members WHERE id = ? AND status = 'active'").get(memberId)));
@@ -691,9 +763,10 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
     for (const [index, row] of characters.entries()) {
       // Mains were seen within the last few hours; alts drift back up to a few days.
       const capturedAt = dayStart - (index === 0 ? hash(row[0]) % 7200 : 86400 * (1 + (hash(row[0]) % 4)));
+      const snapshot = snapshotFor(member, row, capturedAt);
       const result = await syncGuildweaverCharacter({
         memberId,
-        snapshot: snapshotFor(member, row, capturedAt),
+        snapshot,
         deviceId,
         bridgeRevision: 1,
         receivedAt,
@@ -702,11 +775,28 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
         throw new Error(`Unable to seed ${row[0]} for ${memberId}: ${result.status}`);
       }
       counts[result.status in counts ? result.status : "unchanged"] += 1;
+
+      const professions = ingestTelemetry({
+        deviceId,
+        memberId,
+        idempotencyKey: `dev-seed:${memberId}:profession_snapshot:${snapshot.characterId}:${capturedAt}`,
+        body: {
+          streamKey: `profession_snapshot:${snapshot.characterId}`,
+          kind: "state",
+          revision: capturedAt,
+          envelope: professionSnapshotFor(snapshot),
+        },
+        receivedAt,
+      });
+      if (professions.status === "invalid") {
+        throw new Error(`Unable to seed ${row[0]}'s professions: ${professions.error}`);
+      }
+      if (professions.status === "created") counts.recipeBooks += 1;
     }
   }
 
   logger.log(
-    `Seeded ${members.length} roster members; character snapshots: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged; ${counts.trees} talent trees recorded.`,
+    `Seeded ${members.length} roster members; character snapshots: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged; ${counts.trees} talent trees and ${counts.recipeBooks} profession snapshots recorded.`,
   );
   return counts;
 }

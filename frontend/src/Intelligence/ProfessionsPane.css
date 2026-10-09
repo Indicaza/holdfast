@@ -1,0 +1,704 @@
+/* Professions pane: WoW Forever's Professions window. A dark framed page with
+   a gold title bar, overview cards tinted per profession, rank bars with a
+   themed fill, and round side tabs on the right. */
+
+.professions-pane {
+  --prof-gold: #ffd100;
+  --prof-red: #ff2020;
+  --prof-edge: #5b4a2e;
+  --prof-inset: #0b0907;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .6rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.professions-pane__page {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--prof-edge);
+  border-radius: .45rem;
+  background: #120e0a;
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 2rem rgba(0, 0, 0, .6);
+}
+
+.professions-pane__title {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .35rem .8rem;
+  border-bottom: 1px solid var(--prof-edge);
+  background: linear-gradient(180deg, #3a2e20, #241b12);
+  color: var(--prof-gold);
+  font-size: .9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 1px #000;
+}
+
+.professions-pane__title .wow-icon {
+  border: 1px solid #000;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #c9a24e;
+}
+
+.professions-pane__content {
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: .6rem;
+  overflow: auto;
+}
+
+/* Side tabs (LargeSideTabButtonTemplate): round icons, gold ring when checked. */
+
+.professions-pane__rail {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding-top: .2rem;
+}
+
+.prof-rail-button {
+  --interactive-radius: 50%;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: grid;
+  width: 2.9rem;
+  height: 2.9rem;
+  padding: 0;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid var(--prof-edge);
+  background: #000;
+  box-shadow: 0 0 0 1px #000, 0 .2rem .5rem rgba(0, 0, 0, .6);
+  cursor: pointer;
+  filter: brightness(.8) saturate(.85);
+}
+
+.prof-rail-button:hover,
+.prof-rail-button:focus-visible {
+  filter: none;
+  outline: none;
+}
+
+.prof-rail-button.is-active {
+  border-color: var(--prof-gold);
+  box-shadow: 0 0 0 1px #000, 0 0 .7rem rgba(255, 209, 0, .45);
+  filter: none;
+}
+
+.prof-rail-button .wow-icon {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.prof-rail-button .wow-icon img {
+  transform: scale(1.1);
+}
+
+/* Name-only tooltips (side tabs, profession spells, enchants) fit their text.
+   Rendered in document.body, so not scoped under .professions-pane. */
+.item-tooltip.prof-tooltip--text {
+  width: max-content;
+  max-width: min(18rem, 78vw);
+}
+
+/* Book page: two primary cards stacked, three secondary cards in a row. */
+
+.prof-overview {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.prof-card {
+  --prof-tint: rgba(201, 162, 78, .14);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--prof-edge);
+  border-radius: .35rem;
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--prof-tint), transparent 60%),
+    linear-gradient(180deg, #2a2118, #17120d);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 230, 180, .06);
+}
+
+.prof-card__name {
+  margin: 0;
+  color: var(--prof-gold);
+  font-size: .9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 1px #000;
+}
+
+.prof-card__missing {
+  margin: 0;
+  color: #fff;
+  font-size: .76rem;
+  line-height: 1.45;
+}
+
+/* Primary: name top-left, rank bar on the right, spell bottom-left. */
+.prof-card--primary {
+  display: grid;
+  min-height: 7.4rem;
+  grid-template-areas:
+    "name name"
+    "spell bar";
+  grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr);
+  grid-template-rows: auto 1fr;
+  align-items: end;
+  gap: .5rem 1.2rem;
+  padding: .8rem 1rem .9rem;
+}
+
+.prof-card--primary .prof-card__name { grid-area: name; }
+.prof-card--primary .prof-spell { grid-area: spell; }
+.prof-card--primary .prof-bar { grid-area: bar; align-self: center; }
+
+.prof-card--primary.prof-card--missing {
+  grid-template-areas: "name" "missing";
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.prof-card--primary .prof-card__missing {
+  grid-area: missing;
+  align-self: center;
+  max-width: 34rem;
+  justify-self: center;
+  text-align: center;
+}
+
+.prof-overview__secondary {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+/* Secondary: name and bar at the top, spell at the bottom. */
+.prof-card--secondary {
+  display: flex;
+  min-height: 11rem;
+  flex-direction: column;
+  gap: .6rem;
+  padding: .8rem .75rem;
+}
+
+.prof-card--secondary .prof-card__name {
+  text-align: center;
+}
+
+.prof-card--secondary .prof-spell {
+  margin-top: auto;
+}
+
+.prof-card--secondary .prof-card__missing {
+  padding: 0 .2rem;
+}
+
+.prof-card--missing {
+  --prof-tint: transparent;
+}
+
+.prof-card--alchemy { --prof-tint: rgba(90, 214, 106, .16); }
+.prof-card--blacksmithing { --prof-tint: rgba(167, 176, 189, .16); }
+.prof-card--cooking { --prof-tint: rgba(240, 160, 64, .16); }
+.prof-card--enchanting { --prof-tint: rgba(196, 110, 255, .16); }
+.prof-card--engineering { --prof-tint: rgba(224, 160, 64, .16); }
+.prof-card--first-aid { --prof-tint: rgba(224, 74, 74, .16); }
+.prof-card--fishing { --prof-tint: rgba(74, 160, 224, .16); }
+.prof-card--herbalism { --prof-tint: rgba(138, 214, 74, .16); }
+.prof-card--leatherworking { --prof-tint: rgba(176, 122, 74, .16); }
+.prof-card--mining { --prof-tint: rgba(208, 135, 74, .16); }
+.prof-card--skinning { --prof-tint: rgba(201, 176, 122, .16); }
+.prof-card--tailoring { --prof-tint: rgba(110, 96, 230, .16); }
+
+/* Profession spell button: square icon, name, rank title. */
+
+.prof-spell {
+  --interactive-radius: .3rem;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .55rem;
+  padding: .15rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.prof-spell {
+  cursor: pointer;
+}
+
+button.prof-spell:hover strong,
+button.prof-spell:focus-visible strong {
+  color: #fff;
+}
+
+.prof-spell .wow-icon {
+  flex: 0 0 auto;
+  border: 1px solid #000;
+  border-radius: .15rem;
+  box-shadow: 0 0 0 1px #8a7444, 0 0 0 2px #000;
+}
+
+.prof-spell span {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.prof-spell strong {
+  overflow: hidden;
+  color: var(--prof-gold);
+  font-size: .82rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prof-spell small {
+  color: rgba(255, 255, 255, .62);
+  font-size: .72rem;
+}
+
+/* Rank bar (ProfessionsRankBarTemplate): black track, themed fill, white text. */
+
+.prof-bar {
+  --prof-fill: linear-gradient(90deg, #7a5a1e, #c9a24e);
+  position: relative;
+  height: 1.2rem;
+  overflow: hidden;
+  border: 1px solid #000;
+  border-radius: .6rem;
+  background: #000;
+  box-shadow: 0 0 0 1px #6b5634, inset 0 1px 2px rgba(0, 0, 0, .8);
+}
+
+.prof-bar--small {
+  height: 1rem;
+}
+
+.prof-bar__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--prof-fill);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -2px 3px rgba(0, 0, 0, .35);
+}
+
+.prof-bar__text {
+  position: relative;
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000, 0 0 2px #000;
+}
+
+.prof-bar__text em {
+  color: #20ff20;
+  font-style: normal;
+}
+
+.prof-bar--tailoring { --prof-fill: linear-gradient(90deg, #2c1f7a, #5a4ad6); }
+.prof-bar--enchanting { --prof-fill: linear-gradient(90deg, #5a1f8a, #b46aff); }
+.prof-bar--alchemy { --prof-fill: linear-gradient(90deg, #1f6b2a, #5ad66a); }
+.prof-bar--blacksmithing { --prof-fill: linear-gradient(90deg, #4a4f58, #a7b0bd); }
+.prof-bar--engineering { --prof-fill: linear-gradient(90deg, #7a4a12, #e0a040); }
+.prof-bar--leatherworking { --prof-fill: linear-gradient(90deg, #5a3a1e, #b07a4a); }
+.prof-bar--herbalism { --prof-fill: linear-gradient(90deg, #2f6b1f, #8ad64a); }
+.prof-bar--mining { --prof-fill: linear-gradient(90deg, #6b3a1a, #d0874a); }
+.prof-bar--skinning { --prof-fill: linear-gradient(90deg, #6b5a3a, #c9b07a); }
+.prof-bar--cooking { --prof-fill: linear-gradient(90deg, #8a4a12, #f0a040); }
+.prof-bar--fishing { --prof-fill: linear-gradient(90deg, #1a4a7a, #4aa0e0); }
+.prof-bar--first-aid { --prof-fill: linear-gradient(90deg, #7a1a1a, #e04a4a); }
+
+/* Crafting page: rank bar on top, recipe list left, schematic form right. */
+
+.prof-crafting {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.prof-crafting > .prof-bar {
+  flex: 0 0 auto;
+  width: min(100%, 26rem);
+  align-self: center;
+}
+
+.prof-crafting__body {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+  gap: .6rem;
+}
+
+.prof-list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: .4rem;
+  padding: .45rem;
+  border: 1px solid var(--prof-edge);
+  border-radius: .35rem;
+  background: var(--prof-inset);
+}
+
+.prof-list__search {
+  flex: 0 0 auto;
+  height: 1.7rem;
+  padding: 0 .55rem;
+  border: 1px solid #4a3d28;
+  border-radius: .3rem;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  font-size: .78rem;
+}
+
+.prof-list__search:focus {
+  border-color: #8a7444;
+  outline: none;
+}
+
+.prof-list__scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  scrollbar-color: rgba(201, 168, 90, .35) transparent;
+  scrollbar-width: thin;
+}
+
+.prof-list__scroll ul {
+  margin: 0 0 .35rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* Category header: gold text on a dark bar with an expand arrow. */
+.prof-list__header {
+  --interactive-radius: .2rem;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: .4rem;
+  margin: 0 0 .15rem;
+  padding: .2rem .45rem;
+  border: 1px solid #3a2f1e;
+  background: linear-gradient(180deg, #2e2418, #1c160f);
+  color: var(--prof-gold);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prof-list__header::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: .3rem solid transparent;
+  border-bottom: .3rem solid transparent;
+  border-left: .4rem solid currentColor;
+  transition: transform .12s ease;
+}
+
+.prof-list__header.is-open::before {
+  transform: rotate(90deg);
+}
+
+.prof-list__header:disabled {
+  cursor: default;
+}
+
+.prof-list__header small {
+  margin-left: auto;
+  color: rgba(255, 255, 255, .45);
+  font-size: .7rem;
+  font-weight: 400;
+}
+
+.prof-recipe {
+  --interactive-radius: .15rem;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: .4rem;
+  padding: .16rem .45rem .16rem 1.15rem;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.prof-recipe span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prof-recipe small {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: inherit;
+  font-size: .68rem;
+}
+
+.prof-recipe:hover {
+  background: rgba(255, 255, 255, .06);
+}
+
+.prof-recipe.is-selected {
+  background: linear-gradient(90deg, rgba(255, 209, 0, .2), rgba(255, 209, 0, .04));
+  box-shadow: inset 2px 0 0 var(--prof-gold);
+}
+
+/* Recipe difficulty colors (QuestDifficultyColors / TradeSkillTypeColor). */
+.prof-difficulty--optimal { color: #ff8040; }
+.prof-difficulty--medium { color: #ffff00; }
+.prof-difficulty--easy { color: #40bf40; }
+.prof-difficulty--trivial { color: #808080; }
+.prof-difficulty--none { color: #e9dcb8; }
+
+.prof-list__none,
+.prof-crafting__waiting {
+  color: rgba(255, 255, 255, .55);
+  font-size: .8rem;
+}
+
+.prof-list__none {
+  margin: .5rem;
+}
+
+.prof-crafting__waiting {
+  display: grid;
+  flex: 1 1 auto;
+  place-content: center;
+  gap: .3rem;
+  text-align: center;
+}
+
+.prof-crafting__waiting p {
+  margin: 0;
+  color: var(--prof-gold);
+}
+
+/* Schematic form: output icon and name, requirements, description, reagents. */
+
+.prof-schematic {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: .65rem;
+  padding: .9rem 1rem;
+  overflow: auto;
+  border: 1px solid var(--prof-edge);
+  border-radius: .35rem;
+  background: linear-gradient(180deg, #221a12, #120e0a);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .7);
+}
+
+.prof-schematic--empty {
+  place-content: center;
+  color: rgba(255, 255, 255, .5);
+  font-size: .8rem;
+}
+
+.prof-schematic__head {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.prof-schematic__output {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  border-radius: .2rem;
+}
+
+.prof-schematic__output .wow-icon {
+  border-radius: .2rem;
+  box-shadow: 0 0 0 1px #000, 0 .2rem .5rem rgba(0, 0, 0, .6);
+}
+
+.prof-schematic__count,
+.prof-reagent__count {
+  position: absolute;
+  right: .2rem;
+  bottom: .1rem;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 2px #000, 1px 1px 1px #000, -1px -1px 1px #000;
+}
+
+.prof-schematic__head h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-shadow: 0 1px 1px #000;
+}
+
+.prof-schematic__spell {
+  color: #fff;
+}
+
+.prof-schematic__unlearned {
+  margin: .15rem 0 0;
+  color: var(--prof-red);
+  font-size: .76rem;
+}
+
+.prof-schematic__requires,
+.prof-schematic__cooldown,
+.prof-schematic__description {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.prof-schematic__requires {
+  color: #fff;
+}
+
+.prof-schematic__requires > span:first-child {
+  color: var(--prof-gold);
+}
+
+.prof-schematic__requires .is-unmet {
+  color: var(--prof-red);
+}
+
+.prof-schematic__cooldown {
+  color: var(--prof-red);
+}
+
+.prof-schematic__description {
+  color: #fff;
+}
+
+.prof-schematic__reagents h5 {
+  margin: 0 0 .45rem;
+  color: var(--prof-gold);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* Two columns of reagent slots, as the schematic form lays them out. */
+.prof-schematic__reagents ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .45rem .7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prof-schematic__reagents li {
+  min-width: 0;
+}
+
+.prof-reagent {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .5rem;
+  border-radius: .2rem;
+  cursor: default;
+}
+
+.prof-reagent:hover .prof-reagent__name {
+  filter: brightness(1.25);
+}
+
+.prof-reagent:focus-visible,
+.prof-schematic__output:focus-visible,
+.prof-spell--static:focus-visible {
+  outline: 1px solid var(--prof-gold);
+  outline-offset: 2px;
+}
+
+.prof-reagent__icon {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.prof-reagent__icon .wow-icon {
+  border-radius: .2rem;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.prof-reagent__name {
+  min-width: 0;
+  font-size: .78rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 40rem) {
+  .professions-pane {
+    grid-template-columns: 1fr;
+  }
+
+  .professions-pane__rail {
+    flex-flow: row wrap;
+    order: -1;
+  }
+
+  .prof-card--primary {
+    grid-template-areas: "name" "bar" "spell";
+    grid-template-columns: 1fr;
+  }
+
+  .prof-overview__secondary,
+  .prof-crafting__body,
+  .prof-schematic__reagents ul {
+    grid-template-columns: 1fr;
+  }
+
+  .prof-list__scroll {
+    max-height: 16rem;
+  }
+}
