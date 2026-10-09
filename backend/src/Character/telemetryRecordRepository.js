@@ -1,4 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
+import { decodeTelemetryJson, encodeTelemetryJson, parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 const FORBIDDEN_KEYS = new Set([
   "accountid",
@@ -33,14 +34,6 @@ export function sanitizeTelemetryValue(value, depth = 0) {
     clean[key] = sanitizeTelemetryValue(entry, depth + 1);
   }
   return clean;
-}
-
-function parseJson(value, fallback = {}) {
-  try {
-    return JSON.parse(value || JSON.stringify(fallback));
-  } catch {
-    return fallback;
-  }
 }
 
 function integer(value, fallback, min, max) {
@@ -114,7 +107,7 @@ export function ensureTelemetryRecordSchema(db) {
 }
 
 function payloadFromRow(row) {
-  const envelope = parseJson(row?.envelope_json);
+  const envelope = parseTelemetryJson(row?.envelope_json);
   return envelope?.payload && typeof envelope.payload === "object" && !Array.isArray(envelope.payload)
     ? envelope.payload
     : {};
@@ -147,13 +140,13 @@ function rowSummary(row) {
     region: row.region || payload.region || "",
     capturedAt: row.captured_at,
     receivedAt: row.received_at,
-    payloadBytes: Buffer.byteLength(row.envelope_json || "", "utf8"),
+    payloadBytes: Buffer.byteLength(decodeTelemetryJson(row.envelope_json) || "", "utf8"),
   };
 }
 
 function rowDetail(row) {
   if (!row) return null;
-  const envelope = parseJson(row.envelope_json);
+  const envelope = parseTelemetryJson(row.envelope_json);
   return {
     ...rowSummary(row),
     envelope,
@@ -223,7 +216,7 @@ export function recordTelemetry({
       capturedAt(sanitizedEnvelope?.capturedAt),
       receivedAt,
       normalizedIdempotencyKey,
-      JSON.stringify(sanitizedEnvelope),
+      encodeTelemetryJson(sanitizedEnvelope),
     );
 
     const row = db.prepare(`

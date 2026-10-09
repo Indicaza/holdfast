@@ -4,10 +4,11 @@ import { assertProductionEnvironment } from "./Config/environment.js";
 import { startDiscordRankReconciler } from "./Discord/rankSync.js";
 import { startDiscordBilletReconciler } from "./Discord/billetSync.js";
 import { ensureRuntimeDataDirectory, runtimeDataDirectory } from "./Data/runtimeData.js";
-import { guildDatabaseFile } from "./Data/database.js";
+import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
 import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
+import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -24,6 +25,14 @@ const dataInitialization = initializeGuildData();
 
 if (dataInitialization.status === "imported") {
   console.log("Imported legacy GuildOS JSON into SQLite", dataInitialization.imported);
+}
+
+// Telemetry stored before large values were compressed is compressed once,
+// keeping the database under the encrypted backup's size limit.
+const compactedTelemetry = withGuildDatabase(compactStoredTelemetry);
+
+if (compactedTelemetry) {
+  console.log(`Compressed ${compactedTelemetry} stored telemetry values`);
 }
 
 const app = createApp();
