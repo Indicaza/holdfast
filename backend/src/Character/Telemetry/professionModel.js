@@ -11,6 +11,8 @@ const MAX_RECIPES = 800;
 const MAX_REAGENTS = 16;
 const MAX_TOOLS = 8;
 const MAX_TOOLTIP_LINES = 40;
+const MAX_CATEGORIES = 200;
+const MAX_ITEMS = 400;
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -126,6 +128,9 @@ function recipe(value, professionKey) {
     subName: text(value.subName),
     iconFileDataId: number(value.iconFileDataId),
     recipeLink: text(value.recipeLink, 2000),
+    spellLink: text(value.spellLink, 2000),
+    // Client spell tooltip for known recipes (Guildweaver's RecipeTooltipTelemetry).
+    tooltip: tooltip(value.tooltip),
     known: value.known === undefined ? null : Boolean(value.known),
     craftable: boolean(value.craftable),
     disabled: boolean(value.disabled),
@@ -149,6 +154,27 @@ function recipe(value, professionKey) {
     crafted: craftedItem(value.crafted),
     reagents: array(value.reagents).slice(0, MAX_REAGENTS).map(reagent).filter(Boolean),
   };
+}
+
+// Recipe categories as the Professions window groups them.
+function category(value) {
+  if (!isObject(value)) return null;
+  const categoryId = number(value.categoryId);
+  const name = text(value.name, 96);
+  if (categoryId === null || !name) return null;
+  return {
+    categoryId,
+    name,
+    parentCategoryId: number(value.parentCategoryId),
+    order: number(value.order),
+  };
+}
+
+// Reagent descriptions, recorded once per book with their tooltips.
+function bookItem(value) {
+  const base = item(value);
+  if (!base || base.itemId === null) return null;
+  return { ...base, tooltip: tooltip(value.tooltip) };
 }
 
 function specialization(value) {
@@ -190,6 +216,8 @@ function profession(value) {
         }
       : null,
     recipes,
+    categories: array(value.categories).slice(0, MAX_CATEGORIES).map(category).filter(Boolean),
+    items: array(value.items).slice(0, MAX_ITEMS).map(bookItem).filter(Boolean),
   };
 }
 

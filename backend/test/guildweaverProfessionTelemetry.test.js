@@ -133,3 +133,50 @@ test("armory decoration reads the latest stored profession telemetry", () =>
     assert.equal(decorated.professions[0].name, "Blacksmithing");
     assert.equal(decorated.recipes[0].crafted.name, "Rough Sharpening Stone");
   }));
+
+test("recipe categories, reagent details and recipe tooltips reach the armory", () => {
+  const book = structuredClone(fixture);
+  const smithing = book.payload.professions[0];
+  smithing.recipes[0].categoryId = 2460;
+  smithing.recipes[0].spellLink = "|cff71d5ff|Hspell:2660|h[Rough Sharpening Stone]|h|r";
+  smithing.recipes[0].tooltip = { source: "C_TooltipInfo.GetSpellByID", lines: [{ left: "Rough Sharpening Stone" }, { left: "Sharpens a bladed weapon." }] };
+  // The client had not cached the reagent when the recipe was read.
+  smithing.recipes[0].reagents[0] = { itemId: 2835, quantity: 1, required: true, slotIndex: 1 };
+  smithing.categories = [
+    { categoryId: 2460, name: "Weapon Stones", parentCategoryId: 2425, order: 20 },
+    { categoryId: 2425, name: "Blacksmithing", parentCategoryId: 0, order: 0 },
+    { name: "missing an id" },
+  ];
+  smithing.items = [
+    { itemId: 2835, name: "Rough Stone", iconFileDataId: 135232, qualityId: 1, itemLevel: 5, tooltip: { lines: [{ left: "Rough Stone" }, { left: "Max Stack: 20" }] } },
+    { name: "missing an id" },
+  ];
+
+  const canonical = canonicalProfessionSnapshot(book.payload);
+  assert.equal(canonical.professions[0].categories.length, 2, "categories without an id are dropped");
+  assert.equal(canonical.professions[0].items.length, 1, "items without an id are dropped");
+  assert.equal(canonical.professions[0].recipes[0].tooltip.lines.length, 2, "recipe tooltip kept");
+
+  const decorated = applyProfessionTelemetry({ professions: [], recipes: [] }, { revision: 1, payload: canonical });
+  assert.deepEqual(decorated.professions[0].categories.map((category) => category.name), ["Weapon Stones", "Blacksmithing"]);
+  const recipe = decorated.recipes[0];
+  assert.equal(recipe.categoryId, 2460);
+  assert.equal(recipe.tooltip.lines[1].left, "Sharpens a bladed weapon.");
+  assert.match(recipe.spellLink, /Hspell:2660/);
+  const [stone] = recipe.reagents;
+  assert.equal(stone.name, "Rough Stone", "uncached reagent named from the book's item details");
+  assert.equal(stone.iconFileId, 135232);
+  assert.equal(stone.tooltip.lines[1].left, "Max Stack: 20");
+  assert.equal(stone.quantity, 1);
+});
+
+test("snapshots without category names fall back to WoW Forever's categories", () => {
+  const book = structuredClone(fixture);
+  book.payload.professions[0].recipes[0].categoryId = 2460;
+  const decorated = applyProfessionTelemetry({ professions: [], recipes: [] }, { revision: 1, payload: canonicalProfessionSnapshot(book.payload) });
+  const categories = decorated.professions[0].categories;
+  assert.deepEqual(categories.map((category) => [category.categoryId, category.name]), [[2460, "Weapon Stones"], [2425, "Blacksmithing"]]);
+  assert.equal(categories[0].parentCategoryId, 2425);
+  assert.equal(categories[0].order, 20);
+  assert.deepEqual(decorated.professions[1].categories, [], "professions without recipes have no categories");
+});

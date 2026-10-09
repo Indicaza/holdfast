@@ -87,6 +87,7 @@ function equipLocation(slotText, subclass) {
 
 function stripTags(html) {
   return html
+    .replace(/<br\s*\/?>/gi, " ")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -94,6 +95,21 @@ function stripTags(html) {
     .replace(/&quot;/g, "\"")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// Wowhead leaves level-scaled values as formulas, e.g.
+// "[(<!--pl1:1:60-->60 < 12 ? 3 : 8)]". Evaluate them for a level 60 reader.
+// Only numbers, comparisons, arithmetic and ternaries are evaluated.
+export function evaluateFormulas(html) {
+  return html.replace(/<!--.*?-->/g, "").replace(/\[\(([^\]]+)\)\]/g, (match, expression) => {
+    if (!/^[\d\s.<>=?:()+\-*/]+$/.test(expression)) return match;
+    try {
+      const value = Function(`"use strict"; return (${expression});`)();
+      return Number.isFinite(value) ? String(Math.round(value * 100) / 100) : match;
+    } catch {
+      return match;
+    }
+  });
 }
 
 function line(left, leftColor = WHITE, right = undefined, rightColor = undefined) {
@@ -184,7 +200,7 @@ export function parseTooltip(itemId, data, iconIds) {
   if (classes) lines.push(line(`Classes: ${stripTags(classes[1] || classes[2])}`));
 
   for (const effect of html.matchAll(/<span[^>]*class="q2">((?:Equip|Use|Chance on hit):.+?)<\/span>/g)) {
-    lines.push(line(stripTags(effect[1]), GREEN));
+    lines.push(line(stripTags(evaluateFormulas(effect[1])), GREEN));
   }
   const flavor = html.match(/<span class="q">("[^<]+")<\/span>/)?.[1];
   if (flavor) lines.push(line(stripTags(flavor), GOLD));

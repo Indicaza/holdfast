@@ -35,7 +35,9 @@ import { KITS } from "./devData/kits.js";
 
 const seedDir = join(dirname(fileURLToPath(import.meta.url)), "..", "seed", "devData");
 const ITEMS = JSON.parse(readFileSync(join(seedDir, "items.json"), "utf8")).items;
-const RECIPE_BOOKS = JSON.parse(readFileSync(join(seedDir, "recipes.json"), "utf8")).professions;
+const RECIPE_DATA = JSON.parse(readFileSync(join(seedDir, "recipes.json"), "utf8"));
+const RECIPE_BOOKS = RECIPE_DATA.professions;
+const RECIPE_CATEGORIES = RECIPE_DATA.categories || {};
 const RECIPE_TOOLTIPS = JSON.parse(readFileSync(join(seedDir, "recipeTooltips.json"), "utf8")).items;
 const TALENT_TREES = readdirSync(join(seedDir, "talentTrees"))
   .filter((file) => file.endsWith(".json"))
@@ -569,10 +571,19 @@ function recipeDifficulty(skill, level) {
   return "trivial";
 }
 
+// The client's spell tooltip for a recipe: its name, then the description.
+function recipeTooltip(recipe) {
+  const lines = [{ left: recipe.name, leftColor: { r: 1, g: 1, b: 1 } }];
+  if (recipe.tools.length) lines.push({ left: `Tools: ${recipe.tools.join(", ")}`, leftColor: { r: 1, g: 1, b: 1 } });
+  if (recipe.description) lines.push({ left: recipe.description, leftColor: { r: 1, g: 0.82, b: 0 } });
+  return { source: "C_TooltipInfo.GetSpellByID", lines };
+}
+
 // Guildweaver's profession_snapshot: every profession's skill, plus the whole
 // recipe book for crafting professions (C_TradeSkillUI lists unlearned recipes
-// too). Most recipes at or below the character's skill are known; the rest
-// stand in for drops and vendor patterns nobody bought yet.
+// too), its categories, and each reagent of a known recipe described once.
+// Most recipes at or below the character's skill are known; the rest stand in
+// for drops and vendor patterns nobody bought yet.
 function professionSnapshotFor(snapshot) {
   const random = seededRandom(`${snapshot.characterId}:recipes`);
   const capturedAt = snapshot.capturedAt;
@@ -587,6 +598,8 @@ function professionSnapshotFor(snapshot) {
         spellId: recipe.spellId,
         name: recipe.name,
         iconFileDataId: recipe.iconFileDataId,
+        categoryId: recipe.categoryId,
+        tooltip: known ? recipeTooltip(recipe) : undefined,
         known,
         difficulty: recipeDifficulty(recipe.skill, profession.skillLevel),
         skillUps: recipe.skillUps,
@@ -602,6 +615,12 @@ function professionSnapshotFor(snapshot) {
         reagents: recipe.reagents.map((reagent, index) => ({ ...reagent, required: true, slotIndex: index + 1 })),
       };
     });
+    const items = new Map();
+    for (const recipe of recipes.filter((entry) => entry.known)) {
+      for (const reagent of recipe.reagents) {
+        if (!items.has(reagent.itemId)) items.set(reagent.itemId, { ...reagent, quantity: undefined, required: undefined, slotIndex: undefined, ...RECIPE_TOOLTIPS[reagent.itemId] });
+      }
+    }
     return {
       ...profession,
       recipeBook: {
@@ -611,6 +630,12 @@ function professionSnapshotFor(snapshot) {
         knownCount: recipes.filter((recipe) => recipe.known).length,
       },
       recipes,
+      categories: (RECIPE_CATEGORIES[profession.skillLineId] || []).map((category) => ({
+        categoryId: category.id,
+        name: category.name,
+        order: category.order,
+      })),
+      items: [...items.values()],
     };
   });
 
