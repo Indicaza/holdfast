@@ -55,12 +55,14 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(armory.json.equipment.every((item) => item.itemId && item.iconFileId && item.tooltipLines.length));
     assert.ok(armory.json.stats.attributes.strength.effective > 100);
 
-    // Crafting professions carry a recipe book recorded from the client data.
+    // Raw recipe-book metadata can include recipes the character does not know,
+    // while the Armory spellbook exposes only learned recipes.
     const engineering = armory.json.professions.find((profession) => profession.name === "Engineering");
     assert.ok(engineering.recipeBook.knownCount > 50);
     const recipes = armory.json.recipes.filter((recipe) => recipe.professionKey === engineering.key);
-    assert.equal(recipes.length, engineering.recipeBook.recipeCount);
-    assert.ok(recipes.some((recipe) => recipe.known === false));
+    assert.equal(recipes.length, engineering.recipeBook.knownCount);
+    assert.ok(engineering.recipeBook.recipeCount >= recipes.length);
+    assert.ok(recipes.every((recipe) => recipe.known !== false));
     const bomb = recipes.find((recipe) => recipe.name === "Rough Dynamite");
     assert.equal(bomb.crafted.name, "Rough Dynamite");
     assert.deepEqual(bomb.reagents.map((reagent) => reagent.name), ["Rough Blasting Powder", "Linen Cloth"]);
