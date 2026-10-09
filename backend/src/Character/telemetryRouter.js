@@ -2,10 +2,7 @@ import { Router } from "express";
 
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import { authenticateGuildweaverDevice } from "./guildweaverDeviceRepository.js";
-import { associateTelemetryRecordCharacter } from "./telemetryCharacterAssociation.js";
-import { recordTelemetry } from "./telemetryRecordRepository.js";
-
-const SUPPORTED_TELEMETRY_SCHEMAS = new Set([1]);
+import { ingestTelemetry } from "./Telemetry/ingestTelemetry.js";
 
 function bearerToken(req) {
   const authorization = String(req.get("Authorization") || "");
@@ -33,55 +30,23 @@ export function createTelemetryRouter() {
 
   router.post("/telemetry", requireGuildweaverDevice, async (req, res) => {
     try {
-      const streamKey = String(req.body?.streamKey || "").trim();
-      const kind = req.body?.kind === "event" ? "event" : "state";
-      const revision = Number(req.body?.revision);
-      const envelope = req.body?.envelope;
       const idempotencyKey = String(req.get("Idempotency-Key") || "").trim();
-
-      if (!streamKey || !Number.isInteger(revision) || revision < 1 || !idempotencyKey) {
-        res.status(400).json({ error: "invalid_telemetry_record" });
-        return;
-      }
-      if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) {
-        res.status(400).json({ error: "invalid_telemetry_envelope" });
-        return;
-      }
-      if (!SUPPORTED_TELEMETRY_SCHEMAS.has(Number(envelope.schemaVersion))) {
-        res.status(400).json({ error: "unsupported_telemetry_schema" });
-        return;
-      }
-      if (!String(envelope.eventType || "").trim()) {
-        res.status(400).json({ error: "telemetry_event_type_required" });
-        return;
-      }
-      if (!envelope.payload || typeof envelope.payload !== "object" || Array.isArray(envelope.payload)) {
-        res.status(400).json({ error: "invalid_telemetry_payload" });
-        return;
-      }
-
-      const result = recordTelemetry({
+      const result = ingestTelemetry({
         deviceId: req.guildweaverDevice.id,
         memberId: req.guildweaverDevice.memberId,
+        body: req.body,
         idempotencyKey,
-        streamKey,
-        kind,
-        revision,
-        envelope,
         receivedAt: new Date().toISOString(),
       });
 
       if (result.status === "invalid") {
-        res.status(400).json({ error: "invalid_telemetry_record" });
+        res.status(400).json({ error: result.error || "invalid_telemetry_record" });
         return;
       }
 
-      const canonicalCharacterId = associateTelemetryRecordCharacter({
-        recordId: result.record?.id,
-        memberId: req.guildweaverDevice.memberId,
-        deviceId: req.guildweaverDevice.id,
-        rawCharacterId: result.record?.characterId,
-      });
+      const envelope = req.body?.envelope || {};
+      const kind = req.body?.kind === "event" ? "event" : "state";
+      const canonicalCharacterId = result.canonicalCharacterId;
 
       if (result.status === "created") {
         publishLiveUpdate({
@@ -94,13 +59,13 @@ export function createTelemetryRouter() {
         if (
           kind === "state" &&
           (canonicalCharacterId ||
-            result.record?.characterId ||
+            result.rawCharacterId ||
             envelope.eventType === "talent_tree_definition")
         ) {
           publishLiveUpdate({
             topics: ["intelligence", "armory"],
             source: "guildweaver.telemetry.persisted",
-            entityId: canonicalCharacterId || result.record?.characterId || null,
+            entityId: canonicalCharacterId || result.rawCharacterId || null,
           });
         }
       }
@@ -109,10 +74,11 @@ export function createTelemetryRouter() {
       res.status(result.status === "created" ? 201 : 200).json({
         status: result.status,
         recordId: result.record?.id || null,
-        streamKey: result.record?.streamKey || streamKey,
-        revision: result.record?.revision || revision,
+        streamKey: result.record?.streamKey || String(req.body?.streamKey || "").trim(),
+        revision: result.record?.revision || Number(req.body?.revision) || null,
+        telemetryHandler: result.handlerName,
         characterStatus: canonicalCharacterId ? "associated" : null,
-        characterId: canonicalCharacterId || result.record?.characterId || null,
+        characterId: canonicalCharacterId || result.rawCharacterId || null,
       });
     } catch (error) {
       console.error("Unable to ingest Guildweaver telemetry", error);
