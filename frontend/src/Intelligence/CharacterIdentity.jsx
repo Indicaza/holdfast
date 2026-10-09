@@ -24,16 +24,17 @@ function syncFreshness(value) {
   return 'stale'
 }
 
-function ResourceBar({ kind, current, max }) {
-  const total = Number(max) || Number(current) || 0
-  const value = Number.isFinite(Number(current)) ? Number(current) : total
-  const percent = total ? Math.round((Math.max(0, Math.min(value, total)) / total) * 100) : 0
+// Bars are always drawn full: cards show what a character has (health and
+// their power type), not their state at capture time. Exact maximums appear on
+// hover when telemetry reported them.
+function ResourceBar({ kind, max }) {
+  const total = Number(max) > 0 ? Number(max) : null
   return (
-    <div className={`unit-frame__bar unit-frame__bar--${kind}`} role="img" aria-label={total ? `${kind} ${value.toLocaleString()} of ${total.toLocaleString()}` : `${kind} unknown`}>
-      <span className="unit-frame__fill" style={{ width: `${percent}%` }} />
+    <div className={`unit-frame__bar unit-frame__bar--${kind}`} role="img" aria-label={total ? `${kind} ${total.toLocaleString()}` : kind}>
+      <span className="unit-frame__fill" style={{ width: '100%' }} />
       {total ? (
         <span className="unit-frame__bar-text" aria-hidden="true">
-          <span>{percent}%</span>
+          <span />
           <span>{total.toLocaleString()}</span>
         </span>
       ) : null}
@@ -49,16 +50,14 @@ function displayName(character) {
 export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = 'h2', className = '', showAffiliation = false }) {
   const identity = classIdentity(character?.className)
   const vitals = character?.vitals || {}
-  const healthState = {
-    current: health?.current ?? vitals.healthCurrent,
-    max: health?.max ?? vitals.healthMax,
-  }
+  const healthState = { max: health?.max ?? vitals.healthMax }
   const powerState = {
-    current: power?.current ?? vitals.powerCurrent,
     max: power?.max ?? vitals.powerMax,
     token: power?.token ?? vitals.powerToken,
   }
-  const powerKind = POWER_KINDS[String(powerState.token || '').toUpperCase()] || 'mana'
+  const powerKind = POWER_KINDS[String(powerState.token || '').toUpperCase()]
+    || POWER_KINDS[identity.power]
+    || 'mana'
   const guild = character?.guildName || character?.organization?.name || character?.organizationName
   const affiliation = [guild, character?.memberRank].filter(Boolean).join(': ')
   return (
@@ -73,8 +72,8 @@ export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = '
           <Name className="unit-frame__name">{displayName(character)}</Name>
         </div>
         <div className="unit-frame__bars">
-          <ResourceBar kind="health" current={healthState.current} max={healthState.max} />
-          <ResourceBar kind={powerKind} current={powerState.current} max={powerState.max} />
+          <ResourceBar kind="health" max={healthState.max} />
+          <ResourceBar kind={powerKind} max={powerState.max} />
         </div>
         {showAffiliation && affiliation ? <span className="unit-frame__affiliation">{affiliation}</span> : null}
       </div>

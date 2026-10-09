@@ -77,3 +77,58 @@ test("GuildOS character cards read vitals from modular stats telemetry", async (
     });
   });
 });
+
+test("GuildOS character cards find stats telemetry that arrived before the character synced", async () => {
+  await withHttpApp(async ({ request }) => {
+    const rawCharacterId = "character-stats-first";
+    const telemetry = ingestTelemetry({
+      deviceId: "device-stats-first",
+      memberId: memberIds.member,
+      idempotencyKey: "card-vitals-stats-first-1",
+      receivedAt: "2026-10-09T01:15:00.000Z",
+      body: {
+        streamKey: `stats:${rawCharacterId}`,
+        kind: "state",
+        revision: 1,
+        envelope: {
+          schemaVersion: 1,
+          eventType: "stats",
+          payloadSchemaVersion: 1,
+          capturedAt: 1791500001,
+          characterId: rawCharacterId,
+          payload: {
+            stats: { resources: { health: { current: 410, max: 410 }, power: { token: "ENERGY", current: 100, max: 100 } } },
+          },
+        },
+      },
+    });
+    assert.equal(telemetry.status, "created");
+    assert.ok(!telemetry.canonicalCharacterId, "no character to associate with yet");
+
+    const synced = await syncGuildweaverCharacter({
+      memberId: memberIds.member,
+      deviceId: "device-stats-first",
+      bridgeRevision: 1,
+      snapshot: {
+        schemaVersion: 3,
+        capturedAt: 1791500002,
+        characterId: rawCharacterId,
+        characterKey: "classic beta pve 2:rook darkwing",
+        name: "Rook Darkwing",
+        realm: "Classic Beta PvE 2",
+        level: 11,
+        race: { id: 4, name: "Night Elf", token: "NightElf" },
+        class: { id: 4, name: "Rogue", token: "ROGUE" },
+        equipment: [],
+        professions: [],
+      },
+    });
+    assert.equal(synced.status, "created");
+
+    const summary = await request("/api/intelligence", { persona: "member" });
+    const character = summary.json.characters.find((entry) => entry.id === synced.character.id);
+    assert.ok(character);
+    assert.equal(character.vitals?.healthMax, 410);
+    assert.equal(character.vitals?.powerToken, "ENERGY");
+  });
+});

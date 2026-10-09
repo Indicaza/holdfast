@@ -60,7 +60,16 @@ function latestStatsPayloads(db) {
 
   for (const row of rows) {
     const payload = parseJson(row.payload_json, {});
-    for (const characterId of [row.canonical_character_id, row.raw_character_id]) {
+    const rawCharacterId = String(row.raw_character_id || "").trim();
+    // Stats can arrive before the character row and its alias exist, leaving
+    // canonical_character_id empty. Website character ids for Guildweaver
+    // characters are "guildweaver-id:<raw id>", so index that form too.
+    const candidates = [
+      row.canonical_character_id,
+      rawCharacterId,
+      rawCharacterId ? `guildweaver-id:${rawCharacterId}` : "",
+    ];
+    for (const characterId of candidates) {
       const key = String(characterId || "").trim();
       if (key && !result.has(key)) result.set(key, payload);
     }
