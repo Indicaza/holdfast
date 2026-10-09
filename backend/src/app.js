@@ -54,6 +54,10 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
       credentials: true,
     }),
   );
+  // Guildweaver uploads carry whole recipe books: one crafting profession is
+  // several hundred KB of JSON. Only the device-authenticated ingest routes
+  // accept large bodies; everything else keeps the small default.
+  app.use(["/api/bridge/telemetry", "/api/bridge/characters/snapshot"], express.json({ limit: "4mb" }));
   app.use(express.json({ limit: "256kb" }));
   app.use(attachSession);
   app.use("/api/bridge", createCharacterRouter());
@@ -264,6 +268,11 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
 
     if (error?.type === "entity.parse.failed") {
       res.status(400).json({ error: "invalid_json" });
+      return;
+    }
+
+    if (error?.type === "entity.too.large") {
+      res.status(413).json({ error: "payload_too_large" });
       return;
     }
 

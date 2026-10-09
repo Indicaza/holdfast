@@ -3,6 +3,9 @@ import { ensureTelemetryRecordSchema } from "../telemetryRecordRepository.js";
 
 const RAW_RECORDS_PER_STREAM = 20;
 const RAW_RECORDS_GLOBAL = 5000;
+// Recipe books make some states close to a megabyte, so a stream's raw history
+// is also capped by size. The newest record is always kept.
+const RAW_BYTES_PER_STREAM = 2 * 1024 * 1024;
 
 function text(value, maxLength = 240) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -258,6 +261,22 @@ export function pruneRawTelemetryHistory({ deviceId, streamKey }) {
 
     db.prepare(`
       DELETE FROM guildweaver_telemetry_records
+      WHERE id IN (
+        SELECT id FROM (
+          SELECT
+            id,
+            ROW_NUMBER() OVER newest AS position,
+            SUM(length(envelope_json)) OVER newest AS retained_bytes
+          FROM guildweaver_telemetry_records
+          WHERE device_id = ? AND stream_key = ?
+          WINDOW newest AS (ORDER BY received_at DESC, id DESC)
+        )
+        WHERE position > 1 AND retained_bytes > ?
+      )
+    `).run(text(deviceId, 160), text(streamKey, 240), RAW_BYTES_PER_STREAM);
+
+    db.prepare(`
+      DELETE FROM guildweaver_telemetry_records
       WHERE id NOT IN (
         SELECT id FROM guildweaver_telemetry_records
         ORDER BY received_at DESC, id DESC
@@ -270,4 +289,5 @@ export function pruneRawTelemetryHistory({ deviceId, streamKey }) {
 export const telemetryRetention = Object.freeze({
   rawRecordsPerStream: RAW_RECORDS_PER_STREAM,
   rawRecordsGlobal: RAW_RECORDS_GLOBAL,
+  rawBytesPerStream: RAW_BYTES_PER_STREAM,
 });
