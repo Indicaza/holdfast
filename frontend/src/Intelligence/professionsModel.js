@@ -60,8 +60,10 @@ export function recipesFor(profession, recipes) {
   const key = professionKey(profession)
   const name = String(profession?.name || '').toLowerCase()
   return (Array.isArray(recipes) ? recipes : []).filter((recipe) =>
-    recipe.professionKey === key
-    || (!recipe.professionKey && String(recipe.professionName || '').toLowerCase() === name),
+    recipe?.known !== false && (
+      recipe.professionKey === key
+      || (!recipe.professionKey && String(recipe.professionName || '').toLowerCase() === name)
+    ),
   )
 }
 
@@ -103,19 +105,18 @@ function matches(recipe, needle) {
     .some((value) => String(value).toLowerCase().includes(needle))
 }
 
-// Learned and Unlearned groups (PROFESSIONS_CATEGORY_LEARNED/UNLEARNED), each
-// sorted the way the old trade skill window did: hardest first, then by name.
+// The character armory is a spellbook of recipes this character actually
+// knows. Unknown recipes remain in raw telemetry for future intelligence
+// features, but never enter the visible/searchable crafting book.
 export function recipeGroups(recipes, query = '') {
   const needle = String(query || '').trim().toLowerCase()
   const sorted = (Array.isArray(recipes) ? recipes : [])
+    .filter((recipe) => recipe?.known !== false)
     .filter((recipe) => matches(recipe, needle))
     .sort((left, right) =>
       (DIFFICULTY_ORDER[left.difficulty] ?? 4) - (DIFFICULTY_ORDER[right.difficulty] ?? 4)
       || String(left.name).localeCompare(String(right.name)))
-  return [
-    { id: 'learned', label: 'Learned', recipes: sorted.filter((recipe) => recipe.known !== false) },
-    { id: 'unlearned', label: 'Unlearned', recipes: sorted.filter((recipe) => recipe.known === false) },
-  ].filter((group) => group.recipes.length)
+  return sorted.length ? [{ id: 'learned', label: 'Learned', recipes: sorted }] : []
 }
 
 // SecondsToTime-style remaining time: "1 Day 4 Hr", "3 Hr 20 Min", "12 Min".

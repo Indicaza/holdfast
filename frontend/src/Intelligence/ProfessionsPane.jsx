@@ -47,6 +47,21 @@ function textTooltip(name, description = '') {
   return { name, qualityId: 1, description }
 }
 
+// Recipe spell telemetry uses the same client-authored tooltip line shape as
+// equipment. Feeding it through ItemHoverCard keeps positioning, colors and
+// keyboard hover behavior consistent across the character modal.
+function recipeTooltip(recipe) {
+  if (!recipe) return null
+  return {
+    name: recipe.name,
+    qualityId: 1,
+    description: recipe.description,
+    tooltip: recipe.tooltip,
+    spellId: recipe.spellId ?? recipe.recipeId ?? recipe.id,
+    iconFileId: recipe.iconFileId,
+  }
+}
+
 function themeOf(profession) {
   return BAR_THEMES[String(profession?.name || '').toLowerCase()] || 'default'
 }
@@ -153,11 +168,12 @@ function Schematic({ recipe, tooltips }) {
   return (
     <div className="prof-schematic">
       <header className="prof-schematic__head">
-        <ItemHoverCard item={crafted ? withItemTooltip(crafted, tooltips) : textTooltip(recipe.name, recipe.description)} tooltipClassName={crafted ? '' : 'prof-tooltip--text'}>
+        <ItemHoverCard item={crafted ? withItemTooltip(crafted, tooltips) : recipeTooltip(recipe)} tooltipClassName={crafted ? '' : 'prof-tooltip--text'}>
           <span className="prof-schematic__output" tabIndex={0}>
             <WowIcon
               iconFileId={crafted?.iconFileDataId ?? recipe.iconFileId}
               itemId={crafted?.itemId}
+              spellId={crafted ? undefined : recipe.spellId}
               label={recipe.name}
               quality={crafted?.qualityId}
               size={53}
@@ -166,8 +182,9 @@ function Schematic({ recipe, tooltips }) {
           </span>
         </ItemHoverCard>
         <div>
-          <h4 className={crafted ? `item-quality-${crafted.qualityId ?? 1}` : 'prof-schematic__spell'}>{recipe.name}</h4>
-          {recipe.known === false ? <p className="prof-schematic__unlearned">Unlearned</p> : null}
+          <ItemHoverCard item={recipeTooltip(recipe)} side="left">
+            <h4 tabIndex={0} className={crafted ? `item-quality-${crafted.qualityId ?? 1}` : 'prof-schematic__spell'}>{recipe.name}</h4>
+          </ItemHoverCard>
         </div>
       </header>
       {tools.length ? (
@@ -212,8 +229,7 @@ function Schematic({ recipe, tooltips }) {
 function CraftingPage({ profession, recipes, tooltips }) {
   const [query, setQuery] = useState('')
   const [selectedKey, setSelectedKey] = useState(null)
-  // The game hides unlearned recipes by default.
-  const [collapsed, setCollapsed] = useState(() => new Set(['unlearned']))
+  const [collapsed, setCollapsed] = useState(() => new Set())
   const groups = useMemo(() => recipeGroups(recipes, query), [recipes, query])
   const visible = groups.flatMap((group) => group.recipes)
   const selected = visible.find((recipe) => recipeKey(recipe) === selectedKey) || visible[0] || null
@@ -262,16 +278,17 @@ function CraftingPage({ profession, recipes, tooltips }) {
                           const isSelected = selected && recipeKey(selected) === key
                           return (
                             <li key={key}>
-                              <button
-                                type="button"
-                                className={`prof-recipe prof-difficulty--${recipe.difficulty || 'none'}${isSelected ? ' is-selected' : ''}`}
-                                onClick={() => setSelectedKey(key)}
-                                aria-pressed={Boolean(isSelected)}
-                                title={recipe.name}
-                              >
-                                <span>{recipe.name}</span>
-                                {Number(recipe.skillUps) > 1 && recipe.difficulty !== 'trivial' ? <small>{recipe.skillUps}</small> : null}
-                              </button>
+                              <ItemHoverCard item={recipeTooltip(recipe)} side="right">
+                                <button
+                                  type="button"
+                                  className={`prof-recipe prof-difficulty--${recipe.difficulty || 'none'}${isSelected ? ' is-selected' : ''}`}
+                                  onClick={() => setSelectedKey(key)}
+                                  aria-pressed={Boolean(isSelected)}
+                                >
+                                  <span>{recipe.name}</span>
+                                  {Number(recipe.skillUps) > 1 && recipe.difficulty !== 'trivial' ? <small>{recipe.skillUps}</small> : null}
+                                </button>
+                              </ItemHoverCard>
                             </li>
                           )
                         })}
@@ -287,7 +304,7 @@ function CraftingPage({ profession, recipes, tooltips }) {
         </div>
       ) : (
         <div className="prof-crafting__waiting">
-          <p>No recipes synced for {profession.name} yet.</p>
+          <p>No known recipes synced for {profession.name} yet.</p>
           <small>Open {profession.name} in game once and Guildweaver will capture the recipe book.</small>
         </div>
       )}
