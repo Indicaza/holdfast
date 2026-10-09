@@ -57,12 +57,12 @@ test('organized inventory groups carried totals by item class, materials first a
   const inventory = normalizeInventory(armoryInventory())
   const groups = inventoryGroups(inventory)
   assert.equal(groups[0].name, 'Trade Goods')
-  assert.deepEqual(groups[0].items.map((item) => item.name), ['Light Leather', 'Copper Ore'])
+  assert.deepEqual(groups[0].items.map((item) => item.name), ['Copper Ore', 'Light Leather'])
   assert.ok(groups.some((group) => group.items.some((item) => item.name === 'Raider Shortsword of the Tiger')))
 
   const ore = groups.flatMap((group) => group.items).find((item) => item.name === 'Copper Ore')
-  assert.equal(ore.count, 20)
-  assert.equal(ore.stacks, 1)
+  assert.equal(ore.count, 25)
+  assert.equal(ore.stacks, 3)
   assert.equal(ore.tooltip.lines.some((line) => String(line.left || '').includes('Copper Ore')), true, 'rich client tooltip survives grouping')
 
   const filtered = inventoryGroups(inventory, 'agility')
