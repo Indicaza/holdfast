@@ -67,6 +67,12 @@ test("development character seed produces armory-ready characters idempotently",
     assert.equal(bomb.crafted.name, "Rough Dynamite");
     assert.deepEqual(bomb.reagents.map((reagent) => reagent.name), ["Rough Blasting Powder", "Linen Cloth"]);
     assert.ok(bomb.reagents.every((reagent) => reagent.iconFileId));
+    // Recipes sit in the game's categories; reagents carry tooltips.
+    const explosives = engineering.categories.find((category) => category.categoryId === bomb.categoryId);
+    assert.equal(explosives?.name, "Explosives");
+    assert.ok(engineering.categories.length > 5);
+    assert.ok(bomb.reagents.every((reagent) => reagent.tooltip?.lines?.length));
+    assert.ok(bomb.tooltip.lines.length >= 1);
 
     // Classes without a real capture use synthetic trees built from Classic Era data.
     const mage = await request("/api/intelligence/characters/guildweaver-id:character-dev-mirelle", { persona: "member" });

@@ -5,28 +5,30 @@ import EmptyTelemetry from './EmptyTelemetry.jsx'
 import {
   MISSING_PRIMARY_TEXT,
   cooldownRemaining,
+  flattenRecipeTree,
   itemTooltipIndex,
   overviewSlots,
   professionKey,
   railProfessions,
   rankText,
   rankTitle,
-  recipeGroups,
+  recipeCategoryTree,
   recipeKey,
   recipesFor,
   withItemTooltip,
 } from './professionsModel.js'
 import './ProfessionsPane.css'
 
-// Modeled on WoW Forever's Professions window: the book page (two primary
-// cards, then Cooking, Fishing and First Aid), a rail of side tabs on the right,
-// and each profession's crafting page (recipe list and schematic form).
+// Modeled on WoW Forever's Professions window, using its own art (see
+// public/profession-art/README.md): the book page (two primary cards, then
+// Cooking, Fishing and First Aid), a rail of side tabs on the right, and each
+// profession's crafting page (categorized recipe list and schematic form).
 
-// INV_Misc_Book_11. The game's own side tab art (INV_SideTab_Professions_c60)
-// is not on the public icon CDN.
-const OVERVIEW_ICON = 133743
+const ART = '/profession-art'
+const SIDE_TAB_ICON = `${ART}/tab-professions.webp`
 
-const BAR_THEMES = {
+// Professions with their own card, crafting background and skill bar art.
+const THEMES = {
   alchemy: 'alchemy',
   blacksmithing: 'blacksmithing',
   cooking: 'cooking',
@@ -41,15 +43,28 @@ const BAR_THEMES = {
   tailoring: 'tailoring',
 }
 
-// Tooltips that are not items (side tabs, profession spells, enchants) reuse
-// the item tooltip frame with just a name and an optional description.
+const DIFFICULTY_LABELS = {
+  optimal: 'Optimal',
+  medium: 'Medium',
+  easy: 'Easy',
+  trivial: 'Trivial',
+}
+
+function themeOf(profession) {
+  return THEMES[String(profession?.name || '').toLowerCase()] || null
+}
+
+function art(name) {
+  return `url("${ART}/${name}.webp")`
+}
+
+// Tooltips that are not items (side tabs, profession spells) reuse the item
+// tooltip frame with a name and an optional description.
 function textTooltip(name, description = '') {
   return { name, qualityId: 1, description }
 }
 
-// Recipe spell telemetry uses the same client-authored tooltip line shape as
-// equipment. Feeding it through ItemHoverCard keeps positioning, colors and
-// keyboard hover behavior consistent across the character modal.
+// The recipe's own spell tooltip, as the client renders it.
 function recipeTooltip(recipe) {
   if (!recipe) return null
   return {
@@ -62,23 +77,40 @@ function recipeTooltip(recipe) {
   }
 }
 
-function themeOf(profession) {
-  return BAR_THEMES[String(profession?.name || '').toLowerCase()] || 'default'
+// Hovering a recipe shows what it makes, as in game; enchants and other
+// recipes without an item show the recipe spell instead.
+function recipeHoverItem(recipe, tooltips) {
+  return recipe?.crafted ? withItemTooltip(recipe.crafted, tooltips) : recipeTooltip(recipe)
 }
 
+function skillSummary(profession) {
+  const { current, modifier, max } = rankText(profession)
+  return `${rankTitle(profession.max) || 'Skill'} ${current}${modifier ? ` + ${modifier}` : ''}/${max}`
+}
+
+function tooltipColor(color) {
+  if (!color || typeof color !== 'object') return undefined
+  const channel = (value) => Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 255)
+  return { color: `rgb(${channel(color.r)}, ${channel(color.g)}, ${channel(color.b)})` }
+}
+
+// Profession skill bar: the game's frame and background with the profession's
+// fill art, clipped (not stretched) to the current skill.
 function RankBar({ profession, size = 'large' }) {
   const { current, modifier, max } = rankText(profession)
   const percent = max > 0 ? Math.min(100, (current / max) * 100) : 0
+  const theme = themeOf(profession)
   return (
     <div
-      className={`prof-bar prof-bar--${themeOf(profession)} prof-bar--${size}`}
+      className={`prof-bar prof-bar--${size}`}
+      style={{ '--prof-fill': art(`fill-${theme || 'default'}`), '--prof-percent': `${100 - percent}%` }}
       role="meter"
       aria-label={`${profession?.name} skill`}
       aria-valuemin={0}
       aria-valuemax={max || undefined}
       aria-valuenow={current}
     >
-      <span className="prof-bar__fill" style={{ width: `${percent}%` }} />
+      <span className="prof-bar__fill" />
       <span className="prof-bar__text">
         {current}{modifier ? <em> + {modifier}</em> : null}/{max || '?'}
       </span>
@@ -90,17 +122,17 @@ function RankBar({ profession, size = 'large' }) {
 function SpellButton({ profession, onOpen }) {
   const content = (
     <>
-      <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={36} />
-      <span>
+      <span className="prof-spell__icon">
+        <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={40} />
+      </span>
+      <span className="prof-spell__text">
         <strong>{profession.name}</strong>
         <small>{rankTitle(profession.max)}</small>
       </span>
     </>
   )
-  const { current, modifier, max } = rankText(profession)
-  const tooltip = textTooltip(profession.name, `${rankTitle(profession.max) || 'Skill'} ${current}${modifier ? ` + ${modifier}` : ''}/${max}`)
   return (
-    <ItemHoverCard item={tooltip} side="top" tooltipClassName="prof-tooltip--text">
+    <ItemHoverCard item={textTooltip(profession.name, skillSummary(profession))} side="top" tooltipClassName="prof-tooltip--text">
       {onOpen ? (
         <button type="button" className="prof-spell" onClick={() => onOpen(profession.key)} aria-label={`Open ${profession.name}`}>
           {content}
@@ -117,25 +149,36 @@ function Overview({ professions, openable, onOpen }) {
   const opener = (profession) => (openable.has(professionKey(profession)) ? onOpen : null)
   return (
     <div className="prof-overview">
-      {slots.primary.map(({ placeholder, profession }) => (
-        <section className={`prof-card prof-card--primary prof-card--${profession ? themeOf(profession) : 'missing'}`} key={placeholder}>
-          {profession ? (
-            <>
-              <h3 className="prof-card__name">{profession.name}</h3>
-              <RankBar profession={profession} />
-              <SpellButton profession={{ ...profession, key: professionKey(profession) }} onOpen={opener(profession)} />
-            </>
-          ) : (
-            <>
-              <h3 className="prof-card__name">{placeholder}</h3>
-              <p className="prof-card__missing">{MISSING_PRIMARY_TEXT}</p>
-            </>
-          )}
-        </section>
-      ))}
+      {slots.primary.map(({ placeholder, profession }) => {
+        const theme = profession && themeOf(profession)
+        return (
+          <section
+            className={`prof-card prof-card--primary${profession ? '' : ' prof-card--missing'}`}
+            style={{ '--prof-card': art(theme && !['cooking', 'fishing', 'first-aid'].includes(theme) ? `card-${theme}` : 'card-primary-empty') }}
+            key={placeholder}
+          >
+            {profession ? (
+              <>
+                <h3 className="prof-card__name">{profession.name}</h3>
+                <RankBar profession={profession} />
+                <SpellButton profession={{ ...profession, key: professionKey(profession) }} onOpen={opener(profession)} />
+              </>
+            ) : (
+              <>
+                <h3 className="prof-card__name">{placeholder}</h3>
+                <p className="prof-card__missing">{MISSING_PRIMARY_TEXT}</p>
+              </>
+            )}
+          </section>
+        )
+      })}
       <div className="prof-overview__secondary">
         {slots.secondary.map(({ name, missing, profession }) => (
-          <section className={`prof-card prof-card--secondary prof-card--${profession ? themeOf(profession) : 'missing'}`} key={name}>
+          <section
+            className={`prof-card prof-card--secondary${profession ? '' : ' prof-card--missing'}`}
+            style={{ '--prof-card': art(`card-${THEMES[name.toLowerCase()]}`) }}
+            key={name}
+          >
             <h3 className="prof-card__name">{name}</h3>
             {profession ? (
               <>
@@ -152,39 +195,67 @@ function Overview({ professions, openable, onOpen }) {
   )
 }
 
-function Schematic({ recipe, tooltips }) {
+// The crafted item's client tooltip, shown under the schematic so stats are
+// readable without hovering.
+function ItemPreview({ item }) {
+  const lines = (Array.isArray(item?.tooltip?.lines) ? item.tooltip.lines : [])
+    .slice(1)
+    .filter((line) => line?.left || line?.right)
+  if (!lines.length) return null
+  return (
+    <section className="prof-preview" aria-label={`${item.name} details`}>
+      {lines.map((line, index) => (
+        <div className="prof-preview__line" key={`${line.left}:${index}`}>
+          <span style={tooltipColor(line.leftColor)}>{line.left}</span>
+          {line.right ? <span style={tooltipColor(line.rightColor)}>{line.right}</span> : null}
+        </div>
+      ))}
+    </section>
+  )
+}
+
+function Schematic({ recipe, tooltips, theme }) {
   // Captured once per mount so render stays pure; cooldowns are minute-rounded.
   const [now] = useState(() => Date.now())
+  const style = { '--prof-schematic': art(`schematic-${theme || 'blacksmithing'}`) }
   if (!recipe) {
-    return <div className="prof-schematic prof-schematic--empty">Select a recipe.</div>
+    return <div className="prof-schematic prof-schematic--empty" style={style}>Select a recipe.</div>
   }
-  const crafted = recipe.crafted
+  const crafted = recipe.crafted ? withItemTooltip(recipe.crafted, tooltips) : null
   const reagents = Array.isArray(recipe.reagents) ? recipe.reagents : []
   const tools = Array.isArray(recipe.tools) ? recipe.tools : []
   const cooldown = cooldownRemaining(recipe.cooldown?.readyAt, now)
   const quantity = crafted?.maxQuantity > 1
     ? crafted.minQuantity && crafted.minQuantity !== crafted.maxQuantity ? `${crafted.minQuantity}-${crafted.maxQuantity}` : String(crafted.maxQuantity)
     : ''
+  const skillUps = Number(recipe.skillUps) || 0
   return (
-    <div className="prof-schematic">
+    <div className="prof-schematic" style={style}>
       <header className="prof-schematic__head">
-        <ItemHoverCard item={crafted ? withItemTooltip(crafted, tooltips) : recipeTooltip(recipe)} tooltipClassName={crafted ? '' : 'prof-tooltip--text'}>
+        <ItemHoverCard item={crafted || recipeTooltip(recipe)}>
           <span className="prof-schematic__output" tabIndex={0}>
             <WowIcon
-              iconFileId={crafted?.iconFileDataId ?? recipe.iconFileId}
+              iconFileId={crafted?.iconFileDataId ?? crafted?.iconFileId ?? recipe.iconFileId}
               itemId={crafted?.itemId}
               spellId={crafted ? undefined : recipe.spellId}
               label={recipe.name}
               quality={crafted?.qualityId}
-              size={53}
+              size={56}
             />
             {quantity ? <span className="prof-schematic__count">{quantity}</span> : null}
           </span>
         </ItemHoverCard>
-        <div>
+        <div className="prof-schematic__title">
           <ItemHoverCard item={recipeTooltip(recipe)} side="left">
             <h4 tabIndex={0} className={crafted ? `item-quality-${crafted.qualityId ?? 1}` : 'prof-schematic__spell'}>{recipe.name}</h4>
           </ItemHoverCard>
+          {recipe.difficulty ? (
+            <p className={`prof-schematic__difficulty prof-difficulty--${recipe.difficulty}`}>
+              {DIFFICULTY_LABELS[recipe.difficulty] || recipe.difficulty}
+              {recipe.difficulty !== 'trivial' && skillUps ? <span> · {skillUps === 1 ? '1 skill-up' : `${skillUps} skill-ups`}</span> : null}
+              {recipe.maxTrivialLevel ? <span> · grey at {recipe.maxTrivialLevel}</span> : null}
+            </p>
+          ) : null}
         </div>
       </header>
       {tools.length ? (
@@ -210,7 +281,7 @@ function Schematic({ recipe, tooltips }) {
                   <ItemHoverCard item={reagent}>
                     <span className="prof-reagent" tabIndex={0}>
                       <span className="prof-reagent__icon">
-                        <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={37} />
+                        <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={36} />
                         <span className="prof-reagent__count">{reagent.quantity || 1}</span>
                       </span>
                       <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
@@ -222,18 +293,79 @@ function Schematic({ recipe, tooltips }) {
           </ul>
         </section>
       ) : null}
+      {crafted ? <ItemPreview item={crafted} /> : null}
     </div>
+  )
+}
+
+function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, searching }) {
+  const expanded = searching || open(node.id)
+  return (
+    <section className="prof-category" data-depth={node.depth}>
+      <button
+        type="button"
+        className={`prof-category__header${expanded ? ' is-open' : ''}`}
+        onClick={() => onToggle(node.id)}
+        aria-expanded={expanded}
+        disabled={searching}
+      >
+        <span className="prof-category__toggle" aria-hidden="true" />
+        <span className="prof-category__name">{node.name}</span>
+        <small>{node.count}</small>
+      </button>
+      {expanded ? (
+        <>
+          {node.recipes.length ? (
+            <ul>
+              {node.recipes.map((recipe) => {
+                const key = recipeKey(recipe)
+                const isSelected = selectedKey === key
+                return (
+                  <li key={key}>
+                    <ItemHoverCard item={recipeHoverItem(recipe, tooltips)} side="right">
+                      <button
+                        type="button"
+                        className={`prof-recipe prof-difficulty--${recipe.difficulty || 'none'}${isSelected ? ' is-selected' : ''}`}
+                        onClick={() => onSelect(key)}
+                        aria-pressed={isSelected}
+                      >
+                        <span>{recipe.name}</span>
+                        {Number(recipe.skillUps) > 1 && recipe.difficulty !== 'trivial' ? <small>{recipe.skillUps}</small> : null}
+                      </button>
+                    </ItemHoverCard>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+          {node.children.map((child) => (
+            <CategoryNode
+              key={child.id}
+              node={child}
+              open={open}
+              onToggle={onToggle}
+              selectedKey={selectedKey}
+              onSelect={onSelect}
+              tooltips={tooltips}
+              searching={searching}
+            />
+          ))}
+        </>
+      ) : null}
+    </section>
   )
 }
 
 function CraftingPage({ profession, recipes, tooltips }) {
   const [query, setQuery] = useState('')
   const [selectedKey, setSelectedKey] = useState(null)
+  // Categories start open, as in game.
   const [collapsed, setCollapsed] = useState(() => new Set())
-  const groups = useMemo(() => recipeGroups(recipes, query), [recipes, query])
-  const visible = groups.flatMap((group) => group.recipes)
+  const tree = useMemo(() => recipeCategoryTree(recipes, profession.categories, query), [recipes, profession.categories, query])
+  const visible = useMemo(() => flattenRecipeTree(tree), [tree])
   const selected = visible.find((recipe) => recipeKey(recipe) === selectedKey) || visible[0] || null
   const searching = Boolean(query.trim())
+  const theme = themeOf(profession)
 
   const toggle = (id) => setCollapsed((current) => {
     const next = new Set(current)
@@ -257,50 +389,22 @@ function CraftingPage({ profession, recipes, tooltips }) {
               aria-label={`Search ${profession.name} recipes`}
             />
             <div className="prof-list__scroll">
-              {groups.map((group) => {
-                const open = searching || !collapsed.has(group.id)
-                return (
-                  <section key={group.id}>
-                    <button
-                      type="button"
-                      className={`prof-list__header${open ? ' is-open' : ''}`}
-                      onClick={() => toggle(group.id)}
-                      aria-expanded={open}
-                      disabled={searching}
-                    >
-                      <span>{group.label}</span>
-                      <small>{group.recipes.length}</small>
-                    </button>
-                    {open ? (
-                      <ul>
-                        {group.recipes.map((recipe) => {
-                          const key = recipeKey(recipe)
-                          const isSelected = selected && recipeKey(selected) === key
-                          return (
-                            <li key={key}>
-                              <ItemHoverCard item={recipeTooltip(recipe)} side="right">
-                                <button
-                                  type="button"
-                                  className={`prof-recipe prof-difficulty--${recipe.difficulty || 'none'}${isSelected ? ' is-selected' : ''}`}
-                                  onClick={() => setSelectedKey(key)}
-                                  aria-pressed={Boolean(isSelected)}
-                                >
-                                  <span>{recipe.name}</span>
-                                  {Number(recipe.skillUps) > 1 && recipe.difficulty !== 'trivial' ? <small>{recipe.skillUps}</small> : null}
-                                </button>
-                              </ItemHoverCard>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    ) : null}
-                  </section>
-                )
-              })}
+              {tree.map((node) => (
+                <CategoryNode
+                  key={node.id}
+                  node={node}
+                  open={(id) => !collapsed.has(id)}
+                  onToggle={toggle}
+                  selectedKey={selected ? recipeKey(selected) : null}
+                  onSelect={setSelectedKey}
+                  tooltips={tooltips}
+                  searching={searching}
+                />
+              ))}
               {!visible.length ? <p className="prof-list__none">No recipes match.</p> : null}
             </div>
           </div>
-          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} tooltips={tooltips} />
+          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} tooltips={tooltips} theme={theme} />
         </div>
       ) : (
         <div className="prof-crafting__waiting">
@@ -318,21 +422,29 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
   const openable = useMemo(() => new Set(rail.map((profession) => profession.key)), [rail])
   const active = rail.find((profession) => profession.key === view) || null
   const tooltips = useMemo(() => itemTooltipIndex(recipes), [recipes])
+  const activeRecipes = useMemo(() => (active ? recipesFor(active, recipes) : []), [active, recipes])
 
   if (!professions.length) {
     return <EmptyTelemetry title="No profession telemetry yet.">Professions will appear after this character's next Guildweaver sync.</EmptyTelemetry>
   }
 
   return (
-    <div className="professions-pane">
+    <div className={`professions-pane${active ? ' professions-pane--crafting' : ''}`}>
       <div className="professions-pane__page">
         <header className="professions-pane__title">
-          <WowIcon iconFileId={active ? active.iconFileId : OVERVIEW_ICON} label={active ? active.name : 'Professions'} size={28} />
-          <span>{active ? active.name : 'Professions'}</span>
+          <span className="professions-pane__portrait">
+            {active
+              ? <WowIcon iconFileId={active.iconFileId} label={active.name} size={34} />
+              : <WowIcon src={SIDE_TAB_ICON} label="Professions" size={34} />}
+          </span>
+          <span className="professions-pane__heading">
+            <strong>{active ? active.name : 'Professions'}</strong>
+            {active ? <small>{skillSummary(active)} · {activeRecipes.length} known recipes</small> : null}
+          </span>
         </header>
         <div className="professions-pane__content">
           {active
-            ? <CraftingPage key={active.key} profession={active} recipes={recipesFor(active, recipes)} tooltips={tooltips} />
+            ? <CraftingPage key={active.key} profession={active} recipes={activeRecipes} tooltips={tooltips} />
             : <Overview professions={professions} openable={openable} onOpen={setView} />}
         </div>
       </div>
@@ -345,11 +457,11 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
             aria-pressed={!active}
             aria-label="Professions"
           >
-            <WowIcon iconFileId={OVERVIEW_ICON} label="Professions" size={40} />
+            <WowIcon src={SIDE_TAB_ICON} label="Professions" size={40} />
           </button>
         </ItemHoverCard>
         {rail.map((profession) => (
-          <ItemHoverCard key={profession.key} item={textTooltip(profession.name)} side="left" tooltipClassName="prof-tooltip--text">
+          <ItemHoverCard key={profession.key} item={textTooltip(profession.name, skillSummary(profession))} side="left" tooltipClassName="prof-tooltip--text">
             <button
               type="button"
               className={`prof-rail-button${active?.key === profession.key ? ' is-active' : ''}`}

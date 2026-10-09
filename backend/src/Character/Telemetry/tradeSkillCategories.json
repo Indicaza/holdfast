@@ -1,0 +1,926 @@
+{
+ "source": "WoW Forever TradeSkillCategory (wago.tools wow_cn_beta)",
+ "recordedAt": "2026-10-09",
+ "categories": {
+  "2399": {
+   "name": "Jewelcrafting (PROTOTYPE)",
+   "parentId": null,
+   "order": 0
+  },
+  "2400": {
+   "name": "Jewelcrafting (PROTOTYPE)",
+   "parentId": 2399,
+   "order": 0
+  },
+  "2424": {
+   "name": "Alchemy",
+   "parentId": null,
+   "order": 0
+  },
+  "2425": {
+   "name": "Blacksmithing",
+   "parentId": null,
+   "order": 0
+  },
+  "2426": {
+   "name": "Cooking",
+   "parentId": null,
+   "order": 0
+  },
+  "2427": {
+   "name": "Enchanting",
+   "parentId": null,
+   "order": 0
+  },
+  "2428": {
+   "name": "Engineering",
+   "parentId": null,
+   "order": 0
+  },
+  "2429": {
+   "name": "First Aid",
+   "parentId": null,
+   "order": 0
+  },
+  "2430": {
+   "name": "Fishing",
+   "parentId": null,
+   "order": 0
+  },
+  "2431": {
+   "name": "Herbalism",
+   "parentId": null,
+   "order": 0
+  },
+  "2432": {
+   "name": "Leatherworking",
+   "parentId": null,
+   "order": 0
+  },
+  "2433": {
+   "name": "Mining",
+   "parentId": null,
+   "order": 0
+  },
+  "2434": {
+   "name": "Skinning",
+   "parentId": null,
+   "order": 0
+  },
+  "2435": {
+   "name": "Tailoring",
+   "parentId": null,
+   "order": 0
+  },
+  "2448": {
+   "name": "Reagents",
+   "parentId": 2424,
+   "order": 10
+  },
+  "2449": {
+   "name": "Potions",
+   "parentId": 2424,
+   "order": 25
+  },
+  "2450": {
+   "name": "Elixirs",
+   "parentId": 2424,
+   "order": 30
+  },
+  "2451": {
+   "name": "Flasks",
+   "parentId": 2424,
+   "order": 40
+  },
+  "2452": {
+   "name": "Lesser Transmutations",
+   "parentId": 2424,
+   "order": 60
+  },
+  "2453": {
+   "name": "Miscellaneous",
+   "parentId": 2424,
+   "order": 70
+  },
+  "2454": {
+   "name": "Camping",
+   "parentId": 2424,
+   "order": 1
+  },
+  "2455": {
+   "name": "Weapon Oils",
+   "parentId": 2424,
+   "order": 50
+  },
+  "2459": {
+   "name": "Reagents",
+   "parentId": 2425,
+   "order": 10
+  },
+  "2460": {
+   "name": "Weapon Stones",
+   "parentId": 2425,
+   "order": 20
+  },
+  "2461": {
+   "name": "Mail Helmets",
+   "parentId": 2425,
+   "order": 110
+  },
+  "2462": {
+   "name": "Mail Pauldrons",
+   "parentId": 2425,
+   "order": 120
+  },
+  "2463": {
+   "name": "Mail Chestguards",
+   "parentId": 2425,
+   "order": 130
+  },
+  "2464": {
+   "name": "Mail Bracers",
+   "parentId": 2425,
+   "order": 140
+  },
+  "2465": {
+   "name": "Mail Gauntlets",
+   "parentId": 2425,
+   "order": 150
+  },
+  "2466": {
+   "name": "Mail Belts",
+   "parentId": 2425,
+   "order": 160
+  },
+  "2467": {
+   "name": "Mail Legguards",
+   "parentId": 2425,
+   "order": 170
+  },
+  "2468": {
+   "name": "Mail Boots",
+   "parentId": 2425,
+   "order": 180
+  },
+  "2469": {
+   "name": "Plate Helmets",
+   "parentId": 2425,
+   "order": 30
+  },
+  "2470": {
+   "name": "Plate Pauldrons",
+   "parentId": 2425,
+   "order": 40
+  },
+  "2471": {
+   "name": "Plate Chestguards",
+   "parentId": 2425,
+   "order": 50
+  },
+  "2472": {
+   "name": "Plate Bracers",
+   "parentId": 2425,
+   "order": 60
+  },
+  "2473": {
+   "name": "Plate Gauntlets",
+   "parentId": 2425,
+   "order": 70
+  },
+  "2474": {
+   "name": "Plate Belts",
+   "parentId": 2425,
+   "order": 80
+  },
+  "2475": {
+   "name": "Plate Legguards",
+   "parentId": 2425,
+   "order": 90
+  },
+  "2476": {
+   "name": "Plate Boots",
+   "parentId": 2425,
+   "order": 100
+  },
+  "2477": {
+   "name": "Two-Handed Axes",
+   "parentId": 2425,
+   "order": 190
+  },
+  "2478": {
+   "name": "Two-Handed Maces",
+   "parentId": 2425,
+   "order": 200
+  },
+  "2479": {
+   "name": "Polearms",
+   "parentId": 2425,
+   "order": 210
+  },
+  "2480": {
+   "name": "Two-Handed Swords",
+   "parentId": 2425,
+   "order": 220
+  },
+  "2481": {
+   "name": "One-Handed Axes",
+   "parentId": 2425,
+   "order": 230
+  },
+  "2482": {
+   "name": "Daggers",
+   "parentId": 2425,
+   "order": 240
+  },
+  "2483": {
+   "name": "Fist Weapons",
+   "parentId": 2425,
+   "order": 250
+  },
+  "2484": {
+   "name": "One-Handed Maces",
+   "parentId": 2425,
+   "order": 260
+  },
+  "2485": {
+   "name": "One-Handed Swords",
+   "parentId": 2425,
+   "order": 270
+  },
+  "2486": {
+   "name": "Shields",
+   "parentId": 2425,
+   "order": 280
+  },
+  "2487": {
+   "name": "Miscellaneous",
+   "parentId": 2425,
+   "order": 290
+  },
+  "2488": {
+   "name": "Inert Enchanting Rods",
+   "parentId": 2425,
+   "order": 300
+  },
+  "2489": {
+   "name": "Camping",
+   "parentId": 2425,
+   "order": 1
+  },
+  "2490": {
+   "name": "Reagents",
+   "parentId": 2427,
+   "order": 10
+  },
+  "2491": {
+   "name": "Runed Enchanting Rods",
+   "parentId": 2427,
+   "order": 20
+  },
+  "2492": {
+   "name": "Wizard Oils",
+   "parentId": 2427,
+   "order": 30
+  },
+  "2493": {
+   "name": "Helmet Enchants",
+   "parentId": 2427,
+   "order": 40
+  },
+  "2494": {
+   "name": "Shoulder Enchants",
+   "parentId": 2427,
+   "order": 50
+  },
+  "2495": {
+   "name": "Chest Enchants",
+   "parentId": 2427,
+   "order": 60
+  },
+  "2496": {
+   "name": "Bracer Enchants",
+   "parentId": 2427,
+   "order": 70
+  },
+  "2497": {
+   "name": "Glove Enchants",
+   "parentId": 2427,
+   "order": 80
+  },
+  "2498": {
+   "name": "Belt Enchants",
+   "parentId": 2427,
+   "order": 90
+  },
+  "2499": {
+   "name": "Pants Enchants",
+   "parentId": 2427,
+   "order": 100
+  },
+  "2500": {
+   "name": "Boots Enchants",
+   "parentId": 2427,
+   "order": 110
+  },
+  "2501": {
+   "name": "Two-Handed Weapon Enchants",
+   "parentId": 2427,
+   "order": 120
+  },
+  "2502": {
+   "name": "Weapon Enchants",
+   "parentId": 2427,
+   "order": 130
+  },
+  "2503": {
+   "name": "Shield Enchants",
+   "parentId": 2427,
+   "order": 140
+  },
+  "2504": {
+   "name": "Off-Hand Enchants",
+   "parentId": 2427,
+   "order": 150
+  },
+  "2505": {
+   "name": "Amulet Enchants",
+   "parentId": 2427,
+   "order": 160
+  },
+  "2506": {
+   "name": "Cloak Enchants",
+   "parentId": 2427,
+   "order": 170
+  },
+  "2507": {
+   "name": "Ring Enchants",
+   "parentId": 2427,
+   "order": 180
+  },
+  "2508": {
+   "name": "Trinket Enchants",
+   "parentId": 2427,
+   "order": 190
+  },
+  "2509": {
+   "name": "Relics",
+   "parentId": 2427,
+   "order": 200
+  },
+  "2510": {
+   "name": "Curios",
+   "parentId": 2427,
+   "order": 210
+  },
+  "2511": {
+   "name": "Staves",
+   "parentId": 2427,
+   "order": 220
+  },
+  "2512": {
+   "name": "Wands",
+   "parentId": 2427,
+   "order": 230
+  },
+  "2513": {
+   "name": "Off-Hands",
+   "parentId": 2427,
+   "order": 240
+  },
+  "2514": {
+   "name": "Camping",
+   "parentId": 2427,
+   "order": 1
+  },
+  "2515": {
+   "name": "Parts",
+   "parentId": 2428,
+   "order": 10
+  },
+  "2516": {
+   "name": "Explosives",
+   "parentId": 2428,
+   "order": 20
+  },
+  "2517": {
+   "name": "Fireworks",
+   "parentId": 2428,
+   "order": 30
+  },
+  "2518": {
+   "name": "Consumable Devices",
+   "parentId": 2428,
+   "order": 40
+  },
+  "2519": {
+   "name": "Devices",
+   "parentId": 2428,
+   "order": 50
+  },
+  "2520": {
+   "name": "Gadgets",
+   "parentId": 2428,
+   "order": 60
+  },
+  "2521": {
+   "name": "Pets and Guardians",
+   "parentId": 2428,
+   "order": 70
+  },
+  "2522": {
+   "name": "Cloth Headgear",
+   "parentId": 2428,
+   "order": 80
+  },
+  "2523": {
+   "name": "Leather Headgear",
+   "parentId": 2428,
+   "order": 90
+  },
+  "2524": {
+   "name": "Mail Headgear",
+   "parentId": 2428,
+   "order": 100
+  },
+  "2525": {
+   "name": "Plate Headgear",
+   "parentId": 2428,
+   "order": 110
+  },
+  "2526": {
+   "name": "Ranged Weapons",
+   "parentId": 2428,
+   "order": 120
+  },
+  "2527": {
+   "name": "Scopes",
+   "parentId": 2428,
+   "order": 130
+  },
+  "2528": {
+   "name": "Ammunition",
+   "parentId": 2428,
+   "order": 140
+  },
+  "2529": {
+   "name": "Camping",
+   "parentId": 2428,
+   "order": 1
+  },
+  "2530": {
+   "name": "Bandages",
+   "parentId": 2429,
+   "order": 10
+  },
+  "2531": {
+   "name": "Healing Potions",
+   "parentId": 2429,
+   "order": 10
+  },
+  "2532": {
+   "name": "Poultices",
+   "parentId": 2429,
+   "order": 10
+  },
+  "2533": {
+   "name": "Curatives",
+   "parentId": 2429,
+   "order": 10
+  },
+  "2534": {
+   "name": "Miscellaneous",
+   "parentId": 2429,
+   "order": 10
+  },
+  "2535": {
+   "name": "Camping",
+   "parentId": 2429,
+   "order": 1
+  },
+  "2536": {
+   "name": "Reagents",
+   "parentId": 2399,
+   "order": 10
+  },
+  "2537": {
+   "name": "Necks",
+   "parentId": 2399,
+   "order": 20
+  },
+  "2538": {
+   "name": "Rings",
+   "parentId": 2399,
+   "order": 30
+  },
+  "2539": {
+   "name": "Crowns",
+   "parentId": 2399,
+   "order": 40
+  },
+  "2540": {
+   "name": "Cuffs",
+   "parentId": 2399,
+   "order": 50
+  },
+  "2541": {
+   "name": "Trinkets",
+   "parentId": 2399,
+   "order": 60
+  },
+  "2542": {
+   "name": "Red Gems",
+   "parentId": 2399,
+   "order": 70
+  },
+  "2543": {
+   "name": "Orange Gems",
+   "parentId": 2399,
+   "order": 80
+  },
+  "2544": {
+   "name": "Yellow Gems",
+   "parentId": 2399,
+   "order": 90
+  },
+  "2545": {
+   "name": "Green Gems",
+   "parentId": 2399,
+   "order": 100
+  },
+  "2546": {
+   "name": "Blue Gems",
+   "parentId": 2399,
+   "order": 110
+  },
+  "2547": {
+   "name": "Purple Gems",
+   "parentId": 2399,
+   "order": 120
+  },
+  "2548": {
+   "name": "Meta Gems",
+   "parentId": 2399,
+   "order": 130
+  },
+  "2549": {
+   "name": "Camping",
+   "parentId": 2399,
+   "order": 1
+  },
+  "2550": {
+   "name": "Reagents",
+   "parentId": 2432,
+   "order": 100
+  },
+  "2551": {
+   "name": "Bags",
+   "parentId": 2432,
+   "order": 200
+  },
+  "2552": {
+   "name": "Cloaks",
+   "parentId": 2432,
+   "order": 300
+  },
+  "2553": {
+   "name": "Leather Helmets",
+   "parentId": 2432,
+   "order": 400
+  },
+  "2554": {
+   "name": "Leather Pauldrons",
+   "parentId": 2432,
+   "order": 500
+  },
+  "2555": {
+   "name": "Leather Chestguards",
+   "parentId": 2432,
+   "order": 600
+  },
+  "2556": {
+   "name": "Leather Bracers",
+   "parentId": 2432,
+   "order": 700
+  },
+  "2557": {
+   "name": "Leather Gauntlets",
+   "parentId": 2432,
+   "order": 800
+  },
+  "2558": {
+   "name": "Leather Belts",
+   "parentId": 2432,
+   "order": 900
+  },
+  "2559": {
+   "name": "Leather Legguards",
+   "parentId": 2432,
+   "order": 1000
+  },
+  "2560": {
+   "name": "Leather Boots",
+   "parentId": 2432,
+   "order": 1100
+  },
+  "2561": {
+   "name": "Mail Helmets",
+   "parentId": 2432,
+   "order": 1200
+  },
+  "2562": {
+   "name": "Mail Pauldrons",
+   "parentId": 2432,
+   "order": 1300
+  },
+  "2563": {
+   "name": "Mail Chestguards",
+   "parentId": 2432,
+   "order": 1400
+  },
+  "2564": {
+   "name": "Mail Bracers",
+   "parentId": 2432,
+   "order": 1500
+  },
+  "2565": {
+   "name": "Mail Gauntlets",
+   "parentId": 2432,
+   "order": 1600
+  },
+  "2566": {
+   "name": "Mail Belts",
+   "parentId": 2432,
+   "order": 1700
+  },
+  "2567": {
+   "name": "Mail Legguards",
+   "parentId": 2432,
+   "order": 1800
+  },
+  "2568": {
+   "name": "Mail Boots",
+   "parentId": 2432,
+   "order": 1900
+  },
+  "2569": {
+   "name": "Armor Kits",
+   "parentId": 2432,
+   "order": 2000
+  },
+  "2570": {
+   "name": "Quivers",
+   "parentId": 2432,
+   "order": 2100
+  },
+  "2571": {
+   "name": "Ammo Pouches",
+   "parentId": 2432,
+   "order": 2200
+  },
+  "2572": {
+   "name": "Crossbows",
+   "parentId": 2432,
+   "order": 2300
+  },
+  "2573": {
+   "name": "Arrows",
+   "parentId": 2432,
+   "order": 2400
+  },
+  "2574": {
+   "name": "Camping",
+   "parentId": 2432,
+   "order": 1
+  },
+  "2575": {
+   "name": "Smelted Bars",
+   "parentId": 2433,
+   "order": 100
+  },
+  "2576": {
+   "name": "Reagents",
+   "parentId": 2435,
+   "order": 100
+  },
+  "2577": {
+   "name": "Embroideries",
+   "parentId": 2435,
+   "order": 200
+  },
+  "2578": {
+   "name": "Bags",
+   "parentId": 2435,
+   "order": 300
+  },
+  "2579": {
+   "name": "Specialty Bags",
+   "parentId": 2435,
+   "order": 400
+  },
+  "2580": {
+   "name": "Cloaks",
+   "parentId": 2435,
+   "order": 500
+  },
+  "2581": {
+   "name": "Hoods",
+   "parentId": 2435,
+   "order": 600
+  },
+  "2582": {
+   "name": "Spaulders",
+   "parentId": 2435,
+   "order": 700
+  },
+  "2583": {
+   "name": "Robes and Vests",
+   "parentId": 2435,
+   "order": 800
+  },
+  "2584": {
+   "name": "Bracers",
+   "parentId": 2435,
+   "order": 900
+  },
+  "2585": {
+   "name": "Gloves",
+   "parentId": 2435,
+   "order": 1000
+  },
+  "2586": {
+   "name": "Belts",
+   "parentId": 2435,
+   "order": 1100
+  },
+  "2587": {
+   "name": "Leggings",
+   "parentId": 2435,
+   "order": 1200
+  },
+  "2588": {
+   "name": "Shoes",
+   "parentId": 2435,
+   "order": 1300
+  },
+  "2589": {
+   "name": "Shirts",
+   "parentId": 2435,
+   "order": 1400
+  },
+  "2590": {
+   "name": "Dressed for the Occasion",
+   "parentId": 2435,
+   "order": 1500
+  },
+  "2591": {
+   "name": "Camping",
+   "parentId": 2435,
+   "order": 1
+  },
+  "2599": {
+   "name": "Miscellaneous",
+   "parentId": 2432,
+   "order": 2450
+  },
+  "2600": {
+   "name": "Miscellaneous",
+   "parentId": 2435,
+   "order": 1550
+  },
+  "2620": {
+   "name": "Greater Transmutations",
+   "parentId": 2424,
+   "order": 65
+  },
+  "2621": {
+   "name": "Recovery Potions",
+   "parentId": 2424,
+   "order": 20
+  },
+  "2632": {
+   "name": "Everyday Meals",
+   "parentId": 2426,
+   "order": 10
+  },
+  "2633": {
+   "name": "Strength Food",
+   "parentId": 2426,
+   "order": 20
+  },
+  "2634": {
+   "name": "Agility Food",
+   "parentId": 2426,
+   "order": 30
+  },
+  "2635": {
+   "name": "Intellect Food",
+   "parentId": 2426,
+   "order": 40
+  },
+  "2636": {
+   "name": "Miscellaneous Cuisines",
+   "parentId": 2426,
+   "order": 200
+  },
+  "2638": {
+   "name": "Winter Veil Treats",
+   "parentId": 2426,
+   "order": 300
+  },
+  "2639": {
+   "name": "Meal Prep",
+   "parentId": 2426,
+   "order": 5
+  },
+  "2640": {
+   "name": "Stamina Food",
+   "parentId": 2426,
+   "order": 15
+  },
+  "2641": {
+   "name": "Spell Damage Food",
+   "parentId": 2426,
+   "order": 50
+  },
+  "2642": {
+   "name": "Combat Prowess Food",
+   "parentId": 2426,
+   "order": 70
+  },
+  "2643": {
+   "name": "Attack Power Food",
+   "parentId": 2426,
+   "order": 60
+  },
+  "2644": {
+   "name": "Fisherman's Delights",
+   "parentId": 2426,
+   "order": 88
+  },
+  "2645": {
+   "name": "Delightful Drinks",
+   "parentId": 2426,
+   "order": 90
+  },
+  "2646": {
+   "name": "Soothing Drinks",
+   "parentId": 2426,
+   "order": 100
+  },
+  "2651": {
+   "name": "Draughts",
+   "parentId": 2424,
+   "order": 55
+  },
+  "2714": {
+   "name": "Camping",
+   "parentId": 2426,
+   "order": 1
+  },
+  "2715": {
+   "name": "Camping",
+   "parentId": 2430,
+   "order": 1
+  },
+  "2716": {
+   "name": "Camping",
+   "parentId": 2431,
+   "order": 1
+  },
+  "2717": {
+   "name": "Camping",
+   "parentId": 2433,
+   "order": 1
+  },
+  "2718": {
+   "name": "Camping",
+   "parentId": 2434,
+   "order": 1
+  },
+  "2733": {
+   "name": "Poisons",
+   "parentId": null,
+   "order": 0
+  },
+  "2734": {
+   "name": "Poisons",
+   "parentId": 2733,
+   "order": 0
+  },
+  "2757": {
+   "name": "Comprehension",
+   "parentId": null,
+   "order": 0
+  },
+  "2770": {
+   "name": "Thrown",
+   "parentId": 2425,
+   "order": 285
+  },
+  "2771": {
+   "name": "Armor Food",
+   "parentId": 2426,
+   "order": 80
+  }
+ }
+}

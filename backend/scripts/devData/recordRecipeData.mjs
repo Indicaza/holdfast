@@ -1,19 +1,23 @@
-// Records real Classic recipe books for the development character generator.
+// Records WoW Forever recipe books for the development character generator.
 //
 //   node scripts/devData/recordRecipeData.mjs <db2-csv-dir> <community-listfile.csv>
 //
-// <db2-csv-dir> holds CSV exports of these wow_classic_era DB2 tables from
-// https://wago.tools/db2/<Table>/csv?product=wow_classic_era : SkillLineAbility,
-// SpellName, Spell, SpellMisc, SpellEffect, SpellReagents, SpellTotems,
-// SpellCooldowns, SpellCastingRequirements, SpellFocusObject, Item,
-// ItemSparse. Icon names come from the wowdev community listfile
+// <db2-csv-dir> holds CSV exports of these DB2 tables from WoW Forever's client
+// (wago.tools lists it as product wow_cn_beta, build 1.60.1.70245):
+// https://wago.tools/db2/<Table>/csv?product=wow_cn_beta : SkillLineAbility,
+// TradeSkillCategory, SpellName, Spell, SpellMisc, SpellEffect, SpellReagents,
+// SpellTotems, SpellCooldowns, SpellCastingRequirements, SpellFocusObject,
+// Item, ItemSparse. Icon names come from the wowdev community listfile
 // (https://github.com/wowdev/wow-listfile/releases), as in recordGameData.mjs.
 //
-// Writes seed/devData/recipes.json (recipes per profession skill line, shaped
-// close to what Guildweaver's profession capture reports), records crafted
-// item tooltips from Wowhead into seed/devData/recipeTooltips.json (kept
-// between runs, so only new items are fetched), and adds the recipe, reagent
-// and crafted item icons to seed/devData/icons.json.
+// Writes seed/devData/recipes.json (recipes per profession skill line with the
+// game's recipe categories, shaped close to what Guildweaver's profession
+// capture reports), records crafted item and reagent tooltips from Wowhead into
+// seed/devData/recipeTooltips.json (kept between runs, so only new items are
+// fetched), and adds the recipe, reagent and crafted item icons to
+// seed/devData/icons.json. Also writes the game's recipe categories to
+// src/Character/Telemetry/tradeSkillCategories.json, which the armory uses to
+// name categories for snapshots captured before Guildweaver recorded them.
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -25,7 +29,8 @@ const backendRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const outputPath = join(backendRoot, "seed", "devData", "recipes.json");
 const iconOutputPath = join(backendRoot, "seed", "devData", "icons.json");
 const tooltipOutputPath = join(backendRoot, "seed", "devData", "recipeTooltips.json");
-const TOOLTIP_URL = "https://nether.wowhead.com/classic/tooltip/item/";
+const categoryOutputPath = join(backendRoot, "src", "Character", "Telemetry", "tradeSkillCategories.json");
+const TOOLTIP_URL = "https://nether.wowhead.com/forever/tooltip/item/";
 const TOOLTIP_CONCURRENCY = 4;
 
 // Profession skill lines whose recipe books the generator can fill.
@@ -40,9 +45,8 @@ const SKILL_LINES = {
   185: "Cooking",
   129: "First Aid",
 };
-// Original Classic content only: later seasons add recipes with higher IDs.
-const MAX_SPELL_ID = 30000;
-const MAX_ITEM_ID = 25000;
+// Categories the client keeps for unreleased or seasonal recipes.
+const HIDDEN_CATEGORY = /UNCATEGORIZED|NYI|\bPH\b|SEASON OF DISCOVERY/i;
 const CREATE_ITEM_EFFECT = 24;
 const ENCHANT_ITEM_EFFECT = 53;
 
@@ -140,6 +144,31 @@ async function main() {
   const itemText = indexBy(table(dbDir, "ItemSparse"), "ID");
   const iconNames = loadIconNames(listfilePath);
 
+  // Each profession's categories hang off one root category for its skill line.
+  const categoryRows = table(dbDir, "TradeSkillCategory");
+  const categories = {};
+  const categoryOf = new Map();
+  for (const [skillLineId] of Object.entries(SKILL_LINES)) {
+    const root = categoryRows.find((row) => row.SkillLineID === skillLineId && row.ParentTradeSkillCategoryID === "0");
+    const children = categoryRows
+      .filter((row) => root && row.ParentTradeSkillCategoryID === root.ID && !HIDDEN_CATEGORY.test(row.Name_lang))
+      .map((row) => ({ id: Number(row.ID), name: row.Name_lang, order: Number(row.OrderIndex) || 0 }))
+      .sort((left, right) => left.order - right.order || left.id - right.id);
+    categories[skillLineId] = children;
+    for (const category of children) categoryOf.set(String(category.id), Number(skillLineId));
+  }
+
+  const visibleCategories = Object.fromEntries(categoryRows
+    .filter((row) => !HIDDEN_CATEGORY.test(row.Name_lang))
+    .sort((left, right) => Number(left.ID) - Number(right.ID))
+    .map((row) => [row.ID, { name: row.Name_lang, parentId: Number(row.ParentTradeSkillCategoryID) || null, order: Number(row.OrderIndex) || 0 }]));
+  writeFileSync(categoryOutputPath, `${JSON.stringify({
+    source: "WoW Forever TradeSkillCategory (wago.tools wow_cn_beta)",
+    recordedAt: new Date().toISOString().slice(0, 10),
+    categories: visibleCategories,
+  }, null, 1)}\n`);
+  console.log(`Wrote ${Object.keys(visibleCategories).length} recipe categories to ${categoryOutputPath}`);
+
   function item(itemId) {
     const id = String(itemId);
     const base = items.get(id);
@@ -158,7 +187,9 @@ async function main() {
   for (const row of table(dbDir, "SkillLineAbility")) {
     const skillLineId = Number(row.SkillLine);
     const spellId = Number(row.Spell);
-    if (!SKILL_LINES[skillLineId] || spellId >= MAX_SPELL_ID || seen.has(spellId)) continue;
+    if (!SKILL_LINES[skillLineId] || seen.has(spellId)) continue;
+    // Recipes outside a visible category are unreleased or seasonal.
+    if (categoryOf.get(row.TradeSkillCategoryID) !== skillLineId) continue;
     const reagentRow = reagents.get(row.Spell);
     const name = spellNames.get(row.Spell)?.Name_lang;
     if (!reagentRow || !name) continue;
@@ -167,7 +198,6 @@ async function main() {
     const create = spellEffects.find((effect) => Number(effect.Effect) === CREATE_ITEM_EFFECT && Number(effect.EffectItemType));
     const enchants = spellEffects.some((effect) => Number(effect.Effect) === ENCHANT_ITEM_EFFECT);
     if (!create && !enchants) continue;
-    if (create && Number(create.EffectItemType) >= MAX_ITEM_ID) continue;
     const createdItem = create ? item(create.EffectItemType) : null;
     if (create && !createdItem) continue;
 
@@ -201,6 +231,7 @@ async function main() {
     (professions[skillLineId] ||= []).push({
       spellId,
       name,
+      categoryId: Number(row.TradeSkillCategoryID),
       iconFileDataId: createdItem?.iconFileDataId || Number(spellMisc.get(row.Spell)?.SpellIconFileDataID) || null,
       description: cleanDescription(spellText.get(row.Spell)?.Description_lang),
       // Orange until yellow, yellow until green, green until grey. The learn
@@ -235,7 +266,7 @@ async function main() {
     .join(",\n");
   writeFileSync(
     outputPath,
-    `{\n  "source": "wago.tools wow_classic_era DB2 tables",\n  "recordedAt": "${new Date().toISOString().slice(0, 10)}",\n  "professions": {\n${books}\n  }\n}\n`,
+    `{\n  "source": "wago.tools wow_cn_beta (WoW Forever) DB2 tables",\n  "recordedAt": "${new Date().toISOString().slice(0, 10)}",\n  "categories": ${JSON.stringify(categories)},\n  "professions": {\n${books}\n  }\n}\n`,
   );
   const counts = Object.entries(professions).map(([id, recipes]) => `${SKILL_LINES[id]} ${recipes.length}`);
   console.log(`Wrote recipes to ${outputPath}: ${counts.join(", ")}`);
@@ -262,12 +293,15 @@ async function main() {
   writeFileSync(iconOutputPath, `${JSON.stringify(iconFile, null, 2)}\n`);
   console.log(`Added ${added} icon names to ${iconOutputPath}`);
 
-  const craftedIds = [...new Set(Object.values(professions).flat().map((recipe) => recipe.crafted?.itemId).filter(Boolean))];
-  await recordTooltips(craftedIds);
+  const itemIds = [...new Set(Object.values(professions).flat().flatMap((recipe) => [
+    recipe.crafted?.itemId,
+    ...recipe.reagents.map((reagent) => reagent.itemId),
+  ]).filter(Boolean))];
+  await recordTooltips(itemIds);
 }
 
-// Item level, required level and client tooltip lines for each crafted item,
-// as Guildweaver's item description reports them for known recipes.
+// Item level, required level and client tooltip lines for each crafted item
+// and reagent, as Guildweaver's item description reports them.
 async function recordTooltips(itemIds) {
   const existing = existsSync(tooltipOutputPath) ? JSON.parse(readFileSync(tooltipOutputPath, "utf8")).items : {};
   const items = Object.fromEntries(itemIds.filter((id) => existing[id]).map((id) => [id, existing[id]]));
@@ -295,9 +329,9 @@ async function recordTooltips(itemIds) {
     .join(",\n");
   writeFileSync(
     tooltipOutputPath,
-    `{\n  "source": "Wowhead Classic tooltips",\n  "recordedAt": "${new Date().toISOString().slice(0, 10)}",\n  "items": {\n${lines}\n  }\n}\n`,
+    `{\n  "source": "Wowhead WoW Forever tooltips",\n  "recordedAt": "${new Date().toISOString().slice(0, 10)}",\n  "items": {\n${lines}\n  }\n}\n`,
   );
-  console.log(`Wrote ${Object.keys(items).length} crafted item tooltips to ${tooltipOutputPath}${failed ? ` (${failed} failed)` : ""}`);
+  console.log(`Wrote ${Object.keys(items).length} item tooltips to ${tooltipOutputPath}${failed ? ` (${failed} failed)` : ""}`);
 }
 
 main().catch((error) => {
