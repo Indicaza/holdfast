@@ -176,3 +176,21 @@ test('focused share bundle includes metadata and only the selected payload secti
   assert.deepEqual(bundle.section.payload, record.payload.equipment)
   assert.equal(Object.prototype.hasOwnProperty.call(bundle.section, 'talents'), false)
 })
+test('profession_snapshot records get a Professions view and readable recipe labels', () => {
+  const record = {
+    domain: 'profession',
+    eventType: 'profession_snapshot',
+    payload: {
+      schemaVersion: 1,
+      professions: [{ skillLineId: 164, name: 'Blacksmithing', recipeBook: { knownCount: 1 } }],
+    },
+  }
+
+  assert.equal(telemetryDomainDescriptor(record).label, 'Professions')
+  assert.deepEqual(
+    telemetrySummaryEntries(record).map(([key]) => key),
+    ['professions', 'schemaVersion'],
+  )
+  assert.equal(humanizeTelemetryName('knownCount'), 'Known Recipes')
+  assert.equal(humanizeTelemetryName('skillUps'), 'Skill Ups')
+})
