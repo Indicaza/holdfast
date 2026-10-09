@@ -22,7 +22,12 @@ export default function CharacterProfileModal({ characterId, onClose }) {
 
   useEffect(() => {
     if (!characterId) return undefined
-    const refresh = () => setRefreshVersion((current) => current + 1)
+    const refresh = (event) => {
+      // Tell LiveRouteBoundary that an open Armory owns this invalidation. It
+      // will defer the route remount until the user actually closes the modal.
+      event.preventDefault()
+      setRefreshVersion((current) => current + 1)
+    }
     window.addEventListener('holdfast:intelligence-changed', refresh)
     return () => window.removeEventListener('holdfast:intelligence-changed', refresh)
   }, [characterId])
@@ -56,9 +61,13 @@ export default function CharacterProfileModal({ characterId, onClose }) {
 
   const character = armory.character
   const title = status === 'ready' ? character.name : 'Character profile'
+  const handleClose = () => {
+    onClose()
+    window.dispatchEvent(new Event('holdfast:intelligence-modal-closed'))
+  }
 
   return (
-    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={onClose}>
+    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={handleClose}>
       <div className="armory-shell" style={status === 'ready' ? { '--armory-class-color': classIdentity(character.className).color } : undefined}>
         <CharacterHeader character={character} stats={armory.stats} loading={status !== 'ready'} />
         {status === 'ready' ? <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} /> : (
