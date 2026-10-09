@@ -11,6 +11,9 @@ function fallbackText(label, descriptor) {
   return id ? String(id).slice(-2) : '✦'
 }
 
+// INV_Misc_QuestionMark: the game shows it for anything without an icon.
+export const QUESTION_MARK_ICON = '/wow-art/question-mark.webp'
+
 function safeImageSource(value) {
   const source = String(value || '').trim()
   if (!source) return ''
@@ -37,7 +40,9 @@ export function WowIcon({
   const descriptor = wowAssetDescriptor({ iconFileId, itemId, spellId, recipeId, size })
   const imageSource = safeImageSource(src) || descriptor.src
   const [failed, setFailed] = useState(false)
+  const [questionMarkFailed, setQuestionMarkFailed] = useState(false)
   const qualityClass = Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
+  const shown = imageSource && !failed ? imageSource : questionMarkFailed ? '' : QUESTION_MARK_ICON
 
   useEffect(() => {
     setFailed(false)
@@ -50,8 +55,16 @@ export function WowIcon({
       aria-hidden="true"
       data-icon-file-id={descriptor.iconFileId || undefined}
     >
-      {imageSource && !failed ? (
-        <img src={imageSource} alt="" width={size} height={size} loading="lazy" onError={() => setFailed(true)} />
+      {shown ? (
+        <img
+          src={shown}
+          alt=""
+          width={size}
+          height={size}
+          loading="lazy"
+          data-missing-icon={shown === QUESTION_MARK_ICON ? '' : undefined}
+          onError={() => (shown === QUESTION_MARK_ICON ? setQuestionMarkFailed(true) : setFailed(true))}
+        />
       ) : (
         <span className="wow-icon__fallback">{fallbackText(label, descriptor)}</span>
       )}

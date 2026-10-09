@@ -8,7 +8,8 @@ import {
   railProfessions,
   rankText,
   rankTitle,
-  recipeGroups,
+  recipeCategoryTree,
+  flattenRecipeTree,
   recipesFor,
   withItemTooltip,
 } from '../src/Intelligence/professionsModel.js'
@@ -47,18 +48,52 @@ test('recipes match their profession and omit explicitly unknown recipes', () =>
   assert.deepEqual(recipesFor(smithing, recipes).map((recipe) => recipe.name), ['Copper Bracers', 'Rough Sharpening Stone'])
 })
 
-test('recipe groups show learned recipes only, hardest first, and search reagents', () => {
+// Forever's Blacksmithing categories: the profession root, then its groups.
+const SMITHING_CATEGORIES = [
+  { categoryId: 2425, name: 'Blacksmithing', parentCategoryId: 0, order: 0 },
+  { categoryId: 2472, name: 'Plate Bracers', parentCategoryId: 2425, order: 60 },
+  { categoryId: 2460, name: 'Weapon Stones', parentCategoryId: 2425, order: 20 },
+  { categoryId: 2486, name: 'Shields', parentCategoryId: 2425, order: 280 },
+]
+
+test('recipes are grouped into the game categories, in game order, hardest first', () => {
   const recipes = [
-    { key: 'a', name: 'Iron Buckle', difficulty: 'trivial' },
-    { key: 'b', name: 'Thorium Belt', difficulty: 'optimal', reagents: [{ name: 'Thorium Bar' }] },
-    { key: 'c', name: 'Copper Axe', difficulty: 'easy' },
-    { key: 'd', name: 'Arcanite Reaper', difficulty: 'optimal', known: false },
+    { key: 'a', name: 'Iron Buckle', difficulty: 'trivial', categoryId: 2472 },
+    { key: 'b', name: 'Thorium Bracers', difficulty: 'optimal', categoryId: 2472, reagents: [{ name: 'Thorium Bar' }] },
+    { key: 'c', name: 'Rough Sharpening Stone', difficulty: 'easy', categoryId: 2460 },
+    { key: 'd', name: 'Arcanite Reaper', difficulty: 'optimal', known: false, categoryId: 2460 },
+    { key: 'e', name: 'Mystery Item', difficulty: 'easy', categoryId: 9999 },
   ]
-  assert.deepEqual(recipeGroups(recipes).map((group) => [group.label, group.recipes.map((recipe) => recipe.key)]), [
-    ['Learned', ['b', 'c', 'a']],
-  ])
-  assert.deepEqual(recipeGroups(recipes, 'thorium bar').map((group) => group.recipes.map((recipe) => recipe.key)), [['b']])
-  assert.deepEqual(recipeGroups(recipes, 'arcanite'), [])
+  const tree = recipeCategoryTree(recipes, SMITHING_CATEGORIES)
+  assert.deepEqual(tree.map((node) => [node.name, node.count, node.recipes.map((recipe) => recipe.key)]), [
+    ['Weapon Stones', 1, ['c']],
+    ['Plate Bracers', 2, ['b', 'a']],
+    ['Other', 1, ['e']],
+  ], 'root unwrapped, empty Shields dropped, unknown recipe hidden, unmapped recipe in Other')
+  assert.deepEqual(flattenRecipeTree(tree).map((recipe) => recipe.key), ['c', 'b', 'a', 'e'])
+
+  const search = recipeCategoryTree(recipes, SMITHING_CATEGORIES, 'thorium bar')
+  assert.deepEqual(search.map((node) => [node.name, node.recipes.map((recipe) => recipe.key)]), [['Plate Bracers', ['b']]], 'search matches reagents')
+  assert.deepEqual(recipeCategoryTree(recipes, SMITHING_CATEGORIES, 'arcanite'), [])
+})
+
+test('nested categories keep their parents and books without categories get one group', () => {
+  const nested = [
+    { categoryId: 1, name: 'Armor', parentCategoryId: 0, order: 2 },
+    { categoryId: 2, name: 'Helmets', parentCategoryId: 1, order: 1 },
+    { categoryId: 3, name: 'Reagents', parentCategoryId: 0, order: 1 },
+  ]
+  const tree = recipeCategoryTree([
+    { key: 'h', name: 'Helm', categoryId: 2 },
+    { key: 'r', name: 'Bar', categoryId: 3 },
+  ], nested)
+  assert.deepEqual(tree.map((node) => node.name), ['Reagents', 'Armor'])
+  assert.equal(tree[1].count, 1)
+  assert.equal(tree[1].children[0].name, 'Helmets')
+  assert.equal(tree[1].children[0].depth, 1)
+
+  const flat = recipeCategoryTree([{ key: 'x', name: 'Copper Bracers' }], [])
+  assert.deepEqual(flat.map((node) => [node.name, node.count]), [['Recipes', 1]])
 })
 
 test('rank text and titles follow the skill cap', () => {
