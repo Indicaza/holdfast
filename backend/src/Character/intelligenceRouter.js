@@ -14,6 +14,8 @@ import {
   searchRecipes,
 } from "./telemetryProjection.js";
 
+const ARMORY_HYDRATION_BUDGET_MS = 1500;
+
 function referenceIds(values) {
   return [...new Set(values.filter((value) => Number.isFinite(Number(value)) && Number(value) > 0).map((value) => Number(value)))];
 }
@@ -43,13 +45,83 @@ function armoryBuildKey(armory) {
   return label.match(/\bbuild\s+([^·\s]+)/i)?.[1] || label;
 }
 
-async function hydrateSafely(provider, references, options) {
+function safeStatus(source) {
   try {
-    return await provider.hydrateReferences(references, options);
+    return source?.status?.() || {};
+  } catch {
+    return {};
+  }
+}
+
+function applyArmoryStage(armory, label, transform) {
+  try {
+    return transform(armory) || armory;
+  } catch (error) {
+    console.warn(`Unable to ${label}`, error?.message || error);
+    return armory;
+  }
+}
+
+async function hydrateSafely(provider, references, options, deadlineMs = ARMORY_HYDRATION_BUDGET_MS) {
+  let timer = null;
+  const fallback = (extra = {}) => ({
+    ...safeStatus(provider),
+    attempted: 0,
+    hydrated: 0,
+    failed: 0,
+    ...extra,
+  });
+
+  try {
+    const hydration = Promise.resolve().then(() => provider.hydrateReferences(references, options));
+    const budget = Math.max(1, Number(deadlineMs) || ARMORY_HYDRATION_BUDGET_MS);
+    const deadline = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(fallback({ pending: true })), budget);
+    });
+    return await Promise.race([hydration, deadline]);
   } catch (error) {
     console.warn("Unable to hydrate Blizzard game data", error?.message || error);
-    return { ...provider.status(), attempted: 0, hydrated: 0, failed: 1 };
+    return fallback({ failed: 1 });
+  } finally {
+    if (timer) clearTimeout(timer);
   }
+}
+
+function resolveGameDataSafely(resolver, references, options) {
+  try {
+    return resolver(references, options) || {};
+  } catch (error) {
+    console.warn("Unable to resolve cached game data", error?.message || error);
+    return {};
+  }
+}
+
+export async function prepareCharacterArmory(storedArmory, {
+  provider,
+  icons,
+  armoryAdapter = adaptArmoryV3,
+  talentArtDecorator = decorateArmoryTalentArt,
+  gameDataResolver = resolveGameDataBundle,
+  hydrationDeadlineMs = ARMORY_HYDRATION_BUDGET_MS,
+} = {}) {
+  let armory = applyArmoryStage(storedArmory, "adapt character armory", armoryAdapter);
+  armory = applyArmoryStage(armory, "decorate character talents", talentArtDecorator);
+
+  const references = armoryReferences(armory);
+  const gameBuild = armoryBuildKey(armory);
+  const providerStatus = provider
+    ? await hydrateSafely(provider, references, { gameBuild }, hydrationDeadlineMs)
+    : {};
+  const gameData = resolveGameDataSafely(gameDataResolver, references, { gameBuild });
+
+  return sanitizeArmoryPayload({
+    ...armory,
+    gameData: {
+      ...gameData,
+      provider: providerStatus,
+      iconMedia: safeStatus(icons),
+    },
+  });
 }
 
 export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver } = {}) {
@@ -75,17 +147,9 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         return;
       }
 
-      const armory = decorateArmoryTalentArt(adaptArmoryV3(storedArmory));
-      const references = armoryReferences(armory);
-      const gameBuild = armoryBuildKey(armory);
-      const providerStatus = await hydrateSafely(provider, references, { gameBuild });
-      const gameData = resolveGameDataBundle(references, { gameBuild });
-
+      const armory = await prepareCharacterArmory(storedArmory, { provider, icons });
       res.set("Cache-Control", "no-store");
-      res.json(sanitizeArmoryPayload({
-        ...armory,
-        gameData: { ...gameData, provider: providerStatus, iconMedia: icons.status() },
-      }));
+      res.json(armory);
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
@@ -116,7 +180,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
 
   router.get("/game-data/provider", requireAuthenticated, (req, res) => {
     res.set("Cache-Control", "private, max-age=60");
-    res.json({ ...provider.status(), iconMedia: icons.status() });
+    res.json({ ...safeStatus(provider), iconMedia: safeStatus(icons) });
   });
 
   router.post("/game-data/resolve", requireAuthenticated, (req, res) => {
@@ -129,7 +193,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         locale: req.body?.locale,
       });
       res.set("Cache-Control", "private, max-age=300");
-      res.json({ ...gameData, provider: provider.status() });
+      res.json({ ...gameData, provider: safeStatus(provider) });
     } catch (error) {
       console.error("Unable to resolve game data", error);
       res.status(500).json({ error: "game_data_unavailable" });
