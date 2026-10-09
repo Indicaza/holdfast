@@ -12,13 +12,30 @@ export default function CharacterProfileModal({ characterId, onClose }) {
   const [status, setStatus] = useState('loading')
   const [armory, setArmory] = useState(() => normalizeArmory({}))
   const [tab, setTab] = useState('equipment')
+  const [refreshVersion, setRefreshVersion] = useState(0)
+
+  useEffect(() => {
+    if (!characterId) return
+    setStatus('loading')
+    setTab('equipment')
+  }, [characterId])
+
+  useEffect(() => {
+    if (!characterId) return undefined
+    const refresh = (event) => {
+      // Tell LiveRouteBoundary that an open Armory owns this invalidation. It
+      // will defer the route remount until the user actually closes the modal.
+      event.preventDefault()
+      setRefreshVersion((current) => current + 1)
+    }
+    window.addEventListener('holdfast:intelligence-changed', refresh)
+    return () => window.removeEventListener('holdfast:intelligence-changed', refresh)
+  }, [characterId])
 
   useEffect(() => {
     if (!characterId) return undefined
     const controller = new AbortController()
     let active = true
-    setStatus('loading')
-    setTab('equipment')
 
     apiJson(`/api/intelligence/characters/${encodeURIComponent(characterId)}`, { signal: controller.signal })
       .then((payload) => {
@@ -28,22 +45,29 @@ export default function CharacterProfileModal({ characterId, onClose }) {
       })
       .catch((error) => {
         if (!active || error?.name === 'AbortError') return
-        setStatus(error?.status === 404 ? 'missing' : 'error')
+        // A background live refresh should never replace an already usable
+        // character with an error surface. Keep the last known-good armory in
+        // place; initial loads still surface the real error.
+        setStatus((current) => current === 'ready' ? current : (error?.status === 404 ? 'missing' : 'error'))
       })
 
     return () => {
       active = false
       controller.abort()
     }
-  }, [characterId])
+  }, [characterId, refreshVersion])
 
   if (!characterId) return null
 
   const character = armory.character
   const title = status === 'ready' ? character.name : 'Character profile'
+  const handleClose = () => {
+    onClose()
+    window.dispatchEvent(new Event('holdfast:intelligence-modal-closed'))
+  }
 
   return (
-    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={onClose}>
+    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={handleClose}>
       <div className="armory-shell" style={status === 'ready' ? { '--armory-class-color': classIdentity(character.className).color } : undefined}>
         <CharacterHeader character={character} stats={armory.stats} loading={status !== 'ready'} />
         {status === 'ready' ? <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} /> : (

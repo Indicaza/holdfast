@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
-import { coins, itemSearchText, leadingGap, matchesSearch, normalizeInventory, searchTerms } from '../src/Intelligence/inventoryModel.js'
+import { coins, inventoryGroups, itemSearchText, leadingGap, matchesSearch, normalizeInventory, searchTerms } from '../src/Intelligence/inventoryModel.js'
 import { normalizeArmory } from '../src/Intelligence/model.js'
 
 // The armory sends the canonical model (backend inventoryModel.js); the raw
@@ -51,6 +51,22 @@ test('reagent bags get their own window, and a keyring only when it holds keys',
   const keyed = normalizeInventory(source)
   assert.deepEqual(keyed.windows.map((window) => window.title), ['Hefty Reagent Pack', 'Keyring', 'Combined Backpack'])
   assert.equal(keyed.slotCount, 30, 'keyring slots are not bag space')
+})
+
+test('organized inventory groups carried totals by item class, materials first and quality first', () => {
+  const inventory = normalizeInventory(armoryInventory())
+  const groups = inventoryGroups(inventory)
+  assert.equal(groups[0].name, 'Trade Goods')
+  assert.deepEqual(groups[0].items.map((item) => item.name), ['Copper Ore', 'Light Leather'])
+  assert.ok(groups.some((group) => group.items.some((item) => item.name === 'Raider Shortsword of the Tiger')))
+
+  const ore = groups.flatMap((group) => group.items).find((item) => item.name === 'Copper Ore')
+  assert.equal(ore.count, 25)
+  assert.equal(ore.stacks, 3)
+  assert.equal(ore.tooltip.lines.some((line) => String(line.left || '').includes('Copper Ore')), true, 'rich client tooltip survives grouping')
+
+  const filtered = inventoryGroups(inventory, 'agility')
+  assert.deepEqual(filtered.flatMap((group) => group.items).map((item) => item.name), ['Raider Shortsword of the Tiger'])
 })
 
 test('a short first row is pushed right, as the game lays out bags', () => {

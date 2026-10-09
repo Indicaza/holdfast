@@ -1,8 +1,8 @@
 // View model for the character modal's Inventory tab, laid out like the
 // game's bag windows: one Combined Backpack holding the backpack and every
 // equipped bag, and the reagent bag (and a classic keyring holding keys) in
-// windows of their own. Also the bag search: every word typed must match
-// something about the item.
+// windows of their own. The organized view folds those same slots into useful
+// item-class groups without losing the physical bag layout.
 
 function object(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
@@ -34,6 +34,28 @@ export function coins(copperValue) {
 }
 
 export const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
+
+// Materials first: the organized view is primarily an at-a-glance crafting
+// and economy surface, not merely another rendering of the bags.
+const CLASS_ORDER = {
+  7: 0, // Trade Goods
+  5: 1, // Reagent
+  0: 2, // Consumable
+  12: 3, // Quest
+  9: 4, // Recipe
+  2: 5, // Weapon
+  4: 6, // Armor
+  1: 7, // Container
+  11: 8, // Quiver
+  6: 9, // Projectile
+  13: 10, // Key
+  15: 11, // Miscellaneous
+}
+
+function classOrder(itemClass) {
+  const id = optionalNumber(itemClass?.id)
+  return id !== null && id in CLASS_ORDER ? CLASS_ORDER[id] : 50
+}
 
 // INVTYPE_* as the game's tooltips name them.
 export const EQUIP_SLOT_NAMES = {
@@ -156,6 +178,54 @@ export function normalizeInventory(value) {
     capturedAt: telemetry.capturedAt || null,
     revision: optionalNumber(telemetry.revision),
   }
+}
+
+// Every carried item once, aggregated across stacks and grouped by the game's
+// item class. Quality sorting makes valuable/interesting items visually rise
+// inside each group while material classes stay at the top of the page.
+export function inventoryGroups(inventory, query = '') {
+  const terms = searchTerms(query)
+  const byItem = new Map()
+
+  for (const window of array(inventory?.windows)) {
+    for (const entry of array(window.slots)) {
+      const item = entry?.item
+      if (!item) continue
+      const key = item.itemId ?? item.key ?? entry.id
+      const existing = byItem.get(key)
+      if (existing) {
+        existing.count += Math.max(1, count(item.count))
+        existing.stacks += 1
+        existing.sellPrice = existing.unitSellPrice ? existing.unitSellPrice * existing.count : null
+      } else {
+        const quantity = Math.max(1, count(item.count))
+        byItem.set(key, {
+          ...item,
+          count: quantity,
+          stacks: 1,
+          sellPrice: item.unitSellPrice ? item.unitSellPrice * quantity : item.sellPrice,
+        })
+      }
+    }
+  }
+
+  const groups = new Map()
+  for (const item of byItem.values()) {
+    if (terms.length && !matchesSearch(itemSearchText(item), terms)) continue
+    const name = item.itemClass?.name || 'Other'
+    const group = groups.get(name) || { name, order: classOrder(item.itemClass), items: [] }
+    group.items.push(item)
+    groups.set(name, group)
+  }
+
+  return [...groups.values()]
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+    .map((group) => ({
+      ...group,
+      count: group.items.reduce((sum, item) => sum + item.count, 0),
+      items: group.items.sort((a, b) =>
+        (Number(b.qualityId) || 0) - (Number(a.qualityId) || 0) || String(a.name).localeCompare(String(b.name))),
+    }))
 }
 
 // Leading empty cells that push a short first row against the right edge,

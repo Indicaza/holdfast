@@ -94,3 +94,46 @@ test('Guildweaver telemetry refreshes an open Intelligence dashboard without nav
     await viewer.close()
   }
 })
+
+test('Guildweaver telemetry refreshes an open Armory in place instead of closing it', async ({ browser }) => {
+  const viewer = await browser.newContext()
+  const sender = await browser.newContext()
+  await authenticate(viewer, 'member')
+  await authenticate(sender, 'member')
+  const page = await viewer.newPage()
+  const senderPage = await sender.newPage()
+  let armoryReads = 0
+
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname
+    if (path.startsWith('/api/intelligence/characters/')) armoryReads += 1
+  })
+
+  try {
+    await page.goto('/intelligence#characters')
+    await expect(page.getByRole('status', { name: 'Live updates: Live' })).toBeVisible()
+
+    const character = await submitTelemetry(senderPage)
+    expect(character.status).toBe('created')
+    const card = page.locator('.character-card').filter({ hasText: character.fixtureName })
+    await expect(card).toBeVisible()
+    await card.click()
+
+    const profile = page.getByRole('dialog')
+    await expect(profile).toHaveAttribute('aria-label', character.fixtureName)
+    await profile.getByRole('tab', { name: /^Professions/ }).click()
+    await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
+    const initialArmoryReads = armoryReads
+
+    const unrelated = await submitTelemetry(senderPage)
+    expect(unrelated.status).toBe('created')
+
+    await expect.poll(() => armoryReads).toBeGreaterThan(initialArmoryReads)
+    await expect(profile).toHaveAttribute('aria-label', character.fixtureName)
+    await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('dialog')).toHaveCount(1)
+  } finally {
+    await sender.close()
+    await viewer.close()
+  }
+})
