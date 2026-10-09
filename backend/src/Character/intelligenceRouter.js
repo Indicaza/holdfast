@@ -6,6 +6,7 @@ import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.j
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { adaptArmoryV3 } from "./armoryV3Adapter.js";
+import { hydrateArmoryFromLatestSnapshot } from "./durableArmoryRepository.js";
 import { decorateArmoryTalentArt } from "./talentArmoryArt.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
@@ -99,12 +100,14 @@ function resolveGameDataSafely(resolver, references, options) {
 export async function prepareCharacterArmory(storedArmory, {
   provider,
   icons,
+  durableHydrator = hydrateArmoryFromLatestSnapshot,
   armoryAdapter = adaptArmoryV3,
   talentArtDecorator = decorateArmoryTalentArt,
   gameDataResolver = resolveGameDataBundle,
   hydrationDeadlineMs = ARMORY_HYDRATION_BUDGET_MS,
 } = {}) {
-  let armory = applyArmoryStage(storedArmory, "adapt character armory", armoryAdapter);
+  let armory = applyArmoryStage(storedArmory, "hydrate latest durable character snapshot", durableHydrator);
+  armory = applyArmoryStage(armory, "adapt character armory", armoryAdapter);
   armory = applyArmoryStage(armory, "decorate character talents", talentArtDecorator);
 
   const references = armoryReferences(armory);
