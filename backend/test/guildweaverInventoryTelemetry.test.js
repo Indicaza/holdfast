@@ -110,6 +110,14 @@ test("canonical inventory tolerates empty Lua tables and drops broken slots", ()
   assert.equal(canonical.items.some((item) => item.itemId === 2318), false, "items only in the emptied bag are dropped");
   assert.deepEqual(canonical.totals.map((total) => [total.itemId, total.count]), [[2770, 23], [6948, 1], [15210, 1]]);
   assert.deepEqual(inventoryMoney(9), { copper: 9, gold: 0, silver: 0, copperRemainder: 9 });
+
+  const spaced = structuredClone(fixture.payload);
+  const sword = spaced.items.find((item) => item.itemId === 15210);
+  sword.tooltip.lines.splice(2, 0, { blank: true }, { blank: true }, { left: "Indented", offset: 8 });
+  sword.tooltip.lines.push({ blank: true });
+  const spacedLines = canonicalInventorySnapshot(spaced).items.find((item) => item.itemId === 15210).tooltip.lines;
+  assert.deepEqual(spacedLines.slice(2, 4), [{ blank: true }, { left: "Indented", right: null, leftColor: null, rightColor: null, offset: 8 }], "one blank between sections, offsets kept");
+  assert.equal(spacedLines.at(-1).blank, undefined, "no trailing blank");
   assert.deepEqual(canonicalInventorySnapshot({}).containers, []);
 
   const withKeyring = structuredClone(fixture.payload);

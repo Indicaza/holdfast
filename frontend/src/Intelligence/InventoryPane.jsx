@@ -1,220 +1,140 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
-import WowIcon, { ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
+import WowIcon, { ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
-import { statsArt } from './characterArt.js'
-import { inventoryGroups, inventorySummary } from './inventoryModel.js'
-import { formatSyncAge } from './model.js'
-import './CharacterEquipmentSheet.css'
-import './CharacterStats.css'
+import { GameTooltipHover, Money } from './GameTooltip.jsx'
+import { SIDE_COLUMNS, SLOT, windowsLayout } from './inventoryLayout.js'
+import { itemSearchText, leadingGap, matchesSearch, searchTerms } from './inventoryModel.js'
 import './InventoryPane.css'
 
-// The game's bag windows, drawn with their own art (public/inventory-art):
-// the backpack's frame with its money bar, and every other bag built from the
-// container frame's top, row and bottom pieces, so each is exactly as tall as
-// its slots. Beside them, a character-sheet column sums up money, bag space,
-// vendor value and the most-carried materials. "All Items" folds every stack
-// into one row per item, grouped by item class with materials first.
+// The game's bag windows (public/inventory-art): the Combined Backpack with
+// its search box, every bag's slots in one grid and the money along the
+// bottom, plus the reagent bag (and a classic keyring with keys) in windows
+// of their own beside it. Searching dims every item that does not match.
 
-const VIEWS = [
-  { id: 'bags', label: 'Bags' },
-  { id: 'items', label: 'All Items' },
-]
+const SEARCH_DELAY_MS = 150
 
-const COINS = [
-  ['gold', 'gold'],
-  ['silver', 'silver'],
-  ['copperRemainder', 'copper'],
-]
-
-// MoneyFrame: show gold and silver once there are any, copper always.
-function Money({ money, className = '' }) {
-  const shown = COINS.filter((_, index) => index === COINS.length - 1 || COINS.slice(0, index + 1).some(([earlier]) => money[earlier] > 0))
-  return (
-    <span className={`inv-money${className ? ` ${className}` : ''}`} aria-label={`${money.gold} gold, ${money.silver} silver, ${money.copperRemainder} copper`}>
-      {shown.map(([key, coin]) => (
-        <span key={coin} className="inv-money__part">
-          {money[key].toLocaleString()}
-          <img src={`/inventory-art/coin-${coin}.webp`} alt="" width="13" height="13" />
-        </span>
-      ))}
-    </span>
-  )
+function usePaneSize() {
+  const [element, setElement] = useState(null)
+  const [size, setSize] = useState({ width: 0, height: 0 })
+  useLayoutEffect(() => {
+    if (!element) return undefined
+    setSize({ width: element.clientWidth, height: element.clientHeight })
+    if (typeof ResizeObserver !== 'function') return undefined
+    const observer = new ResizeObserver(([entry]) => setSize({ width: entry.contentRect.width, height: entry.contentRect.height }))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [element])
+  return [setElement, size]
 }
 
-function Cell({ entry, bagLabel, style }) {
-  const { item, slot } = entry
-  if (!item) return <span className="inv-cell" style={style} aria-hidden="true" />
-  const quality = Number(item.qualityId) || 0
-  const name = item.name || `Item ${item.itemId || ''}`.trim()
-  return (
-    <ItemHoverCard item={item} side="right">
-      <span
-        className={`inv-cell inv-cell--filled inv-cell--quality-${quality}`}
-        style={style}
-        tabIndex={0}
-        role="img"
-        aria-label={`${bagLabel} slot ${slot}: ${name}${item.count > 1 ? `, ${item.count}` : ''}`}
-      >
-        <ItemIcon item={item} size={36} />
-        {item.count > 1 ? <span className="inv-cell__count">{item.count}</span> : null}
-      </span>
-    </ItemHoverCard>
-  )
+function useDebounced(value, delay) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  return debounced
 }
 
-// One row of four. A short first row sits against the right edge; the frame
-// art has room for two there, so a one- or three-slot remainder fills the gap
-// with blanked-out cells.
-function Row({ row, bag, frame }) {
-  const missing = 4 - row.cells.length
-  const fillers = row.lead && frame !== 'partial' ? Array.from({ length: missing }, (_, index) => index) : []
+function SearchBox({ value, onChange }) {
   return (
-    <div className="inv-bag__cells">
-      {fillers.map((index) => <span key={`filler-${index}`} className="inv-cell inv-cell--blank" aria-hidden="true" />)}
-      {row.cells.map((entry, index) => (
-        <Cell
-          key={entry.slot}
-          entry={entry}
-          bagLabel={bag.label}
-          style={index === 0 && row.lead && frame === 'partial' ? { gridColumnStart: 5 - row.cells.length } : undefined}
-        />
-      ))}
+    <div className="bag-search">
+      <img className="bag-search__icon" src="/inventory-art/search-icon.webp" alt="" />
+      <input
+        type="search"
+        value={value}
+        placeholder="Search"
+        aria-label="Search bags"
+        spellCheck="false"
+        autoComplete="off"
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && value) {
+            event.stopPropagation()
+            onChange('')
+          }
+        }}
+      />
+      {value ? (
+        <button type="button" className="bag-search__clear" aria-label="Clear search" onClick={() => onChange('')}>
+          <img src="/inventory-art/search-clear.webp" alt="" />
+        </button>
+      ) : null}
     </div>
   )
 }
 
-function Portrait({ bag }) {
-  const icon = <WowIcon iconFileId={bag.iconFileId} label={bag.label} size={32} />
-  if (!bag.item) return <span className="inv-bag__portrait">{icon}</span>
+function Slot({ entry, dimmed }) {
+  const { item } = entry
+  if (!item) return <span className={`bag-slot${dimmed ? ' is-dimmed' : ''}`} aria-hidden="true" />
+  const quality = Number(item.qualityId) || 0
+  const name = item.name || `Item ${item.itemId || ''}`.trim()
   return (
-    <ItemHoverCard item={{ ...bag.item, iconFileDataId: bag.iconFileId }} side="top">
-      <span className="inv-bag__portrait" tabIndex={0} role="img" aria-label={bag.item.name || bag.label}>{icon}</span>
-    </ItemHoverCard>
+    <GameTooltipHover item={item}>
+      <span
+        className={`bag-slot bag-slot--filled bag-slot--quality-${quality}${dimmed ? ' is-dimmed' : ''}`}
+        tabIndex={0}
+        role="img"
+        aria-label={`${name}${item.count > 1 ? `, ${item.count}` : ''}`}
+      >
+        <ItemIcon item={item} size={SLOT} />
+        {item.count > 1 ? <span className="bag-slot__count">{item.count}</span> : null}
+      </span>
+    </GameTooltipHover>
   )
 }
 
-function Bag({ bag, money }) {
-  const label = `${bag.label}, ${bag.usedSlots} of ${bag.slotCount} slots used`
-  const title = <span className="inv-bag__title">{bag.label}</span>
-
-  if (bag.frame === 'backpack') {
-    return (
-      <section className="inv-bag inv-bag--backpack-frame" aria-label={label}>
-        <div className="inv-bag__piece inv-bag__piece--backpack">
-          {title}
-          <div className="inv-bag__grid">
-            {bag.slots.map((entry) => <Cell key={entry.slot} entry={entry} bagLabel={bag.label} />)}
-          </div>
-          <div className="inv-bag__money"><Money money={money} /></div>
-        </div>
-      </section>
-    )
-  }
-
-  const [first, ...rest] = bag.rows
+function BagWindow({ window, columns, search, money, terms, searchIndex }) {
+  const gap = leadingGap(window.slots.length, columns)
+  const searching = terms.length > 0
   return (
-    <section className={`inv-bag inv-bag--${bag.kind}`} aria-label={label}>
-      <div className={`inv-bag__piece inv-bag__piece--top-${bag.frame}`}>
-        <Portrait bag={bag} />
-        {title}
-        {first ? <Row row={first} bag={bag} frame={bag.frame} /> : null}
+    <section className={`bag-window bag-window--${window.kind}`} aria-label={window.title} style={{ '--bag-columns': columns }}>
+      <span className="bag-window__background" aria-hidden="true" />
+      <span className="bag-window__portrait" aria-hidden="true">
+        {window.iconFileId ? <WowIcon iconFileId={window.iconFileId} label={window.title} size={34} /> : null}
+      </span>
+      <span className="bag-window__frame" aria-hidden="true">
+        <span className="bag-window__piece bag-window__piece--top-left" />
+        <span className="bag-window__piece bag-window__piece--top" />
+        <span className="bag-window__piece bag-window__piece--top-right" />
+        <span className="bag-window__piece bag-window__piece--left" />
+        <span className="bag-window__piece bag-window__piece--right" />
+        <span className="bag-window__piece bag-window__piece--bottom-left" />
+        <span className="bag-window__piece bag-window__piece--bottom" />
+        <span className="bag-window__piece bag-window__piece--bottom-right" />
+      </span>
+      <h3 className="bag-window__title">{window.title}</h3>
+      {search}
+      <div className="bag-window__grid">
+        {Array.from({ length: gap }, (_, index) => <span key={`gap-${index}`} className="bag-slot bag-slot--gap" aria-hidden="true" />)}
+        {window.slots.map((entry) => (
+          <Slot
+            key={entry.id}
+            entry={entry}
+            dimmed={searching && (!entry.item || !matchesSearch(searchIndex.get(entry.id) || '', terms))}
+          />
+        ))}
       </div>
-      {rest.map((row) => (
-        <div key={row.cells[0].slot} className="inv-bag__piece inv-bag__piece--row">
-          <Row row={row} bag={bag} frame={bag.frame} />
-        </div>
-      ))}
-      <div className="inv-bag__piece inv-bag__piece--bottom" aria-hidden="true" />
+      {money ? <div className="bag-window__money"><Money money={money} /></div> : null}
     </section>
   )
 }
 
-function ItemLine({ item }) {
-  const quality = Number(item.qualityId) || 0
-  return (
-    <li>
-      <ItemHoverCard item={item} side="left">
-        <span className="inv-line" tabIndex={0}>
-          <span className={`inv-line__icon inv-cell--quality-${quality}`}><ItemIcon item={item} size={22} /></span>
-          <span className={`inv-line__name item-quality-${quality}`}>{item.name || `Item ${item.itemId}`}</span>
-          <span className="inv-line__count">{item.count.toLocaleString()}</span>
-        </span>
-      </ItemHoverCard>
-    </li>
-  )
-}
+export default function InventoryPane({ inventory }) {
+  const [paneRef, pane] = usePaneSize()
+  const [query, setQuery] = useState('')
+  const terms = searchTerms(useDebounced(query, SEARCH_DELAY_MS))
 
-function Summary({ inventory, className }) {
-  const summary = useMemo(() => inventorySummary(inventory), [inventory])
-  return (
-    <aside className="character-sheet__stats inv-summary" aria-label="Inventory summary" style={{ '--character-stats-art': statsArt(className) }}>
-      <div className="wow-stats">
-        <section className="wow-stats__section">
-          <h3 className="wow-stats__plate">Money</h3>
-          <div className="inv-summary__money"><Money money={inventory.money} /></div>
-        </section>
-
-        <section className="wow-stats__section">
-          <h3 className="wow-stats__plate">Bags</h3>
-          <dl>
-            {inventory.bags.map((bag) => (
-              <div key={bag.bagId} className="wow-stat">
-                <dt>{bag.label}</dt>
-                <dd>{bag.usedSlots}/{bag.slotCount}</dd>
-              </div>
-            ))}
-            <div className="wow-stat">
-              <dt>Free Slots</dt>
-              <dd className={inventory.freeSlots === 0 ? 'wow-stat__value--debuffed' : undefined}>{inventory.freeSlots}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="wow-stats__section">
-          <h3 className="wow-stats__plate">Carried</h3>
-          <dl>
-            <div className="wow-stat"><dt>Items</dt><dd>{summary.distinctItems}</dd></div>
-            <div className="wow-stat"><dt>Stacks</dt><dd>{summary.stacks}</dd></div>
-            <div className="wow-stat"><dt>Vendor Value</dt><dd><Money money={summary.vendorValue} className="inv-money--inline" /></dd></div>
-          </dl>
-        </section>
-
-        {summary.materials.length ? (
-          <section className="wow-stats__section">
-            <h3 className="wow-stats__plate">Materials</h3>
-            <ul className="inv-lines">
-              {summary.materials.map((item) => <ItemLine key={item.itemId ?? item.key} item={item} />)}
-            </ul>
-            {summary.materialKinds > summary.materials.length ? (
-              <p className="inv-summary__more">+{summary.materialKinds - summary.materials.length} more in All Items</p>
-            ) : null}
-          </section>
-        ) : null}
-      </div>
-    </aside>
-  )
-}
-
-function AllItems({ inventory }) {
-  const groups = useMemo(() => inventoryGroups(inventory), [inventory])
-  if (!groups.length) return <p className="inv-groups__empty">These bags are empty.</p>
-  return (
-    <div className="inv-groups wow-stats">
-      {groups.map((group) => (
-        <section key={group.name} className="wow-stats__section inv-group" aria-label={group.name}>
-          <h3 className="wow-stats__plate">{group.name}</h3>
-          <ul className="inv-lines">
-            {group.items.map((item) => <ItemLine key={item.itemId ?? item.key} item={item} />)}
-          </ul>
-        </section>
-      ))}
-    </div>
-  )
-}
-
-export default function InventoryPane({ inventory, className = '' }) {
-  const [view, setView] = useState('bags')
+  const searchIndex = useMemo(() => {
+    const index = new Map()
+    for (const window of inventory?.windows || []) {
+      for (const entry of window.slots) {
+        if (entry.item) index.set(entry.id, itemSearchText(entry.item))
+      }
+    }
+    return index
+  }, [inventory])
 
   if (!inventory) {
     return (
@@ -226,45 +146,29 @@ export default function InventoryPane({ inventory, className = '' }) {
     )
   }
 
-  const backpack = inventory.bags.find((bag) => bag.frame === 'backpack')
+  const layout = windowsLayout(inventory.windows, pane)
+  const bagWindow = (window) => (
+    <BagWindow
+      key={window.id}
+      window={window}
+      columns={window.kind === 'combined' ? layout.columns : SIDE_COLUMNS}
+      search={window.kind === 'combined' ? <SearchBox value={query} onChange={setQuery} /> : null}
+      money={window.kind === 'combined' ? inventory.money : null}
+      terms={terms}
+      searchIndex={searchIndex}
+    />
+  )
+  const sides = inventory.windows.filter((window) => window.kind !== 'combined')
+  const combined = inventory.windows.find((window) => window.kind === 'combined')
 
   return (
-    <div className="inventory-pane">
-      <header className="inventory-pane__title">
-        <span className="inventory-pane__portrait">
-          <WowIcon iconFileId={inventory.bags[0]?.iconFileId} label="Inventory" size={34} />
-        </span>
-        <span className="inventory-pane__heading">
-          <strong>Inventory</strong>
-          <small>{inventory.usedSlots} of {inventory.slotCount} slots used · {formatSyncAge(inventory.capturedAt).replace(/^Synced/, 'Updated')}</small>
-        </span>
-        <span className="inventory-pane__views" role="group" aria-label="Inventory view">
-          {VIEWS.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              className={`inventory-pane__view${view === entry.id ? ' is-active' : ''}`}
-              aria-pressed={view === entry.id}
-              onClick={() => setView(entry.id)}
-            >
-              {entry.label}
-            </button>
-          ))}
-        </span>
-      </header>
-
-      <div className="inventory-pane__body">
-        <div className="inventory-pane__main">
-          {view === 'bags' ? (
-            <div className="inv-bags">
-              {inventory.bags.map((bag) => <Bag key={bag.bagId} bag={bag} money={inventory.money} />)}
-            </div>
-          ) : <AllItems inventory={inventory} />}
-          {!backpack && view === 'bags' ? (
-            <div className="inv-bags__money"><Money money={inventory.money} /></div>
-          ) : null}
-        </div>
-        <Summary inventory={inventory} className={className} />
+    <div className="inventory-pane" ref={paneRef}>
+      <div
+        className={`inventory-pane__windows${layout.stacked ? ' inventory-pane__windows--stacked' : ''}`}
+        style={layout.scale > 1 ? { zoom: layout.scale } : undefined}
+      >
+        {sides.length ? <div className="inventory-pane__side">{sides.map(bagWindow)}</div> : null}
+        {combined ? bagWindow(combined) : null}
       </div>
     </div>
   )

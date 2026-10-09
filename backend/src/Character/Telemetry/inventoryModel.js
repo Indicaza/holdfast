@@ -71,19 +71,32 @@ function color(value) {
   return Object.keys(result).length ? result : null;
 }
 
+// Tooltip lines as the client drew them: text in its colors, the left offset
+// of indented lines, and blank lines between sections (never leading,
+// trailing or doubled).
 function tooltip(value) {
   if (!isObject(value)) return null;
-  const lines = array(value.lines)
-    .slice(0, MAX_TOOLTIP_LINES)
-    .filter(isObject)
-    .map((line) => ({
-      left: text(line.left, 320),
-      right: text(line.right, 320),
+  const lines = [];
+  for (const line of array(value.lines).filter(isObject)) {
+    if (line.blank === true) {
+      if (lines.length && !lines.at(-1).blank) lines.push({ blank: true });
+      continue;
+    }
+    const left = text(line.left, 600);
+    const right = text(line.right, 600);
+    if (!left && !right) continue;
+    const offset = number(line.offset);
+    lines.push({
+      left,
+      right,
       leftColor: color(line.leftColor),
       rightColor: color(line.rightColor),
-    }))
-    .filter((line) => line.left || line.right);
-  return lines.length ? { source: text(value.source, 64), lines } : null;
+      ...(offset > 0 ? { offset } : {}),
+    });
+    if (lines.length >= MAX_TOOLTIP_LINES) break;
+  }
+  while (lines.at(-1)?.blank) lines.pop();
+  return lines.some((line) => !line.blank) ? { source: text(value.source, 64), lines } : null;
 }
 
 function stats(value) {

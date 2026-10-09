@@ -674,6 +674,9 @@ const GATHERED = {
 };
 const CLOTH = [2589, 2592, 4306];
 const LINEN_BAG = { itemId: 4238, name: "Linen Bag", iconFileDataId: 133622, qualityId: 1, slots: 6 };
+// Bump when the generated bags change so existing dev databases pick them up.
+const INVENTORY_SEED_VERSION = 2;
+const REAGENT_BAG = { itemId: 4245, name: "Small Silk Pack", iconFileDataId: 133634, slots: 16 };
 const WHITE = { r: 1, g: 1, b: 1 };
 const REAGENT_BLUE = { r: 0.4, g: 0.73, b: 1 };
 
@@ -766,16 +769,32 @@ function inventorySnapshotFor(snapshot) {
     item: bagId === 0 ? undefined : { itemId: LINEN_BAG.itemId, name: LINEN_BAG.name, iconFileDataId: LINEN_BAG.iconFileDataId, qualityId: 1 },
     slots: [],
   }));
+  // Higher-level characters carry a reagent bag, which takes their crafting
+  // materials first, as the game routes them.
+  const reagentBag = level >= 40
+    ? { bagId: 5, kind: "reagent", name: REAGENT_BAG.name, slotCount: REAGENT_BAG.slots, freeSlots: REAGENT_BAG.slots, bagFamily: 0, iconFileDataId: REAGENT_BAG.iconFileDataId, item: { itemId: REAGENT_BAG.itemId, name: REAGENT_BAG.name, iconFileDataId: REAGENT_BAG.iconFileDataId, qualityId: 2 }, slots: [] }
+    : null;
+  const bagged = [];
+  for (const stack of stacks) {
+    if (reagentBag && stack.item.isCraftingReagent && reagentBag.slots.length < reagentBag.slotCount) {
+      reagentBag.slots.push({ slot: reagentBag.slots.length + 1, itemKey: stack.item.key, itemId: stack.item.itemId, count: stack.count });
+      reagentBag.freeSlots -= 1;
+    } else {
+      bagged.push(stack);
+    }
+  }
+  if (reagentBag) containers.push(reagentBag);
+
   let bagIndex = 0;
   let slot = 0;
-  for (const stack of stacks) {
+  for (const stack of bagged) {
     // Leave the odd gap, as real bags have after looting and selling.
     slot += random() < 0.2 ? 2 : 1;
-    while (bagIndex < containers.length && slot > containers[bagIndex].slotCount) {
+    while (bagIndex < sizes.length && slot > containers[bagIndex].slotCount) {
       bagIndex += 1;
       slot = 1;
     }
-    if (bagIndex >= containers.length) break;
+    if (bagIndex >= sizes.length) break;
     const container = containers[bagIndex];
     container.slots.push({ slot, itemKey: stack.item.key, itemId: stack.item.itemId, count: stack.count, isBound: stack.isBound });
     container.freeSlots -= 1;
@@ -971,15 +990,17 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
       }
       if (professions.status === "created") counts.recipeBooks += 1;
 
+      const inventoryEnvelope = inventorySnapshotFor(snapshot);
       const inventory = ingestTelemetry({
         deviceId,
         memberId,
-        idempotencyKey: `dev-seed:${memberId}:inventory_snapshot:${snapshot.characterId}:${capturedAt}`,
+        // A new seed version is a new revision, so changed bags reseed.
+        idempotencyKey: `dev-seed:${memberId}:inventory_snapshot:${snapshot.characterId}:${capturedAt}:v${INVENTORY_SEED_VERSION}`,
         body: {
           streamKey: `inventory_snapshot:${snapshot.characterId}`,
           kind: "state",
-          revision: capturedAt,
-          envelope: inventorySnapshotFor(snapshot),
+          revision: capturedAt * 100 + INVENTORY_SEED_VERSION,
+          envelope: inventoryEnvelope,
         },
         receivedAt,
       });
