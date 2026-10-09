@@ -23,6 +23,15 @@ export default function LiveRouteBoundary({ children }) {
     }
 
     const timer = window.setTimeout(() => {
+      // Intelligence owns substantial local UI state: selected character,
+      // modal tab, search text and scroll position. Remounting the whole route
+      // on telemetry invalidation used to erase that state and could close a
+      // character while the user was inspecting it. Let Intelligence refresh
+      // its DB-backed data in place instead.
+      if (pathname === '/intelligence') {
+        window.dispatchEvent(new CustomEvent('holdfast:intelligence-changed', { detail: event }))
+        return
+      }
       setVersion((current) => current + 1)
     }, LIVE_REFRESH_DEBOUNCE_MS)
 
