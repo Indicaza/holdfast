@@ -78,17 +78,25 @@ test('cooldowns read like the game timer', () => {
   assert.equal(cooldownRemaining(null, now), '')
 })
 
-test('reagents borrow tooltips from crafted items in the same books', () => {
+test('reagents borrow tooltips and missing names or icons from the same books', () => {
   const tooltip = { source: 'C_TooltipInfo.GetHyperlink', lines: [{ left: 'Copper Bar' }, { left: 'Max Stack: 20' }] }
   const index = itemTooltipIndex([
-    { name: 'Smelt Copper', crafted: { itemId: 2840, name: 'Copper Bar', itemLevel: 10, tooltip } },
-    { name: 'Copper Bracers', crafted: { itemId: 2853, name: 'Copper Bracers' } },
+    { name: 'Smelt Copper', crafted: { itemId: 2840, name: 'Copper Bar', iconFileDataId: 133216, qualityId: 1, itemLevel: 10, tooltip } },
+    { name: 'Copper Bracers', crafted: { itemId: 2853, name: 'Copper Bracers' }, reagents: [{ itemId: 2840 }] },
+    { name: 'Rough Sharpening Stone', reagents: [{ itemId: 2835, name: 'Rough Stone', iconFileId: 135232, qualityId: 1 }] },
   ])
-  assert.deepEqual([...index.keys()], [2840])
-  const bar = withItemTooltip({ itemId: 2840, name: 'Copper Bar', quantity: 2 }, index)
+  const bar = withItemTooltip({ itemId: 2840, name: '', iconFileId: null, quantity: 2 }, index)
+  assert.equal(bar.name, 'Copper Bar')
+  assert.equal(bar.iconFileId, 133216)
+  assert.equal(bar.qualityId, 1)
   assert.equal(bar.tooltip, tooltip)
   assert.equal(bar.itemLevel, 10)
   assert.equal(bar.quantity, 2)
-  const stone = { itemId: 2835, name: 'Rough Stone' }
-  assert.equal(withItemTooltip(stone, index), stone)
+  // Uncached in one recipe, named in another.
+  const stone = withItemTooltip({ itemId: 2835, quantity: 1 }, index)
+  assert.equal(stone.name, 'Rough Stone')
+  assert.equal(stone.iconFileId, 135232)
+  assert.equal(stone.tooltip, null)
+  const unknown = { itemId: 4000, name: 'Mystery' }
+  assert.equal(withItemTooltip(unknown, index), unknown)
 })

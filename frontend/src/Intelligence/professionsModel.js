@@ -134,22 +134,48 @@ function hasTooltip(item) {
   return Array.isArray(item?.tooltip?.lines) && item.tooltip.lines.length > 0
 }
 
-// Crafted items that carry client tooltip lines, by item ID. Reagents arrive
-// without tooltips, so one made by any of the character's recipes (bars,
-// bolts, powders) borrows the crafted item's tooltip.
+function iconOf(item) {
+  return item?.iconFileDataId ?? item?.iconFileId ?? null
+}
+
+// What the character's recipe books know about each item, by item ID: crafted
+// items and reagents, keeping the most complete description. Reagents arrive
+// without tooltips, and without a name or icon when the game had not cached the
+// item yet, so they borrow from any other mention of the same item (a bar the
+// character smelts, a reagent named in another recipe).
 export function itemTooltipIndex(recipes) {
   const index = new Map()
+  const note = (item) => {
+    const itemId = Number(item?.itemId)
+    if (!itemId) return
+    const known = index.get(itemId) || {}
+    index.set(itemId, {
+      name: known.name || item.name || '',
+      iconFileDataId: known.iconFileDataId ?? iconOf(item),
+      qualityId: known.qualityId ?? item.qualityId ?? null,
+      itemLevel: known.itemLevel ?? item.itemLevel ?? null,
+      requiredLevel: known.requiredLevel ?? item.requiredLevel ?? null,
+      tooltip: hasTooltip(known) ? known.tooltip : hasTooltip(item) ? item.tooltip : null,
+    })
+  }
   for (const recipe of Array.isArray(recipes) ? recipes : []) {
-    const crafted = recipe?.crafted
-    if (crafted?.itemId && hasTooltip(crafted) && !index.has(Number(crafted.itemId))) index.set(Number(crafted.itemId), crafted)
+    note(recipe?.crafted)
+    for (const reagent of Array.isArray(recipe?.reagents) ? recipe.reagents : []) note(reagent)
   }
   return index
 }
 
 export function withItemTooltip(item, index) {
-  if (!item || hasTooltip(item)) return item
-  const known = index?.get(Number(item.itemId))
-  return known
-    ? { ...item, tooltip: known.tooltip, itemLevel: item.itemLevel ?? known.itemLevel, requiredLevel: item.requiredLevel ?? known.requiredLevel }
-    : item
+  const known = item && index?.get(Number(item.itemId))
+  if (!known) return item
+  return {
+    ...item,
+    name: item.name || known.name,
+    iconFileDataId: iconOf(item) ?? known.iconFileDataId,
+    iconFileId: iconOf(item) ?? known.iconFileDataId,
+    qualityId: item.qualityId ?? known.qualityId,
+    itemLevel: item.itemLevel ?? known.itemLevel,
+    requiredLevel: item.requiredLevel ?? known.requiredLevel,
+    tooltip: hasTooltip(item) ? item.tooltip : known.tooltip,
+  }
 }

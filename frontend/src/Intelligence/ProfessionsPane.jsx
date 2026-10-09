@@ -186,19 +186,22 @@ function Schematic({ recipe, tooltips }) {
         <section className="prof-schematic__reagents">
           <h5>Reagents:</h5>
           <ul>
-            {reagents.map((reagent, index) => (
-              <li key={`${reagent.itemId || reagent.name}-${index}`}>
-                <ItemHoverCard item={withItemTooltip({ ...reagent, iconFileDataId: reagent.iconFileId }, tooltips)}>
-                  <span className="prof-reagent" tabIndex={0}>
-                    <span className="prof-reagent__icon">
-                      <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={37} />
-                      <span className="prof-reagent__count">{reagent.quantity || 1}</span>
+            {reagents.map((raw, index) => {
+              const reagent = withItemTooltip(raw, tooltips)
+              return (
+                <li key={`${reagent.itemId || reagent.name}-${index}`}>
+                  <ItemHoverCard item={reagent}>
+                    <span className="prof-reagent" tabIndex={0}>
+                      <span className="prof-reagent__icon">
+                        <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={37} />
+                        <span className="prof-reagent__count">{reagent.quantity || 1}</span>
+                      </span>
+                      <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
                     </span>
-                    <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
-                  </span>
-                </ItemHoverCard>
-              </li>
-            ))}
+                  </ItemHoverCard>
+                </li>
+              )
+            })}
           </ul>
         </section>
       ) : null}
