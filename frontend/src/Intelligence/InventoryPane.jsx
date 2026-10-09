@@ -6,6 +6,7 @@ import { GameTooltipHover, Money } from './GameTooltip.jsx'
 import { SIDE_COLUMNS, SLOT, windowsLayout } from './inventoryLayout.js'
 import { inventoryGroups, itemSearchText, leadingGap, matchesSearch, searchTerms } from './inventoryModel.js'
 import './InventoryPane.css'
+import './InventoryOrganized.css'
 
 // Two complementary views over the same telemetry:
 // - Bags keeps Forever's physical Combined Backpack layout.
