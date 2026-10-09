@@ -5,6 +5,7 @@ import {
   normalizeRecipes,
 } from "./telemetryProjection.js";
 import { ensureTelemetryStateSchema } from "./Telemetry/telemetryStateRepository.js";
+import { parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 function parseJson(value, fallback = {}) {
   try {
@@ -59,7 +60,7 @@ function latestStatsPayloads(db) {
   `).all();
 
   for (const row of rows) {
-    const payload = parseJson(row.payload_json, {});
+    const payload = parseTelemetryJson(row.payload_json, {});
     const rawCharacterId = String(row.raw_character_id || "").trim();
     // Stats can arrive before the character row and its alias exist, leaving
     // canonical_character_id empty. Website character ids for Guildweaver

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import test from "node:test";
 
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
@@ -27,14 +28,16 @@ async function pairBridge(request) {
 // A full crafting profession's recipe book, as Guildweaver captures it, is
 // several hundred KB: every recipe carries item descriptions for its output
 // and reagents.
-function professionSnapshot(recipeCount, revision) {
+// Pass incompressible to defeat storage compression (each description is then
+// random, so the stored record stays close to its JSON size).
+function professionSnapshot(recipeCount, revision, { incompressible = false } = {}) {
   const filler = "Permanently enchants a weapon. ".repeat(60);
   const recipes = Array.from({ length: recipeCount }, (_, index) => ({
     recipeId: 3000 + index,
     name: `Recipe ${index}`,
     known: true,
     difficulty: "easy",
-    description: filler,
+    description: incompressible ? randomBytes(1400).toString("base64") : filler,
     crafted: { itemId: 9000 + index, name: `Item ${index}`, qualityId: 2 },
     reagents: [{ itemId: 2840, name: "Copper Bar", quantity: 2 }],
   }));
@@ -84,17 +87,17 @@ test("bridge ingest accepts recipe-book sized telemetry and reports oversized bo
   });
 });
 
-test("raw history for large states is capped by size and keeps the newest record", () =>
+test("raw history for large states is capped by stored size and keeps the newest record", () =>
   withHttpApp(async () => {
     const ingest = (recipeCount, revision) => ingestTelemetry({
       deviceId: "device-body-limit",
       memberId: memberIds.member,
       idempotencyKey: `gw-size-cap-${revision}`,
-      body: professionSnapshot(recipeCount, revision),
+      body: professionSnapshot(recipeCount, revision, { incompressible: true }),
       receivedAt: new Date(Date.UTC(2026, 9, 8, 12, 0, revision)).toISOString(),
     });
-    // Each book is ~0.8 MB; a 2 MB budget keeps only the newest two.
-    for (let revision = 1; revision <= 5; revision += 1) assert.equal(ingest(400, revision).status, "created");
+    // Each book stores at ~0.8 MB even compressed; a 2 MB budget keeps the newest two.
+    for (let revision = 1; revision <= 5; revision += 1) assert.equal(ingest(600, revision).status, "created");
     const revisions = () => readTelemetryHistory().records.map((record) => record.revision).sort((a, b) => a - b);
     assert.deepEqual(revisions(), [4, 5]);
     assert.ok(telemetryRetention.rawBytesPerStream >= 1024 * 1024);

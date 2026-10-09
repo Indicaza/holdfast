@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../../Data/database.js";
 import { ensureTelemetryRecordSchema } from "../telemetryRecordRepository.js";
+import { encodeTelemetryJson, parseTelemetryJson } from "./telemetryJson.js";
 
 const RAW_RECORDS_PER_STREAM = 20;
 const RAW_RECORDS_GLOBAL = 5000;
@@ -9,14 +10,6 @@ const RAW_BYTES_PER_STREAM = 2 * 1024 * 1024;
 
 function text(value, maxLength = 240) {
   return String(value ?? "").trim().slice(0, maxLength);
-}
-
-function parseJson(value, fallback = {}) {
-  try {
-    return JSON.parse(value || JSON.stringify(fallback));
-  } catch {
-    return fallback;
-  }
 }
 
 function capturedAt(value) {
@@ -92,8 +85,8 @@ function rowToState(row) {
     capturedAt: row.captured_at,
     receivedAt: row.received_at,
     recordId: row.record_id === null ? null : Number(row.record_id),
-    envelope: parseJson(row.envelope_json),
-    payload: parseJson(row.payload_json),
+    envelope: parseTelemetryJson(row.envelope_json),
+    payload: parseTelemetryJson(row.payload_json),
   };
 }
 
@@ -203,8 +196,8 @@ export function storeLatestTelemetryState({
       normalizedCapturedAt,
       receivedAt,
       recordId || null,
-      JSON.stringify(envelope ?? {}),
-      JSON.stringify(payload ?? {}),
+      encodeTelemetryJson(envelope ?? {}),
+      encodeTelemetryJson(payload ?? {}),
     );
 
     return rowToState(

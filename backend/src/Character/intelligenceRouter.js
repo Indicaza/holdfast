@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
+import { sendCompressedJson } from "../Http/compressedJson.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
@@ -155,7 +156,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
 
       const armory = await prepareCharacterArmory(storedArmory, { provider, icons });
       res.set("Cache-Control", "no-store");
-      res.json(armory);
+      sendCompressedJson(req, res, armory);
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });

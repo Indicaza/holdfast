@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { ensureTelemetryRecordSchema } from "./telemetryRecordRepository.js";
+import { parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 function array(value) {
   return Array.isArray(value) ? value : [];
@@ -188,7 +189,7 @@ function latestTalentDefinitions(db, memberId, treeIds) {
   `).all(memberId);
 
   for (const row of rows) {
-    const definition = object(parseJson(row.envelope_json)?.payload);
+    const definition = object(parseTelemetryJson(row.envelope_json)?.payload);
     const treeId = number(definition.treeId);
     if (!wanted.has(treeId) || found.has(treeId)) continue;
     found.set(treeId, definition);
