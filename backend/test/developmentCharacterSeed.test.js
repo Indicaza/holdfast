@@ -34,10 +34,12 @@ test("development character seed produces armory-ready characters idempotently",
     const first = await seedDevelopmentCharacters({ logger: quiet });
     assert.ok(first.created >= 20);
     assert.ok(first.trees >= 1);
+    assert.equal(first.recipeBooks, first.created);
 
     const second = await seedDevelopmentCharacters({ logger: quiet });
     assert.equal(second.created, 0);
     assert.equal(second.trees, 0);
+    assert.equal(second.recipeBooks, 0);
 
     const summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
@@ -52,6 +54,17 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(armory.json.equipment.length >= 17);
     assert.ok(armory.json.equipment.every((item) => item.itemId && item.iconFileId && item.tooltipLines.length));
     assert.ok(armory.json.stats.attributes.strength.effective > 100);
+
+    // Crafting professions carry a recipe book recorded from the client data.
+    const engineering = armory.json.professions.find((profession) => profession.name === "Engineering");
+    assert.ok(engineering.recipeBook.knownCount > 50);
+    const recipes = armory.json.recipes.filter((recipe) => recipe.professionKey === engineering.key);
+    assert.equal(recipes.length, engineering.recipeBook.recipeCount);
+    assert.ok(recipes.some((recipe) => recipe.known === false));
+    const bomb = recipes.find((recipe) => recipe.name === "Rough Dynamite");
+    assert.equal(bomb.crafted.name, "Rough Dynamite");
+    assert.deepEqual(bomb.reagents.map((reagent) => reagent.name), ["Rough Blasting Powder", "Linen Cloth"]);
+    assert.ok(bomb.reagents.every((reagent) => reagent.iconFileId));
 
     // Classes without a real capture use synthetic trees built from Classic Era data.
     const mage = await request("/api/intelligence/characters/guildweaver-id:character-dev-mirelle", { persona: "member" });

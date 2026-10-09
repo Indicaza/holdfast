@@ -233,7 +233,8 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
 
   await profile.getByRole('tab', { name: /^Professions/ }).click()
   await expect(profile.getByRole('heading', { name: 'Blacksmithing' })).toBeVisible()
-  await expect(profile.getByText('Blacksmithing 225/225')).toBeVisible()
+  await expect(profile.getByRole('meter', { name: 'Blacksmithing skill' })).toHaveText('225 + 5/225')
+  await expect(profile.getByRole('heading', { name: 'Fishing' })).toBeVisible()
 
   await profile.locator('.prof-rail-button[title="Blacksmithing"]').click()
   await expect(profile.getByText('Mithril Spurs', { exact: true }).first()).toBeVisible()
