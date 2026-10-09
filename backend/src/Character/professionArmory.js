@@ -40,6 +40,8 @@ function armoryRecipe(recipe, profession) {
     subName: recipe.subName,
     iconFileId: recipe.iconFileDataId,
     recipeLink: recipe.recipeLink,
+    spellLink: recipe.spellLink,
+    tooltip: recipe.tooltip,
     professionKey: profession.key,
     professionId: recipe.professionSkillLineId ?? profession.skillLineId,
     professionName: profession.name,
@@ -59,7 +61,7 @@ function armoryRecipe(recipe, profession) {
     crafted: recipe.crafted,
     craftedItemId: recipe.crafted?.itemId ?? null,
     craftedItemName: recipe.crafted?.name ?? "",
-    reagents: recipe.reagents.map((reagent) => ({
+    reagents: (Array.isArray(recipe.reagents) ? recipe.reagents : []).map((reagent) => ({
       itemId: reagent.itemId,
       currencyId: reagent.currencyId,
       name: reagent.name || "",
@@ -79,12 +81,15 @@ export function applyProfessionTelemetry(armory, state) {
 
   const professionsWithBooks = new Set(professions.filter((entry) => entry.recipeBook).map((entry) => entry.key));
   const telemetryRecipes = professions.flatMap((profession) =>
-    profession.recipes.map((recipe) => armoryRecipe(recipe, profession)),
+    (Array.isArray(profession.recipes) ? profession.recipes : [])
+      .filter((recipe) => recipe?.known !== false)
+      .map((recipe) => armoryRecipe(recipe, profession)),
   );
   // Professions whose window has not been opened since this telemetry existed
-  // keep any recipes the older character snapshot carried.
+  // keep any recipes the older character snapshot carried. Unknown recipes are
+  // intentionally retained in raw telemetry but omitted from the armory view.
   const legacyRecipes = (Array.isArray(armory.recipes) ? armory.recipes : []).filter(
-    (recipe) => !professionsWithBooks.has(recipe?.professionKey),
+    (recipe) => recipe?.known !== false && !professionsWithBooks.has(recipe?.professionKey),
   );
 
   return {
