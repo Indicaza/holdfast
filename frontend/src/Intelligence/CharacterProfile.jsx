@@ -1,8 +1,7 @@
 import { useId, useRef } from 'react'
 
 import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
-import ProfessionCards from './ProfessionCards.jsx'
-import RecipeBrowser from './RecipeBrowser.jsx'
+import ProfessionsPane from './ProfessionsPane.jsx'
 import TalentTree from './TalentTree.jsx'
 import { CharacterFacts, SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
 import './CharacterArmory.css'
@@ -31,13 +30,7 @@ const characterProfileTabs = [
     id: 'professions',
     label: 'Professions',
     badge: (armory) => armory.professions.length || null,
-    render: ({ armory }) => <ProfessionCards professions={armory.professions} />,
-  },
-  {
-    id: 'recipes',
-    label: 'Recipes',
-    badge: (armory) => armory.recipes.length || null,
-    render: ({ armory }) => <RecipeBrowser recipes={armory.recipes} />,
+    render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} />,
   },
 ]
 
@@ -69,7 +62,7 @@ export default function CharacterProfile({ armory, tab = 'equipment', onTabChang
   const character = armory.character
   const baseId = useId()
   const tabRefs = useRef(new Map())
-  const requestedTab = tab === 'stats' || tab === 'overview' ? 'equipment' : tab
+  const requestedTab = tab === 'stats' || tab === 'overview' ? 'equipment' : tab === 'recipes' ? 'professions' : tab
   const active = characterProfileTabs.find((entry) => entry.id === requestedTab) || characterProfileTabs[0]
 
   function focusTab(index) {

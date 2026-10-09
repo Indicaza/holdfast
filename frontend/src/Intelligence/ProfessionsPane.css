@@ -1,0 +1,470 @@
+/* Professions pane: the in-game Professions window. Dark leather panels with
+   bronze edges, gold titles, black skill bars with a themed fill, and a rail
+   of round profession buttons on the right. */
+
+.professions-pane {
+  --prof-gold: #ffd100;
+  --prof-edge: #6b5634;
+  --prof-panel: linear-gradient(180deg, #2a2118, #1a140e);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .6rem;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+
+.professions-pane__page {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--prof-edge);
+  border-radius: .45rem;
+  background: #120e0a;
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 2rem rgba(0, 0, 0, .6);
+}
+
+.professions-pane__title {
+  flex: 0 0 auto;
+  padding: .45rem .8rem;
+  border-bottom: 1px solid var(--prof-edge);
+  background: linear-gradient(180deg, #3a2e20, #241b12);
+  color: var(--prof-gold);
+  font-family: var(--font-display);
+  font-size: .95rem;
+  text-align: center;
+  text-shadow: 0 1px 1px #000;
+}
+
+.professions-pane__content {
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: .7rem;
+  overflow: auto;
+}
+
+/* Right rail: round icon buttons like the game's side tabs. */
+
+.professions-pane__rail {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding-top: .2rem;
+}
+
+.prof-rail-button {
+  --interactive-radius: 50%;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: grid;
+  width: 2.9rem;
+  height: 2.9rem;
+  padding: 0;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid #5b4a2e;
+  background: #000;
+  box-shadow: 0 0 0 1px #000, 0 .2rem .5rem rgba(0, 0, 0, .6);
+  cursor: pointer;
+  filter: brightness(.82) saturate(.85);
+}
+
+.prof-rail-button:hover,
+.prof-rail-button:focus-visible {
+  filter: none;
+  outline: none;
+}
+
+.prof-rail-button.is-active {
+  border-color: var(--prof-gold, #ffd100);
+  box-shadow: 0 0 0 1px #000, 0 0 .7rem rgba(255, 209, 0, .45);
+  filter: none;
+}
+
+.prof-rail-button .wow-icon {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.prof-rail-button .wow-icon img {
+  transform: scale(1.1);
+}
+
+/* Overview panels */
+
+.prof-overview {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.prof-panel {
+  border: 1px solid var(--prof-edge);
+  border-radius: .35rem;
+  background: var(--prof-panel);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 230, 180, .06);
+}
+
+.prof-panel__title {
+  margin: 0;
+  color: var(--prof-gold);
+  font-size: .9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 1px #000;
+}
+
+.prof-panel--primary {
+  display: grid;
+  gap: .55rem;
+  padding: .7rem .9rem .9rem;
+}
+
+.prof-panel__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.prof-overview__secondary {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: .6rem;
+}
+
+.prof-panel--secondary {
+  display: grid;
+  min-height: 9rem;
+  align-content: space-between;
+  gap: .6rem;
+  padding: .7rem;
+}
+
+.prof-panel--secondary .prof-panel__title {
+  text-align: center;
+}
+
+/* Identity: icon with name and rank title, opens the recipe book. */
+
+.prof-identity {
+  --interactive-radius: .3rem;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prof-identity:hover strong {
+  color: #fff;
+}
+
+.prof-identity .wow-icon {
+  border: 1px solid #000;
+  border-radius: .2rem;
+  box-shadow: 0 0 0 1px var(--prof-edge);
+}
+
+.prof-identity span {
+  display: grid;
+  line-height: 1.2;
+}
+
+.prof-identity strong {
+  color: var(--prof-gold);
+  font-size: .85rem;
+}
+
+.prof-identity small {
+  color: rgba(255, 255, 255, .62);
+  font-size: .74rem;
+}
+
+/* Skill bar: black track, themed fill, white centered text. */
+
+.prof-bar {
+  --prof-fill: linear-gradient(180deg, #c9a24e, #7a5a1e);
+  position: relative;
+  height: 1.15rem;
+  overflow: hidden;
+  border: 1px solid #000;
+  border-radius: .15rem;
+  background: #000;
+  box-shadow: 0 0 0 1px #4a3d28;
+}
+
+.prof-bar--compact {
+  height: 1rem;
+}
+
+.prof-bar__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--prof-fill);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+
+.prof-bar__text {
+  position: relative;
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000, 0 0 2px #000;
+}
+
+.prof-bar__text em {
+  color: #40ff40;
+  font-style: normal;
+}
+
+.prof-bar--tailoring { --prof-fill: linear-gradient(90deg, #2c1f7a, #5a4ad6); }
+.prof-bar--enchanting { --prof-fill: linear-gradient(90deg, #b8233a, #ff7a6a); }
+.prof-bar--alchemy { --prof-fill: linear-gradient(90deg, #1f6b2a, #5ad66a); }
+.prof-bar--blacksmithing { --prof-fill: linear-gradient(90deg, #4a4f58, #a7b0bd); }
+.prof-bar--engineering { --prof-fill: linear-gradient(90deg, #7a4a12, #e0a040); }
+.prof-bar--leatherworking { --prof-fill: linear-gradient(90deg, #5a3a1e, #b07a4a); }
+.prof-bar--herbalism { --prof-fill: linear-gradient(90deg, #2f6b1f, #8ad64a); }
+.prof-bar--mining { --prof-fill: linear-gradient(90deg, #6b3a1a, #d0874a); }
+.prof-bar--skinning { --prof-fill: linear-gradient(90deg, #6b5a3a, #c9b07a); }
+.prof-bar--cooking { --prof-fill: linear-gradient(90deg, #8a4a12, #f0a040); }
+.prof-bar--fishing { --prof-fill: linear-gradient(90deg, #1a4a7a, #4aa0e0); }
+.prof-bar--first-aid { --prof-fill: linear-gradient(90deg, #7a1a1a, #e04a4a); }
+
+/* Recipe book */
+
+.prof-book {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.prof-book__body {
+  display: grid;
+  grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+  gap: .6rem;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.prof-book__list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.prof-book__search {
+  height: 1.8rem;
+  padding: 0 .55rem;
+  border: 1px solid #4a3d28;
+  border-radius: .3rem;
+  background: #0a0806;
+  color: #fff;
+  font: inherit;
+  font-size: .8rem;
+}
+
+.prof-book__groups {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  scrollbar-color: rgba(201, 168, 90, .35) transparent;
+  scrollbar-width: thin;
+}
+
+.prof-book__groups ul {
+  margin: 0 0 .5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.prof-book__group {
+  margin: 0 0 .2rem;
+  padding: .2rem .5rem;
+  border: 1px solid var(--prof-edge);
+  border-radius: .2rem;
+  background: linear-gradient(180deg, #3a2e20, #241b12);
+  color: var(--prof-gold);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.prof-recipe {
+  --interactive-radius: .2rem;
+  --interactive-hover-lift: 0;
+  --interactive-hover-scale: 1;
+  --interactive-press-scale: 1;
+  display: block;
+  width: 100%;
+  padding: .2rem .5rem .2rem 1.1rem;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: .8rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.prof-recipe:hover {
+  background: rgba(255, 255, 255, .05);
+}
+
+.prof-recipe.is-selected {
+  background: linear-gradient(90deg, rgba(255, 209, 0, .18), rgba(255, 209, 0, .04));
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 0, .3);
+}
+
+/* In-game recipe difficulty colors. */
+.prof-difficulty--optimal { color: #ff8040 !important; }
+.prof-difficulty--medium { color: #ffff00 !important; }
+.prof-difficulty--easy { color: #40bf40 !important; }
+.prof-difficulty--trivial { color: #808080 !important; }
+.prof-difficulty--none { color: #e9dcb8; }
+
+.prof-book__none,
+.prof-book__waiting {
+  color: rgba(255, 255, 255, .55);
+  font-size: .82rem;
+}
+
+.prof-book__waiting {
+  display: grid;
+  flex: 1 1 auto;
+  place-content: center;
+  gap: .3rem;
+  text-align: center;
+}
+
+.prof-book__waiting p {
+  margin: 0;
+  color: var(--prof-gold);
+}
+
+/* Recipe detail */
+
+.prof-detail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: .7rem;
+  padding: .8rem;
+  overflow: auto;
+  border: 1px solid var(--prof-edge);
+  border-radius: .35rem;
+  background: var(--prof-panel);
+}
+
+.prof-detail--empty {
+  place-content: center;
+  color: rgba(255, 255, 255, .5);
+}
+
+.prof-detail__head {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.prof-detail__head .wow-icon {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #c9a24e, 0 0 0 3px #000;
+}
+
+.prof-detail__head h4 {
+  margin: 0;
+  font-size: .95rem;
+}
+
+.prof-detail__requires {
+  margin: .15rem 0 0;
+  color: var(--prof-gold);
+  font-size: .76rem;
+}
+
+.prof-detail__description {
+  margin: 0;
+  color: #fff;
+  font-size: .8rem;
+  line-height: 1.4;
+}
+
+.prof-detail__section h5 {
+  margin: 0 0 .35rem;
+  color: var(--prof-gold);
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+.prof-reagents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: .4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prof-reagents li,
+.prof-crafted {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: #e9e4d8;
+  font-size: .78rem;
+}
+
+.prof-reagents .wow-icon,
+.prof-crafted .wow-icon {
+  border: 1px solid #000;
+  border-radius: .2rem;
+  box-shadow: 0 0 0 1px #5b4a2e;
+}
+
+.prof-detail__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1rem;
+  margin-top: auto;
+  color: rgba(255, 255, 255, .55);
+  font-size: .74rem;
+}
+
+@media (max-width: 40rem) {
+  .professions-pane {
+    grid-template-columns: 1fr;
+  }
+
+  .professions-pane__rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    order: -1;
+  }
+
+  .prof-panel__row,
+  .prof-book__body {
+    grid-template-columns: 1fr;
+  }
+}

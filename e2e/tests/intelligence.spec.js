@@ -233,15 +233,15 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
 
   await profile.getByRole('tab', { name: /^Professions/ }).click()
   await expect(profile.getByRole('heading', { name: 'Blacksmithing' })).toBeVisible()
-  await expect(profile.getByText('225 / 225')).toBeVisible()
+  await expect(profile.getByText('Blacksmithing 225/225')).toBeVisible()
 
-  await profile.getByRole('tab', { name: /^Recipes/ }).click()
+  await profile.locator('.prof-rail-button[title="Blacksmithing"]').click()
   await expect(profile.getByText('Mithril Spurs', { exact: true }).first()).toBeVisible()
-  await profile.getByPlaceholder('Thorium, potion, recipe ID…').fill('nothing-here')
-  await expect(profile.getByRole('heading', { name: 'No recipes match.' })).toBeVisible()
+  await profile.getByRole('searchbox', { name: 'Search Blacksmithing recipes' }).fill('nothing-here')
+  await expect(profile.getByText('No recipes match.')).toBeVisible()
 
   await page.setViewportSize({ width: 320, height: 700 })
-  await profile.getByPlaceholder('Thorium, potion, recipe ID…').fill('')
+  await profile.getByRole('searchbox', { name: 'Search Blacksmithing recipes' }).fill('')
   await profile.getByRole('tab', { name: /^Talents/ }).click()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
