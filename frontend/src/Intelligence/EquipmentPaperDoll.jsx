@@ -9,6 +9,25 @@ const rightSlots = ['HANDS', 'WAIST', 'LEGS', 'FEET', 'FINGER1', 'FINGER2', 'TRI
 const weaponSlots = ['MAINHAND', 'OFFHAND', 'RANGED']
 const allSlots = [...leftSlots, ...rightSlots, ...weaponSlots]
 
+// The game's empty slot art (Interface/PaperDoll/UI-PaperDoll-Slot-*). The
+// back slot borrows the chest outline, as it does in game.
+const EMPTY_SLOT_ART = {
+  HEAD: 'head', NECK: 'neck', SHOULDER: 'shoulder', BACK: 'chest', CHEST: 'chest', SHIRT: 'shirt', TABARD: 'tabard', WRIST: 'wrists',
+  HANDS: 'hands', WAIST: 'waist', LEGS: 'legs', FEET: 'feet', FINGER1: 'finger', FINGER2: 'rfinger', TRINKET1: 'trinket', TRINKET2: 'trinket',
+  MAINHAND: 'mainhand', OFFHAND: 'secondaryhand', RANGED: 'ranged',
+}
+
+// Race backdrops behind the character (DressUpBackground-<Race> in game).
+const RACE_SCENES = {
+  human: 'human', dwarf: 'dwarf', 'night elf': 'nightelf', nightelf: 'nightelf', gnome: 'gnome',
+  orc: 'orc', undead: 'scourge', scourge: 'scourge', tauren: 'tauren', troll: 'troll',
+}
+
+function raceScene(race) {
+  const key = RACE_SCENES[String(race || '').trim().toLowerCase()]
+  return key ? `/armory-art/race-${key}.webp` : null
+}
+
 function slotLabel(value) {
   const labels = {
     HEAD: 'Head', NECK: 'Neck', SHOULDER: 'Shoulder', BACK: 'Back', CHEST: 'Chest', SHIRT: 'Shirt', TABARD: 'Tabard', WRIST: 'Wrist',
@@ -34,7 +53,11 @@ function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', ic
       title={item ? undefined : slotLabel(slot)}
       aria-label={item ? `${slotLabel(slot)}: ${item.name || `item ${item.itemId || ''}`}` : `${slotLabel(slot)} empty`}
     >
-      {item ? <ItemIcon item={item} size={iconSize} /> : <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>}
+      {item ? <ItemIcon item={item} size={iconSize} /> : (
+        <span className="paper-doll__empty-icon" aria-hidden="true">
+          {EMPTY_SLOT_ART[canonicalEquipmentSlot(slot)] ? <img src={`/armory-art/slot-${EMPTY_SLOT_ART[canonicalEquipmentSlot(slot)]}.webp`} alt="" /> : '◇'}
+        </span>
+      )}
       {!sheet ? (
         <span className="paper-doll__slot-copy">
           <small>{slotLabel(slot)}</small>
@@ -113,7 +136,13 @@ export default function EquipmentPaperDoll({
         <div className="paper-doll__column paper-doll__column--left">
           {leftSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'right')} />)}
         </div>
-        {sheet ? <div className="paper-doll__figure paper-doll__figure--empty" aria-hidden="true" /> : <GearSummary equipment={equipment} className={className} race={race} />}
+        {sheet ? (
+          <div
+            className="paper-doll__figure paper-doll__figure--empty"
+            style={raceScene(race) ? { '--paper-doll-scene': `url("${raceScene(race)}")` } : undefined}
+            aria-hidden="true"
+          />
+        ) : <GearSummary equipment={equipment} className={className} race={race} />}
         <div className="paper-doll__column paper-doll__column--right">
           {rightSlots.map((slot) => <EquipmentSlot key={slot} {...slotProps(slot, 'left')} />)}
         </div>

@@ -85,6 +85,12 @@
   padding: var(--armory-pad) 3.5rem .9rem var(--armory-pad);
 }
 
+/* The header frame is the character card's frame at the modal's larger size. */
+.armory-header .unit-frame--card {
+  --portrait: 4.4rem;
+  --plate: 12.5rem;
+}
+
 .armory-header--loading .unit-frame__bars {
   min-height: 1.85rem;
 }
