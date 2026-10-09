@@ -80,7 +80,8 @@ test("development character seed produces armory-ready characters idempotently",
     const inventory = armory.json.inventory;
     assert.equal(inventory.telemetry.eventType, "inventory_snapshot");
     assert.equal(inventory.containers[0].kind, "backpack");
-    assert.equal(inventory.containers.length, 5, "backpack and four bags at level 60");
+    assert.deepEqual(inventory.containers.map((container) => container.kind), ["backpack", "bag", "bag", "bag", "bag", "reagent"], "backpack, four bags and a reagent bag at level 60");
+    assert.ok(inventory.containers.at(-1).slots.length > 0, "materials go to the reagent bag");
     assert.ok(inventory.money.gold > 0);
     assert.ok(inventory.usedSlots > 3);
     const keys = new Set(inventory.items.map((item) => item.key));

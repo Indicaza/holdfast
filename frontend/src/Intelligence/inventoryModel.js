@@ -1,6 +1,8 @@
-// View model for the character modal's Inventory tab: joins each bag slot to
-// its item description (the armory sends every distinct item once) and groups
-// carried totals by item class for the combined view.
+// View model for the character modal's Inventory tab, laid out like the
+// game's bag windows: one Combined Backpack holding the backpack and every
+// equipped bag, and the reagent bag (and a classic keyring holding keys) in
+// windows of their own. Also the bag search: every word typed must match
+// something about the item.
 
 function object(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
@@ -31,182 +33,165 @@ export function coins(copperValue) {
   }
 }
 
-// Item classes in the order the combined view lists them: materials first,
-// since that is what the inventory data is ultimately for.
-const CLASS_ORDER = {
-  7: 0, // Trade Goods
-  5: 1, // Reagent
-  0: 2, // Consumable
-  12: 3, // Quest
-  9: 4, // Recipe
-  2: 5, // Weapon
-  4: 6, // Armor
-  1: 7, // Container
-  11: 8, // Quiver
-  6: 9, // Projectile
-  13: 10, // Key
-  15: 11, // Miscellaneous
+export const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
+
+// INVTYPE_* as the game's tooltips name them.
+export const EQUIP_SLOT_NAMES = {
+  INVTYPE_HEAD: 'Head',
+  INVTYPE_NECK: 'Neck',
+  INVTYPE_SHOULDER: 'Shoulder',
+  INVTYPE_BODY: 'Shirt',
+  INVTYPE_CHEST: 'Chest',
+  INVTYPE_ROBE: 'Chest',
+  INVTYPE_WAIST: 'Waist',
+  INVTYPE_LEGS: 'Legs',
+  INVTYPE_FEET: 'Feet',
+  INVTYPE_WRIST: 'Wrist',
+  INVTYPE_HAND: 'Hands',
+  INVTYPE_FINGER: 'Finger',
+  INVTYPE_TRINKET: 'Trinket',
+  INVTYPE_CLOAK: 'Back',
+  INVTYPE_WEAPON: 'One-Hand',
+  INVTYPE_SHIELD: 'Off Hand',
+  INVTYPE_2HWEAPON: 'Two-Hand',
+  INVTYPE_WEAPONMAINHAND: 'Main Hand',
+  INVTYPE_WEAPONOFFHAND: 'Off Hand',
+  INVTYPE_HOLDABLE: 'Held In Off-hand',
+  INVTYPE_RANGED: 'Ranged',
+  INVTYPE_RANGEDRIGHT: 'Ranged',
+  INVTYPE_THROWN: 'Thrown',
+  INVTYPE_RELIC: 'Relic',
+  INVTYPE_TABARD: 'Tabard',
+  INVTYPE_BAG: 'Bag',
+  INVTYPE_QUIVER: 'Quiver',
+  INVTYPE_AMMO: 'Ammo',
 }
 
-function classOrder(itemClass) {
-  const id = optionalNumber(itemClass?.id)
-  return id !== null && id in CLASS_ORDER ? CLASS_ORDER[id] : 50
-}
-
-const CONTAINER_LABELS = {
-  backpack: 'Backpack',
+const WINDOW_TITLES = {
+  combined: 'Combined Backpack',
   reagent: 'Reagent Bag',
   keyring: 'Keyring',
 }
 
-export function containerLabel(container) {
-  return container?.name || container?.item?.name || CONTAINER_LABELS[container?.kind] || `Bag ${container?.bagId ?? ''}`.trim()
-}
-
-// Bags are drawn four slots to a row. A size that is not a multiple of four
-// puts the remainder in the first row, right-aligned, as the game does; slot
-// numbers run left to right, top to bottom.
-export function bagRows(slots) {
-  const lead = slots.length % 4
-  const rows = []
-  if (lead) rows.push({ lead: true, cells: slots.slice(0, lead) })
-  for (let index = lead; index < slots.length; index += 4) rows.push({ lead: false, cells: slots.slice(index, index + 4) })
-  return rows
-}
-
-// The art a bag frame is drawn with: the backpack's own frame (portrait and
-// money bar) for a standard 16-slot backpack, otherwise a bag whose top row is
-// either full or the two-slot partial row.
-export function bagFrame(bag) {
-  if (bag.kind === 'backpack' && bag.slotCount === 16) return 'backpack'
-  return bag.slotCount % 4 === 2 ? 'partial' : 'full'
-}
-
-function stackItem(item, stack) {
+function slotItem(item, stack) {
   const quantity = Math.max(1, count(stack.count))
   const unitSellPrice = stack.hasNoValue ? null : optionalNumber(item.sellPrice)
   return {
     ...item,
-    // The game only shows item level on gear, not on materials or consumables.
-    itemLevel: item.equipLocation ? item.itemLevel ?? null : null,
     itemId: item.itemId ?? stack.itemId ?? null,
     name: item.name || '',
     count: quantity,
     unitSellPrice,
-    // Bag tooltips price the whole stack.
+    // Hovering a stack in the bags prices the whole stack.
     sellPrice: unitSellPrice ? unitSellPrice * quantity : null,
     isBound: stack.isBound === true,
     key: stack.itemKey,
   }
 }
 
+// Every slot of one container, empty ones included, in slot order.
+function containerSlots(container, items) {
+  const slotCount = count(container.slotCount)
+  const bySlot = new Map()
+  for (const stack of array(container.slots)) {
+    const slot = count(stack?.slot)
+    if (!slot || (slotCount && slot > slotCount) || bySlot.has(slot)) continue
+    bySlot.set(slot, slotItem(items.get(stack.itemKey) || {}, stack))
+  }
+  const size = Math.max(slotCount, ...bySlot.keys(), 0)
+  return Array.from({ length: size }, (_, index) => ({
+    id: `${container.bagId}:${index + 1}`,
+    bagId: container.bagId,
+    slot: index + 1,
+    item: bySlot.get(index + 1) || null,
+  }))
+}
+
+function bagWindow(kind, containers, items) {
+  const first = containers[0] || {}
+  return {
+    kind,
+    id: kind === 'combined' ? 'combined' : `${kind}:${first.bagId}`,
+    title: kind === 'combined' ? WINDOW_TITLES.combined : first.name || first.item?.name || WINDOW_TITLES[kind],
+    iconFileId: optionalNumber(first.iconFileDataId ?? first.item?.iconFileDataId),
+    slots: containers.flatMap((container) => containerSlots(container, items)),
+  }
+}
+
 export function normalizeInventory(value) {
   const source = object(value)
-  const containers = array(source.containers)
+  const containers = array(source.containers).map(object).filter((container) => count(container.slotCount) > 0)
   if (!containers.length) return null
 
   const items = new Map(array(source.items).map((item) => [item?.key, object(item)]))
+  const kind = (container) => container.kind || (container.bagId === 0 ? 'backpack' : 'bag')
+
+  // The combined window stacks the bags from the last one down to the
+  // backpack, which sits at the bottom.
+  const carried = containers
+    .filter((container) => kind(container) === 'backpack' || kind(container) === 'bag')
+    .sort((a, b) => (kind(a) === 'backpack') - (kind(b) === 'backpack') || Number(b.bagId) - Number(a.bagId))
+  const backpack = carried.find((container) => kind(container) === 'backpack')
+  const combined = bagWindow('combined', carried, items)
+  combined.iconFileId = optionalNumber(backpack?.iconFileDataId) ?? combined.iconFileId
+
+  const windows = [
+    ...containers.filter((container) => kind(container) === 'reagent').map((container) => bagWindow('reagent', [container], items)),
+    // A keyring is only worth a window when it holds keys.
+    ...containers
+      .filter((container) => kind(container) === 'keyring' && array(container.slots).length > 0)
+      .map((container) => bagWindow('keyring', [container], items)),
+  ]
+  if (combined.slots.length) windows.push(combined)
+
+  const space = windows.filter((window) => window.kind !== 'keyring').flatMap((window) => window.slots)
+  const used = space.filter((slot) => slot.item).length
   const telemetry = object(source.telemetry)
-
-  const bags = containers.map((raw) => {
-    const container = object(raw)
-    const slotCount = count(container.slotCount)
-    const bySlot = new Map()
-    for (const stack of array(container.slots)) {
-      const slot = count(stack?.slot)
-      if (!slot || (slotCount && slot > slotCount) || bySlot.has(slot)) continue
-      bySlot.set(slot, stackItem(items.get(stack.itemKey) || {}, stack))
-    }
-    const size = Math.max(slotCount, ...bySlot.keys(), 0)
-    const slots = Array.from({ length: size }, (_, index) => ({ slot: index + 1, item: bySlot.get(index + 1) || null }))
-    const bag = {
-      bagId: container.bagId,
-      kind: container.kind || 'bag',
-      label: containerLabel(container),
-      iconFileId: optionalNumber(container.iconFileDataId ?? container.item?.iconFileDataId),
-      item: container.item || null,
-      slotCount: size,
-      freeSlots: container.freeSlots == null ? size - bySlot.size : count(container.freeSlots),
-      usedSlots: bySlot.size,
-      slots,
-      rows: bagRows(slots),
-    }
-    return { ...bag, frame: bagFrame(bag) }
-  })
-    // An empty keyring is not worth a frame; one holding keys is.
-    .filter((bag) => bag.slotCount > 0 && (bag.kind !== 'keyring' || bag.usedSlots > 0))
-
-  // As in game, the keyring does not count toward bag space.
-  const space = bags.filter((bag) => bag.kind !== 'keyring')
   return {
     money: coins(object(source.money).copper),
-    slotCount: space.reduce((sum, bag) => sum + bag.slotCount, 0),
-    freeSlots: space.reduce((sum, bag) => sum + bag.freeSlots, 0),
-    usedSlots: space.reduce((sum, bag) => sum + bag.usedSlots, 0),
-    bags,
+    slotCount: space.length,
+    usedSlots: used,
+    freeSlots: space.length - used,
+    windows,
     capturedAt: telemetry.capturedAt || null,
     revision: optionalNumber(telemetry.revision),
   }
 }
 
-// Every carried item once, with its count and value across all bags.
-export function carriedItems(inventory) {
-  const byId = new Map()
-  for (const bag of array(inventory?.bags)) {
-    for (const { item } of bag.slots) {
-      if (!item) continue
-      const id = item.itemId ?? item.key
-      const entry = byId.get(id)
-      if (entry) {
-        entry.count += item.count
-        entry.stacks += 1
-        // Priced per stack: a stack the vendor will not buy adds nothing.
-        if (item.sellPrice) entry.sellPrice = (entry.sellPrice || 0) + item.sellPrice
-        entry.unitSellPrice ??= item.unitSellPrice
-      } else {
-        byId.set(id, { ...item, stacks: 1 })
-      }
-    }
-  }
-  return [...byId.values()]
+// Leading empty cells that push a short first row against the right edge,
+// as the game lays out its bag windows.
+export function leadingGap(slotCount, columns) {
+  const remainder = slotCount % columns
+  return remainder ? columns - remainder : 0
 }
 
-// Carried items grouped by item class (materials first), sorted by quality
-// then name within a group.
-export function inventoryGroups(inventory) {
-  const groups = new Map()
-  for (const item of carriedItems(inventory)) {
-    const name = item.itemClass?.name || 'Other'
-    const group = groups.get(name) || { name, order: classOrder(item.itemClass), items: [] }
-    group.items.push(item)
-    groups.set(name, group)
-  }
-
-  return [...groups.values()]
-    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
-    .map((group) => ({
-      ...group,
-      items: group.items.sort((a, b) =>
-        (Number(b.qualityId) || 0) - (Number(a.qualityId) || 0) || String(a.name).localeCompare(String(b.name))),
-    }))
+// Everything the bag search looks at: the name, item class and subclass, the
+// equip slot, quality, every tooltip line, the use effect, binding, reagent
+// status and the item id.
+export function itemSearchText(item) {
+  if (!item) return ''
+  const tooltip = array(item.tooltip?.lines).flatMap((line) => [line?.left, line?.right])
+  return [
+    item.name,
+    item.itemClass?.name,
+    item.itemSubclass?.name,
+    EQUIP_SLOT_NAMES[item.equipLocation],
+    QUALITY_NAMES[Number(item.qualityId)],
+    item.spell?.name,
+    item.isBound ? 'soulbound bound' : '',
+    item.isCraftingReagent ? 'crafting reagent material' : '',
+    item.itemId,
+    ...tooltip,
+  ]
+    .filter((part) => part !== null && part !== undefined && part !== '')
+    .join(' ')
+    .toLowerCase()
 }
 
-function isMaterial(item) {
-  return Number(item.itemClass?.id) === 7 || item.isCraftingReagent === true
+export function searchTerms(query) {
+  return String(query || '').toLowerCase().split(/\s+/).filter(Boolean)
 }
 
-// The side panel's figures: what the bags are worth to a vendor, how many
-// distinct items they hold, and the most-carried materials.
-export function inventorySummary(inventory, materialLimit = 6) {
-  const items = carriedItems(inventory)
-  return {
-    vendorValue: coins(items.reduce((sum, item) => sum + (item.sellPrice || 0), 0)),
-    distinctItems: items.length,
-    stacks: items.reduce((sum, item) => sum + item.stacks, 0),
-    materials: items
-      .filter(isMaterial)
-      .sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name)))
-      .slice(0, materialLimit),
-    materialKinds: items.filter(isMaterial).length,
-  }
+export function matchesSearch(searchText, terms) {
+  return terms.every((term) => searchText.includes(term))
 }
