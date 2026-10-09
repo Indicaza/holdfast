@@ -4,15 +4,19 @@ import WowIcon, { ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { GameTooltipHover, Money } from './GameTooltip.jsx'
 import { SIDE_COLUMNS, SLOT, windowsLayout } from './inventoryLayout.js'
-import { itemSearchText, leadingGap, matchesSearch, searchTerms } from './inventoryModel.js'
+import { inventoryGroups, itemSearchText, leadingGap, matchesSearch, searchTerms } from './inventoryModel.js'
 import './InventoryPane.css'
 
-// The game's bag windows (public/inventory-art): the Combined Backpack with
-// its search box, every bag's slots in one grid and the money along the
-// bottom, plus the reagent bag (and a classic keyring with keys) in windows
-// of their own beside it. Searching dims every item that does not match.
+// Two complementary views over the same telemetry:
+// - Bags keeps Forever's physical Combined Backpack layout.
+// - Organized turns those slots into collapsible item-type groups for quick
+//   crafting/economy inspection, with the same live client tooltips.
 
 const SEARCH_DELAY_MS = 150
+const VIEWS = [
+  { id: 'bags', label: 'Bags' },
+  { id: 'organized', label: 'Organized' },
+]
 
 function usePaneSize() {
   const [element, setElement] = useState(null)
@@ -37,7 +41,7 @@ function useDebounced(value, delay) {
   return debounced
 }
 
-function SearchBox({ value, onChange }) {
+function SearchBox({ value, onChange, label = 'Search bags' }) {
   return (
     <div className="bag-search">
       <img className="bag-search__icon" src="/inventory-art/search-icon.webp" alt="" />
@@ -45,7 +49,7 @@ function SearchBox({ value, onChange }) {
         type="search"
         value={value}
         placeholder="Search"
-        aria-label="Search bags"
+        aria-label={label}
         spellCheck="false"
         autoComplete="off"
         onChange={(event) => onChange(event.target.value)}
@@ -121,10 +125,64 @@ function BagWindow({ window, columns, search, money, terms, searchIndex }) {
   )
 }
 
+function OrganizedItem({ item }) {
+  const quality = Number(item.qualityId) || 0
+  const type = item.itemSubclass?.name || item.itemClass?.name || 'Item'
+  return (
+    <li>
+      <GameTooltipHover item={item}>
+        <span className="organized-item" tabIndex={0}>
+          <span className={`organized-item__icon bag-slot bag-slot--filled bag-slot--quality-${quality}`}>
+            <ItemIcon item={item} size={34} />
+          </span>
+          <span className="organized-item__body">
+            <strong className={`item-quality-${quality}`}>{item.name || `Item ${item.itemId || ''}`.trim()}</strong>
+            <small>{type}{item.stacks > 1 ? ` · ${item.stacks} stacks` : ''}</small>
+          </span>
+          <b className="organized-item__count">{item.count.toLocaleString()}</b>
+        </span>
+      </GameTooltipHover>
+    </li>
+  )
+}
+
+function OrganizedInventory({ inventory, query, onQueryChange }) {
+  const groups = useMemo(() => inventoryGroups(inventory, query), [inventory, query])
+  const totalItems = groups.reduce((sum, group) => sum + group.count, 0)
+  return (
+    <section className="organized-inventory" aria-label="Organized inventory">
+      <header className="organized-inventory__toolbar">
+        <div>
+          <strong>Carried items</strong>
+          <small>{totalItems.toLocaleString()} items · {inventory.freeSlots} free slots</small>
+        </div>
+        <SearchBox value={query} onChange={onQueryChange} label="Search organized inventory" />
+      </header>
+      <div className="organized-inventory__groups">
+        {groups.map((group) => (
+          <details key={group.name} className="organized-group" open>
+            <summary>
+              <span>{group.name}</span>
+              <small>{group.items.length} types · {group.count.toLocaleString()} items</small>
+            </summary>
+            <ul>
+              {group.items.map((item) => <OrganizedItem key={item.itemId ?? item.key} item={item} />)}
+            </ul>
+          </details>
+        ))}
+        {!groups.length ? <p className="organized-inventory__empty">No carried items match this search.</p> : null}
+      </div>
+      <footer className="organized-inventory__money"><Money money={inventory.money} /></footer>
+    </section>
+  )
+}
+
 export default function InventoryPane({ inventory }) {
   const [paneRef, pane] = usePaneSize()
+  const [view, setView] = useState('bags')
   const [query, setQuery] = useState('')
-  const terms = searchTerms(useDebounced(query, SEARCH_DELAY_MS))
+  const debouncedQuery = useDebounced(query, SEARCH_DELAY_MS)
+  const terms = searchTerms(debouncedQuery)
 
   const searchIndex = useMemo(() => {
     const index = new Map()
@@ -162,14 +220,31 @@ export default function InventoryPane({ inventory }) {
   const combined = inventory.windows.find((window) => window.kind === 'combined')
 
   return (
-    <div className="inventory-pane" ref={paneRef}>
-      <div
-        className={`inventory-pane__windows${layout.stacked ? ' inventory-pane__windows--stacked' : ''}`}
-        style={layout.scale > 1 ? { zoom: layout.scale } : undefined}
-      >
-        {sides.length ? <div className="inventory-pane__side">{sides.map(bagWindow)}</div> : null}
-        {combined ? bagWindow(combined) : null}
-      </div>
+    <div className={`inventory-pane inventory-pane--${view}`} ref={paneRef}>
+      <nav className="inventory-pane__views" aria-label="Inventory view">
+        {VIEWS.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            className={view === entry.id ? 'is-active' : ''}
+            aria-pressed={view === entry.id}
+            onClick={() => setView(entry.id)}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </nav>
+      {view === 'organized' ? (
+        <OrganizedInventory inventory={inventory} query={debouncedQuery} onQueryChange={setQuery} />
+      ) : (
+        <div
+          className={`inventory-pane__windows${layout.stacked ? ' inventory-pane__windows--stacked' : ''}`}
+          style={layout.scale > 1 ? { zoom: layout.scale } : undefined}
+        >
+          {sides.length ? <div className="inventory-pane__side">{sides.map(bagWindow)}</div> : null}
+          {combined ? bagWindow(combined) : null}
+        </div>
+      )}
     </div>
   )
 }
