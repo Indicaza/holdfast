@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { ensureTelemetryRecordSchema } from "./telemetryRecordRepository.js";
+import { parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 function array(value) {
   return Array.isArray(value) ? value : [];
@@ -21,14 +22,6 @@ function number(value) {
 function positiveInteger(value) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function parseJson(value) {
-  try {
-    return JSON.parse(value || "{}");
-  } catch {
-    return {};
-  }
 }
 
 function textureDescriptor(value) {
@@ -145,7 +138,7 @@ function latestDefinitions(db, memberId, treeIds) {
   const found = new Map();
 
   for (const row of rows) {
-    const definition = object(parseJson(row.envelope_json)?.payload);
+    const definition = object(parseTelemetryJson(row.envelope_json)?.payload);
     const treeId = number(definition.treeId);
     if (treeId === null || !wanted.has(treeId) || found.has(treeId)) continue;
     const normalized = normalizeTalentDefinitionArt(definition);
