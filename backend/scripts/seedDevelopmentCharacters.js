@@ -654,6 +654,159 @@ function professionSnapshotFor(snapshot) {
   };
 }
 
+// Every reagent the recorded recipe books mention, for seeding bags.
+const REAGENT_CATALOG = (() => {
+  const catalog = new Map();
+  for (const book of Object.values(RECIPE_BOOKS)) {
+    for (const recipe of book) {
+      for (const reagent of recipe.reagents) {
+        if (!catalog.has(reagent.itemId)) catalog.set(reagent.itemId, { itemId: reagent.itemId, name: reagent.name, iconFileDataId: reagent.iconFileDataId, qualityId: reagent.qualityId });
+      }
+    }
+  }
+  return catalog;
+})();
+
+const GATHERED = {
+  Mining: [2770, 2771, 2772, 2835, 2836],
+  Herbalism: [2447, 765, 785, 2450],
+  Skinning: [2318, 2319, 4234],
+};
+const CLOTH = [2589, 2592, 4306];
+const LINEN_BAG = { itemId: 4238, name: "Linen Bag", iconFileDataId: 133622, qualityId: 1, slots: 6 };
+const WHITE = { r: 1, g: 1, b: 1 };
+const REAGENT_BLUE = { r: 0.4, g: 0.73, b: 1 };
+
+function bagItem(base, extra = {}) {
+  const tooltip = RECIPE_TOOLTIPS[base.itemId]?.tooltip;
+  return {
+    key: `item:${base.itemId}::::::::${extra.linkLevel ?? 1}:::::::`,
+    itemId: base.itemId,
+    name: base.name,
+    iconFileDataId: base.iconFileDataId,
+    qualityId: base.qualityId ?? 1,
+    itemLevel: RECIPE_TOOLTIPS[base.itemId]?.itemLevel ?? base.itemLevel ?? null,
+    requiredLevel: base.requiredLevel ?? null,
+    sellPrice: base.sellPrice ?? null,
+    bindType: base.bindType ?? 0,
+    equipLocation: base.equipLocation ?? "",
+    itemClass: base.itemClass ?? { id: 7, name: "Trade Goods" },
+    itemSubclass: base.itemSubclass ?? null,
+    maxStackSize: base.maxStackSize ?? 20,
+    isCraftingReagent: base.isCraftingReagent ?? true,
+    spell: base.spell,
+    tooltip: base.tooltip ?? tooltip ?? {
+      source: "C_TooltipInfo.GetHyperlink",
+      lines: [{ left: base.name, leftColor: WHITE }, { left: "Crafting Reagent", leftColor: REAGENT_BLUE }],
+    },
+    ...extra,
+  };
+}
+
+// Guildweaver's inventory_snapshot: the backpack and a few Linen Bags holding
+// the hearthstone, materials from the character's gathering and crafting
+// professions, some cloth, and a piece of spare gear; money grows with level.
+function inventorySnapshotFor(snapshot) {
+  const random = seededRandom(`${snapshot.characterId}:inventory`);
+  const level = snapshot.level;
+  const pick = (values) => values[Math.floor(random() * values.length)];
+  const professionNames = snapshot.professions.map((profession) => profession.name);
+  const materialIds = new Set([pick(CLOTH)]);
+  for (const name of professionNames) for (const id of GATHERED[name] || []) if (random() < 0.7) materialIds.add(id);
+  for (const profession of snapshot.professions) {
+    const book = RECIPE_BOOKS[profession.skillLineId] || [];
+    for (let index = 0; index < 3 && book.length; index += 1) {
+      const reagent = pick(pick(book).reagents);
+      if (reagent) materialIds.add(reagent.itemId);
+    }
+  }
+
+  const stacks = [
+    {
+      item: bagItem({
+        itemId: 6948, name: "Hearthstone", iconFileDataId: 134414, bindType: 1, maxStackSize: 1, isCraftingReagent: false,
+        itemClass: { id: 15, name: "Miscellaneous" }, spell: { id: 8690, name: "Hearthstone" },
+        tooltip: { source: "C_TooltipInfo.GetHyperlink", lines: [
+          { left: "Hearthstone", leftColor: WHITE }, { left: "Soulbound", leftColor: WHITE }, { left: "Unique", leftColor: WHITE },
+          { left: "Use: Returns you to your home location. Speak to an Innkeeper in a different place to change your home location.", leftColor: { r: 0, g: 1, b: 0 } },
+          { left: "Cooldown: 60 min", leftColor: WHITE },
+        ] },
+      }),
+      count: 1,
+      isBound: true,
+    },
+  ];
+  for (const id of materialIds) {
+    const base = REAGENT_CATALOG.get(id);
+    if (!base) continue;
+    const item = bagItem(base);
+    let remaining = 3 + Math.floor(random() * 45);
+    while (remaining > 0) {
+      const count = Math.min(remaining, item.maxStackSize);
+      stacks.push({ item, count });
+      remaining -= count;
+    }
+  }
+  const spare = Object.values(ITEMS).filter((item) => (item.requiredLevel ?? 0) <= level && item.qualityId >= 2);
+  if (spare.length) {
+    const gear = pick(spare);
+    stacks.push({ item: bagItem({ ...gear, maxStackSize: 1, isCraftingReagent: false }), count: 1 });
+  }
+
+  const bagCount = Math.min(4, 1 + Math.floor(level / 15));
+  const sizes = [16, ...Array.from({ length: bagCount }, () => LINEN_BAG.slots)];
+  const containers = sizes.map((slotCount, bagId) => ({
+    bagId,
+    kind: bagId === 0 ? "backpack" : "bag",
+    name: bagId === 0 ? "Backpack" : LINEN_BAG.name,
+    slotCount,
+    freeSlots: slotCount,
+    bagFamily: 0,
+    iconFileDataId: bagId === 0 ? 133633 : LINEN_BAG.iconFileDataId,
+    item: bagId === 0 ? undefined : { itemId: LINEN_BAG.itemId, name: LINEN_BAG.name, iconFileDataId: LINEN_BAG.iconFileDataId, qualityId: 1 },
+    slots: [],
+  }));
+  let bagIndex = 0;
+  let slot = 0;
+  for (const stack of stacks) {
+    // Leave the odd gap, as real bags have after looting and selling.
+    slot += random() < 0.2 ? 2 : 1;
+    while (bagIndex < containers.length && slot > containers[bagIndex].slotCount) {
+      bagIndex += 1;
+      slot = 1;
+    }
+    if (bagIndex >= containers.length) break;
+    const container = containers[bagIndex];
+    container.slots.push({ slot, itemKey: stack.item.key, itemId: stack.item.itemId, count: stack.count, isBound: stack.isBound });
+    container.freeSlots -= 1;
+  }
+
+  const placed = new Set(containers.flatMap((container) => container.slots.map((entry) => entry.itemKey)));
+  const items = [...new Map(stacks.map((stack) => [stack.item.key, stack.item])).values()].filter((item) => placed.has(item.key));
+  return {
+    schemaVersion: 1,
+    eventType: "inventory_snapshot",
+    capturedAt: snapshot.capturedAt,
+    gameBuild: { version: GAME_BUILD.version, build: GAME_BUILD.build, interface: GAME_BUILD.interface },
+    realm: snapshot.realm,
+    region: snapshot.region,
+    installationId: snapshot.installationId,
+    characterId: snapshot.characterId,
+    addon: { name: "Guildweaver", version: ADDON_VERSION },
+    payloadSchemaVersion: 1,
+    payload: {
+      schemaVersion: 1,
+      scope: "carried",
+      source: "C_Container",
+      money: { copper: Math.floor(level * level * (40 + random() * 160) * 10 + random() * 10000) },
+      slotCount: sizes.reduce((sum, size) => sum + size, 0),
+      freeSlots: containers.reduce((sum, container) => sum + container.freeSlots, 0),
+      containers,
+      items,
+    },
+  };
+}
+
 // This game build reports one class-level specialization (see the Warrior
 // capture); the role follows the character's main talent tree.
 function specializationFor(className, buildName, definition) {
@@ -758,7 +911,7 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
     ...ROSTER.map((entry) => [entry.id, entry.characters]),
     ...Object.entries(PERSONA_CHARACTERS),
   ];
-  const counts = { created: 0, updated: 0, unchanged: 0, trees: 0, recipeBooks: 0 };
+  const counts = { created: 0, updated: 0, unchanged: 0, trees: 0, recipeBooks: 0, inventories: 0 };
 
   for (const [memberId, characters] of owners) {
     const exists = withGuildTransaction((db) => Boolean(db.prepare("SELECT 1 FROM members WHERE id = ? AND status = 'active'").get(memberId)));
@@ -817,11 +970,28 @@ export async function seedDevelopmentCharacters({ now = Date.now(), logger = con
         throw new Error(`Unable to seed ${row[0]}'s professions: ${professions.error}`);
       }
       if (professions.status === "created") counts.recipeBooks += 1;
+
+      const inventory = ingestTelemetry({
+        deviceId,
+        memberId,
+        idempotencyKey: `dev-seed:${memberId}:inventory_snapshot:${snapshot.characterId}:${capturedAt}`,
+        body: {
+          streamKey: `inventory_snapshot:${snapshot.characterId}`,
+          kind: "state",
+          revision: capturedAt,
+          envelope: inventorySnapshotFor(snapshot),
+        },
+        receivedAt,
+      });
+      if (inventory.status === "invalid") {
+        throw new Error(`Unable to seed ${row[0]}'s inventory: ${inventory.error}`);
+      }
+      if (inventory.status === "created") counts.inventories += 1;
     }
   }
 
   logger.log(
-    `Seeded ${members.length} roster members; character snapshots: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged; ${counts.trees} talent trees and ${counts.recipeBooks} profession snapshots recorded.`,
+    `Seeded ${members.length} roster members; character snapshots: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged; ${counts.trees} talent trees, ${counts.recipeBooks} profession snapshots and ${counts.inventories} inventory snapshots recorded.`,
   );
   return counts;
 }

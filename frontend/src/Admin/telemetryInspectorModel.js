@@ -23,10 +23,21 @@ const DOMAIN_ADAPTERS = {
     label: 'Professions',
     summaryKeys: ['professions', 'schemaVersion'],
   },
+  // inventory_snapshot
+  inventory: {
+    label: 'Inventory',
+    summaryKeys: ['money', 'slotCount', 'freeSlots', 'containers', 'totals', 'schemaVersion'],
+  },
 }
 
 const FIELD_LABELS = {
   activeEntryId: 'Active Entry ID',
+  bagFamily: 'Bag Family',
+  bagId: 'Bag ID',
+  freeSlots: 'Free Slots',
+  itemKey: 'Item Key',
+  maxStackSize: 'Max Stack Size',
+  slotCount: 'Slot Count',
   activeEntryRank: 'Active Entry Rank',
   addonVersion: 'Addon Version',
   bonusIds: 'Bonus IDs',

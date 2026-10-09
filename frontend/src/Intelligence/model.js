@@ -1,3 +1,5 @@
+import { normalizeInventory } from './inventoryModel.js'
+
 function object(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
 }
@@ -257,6 +259,7 @@ export function normalizeArmory(payload) {
     },
     professions: array(source.professions).map((profession) => enrichProfession(profession, gameData)),
     recipes: array(source.recipes).map((recipe) => enrichRecipe(recipe, gameData)),
+    inventory: normalizeInventory(source.inventory),
     gameData,
     capturedAt: source.capturedAt || character.lastSeenAt || null,
   }
