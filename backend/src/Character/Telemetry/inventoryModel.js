@@ -172,6 +172,7 @@ function slot(value, slotCount) {
     isBound: value.isBound === true,
     isReadable: value.isReadable === true,
     hasLoot: value.hasLoot === true,
+    hasNoValue: value.hasNoValue === true,
   };
 }
 
@@ -240,8 +241,10 @@ export function canonicalInventorySnapshot(payload) {
     if (items.length >= MAX_ITEMS) break;
   }
 
-  const slotCount = containers.reduce((sum, entry) => sum + entry.slotCount, 0);
-  const freeSlots = containers.reduce((sum, entry) => sum + entry.freeSlots, 0);
+  // As in game, the keyring does not count toward bag space.
+  const bags = containers.filter((entry) => entry.kind !== "keyring");
+  const slotCount = bags.reduce((sum, entry) => sum + entry.slotCount, 0);
+  const freeSlots = bags.reduce((sum, entry) => sum + entry.freeSlots, 0);
   return {
     modelVersion: INVENTORY_MODEL_VERSION,
     scope: text(source.scope, 32) || "carried",
@@ -249,7 +252,7 @@ export function canonicalInventorySnapshot(payload) {
     money: inventoryMoney(isObject(source.money) ? source.money.copper : 0),
     slotCount,
     freeSlots,
-    usedSlots: containers.reduce((sum, entry) => sum + entry.slots.length, 0),
+    usedSlots: bags.reduce((sum, entry) => sum + entry.slots.length, 0),
     containers,
     items,
     totals: totalsFrom(containers),

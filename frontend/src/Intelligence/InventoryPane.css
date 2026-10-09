@@ -1,12 +1,16 @@
-/* Inventory pane: the game's bag frames on the character sheet's own
-   background (armory-art/sheet-background, UI-Character-Info-General-BG),
-   framed like the Professions page: gold title bar, slot grids with quality
-   borders and corner stack counts, and the backpack's money line. */
+/* Inventory pane: the game's bag windows in their own art
+   (public/inventory-art), on the Professions page's background with its gold
+   title bar, beside a character-sheet column (CharacterStats.css plates and
+   row bands on the class crest).
+
+   Bag frames are built from texture pieces 194px wide. Everything inside a
+   piece is placed in percentages of the texture's own pixel grid: slots are
+   42x41 cells starting 16px from the left, the portrait ring's opening is
+   31px across at (11, 9), and the title bar runs from x 50 to 162. */
 
 .inventory-pane {
   --inv-gold: #ffd100;
   --inv-edge: #5b4a2e;
-  --inv-slot: 2.5rem;
   display: flex;
   width: 100%;
   min-width: 0;
@@ -15,16 +19,18 @@
   overflow: hidden;
   border: 1px solid #000;
   border-radius: .5rem;
-  background:
-    linear-gradient(180deg, rgba(8, 6, 4, .35), rgba(8, 6, 4, .7)),
-    #15110c url("/armory-art/sheet-background.webp") center / cover no-repeat;
+  background: #15110c url("/profession-art/background-overview.webp") center / 100% 100% no-repeat;
   box-shadow: 0 0 0 1px var(--inv-edge), 0 .6rem 1.6rem rgba(0, 0, 0, .55);
+  container-name: inventory;
+  container-type: inline-size;
 }
 
 .inventory-pane--empty {
   justify-content: center;
   padding: 1rem;
 }
+
+/* Title bar, as on the Professions page. */
 
 .inventory-pane__title {
   display: flex;
@@ -65,7 +71,6 @@
   white-space: nowrap;
 }
 
-/* View switch: two small game-style buttons. */
 .inventory-pane__views {
   display: flex;
   flex: 0 0 auto;
@@ -99,137 +104,236 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 0 1px rgba(255, 209, 0, .7);
 }
 
-.inventory-pane__content {
+/* Body: bags (or All Items) on the left, the summary column on the right;
+   each scrolls on its own. */
+
+.inventory-pane__body {
+  display: grid;
   min-height: 0;
   flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 17rem);
+  gap: .75rem;
   padding: .75rem;
-  overflow: auto;
+}
+
+.inventory-pane__main,
+.inv-summary {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(196, 166, 103, .35) transparent;
 }
 
+.inventory-pane__main {
+  padding: .1rem .25rem .25rem .1rem;
+}
+
 /* Bag frames */
 
 .inv-bags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: .75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  align-items: start;
+  justify-items: center;
+  gap: 1rem .9rem;
+  grid-auto-flow: row dense;
+}
+
+/* The backpack is as tall as two small bags; let them stack beside it. */
+.inv-bag--backpack-frame {
+  grid-row: span 2;
 }
 
 .inv-bag {
-  display: grid;
-  gap: .4rem;
-  padding: .4rem .5rem .55rem;
-  border: 1px solid #000;
-  border-radius: .45rem;
-  background: linear-gradient(180deg, rgba(20, 16, 11, .92), rgba(9, 7, 5, .94));
-  box-shadow: 0 0 0 1px rgba(138, 116, 68, .55), inset 0 0 1.2rem rgba(0, 0, 0, .7), 0 .35rem .9rem rgba(0, 0, 0, .45);
+  width: 100%;
+  max-width: 17rem;
+  filter: drop-shadow(0 .35rem .6rem rgba(0, 0, 0, .6));
+  container-type: inline-size;
 }
 
-.inv-bag__title {
-  display: flex;
-  align-items: center;
-  gap: .45rem;
-  min-width: 0;
+.inv-bag__piece {
+  position: relative;
+  width: 100%;
 }
+
+/* The frame art sits above the portrait (which shows through the ring's
+   opening) and below the slot contents. */
+.inv-bag__piece::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: var(--inv-piece) 0 0 / 100% 100% no-repeat;
+  content: '';
+  pointer-events: none;
+}
+
+.inv-bag__piece--top-full { --inv-piece: url("/inventory-art/bag-top.webp"); aspect-ratio: 194 / 88; }
+.inv-bag__piece--top-partial { --inv-piece: url("/inventory-art/bag-top-partial.webp"); aspect-ratio: 194 / 67; }
+.inv-bag__piece--row { --inv-piece: url("/inventory-art/bag-row.webp"); aspect-ratio: 194 / 41; }
+.inv-bag__piece--bottom { --inv-piece: url("/inventory-art/bag-bottom.webp"); aspect-ratio: 194 / 8; }
+.inv-bag__piece--backpack { --inv-piece: url("/inventory-art/backpack.webp"); aspect-ratio: 194 / 238; }
 
 .inv-bag__portrait {
-  display: inline-flex;
+  position: absolute;
+  z-index: 0;
+  top: calc(9 / 88 * 100%);
+  left: calc(11 / 194 * 100%);
+  display: grid;
+  width: calc(31 / 194 * 100%);
+  aspect-ratio: 1;
+  overflow: hidden;
   border-radius: 50%;
+  background: #000;
 }
 
+.inv-bag__piece--top-partial .inv-bag__portrait { top: calc(10 / 67 * 100%); }
+
 .inv-bag__portrait .wow-icon {
-  border: 1px solid #000;
+  width: 100%;
+  height: 100%;
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 1px #8a7444;
+  box-shadow: none;
 }
 
 .inv-bag__portrait:focus-visible {
-  outline: 2px solid rgba(255, 209, 0, .6);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 209, 0, .8);
 }
 
-.inv-bag__title strong {
+/* GameFontHighlight on the title bar. */
+.inv-bag__title {
+  position: absolute;
+  z-index: 2;
+  top: calc(9 / 88 * 100%);
+  left: calc(52 / 194 * 100%);
+  display: flex;
+  width: calc(108 / 194 * 100%);
+  height: calc(16 / 88 * 100%);
+  align-items: center;
   overflow: hidden;
-  flex: 1 1 auto;
-  max-width: calc(var(--inv-slot) * 4 - 3rem);
-  color: var(--inv-gold);
-  font-size: .76rem;
+  color: #fff;
+  font-size: clamp(.6rem, 5.6cqi, .84rem);
   font-weight: 600;
+  line-height: 1;
   text-overflow: ellipsis;
   text-shadow: 0 1px 1px #000;
   white-space: nowrap;
 }
 
-.inv-bag__title small {
-  margin-left: auto;
-  color: rgba(255, 255, 255, .55);
-  font-size: .68rem;
-  font-variant-numeric: tabular-nums;
-}
+.inv-bag__piece--top-partial .inv-bag__title { top: calc(10 / 67 * 100%); height: calc(16 / 67 * 100%); }
+.inv-bag__piece--backpack .inv-bag__title { top: calc(9 / 238 * 100%); height: calc(16 / 238 * 100%); }
 
-/* Four slots per row, as the game's bags lay them out. */
+/* A row of four 42x41 cells. */
+.inv-bag__cells,
 .inv-bag__grid {
+  position: absolute;
+  z-index: 2;
+  left: calc(16 / 194 * 100%);
   display: grid;
-  grid-template-columns: repeat(4, var(--inv-slot));
-  gap: .2rem;
+  width: calc(168 / 194 * 100%);
+  grid-template-columns: repeat(4, 1fr);
 }
 
-/* Slots: the dark recessed square of an empty bag slot; filled slots take a
-   quality-colored border (white and grey items keep the plain edge). */
+.inv-bag__piece--row .inv-bag__cells { top: 0; height: 100%; }
+.inv-bag__piece--top-full .inv-bag__cells { top: calc(47 / 88 * 100%); height: calc(41 / 88 * 100%); }
+.inv-bag__piece--top-partial .inv-bag__cells { top: calc(26 / 67 * 100%); height: calc(41 / 67 * 100%); }
 
-.inv-slot {
+.inv-bag__grid {
+  top: calc(47 / 238 * 100%);
+  height: calc(164 / 238 * 100%);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+/* The backpack's money bar. */
+.inv-bag__money {
+  position: absolute;
+  z-index: 2;
+  top: calc(215 / 238 * 100%);
+  left: calc(22 / 194 * 100%);
+  display: flex;
+  width: calc(156 / 194 * 100%);
+  height: calc(14 / 238 * 100%);
+  align-items: center;
+  justify-content: flex-end;
+  font-size: clamp(.58rem, 5.4cqi, .8rem);
+}
+
+/* Slots: an item button centered in the cell art, 36 of the cell's 42px. */
+
+.inv-cell {
   position: relative;
   display: grid;
-  width: var(--inv-slot);
-  height: var(--inv-slot);
-  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
   place-items: center;
-  border: 1px solid rgba(0, 0, 0, .9);
-  border-radius: .2rem;
-  background: radial-gradient(circle at 50% 40%, rgba(60, 60, 60, .35), rgba(0, 0, 0, .85) 75%), #050505;
-  box-shadow: inset 0 0 .45rem rgba(0, 0, 0, .95), 0 0 0 1px rgba(91, 74, 46, .45);
 }
 
-.inv-slot--filled {
-  cursor: default;
-}
-
-.inv-slot .wow-icon {
-  width: calc(var(--inv-slot) - 4px);
-  height: calc(var(--inv-slot) - 4px);
+.inv-cell .wow-icon {
+  width: calc(36 / 42 * 100%);
+  height: auto;
+  aspect-ratio: 1;
   border: 0;
-  border-radius: .15rem;
-  box-shadow: none;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .85);
 }
 
-.inv-slot--quality-2 { box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(30, 255, 0, .8); }
-.inv-slot--quality-3 { box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(0, 112, 221, .95); }
-.inv-slot--quality-4 { box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(163, 53, 238, .95); }
-.inv-slot--quality-5 { box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(255, 128, 0, .95); }
-.inv-slot--quality-6,
-.inv-slot--quality-7 { box-shadow: inset 0 0 0 1px #000, 0 0 0 1px rgba(230, 204, 128, .95); }
-.inv-slot--quality-0 .wow-icon img { filter: saturate(.75) brightness(.9); }
-
-.inv-slot--filled:hover,
-.inv-slot--filled:focus-visible {
+.inv-cell--filled {
+  cursor: default;
   outline: none;
-  filter: brightness(1.18);
 }
 
-.inv-slot--filled:focus-visible {
-  box-shadow: inset 0 0 0 1px #000, 0 0 0 2px rgba(255, 209, 0, .8);
+/* Item quality: the colored icon border the game draws for uncommon and up. */
+.inv-cell--quality-2 { --inv-quality: rgba(30, 255, 0, .9); }
+.inv-cell--quality-3 { --inv-quality: rgba(0, 112, 221, 1); }
+.inv-cell--quality-4 { --inv-quality: rgba(163, 53, 238, 1); }
+.inv-cell--quality-5 { --inv-quality: rgba(255, 128, 0, 1); }
+.inv-cell--quality-6 { --inv-quality: rgba(229, 204, 128, 1); }
+.inv-cell--quality-7 { --inv-quality: rgba(0, 204, 255, 1); }
+
+.inv-cell--quality-2 .wow-icon,
+.inv-cell--quality-3 .wow-icon,
+.inv-cell--quality-4 .wow-icon,
+.inv-cell--quality-5 .wow-icon,
+.inv-cell--quality-6 .wow-icon,
+.inv-cell--quality-7 .wow-icon {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 0 0 2px var(--inv-quality), 0 0 .4rem var(--inv-quality);
 }
 
-/* NumberFontNormal: white, outlined, tucked in the bottom-right corner. */
-.inv-slot__count {
+.inv-cell--quality-0 .wow-icon img { filter: saturate(.8) brightness(.92); }
+
+/* ButtonHilight-Square: a soft white wash over the hovered item. */
+.inv-cell--filled::after {
   position: absolute;
-  right: .15rem;
-  bottom: .05rem;
+  width: calc(36 / 42 * 100%);
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: radial-gradient(circle, rgba(255, 255, 255, .28), rgba(255, 255, 255, .08) 70%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 90ms ease;
+}
+
+.inv-cell--filled:hover::after,
+.inv-cell--filled:focus-visible::after {
+  opacity: 1;
+}
+
+.inv-cell--filled:focus-visible .wow-icon {
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px rgba(255, 209, 0, .9);
+}
+
+/* NumberFontNormal: white, outlined, in the icon's bottom-right corner. */
+.inv-cell__count {
+  position: absolute;
+  right: calc(5 / 42 * 100%);
+  bottom: calc(5 / 41 * 100%);
   color: #fff;
-  font-size: .72rem;
+  font-size: clamp(.6rem, 6.2cqi, .9rem);
   font-weight: 700;
   line-height: 1;
   pointer-events: none;
@@ -237,149 +341,178 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* All Items: one row per item, under gold class headers. */
-
-.inv-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  align-items: start;
-  gap: .75rem;
+/* Cells a one- or three-slot first row does not have. */
+.inv-cell--blank {
+  background: url("/profession-art/background-overview.webp") center / 400% 400%;
+  box-shadow: inset 0 0 .4rem rgba(0, 0, 0, .9);
 }
 
-.inv-group {
-  padding: .4rem .5rem .5rem;
-  border: 1px solid #000;
-  border-radius: .45rem;
-  background: linear-gradient(180deg, rgba(20, 16, 11, .9), rgba(9, 7, 5, .92));
-  box-shadow: 0 0 0 1px rgba(138, 116, 68, .5);
-}
-
-.inv-group__title {
-  margin: 0 0 .35rem;
-  padding-bottom: .25rem;
-  border-bottom: 1px solid rgba(138, 116, 68, .4);
-  color: var(--inv-gold);
-  font-size: .76rem;
-  font-weight: 600;
-  text-shadow: 0 1px 1px #000;
-}
-
-.inv-group ul {
-  display: grid;
-  gap: .15rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.inv-row {
-  --inv-slot: 2.05rem;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: 'icon name count' 'icon name stacks';
-  align-items: center;
-  column-gap: .5rem;
-  padding: .15rem .3rem .15rem .15rem;
-  border-radius: .25rem;
-}
-
-.inv-row:hover,
-.inv-row:focus-visible {
-  outline: none;
-  background: linear-gradient(90deg, rgba(255, 209, 0, .14), rgba(0, 0, 0, .1));
-}
-
-.inv-row > .inv-slot { grid-area: icon; }
-
-.inv-row__name {
-  grid-area: name;
-  overflow: hidden;
-  font-size: .78rem;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 1px #000;
-  white-space: nowrap;
-}
-
-.inv-row__count {
-  grid-area: count;
-  color: #fff;
-  font-size: .78rem;
-  font-weight: 600;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.inv-row__stacks {
-  grid-area: stacks;
-  color: rgba(255, 255, 255, .45);
-  font-size: .62rem;
-  text-align: right;
-}
-
-.inv-groups__empty {
-  margin: 0;
-  color: rgba(255, 255, 255, .6);
-}
-
-/* Footer: free slots on the left, the money line on the right. */
-
-.inventory-pane__footer {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: .4rem .9rem;
-  border-top: 1px solid rgba(91, 74, 46, .8);
-  background: linear-gradient(180deg, rgba(28, 22, 15, .92), rgba(14, 11, 7, .95));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
-}
-
-.inventory-pane__free {
-  color: rgba(255, 255, 255, .6);
-  font-size: .74rem;
-}
+/* Money: white figures with the game's coin icons. */
 
 .inv-money {
   display: inline-flex;
   align-items: center;
-  gap: .65rem;
+  gap: .5em;
   color: #fff;
-  font-size: .9rem;
   font-weight: 600;
+  line-height: 1;
   text-shadow: 0 1px 1px #000;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
 .inv-money__part {
   display: inline-flex;
   align-items: center;
-  gap: .22rem;
+  gap: .18em;
 }
 
-/* UI-GoldIcon / -SilverIcon / -CopperIcon, drawn as small shaded coins. */
-.inv-money__part i {
-  display: inline-block;
-  width: .78rem;
-  height: .78rem;
-  border-radius: 50%;
-  box-shadow: inset -1px -2px 2px rgba(0, 0, 0, .45), inset 1px 1px 1px rgba(255, 255, 255, .55), 0 0 0 1px rgba(0, 0, 0, .7);
+.inv-money__part img {
+  width: 1.05em;
+  height: 1.05em;
 }
 
-.inv-money__part--gold i { background: radial-gradient(circle at 35% 30%, #fff3a8, #f2c230 45%, #a87412); }
-.inv-money__part--silver i { background: radial-gradient(circle at 35% 30%, #ffffff, #c9ced6 45%, #7c828c); }
-.inv-money__part--copper i { background: radial-gradient(circle at 35% 30%, #ffd2a8, #c8763a 45%, #7a3d14); }
+.inv-bags__money {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: .75rem;
+  font-size: .9rem;
+}
 
-@media (max-width: 40rem) {
-  .inventory-pane {
-    --inv-slot: 2.3rem;
-  }
+/* Summary column: the Equipment tab's stat pane on the class crest. */
 
+.inv-summary.character-sheet__stats {
+  height: auto;
+  max-height: 100%;
+  align-self: start;
+}
+
+.inv-summary__money {
+  display: flex;
+  justify-content: center;
+  padding: .45rem .6rem .55rem;
+  background: url("/armory-art/item-level.webp") center / 100% 100% no-repeat;
+  font-size: 1.2rem;
+}
+
+.inv-money--inline {
+  font-size: .78rem;
+}
+
+.inv-summary__more {
+  margin: .1rem 0 0;
+  color: rgba(255, 255, 255, .5);
+  font-size: .7rem;
+  text-align: center;
+}
+
+/* Item lines (materials, All Items): icon, name in its quality color, count;
+   every second line carries the stat pane's row band. */
+
+.inv-lines {
+  display: grid;
+  margin: 0;
+  padding: 0 .2rem;
+  list-style: none;
+}
+
+.inv-lines > li:nth-child(even) .inv-line {
+  background: url("/armory-art/stat-line.webp") center / 100% 100% no-repeat;
+}
+
+.inv-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .5rem;
+  padding: .14rem .45rem .14rem .3rem;
+  border-radius: .15rem;
+  outline: none;
+}
+
+.inv-line:hover,
+.inv-line:focus-visible {
+  background: linear-gradient(90deg, transparent, rgba(255, 209, 0, .1), transparent) !important;
+}
+
+.inv-line:focus-visible {
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 0, .5);
+}
+
+.inv-line__icon {
+  display: grid;
+}
+
+.inv-line__icon .wow-icon {
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.inv-line__icon.inv-cell--quality-2 .wow-icon,
+.inv-line__icon.inv-cell--quality-3 .wow-icon,
+.inv-line__icon.inv-cell--quality-4 .wow-icon,
+.inv-line__icon.inv-cell--quality-5 .wow-icon {
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--inv-quality);
+}
+
+.inv-line__name {
+  overflow: hidden;
+  font-size: .8rem;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px #000;
+  white-space: nowrap;
+}
+
+.inv-line__count {
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  text-shadow: 0 1px 1px #000;
+  font-variant-numeric: tabular-nums;
+}
+
+/* All Items: class groups in columns. */
+
+.inv-groups {
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  align-items: start;
+  gap: .9rem .75rem;
+}
+
+.inv-groups__empty {
+  margin: 1rem 0;
+  color: rgba(255, 255, 255, .6);
+  text-align: center;
+}
+
+/* Narrow panes: one column, bags first (the backpack carries the money line),
+   then the summary; the body scrolls as a whole. */
+@container inventory (max-width: 40rem) {
   .inventory-pane__title {
     flex-wrap: wrap;
   }
 
+  .inventory-pane__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .inventory-pane__main,
+  .inv-summary.character-sheet__stats {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .inv-summary.character-sheet__stats {
+    max-height: none;
+  }
+
   .inv-bags {
-    justify-content: center;
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+    justify-items: center;
   }
 }

@@ -37,7 +37,7 @@ const characterProfileTabs = [
     id: 'inventory',
     label: 'Inventory',
     badge: (armory) => armory.inventory?.usedSlots || null,
-    render: ({ armory }) => <InventoryPane inventory={armory.inventory} />,
+    render: ({ armory, character }) => <InventoryPane inventory={armory.inventory} className={character.className} />,
   },
 ]
 

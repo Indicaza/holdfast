@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
-import { coins, containerLabel, inventoryGroups, normalizeInventory } from '../src/Intelligence/inventoryModel.js'
+import { bagFrame, bagRows, coins, containerLabel, inventoryGroups, inventorySummary, normalizeInventory } from '../src/Intelligence/inventoryModel.js'
 import { normalizeArmory } from '../src/Intelligence/model.js'
 
 // The armory sends the canonical model (backend inventoryModel.js); the raw
@@ -56,4 +56,58 @@ test('missing or empty inventory telemetry normalizes to null', () => {
   assert.equal(normalizeArmory({}).inventory, null)
   assert.equal(normalizeArmory({ inventory: armoryInventory() }).inventory.bags.length, 2)
   assert.equal(containerLabel({ kind: 'keyring', bagId: -2 }), 'Keyring')
+})
+
+test('bags lay out four to a row with a short first row, as the game does', () => {
+  const slots = (size) => Array.from({ length: size }, (_, index) => ({ slot: index + 1 }))
+  assert.deepEqual(bagRows(slots(6)).map((row) => [row.lead, row.cells.map((cell) => cell.slot)]), [[true, [1, 2]], [false, [3, 4, 5, 6]]])
+  assert.deepEqual(bagRows(slots(8)).map((row) => row.cells.length), [4, 4])
+  assert.deepEqual(bagRows(slots(7)).map((row) => row.cells.length), [3, 4])
+
+  assert.equal(bagFrame({ kind: 'backpack', slotCount: 16 }), 'backpack')
+  assert.equal(bagFrame({ kind: 'backpack', slotCount: 20 }), 'full', 'a non-standard backpack uses bag art')
+  assert.equal(bagFrame({ kind: 'bag', slotCount: 6 }), 'partial')
+  assert.equal(bagFrame({ kind: 'bag', slotCount: 7 }), 'full')
+
+  const [backpack, linen] = normalizeInventory(armoryInventory()).bags
+  assert.equal(backpack.frame, 'backpack')
+  assert.equal(linen.frame, 'partial')
+  assert.equal(linen.rows.length, 2)
+})
+
+test('the keyring is shown only when it holds keys and never counts as bag space', () => {
+  const source = armoryInventory()
+  source.containers.push({ bagId: -2, kind: 'keyring', slotCount: 12, freeSlots: 12, slots: [] })
+  const empty = normalizeInventory(source)
+  assert.equal(empty.bags.some((bag) => bag.kind === 'keyring'), false)
+  assert.equal(empty.slotCount, 22)
+
+  source.containers[2].slots = [{ slot: 1, itemKey: 'item:5396', itemId: 5396, count: 1 }]
+  source.containers[2].freeSlots = 11
+  const keyed = normalizeInventory(source)
+  assert.equal(keyed.bags.at(-1).label, 'Keyring')
+  assert.equal(keyed.slotCount, 22)
+  assert.equal(keyed.freeSlots, 16)
+})
+
+test('tooltips price the whole stack and the summary adds up the bags', () => {
+  const inventory = normalizeInventory(armoryInventory())
+  const ore = inventory.bags[0].slots[1].item
+  assert.equal(ore.unitSellPrice, 5)
+  assert.equal(ore.sellPrice, 100, 'twenty ore at 5c')
+
+  const summary = inventorySummary(inventory)
+  // 25 ore x 5c + 7 leather x 15c + sword 461c + hearthstone 0c
+  assert.equal(summary.vendorValue.copper, 125 + 105 + 461)
+  assert.equal(summary.distinctItems, 4)
+  assert.equal(summary.stacks, 6)
+  assert.deepEqual(summary.materials.map((item) => [item.name, item.count]), [['Copper Ore', 25], ['Light Leather', 7]])
+})
+
+test('items marked as having no value are not priced', () => {
+  const source = armoryInventory()
+  source.containers[0].slots[1].hasNoValue = true
+  const inventory = normalizeInventory(source)
+  assert.equal(inventory.bags[0].slots[1].item.sellPrice, null)
+  assert.equal(inventorySummary(inventory).vendorValue.copper, 125 + 105 + 461 - 100)
 })

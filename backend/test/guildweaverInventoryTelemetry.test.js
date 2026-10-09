@@ -111,6 +111,15 @@ test("canonical inventory tolerates empty Lua tables and drops broken slots", ()
   assert.deepEqual(canonical.totals.map((total) => [total.itemId, total.count]), [[2770, 23], [6948, 1], [15210, 1]]);
   assert.deepEqual(inventoryMoney(9), { copper: 9, gold: 0, silver: 0, copperRemainder: 9 });
   assert.deepEqual(canonicalInventorySnapshot({}).containers, []);
+
+  const withKeyring = structuredClone(fixture.payload);
+  withKeyring.containers.push({ bagId: -2, kind: "keyring", slotCount: 12, freeSlots: 11, slots: [{ slot: 1, itemKey: "item:5396", itemId: 5396, count: 1 }] });
+  const keyed = canonicalInventorySnapshot(withKeyring);
+  assert.equal(keyed.slotCount, 22, "keyring slots are not bag space");
+  assert.equal(keyed.freeSlots, 16);
+  assert.equal(keyed.usedSlots, 6);
+  assert.deepEqual(keyed.containers.map((entry) => entry.kind), ["backpack", "bag", "keyring"], "keyring sorts last");
+  assert.equal(keyed.totals.some((total) => total.itemId === 5396), true, "keys still count as carried items");
 });
 
 test("armory carries the latest inventory telemetry", () =>
