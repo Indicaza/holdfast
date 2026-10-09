@@ -236,7 +236,10 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   await expect(profile.getByRole('meter', { name: 'Blacksmithing skill' })).toHaveText('225 + 5/225')
   await expect(profile.getByRole('heading', { name: 'Fishing' })).toBeVisible()
 
-  await profile.locator('.prof-rail-button[title="Blacksmithing"]').click()
+  const blacksmithingTab = profile.getByRole('navigation', { name: 'Profession pages' }).getByRole('button', { name: 'Blacksmithing' })
+  await blacksmithingTab.hover()
+  await expect(page.getByRole('tooltip').filter({ hasText: 'Blacksmithing' })).toBeVisible()
+  await blacksmithingTab.click()
   await expect(profile.getByText('Mithril Spurs', { exact: true }).first()).toBeVisible()
   await profile.getByRole('searchbox', { name: 'Search Blacksmithing recipes' }).fill('nothing-here')
   await expect(profile.getByText('No recipes match.')).toBeVisible()

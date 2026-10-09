@@ -3,12 +3,14 @@ import test from 'node:test'
 
 import {
   cooldownRemaining,
+  itemTooltipIndex,
   overviewSlots,
   railProfessions,
   rankText,
   rankTitle,
   recipeGroups,
   recipesFor,
+  withItemTooltip,
 } from '../src/Intelligence/professionsModel.js'
 
 const mining = { key: 'id:186', skillLineId: 186, name: 'Mining', current: 270, max: 300 }
@@ -74,4 +76,19 @@ test('cooldowns read like the game timer', () => {
   assert.equal(cooldownRemaining(at(3 * 3600), now), '3 Hr')
   assert.equal(cooldownRemaining(at(86400 + 4 * 3600), now), '1 Day 4 Hr')
   assert.equal(cooldownRemaining(null, now), '')
+})
+
+test('reagents borrow tooltips from crafted items in the same books', () => {
+  const tooltip = { source: 'C_TooltipInfo.GetHyperlink', lines: [{ left: 'Copper Bar' }, { left: 'Max Stack: 20' }] }
+  const index = itemTooltipIndex([
+    { name: 'Smelt Copper', crafted: { itemId: 2840, name: 'Copper Bar', itemLevel: 10, tooltip } },
+    { name: 'Copper Bracers', crafted: { itemId: 2853, name: 'Copper Bracers' } },
+  ])
+  assert.deepEqual([...index.keys()], [2840])
+  const bar = withItemTooltip({ itemId: 2840, name: 'Copper Bar', quantity: 2 }, index)
+  assert.equal(bar.tooltip, tooltip)
+  assert.equal(bar.itemLevel, 10)
+  assert.equal(bar.quantity, 2)
+  const stone = { itemId: 2835, name: 'Rough Stone' }
+  assert.equal(withItemTooltip(stone, index), stone)
 })

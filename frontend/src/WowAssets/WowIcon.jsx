@@ -270,7 +270,7 @@ export function FloatingTooltip({ anchor, side = 'right', id, className = '', ch
   )
 }
 
-export function ItemHoverCard({ item, children, side = 'right', className = '' }) {
+export function ItemHoverCard({ item, children, side = 'right', className = '', tooltipClassName = '' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
   if (!item) return children
@@ -288,7 +288,7 @@ export function ItemHoverCard({ item, children, side = 'right', className = '' }
     >
       {children}
       {anchor && typeof document !== 'undefined' ? (
-        <FloatingTooltip anchor={anchor} side={side} id={tooltipId}><TooltipBody item={item} /></FloatingTooltip>
+        <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={tooltipClassName}><TooltipBody item={item} /></FloatingTooltip>
       ) : null}
     </span>
   )

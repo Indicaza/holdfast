@@ -12,7 +12,7 @@
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { kitItemIds } from "./kits.js";
 
@@ -136,7 +136,7 @@ export function parseTooltip(itemId, data, iconIds) {
   const lines = [line(data.name, QUALITY_COLORS[quality] || WHITE)];
   const stats = {};
 
-  const bind = html.match(/Binds when (picked up|equipped)/)?.[0];
+  const bind = html.match(/Binds when (picked up|equipped|used)/)?.[0];
   if (bind) lines.push(line(bind));
   if (/<br>Unique(?!-)/.test(html)) lines.push(line("Unique"));
 
@@ -145,6 +145,8 @@ export function parseTooltip(itemId, data, iconIds) {
     || html.match(/<!--ue--><br>(Neck|Finger|Trinket|Back|Shirt|Tabard)/)?.[1];
   const resolvedSlot = slotText || plainSlot || null;
   if (resolvedSlot) lines.push(line(resolvedSlot, WHITE, subclass || undefined));
+  const bagSlots = html.match(/<br \/?>(\d+ Slot [A-Za-z ]+?)(?:<!--|<\/td>)/)?.[1];
+  if (bagSlots) lines.push(line(bagSlots));
 
   const damage = html.match(/<!--dmg-->(\d+) - (\d+) Damage<\/span><\/td>\s*<th>Speed <!--spd-->([\d.]+)/);
   if (damage) lines.push(line(`${damage[1]} - ${damage[2]} Damage`, WHITE, `Speed ${damage[3]}`));
@@ -176,12 +178,16 @@ export function parseTooltip(itemId, data, iconIds) {
   if (durability) lines.push(line(`Durability ${durability[1]} / ${durability[2]}`));
   const requiredLevel = Number(html.match(/Requires Level <!--rlvl-->(\d+)/)?.[1]) || null;
   if (requiredLevel) lines.push(line(`Requires Level ${requiredLevel}`));
+  const requiredSkill = html.match(/Requires <a href="[^"]*\/skill=\d+[^"]*"[^>]*>([^<]+)<\/a> \((\d+)\)/);
+  if (requiredSkill) lines.push(line(`Requires ${requiredSkill[1]} (${requiredSkill[2]})`));
   const classes = html.match(/Classes: (.+?)<\/div>|Classes: (.+?)<br/);
   if (classes) lines.push(line(`Classes: ${stripTags(classes[1] || classes[2])}`));
 
   for (const effect of html.matchAll(/<span[^>]*class="q2">((?:Equip|Use|Chance on hit):.+?)<\/span>/g)) {
     lines.push(line(stripTags(effect[1]), GREEN));
   }
+  const flavor = html.match(/<span class="q">("[^<]+")<\/span>/)?.[1];
+  if (flavor) lines.push(line(stripTags(flavor), GOLD));
 
   const setName = html.match(/item-set=\d+[^"]*" class="q">([^<]+)<\/a> \((\d+)\/(\d+)\)/);
   if (setName) {
@@ -212,7 +218,7 @@ export function parseTooltip(itemId, data, iconIds) {
     itemClass: { id: classId, name: classId === 2 ? "Weapon" : "Armor" },
     itemSubclass: { id: subclassId, name: subclass || "Miscellaneous" },
     equipLocation: location,
-    bindType: bind === "Binds when picked up" ? 1 : bind ? 2 : 0,
+    bindType: { "Binds when picked up": 1, "Binds when equipped": 2, "Binds when used": 3 }[bind] || 0,
     expansionId: 0,
     setId: Number(html.match(/item-set=(\d+)/)?.[1]) || null,
     sellPrice: sellPrice || null,
@@ -262,7 +268,10 @@ async function main() {
   console.log(`Wrote ${Object.keys(icons).length} of ${wanted.size} icon names to ${iconOutputPath}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+// recordRecipeData.mjs imports parseTooltip, so only run when invoked directly.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

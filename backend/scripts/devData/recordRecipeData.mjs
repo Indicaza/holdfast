@@ -10,16 +10,23 @@
 // (https://github.com/wowdev/wow-listfile/releases), as in recordGameData.mjs.
 //
 // Writes seed/devData/recipes.json (recipes per profession skill line, shaped
-// close to what Guildweaver's profession capture reports) and adds the recipe,
-// reagent and crafted item icons to seed/devData/icons.json.
+// close to what Guildweaver's profession capture reports), records crafted
+// item tooltips from Wowhead into seed/devData/recipeTooltips.json (kept
+// between runs, so only new items are fetched), and adds the recipe, reagent
+// and crafted item icons to seed/devData/icons.json.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { parseTooltip } from "./recordGameData.mjs";
 
 const backendRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const outputPath = join(backendRoot, "seed", "devData", "recipes.json");
 const iconOutputPath = join(backendRoot, "seed", "devData", "icons.json");
+const tooltipOutputPath = join(backendRoot, "seed", "devData", "recipeTooltips.json");
+const TOOLTIP_URL = "https://nether.wowhead.com/classic/tooltip/item/";
+const TOOLTIP_CONCURRENCY = 4;
 
 // Profession skill lines whose recipe books the generator can fill.
 const SKILL_LINES = {
@@ -112,7 +119,7 @@ function cleanDescription(value) {
   return text && !/[$]/.test(text) ? text : null;
 }
 
-function main() {
+async function main() {
   const [dbDir, listfilePath] = process.argv.slice(2);
   if (!dbDir || !listfilePath) {
     console.error("Usage: node scripts/devData/recordRecipeData.mjs <db2-csv-dir> <community-listfile.csv>");
@@ -254,6 +261,46 @@ function main() {
   iconFile.icons = Object.fromEntries(Object.entries(iconFile.icons).sort(([left], [right]) => Number(left) - Number(right)));
   writeFileSync(iconOutputPath, `${JSON.stringify(iconFile, null, 2)}\n`);
   console.log(`Added ${added} icon names to ${iconOutputPath}`);
+
+  const craftedIds = [...new Set(Object.values(professions).flat().map((recipe) => recipe.crafted?.itemId).filter(Boolean))];
+  await recordTooltips(craftedIds);
 }
 
-main();
+// Item level, required level and client tooltip lines for each crafted item,
+// as Guildweaver's item description reports them for known recipes.
+async function recordTooltips(itemIds) {
+  const existing = existsSync(tooltipOutputPath) ? JSON.parse(readFileSync(tooltipOutputPath, "utf8")).items : {};
+  const items = Object.fromEntries(itemIds.filter((id) => existing[id]).map((id) => [id, existing[id]]));
+  const queue = itemIds.filter((id) => !items[id]);
+  let failed = 0;
+  async function worker() {
+    while (queue.length) {
+      const itemId = queue.shift();
+      const response = await fetch(`${TOOLTIP_URL}${itemId}`);
+      if (!response.ok) {
+        failed += 1;
+        console.warn(`Item ${itemId}: HTTP ${response.status}`);
+        continue;
+      }
+      const item = parseTooltip(itemId, await response.json(), new Map());
+      items[itemId] = { itemLevel: item.itemLevel, requiredLevel: item.requiredLevel, tooltip: item.tooltip };
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+  }
+  await Promise.all(Array.from({ length: TOOLTIP_CONCURRENCY }, worker));
+
+  const lines = Object.keys(items)
+    .sort((left, right) => Number(left) - Number(right))
+    .map((id) => `    "${id}": ${JSON.stringify(items[id])}`)
+    .join(",\n");
+  writeFileSync(
+    tooltipOutputPath,
+    `{\n  "source": "Wowhead Classic tooltips",\n  "recordedAt": "${new Date().toISOString().slice(0, 10)}",\n  "items": {\n${lines}\n  }\n}\n`,
+  );
+  console.log(`Wrote ${Object.keys(items).length} crafted item tooltips to ${tooltipOutputPath}${failed ? ` (${failed} failed)` : ""}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 
-import WowIcon from '../WowAssets/WowIcon.jsx'
+import WowIcon, { ItemHoverCard } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import {
   MISSING_PRIMARY_TEXT,
   cooldownRemaining,
+  itemTooltipIndex,
   overviewSlots,
   professionKey,
   railProfessions,
@@ -13,6 +14,7 @@ import {
   recipeGroups,
   recipeKey,
   recipesFor,
+  withItemTooltip,
 } from './professionsModel.js'
 import './ProfessionsPane.css'
 
@@ -37,6 +39,12 @@ const BAR_THEMES = {
   mining: 'mining',
   skinning: 'skinning',
   tailoring: 'tailoring',
+}
+
+// Tooltips that are not items (side tabs, profession spells, enchants) reuse
+// the item tooltip frame with just a name and an optional description.
+function textTooltip(name, description = '') {
+  return { name, qualityId: 1, description }
 }
 
 function themeOf(profession) {
@@ -74,12 +82,18 @@ function SpellButton({ profession, onOpen }) {
       </span>
     </>
   )
-  return onOpen ? (
-    <button type="button" className="prof-spell" onClick={() => onOpen(profession.key)} title={`Open ${profession.name}`}>
-      {content}
-    </button>
-  ) : (
-    <div className="prof-spell prof-spell--static">{content}</div>
+  const { current, modifier, max } = rankText(profession)
+  const tooltip = textTooltip(profession.name, `${rankTitle(profession.max) || 'Skill'} ${current}${modifier ? ` + ${modifier}` : ''}/${max}`)
+  return (
+    <ItemHoverCard item={tooltip} side="top" tooltipClassName="prof-tooltip--text">
+      {onOpen ? (
+        <button type="button" className="prof-spell" onClick={() => onOpen(profession.key)} aria-label={`Open ${profession.name}`}>
+          {content}
+        </button>
+      ) : (
+        <div className="prof-spell prof-spell--static" tabIndex={0}>{content}</div>
+      )}
+    </ItemHoverCard>
   )
 }
 
@@ -123,7 +137,7 @@ function Overview({ professions, openable, onOpen }) {
   )
 }
 
-function Schematic({ recipe }) {
+function Schematic({ recipe, tooltips }) {
   // Captured once per mount so render stays pure; cooldowns are minute-rounded.
   const [now] = useState(() => Date.now())
   if (!recipe) {
@@ -139,16 +153,18 @@ function Schematic({ recipe }) {
   return (
     <div className="prof-schematic">
       <header className="prof-schematic__head">
-        <span className="prof-schematic__output">
-          <WowIcon
-            iconFileId={crafted?.iconFileDataId ?? recipe.iconFileId}
-            itemId={crafted?.itemId}
-            label={recipe.name}
-            quality={crafted?.qualityId}
-            size={53}
-          />
-          {quantity ? <span className="prof-schematic__count">{quantity}</span> : null}
-        </span>
+        <ItemHoverCard item={crafted ? withItemTooltip(crafted, tooltips) : textTooltip(recipe.name, recipe.description)} tooltipClassName={crafted ? '' : 'prof-tooltip--text'}>
+          <span className="prof-schematic__output" tabIndex={0}>
+            <WowIcon
+              iconFileId={crafted?.iconFileDataId ?? recipe.iconFileId}
+              itemId={crafted?.itemId}
+              label={recipe.name}
+              quality={crafted?.qualityId}
+              size={53}
+            />
+            {quantity ? <span className="prof-schematic__count">{quantity}</span> : null}
+          </span>
+        </ItemHoverCard>
         <div>
           <h4 className={crafted ? `item-quality-${crafted.qualityId ?? 1}` : 'prof-schematic__spell'}>{recipe.name}</h4>
           {recipe.known === false ? <p className="prof-schematic__unlearned">Unlearned</p> : null}
@@ -172,11 +188,15 @@ function Schematic({ recipe }) {
           <ul>
             {reagents.map((reagent, index) => (
               <li key={`${reagent.itemId || reagent.name}-${index}`}>
-                <span className="prof-reagent__icon">
-                  <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={37} />
-                  <span className="prof-reagent__count">{reagent.quantity || 1}</span>
-                </span>
-                <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
+                <ItemHoverCard item={withItemTooltip({ ...reagent, iconFileDataId: reagent.iconFileId }, tooltips)}>
+                  <span className="prof-reagent" tabIndex={0}>
+                    <span className="prof-reagent__icon">
+                      <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={37} />
+                      <span className="prof-reagent__count">{reagent.quantity || 1}</span>
+                    </span>
+                    <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
+                  </span>
+                </ItemHoverCard>
               </li>
             ))}
           </ul>
@@ -186,7 +206,7 @@ function Schematic({ recipe }) {
   )
 }
 
-function CraftingPage({ profession, recipes }) {
+function CraftingPage({ profession, recipes, tooltips }) {
   const [query, setQuery] = useState('')
   const [selectedKey, setSelectedKey] = useState(null)
   // The game hides unlearned recipes by default.
@@ -260,7 +280,7 @@ function CraftingPage({ profession, recipes }) {
               {!visible.length ? <p className="prof-list__none">No recipes match.</p> : null}
             </div>
           </div>
-          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} />
+          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} tooltips={tooltips} />
         </div>
       ) : (
         <div className="prof-crafting__waiting">
@@ -277,6 +297,7 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
   const rail = useMemo(() => railProfessions(professions, recipes), [professions, recipes])
   const openable = useMemo(() => new Set(rail.map((profession) => profession.key)), [rail])
   const active = rail.find((profession) => profession.key === view) || null
+  const tooltips = useMemo(() => itemTooltipIndex(recipes), [recipes])
 
   if (!professions.length) {
     return <EmptyTelemetry title="No profession telemetry yet.">Professions will appear after this character's next Guildweaver sync.</EmptyTelemetry>
@@ -291,31 +312,35 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
         </header>
         <div className="professions-pane__content">
           {active
-            ? <CraftingPage key={active.key} profession={active} recipes={recipesFor(active, recipes)} />
+            ? <CraftingPage key={active.key} profession={active} recipes={recipesFor(active, recipes)} tooltips={tooltips} />
             : <Overview professions={professions} openable={openable} onOpen={setView} />}
         </div>
       </div>
       <nav className="professions-pane__rail" aria-label="Profession pages">
-        <button
-          type="button"
-          className={`prof-rail-button${!active ? ' is-active' : ''}`}
-          onClick={() => setView('overview')}
-          aria-pressed={!active}
-          title="Professions"
-        >
-          <WowIcon iconFileId={OVERVIEW_ICON} label="Professions" size={40} />
-        </button>
-        {rail.map((profession) => (
+        <ItemHoverCard item={textTooltip('Professions')} side="left" tooltipClassName="prof-tooltip--text">
           <button
             type="button"
-            key={profession.key}
-            className={`prof-rail-button${active?.key === profession.key ? ' is-active' : ''}`}
-            onClick={() => setView(profession.key)}
-            aria-pressed={active?.key === profession.key}
-            title={profession.name}
+            className={`prof-rail-button${!active ? ' is-active' : ''}`}
+            onClick={() => setView('overview')}
+            aria-pressed={!active}
+            aria-label="Professions"
           >
-            <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={40} />
+            <WowIcon iconFileId={OVERVIEW_ICON} label="Professions" size={40} />
           </button>
+        </ItemHoverCard>
+        {rail.map((profession) => (
+          <ItemHoverCard key={profession.key} item={textTooltip(profession.name)} side="left" tooltipClassName="prof-tooltip--text">
+            <button
+              type="button"
+              className={`prof-rail-button${active?.key === profession.key ? ' is-active' : ''}`}
+              onClick={() => setView(profession.key)}
+              aria-pressed={active?.key === profession.key}
+              aria-label={profession.name}
+              data-profession={profession.name}
+            >
+              <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={40} />
+            </button>
+          </ItemHoverCard>
         ))}
       </nav>
     </div>

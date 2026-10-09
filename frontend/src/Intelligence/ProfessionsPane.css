@@ -106,6 +106,13 @@
   transform: scale(1.1);
 }
 
+/* Name-only tooltips (side tabs, profession spells, enchants) fit their text.
+   Rendered in document.body, so not scoped under .professions-pane. */
+.item-tooltip.prof-tooltip--text {
+  width: max-content;
+  max-width: min(18rem, 78vw);
+}
+
 /* Book page: two primary cards stacked, three secondary cards in a row. */
 
 .prof-overview {
@@ -545,7 +552,9 @@ button.prof-spell:focus-visible strong {
 
 .prof-schematic__output {
   position: relative;
+  display: block;
   flex: 0 0 auto;
+  border-radius: .2rem;
 }
 
 .prof-schematic__output .wow-icon {
@@ -629,10 +638,27 @@ button.prof-spell:focus-visible strong {
 }
 
 .prof-schematic__reagents li {
+  min-width: 0;
+}
+
+.prof-reagent {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: .5rem;
+  border-radius: .2rem;
+  cursor: default;
+}
+
+.prof-reagent:hover .prof-reagent__name {
+  filter: brightness(1.25);
+}
+
+.prof-reagent:focus-visible,
+.prof-schematic__output:focus-visible,
+.prof-spell--static:focus-visible {
+  outline: 1px solid var(--prof-gold);
+  outline-offset: 2px;
 }
 
 .prof-reagent__icon {

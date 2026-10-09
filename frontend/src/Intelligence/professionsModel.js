@@ -129,3 +129,27 @@ export function cooldownRemaining(readyAt, now = Date.now()) {
   if (hours) return minutes ? `${hours} Hr ${minutes} Min` : `${hours} Hr`
   return `${Math.max(1, Math.ceil(seconds / 60))} Min`
 }
+
+function hasTooltip(item) {
+  return Array.isArray(item?.tooltip?.lines) && item.tooltip.lines.length > 0
+}
+
+// Crafted items that carry client tooltip lines, by item ID. Reagents arrive
+// without tooltips, so one made by any of the character's recipes (bars,
+// bolts, powders) borrows the crafted item's tooltip.
+export function itemTooltipIndex(recipes) {
+  const index = new Map()
+  for (const recipe of Array.isArray(recipes) ? recipes : []) {
+    const crafted = recipe?.crafted
+    if (crafted?.itemId && hasTooltip(crafted) && !index.has(Number(crafted.itemId))) index.set(Number(crafted.itemId), crafted)
+  }
+  return index
+}
+
+export function withItemTooltip(item, index) {
+  if (!item || hasTooltip(item)) return item
+  const known = index?.get(Number(item.itemId))
+  return known
+    ? { ...item, tooltip: known.tooltip, itemLevel: item.itemLevel ?? known.itemLevel, requiredLevel: item.requiredLevel ?? known.requiredLevel }
+    : item
+}

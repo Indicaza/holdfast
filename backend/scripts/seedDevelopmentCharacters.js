@@ -36,6 +36,7 @@ import { KITS } from "./devData/kits.js";
 const seedDir = join(dirname(fileURLToPath(import.meta.url)), "..", "seed", "devData");
 const ITEMS = JSON.parse(readFileSync(join(seedDir, "items.json"), "utf8")).items;
 const RECIPE_BOOKS = JSON.parse(readFileSync(join(seedDir, "recipes.json"), "utf8")).professions;
+const RECIPE_TOOLTIPS = JSON.parse(readFileSync(join(seedDir, "recipeTooltips.json"), "utf8")).items;
 const TALENT_TREES = readdirSync(join(seedDir, "talentTrees"))
   .filter((file) => file.endsWith(".json"))
   .map((file) => JSON.parse(readFileSync(join(seedDir, "talentTrees", file), "utf8")));
@@ -596,7 +597,8 @@ function professionSnapshotFor(snapshot) {
         cooldown: onCooldown
           ? { readyAt: capturedAt + Math.round(random() * recipe.cooldownSeconds), isDayCooldown: recipe.cooldownSeconds >= 86400 }
           : undefined,
-        crafted: recipe.crafted,
+        // Guildweaver only reads the crafted item's tooltip for known recipes.
+        crafted: known && recipe.crafted ? { ...recipe.crafted, ...RECIPE_TOOLTIPS[recipe.crafted.itemId] } : recipe.crafted,
         reagents: recipe.reagents.map((reagent, index) => ({ ...reagent, required: true, slotIndex: index + 1 })),
       };
     });
