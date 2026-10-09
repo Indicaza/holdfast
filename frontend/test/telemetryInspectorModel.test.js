@@ -194,3 +194,19 @@ test('profession_snapshot records get a Professions view and readable recipe lab
   assert.equal(humanizeTelemetryName('knownCount'), 'Known Recipes')
   assert.equal(humanizeTelemetryName('skillUps'), 'Skill Ups')
 })
+
+test('inventory_snapshot records get an Inventory view and readable bag labels', () => {
+  const record = {
+    domain: 'inventory',
+    eventType: 'inventory_snapshot',
+    payload: { schemaVersion: 1, money: { copper: 5 }, slotCount: 16, freeSlots: 4, containers: [], totals: [] },
+  }
+
+  assert.equal(telemetryDomainDescriptor(record).label, 'Inventory')
+  assert.deepEqual(
+    telemetrySummaryEntries(record).map(([key]) => key),
+    ['money', 'slotCount', 'freeSlots', 'containers', 'totals', 'schemaVersion'],
+  )
+  assert.equal(humanizeTelemetryName('maxStackSize'), 'Max Stack Size')
+  assert.equal(humanizeTelemetryName('itemKey'), 'Item Key')
+})

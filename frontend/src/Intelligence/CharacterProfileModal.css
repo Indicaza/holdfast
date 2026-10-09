@@ -238,7 +238,8 @@
 }
 
 .armory-content--talents,
-.armory-content--professions {
+.armory-content--professions,
+.armory-content--inventory {
   display: flex;
   overflow: hidden;
 }

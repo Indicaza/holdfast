@@ -1,6 +1,7 @@
 import { useId, useRef } from 'react'
 
 import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
+import InventoryPane from './InventoryPane.jsx'
 import ProfessionsPane from './ProfessionsPane.jsx'
 import TalentTree from './TalentTree.jsx'
 import { CharacterFacts, SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
@@ -31,6 +32,12 @@ const characterProfileTabs = [
     label: 'Professions',
     badge: (armory) => armory.professions.length || null,
     render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} />,
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    badge: (armory) => armory.inventory?.usedSlots || null,
+    render: ({ armory, character }) => <InventoryPane inventory={armory.inventory} className={character.className} />,
   },
 ]
 

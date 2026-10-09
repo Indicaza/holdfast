@@ -8,6 +8,7 @@ import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { adaptArmoryV3 } from "./armoryV3Adapter.js";
 import { hydrateArmoryFromLatestSnapshot } from "./durableArmoryRepository.js";
+import { decorateArmoryInventory } from "./inventoryArmory.js";
 import { decorateArmoryProfessions } from "./professionArmory.js";
 import { decorateArmoryTalentArt } from "./talentArmoryArt.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
@@ -106,6 +107,7 @@ export async function prepareCharacterArmory(storedArmory, {
   armoryAdapter = adaptArmoryV3,
   talentArtDecorator = decorateArmoryTalentArt,
   professionDecorator = decorateArmoryProfessions,
+  inventoryDecorator = decorateArmoryInventory,
   gameDataResolver = resolveGameDataBundle,
   hydrationDeadlineMs = ARMORY_HYDRATION_BUDGET_MS,
 } = {}) {
@@ -113,6 +115,7 @@ export async function prepareCharacterArmory(storedArmory, {
   armory = applyArmoryStage(armory, "adapt character armory", armoryAdapter);
   armory = applyArmoryStage(armory, "decorate character talents", talentArtDecorator);
   armory = applyArmoryStage(armory, "decorate character professions", professionDecorator);
+  armory = applyArmoryStage(armory, "decorate character inventory", inventoryDecorator);
 
   const references = armoryReferences(armory);
   const gameBuild = armoryBuildKey(armory);

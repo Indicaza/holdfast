@@ -35,11 +35,13 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(first.created >= 20);
     assert.ok(first.trees >= 1);
     assert.equal(first.recipeBooks, first.created);
+    assert.equal(first.inventories, first.created);
 
     const second = await seedDevelopmentCharacters({ logger: quiet });
     assert.equal(second.created, 0);
     assert.equal(second.trees, 0);
     assert.equal(second.recipeBooks, 0);
+    assert.equal(second.inventories, 0);
 
     const summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
@@ -73,6 +75,19 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(engineering.categories.length > 5);
     assert.ok(bomb.reagents.every((reagent) => reagent.tooltip?.lines?.length));
     assert.ok(bomb.tooltip.lines.length >= 1);
+
+    // inventory_snapshot telemetry reaches the armory as its own section.
+    const inventory = armory.json.inventory;
+    assert.equal(inventory.telemetry.eventType, "inventory_snapshot");
+    assert.equal(inventory.containers[0].kind, "backpack");
+    assert.equal(inventory.containers.length, 5, "backpack and four bags at level 60");
+    assert.ok(inventory.money.gold > 0);
+    assert.ok(inventory.usedSlots > 3);
+    const keys = new Set(inventory.items.map((item) => item.key));
+    assert.ok(inventory.containers.every((container) => container.slots.every((stack) => keys.has(stack.itemKey))));
+    assert.ok(inventory.items.some((item) => item.name === "Hearthstone" && item.spell?.id === 8690));
+    assert.ok(inventory.items.every((item) => item.iconFileDataId && item.tooltip?.lines?.length));
+    assert.ok(inventory.totals.length >= 3);
 
     // Classes without a real capture use synthetic trees built from Classic Era data.
     const mage = await request("/api/intelligence/characters/guildweaver-id:character-dev-mirelle", { persona: "member" });
