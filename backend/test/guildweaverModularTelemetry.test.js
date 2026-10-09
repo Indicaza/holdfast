@@ -71,7 +71,7 @@ test("modular domains ingest independently, retain raw payloads, and maintain la
 
     const duplicate = ingest("stats", structuredClone(fixtures.stats));
     assert.equal(duplicate.status, "duplicate");
-    assert.equal(duplicate.record, null);
+    assert.equal(duplicate.record?.id, recordIds.stats);
 
     const changedEquipment = structuredClone(fixtures.equipment);
     changedEquipment.capturedAt += 10;
