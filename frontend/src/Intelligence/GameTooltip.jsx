@@ -39,11 +39,13 @@ function color(value) {
 
 const SELL_PRICE_LINE = /^sell price:?\s*$/i
 const WHITE = { r: 1, g: 1, b: 1 }
+// NORMAL_FONT_COLOR: the client's color for a line that names none.
+const NORMAL = { r: 1, g: 0.82, b: 0 }
 const GREEN = { r: 0, g: 1, b: 0 }
 
 function capturedLines(item) {
   return (Array.isArray(item?.tooltip?.lines) ? item.tooltip.lines : [])
-    .filter((line) => (line?.left || line?.right) && !SELL_PRICE_LINE.test(String(line.left || '').trim()))
+    .filter((line) => line && (line.blank || line.left || line.right) && !SELL_PRICE_LINE.test(String(line.left || '').trim()))
 }
 
 function statName(key) {
@@ -81,12 +83,12 @@ export function GameTooltipBody({ item }) {
         <span style={captured.length ? color(title.leftColor) : undefined}>{title.left || item.name}</span>
         {title.right ? <span style={color(title.rightColor)}>{title.right}</span> : null}
       </div>
-      {rest.map((line, index) => (
-        <div key={`${index}:${line.left}`} className="game-tooltip__line">
-          <span style={color(line.leftColor) || color(WHITE)}>{line.left}</span>
-          {line.right ? <span className="game-tooltip__right" style={color(line.rightColor) || color(WHITE)}>{line.right}</span> : null}
+      {rest.map((line, index) => (line.blank ? <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" /> : (
+        <div key={`${index}:${line.left}`} className="game-tooltip__line" style={line.offset ? { paddingLeft: `${line.offset}px` } : undefined}>
+          <span style={color(line.leftColor) || color(NORMAL)}>{line.left}</span>
+          {line.right ? <span className="game-tooltip__right" style={color(line.rightColor) || color(NORMAL)}>{line.right}</span> : null}
         </div>
-      ))}
+      )))}
       {price ? (
         <div className="game-tooltip__line game-tooltip__price">
           <span>Sell Price: <Money money={price} /></span>

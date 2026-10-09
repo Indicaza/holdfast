@@ -28,6 +28,10 @@
   overflow-wrap: anywhere;
 }
 
+.game-tooltip__blank {
+  height: .55rem;
+}
+
 .game-tooltip__title {
   margin-bottom: .05rem;
   font-size: .9rem;

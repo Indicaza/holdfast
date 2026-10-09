@@ -26,9 +26,21 @@
   margin: auto;
   padding: 8px;
   /* Side windows sit left of the combined window, bottoms aligned, as in
-     game; when they cannot share a row the combined window comes first. */
-  flex-wrap: wrap-reverse;
-  align-items: flex-start;
+     game; stacked, they sit in a row underneath it. */
+  align-items: flex-end;
+  justify-content: center;
+  gap: 18px;
+}
+
+.inventory-pane__windows--stacked {
+  flex-direction: column-reverse;
+  align-items: center;
+}
+
+.inventory-pane__side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: center;
   gap: 18px;
 }

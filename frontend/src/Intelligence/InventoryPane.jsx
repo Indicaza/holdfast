@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import WowIcon, { ItemIcon } from '../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { GameTooltipHover, Money } from './GameTooltip.jsx'
+import { SIDE_COLUMNS, SLOT, windowsLayout } from './inventoryLayout.js'
 import { itemSearchText, leadingGap, matchesSearch, searchTerms } from './inventoryModel.js'
 import './InventoryPane.css'
 
@@ -11,34 +12,7 @@ import './InventoryPane.css'
 // bottom, plus the reagent bag (and a classic keyring with keys) in windows
 // of their own beside it. Searching dims every item that does not match.
 
-const SLOT = 37
-const SLOT_GAP = 5
-const WINDOW_PADDING = 9
-// The frame art reaches past the window box: 13px left, 4px right, 16px up
-// and 3px down.
-const FRAME_OVERHANG = 17
-const FRAME_OVERHANG_VERTICAL = 19
-const PANE_PADDING = 8
-const MAX_SCALE = 1.5
-const WINDOW_GAP = 18
-const SIDE_COLUMNS = 4
-const MAX_COLUMNS = 10
-const MIN_COLUMNS = 4
 const SEARCH_DELAY_MS = 150
-
-function windowWidth(columns) {
-  return columns * SLOT + (columns - 1) * SLOT_GAP + WINDOW_PADDING * 2 + FRAME_OVERHANG
-}
-
-// As many columns as the pane allows, up to the game's ten: beside the side
-// windows when everything fits on one row, otherwise on a row of its own.
-function combinedColumns(paneWidth, sideWindows) {
-  if (!paneWidth) return MAX_COLUMNS
-  const sides = sideWindows * (windowWidth(SIDE_COLUMNS) + WINDOW_GAP)
-  if (windowWidth(MAX_COLUMNS) + sides <= paneWidth) return MAX_COLUMNS
-  const fit = Math.floor((paneWidth - WINDOW_PADDING * 2 - FRAME_OVERHANG + SLOT_GAP) / (SLOT + SLOT_GAP))
-  return Math.max(MIN_COLUMNS, Math.min(MAX_COLUMNS, fit))
-}
 
 function usePaneSize() {
   const [element, setElement] = useState(null)
@@ -52,29 +26,6 @@ function usePaneSize() {
     return () => observer.disconnect()
   }, [element])
   return [setElement, size]
-}
-
-function gridHeight(slots, columns) {
-  const rows = Math.max(1, Math.ceil(slots / columns))
-  return rows * SLOT + (rows - 1) * SLOT_GAP
-}
-
-// The window's outer size at 1x, frame art included: the combined window
-// adds the search row and money line under its title band.
-function windowSize(window, columns) {
-  const chrome = window.kind === 'combined' ? 30 + 29 + 31 + 10 : 40 + 10
-  return { width: windowWidth(columns), height: chrome + gridHeight(window.slots.length, columns) + FRAME_OVERHANG_VERTICAL }
-}
-
-// Scales the windows up to fill the pane when they all fit on one row,
-// capped so the game art stays crisp.
-function windowsScale(windows, columnsFor, pane) {
-  if (!pane.width || !pane.height) return 1
-  const sizes = windows.map((window) => windowSize(window, columnsFor(window)))
-  const width = sizes.reduce((sum, size) => sum + size.width, 0) + WINDOW_GAP * (sizes.length - 1) + PANE_PADDING * 2
-  const height = Math.max(...sizes.map((size) => size.height)) + PANE_PADDING * 2
-  if (width > pane.width) return 1
-  return Math.max(1, Math.min(MAX_SCALE, pane.width / width, pane.height / height))
 }
 
 function useDebounced(value, delay) {
@@ -195,25 +146,29 @@ export default function InventoryPane({ inventory }) {
     )
   }
 
-  const sideWindows = inventory.windows.filter((window) => window.kind !== 'combined').length
-  const columns = combinedColumns(pane.width, sideWindows)
-  const columnsFor = (window) => (window.kind === 'combined' ? columns : SIDE_COLUMNS)
-  const scale = windowsScale(inventory.windows, columnsFor, pane)
+  const layout = windowsLayout(inventory.windows, pane)
+  const bagWindow = (window) => (
+    <BagWindow
+      key={window.id}
+      window={window}
+      columns={window.kind === 'combined' ? layout.columns : SIDE_COLUMNS}
+      search={window.kind === 'combined' ? <SearchBox value={query} onChange={setQuery} /> : null}
+      money={window.kind === 'combined' ? inventory.money : null}
+      terms={terms}
+      searchIndex={searchIndex}
+    />
+  )
+  const sides = inventory.windows.filter((window) => window.kind !== 'combined')
+  const combined = inventory.windows.find((window) => window.kind === 'combined')
 
   return (
     <div className="inventory-pane" ref={paneRef}>
-      <div className="inventory-pane__windows" style={scale > 1 ? { zoom: scale } : undefined}>
-        {inventory.windows.map((window) => (
-          <BagWindow
-            key={window.id}
-            window={window}
-            columns={columnsFor(window)}
-            search={window.kind === 'combined' ? <SearchBox value={query} onChange={setQuery} /> : null}
-            money={window.kind === 'combined' ? inventory.money : null}
-            terms={terms}
-            searchIndex={searchIndex}
-          />
-        ))}
+      <div
+        className={`inventory-pane__windows${layout.stacked ? ' inventory-pane__windows--stacked' : ''}`}
+        style={layout.scale > 1 ? { zoom: layout.scale } : undefined}
+      >
+        {sides.length ? <div className="inventory-pane__side">{sides.map(bagWindow)}</div> : null}
+        {combined ? bagWindow(combined) : null}
       </div>
     </div>
   )
