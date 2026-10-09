@@ -37,16 +37,17 @@ test('side tabs skip gathering skills without a crafting window', () => {
   assert.deepEqual(railProfessions([mining], []).map((entry) => entry.name), ['Mining'], 'Mining opens smelting even before a capture')
 })
 
-test('recipes match their profession by key, or by name for older snapshots', () => {
+test('recipes match their profession and omit explicitly unknown recipes', () => {
   const recipes = [
     { professionKey: 'id:164', name: 'Copper Bracers' },
     { professionName: 'Blacksmithing', name: 'Rough Sharpening Stone' },
+    { professionKey: 'id:164', name: 'Arcanite Reaper', known: false },
     { professionKey: 'id:185', name: 'Roasted Boar Meat' },
   ]
   assert.deepEqual(recipesFor(smithing, recipes).map((recipe) => recipe.name), ['Copper Bracers', 'Rough Sharpening Stone'])
 })
 
-test('recipe groups split learned from unlearned, hardest first, and search reagents', () => {
+test('recipe groups show learned recipes only, hardest first, and search reagents', () => {
   const recipes = [
     { key: 'a', name: 'Iron Buckle', difficulty: 'trivial' },
     { key: 'b', name: 'Thorium Belt', difficulty: 'optimal', reagents: [{ name: 'Thorium Bar' }] },
@@ -55,9 +56,9 @@ test('recipe groups split learned from unlearned, hardest first, and search reag
   ]
   assert.deepEqual(recipeGroups(recipes).map((group) => [group.label, group.recipes.map((recipe) => recipe.key)]), [
     ['Learned', ['b', 'c', 'a']],
-    ['Unlearned', ['d']],
   ])
   assert.deepEqual(recipeGroups(recipes, 'thorium bar').map((group) => group.recipes.map((recipe) => recipe.key)), [['b']])
+  assert.deepEqual(recipeGroups(recipes, 'arcanite'), [])
 })
 
 test('rank text and titles follow the skill cap', () => {
