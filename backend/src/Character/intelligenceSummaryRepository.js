@@ -4,6 +4,7 @@ import {
   normalizeProfessions,
   normalizeRecipes,
 } from "./telemetryProjection.js";
+import { ensureTelemetryStateSchema } from "./Telemetry/telemetryStateRepository.js";
 
 function parseJson(value, fallback = {}) {
   try {
@@ -47,22 +48,55 @@ function distribution(characters, key) {
   );
 }
 
-// Max health and primary power from the snapshot's character-sheet stats, so
-// the character list can draw a unit frame without loading full armories.
-function snapshotVitals(snapshot) {
-  const resources = snapshot?.stats?.resources;
+function latestStatsPayloads(db) {
+  ensureTelemetryStateSchema(db);
+  const result = new Map();
+  const rows = db.prepare(`
+    SELECT canonical_character_id, raw_character_id, payload_json
+    FROM guildweaver_telemetry_latest_state
+    WHERE event_type = 'stats'
+    ORDER BY captured_at DESC, received_at DESC
+  `).all();
+
+  for (const row of rows) {
+    const payload = parseJson(row.payload_json, {});
+    for (const characterId of [row.canonical_character_id, row.raw_character_id]) {
+      const key = String(characterId || "").trim();
+      if (key && !result.has(key)) result.set(key, payload);
+    }
+  }
+
+  return result;
+}
+
+function snapshotVitals(snapshot, statsPayload = null) {
+  const resources = statsPayload?.stats?.resources ?? snapshot?.stats?.resources;
   if (!resources || typeof resources !== "object") return null;
-  const healthMax = Number(resources.health?.max ?? resources.health?.current) || null;
-  const powerMax = Number(resources.power?.max ?? resources.power?.current) || null;
+  const healthCurrent = Number(resources.health?.current);
+  const healthMax = Number(resources.health?.max ?? resources.health?.current);
+  const powerCurrent = Number(resources.power?.current);
+  const powerMax = Number(resources.power?.max ?? resources.power?.current);
   const powerToken = typeof resources.power?.token === "string" ? resources.power.token.slice(0, 24) : null;
-  return healthMax || powerMax ? { healthMax, powerMax, powerToken } : null;
+  const normalizedHealthCurrent = Number.isFinite(healthCurrent) ? healthCurrent : null;
+  const normalizedHealthMax = Number.isFinite(healthMax) && healthMax > 0 ? healthMax : null;
+  const normalizedPowerCurrent = Number.isFinite(powerCurrent) ? powerCurrent : null;
+  const normalizedPowerMax = Number.isFinite(powerMax) && powerMax > 0 ? powerMax : null;
+
+  return normalizedHealthMax || normalizedPowerMax
+    ? {
+        healthCurrent: normalizedHealthCurrent,
+        healthMax: normalizedHealthMax,
+        powerCurrent: normalizedPowerCurrent,
+        powerMax: normalizedPowerMax,
+        powerToken,
+      }
+    : null;
 }
 
 export function readSyncedIntelligenceSummary() {
   return withGuildDatabase((db) => {
-    // Projection tables are useful caches, but durable character snapshots are the
-    // source of truth for whether Guildweaver has ever synced a character.
     ensureTelemetryProjectionSchema(db);
+    const statsPayloads = latestStatsPayloads(db);
 
     const rows = db.prepare(`
       SELECT
@@ -157,7 +191,7 @@ export function readSyncedIntelligenceSummary() {
         memberRank: row.member_rank,
         lastSeenAt: lastSeenAt || null,
         isMain: Boolean(row.is_main),
-        vitals: snapshotVitals(snapshot),
+        vitals: snapshotVitals(snapshot, statsPayloads.get(row.id)),
       };
     });
 
@@ -168,8 +202,6 @@ export function readSyncedIntelligenceSummary() {
       const snapshot = snapshots.get(row.id) || {};
       let characterProfessions = normalizeProfessions(snapshot);
 
-      // Very old snapshots may predate rich profession telemetry. Keep the durable
-      // character row useful as a final compatibility fallback.
       if (!characterProfessions.length) {
         const legacy = parseJson(row.professions_json, []);
         if (Array.isArray(legacy)) {

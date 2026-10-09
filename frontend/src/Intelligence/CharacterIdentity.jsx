@@ -8,8 +8,6 @@ import './CharacterCardPolish.css'
 
 const POWER_KINDS = { MANA: 'mana', RAGE: 'rage', ENERGY: 'energy', FOCUS: 'focus' }
 
-// Characters sync when their player logs in or out, so freshness follows play
-// habits: played today, played this week, or gone quiet.
 const DAY = 24 * 60 * 60 * 1000
 const FRESHNESS = {
   fresh: { bars: 3, label: 'Up to date', detail: 'Synced within the last day.' },
@@ -48,14 +46,19 @@ function displayName(character) {
   return full || character?.fullName || character?.name || ''
 }
 
-// The in-game player frame, layer by layer: a round portrait in a thin gold
-// ring; a separate level bubble at its bottom left; and a frame body tucked
-// behind the portrait holding a tinted name strip over a bronze-edged bar
-// group (tall health bar, thin power bar). Bar numbers appear on hover, as the
-// game's status text does.
 export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = 'h2', className = '', showAffiliation = false }) {
   const identity = classIdentity(character?.className)
-  const powerKind = POWER_KINDS[String(power?.token || '').toUpperCase()] || 'mana'
+  const vitals = character?.vitals || {}
+  const healthState = {
+    current: health?.current ?? vitals.healthCurrent,
+    max: health?.max ?? vitals.healthMax,
+  }
+  const powerState = {
+    current: power?.current ?? vitals.powerCurrent,
+    max: power?.max ?? vitals.powerMax,
+    token: power?.token ?? vitals.powerToken,
+  }
+  const powerKind = POWER_KINDS[String(powerState.token || '').toUpperCase()] || 'mana'
   const guild = character?.guildName || character?.organization?.name || character?.organizationName
   const affiliation = [guild, character?.memberRank].filter(Boolean).join(': ')
   return (
@@ -70,8 +73,8 @@ export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = '
           <Name className="unit-frame__name">{displayName(character)}</Name>
         </div>
         <div className="unit-frame__bars">
-          <ResourceBar kind="health" current={health?.current} max={health?.max} />
-          <ResourceBar kind={powerKind} current={power?.current} max={power?.max} />
+          <ResourceBar kind="health" current={healthState.current} max={healthState.max} />
+          <ResourceBar kind={powerKind} current={powerState.current} max={powerState.max} />
         </div>
         {showAffiliation && affiliation ? <span className="unit-frame__affiliation">{affiliation}</span> : null}
       </div>
@@ -92,8 +95,6 @@ export function CharacterFacts({ character, classAs: ClassName = 'h3' }) {
   )
 }
 
-// The in-game latency meter: three bars, green/yellow/red, beside the sync age.
-// Hovering shows the exact time and what the color means.
 export function SyncBadge({ lastSeenAt, showLabel = false, focusable = false }) {
   const [anchor, setAnchor] = useState(null)
   const freshness = syncFreshness(lastSeenAt)

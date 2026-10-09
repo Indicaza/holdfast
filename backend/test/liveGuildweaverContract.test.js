@@ -37,7 +37,9 @@ test("current Guildweaver v3 snapshot feeds GuildOS cards and Armory without syn
     assert.equal(card.race, "Night Elf");
     assert.equal(card.guildName, "Holdfast");
     assert.deepEqual(card.vitals, {
+      healthCurrent: 984,
       healthMax: 984,
+      powerCurrent: 100,
       powerMax: 100,
       powerToken: "RAGE",
     });
