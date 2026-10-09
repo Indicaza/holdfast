@@ -7,6 +7,7 @@ export function createTelemetryStateHandler({
   payloadSchemaVersions = [1],
   requiresCharacter = true,
   validatePayload = () => true,
+  canonicalizePayload = (payload) => payload,
 }) {
   const supportedVersions = new Set(payloadSchemaVersions.map(Number));
 
@@ -26,7 +27,7 @@ export function createTelemetryStateHandler({
       return { ok: true };
     },
     canonicalize({ envelope }) {
-      return envelope.payload;
+      return canonicalizePayload(envelope.payload);
     },
   };
 }

@@ -14,6 +14,15 @@ const DOMAIN_ADAPTERS = {
     label: 'Talent Tree',
     summaryKeys: ['class', 'treeId', 'sourceApi', 'kind', 'gameBuild'],
   },
+  // profession_snapshot (the older modular "professions" stream shares the view)
+  profession: {
+    label: 'Professions',
+    summaryKeys: ['professions', 'schemaVersion'],
+  },
+  professions: {
+    label: 'Professions',
+    summaryKeys: ['professions', 'schemaVersion'],
+  },
 }
 
 const FIELD_LABELS = {
@@ -35,6 +44,12 @@ const FIELD_LABELS = {
   instanceDifficultyId: 'Instance Difficulty ID',
   itemId: 'Item ID',
   itemLevel: 'Item Level',
+  knownCount: 'Known Recipes',
+  maxTrivialLevel: 'Max Trivial Level',
+  recipeBook: 'Recipe Book',
+  recipeCount: 'Recipe Count',
+  skillUps: 'Skill Ups',
+  unlockedRecipeLevel: 'Unlocked Recipe Level',
   linkLevel: 'Link Level',
   maxSkillLevel: 'Max Skill Level',
   qualityId: 'Quality ID',
