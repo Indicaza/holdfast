@@ -147,8 +147,8 @@ function OrganizedItem({ item }) {
   )
 }
 
-function OrganizedInventory({ inventory, query, onQueryChange }) {
-  const groups = useMemo(() => inventoryGroups(inventory, query), [inventory, query])
+function OrganizedInventory({ inventory, query, filterQuery, onQueryChange }) {
+  const groups = useMemo(() => inventoryGroups(inventory, filterQuery), [inventory, filterQuery])
   const totalItems = groups.reduce((sum, group) => sum + group.count, 0)
   return (
     <section className="organized-inventory" aria-label="Organized inventory">
@@ -236,7 +236,7 @@ export default function InventoryPane({ inventory }) {
         ))}
       </nav>
       {view === 'organized' ? (
-        <OrganizedInventory inventory={inventory} query={debouncedQuery} onQueryChange={setQuery} />
+        <OrganizedInventory inventory={inventory} query={query} filterQuery={debouncedQuery} onQueryChange={setQuery} />
       ) : (
         <div
           className={`inventory-pane__windows${layout.stacked ? ' inventory-pane__windows--stacked' : ''}`}
