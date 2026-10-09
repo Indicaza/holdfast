@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 3,
+  "capturedAt": 1791450000,
+  "addonVersion": "0.5.0-alpha.1",
+  "installationId": "install-live-contract",
+  "capture": {
+    "integrityVersion": 1,
+    "reason": "PLAYER_EQUIPMENT_CHANGED",
+    "sections": {
+      "identity": "complete",
+      "stats": "complete",
+      "equipment": "complete",
+      "talents": "complete",
+      "professions": "complete",
+      "recipes": "partial",
+      "guild": "complete",
+      "specialization": "complete"
+    }
+  },
+  "characterKey": "classic beta pve 2:rook ravenstar",
+  "characterId": "character-live-contract-rook",
+  "name": "Rook Ravenstar",
+  "firstName": "Rook",
+  "lastName": "Ravenstar",
+  "fullName": "Rook Ravenstar",
+  "realm": "Classic Beta PvE 2",
+  "region": "US",
+  "gameBuild": {
+    "version": "1.60.1",
+    "build": "70245",
+    "interface": 16001
+  },
+  "level": 22,
+  "sex": 2,
+  "bodyType": "male",
+  "race": {
+    "id": 4,
+    "name": "Night Elf",
+    "token": "NightElf"
+  },
+  "class": {
+    "id": 1,
+    "name": "Warrior",
+    "token": "WARRIOR"
+  },
+  "guild": {
+    "name": "Holdfast",
+    "rankName": "Commander",
+    "rankIndex": 0,
+    "realm": "Classic Beta PvE 2"
+  },
+  "specialization": {
+    "index": 3,
+    "id": 73,
+    "name": "Protection",
+    "iconFileDataId": 132341,
+    "role": "TANK"
+  },
+  "stats": {
+    "schemaVersion": 1,
+    "resources": {
+      "health": { "current": 984, "max": 984 },
+      "power": { "typeId": 1, "token": "RAGE", "current": 100, "max": 100 }
+    },
+    "attributes": {
+      "strength": { "current": 83, "effective": 83, "positive": 36, "negative": 0 },
+      "agility": { "current": 45, "effective": 45, "positive": 7, "negative": 0 },
+      "stamina": { "current": 94, "effective": 94, "positive": 48, "negative": 0 },
+      "intellect": { "current": 24, "effective": 24, "positive": 1, "negative": 0 },
+      "spirit": { "current": 28, "effective": 28, "positive": 1, "negative": 0 }
+    },
+    "offense": {
+      "attackPower": { "base": 185, "positive": 36, "negative": 0, "effective": 221 },
+      "meleeDamage": { "min": 60.31, "max": 82.31 },
+      "crit": { "melee": 8.5 }
+    },
+    "defense": {
+      "armor": { "base": 1297, "effective": 1297, "armor": 1297 },
+      "dodge": 4.2,
+      "parry": 5,
+      "block": 5
+    },
+    "utility": {
+      "itemLevel": { "overall": 10.4, "equipped": 10.4 }
+    }
+  },
+  "equipment": [
+    {
+      "slot": "head",
+      "slotId": 1,
+      "itemId": 11746,
+      "name": "Golem Skull Helm",
+      "qualityId": 3,
+      "itemLevel": 35,
+      "requiredLevel": 20,
+      "iconFileDataId": 132767,
+      "enchantId": 17,
+      "gemItemIds": [],
+      "bonusIds": [],
+      "rawItemString": "item:11746:17:0:0:0:0:0:0:22",
+      "itemClass": { "id": 4, "name": "Armor" },
+      "itemSubclass": { "id": 4, "name": "Plate" },
+      "equipLocation": "INVTYPE_HEAD"
+    }
+  ],
+  "talents": {
+    "api": "traits",
+    "kind": "combat",
+    "configId": 901,
+    "name": "Protection",
+    "treeIds": [1111],
+    "pointsSpent": 2,
+    "pointsAvailable": 0,
+    "allocations": [
+      {
+        "nodeId": 101,
+        "rank": 2,
+        "ranksPurchased": 2,
+        "activeEntryId": 1001,
+        "activeEntryRank": 2
+      }
+    ]
+  },
+  "professions": [
+    {
+      "skillLineId": 164,
+      "name": "Blacksmithing",
+      "kind": "primary",
+      "iconFileDataId": 136241,
+      "skillLevel": 94,
+      "maxSkillLevel": 150,
+      "skillModifier": 5,
+      "recipes": [
+        {
+          "recipeId": 9789,
+          "name": "Mithril Spurs",
+          "known": true,
+          "iconFileDataId": 132307,
+          "professionSkillLineId": 164,
+          "professionName": "Blacksmithing",
+          "craftedItemId": 7969,
+          "reagents": [
+            {
+              "slotIndex": 1,
+              "quantityRequired": 4,
+              "required": true,
+              "reagents": [
+                { "itemId": 3860, "quantityRequired": 4 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
