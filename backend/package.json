@@ -10,6 +10,7 @@
     "test:discord": "node --test --experimental-test-coverage --test-coverage-include=src/Discord/provisioning.js --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=90 test/discordProvisioning.test.js",
     "dev": "nodemon --config nodemon.json src/index.js",
     "dev:seed": "node scripts/seedDevelopment.js",
+    "dev:seed:characters": "node scripts/seedDevelopmentCharacters.js",
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",
     "backup": "node scripts/backupData.js",

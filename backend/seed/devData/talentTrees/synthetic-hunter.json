@@ -1,0 +1,2838 @@
+{
+  "schemaVersion": 1,
+  "eventType": "talent_tree_definition",
+  "synthetic": true,
+  "syntheticSource": "Classic Era Talent/TalentTab via wago.tools; tooltips via Wowhead Classic",
+  "capturedAt": 1791430710,
+  "gameBuild": {
+    "interface": 16001,
+    "buildDate": "Oct  5 2026",
+    "version": "1.60.1",
+    "build": "70245"
+  },
+  "realm": "Classic Beta PvE 2",
+  "region": null,
+  "installationId": "install-dev-synthetic",
+  "characterId": null,
+  "guildId": null,
+  "payload": {
+    "treeHash": [
+      139,
+      156,
+      162,
+      83,
+      127,
+      189,
+      26,
+      200,
+      121,
+      12,
+      146,
+      110,
+      158,
+      236,
+      252,
+      64
+    ],
+    "class": {
+      "id": 3,
+      "name": "Hunter",
+      "token": "HUNTER"
+    },
+    "schemaVersion": 3,
+    "specialization": {
+      "role": "DAMAGER",
+      "index": 1,
+      "iconFileDataId": 626000,
+      "name": "Hunter"
+    },
+    "locale": "enUS",
+    "edges": [
+      {
+        "sourceNodeId": 901393,
+        "targetNodeId": 901397,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901387,
+        "targetNodeId": 901386,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901344,
+        "targetNodeId": 901349,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901347,
+        "targetNodeId": 901361,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901308,
+        "targetNodeId": 901312,
+        "type": 2,
+        "visualStyle": 1
+      },
+      {
+        "sourceNodeId": 901321,
+        "targetNodeId": 901325,
+        "type": 2,
+        "visualStyle": 1
+      }
+    ],
+    "treeId": 9003,
+    "nodes": [
+      {
+        "nodeId": 901382,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136076,
+            "definitionId": 981382,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Aspect of the Hawk",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "While Aspect of the Hawk is active, all normal ranged attacks have a 1% chance of increasing ranged attack speed by 30% for 12 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19552:0|h[Improved Aspect of the Hawk]|h|r",
+            "name": "Improved Aspect of the Hawk",
+            "entryId": 951382,
+            "description": "While Aspect of the Hawk is active, all normal ranged attacks have a 1% chance of increasing ranged attack speed by 30% for 12 sec.",
+            "spellId": 19552
+          }
+        ]
+      },
+      {
+        "nodeId": 901389,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136080,
+            "definitionId": 981389,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Endurance Training",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Health of your pets by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19583:0|h[Endurance Training]|h|r",
+            "name": "Endurance Training",
+            "entryId": 951389,
+            "description": "Increases the Health of your pets by 3%.",
+            "spellId": 19583
+          }
+        ]
+      },
+      {
+        "nodeId": 901624,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132150,
+            "definitionId": 981624,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Eyes of the Beast",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the duration of your Eyes of the Beast by 30 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19557:0|h[Improved Eyes of the Beast]|h|r",
+            "name": "Improved Eyes of the Beast",
+            "entryId": 951624,
+            "description": "Increases the duration of your Eyes of the Beast by 30 sec.",
+            "spellId": 19557
+          }
+        ]
+      },
+      {
+        "nodeId": 901381,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132159,
+            "definitionId": 981381,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Aspect of the Monkey",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Dodge bonus of your Aspect of the Monkey by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19549:0|h[Improved Aspect of the Monkey]|h|r",
+            "name": "Improved Aspect of the Monkey",
+            "entryId": 951381,
+            "description": "Increases the Dodge bonus of your Aspect of the Monkey by 1%.",
+            "spellId": 19549
+          }
+        ]
+      },
+      {
+        "nodeId": 901395,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 134355,
+            "definitionId": 981395,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Thick Hide",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Armor rating of your pets by 10%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19609:0|h[Thick Hide]|h|r",
+            "name": "Thick Hide",
+            "entryId": 951395,
+            "description": "Increases the Armor rating of your pets by 10%.",
+            "spellId": 19609
+          }
+        ]
+      },
+      {
+        "nodeId": 901625,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132163,
+            "definitionId": 981625,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Revive Pet",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Revive Pet's casting time is reduced by 3 sec, mana cost is reduced by 20%, and increases the health your pet returns with by an additional 15%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:24443:0|h[Improved Revive Pet]|h|r",
+            "name": "Improved Revive Pet",
+            "entryId": 951625,
+            "description": "Revive Pet's casting time is reduced by 3 sec, mana cost is reduced by 20%, and increases the health your pet returns with by an additional 15%.",
+            "spellId": 24443
+          }
+        ]
+      },
+      {
+        "nodeId": 901384,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132242,
+            "definitionId": 981384,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Pathfinding",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the speed bonus of your Aspect of the Cheetah and Aspect of the Pack by 3%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19559:0|h[Pathfinding]|h|r",
+            "name": "Pathfinding",
+            "entryId": 951384,
+            "description": "Increases the speed bonus of your Aspect of the Cheetah and Aspect of the Pack by 3%.",
+            "spellId": 19559
+          }
+        ]
+      },
+      {
+        "nodeId": 901391,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132120,
+            "definitionId": 981391,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Bestial Swiftness",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the outdoor movement speed of your pets by 30%."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19596:0|h[Bestial Swiftness]|h|r",
+            "name": "Bestial Swiftness",
+            "entryId": 951391,
+            "description": "Increases the outdoor movement speed of your pets by 30%.",
+            "spellId": 19596
+          }
+        ]
+      },
+      {
+        "nodeId": 901396,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132091,
+            "definitionId": 981396,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Unleashed Fury",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your pets by 4%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19616:0|h[Unleashed Fury]|h|r",
+            "name": "Unleashed Fury",
+            "entryId": 951396,
+            "description": "Increases the damage done by your pets by 4%.",
+            "spellId": 19616
+          }
+        ]
+      },
+      {
+        "nodeId": 901385,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132179,
+            "definitionId": 981385,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Mend Pet",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives the Mend Pet spell a 15% chance of cleansing 1 Curse, Disease, Magic or Poison effect from the pet each tick."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19572:0|h[Improved Mend Pet]|h|r",
+            "name": "Improved Mend Pet",
+            "entryId": 951385,
+            "description": "Gives the Mend Pet spell a 15% chance of cleansing 1 Curse, Disease, Magic or Poison effect from the pet each tick.",
+            "spellId": 19572
+          }
+        ]
+      },
+      {
+        "nodeId": 901393,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 134297,
+            "definitionId": 981393,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ferocity",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of your pets by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19598:0|h[Ferocity]|h|r",
+            "name": "Ferocity",
+            "entryId": 951393,
+            "description": "Increases the critical strike chance of your pets by 3%.",
+            "spellId": 19598
+          }
+        ]
+      },
+      {
+        "nodeId": 901388,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1020
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132121,
+            "definitionId": 981388,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Spirit Bond",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "While your pet is active, you and your pet will regenerate 1% of total health every 10 sec."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19578:0|h[Spirit Bond]|h|r",
+            "name": "Spirit Bond",
+            "entryId": 951388,
+            "description": "While your pet is active, you and your pet will regenerate 1% of total health every 10 sec.",
+            "spellId": 19578
+          }
+        ]
+      },
+      {
+        "nodeId": 901387,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132111,
+            "definitionId": 981387,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Intimidation",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "8% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "100 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "1 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Command your pet to intimidate the target on the next successful melee attack, causing a high amount of threat and stunning the target for 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19577:0|h[Intimidation]|h|r",
+            "name": "Intimidation",
+            "entryId": 951387,
+            "description": "Command your pet to intimidate the target on the next successful melee attack, causing a high amount of threat and stunning the target for 3 sec.",
+            "spellId": 19577
+          }
+        ]
+      },
+      {
+        "nodeId": 901390,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 2820
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136006,
+            "definitionId": 981390,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Bestial Discipline",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Focus regeneration of your pets by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19590:0|h[Bestial Discipline]|h|r",
+            "name": "Bestial Discipline",
+            "entryId": 951390,
+            "description": "Increases the Focus regeneration of your pets by 10%.",
+            "spellId": 19590
+          }
+        ]
+      },
+      {
+        "nodeId": 901397,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 2220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 134296,
+            "definitionId": 981397,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Frenzy",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your pet a 20% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19621:0|h[Frenzy]|h|r",
+            "name": "Frenzy",
+            "entryId": 951397,
+            "description": "Gives your pet a 20% chance to gain a 30% attack speed increase for 8 sec after dealing a critical strike.",
+            "spellId": 19621
+          }
+        ]
+      },
+      {
+        "nodeId": 901386,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 1620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132127,
+            "definitionId": 981386,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Bestial Wrath",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "12% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "100 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "2 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Send your pet into a rage causing 50% additional damage for 18 sec. While enraged, the beast does not feel pity or remorse or fear and it cannot be stopped unless killed."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19574:0|h[Bestial Wrath]|h|r",
+            "name": "Bestial Wrath",
+            "entryId": 951386,
+            "description": "Send your pet into a rage causing 50% additional damage for 18 sec. While enraged, the beast does not feel pity or remorse or fear and it cannot be stopped unless killed.",
+            "spellId": 19574
+          }
+        ]
+      },
+      {
+        "nodeId": 901341,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135860,
+            "definitionId": 981341,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Concussive Shot",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Concussive Shot a 4% chance to stun the target for 3 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19407:0|h[Improved Concussive Shot]|h|r",
+            "name": "Improved Concussive Shot",
+            "entryId": 951341,
+            "description": "Gives your Concussive Shot a 4% chance to stun the target for 3 sec.",
+            "spellId": 19407
+          }
+        ]
+      },
+      {
+        "nodeId": 901342,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135865,
+            "definitionId": 981342,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Efficiency",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Mana cost of your Shots"
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19416:0|h[Efficiency]|h|r",
+            "name": "Efficiency",
+            "entryId": 951342,
+            "description": "Reduces the Mana cost of your Shots",
+            "spellId": 19416
+          }
+        ]
+      },
+      {
+        "nodeId": 901343,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132212,
+            "definitionId": 981343,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Hunter's Mark",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the Ranged Attack Power bonus of your Hunter's Mark spell by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19421:0|h[Improved Hunter's Mark]|h|r",
+            "name": "Improved Hunter's Mark",
+            "entryId": 951343,
+            "description": "Increases the Ranged Attack Power bonus of your Hunter's Mark spell by 3%.",
+            "spellId": 19421
+          }
+        ]
+      },
+      {
+        "nodeId": 901344,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132312,
+            "definitionId": 981344,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Lethal Shots",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your critical strike chance with ranged weapons by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19426:0|h[Lethal Shots]|h|r",
+            "name": "Lethal Shots",
+            "entryId": 951344,
+            "description": "Increases your critical strike chance with ranged weapons by 1%.",
+            "spellId": 19426
+          }
+        ]
+      },
+      {
+        "nodeId": 901345,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135130,
+            "definitionId": 981345,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Aimed Shot",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "75 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "8 - 35 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "3 sec cast",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "6 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Ranged Weapon"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "An aimed shot that increases ranged damage by 70."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19434:0|h[Aimed Shot]|h|r",
+            "name": "Aimed Shot",
+            "entryId": 951345,
+            "description": "An aimed shot that increases ranged damage by 70.",
+            "spellId": 19434
+          }
+        ]
+      },
+      {
+        "nodeId": 901346,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132218,
+            "definitionId": 981346,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Arcane Shot",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the cooldown of your Arcane Shot by 0.2 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19454:0|h[Improved Arcane Shot]|h|r",
+            "name": "Improved Arcane Shot",
+            "entryId": 951346,
+            "description": "Reduces the cooldown of your Arcane Shot by 0.2 sec.",
+            "spellId": 19454
+          }
+        ]
+      },
+      {
+        "nodeId": 901352,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 6820
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132327,
+            "definitionId": 981352,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Hawk Eye",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the range of your ranged weapons by 2 yards."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19498:0|h[Hawk Eye]|h|r",
+            "name": "Hawk Eye",
+            "entryId": 951352,
+            "description": "Increases the range of your ranged weapons by 2 yards.",
+            "spellId": 19498
+          }
+        ]
+      },
+      {
+        "nodeId": 901348,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132204,
+            "definitionId": 981348,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Serpent Sting",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Serpent Sting by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19464:0|h[Improved Serpent Sting]|h|r",
+            "name": "Improved Serpent Sting",
+            "entryId": 951348,
+            "description": "Increases the damage done by your Serpent Sting by 2%.",
+            "spellId": 19464
+          }
+        ]
+      },
+      {
+        "nodeId": 901349,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132271,
+            "definitionId": 981349,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Mortal Shots",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your ranged weapon"
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19485:0|h[Mortal Shots]|h|r",
+            "name": "Mortal Shots",
+            "entryId": 951349,
+            "description": "Increases your ranged weapon",
+            "spellId": 19485
+          }
+        ]
+      },
+      {
+        "nodeId": 901353,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5020
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132153,
+            "definitionId": 981353,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Scatter Shot",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "8% of base mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "15 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "30 sec cooldown",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Ranged Weapon"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "A short-range shot that deals 50% weapon damage and disorients the target for 4 sec. Any damage caused will remove the effect. Turns off your attack when used."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19503:0|h[Scatter Shot]|h|r",
+            "name": "Scatter Shot",
+            "entryId": 951353,
+            "description": "A short-range shot that deals 50% weapon damage and disorients the target for 4 sec. Any damage caused will remove the effect. Turns off your attack when used.",
+            "spellId": 19503
+          }
+        ]
+      },
+      {
+        "nodeId": 901347,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132330,
+            "definitionId": 981347,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Barrage",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage done by your Multi-Shot and Volley spells by 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19461:0|h[Barrage]|h|r",
+            "name": "Barrage",
+            "entryId": 951347,
+            "description": "Increases the damage done by your Multi-Shot and Volley spells by 5%.",
+            "spellId": 19461
+          }
+        ]
+      },
+      {
+        "nodeId": 901351,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132169,
+            "definitionId": 981351,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Scorpid Sting",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the Stamina of targets affected by your Scorpid Sting by 10% of the amount of Strength reduced."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19491:0|h[Improved Scorpid Sting]|h|r",
+            "name": "Improved Scorpid Sting",
+            "entryId": 951351,
+            "description": "Reduces the Stamina of targets affected by your Scorpid Sting by 10% of the amount of Strength reduced.",
+            "spellId": 19491
+          }
+        ]
+      },
+      {
+        "nodeId": 901362,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 6220
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 135615,
+            "definitionId": 981362,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Ranged Weapon Specialization",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Ranged Weapon"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the damage you deal with ranged weapons by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19507:0|h[Ranged Weapon Specialization]|h|r",
+            "name": "Ranged Weapon Specialization",
+            "entryId": 951362,
+            "description": "Increases the damage you deal with ranged weapons by 1%.",
+            "spellId": 19507
+          }
+        ]
+      },
+      {
+        "nodeId": 901361,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 5620
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132329,
+            "definitionId": 981361,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Trueshot Aura",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "325 Mana\nInstant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the"
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19506:0|h[Trueshot Aura]|h|r",
+            "name": "Trueshot Aura",
+            "entryId": 951361,
+            "description": "Increases the",
+            "spellId": 19506
+          }
+        ]
+      },
+      {
+        "nodeId": 901623,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 134154,
+            "definitionId": 981623,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Monster Slaying",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases all damage caused against Beasts, Giants and Dragonkin targets by 1% and increases critical damage caused against Beasts, Giants and Dragonkin targets by an additional 1%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:24293:0|h[Monster Slaying]|h|r",
+            "name": "Monster Slaying",
+            "entryId": 951623,
+            "description": "Increases all damage caused against Beasts, Giants and Dragonkin targets by 1% and increases critical damage caused against Beasts, Giants and Dragonkin targets by an additional 1%.",
+            "spellId": 24293
+          }
+        ]
+      },
+      {
+        "nodeId": 901301,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135942,
+            "definitionId": 981301,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Humanoid Slaying",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases all damage caused against Humanoid targets by 1% and increases critical damage caused against Humanoid targets by an additional 1%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19151:0|h[Humanoid Slaying]|h|r",
+            "name": "Humanoid Slaying",
+            "entryId": 951301,
+            "description": "Increases all damage caused against Humanoid targets by 1% and increases critical damage caused against Humanoid targets by an additional 1%.",
+            "spellId": 19151
+          }
+        ]
+      },
+      {
+        "nodeId": 901311,
+        "conditionIds": [],
+        "position": {
+          "y": 2130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132269,
+            "definitionId": 981311,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Deflection",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Parry chance by 1%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19295:0|h[Deflection]|h|r",
+            "name": "Deflection",
+            "entryId": 951311,
+            "description": "Increases your Parry chance by 1%.",
+            "spellId": 19295
+          }
+        ]
+      },
+      {
+        "nodeId": 901304,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136100,
+            "definitionId": 981304,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Entrapment",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 5% chance to entrap the target, preventing them from moving for 5 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19184:0|h[Entrapment]|h|r",
+            "name": "Entrapment",
+            "entryId": 951304,
+            "description": "Gives your Immolation Trap, Frost Trap, and Explosive Trap a 5% chance to entrap the target, preventing them from moving for 5 sec.",
+            "spellId": 19184
+          }
+        ]
+      },
+      {
+        "nodeId": 901621,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132277,
+            "definitionId": 981621,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Savage Strikes",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the critical strike chance of Raptor Strike and Mongoose Bite by 10%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19159:0|h[Savage Strikes]|h|r",
+            "name": "Savage Strikes",
+            "entryId": 951621,
+            "description": "Increases the critical strike chance of Raptor Strike and Mongoose Bite by 10%.",
+            "spellId": 19159
+          }
+        ]
+      },
+      {
+        "nodeId": 901305,
+        "conditionIds": [],
+        "position": {
+          "y": 2730,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 132309,
+            "definitionId": 981305,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Wing Clip",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Gives your Wing Clip ability a 4% chance to immobilize the target for 5 sec."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19228:0|h[Improved Wing Clip]|h|r",
+            "name": "Improved Wing Clip",
+            "entryId": 951305,
+            "description": "Gives your Wing Clip ability a 4% chance to immobilize the target for 5 sec.",
+            "spellId": 19228
+          }
+        ]
+      },
+      {
+        "nodeId": 901306,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 136106,
+            "definitionId": 981306,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Clever Traps",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases the duration of Freezing and Frost trap effects by 15% and the damage of Immolation and Explosive trap effects by 15%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19239:0|h[Clever Traps]|h|r",
+            "name": "Clever Traps",
+            "entryId": 951306,
+            "description": "Increases the duration of Freezing and Frost trap effects by 15% and the damage of Immolation and Explosive trap effects by 15%.",
+            "spellId": 19239
+          }
+        ]
+      },
+      {
+        "nodeId": 901622,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136223,
+            "definitionId": 981622,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Survivalist",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases total health by 2%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19255:0|h[Survivalist]|h|r",
+            "name": "Survivalist",
+            "entryId": 951622,
+            "description": "Increases total health by 2%.",
+            "spellId": 19255
+          }
+        ]
+      },
+      {
+        "nodeId": 901308,
+        "conditionIds": [],
+        "position": {
+          "y": 3330,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132369,
+            "definitionId": 981308,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Deterrence",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "5 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "When activated, increases your Dodge and Parry chance by 25% for 10 sec."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19263:0|h[Deterrence]|h|r",
+            "name": "Deterrence",
+            "entryId": 951308,
+            "description": "When activated, increases your Dodge and Parry chance by 25% for 10 sec.",
+            "spellId": 19263
+          }
+        ]
+      },
+      {
+        "nodeId": 901322,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9080
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132149,
+            "definitionId": 981322,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Trap Mastery",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Decreases the chance enemies will resist trap effects by 5%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19376:0|h[Trap Mastery]|h|r",
+            "name": "Trap Mastery",
+            "entryId": 951322,
+            "description": "Decreases the chance enemies will resist trap effects by 5%.",
+            "spellId": 19376
+          }
+        ]
+      },
+      {
+        "nodeId": 901310,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 132219,
+            "definitionId": 981310,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Surefooted",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases hit chance by 1% and increases the chance movement impairing effects will be resisted by an additional 5%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19290:0|h[Surefooted]|h|r",
+            "name": "Surefooted",
+            "entryId": 951310,
+            "description": "Increases hit chance by 1% and increases the chance movement impairing effects will be resisted by an additional 5%.",
+            "spellId": 19290
+          }
+        ]
+      },
+      {
+        "nodeId": 901309,
+        "conditionIds": [],
+        "position": {
+          "y": 3930,
+          "x": 10880
+        },
+        "type": 0,
+        "maxRanks": 2,
+        "entries": [
+          {
+            "iconFileDataId": 132293,
+            "definitionId": 981309,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Improved Feign Death",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Reduces the chance your Feign Death ability will be resisted by 2%."
+                }
+              ]
+            },
+            "maxRanks": 2,
+            "spellLink": "|cff71d5ff|Hspell:19286:0|h[Improved Feign Death]|h|r",
+            "name": "Improved Feign Death",
+            "entryId": 951309,
+            "description": "Reduces the chance your Feign Death ability will be resisted by 2%.",
+            "spellId": 19286
+          }
+        ]
+      },
+      {
+        "nodeId": 901321,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 3,
+        "entries": [
+          {
+            "iconFileDataId": 135881,
+            "definitionId": 981321,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Killer Instinct",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your critical strike chance with all attacks by 1%."
+                }
+              ]
+            },
+            "maxRanks": 3,
+            "spellLink": "|cff71d5ff|Hspell:19370:0|h[Killer Instinct]|h|r",
+            "name": "Killer Instinct",
+            "entryId": 951321,
+            "description": "Increases your critical strike chance with all attacks by 1%.",
+            "spellId": 19370
+          }
+        ]
+      },
+      {
+        "nodeId": 901312,
+        "conditionIds": [],
+        "position": {
+          "y": 4530,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 132336,
+            "definitionId": 981312,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Counterattack",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "45 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "Melee Range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "5 sec cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "A strike that becomes active after parrying an opponent's attack. This attack deals 40 damage and immobilizes the target for 5 sec. Counterattack cannot be blocked, dodged, or parried."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19306:0|h[Counterattack]|h|r",
+            "name": "Counterattack",
+            "entryId": 951312,
+            "description": "A strike that becomes active after parrying an opponent's attack. This attack deals 40 damage and immobilizes the target for 5 sec. Counterattack cannot be blocked, dodged, or parried.",
+            "spellId": 19306
+          }
+        ]
+      },
+      {
+        "nodeId": 901303,
+        "conditionIds": [],
+        "position": {
+          "y": 5130,
+          "x": 10280
+        },
+        "type": 0,
+        "maxRanks": 5,
+        "entries": [
+          {
+            "iconFileDataId": 136047,
+            "definitionId": 981303,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Lightning Reflexes",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Passive"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "Increases your Agility by 3%."
+                }
+              ]
+            },
+            "maxRanks": 5,
+            "spellLink": "|cff71d5ff|Hspell:19168:0|h[Lightning Reflexes]|h|r",
+            "name": "Lightning Reflexes",
+            "entryId": 951303,
+            "description": "Increases your Agility by 3%.",
+            "spellId": 19168
+          }
+        ]
+      },
+      {
+        "nodeId": 901325,
+        "conditionIds": [],
+        "position": {
+          "y": 5730,
+          "x": 9680
+        },
+        "type": 0,
+        "maxRanks": 1,
+        "entries": [
+          {
+            "iconFileDataId": 135125,
+            "definitionId": 981325,
+            "tooltip": {
+              "source": "C_TooltipInfo.GetSpellByID",
+              "lines": [
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Wyvern Sting",
+                  "rightColor": {
+                    "b": 0.501960813999176,
+                    "g": 0.501960813999176,
+                    "r": 0.501960813999176
+                  }
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "115 Mana",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "8 - 35 yd range"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Instant",
+                  "rightColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "right": "2 min cooldown"
+                },
+                {
+                  "leftColor": {
+                    "b": 1,
+                    "g": 1,
+                    "r": 1
+                  },
+                  "left": "Requires Ranged Weapon"
+                },
+                {
+                  "leftColor": {
+                    "b": 0,
+                    "g": 0.8235294818878174,
+                    "r": 1
+                  },
+                  "left": "A stinging shot that puts the target to sleep for 12 sec. Any damage will cancel the effect. When the target wakes up, the Sting causes 300 Nature damage over 6 sec. Only usable out of combat. Only one Sting per Hunter can be active on the target at a time."
+                }
+              ]
+            },
+            "maxRanks": 1,
+            "spellLink": "|cff71d5ff|Hspell:19386:0|h[Wyvern Sting]|h|r",
+            "name": "Wyvern Sting",
+            "entryId": 951325,
+            "description": "A stinging shot that puts the target to sleep for 12 sec. Any damage will cancel the effect. When the target wakes up, the Sting causes 300 Nature damage over 6 sec. Only usable out of combat. Only one Sting per Hunter can be active on the target at a time.",
+            "spellId": 19386
+          }
+        ]
+      }
+    ],
+    "sourceApi": "traits",
+    "kind": "combat",
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Oct  5 2026",
+      "version": "1.60.1",
+      "build": "70245"
+    }
+  }
+}

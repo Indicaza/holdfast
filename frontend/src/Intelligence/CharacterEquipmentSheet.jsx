@@ -7,6 +7,7 @@ export default function CharacterEquipmentSheet({
   stats = {},
   className = '',
   race = '',
+  level = null,
 }) {
   return (
     <div className="character-sheet">
@@ -23,7 +24,7 @@ export default function CharacterEquipmentSheet({
       </section>
 
       <aside className="character-sheet__stats" aria-label="Character stats">
-        <CharacterStats stats={stats} />
+        <CharacterStats stats={stats} className={className} level={level} />
       </aside>
     </div>
   )

@@ -1,403 +1,314 @@
+/* Character Armory modal shell.
+   A fixed-proportion window: unit-frame header, book-style tabs whose
+   selected tab joins the page below it, and one page that owns all remaining
+   space. Tab contents size themselves to the page and scroll when they cannot. */
+
 .modal--armory {
-  padding: clamp(.65rem, 1.25vw, 1.25rem);
+  padding: clamp(.75rem, 2.5vw, 2rem);
 }
 
 .modal__panel--armory {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  width: min(100%, 96rem);
-  height: min(94svh, 70rem);
+  --armory-gold: #ffd100;
+  --armory-brass: #c9a85a;
+  --armory-line: rgba(201, 168, 90, .38);
+  --armory-ink: #ece6d6;
+  --armory-muted: rgba(220, 214, 200, .62);
+  --armory-page: #0d1520;
+  --armory-pad: clamp(.85rem, 1.4vw, 1.2rem);
+  display: flex;
+  width: min(100%, 60rem);
+  height: min(100%, 50rem);
   max-height: none;
+  flex-direction: column;
   overflow: hidden;
-  border-radius: 1.15rem;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(196, 166, 103, .1), transparent 26rem),
-    radial-gradient(circle at 88% 10%, rgba(44, 93, 140, .1), transparent 30rem),
-    linear-gradient(165deg, rgba(9, 22, 39, .995), rgba(2, 7, 14, .995));
-}
-
-.modal__panel--armory .modal__close {
-  z-index: 20;
-  top: 1.35rem;
-  right: 1.35rem;
-  width: 2.9rem;
-  height: 2.9rem;
-  border-color: rgba(196, 166, 103, .22);
-  background: rgba(2, 8, 15, .72);
-}
-
-.modal__panel--armory .modal__header {
-  position: relative;
-  justify-items: start;
-  padding:
-    clamp(1.65rem, 3vw, 2.6rem)
-    clamp(1.5rem, 4vw, 4rem)
-    clamp(1.35rem, 2.2vw, 2rem);
-  border-bottom: 1px solid rgba(196, 166, 103, .16);
-  background:
-    linear-gradient(90deg, rgba(196, 166, 103, .045), transparent 40%),
-    rgba(2, 8, 15, .26);
-  text-align: left;
-}
-
-.modal__panel--armory .modal__eyebrow {
-  margin-bottom: .55rem;
-  font-size: .7rem;
-  letter-spacing: .22em;
-}
-
-.modal__panel--armory .modal__header h1 {
-  max-width: calc(100% - 4rem);
-  font-size: clamp(2.65rem, 5vw, 4.8rem);
-  line-height: .94;
-}
-
-.modal__panel--armory .modal__intro {
-  max-width: min(100%, 78rem);
-  margin-top: .85rem;
-  color: rgba(226, 232, 240, .72);
-  font-size: clamp(.86rem, 1.2vw, 1rem);
-  line-height: 1.45;
-  text-align: left;
+  border: 1px solid rgba(201, 168, 90, .4);
+  border-radius: .75rem;
+  background: linear-gradient(180deg, #121c2a, #080d15 70%);
+  box-shadow: 0 2.5rem 6rem rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05);
 }
 
 .modal__panel--armory .modal__body {
+  display: flex;
   min-height: 0;
-  overflow-y: auto;
-  padding:
-    0
-    clamp(1.25rem, 3vw, 3.25rem)
-    clamp(1.75rem, 3vw, 3rem);
-  scrollbar-gutter: stable;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 0;
 }
 
-.modal__panel--armory .modal__body::-webkit-scrollbar {
-  width: .55rem;
+.modal__panel--armory .modal__close {
+  z-index: 5;
+  top: .75rem;
+  right: .75rem;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid transparent;
+  border-radius: .4rem;
+  background: transparent;
+  color: var(--armory-muted);
+  font-size: 1.4rem;
 }
 
-.modal__panel--armory .modal__body::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgba(196, 166, 103, .25);
-  background-clip: padding-box;
+.modal__panel--armory .modal__close:hover,
+.modal__panel--armory .modal__close:focus-visible {
+  border-color: var(--armory-line);
+  background: rgba(255, 255, 255, .05);
+  color: var(--armory-ink);
 }
 
-.character-profile-modal {
-  min-width: 0;
-  min-height: 100%;
+.armory-shell {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  background: radial-gradient(ellipse 50% 8rem at 0% 0%, color-mix(in srgb, var(--armory-class-color, #c4a667) 9%, transparent), transparent);
 }
 
-.character-profile--modal {
+.armory-shell__state {
   display: grid;
-  min-width: 0;
-  gap: 0;
+  flex: 1 1 auto;
+  place-items: center;
+  margin: 0 var(--armory-pad) var(--armory-pad);
+  padding: var(--armory-pad);
+  border: 1px solid var(--armory-line);
+  border-radius: .5rem;
+  background: var(--armory-page);
 }
 
-.character-profile--modal .armory-tabs {
-  position: sticky;
-  z-index: 6;
-  top: 0;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(7.75rem, 1fr);
-  align-items: stretch;
-  gap: .35rem;
-  margin: 0;
-  padding: .35rem;
+/* Header: WoW player frame on the left, identity text beside it. The frame,
+   facts, and sync badge are styled in CharacterIdentity.css. */
+
+.armory-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1.1rem;
+  padding: var(--armory-pad) 3.5rem .9rem var(--armory-pad);
+}
+
+.armory-header--loading .unit-frame__bars {
+  min-height: 1.85rem;
+}
+
+/* Book tabs: the selected tab shares the page's fill and border and covers
+   the page's top edge beneath it, so tab and page read as one sheet. Other
+   tabs sit behind, darker, attached to the same edge. Hover changes fill and
+   color only. */
+
+.character-profile {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 0 var(--armory-pad) var(--armory-pad);
+}
+
+.armory-tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: .3rem;
+  /* The bar overlaps the page's top border by 1px so the selected tab can
+     cover it. The overlap lives on the bar, not the tabs, because the bar's
+     horizontal scrolling clips anything that hangs outside it. */
+  margin-bottom: -1px;
+  padding: .3rem .6rem 0;
   overflow-x: auto;
-  overflow-y: hidden;
-  border: 1px solid rgba(196, 166, 103, .16);
-  border-radius: .65rem;
-  background:
-    linear-gradient(180deg, rgba(10, 22, 36, .985), rgba(3, 10, 18, .98));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .025),
-    inset 0 -1px 0 rgba(0, 0, 0, .4),
-    0 .6rem 1.5rem rgba(0, 0, 0, .16);
-  isolation: isolate;
   scrollbar-width: none;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
-.character-profile--modal .armory-tabs::-webkit-scrollbar {
+.armory-tabs::-webkit-scrollbar {
   display: none;
 }
 
-.character-profile--modal .armory-tabs button {
+.armory-tabs__tab {
   position: relative;
-  z-index: 0;
-  width: 100%;
-  min-width: 0;
-  min-height: 3.35rem;
-  padding: .35rem 1rem;
-  overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: .42rem;
-  background: transparent !important;
-  color: rgba(203, 213, 225, .68);
-  box-shadow: inset 0 0 0 1px transparent;
-  font-size: .78rem;
-  font-weight: 700;
-  letter-spacing: .035em;
-  text-transform: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  padding: .5rem 1.05rem .55rem;
+  border: 1px solid rgba(201, 168, 90, .26);
+  border-bottom-color: var(--armory-line);
+  /* Opt out of the global button treatment (index.css): physical tabs have
+     square bottoms and never lift or scale off the page. */
+  --interactive-radius: .5rem .5rem 0 0;
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0;
+  --interactive-press-scale: 1;
+  background: linear-gradient(180deg, #151d29, #0a0f17);
+  color: var(--armory-muted);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 600;
   cursor: pointer;
-  isolation: isolate;
-  transition:
-    color 140ms ease,
-    border-color 140ms ease,
-    background 140ms ease,
-    box-shadow 140ms ease;
+  transition: color .12s ease, background-color .12s ease;
 }
 
-.character-profile--modal .armory-tabs button::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 110%, rgba(214, 184, 113, .12), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, .018), transparent 45%);
-  opacity: 0;
-  transition: opacity 140ms ease;
+.armory-tabs__tab:active {
+  filter: none;
+  translate: none;
 }
 
-.character-profile--modal .armory-tabs button::after {
-  content: '';
-  position: absolute;
-  right: .8rem;
-  bottom: .2rem;
-  left: .8rem;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #e8cc8c, transparent);
-  box-shadow: 0 0 .65rem rgba(232, 204, 140, .3);
-  opacity: 0;
-  transform: scaleX(.55);
-  transform-origin: center;
-  transition: opacity 140ms ease, transform 160ms ease;
+.armory-tabs__tab:hover {
+  filter: none;
+  background: linear-gradient(180deg, #1b2533, #0e141d);
+  color: var(--armory-ink);
 }
 
-.character-profile--modal .armory-tabs button:hover,
-.character-profile--modal .armory-tabs button:focus-visible {
-  border-color: rgba(196, 166, 103, .18);
-  background: rgba(196, 166, 103, .035) !important;
-  color: rgba(244, 231, 199, .94) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .018);
-}
-
-.character-profile--modal .armory-tabs button:hover::before,
-.character-profile--modal .armory-tabs button:focus-visible::before {
-  opacity: 1;
-}
-
-.character-profile--modal .armory-tabs button:focus-visible {
-  outline: 1px solid rgba(232, 204, 140, .52);
+.armory-tabs__tab:focus-visible {
+  outline: 2px solid rgba(255, 209, 0, .55);
   outline-offset: -3px;
 }
 
-.character-profile--modal .armory-tabs .armory-tabs__active {
-  z-index: 1;
-  border-color: rgba(196, 166, 103, .32);
-  background:
-    linear-gradient(180deg, rgba(196, 166, 103, .085), rgba(196, 166, 103, .035)) !important;
-  color: #f2d998 !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .035),
-    inset 0 0 .9rem rgba(196, 166, 103, .035);
+.armory-tabs__tab[aria-selected='true'] {
+  z-index: 2;
+  border-color: var(--armory-line);
+  border-bottom-color: var(--armory-page);
+  padding-top: .75rem;
+  background: var(--armory-page);
+  color: var(--armory-gold);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 
-.character-profile--modal .armory-tabs .armory-tabs__active::before {
-  opacity: 1;
-}
-
-.character-profile--modal .armory-tabs .armory-tabs__active::after {
-  opacity: 1;
-  transform: scaleX(1);
-}
-
-.character-profile--modal .armory-content {
-  padding-top: clamp(1.8rem, 2.8vw, 2.6rem);
-  padding-bottom: .5rem;
-}
-
-.character-profile--modal .armory-panel {
-  padding: clamp(1.35rem, 2.25vw, 2rem);
-  border-color: rgba(196, 166, 103, .17);
-  border-radius: 1rem;
-  background:
-    linear-gradient(145deg, rgba(14, 27, 44, .76), rgba(3, 10, 18, .74));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .025),
-    0 .9rem 2rem rgba(0, 0, 0, .12);
-}
-
-.character-profile--modal .armory-panel__heading h2 {
-  margin: .2rem 0 1.25rem;
-  font-size: clamp(1.45rem, 2vw, 1.8rem);
-}
-
-.character-profile--modal .armory-facts,
-.character-profile--modal .armory-stats {
-  gap: .7rem;
-}
-
-.character-profile--modal .armory-facts div,
-.character-profile--modal .armory-stats div {
-  min-width: 0;
-  padding: .9rem 1rem;
-  border: 1px solid rgba(255, 255, 255, .055);
-  border-radius: .75rem;
-  background: rgba(255, 255, 255, .016);
-}
-
-.character-profile--modal .armory-facts dt,
-.character-profile--modal .armory-stats dt {
-  margin-bottom: .18rem;
+.armory-tabs__badge {
+  min-width: 1.35rem;
+  padding: .05rem .38rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  color: var(--armory-muted);
   font-size: .68rem;
-  letter-spacing: .035em;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
-.character-profile--modal .armory-facts dd,
-.character-profile--modal .armory-stats dd {
-  line-height: 1.35;
+.armory-tabs__tab[aria-selected='true'] .armory-tabs__badge {
+  background: rgba(255, 209, 0, .14);
+  color: var(--armory-gold);
 }
 
-.character-profile--modal .armory-muted {
-  margin: 0;
-  padding: 1rem 1.1rem;
-  border: 1px dashed rgba(255, 255, 255, .08);
-  border-radius: .75rem;
-  background: rgba(255, 255, 255, .012);
-  line-height: 1.55;
-}
+/* The page */
 
-.character-profile--modal .profession-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.character-profile--modal .profession-card {
-  min-height: 9.5rem;
-  align-content: start;
-  gap: 1rem;
-  padding: 1.25rem;
-  border-color: rgba(255, 255, 255, .075);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, .028), rgba(255, 255, 255, .008));
-}
-
-.character-profile--modal .profession-card__heading {
-  gap: .85rem;
-}
-
-.character-profile--modal .paper-doll {
-  gap: clamp(1.1rem, 2vw, 1.8rem);
-}
-
-.character-profile--modal .paper-doll__layout {
-  padding: clamp(1rem, 2vw, 1.6rem);
-  border-color: rgba(196, 166, 103, .18);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(196, 166, 103, .09), transparent 34%),
-    rgba(3, 10, 18, .72);
-}
-
-.character-profile--modal .recipe-browser,
-.character-profile--modal .talent-tree {
+.armory-content {
+  position: relative;
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: var(--armory-pad);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--armory-line);
+  border-radius: .5rem;
+  background: var(--armory-page);
+  box-shadow: inset 0 0 2rem rgba(0, 0, 0, .35);
+  scrollbar-color: rgba(201, 168, 90, .35) transparent;
+  scrollbar-width: thin;
 }
 
-@media (max-width: 76rem) {
-  .character-profile--modal .profession-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Equipment: sized from the page height like the in-game character pane — two
+   slot columns around a figure about four slots wide, then a fixed stats
+   column. When the page is too narrow, the sheet stacks and the page scrolls. */
+.armory-content--equipment {
+  container-name: armory-equipment;
+  container-type: size;
+}
+
+@container armory-equipment (min-width: 46rem) {
+  .armory-content--equipment > .character-sheet {
+    --sheet-slot: clamp(2.6rem, calc((100cqh - 2.6rem) / 9.4), 4rem);
+    grid-template-columns: minmax(calc(var(--sheet-slot) * 6.4), 1fr) minmax(15rem, 19rem);
+    /* One row exactly the page's height, so the stats column scrolls inside
+       itself instead of growing past the page and being clipped. */
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .armory-content--equipment .paper-doll.paper-doll--sheet .paper-doll__layout {
+    --paper-doll-sheet-slot: var(--sheet-slot);
   }
 }
 
-@media (max-width: 58rem) {
+.armory-content--talents {
+  display: flex;
+  overflow: hidden;
+}
+
+.armory-content--talents > .talent-tree {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+}
+
+/* Tab content inside the shell */
+
+.armory-shell .profession-grid {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: .9rem;
+}
+
+.armory-shell .profession-card {
+  gap: .9rem;
+  padding: 1.1rem 1.2rem;
+  border-color: rgba(255, 255, 255, .07);
+  border-radius: .6rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .008));
+}
+
+/* Small screens: the modal becomes the whole screen. */
+
+@media (max-width: 40rem) {
   .modal--armory {
-    padding: .65rem;
-  }
-
-  .modal__panel--armory {
-    height: calc(100svh - 1.3rem);
-  }
-
-  .modal__panel--armory .modal__header {
-    padding-inline: 1.35rem 4.5rem;
-  }
-
-  .modal__panel--armory .modal__body {
-    padding-inline: 1rem;
-  }
-}
-
-@media (max-width: 48rem) {
-  .character-profile--modal .profession-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .character-profile--modal .armory-panel {
-    padding: 1.15rem;
-  }
-
-  .character-profile--modal .armory-content {
-    padding-top: 1.45rem;
-  }
-}
-
-@media (max-width: 36rem) {
-  .modal--armory {
-    align-items: stretch;
     padding: 0;
   }
 
   .modal__panel--armory {
+    --armory-pad: .6rem;
     width: 100%;
     height: 100svh;
-    max-height: 100svh;
     border: 0;
     border-radius: 0;
   }
 
-  .modal__panel--armory .modal__close {
-    top: .9rem;
-    right: .9rem;
+  .armory-header {
+    flex-wrap: wrap;
+    gap: .5rem .9rem;
+    padding: .9rem 3rem .7rem .9rem;
   }
 
-  .modal__panel--armory .modal__header {
-    padding: 1.4rem 4rem 1.15rem 1rem;
+  .armory-header .unit-frame {
+    --portrait: 3.9rem;
+    --plate: min(12.5rem, calc(100vw - 9rem));
   }
 
-  .modal__panel--armory .modal__header h1 {
-    font-size: clamp(2.35rem, 13vw, 3.2rem);
+  .armory-header .unit-frame {
+    flex-basis: 100%;
   }
 
-  .modal__panel--armory .modal__intro {
-    margin-top: .65rem;
-    font-size: .8rem;
+  .armory-header .character-facts {
+    flex: 1 1 10rem;
+    padding-left: 0;
   }
 
-  .modal__panel--armory .modal__body {
-    padding-inline: .8rem;
-    padding-bottom: 1.25rem;
+  .armory-header .sync-badge {
+    align-self: end;
   }
 
-  .character-profile--modal .armory-tabs {
-    grid-auto-columns: minmax(6.75rem, 1fr);
-    gap: .25rem;
-    margin-inline: 0;
-    padding: .25rem;
+  .armory-tabs {
+    gap: .15rem;
+    padding: 0 .2rem;
   }
 
-  .character-profile--modal .armory-tabs button {
-    min-height: 3rem;
-    padding-inline: .75rem;
-    font-size: .7rem;
+  .armory-tabs__tab {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding-inline: .45rem;
+    font-size: .82rem;
   }
 
-  .character-profile--modal .armory-tabs button::after {
-    right: .65rem;
-    left: .65rem;
+  .armory-tabs__badge {
+    display: none;
   }
 }

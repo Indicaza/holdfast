@@ -525,10 +525,6 @@
   box-shadow: 0 0 0 3px rgba(196, 166, 103, .09);
 }
 
-.intelligence-character-browser .intel-character-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 @media (max-width: 72rem) {
   .intelligence-app .intel-scorecards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -630,8 +626,7 @@
 }
 
 @media (max-width: 40rem) {
-  .intelligence-app .intel-scorecards,
-  .intelligence-character-browser .intel-character-grid {
+  .intelligence-app .intel-scorecards {
     grid-template-columns: 1fr;
   }
 

@@ -8,7 +8,9 @@ import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import WowIcon from '../WowAssets/WowIcon.jsx'
+import { SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
 import CharacterProfileModal from './CharacterProfileModal.jsx'
+import { classIdentity } from './classIdentity.js'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
@@ -53,18 +55,23 @@ function CharacterCard({ character, onOpen }) {
     onOpen(character.id)
   }
 
+  const vitals = character.vitals || {}
   return (
-    <a className="intel-character-card" href={`/armory/${encodeURIComponent(character.id)}`} onClick={handleClick}>
-      <div className="intel-character-card__crest" aria-hidden="true">♜</div>
-      <div className="intel-character-card__identity">
-        <strong>{character.name}</strong>
-        <span>{character.level ? `Level ${character.level} · ` : ''}{character.spec || character.className || 'Class unknown'}</span>
-        <small>{character.realm || character.guildName || 'Realm not reported'}</small>
-      </div>
-      <div className="intel-character-card__meta">
-        <em>{formatSyncAge(character.lastSeenAt)}</em>
-        <span aria-hidden="true">→</span>
-      </div>
+    <a
+      className="character-card"
+      href={`/armory/${encodeURIComponent(character.id)}`}
+      onClick={handleClick}
+      style={{ '--armory-class-color': classIdentity(character.className).color }}
+    >
+      <UnitFrame
+        character={character}
+        health={{ max: vitals.healthMax }}
+        power={{ max: vitals.powerMax, token: vitals.powerToken }}
+        nameAs="strong"
+        className="unit-frame--card"
+        showAffiliation
+      />
+      <SyncBadge lastSeenAt={character.lastSeenAt} />
     </a>
   )
 }

@@ -61,9 +61,14 @@ Holdfast uses **Node 24**. `.nvmrc` pins the expected major version for tools th
 ```bash
 git clone https://github.com/Indicaza/holdfast.git
 cd holdfast
+npm run dev
 ```
 
-Install the backend and create a local environment file:
+That one command installs backend and frontend dependencies when they are missing or stale, creates `backend/.env` with the local development sandbox enabled (only if it does not already exist), seeds the development personas on first run, and starts both servers with prefixed output. Ctrl+C stops both. Use `npm run dev -- --seed` to re-run the development seed, or `npm run setup` to prepare everything without starting the servers.
+
+### Manual setup
+
+To run each piece yourself instead, install the backend and create a local environment file:
 
 ```bash
 cd backend

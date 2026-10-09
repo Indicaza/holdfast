@@ -91,6 +91,19 @@ The development auth surface is defense-in-depth guarded:
 
 Do not add development identities, bypasses, or fixtures to production-specific code paths.
 
+### Character data
+
+`npm run dev:seed` also seeds a fake roster for the Intelligence and armory views (`npm run dev:seed:characters` runs just that part). The people and character names are invented, but the game data is real so the UI renders like production telemetry:
+
+- `backend/scripts/devData/kits.js` — equipment kits by class and level, using real Classic item IDs
+- `backend/seed/devData/items.json` — recorded item names, stats, tooltips, and icon FileDataIDs
+- `backend/seed/devData/talentTrees/*.json` — `talent_tree_definition` envelopes. Real Guildweaver captures (currently Warrior) take precedence; `synthetic-*.json` trees for the other classes are generated from Classic Era talent data by `scripts/devData/buildSyntheticTalentTrees.mjs` and marked `"synthetic": true`. This game build's real trees differ from Classic Era, so replace a synthetic file once that class is captured.
+- `backend/seed/devData/icons.json` — FileDataID → icon name, used by a development-only icon fallback when Blizzard API credentials are not configured
+
+Snapshots go through the same pairing, sync, and telemetry repositories as the Guildweaver bridge. Seeding is idempotent within a day.
+
+To add a real capture, save its `talent_tree_definition` envelope into `seed/devData/talentTrees/` and delete the matching `synthetic-*.json`. Then re-run `node scripts/devData/recordGameData.mjs <community-listfile.csv>` (from [wowdev/wow-listfile](https://github.com/wowdev/wow-listfile/releases)) to refresh item and icon data, and `npm run dev:seed`. Re-running `buildSyntheticTalentTrees.mjs <community-listfile.csv>` regenerates synthetic trees only for classes without a capture.
+
 ## Real Discord development
 
 `backend/.env.example` documents every supported backend variable.
@@ -108,6 +121,23 @@ Production data is not seed data and should never be copied into the repository 
 If you already have valuable local data, back it up before intentionally using `--reset-quests` or experimenting with persistence code.
 
 ## Running the app
+
+From the repository root, start the backend and frontend together:
+
+```bash
+npm run dev
+```
+
+The launcher (`scripts/dev.mjs`, Node built-ins only) will:
+
+- run `npm ci` in `backend/` and `frontend/` when `node_modules` is missing or older than `package-lock.json`
+- create `backend/.env` from `.env.example` with `SESSION_SECRET` and `HOLDFAST_DEV_AUTH=true` filled in for the sandbox — an existing `.env` is never modified
+- run `npm run dev:seed` when it just created `.env`, or when passed `--seed` (`npm run dev -- --seed`)
+- start both dev servers with `[backend]` / `[frontend]` prefixed output; Ctrl+C stops both
+
+`npm run setup` performs the install, `.env`, and seed steps without starting servers.
+
+To run the servers separately instead:
 
 Backend:
 

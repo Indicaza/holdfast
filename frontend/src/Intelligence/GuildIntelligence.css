@@ -228,87 +228,48 @@
 
 .intel-character-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr));
   gap: var(--space-3);
 }
 
-.intel-character-card {
-  display: grid;
+.character-card {
+  --armory-pad: 1rem;
+  position: relative;
+  display: flex;
   min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid rgba(255, 255, 255, .07);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, .018);
-  color: inherit;
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    background var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-
-.intel-character-card:hover,
-.intel-character-card:focus-visible {
-  border-color: rgba(196, 166, 103, .42);
-  background: rgba(196, 166, 103, .045);
-  transform: translateY(-1px);
-}
-
-.intel-character-card__crest {
-  display: grid;
-  width: 3.35rem;
-  height: 3.35rem;
-  place-items: center;
-  border: 1px solid rgba(196, 166, 103, .35);
-  border-radius: 50%;
-  color: var(--color-accent-bright);
+  gap: .7rem .75rem;
+  padding: .95rem .9rem .95rem 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(201, 168, 90, .26);
+  border-radius: .7rem;
   background:
-    radial-gradient(circle, rgba(196, 166, 103, .09), rgba(196, 166, 103, .025));
-  font-family: var(--font-display);
-  font-size: 1.15rem;
+    radial-gradient(ellipse 45% 85% at 0% 0%, color-mix(in srgb, var(--armory-class-color, #c4a667) 11%, transparent), transparent),
+    linear-gradient(180deg, #121c2a, #090e16);
+  box-shadow: 0 .6rem 1.4rem rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .04);
+  color: inherit;
+  transition: border-color .14s ease, box-shadow .14s ease, background-color .14s ease;
 }
 
-.intel-character-card__identity {
-  display: grid;
-  min-width: 0;
-  gap: .12rem;
+.character-card:hover,
+.character-card:focus-visible {
+  border-color: rgba(231, 201, 127, .6);
+  outline: none;
+  box-shadow:
+    0 .8rem 1.8rem rgba(0, 0, 0, .4),
+    0 0 0 1px rgba(231, 201, 127, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 
-.intel-character-card__identity strong {
-  overflow: hidden;
-  color: var(--color-text-strong);
-  font-family: var(--font-display);
-  font-size: var(--font-size-md);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.unit-frame--card {
+  --portrait: 3.9rem;
+  --plate: 11.5rem;
 }
 
-.intel-character-card__identity span,
-.intel-character-card__identity small,
-.intel-character-card__meta em {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-style: normal;
-}
-
-.intel-character-card__identity span,
-.intel-character-card__identity small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.intel-character-card__meta {
-  display: grid;
-  justify-items: end;
-  gap: .3rem;
-}
-
-.intel-character-card__meta span {
-  color: var(--color-accent-bright);
-  font-size: var(--font-size-md);
+/* The sync meter sits on the card's right edge, vertically centered. */
+.character-card > .sync-badge {
+  margin-left: auto;
 }
 
 .intel-section {
@@ -548,7 +509,6 @@
 @media (max-width: 56rem) {
   .intel-paths,
   .intel-scorecards,
-  .intel-character-grid,
   .intel-distributions {
     grid-template-columns: 1fr;
   }
@@ -579,15 +539,8 @@
     flex-direction: column;
   }
 
-  .intel-character-card {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .intel-character-card__meta {
-    grid-column: 2;
-    grid-template-columns: auto auto;
-    justify-content: start;
-    align-items: center;
+  .unit-frame--card {
+    --plate: 9.5rem;
   }
 
   .craft-result__crafters a {

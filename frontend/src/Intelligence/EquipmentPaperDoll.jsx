@@ -31,7 +31,7 @@ function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', ic
       className={`paper-doll__slot${sheet ? ' paper-doll__slot--sheet' : ''}${item ? ` paper-doll__slot--filled paper-doll__slot--quality-${quality}` : ''}${active ? ' paper-doll__slot--active' : ''}`}
       onClick={() => item && onSelect(item)}
       disabled={!item}
-      title={item?.name || slotLabel(slot)}
+      title={item ? undefined : slotLabel(slot)}
       aria-label={item ? `${slotLabel(slot)}: ${item.name || `item ${item.itemId || ''}`}` : `${slotLabel(slot)} empty`}
     >
       {item ? <ItemIcon item={item} size={iconSize} /> : <span className="paper-doll__empty-icon" aria-hidden="true">◇</span>}
