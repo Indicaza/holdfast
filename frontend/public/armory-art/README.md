@@ -8,9 +8,8 @@ Blizzard UI art for the character sheet, from WoW Forever's client (build
 - `sheet-background`: UI-Character-Info-General-BG
 - `stats-<class>`, `stats-default`: UI-Character-Info-<Class>-BG / -Stat-BG
 - `gear-slot`: UI-Character-Info-GearSlot
-- `stat-title`, `item-level`, `stat-line`, `divider`: UI-Character-Info-Title,
-  -ItemLevel-Bounce, -Line-Bounce, -ScrollLine
-- `race-overlay`: UI-Character-Info-RaceBG-Overlay
+- `stat-title`, `item-level`, `stat-line`: UI-Character-Info-Title,
+  -ItemLevel-Bounce, -Line-Bounce
 - `slot-<slot>`: Interface/PaperDoll/UI-PaperDoll-Slot-* (empty slot outlines)
 
 `resist-*.png` are the resistance school icons used by the stat pane.
