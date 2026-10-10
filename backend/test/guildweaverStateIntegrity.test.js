@@ -61,7 +61,11 @@ async function armory(request, characterId) {
     persona: "member",
   });
   assert.equal(response.status, 200, response.text);
-  return response.json;
+  const recipes = await request(`/api/intelligence/characters/${encodeURIComponent(characterId)}/recipes`, {
+    persona: "member",
+  });
+  assert.equal(recipes.status, 200, recipes.text);
+  return { ...response.json, recipes: recipes.json.recipes };
 }
 
 async function pairDevice(request, name = "Integrity test") {

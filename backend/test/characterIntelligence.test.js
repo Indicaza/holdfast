@@ -168,6 +168,9 @@ test("character intelligence projects rich snapshots and remains idempotent", as
     assert.deepEqual(summary.json.specDistribution, [{ name: "Protection", count: 1 }]);
 
     const armory = await request(`/api/intelligence/characters/${encodeURIComponent(first.character.id)}`, { persona: "member" });
+    const recipeBook = await request(`/api/intelligence/characters/${encodeURIComponent(first.character.id)}/recipes`, { persona: "member" });
+    assert.equal(armory.json.recipes, undefined, "recipes load separately");
+    assert.equal(armory.json.recipeCount, 1);
     assert.equal(armory.status, 200);
     assert.equal(armory.json.character.name, "Rook");
     assert.equal(armory.json.character.level, 30);
@@ -180,15 +183,16 @@ test("character intelligence projects rich snapshots and remains idempotent", as
     assert.equal(armory.json.talents.edges[0].to, 102);
     assert.equal(armory.json.talents.edges[0].required, true);
     assert.equal(armory.json.professions.find((entry) => entry.name === "Blacksmithing").current, 225);
-    assert.equal(armory.json.recipes[0].name, "Mithril Spurs");
-    assert.equal(armory.json.recipes[0].reagents[0].quantity, 4);
+    assert.equal(recipeBook.json.recipes[0].name, "Mithril Spurs");
+    assert.equal(recipeBook.json.recipes[0].reagents[0].quantity, 4);
     assert.equal(armory.json.gameData.items["11746"].name, "Golem Skull Helm");
     assert.equal(armory.json.gameData.items["11746"].iconFileId, 132767);
     assert.equal(armory.json.gameData.items["11746"].qualityId, 3);
-    assert.equal(armory.json.gameData.items["3860"].name, "Mithril Bar");
+    assert.equal(recipeBook.json.gameData.items["3860"].name, "Mithril Bar", "reagents arrive with the recipes");
+    assert.equal(armory.json.gameData.items["3860"], undefined);
     assert.equal(armory.json.gameData.spells["12975"].name, "Last Stand");
     assert.equal(armory.json.gameData.professions["164"].name, "Blacksmithing");
-    assert.equal(armory.json.gameData.recipes["9789"].name, "Mithril Spurs");
+    assert.equal(recipeBook.json.gameData.recipes["9789"].name, "Mithril Spurs");
 
     const resolveAnonymous = await request("/api/intelligence/game-data/resolve", {
       method: "POST",
@@ -298,6 +302,7 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
     assert.equal(result.status, "created");
 
     const armory = await request(`/api/intelligence/characters/${encodeURIComponent(result.character.id)}`, { persona: "member" });
+    const recipeBook = await request(`/api/intelligence/characters/${encodeURIComponent(result.character.id)}/recipes`, { persona: "member" });
     assert.equal(armory.status, 200);
     assert.equal(armory.json.character.name, "Sparse");
     assert.equal(armory.json.character.className, "Mage");
@@ -305,7 +310,7 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
     assert.deepEqual(armory.json.talents.nodes, []);
     assert.deepEqual(armory.json.talents.edges, []);
     assert.deepEqual(armory.json.professions, []);
-    assert.deepEqual(armory.json.recipes, []);
+    assert.deepEqual(recipeBook.json.recipes, []);
     assert.deepEqual(armory.json.gameData.items, {});
 
     const missing = await request("/api/intelligence/characters/not-real", { persona: "member" });

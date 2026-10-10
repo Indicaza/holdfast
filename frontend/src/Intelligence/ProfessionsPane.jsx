@@ -426,7 +426,7 @@ function CraftingPage({ profession, recipes, tooltips, carried }) {
   )
 }
 
-export default function ProfessionsPane({ professions = [], recipes = [], carried = null }) {
+export default function ProfessionsPane({ professions = [], recipes = [], recipesStatus = 'ready', carried = null }) {
   const [view, setView] = useState('overview')
   const rail = useMemo(() => railProfessions(professions, recipes), [professions, recipes])
   const openable = useMemo(() => new Set(rail.map((profession) => profession.key)), [rail])
@@ -455,7 +455,13 @@ export default function ProfessionsPane({ professions = [], recipes = [], carrie
         <div className="professions-pane__content">
           {active
             ? <CraftingPage key={active.key} profession={active} recipes={activeRecipes} tooltips={tooltips} carried={carried} />
-            : <Overview professions={professions} openable={openable} onOpen={setView} />}
+            : (
+              <>
+                {recipesStatus === 'loading' ? <p className="armory-state" role="status">Opening recipe books…</p> : null}
+                {recipesStatus === 'error' ? <p className="armory-state" role="status">Recipe books could not be loaded.</p> : null}
+                <Overview professions={professions} openable={openable} onOpen={setView} />
+              </>
+            )}
         </div>
       </div>
       <nav className="professions-pane__rail" aria-label="Profession pages">

@@ -41,6 +41,10 @@ test("Armory consumes the canonical Guildweaver schema 2 character payload", asy
       `/api/intelligence/characters/${encodeURIComponent(first.character.id)}`,
       { persona: "member" },
     );
+    const recipeBook = await request(
+      `/api/intelligence/characters/${encodeURIComponent(first.character.id)}/recipes`,
+      { persona: "member" },
+    );
 
     assert.equal(response.status, 200);
     assert.equal(response.json.character.name, "Rook");
@@ -83,19 +87,19 @@ test("Armory consumes the canonical Guildweaver schema 2 character payload", asy
     assert.equal(response.json.professions[0].modifier, 5);
     assert.equal(response.json.professions[0].specialization.configId, 81001);
 
-    assert.equal(response.json.recipes.length, 1);
-    assert.equal(response.json.recipes[0].id, 1001);
-    assert.equal(response.json.recipes[0].iconFileId, 132604);
-    assert.equal(response.json.recipes[0].professionId, 164);
-    assert.equal(response.json.recipes[0].craftedItemId, 2853);
-    assert.equal(response.json.recipes[0].craftedItemName, "Copper Bracers");
-    assert.equal(response.json.recipes[0].reagents.length, 1);
+    assert.equal(recipeBook.json.recipes.length, 1);
+    assert.equal(recipeBook.json.recipes[0].id, 1001);
+    assert.equal(recipeBook.json.recipes[0].iconFileId, 132604);
+    assert.equal(recipeBook.json.recipes[0].professionId, 164);
+    assert.equal(recipeBook.json.recipes[0].craftedItemId, 2853);
+    assert.equal(recipeBook.json.recipes[0].craftedItemName, "Copper Bracers");
+    assert.equal(recipeBook.json.recipes[0].reagents.length, 1);
     assert.deepEqual(
       {
-        itemId: response.json.recipes[0].reagents[0].itemId,
-        quantity: response.json.recipes[0].reagents[0].quantity,
-        slotIndex: response.json.recipes[0].reagents[0].slotIndex,
-        required: response.json.recipes[0].reagents[0].required,
+        itemId: recipeBook.json.recipes[0].reagents[0].itemId,
+        quantity: recipeBook.json.recipes[0].reagents[0].quantity,
+        slotIndex: recipeBook.json.recipes[0].reagents[0].slotIndex,
+        required: recipeBook.json.recipes[0].reagents[0].required,
       },
       { itemId: 2840, quantity: 2, slotIndex: 1, required: true },
     );

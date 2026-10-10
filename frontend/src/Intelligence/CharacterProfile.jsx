@@ -32,7 +32,7 @@ const characterProfileTabs = [
     id: 'professions',
     label: 'Professions',
     badge: (armory) => armory.professions.length || null,
-    render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} carried={carriedCounts(armory.inventory)} />,
+    render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} recipesStatus={armory.recipesStatus} carried={carriedCounts(armory.inventory)} />,
   },
   {
     id: 'inventory',

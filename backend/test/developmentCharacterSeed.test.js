@@ -48,6 +48,7 @@ test("development character seed produces armory-ready characters idempotently",
     assert.ok(summary.json.characters.some((character) => character.firstName === "Ironhide" && character.name === "Ironhide Blackforge"));
 
     const armory = await request("/api/intelligence/characters/guildweaver-id:character-dev-ironhide", { persona: "member" });
+    const recipeBook = await request("/api/intelligence/characters/guildweaver-id:character-dev-ironhide/recipes", { persona: "member" });
     assert.equal(armory.status, 200);
     assert.equal(armory.json.character.level, 60);
     assert.equal(armory.json.talents.pointsSpent, 51);
@@ -61,7 +62,7 @@ test("development character seed produces armory-ready characters idempotently",
     // while the Armory spellbook exposes only learned recipes.
     const engineering = armory.json.professions.find((profession) => profession.name === "Engineering");
     assert.ok(engineering.recipeBook.knownCount > 50);
-    const recipes = armory.json.recipes.filter((recipe) => recipe.professionKey === engineering.key);
+    const recipes = recipeBook.json.recipes.filter((recipe) => recipe.professionKey === engineering.key);
     assert.equal(recipes.length, engineering.recipeBook.knownCount);
     assert.ok(engineering.recipeBook.recipeCount >= recipes.length);
     assert.ok(recipes.every((recipe) => recipe.known !== false));

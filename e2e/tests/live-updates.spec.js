@@ -129,8 +129,11 @@ test('an open Armory refreshes in place for its own character and ignores the re
     const profile = page.getByRole('dialog')
     await expect(profile).toHaveAttribute('aria-label', character.fixtureName)
     expect(new URL(page.url()).searchParams.get('character')).toBe(character.character.id)
+    // Recipe books load when the professions tab first opens.
+    const recipeBook = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith('/recipes'))
     await profile.getByRole('tab', { name: /^Professions/ }).click()
     await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
+    expect((await recipeBook).status()).toBe(200)
 
     // Someone else's character changing leaves the open modal alone.
     const readsBeforeUnrelated = armoryReads
