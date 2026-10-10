@@ -186,6 +186,10 @@ test("schema v3 character snapshots retain Armory data and rejoin talent definit
       `/api/intelligence/characters/${encodeURIComponent(synced.character.id)}`,
       { persona: "member" },
     );
+    const recipeBook = await request(
+      `/api/intelligence/characters/${encodeURIComponent(synced.character.id)}/recipes`,
+      { persona: "member" },
+    );
 
     assert.equal(armory.status, 200);
     assert.equal(armory.json.character.name, "Rook Ravenstar");
@@ -213,10 +217,10 @@ test("schema v3 character snapshots retain Armory data and rejoin talent definit
     assert.equal(blacksmithing.current, 94);
     assert.equal(blacksmithing.max, 150);
 
-    assert.equal(armory.json.recipes.length, 1);
-    assert.equal(armory.json.recipes[0].id, 9789);
-    assert.equal(armory.json.recipes[0].reagents[0].itemId, 3860);
-    assert.equal(armory.json.recipes[0].reagents[0].quantity, 4);
+    assert.equal(recipeBook.json.recipes.length, 1);
+    assert.equal(recipeBook.json.recipes[0].id, 9789);
+    assert.equal(recipeBook.json.recipes[0].reagents[0].itemId, 3860);
+    assert.equal(recipeBook.json.recipes[0].reagents[0].quantity, 4);
 
     assert.equal(armory.json.talents.treeId, 1111);
     assert.equal(armory.json.talents.nodes.length, 2);

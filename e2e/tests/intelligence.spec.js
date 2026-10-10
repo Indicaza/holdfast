@@ -201,6 +201,10 @@ async function seedArmory(page, context) {
 
 test('member Armory modal renders equipment, talent tree, professions, recipes, and narrow screens', async ({ page, context }) => {
   await seedArmory(page, context)
+  let recipeReads = 0
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.endsWith('/recipes')) recipeReads += 1
+  })
   await page.goto('/intelligence#characters')
 
   const characterCard = page.locator('.character-card').filter({ hasText: 'Armorytest' })
@@ -231,8 +235,10 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   await profile.locator('.talent-node').nth(1).hover()
   await expect(page.getByRole('tooltip').filter({ hasText: 'Shield Mastery' })).toBeVisible()
 
+  expect(recipeReads, 'recipe books wait for the professions tab').toBe(0)
   await profile.getByRole('tab', { name: /^Professions/ }).click()
   await expect(profile.getByRole('heading', { name: 'Blacksmithing' })).toBeVisible()
+  expect(recipeReads).toBe(1)
   await expect(profile.getByRole('meter', { name: 'Blacksmithing skill' })).toHaveText('225 + 5/225')
   await expect(profile.getByRole('heading', { name: 'Fishing' })).toBeVisible()
 

@@ -140,12 +140,16 @@ test("a persisted DB-only character still opens in Armory", async () => {
       `/api/intelligence/characters/${encodeURIComponent(characterId)}`,
       { persona: "member" },
     );
+    const recipeBook = await request(
+      `/api/intelligence/characters/${encodeURIComponent(characterId)}/recipes`,
+      { persona: "member" },
+    );
 
     assert.equal(response.status, 200, response.text);
     assert.equal(response.json.character.name, "Rook Ravenstar");
     assert.equal(response.json.character.level, 31);
     assert.equal(response.json.equipment[0].name, "Whirlwind Axe");
     assert.equal(response.json.professions[0].name, "Blacksmithing");
-    assert.equal(response.json.recipes[0].name, "Copper Bracers");
+    assert.equal(recipeBook.json.recipes[0].name, "Copper Bracers");
   });
 });

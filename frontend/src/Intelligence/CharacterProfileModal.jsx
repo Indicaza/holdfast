@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useLiveResource } from '../Live/useLiveResource.js'
 import Modal from '../Modal/Modal.jsx'
@@ -9,25 +9,58 @@ import { normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
 
 const EMPTY_ARMORY = normalizeArmory({})
+const RECIPE_SECTIONS = new Set(['profession_books', 'professions'])
+
+function mergeGameData(base = {}, extra = {}) {
+  const merged = { ...base }
+  for (const [bucket, entries] of Object.entries(extra || {})) {
+    const current = merged[bucket]
+    merged[bucket] = current && typeof current === 'object' && !Array.isArray(current) && entries && typeof entries === 'object' && !Array.isArray(entries)
+      ? { ...entries, ...current }
+      : current ?? entries
+  }
+  return merged
+}
 
 // The character modal. Its armory refreshes in place whenever this character's
 // telemetry changes (live "character changed" events name the character), so
 // the open tab and scroll position survive while new data streams in.
+//
+// Recipe books are most of a character's data, so they load separately the
+// first time the professions tab opens, and refresh only when profession
+// telemetry changes.
 export default function CharacterProfileModal({ characterId, onClose }) {
   const [tab, setTab] = useState('equipment')
+  const [recipesWanted, setRecipesWanted] = useState(false)
+  const url = characterId ? `/api/intelligence/characters/${encodeURIComponent(characterId)}` : null
   const matches = useCallback((event) => event.entityId === characterId, [characterId])
-  const { status, data } = useLiveResource(
-    characterId ? `/api/intelligence/characters/${encodeURIComponent(characterId)}` : null,
-    { topics: ['armory'], matches, select: normalizeArmory },
+  const matchesRecipes = useCallback(
+    (event) => event.entityId === characterId && (event.detail?.sections || []).some((section) => RECIPE_SECTIONS.has(section)),
+    [characterId],
   )
+  const { status, data } = useLiveResource(url, { topics: ['armory'], matches })
+  const recipeBook = useLiveResource(url && `${url}/recipes`, { topics: ['armory'], matches: matchesRecipes, enabled: recipesWanted })
 
   useEffect(() => {
     setTab('equipment')
+    setRecipesWanted(false)
   }, [characterId])
+
+  useEffect(() => {
+    if (tab === 'professions' || tab === 'recipes') setRecipesWanted(true)
+  }, [tab])
+
+  const armory = useMemo(() => {
+    if (!data) return EMPTY_ARMORY
+    const recipes = recipeBook.data
+    return {
+      ...normalizeArmory(recipes ? { ...data, recipes: recipes.recipes, gameData: mergeGameData(data.gameData, recipes.gameData) } : data),
+      recipesStatus: recipes ? 'ready' : recipeBook.status === 'idle' ? 'loading' : recipeBook.status,
+    }
+  }, [data, recipeBook.data, recipeBook.status])
 
   if (!characterId) return null
 
-  const armory = data || EMPTY_ARMORY
   const ready = status === 'ready'
   const character = armory.character
   const title = ready ? character.name : 'Character profile'

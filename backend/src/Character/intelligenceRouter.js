@@ -131,12 +131,39 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         return;
       }
 
-      const armory = await prepareCharacterArmory(composed, { provider, icons });
+      // Recipe books are most of a character's data and only the professions
+      // tab shows them, so they load from /recipes when it opens.
+      const { recipes, ...withoutRecipes } = composed;
+      const armory = await prepareCharacterArmory(
+        { ...withoutRecipes, recipeCount: Array.isArray(recipes) ? recipes.length : 0 },
+        { provider, icons },
+      );
       res.set("Cache-Control", "no-store");
       sendCompressedJson(req, res, armory);
     } catch (error) {
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
+    }
+  });
+
+  router.get("/characters/:characterId/recipes", requireAuthenticated, async (req, res) => {
+    try {
+      const composed = readCharacterArmoryFromReadModel(req.params.characterId);
+      if (!composed) {
+        res.status(404).json({ error: "character_not_found" });
+        return;
+      }
+
+      // Game data for the recipes alone: their crafted items and reagents.
+      const prepared = await prepareCharacterArmory(
+        { character: composed.character, recipes: composed.recipes },
+        { provider, icons },
+      );
+      res.set("Cache-Control", "no-store");
+      sendCompressedJson(req, res, { recipes: prepared.recipes || [], gameData: prepared.gameData });
+    } catch (error) {
+      console.error("Unable to read character recipes", error);
+      res.status(500).json({ error: "character_recipes_unavailable" });
     }
   });
 
