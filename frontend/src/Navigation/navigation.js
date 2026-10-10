@@ -1,33 +1,24 @@
-import { startTransition, useSyncExternalStore } from 'react'
-
 // Client-side navigation. Same-origin links change the page without a reload,
 // so the app (session, navbar, live connection, cached data) stays mounted and
-// only the page area changes. Navigations run in a transition: the current page
-// stays on screen until the next one's code has loaded.
+// only the page area changes. The app follows the location in a transition
+// (see App), so the current page stays on screen until the next one's code
+// has loaded.
 
 const listeners = new Set()
 
-function snapshot() {
-  return window.location.href
-}
-
 function emit() {
-  startTransition(() => {
-    for (const listener of listeners) listener()
-  })
+  for (const listener of listeners) listener()
 }
 
-function subscribe(listener) {
+// Calls listener after every navigation (links, Back/Forward). Returns the
+// unsubscribe.
+export function subscribeLocation(listener) {
   listeners.add(listener)
   window.addEventListener('popstate', emit)
   return () => {
     listeners.delete(listener)
     if (!listeners.size) window.removeEventListener('popstate', emit)
   }
-}
-
-export function useLocationHref() {
-  return useSyncExternalStore(subscribe, snapshot, snapshot)
 }
 
 export function navigate(to, { replace = false } = {}) {

@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState, useTransition } from 'react'
 import Navbar from './Home/Navbar/Navbar.jsx'
-import { interceptLinkClicks, useLocationHref } from './Navigation/navigation.js'
+import { interceptLinkClicks, subscribeLocation } from './Navigation/navigation.js'
+import RouteProgress from './Navigation/RouteProgress.jsx'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
@@ -147,8 +148,12 @@ function memberProfileRoute(pathname) {
 }
 
 function App() {
-  // Re-render on client-side navigation; links no longer reload the page.
-  const href = useLocationHref()
+  // Follow client-side navigation in a transition: React keeps the current
+  // page on screen while the next page's code loads, instead of falling back
+  // to the loading screen. Links no longer reload the page.
+  const [href, setHref] = useState(() => window.location.href)
+  const [navigating, startNavigation] = useTransition()
+  useEffect(() => subscribeLocation(() => startNavigation(() => setHref(window.location.href))), [])
   useEffect(() => interceptLinkClicks(), [])
   const requestedPathname = normalizePathname(new URL(href).pathname)
   const dynamicRoute = memberProfileRoute(requestedPathname)
@@ -192,6 +197,10 @@ function App() {
       <Suspense fallback={<PageLoading />}>
         <Page key={route.path} {...(route.props || {})} />
       </Suspense>
+
+      {/* Fixed under the navbar; kept out of the navbar + page sibling pair
+          that full-bleed pages are styled by (index.css). */}
+      <RouteProgress active={navigating} />
 
       <AuthResultModal />
     </>

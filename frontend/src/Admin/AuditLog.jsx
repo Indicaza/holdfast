@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
+import './Admin.css'
 
 const EVENT_LABELS = {
   'quest.workspace_saved': 'saved the quest workspace',

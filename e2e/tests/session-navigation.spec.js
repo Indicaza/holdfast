@@ -143,3 +143,42 @@ test('returning to the tab rechecks the session quietly and reports the timezone
   await expect(page.locator('.navbar')).toHaveAttribute('data-probe', 'kept')
   await expect(account(page)).toBeVisible()
 })
+
+test('a page whose code is still loading keeps the current page on screen', async ({ page, context }) => {
+  await authenticate(context, 'member')
+  let releaseChunk
+  const chunkGate = new Promise((resolve) => { releaseChunk = resolve })
+  await page.route(/\/assets\/Ranks-[^/]+\.js$/, async (route) => {
+    await chunkGate
+    await route.continue()
+  })
+  await page.goto('/charter')
+  await expect(page.getByRole('heading', { name: 'Holdfast Charter', level: 1 }).first()).toBeAttached()
+
+  await page.locator('.navbar a[href="/ranks"]').first().click()
+  await expect(page).toHaveURL(/\/ranks$/)
+  await expect(page.locator('.route-progress--active')).toBeAttached()
+  await expect(page.locator('.page-loading')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Holdfast Charter', level: 1 }).first()).toBeAttached()
+
+  releaseChunk()
+  await expect(page.getByRole('heading', { name: 'Ranks & Roles', level: 1 })).toBeVisible()
+  await expect(page.locator('.route-progress--active')).toHaveCount(0)
+})
+
+test('a members-only page waits for the session check without flashing the home page', async ({ page, context }) => {
+  await authenticate(context, 'member')
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  await page.route('**/api/me', async (route) => {
+    const response = await route.fetch()
+    await gate
+    await route.fulfill({ response })
+  })
+  await page.goto('/members')
+  await expect(page.getByText('Checking your membership…')).toBeVisible()
+  await expect(page.locator('.home')).toHaveCount(0)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  release()
+  await expect(page.locator('main input[type="search"]')).toBeVisible()
+})

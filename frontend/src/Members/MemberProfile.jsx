@@ -10,6 +10,7 @@ import MemberBilletControl from './MemberBilletControl.jsx'
 import MemberRankControl from './MemberRankControl.jsx'
 import RankInsignia from './RankInsignia.jsx'
 import { navigate } from '../Navigation/navigation.js'
+import PageLoading from '../PageLoading/PageLoading.jsx'
 import './MemberProfile.css'
 
 function displayName(member) {
@@ -585,7 +586,9 @@ function MemberProfile({ memberId }) {
   const returnTo = isSelfRoute ? '/members/me' : `/members/${memberId}`
   const closeGate = () => navigate('/')
 
-  if (session.status === 'loading' || session.status === 'error') {
+  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+
+  if (session.status === 'error') {
     return (
       <Home
         overlay={

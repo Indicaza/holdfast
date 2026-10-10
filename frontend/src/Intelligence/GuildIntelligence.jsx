@@ -1,8 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
-import AuditLog from '../Admin/AuditLog.jsx'
-import GuildweaverConsole from '../Admin/GuildweaverConsole.jsx'
-import '../Admin/Admin.css'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
@@ -18,7 +15,12 @@ import intelligenceViews from './intelligenceViews.js'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
 import RosterComposition from './RosterComposition.jsx'
 import { navigate } from '../Navigation/navigation.js'
+import PageLoading from '../PageLoading/PageLoading.jsx'
 import './GuildIntelligence.css'
+
+// Admin-only workspaces load when first opened, not for every member.
+const AuditLog = lazy(() => import('../Admin/AuditLog.jsx'))
+const GuildweaverConsole = lazy(() => import('../Admin/GuildweaverConsole.jsx'))
 
 const EMPTY_INTELLIGENCE = normalizeIntelligence({})
 
@@ -156,8 +158,7 @@ function Overview({ availableViews, data, freshCharacters, onOpenCharacter, onSe
   )
 }
 
-function CharacterBrowser({ characters, onOpenCharacter }) {
-  const [query, setQuery] = useState('')
+function CharacterBrowser({ characters, onOpenCharacter, query, onQueryChange }) {
   const normalized = query.trim().toLowerCase()
   const filtered = useMemo(() => {
     if (!normalized) return characters
@@ -184,7 +185,7 @@ function CharacterBrowser({ characters, onOpenCharacter }) {
           <input
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Name, class, spec, realm…"
           />
         </label>
@@ -207,9 +208,8 @@ function CharacterBrowser({ characters, onOpenCharacter }) {
   )
 }
 
-function CraftFinder() {
-  const [input, setInput] = useState('')
-  const [query, setQuery] = useState('')
+function CraftFinder({ input, onInputChange }) {
+  const [query, setQuery] = useState(() => input.trim())
   const [status, setStatus] = useState('idle')
   const [results, setResults] = useState([])
 
@@ -255,7 +255,7 @@ function CraftFinder() {
       <div className="craft-finder__search-wrap">
         <label className="craft-finder__search">
           <span>Recipe or item</span>
-          <input type="search" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Mithril Spurs, potion, item ID…" />
+          <input type="search" value={input} onChange={(event) => onInputChange(event.target.value)} placeholder="Mithril Spurs, potion, item ID…" />
         </label>
         {status === 'loading' ? <p className="intel-muted">Searching known recipes…</p> : null}
         {status === 'error' ? <p className="intel-error">Craft Finder is unavailable right now.</p> : null}
@@ -299,12 +299,14 @@ function CraftFinder() {
   )
 }
 
-function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCharacter, onSelectView, session }) {
+function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCharacter, onSelectView, session, searches, onSearchChange }) {
   if (activeView === 'roster') return <RosterComposition data={data} />
-  if (activeView === 'characters') return <CharacterBrowser characters={data.characters} onOpenCharacter={onOpenCharacter} />
-  if (activeView === 'craft') return <CraftFinder />
-  if (activeView === 'audit' && session.hasPermission('audit.view')) return <AuditLog />
-  if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <GuildweaverConsole />
+  if (activeView === 'characters') {
+    return <CharacterBrowser characters={data.characters} onOpenCharacter={onOpenCharacter} query={searches.characters} onQueryChange={(value) => onSearchChange('characters', value)} />
+  }
+  if (activeView === 'craft') return <CraftFinder input={searches.craft} onInputChange={(value) => onSearchChange('craft', value)} />
+  if (activeView === 'audit' && session.hasPermission('audit.view')) return <Suspense fallback={<p className="intel-muted">Opening the audit log…</p>}><AuditLog /></Suspense>
+  if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <Suspense fallback={<p className="intel-muted">Opening the Guildweaver console…</p>}><GuildweaverConsole /></Suspense>
   return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
 }
 
@@ -330,7 +332,11 @@ export default function GuildIntelligence() {
   })
   const data = summary || EMPTY_INTELLIGENCE
   const status = summaryStatus === 'idle' ? 'ready' : summaryStatus === 'missing' ? 'error' : summaryStatus
-  const [activeView, setActiveView] = useState('overview')
+  // Open on the view the URL names; the effect below narrows it to the views
+  // this member may see once permissions are known.
+  const [activeView, setActiveView] = useState(() => readViewFromLocation(intelligenceViews))
+  // Searches survive switching between workspaces.
+  const [searches, setSearches] = useState({ characters: '', craft: '' })
   const [selectedCharacterId, setSelectedCharacterId] = useState(readCharacterFromLocation)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
@@ -395,7 +401,9 @@ export default function GuildIntelligence() {
   const closeGate = () => navigate('/')
   const freshCharacters = useMemo(() => freshSyncCount(data.characters), [data.characters])
 
-  if (session.status === 'loading' || session.status === 'error' || !session.authenticated) {
+  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+
+  if (session.status === 'error' || !session.authenticated) {
     return <Home overlay={<MemberAccessModal returnTo="/intelligence" onClose={closeGate} />} />
   }
 
@@ -422,6 +430,8 @@ export default function GuildIntelligence() {
             onOpenCharacter={openCharacter}
             onSelectView={selectView}
             session={session}
+            searches={searches}
+            onSearchChange={(view, value) => setSearches((current) => ({ ...current, [view]: value }))}
           />
         ) : null}
       </IntelligenceAppShell>
