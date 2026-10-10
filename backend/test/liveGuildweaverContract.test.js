@@ -4,9 +4,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
-import { readSyncedIntelligenceSummary } from "../src/Character/intelligenceSummaryRepository.js";
 import { prepareCharacterArmory } from "../src/Character/intelligenceRouter.js";
-import { readCharacterArmory } from "../src/Character/telemetryProjection.js";
+import { readCharacterArmoryFromReadModel, readCharacterCards } from "../src/Character/ReadModel/readModelReader.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
 const fixturePath = fileURLToPath(new URL("./fixtures/guildweaver-character-snapshot.v3.json", import.meta.url));
@@ -27,7 +26,7 @@ test("current Guildweaver v3 snapshot feeds GuildOS cards and Armory without syn
 
     assert.equal(synced.status, "created");
 
-    const summary = readSyncedIntelligenceSummary();
+    const summary = readCharacterCards();
     const card = summary.characters.find((character) => character.id === synced.character.id);
     assert.ok(card);
     assert.equal(card.name, "Rook Ravenstar");
@@ -44,7 +43,7 @@ test("current Guildweaver v3 snapshot feeds GuildOS cards and Armory without syn
       powerToken: "RAGE",
     });
 
-    const stored = readCharacterArmory(synced.character.id);
+    const stored = readCharacterArmoryFromReadModel(synced.character.id);
     const armory = await prepareCharacterArmory(stored, {
       provider: null,
       icons: null,

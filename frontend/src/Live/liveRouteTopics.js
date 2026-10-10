@@ -22,3 +22,13 @@ export function matchesLiveTopics(eventTopics, topics) {
   if (eventTopics.includes('*')) return true
   return topics.some((topic) => eventTopics.includes(topic))
 }
+
+// Routes whose pages keep their own data current (useLiveResource) and must
+// never be remounted by a live update: remounting would close an open
+// character modal and lose the user's place.
+export function refreshesInPlace(pathname, hash) {
+  if (pathname.startsWith('/armory/')) return true
+  if (pathname !== '/intelligence') return false
+  const view = String(hash || '').replace(/^#/, '').toLowerCase()
+  return view !== 'audit' && view !== 'guildweaver'
+}

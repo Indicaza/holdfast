@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
-import { readSyncedIntelligenceSummary } from "../src/Character/intelligenceSummaryRepository.js";
+import { readCharacterCards } from "../src/Character/ReadModel/readModelReader.js";
 import {
   readTelemetryHistory,
   recordTelemetry,
@@ -118,7 +118,7 @@ test("Guildweaver character and generic telemetry ingest are durable before Guil
       telemetry: 1,
     });
 
-    const intelligence = readSyncedIntelligenceSummary();
+    const intelligence = readCharacterCards();
     assert.equal(intelligence.summary.characterCount, 1);
     assert.equal(intelligence.characters[0].name, "Rook");
     assert.equal(intelligence.characters[0].level, 30);

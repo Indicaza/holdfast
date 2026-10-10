@@ -6,17 +6,9 @@ import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProv
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
 import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
-import { adaptArmoryV3 } from "./armoryV3Adapter.js";
-import { hydrateArmoryFromLatestSnapshot } from "./durableArmoryRepository.js";
-import { decorateArmoryInventory } from "./inventoryArmory.js";
-import { decorateArmoryProfessions } from "./professionArmory.js";
-import { decorateArmoryTalentArt } from "./talentArmoryArt.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
-import { readSyncedIntelligenceSummary } from "./intelligenceSummaryRepository.js";
-import {
-  readCharacterArmory,
-  searchRecipes,
-} from "./telemetryProjection.js";
+import { readCharacterArmoryFromReadModel, readCharacterCards } from "./ReadModel/readModelReader.js";
+import { searchRecipes } from "./telemetryProjection.js";
 
 const ARMORY_HYDRATION_BUDGET_MS = 1500;
 
@@ -57,15 +49,6 @@ function safeStatus(source) {
   }
 }
 
-function applyArmoryStage(armory, label, transform) {
-  try {
-    return transform(armory) || armory;
-  } catch (error) {
-    console.warn(`Unable to ${label}`, error?.message || error);
-    return armory;
-  }
-}
-
 async function hydrateSafely(provider, references, options, deadlineMs = ARMORY_HYDRATION_BUDGET_MS) {
   let timer = null;
   const fallback = (extra = {}) => ({
@@ -100,23 +83,14 @@ function resolveGameDataSafely(resolver, references, options) {
   }
 }
 
-export async function prepareCharacterArmory(storedArmory, {
+// Adds Blizzard game data (names, icons, tooltips the client did not send)
+// to an armory composed from the character read model.
+export async function prepareCharacterArmory(armory, {
   provider,
   icons,
-  durableHydrator = hydrateArmoryFromLatestSnapshot,
-  armoryAdapter = adaptArmoryV3,
-  talentArtDecorator = decorateArmoryTalentArt,
-  professionDecorator = decorateArmoryProfessions,
-  inventoryDecorator = decorateArmoryInventory,
   gameDataResolver = resolveGameDataBundle,
   hydrationDeadlineMs = ARMORY_HYDRATION_BUDGET_MS,
 } = {}) {
-  let armory = applyArmoryStage(storedArmory, "hydrate latest durable character snapshot", durableHydrator);
-  armory = applyArmoryStage(armory, "adapt character armory", armoryAdapter);
-  armory = applyArmoryStage(armory, "decorate character talents", talentArtDecorator);
-  armory = applyArmoryStage(armory, "decorate character professions", professionDecorator);
-  armory = applyArmoryStage(armory, "decorate character inventory", inventoryDecorator);
-
   const references = armoryReferences(armory);
   const gameBuild = armoryBuildKey(armory);
   const providerStatus = provider
@@ -142,7 +116,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
   router.get("/", requireAuthenticated, (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
-      res.json(readSyncedIntelligenceSummary());
+      res.json(readCharacterCards());
     } catch (error) {
       console.error("Unable to read guild intelligence", error);
       res.status(500).json({ error: "intelligence_unavailable" });
@@ -151,13 +125,13 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
 
   router.get("/characters/:characterId", requireAuthenticated, async (req, res) => {
     try {
-      const storedArmory = readCharacterArmory(req.params.characterId);
-      if (!storedArmory) {
+      const composed = readCharacterArmoryFromReadModel(req.params.characterId);
+      if (!composed) {
         res.status(404).json({ error: "character_not_found" });
         return;
       }
 
-      const armory = await prepareCharacterArmory(storedArmory, { provider, icons });
+      const armory = await prepareCharacterArmory(composed, { provider, icons });
       res.set("Cache-Control", "no-store");
       sendCompressedJson(req, res, armory);
     } catch (error) {

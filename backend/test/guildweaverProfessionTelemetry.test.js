@@ -5,7 +5,9 @@ import test from "node:test";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
 import { readLatestTelemetryState } from "../src/Character/Telemetry/telemetryStateRepository.js";
 import { canonicalProfessionSnapshot } from "../src/Character/Telemetry/professionModel.js";
-import { applyProfessionTelemetry, decorateArmoryProfessions } from "../src/Character/professionArmory.js";
+import { applyProfessionTelemetry } from "../src/Character/professionArmory.js";
+import { readCharacterArmoryFromReadModel } from "../src/Character/ReadModel/readModelReader.js";
+import { ingestCharacterIdentity } from "../testSupport/characterTelemetry.js";
 import { readTelemetryRecord } from "../src/Character/telemetryRecordRepository.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
@@ -126,12 +128,20 @@ test("armory uses profession telemetry and keeps legacy recipes for professions 
   assert.equal(applyProfessionTelemetry(armory, null), armory, "no telemetry leaves the armory alone");
 });
 
-test("armory decoration reads the latest stored profession telemetry", () =>
+test("the armory carries the latest profession telemetry, whichever arrives first", () =>
   withHttpApp(async () => {
+    // Recipe books arrive before the website knows the character: they wait
+    // under the addon's character id and project once the character exists.
     ingest(structuredClone(fixture));
-    const decorated = decorateArmoryProfessions({ character: { id: "character-rook" }, professions: [], recipes: [] });
-    assert.equal(decorated.professions[0].name, "Blacksmithing");
-    assert.equal(decorated.recipes[0].crafted.name, "Rough Sharpening Stone");
+    assert.equal(readCharacterArmoryFromReadModel("guildweaver-id:character-rook"), null);
+
+    const identity = ingestCharacterIdentity({ deviceId: "device-profession-telemetry", memberId: memberIds.member, characterId: "character-rook" });
+    assert.equal(identity.canonicalCharacterId, "guildweaver-id:character-rook");
+
+    const armory = readCharacterArmoryFromReadModel("guildweaver-id:character-rook");
+    assert.equal(armory.professions[0].name, "Blacksmithing");
+    assert.equal(armory.recipes[0].crafted.name, "Rough Sharpening Stone");
+    assert.equal(armory.professionTelemetry.eventType, "profession_snapshot");
   }));
 
 test("recipe categories, reagent details and recipe tooltips reach the armory", () => {

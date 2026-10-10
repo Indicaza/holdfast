@@ -1,3 +1,6 @@
+import { withGuildTransaction } from "../../Data/database.js";
+import { projectTelemetryStateInDatabase } from "../ReadModel/readModelWriter.js";
+import { ensureCharacterReadModelCurrent } from "../ReadModel/rebuildReadModel.js";
 import { associateTelemetryRecordCharacter } from "../telemetryCharacterAssociation.js";
 import { recordTelemetry } from "../telemetryRecordRepository.js";
 import { canonicalTelemetryPayload, validateTelemetryDomain } from "./handlerRegistry.js";
@@ -43,12 +46,13 @@ export function ingestTelemetry({
 
   const persistedEnvelope = result.record?.envelope || incoming.envelope;
   const rawCharacterId = String(persistedEnvelope?.characterId || "").trim();
-  const canonicalCharacterId = associateTelemetryRecordCharacter({
+  let canonicalCharacterId = associateTelemetryRecordCharacter({
     recordId: result.record?.id,
     memberId,
     deviceId,
     rawCharacterId,
   });
+  let changedSections = [];
 
   if (incoming.kind === "state" && result.record) {
     const persistedRecord = {
@@ -56,6 +60,7 @@ export function ingestTelemetry({
       envelope: persistedEnvelope,
       eventType: String(persistedEnvelope.eventType || incoming.eventType),
     };
+    const canonicalPayload = canonicalTelemetryPayload(persistedRecord);
     storeLatestTelemetryState({
       memberId,
       deviceId,
@@ -71,8 +76,25 @@ export function ingestTelemetry({
       receivedAt,
       recordId: result.record.id,
       envelope: persistedEnvelope,
-      payload: canonicalTelemetryPayload(persistedRecord),
+      payload: canonicalPayload,
     });
+
+    // The character read model the website renders from (ReadModel/).
+    ensureCharacterReadModelCurrent();
+    const projected = withGuildTransaction((db) => projectTelemetryStateInDatabase(db, {
+      memberId,
+      deviceId,
+      rawCharacterId,
+      eventType: persistedRecord.eventType,
+      payload: canonicalPayload,
+      capturedAt: persistedEnvelope.capturedAt,
+      receivedAt,
+      recordId: result.record.id,
+      revision: incoming.revision,
+      installationId: persistedEnvelope.installationId || "",
+    }));
+    canonicalCharacterId = canonicalCharacterId || projected.characterId;
+    changedSections = projected.changed;
   }
 
   advanceTelemetryStreamHead({
@@ -89,6 +111,7 @@ export function ingestTelemetry({
     record: result.record,
     canonicalCharacterId,
     rawCharacterId,
+    changedSections,
     handlerName: domainValidation.handler?.eventType || "opaque",
   };
 }

@@ -1,6 +1,3 @@
-import { withGuildDatabase } from "../Data/database.js";
-import { ensureTelemetryRecordSchema } from "./telemetryRecordRepository.js";
-import { parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 function array(value) {
   return Array.isArray(value) ? value : [];
@@ -21,35 +18,6 @@ function number(value, fallback = null) {
 
 function optionalBoolean(value) {
   return typeof value === "boolean" ? value : null;
-}
-
-function parseJson(value) {
-  try {
-    return JSON.parse(value || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function latestSnapshotPayload(db, characterId) {
-  const projected = db.prepare(`
-    SELECT s.payload_json
-    FROM telemetry_characters t
-    LEFT JOIN character_snapshots s ON s.id = t.latest_snapshot_id
-    WHERE t.character_id = ?
-    LIMIT 1
-  `).get(characterId)?.payload_json;
-
-  if (projected) return parseJson(projected);
-
-  const latest = db.prepare(`
-    SELECT payload_json
-    FROM character_snapshots
-    WHERE character_id = ?
-    ORDER BY captured_at DESC, id DESC
-    LIMIT 1
-  `).get(characterId)?.payload_json;
-  return parseJson(latest);
 }
 
 function normalizeEquipmentItem(raw) {
@@ -177,28 +145,6 @@ function normalizeRecipes(snapshot) {
   return result;
 }
 
-function latestTalentDefinitions(db, memberId, treeIds) {
-  ensureTelemetryRecordSchema(db);
-  const wanted = new Set(treeIds);
-  const found = new Map();
-  const rows = db.prepare(`
-    SELECT envelope_json
-    FROM guildweaver_telemetry_records
-    WHERE event_type = 'talent_tree_definition' AND member_id = ?
-    ORDER BY received_at DESC, id DESC
-  `).all(memberId);
-
-  for (const row of rows) {
-    const definition = object(parseTelemetryJson(row.envelope_json)?.payload);
-    const treeId = number(definition.treeId);
-    if (!wanted.has(treeId) || found.has(treeId)) continue;
-    found.set(treeId, definition);
-    if (found.size === wanted.size) break;
-  }
-
-  return treeIds.map((treeId) => found.get(treeId)).filter(Boolean);
-}
-
 function normalizeTalentConditions(value) {
   return array(value).map((condition) => ({
     id: number(condition?.id),
@@ -210,7 +156,7 @@ function normalizeTalentConditions(value) {
   }));
 }
 
-function normalizeTalents(db, armory, snapshot) {
+function normalizeTalents(armory, snapshot, definitionsFor) {
   const state = object(snapshot?.talents);
   const treeIds = array(state.treeIds).map((value) => number(value)).filter(Number.isFinite);
   if (!treeIds.length) return armory.talents;
@@ -225,7 +171,7 @@ function normalizeTalents(db, armory, snapshot) {
       .map((nodeState) => [number(nodeState?.nodeId), nodeState])
       .filter(([nodeId]) => Number.isFinite(nodeId)),
   );
-  const definitions = latestTalentDefinitions(db, armory.character.memberId, treeIds);
+  const definitions = definitionsFor(treeIds);
   if (!definitions.length) {
     return {
       ...armory.talents,
@@ -326,34 +272,33 @@ function normalizeTalents(db, armory, snapshot) {
   };
 }
 
-export function adaptArmoryV3(armory) {
-  if (!armory?.character?.id) return armory;
+// The v3 snapshot's own equipment, talents and professions, which carry more
+// than the generic normalizers keep. `definitionsFor(treeIds)` returns the
+// talent tree definitions for the allocations.
+export function adaptArmoryV3Snapshot(armory, snapshot, definitionsFor) {
+  if (!armory?.character?.id || number(snapshot?.schemaVersion, 0) < 3) return armory;
 
-  return withGuildDatabase((db) => {
-    const snapshot = latestSnapshotPayload(db, armory.character.id);
-    if (number(snapshot?.schemaVersion, 0) < 3) return armory;
+  const equipment = array(snapshot.equipment).map(normalizeEquipmentItem).filter((item) => item.itemId || item.name);
+  const professions = array(snapshot.professions).map(normalizeProfession).filter((profession) => profession.name);
+  const recipes = normalizeRecipes(snapshot);
+  const firstName = text(snapshot.firstName, 40);
+  const lastName = text(snapshot.lastName, 40);
+  const fullName = text(snapshot.fullName || snapshot.name, 96);
 
-    const equipment = array(snapshot.equipment).map(normalizeEquipmentItem).filter((item) => item.itemId || item.name);
-    const professions = array(snapshot.professions).map(normalizeProfession).filter((profession) => profession.name);
-    const recipes = normalizeRecipes(snapshot);
-    const firstName = text(snapshot.firstName, 40);
-    const lastName = text(snapshot.lastName, 40);
-    const fullName = text(snapshot.fullName || snapshot.name, 96);
-
-    return {
-      ...armory,
-      character: {
-        ...armory.character,
-        name: fullName || armory.character.name,
-        firstName,
-        lastName,
-        fullName,
-      },
-      stats: Object.keys(object(snapshot.stats)).length ? object(snapshot.stats) : armory.stats,
-      equipment: equipment.length ? equipment : armory.equipment,
-      talents: normalizeTalents(db, armory, snapshot),
-      professions: professions.length ? professions : armory.professions,
-      recipes: recipes.length ? recipes : armory.recipes,
-    };
-  });
+  return {
+    ...armory,
+    character: {
+      ...armory.character,
+      name: fullName || armory.character.name,
+      firstName,
+      lastName,
+      fullName,
+    },
+    stats: Object.keys(object(snapshot.stats)).length ? object(snapshot.stats) : armory.stats,
+    equipment: equipment.length ? equipment : armory.equipment,
+    talents: normalizeTalents(armory, snapshot, definitionsFor),
+    professions: professions.length ? professions : armory.professions,
+    recipes: recipes.length ? recipes : armory.recipes,
+  };
 }
+

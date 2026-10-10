@@ -45,7 +45,7 @@ function snapshot({ characterId, name, className, level, capturedAt }) {
   };
 }
 
-test("schema v3 keeps multiple characters while generic telemetry remains evidence-only", async () => {
+test("schema v3 keeps multiple characters; a character's own telemetry and its legacy snapshot converge on one character", async () => {
   await withHttpApp(async ({ request }) => {
     const deviceToken = await pairBridge(request);
     const headers = { Authorization: `Bearer ${deviceToken}` };
@@ -112,15 +112,18 @@ test("schema v3 keeps multiple characters while generic telemetry remains eviden
         },
       },
     });
+    // The character's own snapshot stream is enough for the website to know
+    // it; the legacy endpoint is not a prerequisite.
     assert.equal(telemetry.status, 201);
-    assert.equal(telemetry.json.characterStatus, null);
+    assert.equal(telemetry.json.characterStatus, "associated");
+    assert.equal(telemetry.json.characterId, "guildweaver-id:character-kumo");
 
     let summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);
-    assert.equal(summary.json.summary.characterCount, 2);
+    assert.equal(summary.json.summary.characterCount, 3);
     assert.deepEqual(
       new Set(summary.json.characters.map((character) => character.name)),
-      new Set(["Rook", "Quill"]),
+      new Set(["Rook", "Quill", "Kumo"]),
     );
 
     const druid = await request("/api/bridge/characters/snapshot", {
@@ -131,8 +134,9 @@ test("schema v3 keeps multiple characters while generic telemetry remains eviden
         snapshot: druidSnapshot,
       },
     });
-    assert.equal(druid.status, 201);
+    assert.equal(druid.status, 200, "an update, not a new character");
     assert.equal(druid.json.character.name, "Kumo");
+    assert.equal(druid.json.character.id, "guildweaver-id:character-kumo", "the legacy snapshot joins the same character");
 
     summary = await request("/api/intelligence", { persona: "member" });
     assert.equal(summary.status, 200);

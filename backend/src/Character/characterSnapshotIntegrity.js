@@ -51,7 +51,7 @@ function professionIdentity(profession) {
   return name ? `name:${name}` : "";
 }
 
-function preserveProfessionRecipes(previousProfessions, incomingProfessions) {
+export function preserveProfessionRecipes(previousProfessions, incomingProfessions) {
   const previousByKey = new Map();
   for (const profession of array(previousProfessions)) {
     const key = professionIdentity(profession);

@@ -5,7 +5,9 @@ import test from "node:test";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
 import { readLatestTelemetryState } from "../src/Character/Telemetry/telemetryStateRepository.js";
 import { canonicalInventorySnapshot, inventoryMoney } from "../src/Character/Telemetry/inventoryModel.js";
-import { applyInventoryTelemetry, decorateArmoryInventory } from "../src/Character/inventoryArmory.js";
+import { applyInventoryTelemetry } from "../src/Character/inventoryArmory.js";
+import { readCharacterArmoryFromReadModel } from "../src/Character/ReadModel/readModelReader.js";
+import { ingestCharacterIdentity } from "../testSupport/characterTelemetry.js";
 import { readTelemetryRecord } from "../src/Character/telemetryRecordRepository.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
@@ -135,11 +137,16 @@ test("armory carries the latest inventory telemetry", () =>
     const armory = { character: { id: "character-rook" }, equipment: [] };
     assert.equal(applyInventoryTelemetry(armory, null), armory, "no telemetry leaves the armory alone");
 
-    ingest(structuredClone(fixture));
-    const decorated = decorateArmoryInventory(armory);
+    ingestCharacterIdentity({ deviceId: "device-inventory-telemetry", memberId: memberIds.member, characterId: "character-rook" });
+    const result = ingest(structuredClone(fixture));
+    assert.equal(result.canonicalCharacterId, "guildweaver-id:character-rook");
+    assert.deepEqual(result.changedSections, ["inventory"]);
+
+    const decorated = readCharacterArmoryFromReadModel("guildweaver-id:character-rook");
     assert.equal(decorated.inventory.money.gold, 123);
     assert.equal(decorated.inventory.containers.length, 2);
-    assert.equal(decorated.inventory.telemetry.revision, 1);
+    assert.equal(decorated.inventory.telemetry.revision, 1, "the stream's revision");
     assert.equal(decorated.inventory.telemetry.eventType, "inventory_snapshot");
     assert.deepEqual(decorated.equipment, [], "equipment untouched");
+    assert.ok(decorated.freshness.inventory, "the section's capture time is reported");
   }));

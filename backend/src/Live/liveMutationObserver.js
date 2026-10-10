@@ -14,8 +14,9 @@ export function classifyLiveMutation(req) {
   const withActor = (event) => ({ ...event, actorId })
   const events = []
 
+  // Character snapshots announce themselves once their read model changes
+  // (Live/characterChangeEvents.js), not on every bridge request.
   if (path.startsWith('/api/bridge/characters/snapshot')) {
-    events.push(withActor({ topics: ['intelligence', 'armory'], source: 'guildweaver.character' }))
     events.push(withActor({ topics: ['guildweaver'], source: 'guildweaver.character', permission: 'site.admin' }))
   } else if (path.startsWith('/api/bridge/quests')) {
     events.push(withActor({ topics: ['quests', 'notifications'], source: 'guildweaver.quests' }))

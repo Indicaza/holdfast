@@ -37,7 +37,7 @@ function slug(value) {
     .replace(/^-+|-+$/g, "") || "unaffiliated";
 }
 
-function entityName(value) {
+export function entityName(value) {
   if (typeof value === "string") return text(value, 96);
   return text(value?.name ?? value?.displayName, 96);
 }
@@ -105,7 +105,7 @@ function normalizeRecipeReagents(raw) {
   return result;
 }
 
-function gameBuildLabel(snapshot) {
+export function gameBuildLabel(snapshot) {
   const raw = snapshot?.gameBuild ?? snapshot?.build ?? snapshot?.gameVersion;
   if (raw === null || raw === undefined) return "";
   if (typeof raw !== "object" || Array.isArray(raw)) return text(raw, 96);
@@ -196,7 +196,7 @@ export function normalizeRecipes(snapshot, professions = normalizeProfessions(sn
   return recipes;
 }
 
-function normalizeOrganization(snapshot) {
+export function normalizeOrganization(snapshot) {
   const organization = object(snapshot?.organization);
   const guild = snapshot?.guild;
   const guildName = entityName(guild);
@@ -558,7 +558,7 @@ export function normalizeTalents(snapshot) {
   };
 }
 
-function stats(snapshot) {
+export function stats(snapshot) {
   const source = object(snapshot?.stats ?? snapshot?.attributes);
   const result = {};
   for (const [key, value] of Object.entries(source)) {
@@ -567,20 +567,6 @@ function stats(snapshot) {
     }
   }
   return result;
-}
-
-function professionFromRow(row) {
-  return {
-    key: row.profession_key,
-    id: row.profession_id === null ? null : Number(row.profession_id),
-    name: row.name,
-    iconFileId:
-      row.icon_file_id === null ? null : Number(row.icon_file_id),
-    current: Number(row.skill_current) || 0,
-    max: Number(row.skill_max) || 0,
-    modifier: Number(row.skill_modifier) || 0,
-    specialization: parseJson(row.specialization_json, null),
-  };
 }
 
 function recipeFromRow(row) {
@@ -602,187 +588,6 @@ function recipeFromRow(row) {
     craftedItemName: row.crafted_item_name,
     reagents: parseJson(row.reagents_json, []),
   };
-}
-
-function characterRows(db) {
-  ensureTelemetryProjectionSchema(db);
-  return db
-    .prepare(`
-    SELECT
-      c.id, c.member_id, c.name, c.race, c.class_name, c.spec, c.is_main,
-      m.display_name AS member_name, m.rank AS member_rank,
-      t.organization_id, o.name AS organization_name, t.realm, t.region,
-      t.guild_name, t.level, t.schema_version, t.game_build,
-      t.latest_snapshot_id, t.last_seen_at
-    FROM characters c
-    JOIN members m ON m.id = c.member_id AND m.status = 'active'
-    LEFT JOIN telemetry_characters t ON t.character_id = c.id
-    LEFT JOIN telemetry_organizations o ON o.id = t.organization_id
-  `)
-    .all();
-}
-
-export function readIntelligenceSummary() {
-  return withGuildDatabase((db) => {
-    const characters = characterRows(db).map((row) => ({
-      id: row.id,
-      name: row.name,
-      race: row.race,
-      className: row.class_name,
-      spec: row.spec,
-      level: Number(row.level) || 0,
-      realm: row.realm || "",
-      guildName: row.guild_name || "",
-      organizationName: row.organization_name || "",
-      memberName: row.member_name,
-      memberRank: row.member_rank,
-      lastSeenAt: row.last_seen_at || null,
-      isMain: Boolean(row.is_main),
-    }));
-
-    const professions = db
-      .prepare(`
-      SELECT p.name, COUNT(DISTINCT p.character_id) AS characters
-      FROM telemetry_professions p
-      JOIN characters c ON c.id = p.character_id
-      JOIN members m ON m.id = c.member_id AND m.status = 'active'
-      GROUP BY p.name COLLATE NOCASE
-      ORDER BY characters DESC, p.name COLLATE NOCASE
-    `)
-      .all()
-      .map((row) => ({
-        name: row.name,
-        characters: Number(row.characters) || 0,
-      }));
-
-    const recipeCount = Number(
-      db
-        .prepare(`
-      SELECT COUNT(*) AS count FROM telemetry_recipes r
-      JOIN characters c ON c.id = r.character_id
-      JOIN members m ON m.id = c.member_id AND m.status = 'active'
-      WHERE r.known = 1
-    `)
-        .get()?.count || 0,
-    );
-
-    const classDistribution = db
-      .prepare(`
-      SELECT c.class_name AS name, COUNT(*) AS count
-      FROM characters c JOIN members m ON m.id = c.member_id AND m.status = 'active'
-      WHERE c.class_name <> ''
-      GROUP BY c.class_name COLLATE NOCASE
-      ORDER BY count DESC, name COLLATE NOCASE
-    `)
-      .all()
-      .map((row) => ({
-        name: row.name,
-        count: Number(row.count) || 0,
-      }));
-
-    const specDistribution = db
-      .prepare(`
-      SELECT c.spec AS name, COUNT(*) AS count
-      FROM characters c JOIN members m ON m.id = c.member_id AND m.status = 'active'
-      WHERE c.spec <> ''
-      GROUP BY c.spec COLLATE NOCASE
-      ORDER BY count DESC, name COLLATE NOCASE
-    `)
-      .all()
-      .map((row) => ({
-        name: row.name,
-        count: Number(row.count) || 0,
-      }));
-
-    return {
-      summary: {
-        characterCount: characters.length,
-        professionCount: professions.length,
-        recipeCount,
-      },
-      characters: [...characters].sort((a, b) =>
-        String(b.lastSeenAt || "").localeCompare(String(a.lastSeenAt || "")),
-      ),
-      professions,
-      classDistribution,
-      specDistribution,
-    };
-  });
-}
-
-export function readCharacterArmory(characterId) {
-  return withGuildDatabase((db) => {
-    const row = characterRows(db).find(
-      (item) => item.id === String(characterId),
-    );
-    if (!row) return null;
-
-    let payload = {};
-    if (row.latest_snapshot_id) {
-      payload = parseJson(
-        db
-          .prepare(
-            "SELECT payload_json FROM character_snapshots WHERE id = ?",
-          )
-          .get(row.latest_snapshot_id)?.payload_json,
-        {},
-      );
-    } else {
-      payload = parseJson(
-        db
-          .prepare(
-            "SELECT payload_json FROM character_snapshots WHERE character_id = ? ORDER BY captured_at DESC, id DESC LIMIT 1",
-          )
-          .get(row.id)?.payload_json,
-        {},
-      );
-    }
-
-    const professions = db
-      .prepare(
-        "SELECT * FROM telemetry_professions WHERE character_id = ? ORDER BY name COLLATE NOCASE",
-      )
-      .all(row.id)
-      .map(professionFromRow);
-    const recipes = db
-      .prepare(
-        "SELECT * FROM telemetry_recipes WHERE character_id = ? ORDER BY profession_name COLLATE NOCASE, name COLLATE NOCASE",
-      )
-      .all(row.id)
-      .map(recipeFromRow);
-
-    return {
-      character: {
-        id: row.id,
-        memberId: row.member_id,
-        memberName: row.member_name,
-        memberRank: row.member_rank,
-        name: text(payload?.name, 32) || row.name,
-        race: entityName(payload?.race) || row.race,
-        className: entityName(payload?.class) || row.class_name,
-        spec: entityName(payload?.specialization) || row.spec,
-        level: integer(payload?.level, Number(row.level) || 0) ?? 0,
-        realm:
-          text(payload?.realm ?? payload?.realmName, 96) || row.realm || "",
-        region: text(payload?.region, 24) || row.region || "",
-        guildName: entityName(payload?.guild) || row.guild_name || "",
-        organization: row.organization_id
-          ? { id: row.organization_id, name: row.organization_name || "" }
-          : null,
-        lastSeenAt: text(payload?.lastSeen, 48) || row.last_seen_at || null,
-        gameBuild: gameBuildLabel(payload) || row.game_build || "",
-        schemaVersion:
-          integer(payload?.schemaVersion, Number(row.schema_version) || 0) ?? 0,
-        isMain: Boolean(row.is_main),
-      },
-      stats: stats(payload),
-      equipment: normalizeEquipment(payload),
-      talents: normalizeTalents(payload),
-      professions,
-      recipes,
-      capturedAt: row.last_seen_at || null,
-    };
-  });
 }
 
 export function searchRecipes(query = "", { limit = 100 } = {}) {

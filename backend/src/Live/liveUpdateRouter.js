@@ -37,6 +37,7 @@ export function createLiveUpdateRouter({ heartbeatMs = 20_000 } = {}) {
           source: event.source,
           entityId: event.entityId,
           actorId: event.actorId,
+          detail: event.detail,
           at: event.at,
         }, event.id)
       },
