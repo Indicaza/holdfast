@@ -182,3 +182,22 @@ test('a members-only page waits for the session check without flashing the home 
   release()
   await expect(page.locator('main input[type="search"]')).toBeVisible()
 })
+
+test('returning to a page shows its data at once without fetching it again', async ({ page, context }) => {
+  await authenticate(context, 'member')
+  let directoryReads = 0
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/guild/members') directoryReads += 1
+  })
+  await page.goto('/members')
+  await expect(page.locator('main input[type="search"]')).toBeVisible()
+  await expect.poll(() => directoryReads).toBe(1)
+
+  await page.locator('.navbar a[href="/charter"]').first().click()
+  await expect(page).toHaveURL(/\/charter$/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/members$/)
+  await expect(page.locator('.members-page__tools')).toBeVisible()
+  await page.waitForTimeout(300)
+  expect(directoryReads).toBe(1)
+})
