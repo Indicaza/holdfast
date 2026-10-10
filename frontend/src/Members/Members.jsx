@@ -6,6 +6,7 @@ import { useSession } from '../Auth/sessionContext.js'
 import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import { navigate } from '../Navigation/navigation.js'
+import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -264,7 +265,9 @@ function Members() {
 
   const closeGate = () => navigate('/')
 
-  if (session.status === 'loading' || session.status === 'error') {
+  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+
+  if (session.status === 'error') {
     return (
       <Home
         overlay={

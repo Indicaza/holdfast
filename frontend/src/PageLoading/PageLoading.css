@@ -1,6 +1,6 @@
 .page-loading {
   display: grid;
-  min-height: 100svh;
+  min-height: calc(100svh - var(--nav-height));
   place-content: center;
   justify-items: center;
   gap: var(--space-4);
