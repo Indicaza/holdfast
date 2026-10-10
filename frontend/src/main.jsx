@@ -6,7 +6,6 @@ import App from './App.jsx'
 import AppErrorBoundary from './AppErrorBoundary/AppErrorBoundary.jsx'
 import { SessionProvider } from './Auth/SessionProvider.jsx'
 import RecruitmentProvider from './Join/RecruitmentProvider.jsx'
-import LiveRouteBoundary from './Live/LiveRouteBoundary.jsx'
 import { LiveUpdatesProvider } from './Live/LiveUpdatesProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -15,9 +14,7 @@ createRoot(document.getElementById('root')).render(
       <SessionProvider>
         <LiveUpdatesProvider>
           <RecruitmentProvider>
-            <LiveRouteBoundary>
-              <App />
-            </LiveRouteBoundary>
+            <App />
           </RecruitmentProvider>
         </LiveUpdatesProvider>
       </SessionProvider>

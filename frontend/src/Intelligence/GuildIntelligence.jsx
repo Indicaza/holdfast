@@ -17,6 +17,7 @@ import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
 import RosterComposition from './RosterComposition.jsx'
+import { navigate } from '../Navigation/navigation.js'
 import './GuildIntelligence.css'
 
 const EMPTY_INTELLIGENCE = normalizeIntelligence({})
@@ -391,7 +392,7 @@ export default function GuildIntelligence() {
     }
   }
 
-  const closeGate = () => window.location.assign('/')
+  const closeGate = () => navigate('/')
   const freshCharacters = useMemo(() => freshSyncCount(data.characters), [data.characters])
 
   if (session.status === 'loading' || session.status === 'error' || !session.authenticated) {

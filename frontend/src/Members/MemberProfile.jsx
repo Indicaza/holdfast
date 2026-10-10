@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
@@ -8,6 +9,7 @@ import MemberProfileEditor from './MemberProfileEditor.jsx'
 import MemberBilletControl from './MemberBilletControl.jsx'
 import MemberRankControl from './MemberRankControl.jsx'
 import RankInsignia from './RankInsignia.jsx'
+import { navigate } from '../Navigation/navigation.js'
 import './MemberProfile.css'
 
 function displayName(member) {
@@ -508,6 +510,14 @@ function MemberProfile({ memberId }) {
     ? '/api/guild/members/me'
     : `/api/guild/members/${encodeURIComponent(memberId)}`
 
+  // Live member, rank and authority changes refresh the profile in place; an
+  // open editor keeps its own draft.
+  const [revision, setRevision] = useState(0)
+  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
+    enabled: session.authenticated,
+  })
+  const [loadedEndpoint, setLoadedEndpoint] = useState('')
+
   useEffect(() => {
     if (!session.authenticated) {
       setStatus('ready')
@@ -516,7 +526,8 @@ function MemberProfile({ memberId }) {
 
     const controller = new AbortController()
     let active = true
-    setStatus('loading')
+    const background = loadedEndpoint === endpoint
+    if (!background) setStatus('loading')
 
     async function loadProfile() {
       try {
@@ -535,8 +546,10 @@ function MemberProfile({ memberId }) {
           Array.isArray(billetResult?.billets) ? billetResult.billets : [],
         )
         setStatus(result?.member ? 'ready' : 'not-found')
+        setLoadedEndpoint(endpoint)
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
+        if (background && error?.status !== 404) return
         setStatus(error?.status === 404 ? 'not-found' : 'error')
       }
     }
@@ -547,7 +560,9 @@ function MemberProfile({ memberId }) {
       active = false
       controller.abort()
     }
-  }, [endpoint, session.authenticated])
+    // loadedEndpoint only tells a refresh from a first load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint, revision, session.authenticated])
 
   const profileUrl = useMemo(() => {
     if (!member?.id) return ''
@@ -568,7 +583,7 @@ function MemberProfile({ memberId }) {
   }
 
   const returnTo = isSelfRoute ? '/members/me' : `/members/${memberId}`
-  const closeGate = () => window.location.assign('/')
+  const closeGate = () => navigate('/')
 
   if (session.status === 'loading' || session.status === 'error') {
     return (

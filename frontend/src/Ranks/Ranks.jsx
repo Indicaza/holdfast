@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import { useSession } from '../Auth/sessionContext.js'
 import PageShell from '../PageShell/PageShell.jsx'
 import RankInsignia from '../Members/RankInsignia.jsx'
@@ -252,6 +253,12 @@ function Ranks() {
   const canManageBilletDefinitions =
     canCreateBillets || canEditBillets || canDeleteBillets
 
+  // Live rank and authority changes refresh the catalog in place.
+  const [revision, setRevision] = useState(0)
+  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
+    enabled: session.authenticated,
+  })
+
   useEffect(() => {
     if (!session.authenticated) {
       setCatalog(null)
@@ -265,7 +272,7 @@ function Ranks() {
     let active = true
 
     async function loadAuthority() {
-      setCatalogStatus('loading')
+      if (revision === 0) setCatalogStatus('loading')
 
       try {
         const result = await apiJson('/api/guild/authority', {
@@ -277,7 +284,7 @@ function Ranks() {
         setCatalogStatus('ready')
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
-        setCatalogStatus('error')
+        if (revision === 0) setCatalogStatus('error')
       }
     }
 
@@ -287,7 +294,7 @@ function Ranks() {
       active = false
       controller.abort()
     }
-  }, [session.authenticated])
+  }, [revision, session.authenticated])
 
   const rankScopes = useMemo(
     () =>

@@ -121,3 +121,25 @@ test('failed sign-out is visible and leaves the verified account available', asy
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
   await expect(signIn(page)).toBeVisible()
 })
+
+test('returning to the tab rechecks the session quietly and reports the timezone once', async ({ page, context }) => {
+  await authenticate(context, 'member')
+  let timezoneWrites = 0
+  page.on('request', (request) => {
+    if (request.method() === 'PATCH' && new URL(request.url()).pathname === '/api/guild/members/me/timezone') timezoneWrites += 1
+  })
+  await page.goto('/members')
+  await expect(account(page)).toBeVisible()
+  await page.locator('.navbar').evaluate((navbar) => { navbar.dataset.probe = 'kept' })
+
+  for (let index = 0; index < 3; index += 1) {
+    const recheck = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/me')
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await recheck
+  }
+  await page.waitForTimeout(300)
+
+  expect(timezoneWrites).toBeLessThanOrEqual(1)
+  await expect(page.locator('.navbar')).toHaveAttribute('data-probe', 'kept')
+  await expect(account(page)).toBeVisible()
+})

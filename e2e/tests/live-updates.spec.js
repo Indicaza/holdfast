@@ -135,6 +135,11 @@ test('an open Armory refreshes in place for its own character and ignores the re
     await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
     expect((await recipeBook).status()).toBe(200)
 
+    // The character's own creation is announced once its read model settles
+    // (the server coalesces a burst for 750 ms), which can land after the
+    // modal opened and refresh it. Count only what happens after that.
+    await page.waitForTimeout(1200)
+
     // Someone else's character changing leaves the open modal alone.
     const readsBeforeUnrelated = armoryReads
     const unrelated = await submitTelemetry(senderPage)
@@ -155,6 +160,44 @@ test('an open Armory refreshes in place for its own character and ignores the re
     // The open character is in the URL, so a reload reopens it.
     await page.reload()
     await expect(page.getByRole('dialog')).toHaveAttribute('aria-label', character.fixtureName)
+  } finally {
+    await sender.close()
+    await viewer.close()
+  }
+})
+
+test('another member\'s change refreshes the directory in place without remounting the app', async ({ browser }) => {
+  const viewer = await browser.newContext()
+  const sender = await browser.newContext()
+  await authenticate(viewer, 'member')
+  await authenticate(sender, 'officer')
+  const page = await viewer.newPage()
+  const senderPage = await sender.newPage()
+
+  try {
+    const liveStream = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/notifications/live')
+    await page.goto('/members')
+    await liveStream
+    const search = page.locator('main input[type="search"]')
+    await search.fill('Owen')
+    // Tag the navbar node: a remount would replace it.
+    await page.locator('.navbar').evaluate((navbar) => { navbar.dataset.probe = 'kept' })
+
+    await senderPage.goto('/')
+    const directoryRefresh = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/guild/members')
+    const saved = await senderPage.evaluate(async () => {
+      const response = await fetch('/api/guild/members/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: { bio: `Live refresh ${Date.now()}` } }),
+      })
+      return response.status
+    })
+    expect(saved).toBe(200)
+    await directoryRefresh
+
+    await expect(page.locator('.navbar')).toHaveAttribute('data-probe', 'kept')
+    await expect(search).toHaveValue('Owen')
   } finally {
     await sender.close()
     await viewer.close()

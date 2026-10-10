@@ -1,10 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
-import { matchesLiveTopics } from './liveRouteTopics.js'
-import { useLiveUpdates } from './liveUpdatesContext.js'
-
-const REFRESH_DEBOUNCE_MS = 300
+import { useLiveRefresh } from './liveUpdatesContext.js'
 
 // Fetches a JSON resource and keeps it current with live updates.
 //
@@ -17,15 +14,14 @@ const REFRESH_DEBOUNCE_MS = 300
 //   matches  optional (event) => boolean to narrow further, e.g. one entity
 //   select   optional (payload) => data
 export function useLiveResource(url, { topics = [], matches = null, select = null, enabled = true } = {}) {
-  const { event } = useLiveUpdates()
   const [state, setState] = useState({ status: enabled && url ? 'loading' : 'idle', data: null, error: null, refreshing: false })
   const [version, setVersion] = useState(0)
-  const options = useRef({ topics, matches, select })
+  const options = useRef({ select })
   const loadedUrl = useRef(null)
 
   // The latest options, for the effects below (layout effects run first).
   useLayoutEffect(() => {
-    options.current = { topics, matches, select }
+    options.current = { select }
   })
 
   // A new resource starts over; the same resource refreshes in place.
@@ -55,15 +51,8 @@ export function useLiveResource(url, { topics = [], matches = null, select = nul
     return () => controller.abort()
   }, [url, enabled, version])
 
-  useEffect(() => {
-    if (!event || !enabled || !url) return undefined
-    const { topics: wanted, matches: narrow } = options.current
-    if (!matchesLiveTopics(event.topics, wanted)) return undefined
-    // A reconnect ('*') may have missed anything, so it always refreshes.
-    if (narrow && !event.topics.includes('*') && !narrow(event)) return undefined
-    const timer = window.setTimeout(() => setVersion((current) => current + 1), REFRESH_DEBOUNCE_MS)
-    return () => window.clearTimeout(timer)
-  }, [event, enabled, url])
+  // A matching live event refetches in the background (see above).
+  useLiveRefresh(topics, () => setVersion((current) => current + 1), { matches, enabled: Boolean(enabled && url) })
 
   return state
 }

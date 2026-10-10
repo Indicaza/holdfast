@@ -48,6 +48,8 @@ export function observeLiveMutation(req, res, next) {
 
   res.once('finish', () => {
     if (res.statusCode < 200 || res.statusCode >= 400) return
+    // A route that changed nothing says so, and nobody needs to refresh.
+    if (res.locals?.unchanged) return
     for (const event of classifyLiveMutation(req)) publishLiveUpdate(event)
   })
 

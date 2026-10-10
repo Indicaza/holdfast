@@ -279,6 +279,7 @@ export function createMemberRouter() {
         return;
       }
 
+      res.locals.unchanged = result.status !== "updated";
       res.set("Cache-Control", "no-store");
       res.json({
         timezone: result.member.profile.timezone,

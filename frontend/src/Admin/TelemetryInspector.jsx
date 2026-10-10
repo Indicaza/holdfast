@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 
 import {
   humanizeTelemetryName,
@@ -154,8 +155,8 @@ export default function TelemetryInspector() {
     }
   }, [])
 
-  const loadHistory = useCallback(async () => {
-    setLoading(true)
+  const loadHistory = useCallback(async ({ quiet = false } = {}) => {
+    if (!quiet) setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
@@ -169,9 +170,9 @@ export default function TelemetryInspector() {
       setRecords(historyBody.records || [])
       setHasMore(Boolean(historyBody.pagination?.hasMore))
     } catch (loadError) {
-      setError(loadError.message || 'Unable to load Guildweaver telemetry.')
+      if (!quiet) setError(loadError.message || 'Unable to load Guildweaver telemetry.')
     } finally {
-      setLoading(false)
+      if (!quiet) setLoading(false)
     }
   }, [characterId, debouncedCharacter, debouncedPayload, debouncedTimeWindow, offset])
 
@@ -179,6 +180,13 @@ export default function TelemetryInspector() {
     loadSummary()
     loadHistory()
   }, [loadHistory, loadSummary])
+
+  // New telemetry (character changes, bridge activity) refreshes the summary
+  // and the current page of history in place, keeping filters and selection.
+  useLiveRefresh(['guildweaver', 'intelligence'], () => {
+    loadSummary()
+    loadHistory({ quiet: true })
+  }, { debounceMs: 1000 })
 
   const selectRecord = useCallback(async (record) => {
     setSelected(record)
