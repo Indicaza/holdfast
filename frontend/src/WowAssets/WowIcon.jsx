@@ -283,12 +283,26 @@ export function FloatingTooltip({ anchor, side = 'right', id, className = '', ch
   )
 }
 
+function focusVisible(event) {
+  try {
+    return event.target.matches(':focus-visible')
+  } catch {
+    return true
+  }
+}
+
 export function ItemHoverCard({ item, children, side = 'right', className = '', tooltipClassName = '' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
   if (!item) return children
   // The wrapper is display: contents (no box), so measure the trigger inside it.
-  const show = (event) => setAnchor((event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect())
+  const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()
+  const show = (event) => setAnchor(measure(event))
+  // Keyboard focus shows the tooltip; the focus a mouse click leaves behind
+  // must not keep it open after the pointer moves on.
+  const showOnFocus = (event) => {
+    if (focusVisible(event)) setAnchor(measure(event))
+  }
   const hide = () => setAnchor(null)
   return (
     <span
@@ -296,7 +310,7 @@ export function ItemHoverCard({ item, children, side = 'right', className = '', 
       aria-describedby={anchor ? tooltipId : undefined}
       onMouseEnter={show}
       onMouseLeave={hide}
-      onFocus={show}
+      onFocus={showOnFocus}
       onBlur={hide}
     >
       {children}

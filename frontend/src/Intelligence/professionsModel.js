@@ -219,3 +219,18 @@ export function withItemTooltip(item, index) {
     tooltip: hasTooltip(item) ? item.tooltip : known.tooltip,
   }
 }
+
+// How many times the character can craft a recipe from what it carries, as the
+// game shows beside each recipe ([n]); null when its bags are unknown or the
+// recipe lists no reagents.
+export function craftableCount(recipe, carried) {
+  const reagents = Array.isArray(recipe?.reagents) ? recipe.reagents.filter((reagent) => reagent?.required !== false) : []
+  if (!carried || !reagents.length) return null
+  let count = Infinity
+  for (const reagent of reagents) {
+    const needed = Number(reagent.quantity) || 1
+    const owned = Number.isFinite(Number(reagent.itemId)) ? carried.get(Number(reagent.itemId)) || 0 : 0
+    count = Math.min(count, Math.floor(owned / needed))
+  }
+  return Number.isFinite(count) ? count : null
+}

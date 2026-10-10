@@ -136,3 +136,29 @@ test('reagents borrow tooltips and missing names or icons from the same books', 
   const unknown = { itemId: 4000, name: 'Mystery' }
   assert.equal(withItemTooltip(unknown, index), unknown)
 })
+
+test('craftable counts come from the carried reagents, as the game shows them', async () => {
+  const { craftableCount } = await import('../src/Intelligence/professionsModel.js')
+  const recipe = { reagents: [{ itemId: 2770, quantity: 2 }, { itemId: 2589, quantity: 1 }] }
+  assert.equal(craftableCount(recipe, new Map([[2770, 7], [2589, 5]])), 3, 'limited by the scarcest reagent')
+  assert.equal(craftableCount(recipe, new Map([[2770, 7]])), 0)
+  assert.equal(craftableCount(recipe, null), null, 'unknown bags: no count')
+  assert.equal(craftableCount({ reagents: [] }, new Map()), null, 'no reagents: no count')
+  assert.equal(craftableCount({ reagents: [{ itemId: 1, quantity: 1, required: false }, { itemId: 2, quantity: 1 }] }, new Map([[2, 4]])), 4, 'optional reagents do not limit')
+})
+
+test('carried counts add up the bags and reagent bag but not the keyring', async () => {
+  const { carriedCounts } = await import('../src/Intelligence/inventoryModel.js')
+  const slot = (itemId, count) => ({ item: { itemId, count } })
+  const counts = carriedCounts({
+    windows: [
+      { kind: 'reagent', slots: [slot(2770, 20)] },
+      { kind: 'keyring', slots: [slot(5396, 1)] },
+      { kind: 'combined', slots: [slot(2770, 5), { item: null }, slot(6948, 1)] },
+    ],
+  })
+  assert.equal(counts.get(2770), 25)
+  assert.equal(counts.get(6948), 1)
+  assert.equal(counts.has(5396), false)
+  assert.equal(carriedCounts(null), null)
+})

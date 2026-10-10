@@ -814,3 +814,18 @@ button.prof-spell:hover strong {
     max-height: 18rem;
   }
 }
+
+/* "[n]": how many the character can craft from its bags. */
+.prof-recipe__craftable {
+  font-style: normal;
+}
+
+/* A reagent the character is short of: greyed out, as in game. */
+.prof-reagent.is-short .wow-icon img {
+  filter: grayscale(1) brightness(.6);
+}
+
+.prof-reagent.is-short .prof-reagent__name,
+.prof-reagent.is-short .prof-reagent__count {
+  color: #808080;
+}

@@ -180,6 +180,23 @@ export function normalizeInventory(value) {
   }
 }
 
+// How many of each item the character carries (bags and reagent bag; the game
+// counts reagents there, not on the keyring or in the bank), or null when its
+// bags have not synced.
+export function carriedCounts(inventory) {
+  if (!inventory) return null
+  const counts = new Map()
+  for (const window of array(inventory.windows)) {
+    if (window.kind === 'keyring') continue
+    for (const { item } of window.slots) {
+      const id = Number(item?.itemId)
+      if (!Number.isFinite(id)) continue
+      counts.set(id, (counts.get(id) || 0) + (Number(item.count) || 1))
+    }
+  }
+  return counts
+}
+
 // Every carried item once, aggregated across stacks and grouped by the game's
 // item class. Quality sorting makes valuable/interesting items visually rise
 // inside each group while material classes stay at the top of the page.

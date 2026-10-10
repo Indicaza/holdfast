@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 
-import WowIcon, { ItemHoverCard } from '../WowAssets/WowIcon.jsx'
+import WowIcon from '../WowAssets/WowIcon.jsx'
+import { GameTooltipHover } from './GameTooltip.jsx'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import {
   MISSING_PRIMARY_TEXT,
   cooldownRemaining,
+  craftableCount,
   flattenRecipeTree,
   itemTooltipIndex,
   overviewSlots,
@@ -132,7 +134,7 @@ function SpellButton({ profession, onOpen }) {
     </>
   )
   return (
-    <ItemHoverCard item={textTooltip(profession.name, skillSummary(profession))} side="top" tooltipClassName="prof-tooltip--text">
+    <GameTooltipHover item={textTooltip(profession.name, skillSummary(profession))} side="top" className="prof-tooltip--text">
       {onOpen ? (
         <button type="button" className="prof-spell" onClick={() => onOpen(profession.key)} aria-label={`Open ${profession.name}`}>
           {content}
@@ -140,7 +142,7 @@ function SpellButton({ profession, onOpen }) {
       ) : (
         <div className="prof-spell prof-spell--static" tabIndex={0}>{content}</div>
       )}
-    </ItemHoverCard>
+    </GameTooltipHover>
   )
 }
 
@@ -214,7 +216,7 @@ function ItemPreview({ item }) {
   )
 }
 
-function Schematic({ recipe, tooltips, theme }) {
+function Schematic({ recipe, tooltips, theme, carried }) {
   // Captured once per mount so render stays pure; cooldowns are minute-rounded.
   const [now] = useState(() => Date.now())
   const style = { '--prof-schematic': art(`schematic-${theme || 'blacksmithing'}`) }
@@ -232,7 +234,7 @@ function Schematic({ recipe, tooltips, theme }) {
   return (
     <div className="prof-schematic" style={style}>
       <header className="prof-schematic__head">
-        <ItemHoverCard item={crafted || recipeTooltip(recipe)}>
+        <GameTooltipHover item={crafted || recipeTooltip(recipe)}>
           <span className="prof-schematic__output" tabIndex={0}>
             <WowIcon
               iconFileId={crafted?.iconFileDataId ?? crafted?.iconFileId ?? recipe.iconFileId}
@@ -244,11 +246,11 @@ function Schematic({ recipe, tooltips, theme }) {
             />
             {quantity ? <span className="prof-schematic__count">{quantity}</span> : null}
           </span>
-        </ItemHoverCard>
+        </GameTooltipHover>
         <div className="prof-schematic__title">
-          <ItemHoverCard item={recipeTooltip(recipe)} side="left">
+          <GameTooltipHover item={recipeTooltip(recipe)} side="left">
             <h4 tabIndex={0} className={crafted ? `item-quality-${crafted.qualityId ?? 1}` : 'prof-schematic__spell'}>{recipe.name}</h4>
-          </ItemHoverCard>
+          </GameTooltipHover>
           {recipe.difficulty ? (
             <p className={`prof-schematic__difficulty prof-difficulty--${recipe.difficulty}`}>
               {DIFFICULTY_LABELS[recipe.difficulty] || recipe.difficulty}
@@ -276,17 +278,22 @@ function Schematic({ recipe, tooltips, theme }) {
           <ul>
             {reagents.map((raw, index) => {
               const reagent = withItemTooltip(raw, tooltips)
+              const needed = Number(reagent.quantity) || 1
+              // With the character's bags synced, the count reads owned/needed
+              // and a reagent it is short of greys out, as in game.
+              const owned = carried ? carried.get(Number(reagent.itemId)) || 0 : null
+              const short = owned !== null && owned < needed
               return (
                 <li key={`${reagent.itemId || reagent.name}-${index}`}>
-                  <ItemHoverCard item={reagent}>
-                    <span className="prof-reagent" tabIndex={0}>
+                  <GameTooltipHover item={reagent}>
+                    <span className={`prof-reagent${short ? ' is-short' : ''}`} tabIndex={0}>
                       <span className="prof-reagent__icon">
                         <WowIcon iconFileId={reagent.iconFileId} itemId={reagent.itemId} label={reagent.name} quality={reagent.qualityId} size={36} />
-                        <span className="prof-reagent__count">{reagent.quantity || 1}</span>
+                        <span className="prof-reagent__count">{owned === null ? needed : `${owned}/${needed}`}</span>
                       </span>
                       <span className={`prof-reagent__name item-quality-${reagent.qualityId ?? 1}`}>{reagent.name || `Item ${reagent.itemId}`}</span>
                     </span>
-                  </ItemHoverCard>
+                  </GameTooltipHover>
                 </li>
               )
             })}
@@ -298,7 +305,7 @@ function Schematic({ recipe, tooltips, theme }) {
   )
 }
 
-function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, searching }) {
+function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, searching, carried }) {
   const expanded = searching || open(node.id)
   return (
     <section className="prof-category" data-depth={node.depth}>
@@ -320,19 +327,20 @@ function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, s
               {node.recipes.map((recipe) => {
                 const key = recipeKey(recipe)
                 const isSelected = selectedKey === key
+                const craftable = craftableCount(recipe, carried)
                 return (
                   <li key={key}>
-                    <ItemHoverCard item={recipeHoverItem(recipe, tooltips)} side="right">
+                    <GameTooltipHover item={recipeHoverItem(recipe, tooltips)} side="right">
                       <button
                         type="button"
                         className={`prof-recipe prof-difficulty--${recipe.difficulty || 'none'}${isSelected ? ' is-selected' : ''}`}
                         onClick={() => onSelect(key)}
                         aria-pressed={isSelected}
                       >
-                        <span>{recipe.name}</span>
+                        <span>{recipe.name}{craftable ? <em className="prof-recipe__craftable"> [{craftable}]</em> : null}</span>
                         {Number(recipe.skillUps) > 1 && recipe.difficulty !== 'trivial' ? <small>{recipe.skillUps}</small> : null}
                       </button>
-                    </ItemHoverCard>
+                    </GameTooltipHover>
                   </li>
                 )
               })}
@@ -348,6 +356,7 @@ function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, s
               onSelect={onSelect}
               tooltips={tooltips}
               searching={searching}
+              carried={carried}
             />
           ))}
         </>
@@ -356,7 +365,7 @@ function CategoryNode({ node, open, onToggle, selectedKey, onSelect, tooltips, s
   )
 }
 
-function CraftingPage({ profession, recipes, tooltips }) {
+function CraftingPage({ profession, recipes, tooltips, carried }) {
   const [query, setQuery] = useState('')
   const [selectedKey, setSelectedKey] = useState(null)
   // Categories start open, as in game.
@@ -399,12 +408,13 @@ function CraftingPage({ profession, recipes, tooltips }) {
                   onSelect={setSelectedKey}
                   tooltips={tooltips}
                   searching={searching}
+                  carried={carried}
                 />
               ))}
               {!visible.length ? <p className="prof-list__none">No recipes match.</p> : null}
             </div>
           </div>
-          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} tooltips={tooltips} theme={theme} />
+          <Schematic key={selected ? recipeKey(selected) : 'none'} recipe={selected} tooltips={tooltips} theme={theme} carried={carried} />
         </div>
       ) : (
         <div className="prof-crafting__waiting">
@@ -416,7 +426,7 @@ function CraftingPage({ profession, recipes, tooltips }) {
   )
 }
 
-export default function ProfessionsPane({ professions = [], recipes = [] }) {
+export default function ProfessionsPane({ professions = [], recipes = [], carried = null }) {
   const [view, setView] = useState('overview')
   const rail = useMemo(() => railProfessions(professions, recipes), [professions, recipes])
   const openable = useMemo(() => new Set(rail.map((profession) => profession.key)), [rail])
@@ -444,12 +454,12 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
         </header>
         <div className="professions-pane__content">
           {active
-            ? <CraftingPage key={active.key} profession={active} recipes={activeRecipes} tooltips={tooltips} />
+            ? <CraftingPage key={active.key} profession={active} recipes={activeRecipes} tooltips={tooltips} carried={carried} />
             : <Overview professions={professions} openable={openable} onOpen={setView} />}
         </div>
       </div>
       <nav className="professions-pane__rail" aria-label="Profession pages">
-        <ItemHoverCard item={textTooltip('Professions')} side="left" tooltipClassName="prof-tooltip--text">
+        <GameTooltipHover item={textTooltip('Professions')} side="left" className="prof-tooltip--text">
           <button
             type="button"
             className={`prof-rail-button${!active ? ' is-active' : ''}`}
@@ -459,9 +469,9 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
           >
             <WowIcon src={SIDE_TAB_ICON} label="Professions" size={40} />
           </button>
-        </ItemHoverCard>
+        </GameTooltipHover>
         {rail.map((profession) => (
-          <ItemHoverCard key={profession.key} item={textTooltip(profession.name, skillSummary(profession))} side="left" tooltipClassName="prof-tooltip--text">
+          <GameTooltipHover key={profession.key} item={textTooltip(profession.name, skillSummary(profession))} side="left" className="prof-tooltip--text">
             <button
               type="button"
               className={`prof-rail-button${active?.key === profession.key ? ' is-active' : ''}`}
@@ -472,7 +482,7 @@ export default function ProfessionsPane({ professions = [], recipes = [] }) {
             >
               <WowIcon iconFileId={profession.iconFileId} label={profession.name} size={40} />
             </button>
-          </ItemHoverCard>
+          </GameTooltipHover>
         ))}
       </nav>
     </div>
