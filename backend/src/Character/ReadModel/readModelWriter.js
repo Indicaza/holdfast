@@ -9,14 +9,12 @@
 // whenever one changes.
 
 import {
-  ensureGuildweaverCharacterIdentitySchema,
   readGuildweaverCharacterAliasInDatabase,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
 } from "../characterIdentityRepository.js";
 import { preserveProfessionRecipes } from "../characterSnapshotIntegrity.js";
 import { ensureTelemetryProjectionSchema, entityName, normalizeOrganization } from "../telemetryProjection.js";
-import { ensureTelemetryStateSchema } from "../Telemetry/telemetryStateRepository.js";
 import { parseTelemetryJson } from "../Telemetry/telemetryJson.js";
 import { composeProfessions, composedSnapshot } from "./composeArmory.js";
 import { identityFromTelemetry, sectionsFromTelemetry } from "./projectors.js";
@@ -260,7 +258,6 @@ export function refreshCharacterDerivedInDatabase(db, characterId, changed = nul
 // The character a raw (addon) character id belongs to, creating it from its
 // own identity telemetry when this is the first the website hears of it.
 function resolveCharacterInDatabase(db, { memberId, deviceId, rawCharacterId, identity, installationId, observedAt }) {
-  ensureGuildweaverCharacterIdentitySchema(db);
   ensureTelemetryProjectionSchema(db);
   const aliased = readGuildweaverCharacterAliasInDatabase({ db, memberId, deviceId, rawCharacterId });
   if (aliased) return { characterId: aliased, associated: false };
@@ -312,7 +309,6 @@ function resolveCharacterInDatabase(db, { memberId, deviceId, rawCharacterId, id
 // waiting under the raw id. Associate and project them now.
 export function replayPendingTelemetryInDatabase(db, { memberId, rawCharacterId, characterId }) {
   if (!rawCharacterId || !characterId) return;
-  ensureTelemetryStateSchema(db);
   db.prepare(`
     UPDATE guildweaver_telemetry_latest_state SET canonical_character_id = ?
     WHERE member_id = ? AND raw_character_id = ? AND canonical_character_id <> ?

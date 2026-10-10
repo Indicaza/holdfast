@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DatabaseSync } from "node:sqlite";
+import { migrateGuildDatabase } from "../src/Data/database.js";
 
 import {
   QuestCompletionError,
@@ -56,6 +57,7 @@ function member(id = "member-one", displayName = "Rook") {
 
 function withDb(callback) {
   const db = new DatabaseSync(":memory:");
+  migrateGuildDatabase(db);
 
   try {
     return callback(db);

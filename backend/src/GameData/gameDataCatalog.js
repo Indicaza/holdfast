@@ -57,32 +57,6 @@ export function gameBuildKey(value) {
   );
 }
 
-export function ensureGameDataCatalogSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS game_data_catalog (
-      entity_type TEXT NOT NULL,
-      entity_id TEXT NOT NULL,
-      game_build TEXT NOT NULL DEFAULT '',
-      locale TEXT NOT NULL DEFAULT '${DEFAULT_LOCALE}',
-      name TEXT NOT NULL DEFAULT '',
-      icon_file_id INTEGER,
-      quality_id INTEGER,
-      metadata_json TEXT NOT NULL DEFAULT '{}',
-      source TEXT NOT NULL DEFAULT 'telemetry',
-      source_priority INTEGER NOT NULL DEFAULT 20,
-      observed_at TEXT NOT NULL,
-      expires_at TEXT NOT NULL DEFAULT '',
-      updated_at TEXT NOT NULL,
-      PRIMARY KEY(entity_type, entity_id, game_build, locale)
-    );
-
-    CREATE INDEX IF NOT EXISTS game_data_catalog_lookup_idx
-      ON game_data_catalog(entity_type, entity_id, locale, game_build);
-    CREATE INDEX IF NOT EXISTS game_data_catalog_source_idx
-      ON game_data_catalog(source, updated_at DESC);
-  `);
-}
-
 function cleanMetadata(value) {
   const source = object(value);
   const result = {};
@@ -94,7 +68,6 @@ function cleanMetadata(value) {
 }
 
 export function upsertGameDataEntityInDatabase(db, input = {}) {
-  ensureGameDataCatalogSchema(db);
   const type = text(input.type, 32).toLowerCase();
   const id = text(input.id, 96);
   if (!ENTITY_TYPES.has(type) || !id) return null;
@@ -254,7 +227,6 @@ function talentEntries(snapshot) {
 }
 
 export function learnGameDataFromSnapshotInDatabase(db, snapshot = {}, options = {}) {
-  ensureGameDataCatalogSchema(db);
   const context = {
     gameBuild: text(options.gameBuild || gameBuildKey(snapshot), 64),
     locale: text(options.locale || DEFAULT_LOCALE, 16) || DEFAULT_LOCALE,
@@ -348,7 +320,6 @@ function bucketName(type) {
 }
 
 export function resolveGameDataBundleInDatabase(db, references = {}, options = {}) {
-  ensureGameDataCatalogSchema(db);
   const gameBuild = text(options.gameBuild, 64);
   const locale = text(options.locale || DEFAULT_LOCALE, 16) || DEFAULT_LOCALE;
   const bundle = {

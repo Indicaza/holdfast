@@ -1,5 +1,4 @@
 import { withGuildDatabase } from "../../Data/database.js";
-import { ensureTelemetryRecordSchema } from "../telemetryRecordRepository.js";
 import { encodeTelemetryJson, parseTelemetryJson } from "./telemetryJson.js";
 
 const RAW_RECORDS_PER_STREAM = 20;
@@ -20,45 +19,6 @@ function capturedAt(value) {
   }
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString();
-}
-
-export function ensureTelemetryStateSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS guildweaver_telemetry_stream_heads (
-      device_id TEXT NOT NULL,
-      stream_key TEXT NOT NULL,
-      revision INTEGER NOT NULL,
-      idempotency_key TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      PRIMARY KEY(device_id, stream_key)
-    );
-
-    CREATE TABLE IF NOT EXISTS guildweaver_telemetry_latest_state (
-      state_key TEXT PRIMARY KEY,
-      member_id TEXT NOT NULL,
-      device_id TEXT NOT NULL,
-      raw_character_id TEXT NOT NULL DEFAULT '',
-      canonical_character_id TEXT NOT NULL DEFAULT '',
-      event_type TEXT NOT NULL,
-      handler_name TEXT NOT NULL,
-      stream_key TEXT NOT NULL,
-      revision INTEGER NOT NULL,
-      envelope_schema_version INTEGER NOT NULL,
-      payload_schema_version INTEGER NOT NULL,
-      captured_at TEXT NOT NULL,
-      received_at TEXT NOT NULL,
-      record_id INTEGER,
-      envelope_json TEXT NOT NULL,
-      payload_json TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_latest_character_idx
-      ON guildweaver_telemetry_latest_state(raw_character_id, event_type);
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_latest_canonical_idx
-      ON guildweaver_telemetry_latest_state(canonical_character_id, event_type);
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_latest_received_idx
-      ON guildweaver_telemetry_latest_state(received_at DESC);
-  `);
 }
 
 function stateKey({ memberId, deviceId, rawCharacterId, eventType, streamKey }) {
@@ -85,6 +45,8 @@ function rowToState(row) {
     capturedAt: row.captured_at,
     receivedAt: row.received_at,
     recordId: row.record_id === null ? null : Number(row.record_id),
+    // Envelope metadata; the canonical payload is in `payload` and the raw
+    // one in the record (recordId).
     envelope: parseTelemetryJson(row.envelope_json),
     payload: parseTelemetryJson(row.payload_json),
   };
@@ -92,7 +54,6 @@ function rowToState(row) {
 
 export function telemetryStreamAlreadyProcessed({ deviceId, streamKey, revision, idempotencyKey }) {
   return withGuildDatabase((db) => {
-    ensureTelemetryStateSchema(db);
     const row = db.prepare(`
       SELECT revision, idempotency_key
       FROM guildweaver_telemetry_stream_heads
@@ -115,7 +76,6 @@ export function advanceTelemetryStreamHead({
   receivedAt,
 }) {
   return withGuildDatabase((db) => {
-    ensureTelemetryStateSchema(db);
     db.prepare(`
       INSERT INTO guildweaver_telemetry_stream_heads (
         device_id, stream_key, revision, idempotency_key, updated_at
@@ -153,7 +113,6 @@ export function storeLatestTelemetryState({
   payload,
 }) {
   return withGuildDatabase((db) => {
-    ensureTelemetryStateSchema(db);
     const key = stateKey({ memberId, deviceId, rawCharacterId, eventType, streamKey });
     const normalizedCapturedAt = capturedAt(captured);
 
@@ -196,7 +155,8 @@ export function storeLatestTelemetryState({
       normalizedCapturedAt,
       receivedAt,
       recordId || null,
-      encodeTelemetryJson(envelope ?? {}),
+      // The payload has its own column; the envelope keeps only its metadata.
+      encodeTelemetryJson({ ...(envelope ?? {}), payload: undefined }),
       encodeTelemetryJson(payload ?? {}),
     );
 
@@ -208,7 +168,6 @@ export function storeLatestTelemetryState({
 
 export function readLatestTelemetryState({ memberId = "", characterId = "", eventType = "" } = {}) {
   return withGuildDatabase((db) => {
-    ensureTelemetryStateSchema(db);
     const clauses = [];
     const params = [];
     if (memberId) {
@@ -235,7 +194,6 @@ export function readLatestTelemetryState({ memberId = "", characterId = "", even
 
 export function pruneRawTelemetryHistory({ deviceId, streamKey }) {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     db.prepare(`
       DELETE FROM guildweaver_telemetry_records
       WHERE device_id = ? AND stream_key = ? AND id NOT IN (

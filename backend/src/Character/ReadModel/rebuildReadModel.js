@@ -5,8 +5,6 @@
 
 import { guildDatabaseFile, withGuildTransaction } from "../../Data/database.js";
 import { ensureCharacterSnapshotObservabilitySchema } from "../characterSnapshotRepository.js";
-import { ensureTelemetryRecordSchema } from "../telemetryRecordRepository.js";
-import { ensureTelemetryStateSchema } from "../Telemetry/telemetryStateRepository.js";
 import { parseTelemetryJson } from "../Telemetry/telemetryJson.js";
 import { sectionsFromCharacterSnapshot } from "./projectors.js";
 import { READ_MODEL_VERSION, dropCharacterReadModelTables, ensureCharacterReadModelSchema } from "./readModelSchema.js";
@@ -21,8 +19,6 @@ export function rebuildCharacterReadModelInDatabase(db) {
   dropCharacterReadModelTables(db);
   ensureCharacterReadModelSchema(db);
   ensureCharacterSnapshotObservabilitySchema(db);
-  ensureTelemetryRecordSchema(db);
-  ensureTelemetryStateSchema(db);
 
   const snapshots = db.prepare(`
     SELECT s.character_id, s.id, s.captured_at, s.payload_json, MAX(i.received_at) AS received_at

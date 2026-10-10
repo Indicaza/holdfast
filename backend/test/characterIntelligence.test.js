@@ -5,7 +5,6 @@ import { syncGuildweaverCharacter } from "../src/Character/characterSyncReposito
 import { ensureTelemetryProjectionSchema } from "../src/Character/telemetryProjection.js";
 import { withGuildDatabase } from "../src/Data/database.js";
 import {
-  ensureGameDataCatalogSchema,
   resolveGameDataBundleInDatabase,
   upsertGameDataEntityInDatabase,
 } from "../src/GameData/gameDataCatalog.js";
@@ -227,7 +226,6 @@ test("character intelligence projects rich snapshots and remains idempotent", as
 test("game data catalog lets authoritative metadata replace telemetry without later regression", async () => {
   await withHttpApp(async () => {
     withGuildDatabase((db) => {
-      ensureGameDataCatalogSchema(db);
       upsertGameDataEntityInDatabase(db, {
         type: "item",
         id: 11746,
@@ -270,8 +268,6 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
     withGuildDatabase((db) => {
       ensureTelemetryProjectionSchema(db);
       ensureTelemetryProjectionSchema(db);
-      ensureGameDataCatalogSchema(db);
-      ensureGameDataCatalogSchema(db);
       const tables = new Set(
         db
           .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")

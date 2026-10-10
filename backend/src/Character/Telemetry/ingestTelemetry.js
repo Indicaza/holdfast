@@ -1,4 +1,4 @@
-import { withGuildTransaction } from "../../Data/database.js";
+import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js";
 import { projectTelemetryStateInDatabase } from "../ReadModel/readModelWriter.js";
 import { ensureCharacterReadModelCurrent } from "../ReadModel/rebuildReadModel.js";
 import { associateTelemetryRecordCharacter } from "../telemetryCharacterAssociation.js";
@@ -29,6 +29,12 @@ export function ingestTelemetry({
     return { status: "invalid", error: domainValidation.error };
   }
 
+  // Raw record, latest state, read model and stream head commit together, so
+  // a failure part way leaves nothing to reconcile.
+  return withGuildTransaction(() => storeTelemetry({ deviceId, memberId, incoming, domainValidation, receivedAt }));
+}
+
+function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receivedAt }) {
   const result = recordTelemetry({
     deviceId,
     memberId,
@@ -81,7 +87,7 @@ export function ingestTelemetry({
 
     // The character read model the website renders from (ReadModel/).
     ensureCharacterReadModelCurrent();
-    const projected = withGuildTransaction((db) => projectTelemetryStateInDatabase(db, {
+    const projected = withGuildDatabase((db) => projectTelemetryStateInDatabase(db, {
       memberId,
       deviceId,
       rawCharacterId,
