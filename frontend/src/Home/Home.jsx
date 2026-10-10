@@ -5,7 +5,6 @@ import RecruitmentSnapshot from './RecruitmentSnapshot/RecruitmentSnapshot.jsx'
 import HeroContent from './HeroContent/HeroContent.jsx'
 import HeroSlideshow from './HeroSlideshow/HeroSlideshow.jsx'
 import { useHeroStory } from './HeroStory/heroStory.js'
-import Navbar from './Navbar/Navbar.jsx'
 import { useRecruitment } from '../Join/JoinContext.js'
 import './Home.css'
 
@@ -18,8 +17,6 @@ function Home({ overlay = null }) {
     <div className="home">
       <HeroSlideshow story={story} />
       <div className="home__overlay" aria-hidden="true" />
-
-      <Navbar />
 
       <div className="home__frame">
         <main className="home__content">
