@@ -81,3 +81,34 @@ test('a failed first load leaves nothing cached; a failed refresh keeps the last
   await assert.rejects(loadResource('/api/two', ['x']))
   assert.equal(peekResource('/api/two'), null)
 })
+
+test('recipe books use a small LRU window so character browsing stays bounded', async (context) => {
+  stubFetch(context, (url) => json({ url }))
+  const recipeUrl = (id) => `/api/intelligence/characters/${id}/recipes`
+
+  for (let id = 1; id <= 8; id += 1) {
+    await loadResource(recipeUrl(id), ['armory'])
+  }
+
+  assert.ok(peekResource(recipeUrl(1)))
+  await loadResource(recipeUrl(9), ['armory'])
+
+  assert.ok(peekResource(recipeUrl(1)))
+  assert.equal(peekResource(recipeUrl(2)), null)
+  assert.ok(peekResource(recipeUrl(9)))
+})
+
+test('the shared cache evicts least recently used resources beyond its global cap', async (context) => {
+  stubFetch(context, (url) => json({ url }))
+
+  for (let id = 1; id <= 64; id += 1) {
+    await loadResource(`/api/test/${id}`, ['test'])
+  }
+
+  assert.ok(peekResource('/api/test/1'))
+  await loadResource('/api/test/65', ['test'])
+
+  assert.ok(peekResource('/api/test/1'))
+  assert.equal(peekResource('/api/test/2'), null)
+  assert.ok(peekResource('/api/test/65'))
+})
