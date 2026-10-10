@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
+import Navbar from './Home/Navbar/Navbar.jsx'
+import { interceptLinkClicks, useLocationHref } from './Navigation/navigation.js'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
@@ -96,6 +98,8 @@ const routes = {
     title: 'Connect Guildweaver | Holdfast',
     description: 'Securely connect Guildweaver Bridge to your Holdfast member profile.',
     robots: 'noindex,nofollow',
+    // A focused pairing page opened from the bridge: no site chrome.
+    navbar: false,
   },
   '/privacy': {
     component: Privacy,
@@ -143,7 +147,10 @@ function memberProfileRoute(pathname) {
 }
 
 function App() {
-  const requestedPathname = normalizePathname(window.location.pathname)
+  // Re-render on client-side navigation; links no longer reload the page.
+  const href = useLocationHref()
+  useEffect(() => interceptLinkClicks(), [])
+  const requestedPathname = normalizePathname(new URL(href).pathname)
   const dynamicRoute = memberProfileRoute(requestedPathname)
   const pathname = resolvePathname(requestedPathname, Object.keys(routes))
   const route = dynamicRoute ?? (pathname
@@ -179,8 +186,11 @@ function App() {
         home={route.home}
       />
 
+      {/* One navbar for the whole app: it never remounts between pages. */}
+      {route.navbar === false ? null : <Navbar />}
+
       <Suspense fallback={<PageLoading />}>
-        <Page {...(route.props || {})} />
+        <Page key={route.path} {...(route.props || {})} />
       </Suspense>
 
       <AuthResultModal />

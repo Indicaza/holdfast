@@ -4,28 +4,38 @@ import { authenticate } from '../helpers/auth.js'
 const account = (page) => page.getByRole('button', { name: 'Open account menu for Mira Member' })
 const signIn = (page) => page.locator('.navbar').getByRole('button', { name: 'Sign In', exact: true })
 
-test('page changes never present an unresolved member session as signed out', async ({ page, context }) => {
+test('the member session is checked once and survives every page change', async ({ page, context }) => {
   await authenticate(context, 'member')
   let release
-  let gate = new Promise((resolve) => { release = resolve })
+  const gate = new Promise((resolve) => { release = resolve })
+  let checks = 0
   await page.route('**/api/me', async (route) => {
+    checks += 1
     const response = await route.fetch()
     await gate
     await route.fulfill({ response })
   })
   await page.goto('/')
-  for (const href of ['/charter', '/ranks', '/members', '/quests', '/']) {
-    await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
-    await expect(signIn(page)).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Join Holdfast', exact: true })).toHaveCount(0)
-    release()
-    await expect(account(page)).toBeVisible()
-    gate = new Promise((resolve) => { release = resolve })
-    await page.locator(`.navbar a[href="${href}"]`).first().click()
-    expect(new URL(page.url()).pathname).toBe(href)
-  }
+  // While the first check is pending, the navbar never claims "signed out".
+  await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
+  await expect(signIn(page)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Join Holdfast', exact: true })).toHaveCount(0)
   release()
   await expect(account(page)).toBeVisible()
+
+  // Page changes keep the app (and its navbar) mounted: no reload, no
+  // re-check, no flash of a loading or signed-out navbar.
+  const navbar = await page.locator('.navbar').elementHandle()
+  for (const href of ['/charter', '/ranks', '/members', '/quests', '/']) {
+    await page.locator(`.navbar a[href="${href}"]`).first().click()
+    await expect(page).toHaveURL((url) => url.pathname === href)
+    await expect(account(page)).toBeVisible()
+    await expect(page.getByRole('status', { name: 'Checking member session' })).toHaveCount(0)
+    expect(await navbar.evaluate((element) => element.isConnected)).toBe(true)
+  }
+  // A page may revalidate in the background (without touching the navbar),
+  // but page changes no longer each re-check the session as reloads did.
+  expect(checks).toBeLessThanOrEqual(2)
 })
 
 test('an anonymous session shows Sign in only after its check completes', async ({ page }) => {

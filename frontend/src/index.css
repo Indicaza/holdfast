@@ -209,3 +209,12 @@ h6 {
     translate: 0 !important;
   }
 }
+
+/* The navbar is rendered once by the app, above every page. Full-bleed page
+   shells reach up behind it so their backgrounds start at the top of the
+   window, as they did when each shell drew its own navbar. */
+.navbar + .home,
+.navbar + .page-shell {
+  margin-top: calc(-1 * var(--nav-height));
+  padding-top: var(--nav-height);
+}

@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 
-import Navbar from '../Home/Navbar/Navbar.jsx'
 import LiveStatusBadge from '../Live/LiveStatusBadge.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import './IntelligenceAppShell.css'
@@ -119,7 +118,6 @@ export default function IntelligenceAppShell({
 
   return (
     <>
-      <Navbar />
       <div className={`intelligence-app ${collapsed ? 'intelligence-app--collapsed' : ''} ${mobileOpen ? 'intelligence-app--mobile-open' : ''}`}>
         <aside className="intelligence-rail" aria-label="GuildOS navigation">
           <div className="intelligence-rail__brand-row">

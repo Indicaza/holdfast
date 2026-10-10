@@ -172,7 +172,8 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
             >
               Open Discord
             </button>
-            <a className="join-action join-action--secondary" href={pendingSignup ? returnTo : '/members/me'}>
+            {/* Leaving the dialog for another page closes it. */}
+            <a className="join-action join-action--secondary" href={pendingSignup ? returnTo : '/members/me'} onClick={onClose}>
               {pendingSignup ? 'Continue to objective' : 'Set Up My Profile'}
             </a>
           </div>

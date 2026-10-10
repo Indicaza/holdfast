@@ -1,5 +1,4 @@
 import Footer from '../Home/Footer/Footer.jsx'
-import Navbar from '../Home/Navbar/Navbar.jsx'
 import './PageShell.css'
 
 function PageShell({
@@ -21,8 +20,6 @@ function PageShell({
   return (
     <div className={shellClassName}>
       <div className="page-shell__background" aria-hidden="true" />
-
-      <Navbar />
 
       <div className="page-shell__frame">
         <main className="page-shell__main">

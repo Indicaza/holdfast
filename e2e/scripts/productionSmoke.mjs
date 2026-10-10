@@ -35,6 +35,8 @@ try {
     assert.equal(response.status(), 200)
     await expect(page).toHaveTitle(title)
     await page.getByRole('navigation', { name: 'Primary navigation' }).waitFor()
+    // The navbar stays mounted while a lazy page loads, so wait for the page itself.
+    await page.locator('main h1').first().waitFor({ state: 'attached' })
     assert.ok((await page.locator('main').innerText()).trim().length > 100, `Empty application page: ${route}`)
   }
   await page.goto('/quests')
