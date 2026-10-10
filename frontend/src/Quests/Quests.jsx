@@ -17,6 +17,7 @@ import {
   withSelfAssignments,
 } from './questAuthority.js'
 import { navigate } from '../Navigation/navigation.js'
+import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Quests.css'
 
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
@@ -606,11 +607,9 @@ function Quests() {
     return <Home />
   }
 
-  if (
-    session.status === 'loading' ||
-    session.status === 'error' ||
-    !session.authenticated
-  ) {
+  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+
+  if (session.status === 'error' || !session.authenticated) {
     return (
       <Home
         overlay={

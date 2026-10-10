@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
-import { apiJson } from '../Api/apiClient.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import Modal from '../Modal/Modal.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import GuildweaverDownload from './GuildweaverDownload.jsx'
@@ -51,26 +51,11 @@ const detailItems = [
 ]
 
 export default function Guildweaver() {
-  const [release, setRelease] = useState(fallbackRelease)
   const [activeModal, setActiveModal] = useState(null)
-
-  useEffect(() => {
-    let active = true
-
-    apiJson('/api/guildweaver/release')
-      .then((metadata) => {
-        if (active && metadata?.channel && metadata?.releasePage) {
-          setRelease({ ...fallbackRelease, ...metadata })
-        }
-      })
-      .catch(() => {
-        // The public GitHub edge channel remains a safe fallback.
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+  // Release metadata, cached across page changes. The public GitHub edge
+  // channel remains a safe fallback.
+  const { data: metadata } = useLiveResource('/api/guildweaver/release')
+  const release = metadata?.channel && metadata?.releasePage ? { ...fallbackRelease, ...metadata } : fallbackRelease
 
   return (
     <PageShell

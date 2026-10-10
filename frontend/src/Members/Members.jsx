@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
-import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import { navigate } from '../Navigation/navigation.js'
+import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -14,6 +14,13 @@ const EMPTY_DIRECTORY = {
     memberCount: 0,
     activeAssignmentCount: 0,
   },
+}
+
+function normalizeDirectory(result) {
+  return {
+    members: Array.isArray(result?.members) ? result.members : [],
+    summary: result?.summary || EMPTY_DIRECTORY.summary,
+  }
 }
 
 function memberName(member) {
@@ -109,8 +116,6 @@ function MemberCard({ member }) {
 
 function Members() {
   const session = useSession()
-  const [directory, setDirectory] = useState(EMPTY_DIRECTORY)
-  const [status, setStatus] = useState('loading')
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -147,50 +152,15 @@ function Members() {
   }, [])
 
 
-  // Live member, rank and authority changes refresh the directory in place.
-  const [revision, setRevision] = useState(0)
-  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
+  // Cached across page changes; live member, rank and authority changes
+  // refresh it in place.
+  const { status: directoryStatus, data } = useLiveResource('/api/guild/members', {
+    topics: ['members', 'ranks', 'authority'],
+    select: normalizeDirectory,
     enabled: session.authenticated,
   })
-
-  useEffect(() => {
-    if (!session.authenticated) {
-      setStatus('ready')
-      return undefined
-    }
-
-    const controller = new AbortController()
-    let active = true
-
-    async function loadDirectory() {
-      if (revision === 0) setStatus('loading')
-
-      try {
-        const result = await apiJson('/api/guild/members', {
-          signal: controller.signal,
-        })
-
-        if (!active) return
-
-        setDirectory({
-          members: Array.isArray(result?.members) ? result.members : [],
-          summary: result?.summary || EMPTY_DIRECTORY.summary,
-        })
-        setStatus('ready')
-      } catch (error) {
-        if (!active || error?.name === 'AbortError') return
-        // A failed background refresh keeps the directory on screen.
-        if (revision === 0) setStatus('error')
-      }
-    }
-
-    void loadDirectory()
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [revision, session.authenticated])
+  const directory = data || EMPTY_DIRECTORY
+  const status = directoryStatus === 'idle' ? 'ready' : directoryStatus === 'missing' ? 'error' : directoryStatus
 
   const visibleMembers = useMemo(() => {
     const members = directory.members.filter((member) => {
@@ -264,7 +234,9 @@ function Members() {
 
   const closeGate = () => navigate('/')
 
-  if (session.status === 'loading' || session.status === 'error') {
+  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+
+  if (session.status === 'error') {
     return (
       <Home
         overlay={

@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
-import { apiJson } from '../Api/apiClient.js'
-import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
+import './Admin.css'
 
 const EVENT_LABELS = {
   'quest.workspace_saved': 'saved the quest workspace',
@@ -41,33 +40,10 @@ function formattedDate(value) {
 }
 
 function AuditLog() {
-  const [events, setEvents] = useState([])
-  const [status, setStatus] = useState('loading')
-
-  // New activity refreshes the log in place.
-  const [revision, setRevision] = useState(0)
-  useLiveRefresh(['audit'], () => setRevision((current) => current + 1))
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function load() {
-      try {
-        const result = await apiJson('/api/admin/audit?limit=20', {
-          signal: controller.signal,
-        })
-        setEvents(Array.isArray(result?.events) ? result.events : [])
-        setStatus('ready')
-      } catch (error) {
-        if (error?.name !== 'AbortError' && revision === 0) {
-          setStatus('error')
-        }
-      }
-    }
-
-    void load()
-    return () => controller.abort()
-  }, [revision])
+  // Cached across page changes; new activity refreshes the log in place.
+  const log = useLiveResource('/api/admin/audit?limit=20', { topics: ['audit'] })
+  const events = Array.isArray(log.data?.events) ? log.data.events : []
+  const status = log.status === 'missing' ? 'error' : log.status
 
   return (
     <section className="admin-audit">
