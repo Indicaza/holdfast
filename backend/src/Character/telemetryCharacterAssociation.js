@@ -1,6 +1,5 @@
 import { withGuildTransaction } from "../Data/database.js";
 import {
-  ensureGuildweaverCharacterIdentitySchema,
   readGuildweaverCharacterAliasInDatabase,
 } from "./characterIdentityRepository.js";
 
@@ -13,7 +12,6 @@ export function associateTelemetryRecordCharacter({
   if (!recordId || !memberId || !rawCharacterId) return null;
 
   return withGuildTransaction((db) => {
-    ensureGuildweaverCharacterIdentitySchema(db);
     const characterId = readGuildweaverCharacterAliasInDatabase({
       db,
       memberId,

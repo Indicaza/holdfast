@@ -25,46 +25,12 @@ function text(value, maxLength = 120) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
-function ensureSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS guildweaver_pairings (
-      id TEXT PRIMARY KEY,
-      device_code_hash TEXT NOT NULL UNIQUE,
-      user_code TEXT NOT NULL UNIQUE,
-      device_name TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'consumed')),
-      member_id TEXT REFERENCES members(id) ON DELETE CASCADE,
-      created_at TEXT NOT NULL,
-      expires_at TEXT NOT NULL,
-      approved_at TEXT NOT NULL DEFAULT '',
-      consumed_at TEXT NOT NULL DEFAULT ''
-    );
-
-    CREATE INDEX IF NOT EXISTS guildweaver_pairings_expiry_idx
-      ON guildweaver_pairings(status, expires_at);
-
-    CREATE TABLE IF NOT EXISTS guildweaver_devices (
-      id TEXT PRIMARY KEY,
-      member_id TEXT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-      name TEXT NOT NULL DEFAULT '',
-      token_hash TEXT NOT NULL UNIQUE,
-      created_at TEXT NOT NULL,
-      last_seen_at TEXT NOT NULL,
-      revoked_at TEXT
-    );
-
-    CREATE INDEX IF NOT EXISTS guildweaver_devices_member_idx
-      ON guildweaver_devices(member_id, revoked_at, last_seen_at DESC);
-  `);
-}
-
 function deleteExpiredPairings(db, now) {
   db.prepare("DELETE FROM guildweaver_pairings WHERE expires_at <= ?").run(now);
 }
 
 export function startGuildweaverPairing({ deviceName = "Guildweaver Bridge" } = {}) {
   return withGuildTransaction((db) => {
-    ensureSchema(db);
     const now = new Date();
     const nowIso = now.toISOString();
     deleteExpiredPairings(db, nowIso);
@@ -102,7 +68,6 @@ export function startGuildweaverPairing({ deviceName = "Guildweaver Bridge" } = 
 
 export function approveGuildweaverPairing({ userCode, memberId }) {
   return withGuildTransaction((db) => {
-    ensureSchema(db);
     const now = new Date().toISOString();
     deleteExpiredPairings(db, now);
 
@@ -156,7 +121,6 @@ export function approveGuildweaverPairing({ userCode, memberId }) {
 
 export function exchangeGuildweaverPairing(deviceCode) {
   return withGuildTransaction((db) => {
-    ensureSchema(db);
     const now = new Date().toISOString();
     deleteExpiredPairings(db, now);
 
@@ -218,7 +182,6 @@ export function exchangeGuildweaverPairing(deviceCode) {
 
 export function authenticateGuildweaverDevice(deviceToken) {
   return withGuildTransaction((db) => {
-    ensureSchema(db);
     const row = db
       .prepare(
         `
@@ -253,7 +216,6 @@ export function authenticateGuildweaverDevice(deviceToken) {
 
 export function readGuildweaverDevices(memberId) {
   return withGuildDatabase((db) => {
-    ensureSchema(db);
     return db
       .prepare(
         `

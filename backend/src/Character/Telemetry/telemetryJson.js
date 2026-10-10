@@ -45,7 +45,7 @@ export function compactStoredTelemetry(db) {
   const tables = new Set(
     db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name),
   );
-  let compressed = 0;
+  let compressed = slimLatestStateEnvelopes(db, tables);
   for (const [table, column] of columns) {
     if (!tables.has(table)) continue;
     const key = table === "guildweaver_telemetry_records" ? "id" : "state_key";
@@ -61,4 +61,24 @@ export function compactStoredTelemetry(db) {
   }
   if (compressed) db.exec("VACUUM");
   return compressed;
+}
+
+// The latest-state table keeps the payload in its own column; envelopes
+// written before that also carried a copy. Removed once per database.
+function slimLatestStateEnvelopes(db, tables) {
+  const done = "latest_state_envelopes_slim";
+  if (!tables.has("guildweaver_telemetry_latest_state") || !tables.has("app_meta")) return 0;
+  if (db.prepare("SELECT 1 FROM app_meta WHERE key = ?").get(done)) return 0;
+  const rows = db.prepare("SELECT state_key, envelope_json FROM guildweaver_telemetry_latest_state").all();
+  const update = db.prepare("UPDATE guildweaver_telemetry_latest_state SET envelope_json = ? WHERE state_key = ?");
+  let slimmed = 0;
+  for (const row of rows) {
+    const envelope = parseTelemetryJson(row.envelope_json, null);
+    if (!envelope || !("payload" in envelope)) continue;
+    delete envelope.payload;
+    update.run(encodeTelemetryJson(envelope), row.state_key);
+    slimmed += 1;
+  }
+  db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES (?, '1', ?)").run(done, new Date().toISOString());
+  return slimmed;
 }

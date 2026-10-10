@@ -76,14 +76,14 @@ test("recipe books are stored compressed and read back intact", () =>
     }));
     const jsonBytes = JSON.stringify(body.envelope).length;
     assert.equal(stored.record.type, "blob");
-    assert.equal(stored.state.envelopeType, "blob");
     assert.equal(stored.state.payloadType, "blob");
     assert.ok(stored.record.bytes * 8 < jsonBytes, `raw record compressed (${stored.record.bytes} of ${jsonBytes} bytes)`);
 
     assert.deepEqual(readTelemetryRecord(result.record.id).envelope, body.envelope);
     assert.equal(readTelemetryRecord(result.record.id).payloadBytes, jsonBytes, "inspector reports the JSON size");
     const [state] = readLatestTelemetryState({ memberId: memberIds.member, characterId: "character-rook", eventType: "profession_snapshot" });
-    assert.deepEqual(state.envelope, body.envelope);
+    const { payload: _payload, ...envelopeMetadata } = body.envelope;
+    assert.deepEqual(state.envelope, envelopeMetadata);
     const armory = applyProfessionTelemetry({ professions: [], recipes: [] }, state);
     assert.equal(armory.recipes.length, 300);
     assert.equal(armory.recipes[299].crafted.tooltip.lines[1].left, "Binds when equipped");
@@ -107,7 +107,7 @@ test("telemetry stored before compression is compacted once", () =>
         .run(envelope, decodeTelemetryJson(db.prepare("SELECT payload_json FROM guildweaver_telemetry_latest_state WHERE stream_key = ?").get(body.streamKey).payload_json), body.streamKey);
     });
 
-    assert.equal(withGuildDatabase(compactStoredTelemetry), 3, "record envelope, state envelope and state payload");
+    assert.equal(withGuildDatabase(compactStoredTelemetry), 3, "state envelope slimmed; record envelope and state payload compressed");
     assert.equal(withGuildDatabase(compactStoredTelemetry), 0, "already compacted");
     const types = withGuildDatabase((db) => db.prepare("SELECT typeof(envelope_json) AS type FROM guildweaver_telemetry_records WHERE id = ?").get(result.record.id).type);
     assert.equal(types, "blob");

@@ -110,32 +110,7 @@ export function completionFingerprint(objective) {
   });
 }
 
-export function ensureQuestCompletionSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS quest_completion_requests (
-      objective_id TEXT PRIMARY KEY,
-      quest_id TEXT NOT NULL,
-      status TEXT NOT NULL
-        CHECK (status IN ('pending', 'approved', 'rejected')),
-      objective_fingerprint TEXT NOT NULL,
-      requested_by_member_id TEXT NOT NULL,
-      requested_by_name TEXT NOT NULL DEFAULT '',
-      requested_at TEXT NOT NULL,
-      request_note TEXT NOT NULL DEFAULT '',
-      reviewed_by_member_id TEXT,
-      reviewed_by_name TEXT NOT NULL DEFAULT '',
-      reviewed_at TEXT NOT NULL DEFAULT '',
-      review_note TEXT NOT NULL DEFAULT '',
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS quest_completion_requests_quest_status_idx
-      ON quest_completion_requests(quest_id, status, updated_at DESC);
-  `);
-}
-
 function rowForObjective(db, objectiveId) {
-  ensureQuestCompletionSchema(db);
   return db
     .prepare(
       "SELECT * FROM quest_completion_requests WHERE objective_id = ?",
@@ -186,7 +161,6 @@ export function readCompletionStatesFromDatabase(
   document,
   { questId = "", publishedOnly = true } = {},
 ) {
-  ensureQuestCompletionSchema(db);
 
   const quests = new Map(
     document.quests
@@ -282,7 +256,6 @@ export function requestObjectiveCompletionInDatabase({
   }
 
   const requestNote = cleanText(note, 800, "Completion note");
-  ensureQuestCompletionSchema(db);
 
   db.prepare(
     `

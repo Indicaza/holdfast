@@ -7,7 +7,6 @@ import {
   recordCharacterSnapshotInDatabase,
 } from "./characterSnapshotRepository.js";
 import {
-  ensureGuildweaverCharacterIdentitySchema,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
 } from "./characterIdentityRepository.js";
@@ -191,7 +190,6 @@ export async function syncGuildweaverCharacter({
 
     ensureTelemetryProjectionSchema(db);
     ensureCharacterSnapshotObservabilitySchema(db);
-    ensureGuildweaverCharacterIdentitySchema(db);
 
     const preferredId = preferredCharacterId(snapshot);
     const rawCharacterId = text(snapshot?.characterId, 200);

@@ -72,41 +72,6 @@ export function telemetryDomain(eventType) {
   );
 }
 
-export function ensureTelemetryRecordSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS guildweaver_telemetry_records (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      device_id TEXT NOT NULL,
-      member_id TEXT NOT NULL,
-      stream_key TEXT NOT NULL,
-      kind TEXT NOT NULL CHECK (kind IN ('state', 'event')),
-      revision INTEGER NOT NULL,
-      event_type TEXT NOT NULL,
-      domain TEXT NOT NULL,
-      schema_version INTEGER NOT NULL,
-      character_id TEXT NOT NULL DEFAULT '',
-      installation_id TEXT NOT NULL DEFAULT '',
-      realm TEXT NOT NULL DEFAULT '',
-      region TEXT NOT NULL DEFAULT '',
-      captured_at TEXT NOT NULL,
-      received_at TEXT NOT NULL,
-      idempotency_key TEXT NOT NULL,
-      envelope_json TEXT NOT NULL,
-      UNIQUE(device_id, stream_key, revision),
-      UNIQUE(idempotency_key)
-    );
-
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_received_idx
-      ON guildweaver_telemetry_records(received_at DESC, id DESC);
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_domain_idx
-      ON guildweaver_telemetry_records(domain, received_at DESC);
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_character_idx
-      ON guildweaver_telemetry_records(character_id, received_at DESC);
-    CREATE INDEX IF NOT EXISTS guildweaver_telemetry_device_idx
-      ON guildweaver_telemetry_records(device_id, received_at DESC);
-  `);
-}
-
 function payloadFromRow(row) {
   const envelope = parseTelemetryJson(row?.envelope_json);
   return envelope?.payload && typeof envelope.payload === "object" && !Array.isArray(envelope.payload)
@@ -183,7 +148,6 @@ export function recordTelemetry({
   receivedAt = new Date().toISOString(),
 }) {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     const sanitizedEnvelope = sanitizeTelemetryValue(envelope);
     const eventType = text(sanitizedEnvelope?.eventType, 120);
     const normalizedKind = kind === "event" ? "event" : "state";
@@ -329,7 +293,6 @@ function listFilters({
 
 export function readTelemetryHistory(options = {}) {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     const limit = integer(options.limit, 40, 1, 100);
     const offset = integer(options.offset, 0, 0, 1000000);
     const where = listFilters(options);
@@ -349,7 +312,6 @@ export function readTelemetryHistory(options = {}) {
 
 export function readTelemetryRecord(id) {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     return rowDetail(
       db.prepare(`${telemetrySelect()} WHERE r.id = ? LIMIT 1`).get(Number(id)),
     );
@@ -358,7 +320,6 @@ export function readTelemetryRecord(id) {
 
 export function readTelemetryCharacters(options = {}) {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     const limit = integer(options.limit, 12, 1, 30);
     const query = text(options.q, 120).toLowerCase();
     const rows = db.prepare(`
@@ -405,7 +366,6 @@ export function readTelemetryCharacters(options = {}) {
 
 export function readTelemetrySummary() {
   return withGuildDatabase((db) => {
-    ensureTelemetryRecordSchema(db);
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const totals = db.prepare(`
       SELECT

@@ -49,7 +49,8 @@ test("profession_snapshot keeps the raw payload and stores a canonical latest st
 
     const [state] = latest();
     assert.equal(state.handlerName, "profession_snapshot");
-    assert.deepEqual(state.envelope, fixture, "latest state keeps the incoming envelope");
+    const { payload: _incoming, ...incomingMetadata } = fixture;
+    assert.deepEqual(state.envelope, incomingMetadata, "latest state keeps the envelope metadata; the payload is stored once");
 
     const payload = state.payload;
     assert.equal(payload.modelVersion, 1);

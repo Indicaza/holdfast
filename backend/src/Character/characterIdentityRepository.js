@@ -10,36 +10,12 @@ function tableExists(db, name) {
   );
 }
 
-export function ensureGuildweaverCharacterIdentitySchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS guildweaver_character_aliases (
-      member_id TEXT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-      device_id TEXT NOT NULL DEFAULT '',
-      installation_id TEXT NOT NULL DEFAULT '',
-      raw_character_id TEXT NOT NULL,
-      character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-      character_name TEXT NOT NULL DEFAULT '',
-      realm TEXT NOT NULL DEFAULT '',
-      region TEXT NOT NULL DEFAULT '',
-      first_seen_at TEXT NOT NULL,
-      last_seen_at TEXT NOT NULL,
-      PRIMARY KEY(member_id, device_id, raw_character_id)
-    );
-
-    CREATE INDEX IF NOT EXISTS guildweaver_character_aliases_character_idx
-      ON guildweaver_character_aliases(character_id, last_seen_at DESC);
-    CREATE INDEX IF NOT EXISTS guildweaver_character_aliases_raw_idx
-      ON guildweaver_character_aliases(member_id, raw_character_id, last_seen_at DESC);
-  `);
-}
-
 export function readGuildweaverCharacterAliasInDatabase({
   db,
   memberId,
   deviceId = "",
   rawCharacterId = "",
 }) {
-  ensureGuildweaverCharacterIdentitySchema(db);
   const raw = text(rawCharacterId, 200);
   if (!raw) return null;
 
@@ -109,7 +85,6 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
   realm = "",
   region = "",
 }) {
-  ensureGuildweaverCharacterIdentitySchema(db);
 
   const aliased = readGuildweaverCharacterAliasInDatabase({
     db,
@@ -160,7 +135,6 @@ export function recordGuildweaverCharacterAliasInDatabase({
 }) {
   const raw = text(rawCharacterId, 200);
   if (!raw || !characterId) return false;
-  ensureGuildweaverCharacterIdentitySchema(db);
 
   const member = text(memberId, 160);
   const device = text(deviceId, 160);

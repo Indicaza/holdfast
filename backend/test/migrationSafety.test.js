@@ -10,7 +10,6 @@ import {
   migrateGuildDatabase,
   openGuildDatabase,
 } from "../src/Data/database.js";
-import { ensureQuestCompletionSchema } from "../src/Quest/questCompletion.js";
 
 function preserveEnvironment() {
   return {
@@ -191,7 +190,27 @@ function seedVersionFiveDatabase({ withLegacyCompletionTable = false } = {}) {
     if (withLegacyCompletionTable) {
       // #111 originally created this lazily before it became a versioned migration.
       // Migration 6 must adopt that live table rather than replacing it.
-      ensureQuestCompletionSchema(db);
+      db.exec(`
+    CREATE TABLE IF NOT EXISTS quest_completion_requests (
+      objective_id TEXT PRIMARY KEY,
+      quest_id TEXT NOT NULL,
+      status TEXT NOT NULL
+        CHECK (status IN ('pending', 'approved', 'rejected')),
+      objective_fingerprint TEXT NOT NULL,
+      requested_by_member_id TEXT NOT NULL,
+      requested_by_name TEXT NOT NULL DEFAULT '',
+      requested_at TEXT NOT NULL,
+      request_note TEXT NOT NULL DEFAULT '',
+      reviewed_by_member_id TEXT,
+      reviewed_by_name TEXT NOT NULL DEFAULT '',
+      reviewed_at TEXT NOT NULL DEFAULT '',
+      review_note TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS quest_completion_requests_quest_status_idx
+      ON quest_completion_requests(quest_id, status, updated_at DESC);
+  `);
       db.prepare(
         `
           INSERT INTO quest_completion_requests (
@@ -278,7 +297,7 @@ for (const withLegacyCompletionTable of [false, true]) {
       const upgraded = openGuildDatabase();
 
       try {
-        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6, 7]);
+        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6, 7, 8]);
         assert.deepEqual(persistentState(upgraded), before);
         assert.equal(upgraded.prepare("PRAGMA quick_check").get().quick_check, "ok");
         assert.equal(upgraded.prepare("PRAGMA foreign_key_check").all().length, 0);

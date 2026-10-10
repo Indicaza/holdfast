@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 
@@ -8,6 +8,7 @@ import {
   DEFAULT_RANK_AUTHORITY,
 } from "../Guild/authorityPolicy.js";
 import { notificationMigration } from "../Notification/notificationMigration.js";
+import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
 
@@ -787,6 +788,7 @@ const migrations = [
     },
   },
   notificationMigration,
+  guildweaverTablesMigration,
 ];
 
 function configureDatabase(db) {
@@ -851,34 +853,76 @@ export function openGuildDatabase() {
   return db;
 }
 
-export function withGuildDatabase(callback) {
-  const db = openGuildDatabase();
+// One connection per database file, opened and migrated once. It is reopened
+// when the data directory changes or the file is replaced (a restore, or a
+// test removing its directory), which the inode check catches.
+let shared = null;
+let transactionDepth = 0;
 
+function fileIdentity(file) {
   try {
-    return callback(db);
-  } finally {
-    db.close();
+    const stats = statSync(file);
+    return `${stats.dev}:${stats.ino}`;
+  } catch {
+    return null;
   }
 }
 
+function sharedDatabase() {
+  const file = guildDatabaseFile();
+  if (shared && shared.file === file && shared.identity === fileIdentity(file)) {
+    return shared.db;
+  }
+  if (transactionDepth > 0) {
+    throw new Error("The guild database changed during a transaction");
+  }
+  closeGuildDatabase();
+  const db = openGuildDatabase();
+  shared = { file, db, identity: fileIdentity(file) };
+  return db;
+}
+
+export function closeGuildDatabase() {
+  if (!shared) return;
+  const { db } = shared;
+  shared = null;
+  transactionDepth = 0;
+  try {
+    db.close();
+  } catch {
+    // Already closed.
+  }
+}
+
+export function withGuildDatabase(callback) {
+  return callback(sharedDatabase());
+}
+
+// Nested transactions become savepoints, so a repository that opens its own
+// transaction can run inside a caller's.
 export function withGuildTransaction(callback) {
-  return withGuildDatabase((db) => {
-    db.exec("BEGIN IMMEDIATE");
+  const db = sharedDatabase();
+  const savepoint = transactionDepth > 0 ? `guild_${transactionDepth}` : null;
+  db.exec(savepoint ? `SAVEPOINT ${savepoint}` : "BEGIN IMMEDIATE");
+  transactionDepth += 1;
 
-    try {
-      const result = callback(db);
+  try {
+    const result = callback(db);
 
-      if (result && typeof result.then === "function") {
-        throw new Error("Guild database transactions must be synchronous");
-      }
-
-      db.exec("COMMIT");
-      return result;
-    } catch (error) {
-      db.exec("ROLLBACK");
-      throw error;
+    if (result && typeof result.then === "function") {
+      throw new Error("Guild database transactions must be synchronous");
     }
-  });
+
+    transactionDepth -= 1;
+    db.exec(savepoint ? `RELEASE ${savepoint}` : "COMMIT");
+    return result;
+  } catch (error) {
+    transactionDepth = Math.max(0, transactionDepth - 1);
+    if (db.isTransaction) {
+      db.exec(savepoint ? `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}` : "ROLLBACK");
+    }
+    throw error;
+  }
 }
 
 export function appliedMigrationVersions() {
