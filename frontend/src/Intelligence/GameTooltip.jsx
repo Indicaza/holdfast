@@ -67,6 +67,8 @@ function metadataLines(item) {
   if (Number(item.requiredLevel) > 1) lines.push({ left: `Requires Level ${item.requiredLevel}`, leftColor: WHITE })
   if (item.spell?.name) lines.push({ left: `Use: ${item.spell.name}`, leftColor: GREEN })
   if (item.isCraftingReagent) lines.push({ left: 'Crafting Reagent', leftColor: { r: 0.4, g: 0.73, b: 1 } })
+  // Spells and labels (recipes, profession tabs) carry a description instead.
+  if (item.description) lines.push({ left: String(item.description), leftColor: NORMAL })
   return lines
 }
 
@@ -98,12 +100,26 @@ export function GameTooltipBody({ item }) {
   )
 }
 
-export function GameTooltipHover({ item, children, side = 'right' }) {
+// Shows a tooltip on hover, and on keyboard focus. A mouse click also focuses
+// its target; that must not leave a tooltip stuck open after the pointer moves on.
+function focusVisible(event) {
+  try {
+    return event.target.matches(':focus-visible')
+  } catch {
+    return true
+  }
+}
+
+export function GameTooltipHover({ item, children, side = 'right', className = '' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
   if (!item) return children
   // The wrapper is display: contents (no box), so measure the trigger inside it.
-  const show = (event) => setAnchor((event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect())
+  const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()
+  const show = (event) => setAnchor(measure(event))
+  const showOnFocus = (event) => {
+    if (focusVisible(event)) setAnchor(measure(event))
+  }
   const hide = () => setAnchor(null)
   return (
     <span
@@ -111,12 +127,12 @@ export function GameTooltipHover({ item, children, side = 'right' }) {
       aria-describedby={anchor ? tooltipId : undefined}
       onMouseEnter={show}
       onMouseLeave={hide}
-      onFocus={show}
+      onFocus={showOnFocus}
       onBlur={hide}
     >
       {children}
       {anchor && typeof document !== 'undefined' ? (
-        <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className="game-tooltip">
+        <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={`game-tooltip${className ? ` ${className}` : ''}`}>
           <GameTooltipBody item={item} />
         </FloatingTooltip>
       ) : null}

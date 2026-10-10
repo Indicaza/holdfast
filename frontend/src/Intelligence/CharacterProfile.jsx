@@ -2,6 +2,7 @@ import { useId, useRef } from 'react'
 
 import CharacterEquipmentSheet from './CharacterEquipmentSheet.jsx'
 import InventoryPane from './InventoryPane.jsx'
+import { carriedCounts } from './inventoryModel.js'
 import ProfessionsPane from './ProfessionsPane.jsx'
 import TalentTree from './TalentTree.jsx'
 import { CharacterFacts, SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
@@ -31,7 +32,7 @@ const characterProfileTabs = [
     id: 'professions',
     label: 'Professions',
     badge: (armory) => armory.professions.length || null,
-    render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} />,
+    render: ({ armory }) => <ProfessionsPane professions={armory.professions} recipes={armory.recipes} carried={carriedCounts(armory.inventory)} />,
   },
   {
     id: 'inventory',
