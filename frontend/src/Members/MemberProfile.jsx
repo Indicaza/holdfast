@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
-import { apiJson } from '../Api/apiClient.js'
+import { useMemo, useState } from 'react'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
@@ -500,9 +499,6 @@ function PlayerIdentity({ member, editable, onEdit }) {
 
 function MemberProfile({ memberId }) {
   const session = useSession()
-  const [member, setMember] = useState(null)
-  const [billets, setBillets] = useState([])
-  const [status, setStatus] = useState('loading')
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
 
@@ -511,59 +507,22 @@ function MemberProfile({ memberId }) {
     ? '/api/guild/members/me'
     : `/api/guild/members/${encodeURIComponent(memberId)}`
 
-  // Live member, rank and authority changes refresh the profile in place; an
-  // open editor keeps its own draft.
-  const [revision, setRevision] = useState(0)
-  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
-    enabled: session.authenticated,
-  })
-  const [loadedEndpoint, setLoadedEndpoint] = useState('')
-
-  useEffect(() => {
-    if (!session.authenticated) {
-      setStatus('ready')
-      return undefined
-    }
-
-    const controller = new AbortController()
-    let active = true
-    const background = loadedEndpoint === endpoint
-    if (!background) setStatus('loading')
-
-    async function loadProfile() {
-      try {
-        const [result, billetResult] = await Promise.all([
-          apiJson(endpoint, {
-            signal: controller.signal,
-          }),
-          apiJson('/api/guild/billets', {
-            signal: controller.signal,
-          }),
-        ])
-
-        if (!active) return
-        setMember(result?.member || null)
-        setBillets(
-          Array.isArray(billetResult?.billets) ? billetResult.billets : [],
-        )
-        setStatus(result?.member ? 'ready' : 'not-found')
-        setLoadedEndpoint(endpoint)
-      } catch (error) {
-        if (!active || error?.name === 'AbortError') return
-        if (background && error?.status !== 404) return
-        setStatus(error?.status === 404 ? 'not-found' : 'error')
-      }
-    }
-
-    void loadProfile()
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-    // loadedEndpoint only tells a refresh from a first load.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endpoint, revision, session.authenticated])
+  // Cached across page changes; live member, rank and authority changes
+  // refresh the profile in place (an open editor keeps its own draft), and
+  // this page's own edits apply at once.
+  const liveOptions = { topics: ['members', 'ranks', 'authority'], enabled: session.authenticated }
+  const profile = useLiveResource(endpoint, liveOptions)
+  const billetCatalog = useLiveResource('/api/guild/billets', liveOptions)
+  const member = profile.data?.member || null
+  const billets = Array.isArray(billetCatalog.data?.billets) ? billetCatalog.data.billets : []
+  const setMember = (updatedMember) => profile.mutate((current) => ({ ...current, member: updatedMember }))
+  const status = !session.authenticated || profile.status === 'idle'
+    ? 'ready'
+    : profile.status === 'missing' || (profile.status === 'ready' && !member)
+      ? 'not-found'
+      : profile.status === 'ready' && billetCatalog.status === 'loading'
+        ? 'loading'
+        : profile.status
 
   const profileUrl = useMemo(() => {
     if (!member?.id) return ''

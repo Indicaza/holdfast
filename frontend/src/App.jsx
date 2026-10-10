@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState, useTransition } from 'react'
 import Navbar from './Home/Navbar/Navbar.jsx'
 import { interceptLinkClicks, subscribeLocation } from './Navigation/navigation.js'
 import RouteProgress from './Navigation/RouteProgress.jsx'
+import ResourceCacheSync from './Api/ResourceCacheSync.jsx'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
@@ -203,6 +204,7 @@ function App() {
       <RouteProgress active={navigating} />
 
       <AuthResultModal />
+      <ResourceCacheSync />
     </>
   )
 }

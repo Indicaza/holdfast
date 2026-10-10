@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { apiJson } from '../Api/apiClient.js'
-import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import { useSession } from '../Auth/sessionContext.js'
 import PageShell from '../PageShell/PageShell.jsx'
 import RankInsignia from '../Members/RankInsignia.jsx'
@@ -242,8 +241,6 @@ function interactiveCardProps(editable, onEdit, label) {
 
 function Ranks() {
   const session = useSession()
-  const [catalog, setCatalog] = useState(null)
-  const [catalogStatus, setCatalogStatus] = useState('idle')
   const [editing, setEditing] = useState(null)
   const [creatingBillet, setCreatingBillet] = useState(false)
   const canManageAuthority = session.hasPermission('authority.manage')
@@ -253,48 +250,21 @@ function Ranks() {
   const canManageBilletDefinitions =
     canCreateBillets || canEditBillets || canDeleteBillets
 
-  // Live rank and authority changes refresh the catalog in place.
-  const [revision, setRevision] = useState(0)
-  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
+  // Cached across page changes; live rank and authority changes refresh it
+  // in place, and this page's own edits apply at once (mutate).
+  const authority = useLiveResource('/api/guild/authority', {
+    topics: ['members', 'ranks', 'authority'],
     enabled: session.authenticated,
   })
+  const catalog = authority.data
+  const catalogStatus = authority.status === 'missing' ? 'error' : authority.status
+  const setCatalog = authority.mutate
 
   useEffect(() => {
-    if (!session.authenticated) {
-      setCatalog(null)
-      setCatalogStatus('idle')
-      setEditing(null)
-      setCreatingBillet(false)
-      return undefined
-    }
-
-    const controller = new AbortController()
-    let active = true
-
-    async function loadAuthority() {
-      if (revision === 0) setCatalogStatus('loading')
-
-      try {
-        const result = await apiJson('/api/guild/authority', {
-          signal: controller.signal,
-        })
-
-        if (!active) return
-        setCatalog(result)
-        setCatalogStatus('ready')
-      } catch (error) {
-        if (!active || error?.name === 'AbortError') return
-        if (revision === 0) setCatalogStatus('error')
-      }
-    }
-
-    void loadAuthority()
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [revision, session.authenticated])
+    if (session.authenticated) return
+    setEditing(null)
+    setCreatingBillet(false)
+  }, [session.authenticated])
 
   const rankScopes = useMemo(
     () =>
