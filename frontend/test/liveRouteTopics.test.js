@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { matchesLiveTopics, routeTopics } from '../src/Live/liveRouteTopics.js'
+import { matchesLiveTopics, refreshesInPlace, routeTopics } from '../src/Live/liveRouteTopics.js'
 
 test('live routes subscribe only to relevant domains', () => {
   assert.deepEqual(routeTopics('/quests', ''), ['quests'])
@@ -17,4 +17,14 @@ test('wildcard reconnects and topic intersections invalidate active routes', () 
   assert.equal(matchesLiveTopics(['members', 'notifications'], ['members']), true)
   assert.equal(matchesLiveTopics(['notifications'], ['members']), false)
   assert.equal(matchesLiveTopics([], ['members']), false)
+})
+
+test('intelligence pages refresh their own data and are never remounted by live updates', () => {
+  assert.equal(refreshesInPlace('/intelligence', ''), true)
+  assert.equal(refreshesInPlace('/intelligence', '#characters'), true)
+  assert.equal(refreshesInPlace('/intelligence', '#craft'), true)
+  assert.equal(refreshesInPlace('/intelligence', '#audit'), false)
+  assert.equal(refreshesInPlace('/intelligence', '#guildweaver'), false)
+  assert.equal(refreshesInPlace('/quests', ''), false)
+  assert.equal(refreshesInPlace('/members', ''), false)
 })

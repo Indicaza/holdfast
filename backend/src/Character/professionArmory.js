@@ -1,7 +1,5 @@
 import { readFileSync } from "node:fs";
 
-import { readLatestTelemetryState } from "./Telemetry/telemetryStateRepository.js";
-
 // Uses the latest profession_snapshot telemetry for a character's armory
 // professions and recipes. Keeps the fields the current profession/recipe UI
 // reads and adds the richer recipe data (crafted item, reagents with names and
@@ -33,13 +31,6 @@ function professionCategories(profession) {
     }
   }
   return categories;
-}
-
-function latestProfessionState(characterId) {
-  const states = readLatestTelemetryState({ characterId, eventType: "profession_snapshot" });
-  return states
-    .filter((state) => Array.isArray(state?.payload?.professions))
-    .sort((a, b) => String(b.capturedAt).localeCompare(String(a.capturedAt)))[0] || null;
 }
 
 function armoryProfession(profession) {
@@ -149,10 +140,4 @@ export function applyProfessionTelemetry(armory, state) {
       modelVersion: state.payload.modelVersion ?? null,
     },
   };
-}
-
-export function decorateArmoryProfessions(armory) {
-  const characterId = armory?.character?.id;
-  if (!characterId) return armory;
-  return applyProfessionTelemetry(armory, latestProfessionState(characterId));
 }

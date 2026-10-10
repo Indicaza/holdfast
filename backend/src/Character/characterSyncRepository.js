@@ -1,5 +1,6 @@
 import { withGuildTransaction } from "../Data/database.js";
 import { learnGameDataFromSnapshotInDatabase } from "../GameData/gameDataCatalog.js";
+import { publishCharacterChanged } from "../Live/characterChangeEvents.js";
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
 import {
   ensureCharacterSnapshotObservabilitySchema,
@@ -15,6 +16,9 @@ import {
   mergeCharacterSnapshot,
   snapshotCapturedAt,
 } from "./characterSnapshotIntegrity.js";
+import { sectionsFromCharacterSnapshot } from "./ReadModel/projectors.js";
+import { applySectionsInDatabase, replayPendingTelemetryInDatabase } from "./ReadModel/readModelWriter.js";
+import { ensureCharacterReadModelCurrent } from "./ReadModel/rebuildReadModel.js";
 import { projectionSnapshot } from "./schemaV3Projection.js";
 import {
   ensureTelemetryProjectionSchema,
@@ -64,6 +68,20 @@ function preferredCharacterId(snapshot) {
   if (key) return `guildweaver:${key}`;
 
   return "";
+}
+
+// The character read model takes the snapshot as captured (not merged): per
+// section, the newest capture wins and partial sections only fill gaps.
+function projectReadModel(db, { characterId, memberId, rawCharacterId, snapshot, capturedAt, receivedAt }) {
+  const changed = applySectionsInDatabase(db, {
+    characterId,
+    sections: sectionsFromCharacterSnapshot(snapshot),
+    capturedAt,
+    receivedAt,
+    source: "character_snapshot",
+  });
+  replayPendingTelemetryInDatabase(db, { memberId, rawCharacterId, characterId });
+  return changed;
 }
 
 function parsePayload(value) {
@@ -162,6 +180,7 @@ export async function syncGuildweaverCharacter({
     return { status: "invalid", character: null, snapshot: null };
   }
 
+  ensureCharacterReadModelCurrent();
   const result = withGuildTransaction((db) => {
     const member = db
       .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
@@ -235,9 +254,11 @@ export async function syncGuildweaverCharacter({
         region,
         observedAt: receivedAt,
       });
+      const changedSections = projectReadModel(db, { characterId, memberId: normalizedMemberId, rawCharacterId, snapshot, capturedAt: captured, receivedAt });
 
       return {
         status: "stale",
+        changedSections,
         character: currentCharacterResult(db, characterId, incomingNames),
         snapshot: staleSnapshot,
         preservedSections: [],
@@ -337,6 +358,7 @@ export async function syncGuildweaverCharacter({
       source: "telemetry",
       observedAt: storedSnapshot.capturedAt,
     });
+    const changedSections = projectReadModel(db, { characterId, memberId: normalizedMemberId, rawCharacterId, snapshot, capturedAt: captured, receivedAt });
 
     return {
       status,
@@ -354,12 +376,16 @@ export async function syncGuildweaverCharacter({
       },
       snapshot: storedSnapshot,
       preservedSections: merged.preservedSections,
+      changedSections,
     };
   });
 
+  if (result.character?.id) {
+    publishCharacterChanged({ characterId: result.character.id, sections: result.changedSections || [] });
+  }
   if (result.status === "created" || result.status === "updated") {
     publishLiveUpdate({
-      topics: ["intelligence", "armory", "members"],
+      topics: ["members"],
       source: "guildweaver.character",
       entityId: result.character.id,
     });

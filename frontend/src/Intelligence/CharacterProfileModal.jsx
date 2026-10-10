@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { apiJson } from '../Api/apiClient.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import Modal from '../Modal/Modal.jsx'
 import CharacterProfile, { CharacterHeader } from './CharacterProfile.jsx'
 import { classIdentity } from './classIdentity.js'
@@ -8,69 +8,35 @@ import EmptyTelemetry from './EmptyTelemetry.jsx'
 import { normalizeArmory } from './model.js'
 import './CharacterProfileModal.css'
 
+const EMPTY_ARMORY = normalizeArmory({})
+
+// The character modal. Its armory refreshes in place whenever this character's
+// telemetry changes (live "character changed" events name the character), so
+// the open tab and scroll position survive while new data streams in.
 export default function CharacterProfileModal({ characterId, onClose }) {
-  const [status, setStatus] = useState('loading')
-  const [armory, setArmory] = useState(() => normalizeArmory({}))
   const [tab, setTab] = useState('equipment')
-  const [refreshVersion, setRefreshVersion] = useState(0)
+  const matches = useCallback((event) => event.entityId === characterId, [characterId])
+  const { status, data } = useLiveResource(
+    characterId ? `/api/intelligence/characters/${encodeURIComponent(characterId)}` : null,
+    { topics: ['armory'], matches, select: normalizeArmory },
+  )
 
   useEffect(() => {
-    if (!characterId) return
-    setStatus('loading')
     setTab('equipment')
   }, [characterId])
 
-  useEffect(() => {
-    if (!characterId) return undefined
-    const refresh = (event) => {
-      // Tell LiveRouteBoundary that an open Armory owns this invalidation. It
-      // will defer the route remount until the user actually closes the modal.
-      event.preventDefault()
-      setRefreshVersion((current) => current + 1)
-    }
-    window.addEventListener('holdfast:intelligence-changed', refresh)
-    return () => window.removeEventListener('holdfast:intelligence-changed', refresh)
-  }, [characterId])
-
-  useEffect(() => {
-    if (!characterId) return undefined
-    const controller = new AbortController()
-    let active = true
-
-    apiJson(`/api/intelligence/characters/${encodeURIComponent(characterId)}`, { signal: controller.signal })
-      .then((payload) => {
-        if (!active) return
-        setArmory(normalizeArmory(payload))
-        setStatus('ready')
-      })
-      .catch((error) => {
-        if (!active || error?.name === 'AbortError') return
-        // A background live refresh should never replace an already usable
-        // character with an error surface. Keep the last known-good armory in
-        // place; initial loads still surface the real error.
-        setStatus((current) => current === 'ready' ? current : (error?.status === 404 ? 'missing' : 'error'))
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [characterId, refreshVersion])
-
   if (!characterId) return null
 
+  const armory = data || EMPTY_ARMORY
+  const ready = status === 'ready'
   const character = armory.character
-  const title = status === 'ready' ? character.name : 'Character profile'
-  const handleClose = () => {
-    onClose()
-    window.dispatchEvent(new Event('holdfast:intelligence-modal-closed'))
-  }
+  const title = ready ? character.name : 'Character profile'
 
   return (
-    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={handleClose}>
-      <div className="armory-shell" style={status === 'ready' ? { '--armory-class-color': classIdentity(character.className).color } : undefined}>
-        <CharacterHeader character={character} stats={armory.stats} loading={status !== 'ready'} />
-        {status === 'ready' ? <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} /> : (
+    <Modal title={title} ariaLabel={title} hideHeader size="armory" align="left" onClose={onClose}>
+      <div className="armory-shell" style={ready ? { '--armory-class-color': classIdentity(character.className).color } : undefined}>
+        <CharacterHeader character={character} stats={armory.stats} loading={!ready} />
+        {ready ? <CharacterProfile armory={armory} tab={tab} onTabChange={setTab} /> : (
           <div className="armory-shell__state">
             {status === 'loading' ? <p className="armory-state">Opening the latest character snapshot…</p> : null}
             {status === 'error' ? <EmptyTelemetry title="The profile could not be loaded.">Guildweaver telemetry is temporarily unavailable.</EmptyTelemetry> : null}

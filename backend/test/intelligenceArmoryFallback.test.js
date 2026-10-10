@@ -44,12 +44,6 @@ test("character armory keeps durable snapshot data when optional enrichment fail
       },
     },
     icons: iconResolver(),
-    armoryAdapter() {
-      throw new Error("adapter unavailable");
-    },
-    talentArtDecorator() {
-      throw new Error("talent art unavailable");
-    },
     gameDataResolver() {
       throw new Error("catalog unavailable");
     },
@@ -76,8 +70,6 @@ test("character armory does not wait on slow external hydration", async () => {
       },
     },
     icons: iconResolver(),
-    armoryAdapter: (value) => value,
-    talentArtDecorator: (value) => value,
     gameDataResolver: () => ({ items: {} }),
     hydrationDeadlineMs: 10,
   });
@@ -85,4 +77,23 @@ test("character armory does not wait on slow external hydration", async () => {
   assert.ok(Date.now() - startedAt < 500);
   assert.equal(armory.character.name, "Rook Ravenstar");
   assert.equal(armory.gameData.provider.pending, true);
+});
+
+test("a malformed section never takes the character modal down", async () => {
+  const { composeCharacterArmory } = await import("../src/Character/ReadModel/composeArmory.js");
+  const at = "2026-10-09T12:00:00.000Z";
+  const armory = composeCharacterArmory({
+    character: { id: "character-rook", member_id: "member", name: "Rook", is_main: 1 },
+    sections: {
+      identity: { capturedAt: at, payload: { name: "Rook", level: 22, schemaVersion: 3 } },
+      equipment: { capturedAt: at, payload: { equipment: [{ slot: "HeadSlot", itemId: 11746, name: "Golem Skull Helm" }] } },
+      // Neither shape the decorators expect.
+      profession_books: { capturedAt: at, payload: { professions: [null, 7] } },
+      inventory: { capturedAt: at, payload: { containers: "broken" } },
+    },
+  });
+  assert.equal(armory.character.name, "Rook");
+  assert.equal(armory.character.level, 22);
+  assert.equal(armory.equipment[0].itemId, 11746);
+  assert.equal(armory.freshness.equipment, at);
 });

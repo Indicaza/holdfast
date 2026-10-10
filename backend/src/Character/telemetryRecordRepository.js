@@ -1,4 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
+import { applyTalentDefinitionInDatabase } from "./ReadModel/sectionStore.js";
 import { decodeTelemetryJson, encodeTelemetryJson, parseTelemetryJson } from "./Telemetry/telemetryJson.js";
 
 const FORBIDDEN_KEYS = new Set([
@@ -194,6 +195,19 @@ export function recordTelemetry({
       return { status: "invalid" };
     }
 
+    // A device whose revision counter was reset (its SavedVariables were
+    // wiped, or the stream was pruned and recreated) reuses revisions with
+    // new content. The idempotency key covers the content, so a different key
+    // at a taken revision is that reset: newer content replaces the old row
+    // instead of being dropped as a duplicate.
+    const reused = db.prepare(`
+      SELECT id, captured_at FROM guildweaver_telemetry_records
+      WHERE device_id = ? AND stream_key = ? AND revision = ? AND idempotency_key <> ?
+    `).get(text(deviceId, 160), normalizedStreamKey, normalizedRevision, normalizedIdempotencyKey);
+    if (reused && capturedAt(sanitizedEnvelope?.capturedAt) >= reused.captured_at) {
+      db.prepare("DELETE FROM guildweaver_telemetry_records WHERE id = ?").run(reused.id);
+    }
+
     const result = db.prepare(`
       INSERT OR IGNORE INTO guildweaver_telemetry_records (
         device_id, member_id, stream_key, kind, revision, event_type, domain,
@@ -219,11 +233,19 @@ export function recordTelemetry({
       encodeTelemetryJson(sanitizedEnvelope),
     );
 
+    if (result.changes && eventType === "talent_tree_definition") {
+      applyTalentDefinitionInDatabase(db, {
+        payload: sanitizedEnvelope.payload,
+        capturedAt: capturedAt(sanitizedEnvelope?.capturedAt),
+        receivedAt,
+      });
+    }
+
     const row = db.prepare(`
       SELECT * FROM guildweaver_telemetry_records
       WHERE idempotency_key = ? OR (device_id = ? AND stream_key = ? AND revision = ?)
-      ORDER BY id DESC LIMIT 1
-    `).get(normalizedIdempotencyKey, text(deviceId, 160), normalizedStreamKey, normalizedRevision);
+      ORDER BY (idempotency_key = ?) DESC, id DESC LIMIT 1
+    `).get(normalizedIdempotencyKey, text(deviceId, 160), normalizedStreamKey, normalizedRevision, normalizedIdempotencyKey);
 
     return {
       status: result.changes ? "created" : "duplicate",

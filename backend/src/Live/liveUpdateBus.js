@@ -20,6 +20,7 @@ export function publishLiveUpdate({
   actorId = null,
   memberId = null,
   permission = null,
+  detail = null,
 } = {}) {
   const normalizedTopics = normalizeTopics(topics)
   if (!normalizedTopics.length) return null
@@ -33,6 +34,7 @@ export function publishLiveUpdate({
     actorId: actorId ? String(actorId) : null,
     memberId: memberId ? String(memberId) : null,
     permission: permission ? String(permission) : null,
+    detail: detail && typeof detail === 'object' ? detail : null,
     at: new Date().toISOString(),
   }
 

@@ -5,6 +5,7 @@ import GuildweaverConsole from '../Admin/GuildweaverConsole.jsx'
 import '../Admin/Admin.css'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
+import { useLiveResource } from '../Live/useLiveResource.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import WowIcon from '../WowAssets/WowIcon.jsx'
@@ -17,6 +18,8 @@ import intelligenceViews from './intelligenceViews.js'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
 import RosterComposition from './RosterComposition.jsx'
 import './GuildIntelligence.css'
+
+const EMPTY_INTELLIGENCE = normalizeIntelligence({})
 
 const VIEW_ALIASES = Object.freeze({
   composition: 'roster',
@@ -59,7 +62,7 @@ function CharacterCard({ character, onOpen }) {
   return (
     <a
       className="character-card"
-      href={`/armory/${encodeURIComponent(character.id)}`}
+      href={`/intelligence?character=${encodeURIComponent(character.id)}`}
       onClick={handleClick}
       style={{ '--armory-class-color': classIdentity(character.className).color }}
     >
@@ -277,7 +280,7 @@ function CraftFinder() {
                 {result.crafters?.map((crafter) => {
                   const skill = professionSkillLabel(crafter, result.recipe?.professionName)
                   return (
-                    <a key={crafter.id} href={`/armory/${encodeURIComponent(crafter.id)}`}>
+                    <a key={crafter.id} href={`/intelligence?character=${encodeURIComponent(crafter.id)}`}>
                       <span>
                         <strong>{crafter.name}</strong>
                         <small>{skill || crafter.className || 'Character'}{crafter.realm ? ` · ${crafter.realm}` : ''}</small>
@@ -304,12 +307,30 @@ function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCh
   return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
 }
 
+// The open character lives in the URL (?character=), so a refresh, a shared
+// link or Back/Forward reopens it, and nothing else on the page can close it.
+function readCharacterFromLocation() {
+  return new URLSearchParams(window.location.search).get('character') || ''
+}
+
+function writeCharacterToLocation(characterId) {
+  const url = new URL(window.location.href)
+  if (characterId) url.searchParams.set('character', characterId)
+  else url.searchParams.delete('character')
+  if (url.href !== window.location.href) window.history.pushState(null, '', url)
+}
+
 export default function GuildIntelligence() {
   const session = useSession()
-  const [status, setStatus] = useState('loading')
-  const [data, setData] = useState(() => normalizeIntelligence({}))
+  const { status: summaryStatus, data: summary } = useLiveResource('/api/intelligence', {
+    topics: ['intelligence', 'members'],
+    select: normalizeIntelligence,
+    enabled: session.authenticated,
+  })
+  const data = summary || EMPTY_INTELLIGENCE
+  const status = summaryStatus === 'idle' ? 'ready' : summaryStatus === 'missing' ? 'error' : summaryStatus
   const [activeView, setActiveView] = useState('overview')
-  const [selectedCharacterId, setSelectedCharacterId] = useState('')
+  const [selectedCharacterId, setSelectedCharacterId] = useState(readCharacterFromLocation)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -328,28 +349,15 @@ export default function GuildIntelligence() {
   }), [canAudit, canInspectGuildweaver])
 
   useEffect(() => {
-    if (!session.authenticated) {
-      setStatus('ready')
-      return undefined
-    }
-    const controller = new AbortController()
-    let active = true
-    setStatus('loading')
-    apiJson('/api/intelligence', { signal: controller.signal })
-      .then((payload) => {
-        if (!active) return
-        setData(normalizeIntelligence(payload))
-        setStatus('ready')
-      })
-      .catch((error) => {
-        if (!active || error?.name === 'AbortError') return
-        setStatus('error')
-      })
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [session.authenticated])
+    const syncCharacter = () => setSelectedCharacterId(readCharacterFromLocation())
+    window.addEventListener('popstate', syncCharacter)
+    return () => window.removeEventListener('popstate', syncCharacter)
+  }, [])
+
+  function openCharacter(characterId) {
+    setSelectedCharacterId(characterId)
+    writeCharacterToLocation(characterId)
+  }
 
   useEffect(() => {
     if (!session.authenticated) return undefined
@@ -410,13 +418,13 @@ export default function GuildIntelligence() {
             availableViews={availableViews}
             data={data}
             freshCharacters={freshCharacters}
-            onOpenCharacter={setSelectedCharacterId}
+            onOpenCharacter={openCharacter}
             onSelectView={selectView}
             session={session}
           />
         ) : null}
       </IntelligenceAppShell>
-      <CharacterProfileModal characterId={selectedCharacterId} onClose={() => setSelectedCharacterId('')} />
+      <CharacterProfileModal characterId={selectedCharacterId} onClose={() => openCharacter('')} />
     </>
   )
 }

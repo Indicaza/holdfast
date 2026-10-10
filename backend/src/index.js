@@ -9,6 +9,7 @@ import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
 import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
 import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
+import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildReadModel.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -33,6 +34,14 @@ const compactedTelemetry = withGuildDatabase(compactStoredTelemetry);
 
 if (compactedTelemetry) {
   console.log(`Compressed ${compactedTelemetry} stored telemetry values`);
+}
+
+// The character read model is rebuilt from stored telemetry when its version
+// changes, before the first request reads it.
+const readModelRebuild = ensureCharacterReadModelCurrent();
+
+if (readModelRebuild) {
+  console.log("Rebuilt the character read model", readModelRebuild);
 }
 
 const app = createApp();

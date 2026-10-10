@@ -8,9 +8,9 @@ import {
   normalizeProfessions,
   normalizeRecipes,
   normalizeTalents,
-  readIntelligenceSummary,
   searchCraftFinder,
 } from "../src/Character/telemetryProjection.js";
+import { readCharacterCards } from "../src/Character/ReadModel/readModelReader.js";
 import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
 
 test("telemetry normalizers accept alternate and malformed optional shapes", () => {
@@ -94,7 +94,7 @@ test("telemetry normalizers accept alternate and malformed optional shapes", () 
   assert.equal(talents.edges[0].required, false);
 });
 
-test("legacy summary and craft projections remain readable for compatibility", async () => {
+test("legacy v1 snapshots feed the character cards and the craft finder", async () => {
   await withHttpApp(async () => {
     await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -132,7 +132,7 @@ test("legacy summary and craft projections remain readable for compatibility", a
       },
     });
 
-    const summary = readIntelligenceSummary();
+    const summary = readCharacterCards();
     assert.equal(summary.characters.length, 1);
     assert.equal(summary.characters[0].organizationName, "Sister Guild");
     assert.equal(summary.professions[0].name, "Blacksmithing");

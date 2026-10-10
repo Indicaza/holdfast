@@ -1,7 +1,3 @@
-import { withGuildDatabase } from "../Data/database.js";
-import { ensureTelemetryRecordSchema } from "./telemetryRecordRepository.js";
-import { parseTelemetryJson } from "./Telemetry/telemetryJson.js";
-
 function array(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -124,47 +120,19 @@ export function normalizeTalentDefinitionArt(value) {
   };
 }
 
-function latestDefinitions(db, memberId, treeIds) {
-  const wanted = new Set(array(treeIds).map(number).filter((value) => value !== null));
-  if (!memberId || !wanted.size) return [];
-
-  ensureTelemetryRecordSchema(db);
-  const rows = db.prepare(`
-    SELECT envelope_json
-    FROM guildweaver_telemetry_records
-    WHERE event_type = 'talent_tree_definition' AND member_id = ?
-    ORDER BY received_at DESC, id DESC
-  `).all(memberId);
-  const found = new Map();
-
-  for (const row of rows) {
-    const definition = object(parseTelemetryJson(row.envelope_json)?.payload);
-    const treeId = number(definition.treeId);
-    if (treeId === null || !wanted.has(treeId) || found.has(treeId)) continue;
-    const normalized = normalizeTalentDefinitionArt(definition);
-    if (normalized) found.set(treeId, normalized);
-    if (found.size === wanted.size) break;
-  }
-
-  return [...found.values()];
+// Adds tree art and definitions to an armory's talents from normalized
+// definitions (normalizeTalentDefinitionArt).
+export function applyTalentArt(armory, definitions) {
+  if (!armory?.talents || !definitions?.length) return armory;
+  const primary = definitions.find((definition) => definition.art?.talentTabs?.length) || definitions[0];
+  return {
+    ...armory,
+    talents: {
+      ...armory.talents,
+      treeDefinitions: definitions,
+      treeHashes: definitions.map(({ treeId, treeHash }) => ({ treeId, treeHash })).filter((entry) => entry.treeHash),
+      art: primary?.art || null,
+    },
+  };
 }
 
-export function decorateArmoryTalentArt(armory) {
-  if (!armory?.character?.memberId || !armory?.talents) return armory;
-
-  return withGuildDatabase((db) => {
-    const definitions = latestDefinitions(db, armory.character.memberId, armory.talents.treeIds);
-    if (!definitions.length) return armory;
-
-    const primary = definitions.find((definition) => definition.art?.talentTabs?.length) || definitions[0];
-    return {
-      ...armory,
-      talents: {
-        ...armory.talents,
-        treeDefinitions: definitions,
-        treeHashes: definitions.map(({ treeId, treeHash }) => ({ treeId, treeHash })).filter((entry) => entry.treeHash),
-        art: primary?.art || null,
-      },
-    };
-  });
-}

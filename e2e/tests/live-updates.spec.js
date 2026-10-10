@@ -1,9 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { authenticate } from '../helpers/auth.js'
 
-async function submitTelemetry(page) {
+// Syncs a character snapshot through a freshly paired bridge device. Pass a
+// previous result as `again` to sync the same character a second time (one
+// level higher, a second later).
+async function submitTelemetry(page, again = null) {
   await page.goto('/')
-  return page.evaluate(async () => {
+  return page.evaluate(async (again) => {
     async function json(url, options = {}) {
       const { headers = {}, ...requestOptions } = options
       const response = await fetch(url, {
@@ -18,35 +21,39 @@ async function submitTelemetry(page) {
       return body
     }
 
-    const pairing = await json('/api/bridge/pairing/start', {
-      method: 'POST',
-      body: JSON.stringify({ deviceName: 'Live Feed E2E' }),
-    })
-    await json('/api/bridge/pairing/approve', {
-      method: 'POST',
-      body: JSON.stringify({ userCode: pairing.userCode }),
-    })
-    const token = await json('/api/bridge/pairing/token', {
-      method: 'POST',
-      body: JSON.stringify({ deviceCode: pairing.deviceCode }),
-    })
-    const suffix = crypto.randomUUID().replaceAll('-', '').slice(0, 8)
+    let token = again?.token
+    if (!token) {
+      const pairing = await json('/api/bridge/pairing/start', {
+        method: 'POST',
+        body: JSON.stringify({ deviceName: 'Live Feed E2E' }),
+      })
+      await json('/api/bridge/pairing/approve', {
+        method: 'POST',
+        body: JSON.stringify({ userCode: pairing.userCode }),
+      })
+      token = await json('/api/bridge/pairing/token', {
+        method: 'POST',
+        body: JSON.stringify({ deviceCode: pairing.deviceCode }),
+      })
+    }
+    const suffix = again?.suffix || crypto.randomUUID().replaceAll('-', '').slice(0, 8)
     const name = `Live${suffix}`
+    const level = again ? again.level + 1 : 31
 
     const result = await json('/api/bridge/characters/snapshot', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token.deviceToken}` },
       body: JSON.stringify({
-        revision: 9,
+        revision: again ? 10 : 9,
         snapshot: {
           schemaVersion: 2,
-          capturedAt: Math.floor(Date.now() / 1000),
+          capturedAt: Math.floor(Date.now() / 1000) + (again ? 1 : 0),
           characterId: `live-feed-e2e-${suffix}`,
           characterKey: `classic beta pve 2:${name.toLowerCase()}`,
           name,
           realm: 'Classic Beta PvE 2',
           region: 'US',
-          level: 31,
+          level,
           race: { id: 1, name: 'Human' },
           class: { id: 8, name: 'Mage' },
           specialization: { id: 63, name: 'Fire' },
@@ -58,8 +65,8 @@ async function submitTelemetry(page) {
       }),
     })
 
-    return { ...result, fixtureName: name }
-  })
+    return { ...result, fixtureName: name, token, suffix, level }
+  }, again)
 }
 
 test('Guildweaver telemetry refreshes an open Intelligence dashboard without navigation', async ({ browser }) => {
@@ -95,7 +102,7 @@ test('Guildweaver telemetry refreshes an open Intelligence dashboard without nav
   }
 })
 
-test('Guildweaver telemetry refreshes an open Armory in place instead of closing it', async ({ browser }) => {
+test('an open Armory refreshes in place for its own character and ignores the rest', async ({ browser }) => {
   const viewer = await browser.newContext()
   const sender = await browser.newContext()
   await authenticate(viewer, 'member')
@@ -121,17 +128,30 @@ test('Guildweaver telemetry refreshes an open Armory in place instead of closing
 
     const profile = page.getByRole('dialog')
     await expect(profile).toHaveAttribute('aria-label', character.fixtureName)
+    expect(new URL(page.url()).searchParams.get('character')).toBe(character.character.id)
     await profile.getByRole('tab', { name: /^Professions/ }).click()
     await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
-    const initialArmoryReads = armoryReads
 
+    // Someone else's character changing leaves the open modal alone.
+    const readsBeforeUnrelated = armoryReads
     const unrelated = await submitTelemetry(senderPage)
     expect(unrelated.status).toBe('created')
+    await expect(page.locator('.character-card').filter({ hasText: unrelated.fixtureName })).toBeVisible()
+    await page.waitForTimeout(1000)
+    expect(armoryReads).toBe(readsBeforeUnrelated)
+    await expect(page.getByRole('dialog')).toHaveCount(1)
 
-    await expect.poll(() => armoryReads).toBeGreaterThan(initialArmoryReads)
-    await expect(profile).toHaveAttribute('aria-label', character.fixtureName)
+    // Its own character changing refreshes it in place: same tab, new data.
+    const update = await submitTelemetry(senderPage, character)
+    expect(update.status).toBe('updated')
+    await expect.poll(() => armoryReads).toBeGreaterThan(readsBeforeUnrelated)
+    await expect(profile.getByText(`${character.level + 1}`, { exact: true }).first()).toBeVisible()
     await expect(profile.getByRole('tab', { name: /^Professions/ })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByRole('dialog')).toHaveCount(1)
+
+    // The open character is in the URL, so a reload reopens it.
+    await page.reload()
+    await expect(page.getByRole('dialog')).toHaveAttribute('aria-label', character.fixtureName)
   } finally {
     await sender.close()
     await viewer.close()
