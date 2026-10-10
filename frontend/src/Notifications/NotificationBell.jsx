@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
-import { useLiveUpdates } from '../Live/liveUpdatesContext.js'
+import { useLiveRefresh, useLiveUpdates } from '../Live/liveUpdatesContext.js'
+import { followLink } from '../Navigation/navigation.js'
 import './NotificationBell.css'
 
 function relativeTime(value) {
@@ -34,7 +35,7 @@ function BellIcon() {
 }
 
 function NotificationBell() {
-  const { event: liveEvent } = useLiveUpdates()
+  const { status: liveStatus } = useLiveUpdates()
   const [open, setOpen] = useState(false)
   const [inbox, setInbox] = useState({
     notifications: [],
@@ -60,33 +61,30 @@ function NotificationBell() {
 
   useEffect(() => {
     refresh()
+  }, [refresh])
+
+  // Live events keep the inbox current (a reconnect counts, in case one was
+  // missed). Polling and tab returns only matter while live updates are down.
+  useLiveRefresh(['notifications'], refresh, { debounceMs: 150 })
+
+  useEffect(() => {
+    if (liveStatus === 'live') return undefined
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === 'visible') refresh()
     }, 45_000)
 
-    function handleFocus() {
-      refresh()
-    }
-
     function handleVisibility() {
       if (document.visibilityState === 'visible') refresh()
     }
 
-    window.addEventListener('focus', handleFocus)
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       window.clearInterval(interval)
-      window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [refresh])
-
-  useEffect(() => {
-    if (!liveEvent?.topics?.some((topic) => topic === 'notifications' || topic === '*')) return
-    void refresh()
-  }, [liveEvent, refresh])
+  }, [liveStatus, refresh])
 
   useEffect(() => {
     if (!open) return undefined
@@ -130,7 +128,7 @@ function NotificationBell() {
     }
 
     if (notification.href) {
-      window.location.assign(notification.href)
+      followLink(notification.href)
     }
   }
 

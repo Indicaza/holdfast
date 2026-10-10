@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
 import Home from '../Home/Home.jsx'
@@ -15,6 +16,7 @@ import {
   rewardApprovalStatus,
   withSelfAssignments,
 } from './questAuthority.js'
+import { navigate } from '../Navigation/navigation.js'
 import './Quests.css'
 
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
@@ -216,19 +218,20 @@ function Quests() {
       if (document.visibilityState === 'visible') refresh()
     }
 
-    window.addEventListener('focus', refresh)
     window.addEventListener('storage', handleStorage)
     window.addEventListener(QUESTS_CHANGED_KEY, refresh)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       controller.abort()
-      window.removeEventListener('focus', refresh)
       window.removeEventListener('storage', handleStorage)
       window.removeEventListener(QUESTS_CHANGED_KEY, refresh)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [loadData])
+
+  // Quest changes by anyone else arrive as live events.
+  useLiveRefresh(['quests'], () => void loadData(), { enabled: session.authenticated })
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -596,7 +599,7 @@ function Quests() {
     0,
   )
 
-  const closeGate = () => window.location.assign('/')
+  const closeGate = () => navigate('/')
   const authCode = new URLSearchParams(window.location.search).get('auth')
 
   if (session.status === 'loading' && authCode === 'connected') {

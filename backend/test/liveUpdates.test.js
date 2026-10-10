@@ -59,6 +59,40 @@ test('successful member writes appear on the authenticated live stream', () => w
   controller.abort()
 }))
 
+test('a timezone write that changes nothing is not broadcast', () => withHttpApp(async ({ base, cookie, request }) => {
+  const controller = new AbortController()
+  const response = await fetch(`${base}/api/notifications/live`, {
+    signal: controller.signal,
+    headers: { Origin: 'https://holdfast.example', Cookie: cookie('member') },
+  })
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let text = ''
+  const collecting = (async () => {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) return
+      text += decoder.decode(value, { stream: true })
+    }
+  })().catch(() => {})
+  const settle = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+  while (!/event: ready/.test(text)) await settle(20)
+
+  // Every tab focus re-sends the detected timezone. The officer chose one
+  // manually, so nothing changes and nobody else should refresh.
+  const repeat = await request('/api/guild/members/me/timezone', { persona: 'officer', method: 'PATCH', body: { timezone: 'Europe/Berlin' } })
+  assert.equal(repeat.json.status, 'manual')
+  await settle(400)
+  assert.doesNotMatch(text, /event: change/)
+
+  const saved = await request('/api/guild/members/me', { persona: 'officer', method: 'PATCH', body: { profile: { bio: 'A real change' } } })
+  assert.equal(saved.status, 200, saved.text)
+  await settle(400)
+  assert.match(text, /event: change[\s\S]*"members"/)
+  controller.abort()
+  await collecting
+}))
+
 test('live bus scopes private and privileged invalidations', () => {
   resetLiveUpdatesForTests()
   const memberEvents = []

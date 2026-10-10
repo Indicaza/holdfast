@@ -54,6 +54,17 @@ function internalLink(event) {
   return url
 }
 
+// Opens an href the way a link click would: app pages without a reload,
+// anything else (other sites, server paths) as a normal page load.
+export function followLink(href, { replace = false } = {}) {
+  const url = new URL(href, window.location.href)
+  if (url.origin !== window.location.origin || SERVER_PATHS.test(url.pathname)) {
+    window.location[replace ? 'replace' : 'assign'](url.href)
+    return
+  }
+  navigate(url.href, { replace })
+}
+
 // Routes every same-origin link click through navigate(). Returns the cleanup.
 export function interceptLinkClicks() {
   const onClick = (event) => {

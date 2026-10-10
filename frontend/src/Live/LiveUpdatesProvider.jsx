@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from '../Auth/sessionContext.js'
 import { LiveUpdatesContext } from './liveUpdatesContext.js'
 
@@ -18,8 +18,23 @@ function parsedEvent(event) {
 export function LiveUpdatesProvider({ children }) {
   const session = useSession()
   const [status, setStatus] = useState('offline')
-  const [event, setEvent] = useState(null)
+  const listeners = useRef(new Set())
   const connectedOnce = useRef(false)
+
+  const subscribe = useCallback((listener) => {
+    listeners.current.add(listener)
+    return () => listeners.current.delete(listener)
+  }, [])
+
+  const publish = useCallback((event) => {
+    for (const listener of [...listeners.current]) {
+      try {
+        listener(event)
+      } catch (error) {
+        console.error('Live update listener failed', error)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!session.authenticated || typeof EventSource === 'undefined') {
@@ -34,7 +49,7 @@ export function LiveUpdatesProvider({ children }) {
     function handleReady() {
       setStatus('live')
       if (connectedOnce.current) {
-        setEvent({
+        publish({
           type: 'sync',
           topics: ['*'],
           source: 'stream.reconnected',
@@ -46,7 +61,7 @@ export function LiveUpdatesProvider({ children }) {
 
     function handleChange(message) {
       const next = parsedEvent(message)
-      if (next) setEvent(next)
+      if (next) publish(next)
       setStatus('live')
     }
 
@@ -77,9 +92,9 @@ export function LiveUpdatesProvider({ children }) {
       window.removeEventListener('online', handleOnline)
       connectedOnce.current = false
     }
-  }, [session.authenticated])
+  }, [publish, session.authenticated])
 
-  const value = useMemo(() => ({ status, event }), [status, event])
+  const value = useMemo(() => ({ status, subscribe }), [status, subscribe])
 
   return (
     <LiveUpdatesContext.Provider value={value}>

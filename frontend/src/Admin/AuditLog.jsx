@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 
 const EVENT_LABELS = {
   'quest.workspace_saved': 'saved the quest workspace',
@@ -43,6 +44,10 @@ function AuditLog() {
   const [events, setEvents] = useState([])
   const [status, setStatus] = useState('loading')
 
+  // New activity refreshes the log in place.
+  const [revision, setRevision] = useState(0)
+  useLiveRefresh(['audit'], () => setRevision((current) => current + 1))
+
   useEffect(() => {
     const controller = new AbortController()
 
@@ -54,7 +59,7 @@ function AuditLog() {
         setEvents(Array.isArray(result?.events) ? result.events : [])
         setStatus('ready')
       } catch (error) {
-        if (error?.name !== 'AbortError') {
+        if (error?.name !== 'AbortError' && revision === 0) {
           setStatus('error')
         }
       }
@@ -62,7 +67,7 @@ function AuditLog() {
 
     void load()
     return () => controller.abort()
-  }, [])
+  }, [revision])
 
   return (
     <section className="admin-audit">

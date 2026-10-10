@@ -3,7 +3,9 @@ import { apiJson } from '../Api/apiClient.js'
 import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
+import { navigate } from '../Navigation/navigation.js'
 import './Members.css'
 
 const EMPTY_DIRECTORY = {
@@ -145,6 +147,12 @@ function Members() {
   }, [])
 
 
+  // Live member, rank and authority changes refresh the directory in place.
+  const [revision, setRevision] = useState(0)
+  useLiveRefresh(['members', 'ranks', 'authority'], () => setRevision((current) => current + 1), {
+    enabled: session.authenticated,
+  })
+
   useEffect(() => {
     if (!session.authenticated) {
       setStatus('ready')
@@ -155,7 +163,7 @@ function Members() {
     let active = true
 
     async function loadDirectory() {
-      setStatus('loading')
+      if (revision === 0) setStatus('loading')
 
       try {
         const result = await apiJson('/api/guild/members', {
@@ -171,7 +179,8 @@ function Members() {
         setStatus('ready')
       } catch (error) {
         if (!active || error?.name === 'AbortError') return
-        setStatus('error')
+        // A failed background refresh keeps the directory on screen.
+        if (revision === 0) setStatus('error')
       }
     }
 
@@ -181,7 +190,7 @@ function Members() {
       active = false
       controller.abort()
     }
-  }, [session.authenticated])
+  }, [revision, session.authenticated])
 
   const visibleMembers = useMemo(() => {
     const members = directory.members.filter((member) => {
@@ -253,7 +262,7 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id, sort])
 
-  const closeGate = () => window.location.assign('/')
+  const closeGate = () => navigate('/')
 
   if (session.status === 'loading' || session.status === 'error') {
     return (

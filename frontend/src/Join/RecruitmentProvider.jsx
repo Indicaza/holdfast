@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { JoinContext } from './JoinContext.js'
 import JoinModal from './JoinModal.jsx'
+import { navigate } from '../Navigation/navigation.js'
 import { currentReturnTo, safeReturnTo } from './joinDestination.js'
 
 function RecruitmentProvider({ children }) {
@@ -24,8 +25,7 @@ function RecruitmentProvider({ children }) {
   }, [join.isOpen])
   const closeJoin = useCallback(() => {
     if (window.location.pathname.replace(/\/+$/, '') === '/join') {
-      window.location.assign(join.returnTo)
-      return
+      navigate(join.returnTo)
     }
     setJoin((current) => ({ ...current, isOpen: false }))
   }, [join.returnTo])

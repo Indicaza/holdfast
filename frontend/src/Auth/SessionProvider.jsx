@@ -16,11 +16,25 @@ function detectedTimezone() {
   }
 }
 
-async function syncDetectedTimezone() {
+const SYNCED_TIMEZONE_KEY = 'holdfast:timezone-synced'
+
+// Reports the browser's timezone once per member and value per browser
+// session, not on every session check (each tab focus runs one).
+async function syncDetectedTimezone(userId) {
   const timezone = detectedTimezone()
 
   if (!timezone) {
     return
+  }
+
+  const marker = `${userId}:${timezone}`
+  try {
+    if (window.sessionStorage.getItem(SYNCED_TIMEZONE_KEY) === marker) return
+    window.sessionStorage.setItem(SYNCED_TIMEZONE_KEY, marker)
+  } catch {
+    // Without session storage this still runs once per page load.
+    if (syncDetectedTimezone.sent === marker) return
+    syncDetectedTimezone.sent = marker
   }
 
   try {
@@ -34,6 +48,13 @@ async function syncDetectedTimezone() {
   } catch {
     // Timezone sync is best-effort and should never block sign-in.
   }
+}
+
+// The same session, so consumers need not rerender after a routine check.
+function sameSession(a, b) {
+  return a.status === b.status
+    && a.authenticated === b.authenticated
+    && JSON.stringify([a.user, a.permissions, a.authority]) === JSON.stringify([b.user, b.permissions, b.authority])
 }
 
 function currentReturnTo() {
@@ -53,9 +74,14 @@ export function SessionProvider({ children }) {
     authority: null,
   })
 
-  const refresh = useCallback(() => {
+  // An explicit retry shows "checking" again; background checks (focus, tab
+  // return) leave what is on screen alone until they have an answer, so a
+  // click that focuses the window never swaps the button out from under it.
+  const refresh = useCallback((options) => {
     if (inFlight.current) return inFlight.current
-    setSession((current) => current.status === 'error' ? { ...current, status: 'loading' } : current)
+    if (options?.background !== true) {
+      setSession((current) => current.status === 'error' ? { ...current, status: 'loading' } : current)
+    }
     const requestGeneration = generation.current
     const request = (async () => {
       try {
@@ -69,10 +95,10 @@ export function SessionProvider({ children }) {
         }
 
         if (requestGeneration !== generation.current) return null
-        setSession(nextSession)
+        setSession((current) => (sameSession(current, nextSession) ? current : nextSession))
 
-        if (data?.authenticated) {
-          void syncDetectedTimezone()
+        if (data?.authenticated && data.user?.id) {
+          void syncDetectedTimezone(data.user.id)
         }
 
         return nextSession
@@ -86,7 +112,7 @@ export function SessionProvider({ children }) {
         }
 
         if (requestGeneration !== generation.current) return null
-        setSession(nextSession)
+        setSession((current) => (sameSession(current, nextSession) ? current : nextSession))
         return nextSession
       }
     })()
@@ -99,13 +125,14 @@ export function SessionProvider({ children }) {
 
   useEffect(() => {
     refresh()
+    const onFocus = () => void refresh({ background: true })
     const onVisibility = () => {
-      if (!document.hidden) void refresh()
+      if (!document.hidden) void refresh({ background: true })
     }
-    window.addEventListener('focus', refresh)
+    window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.removeEventListener('focus', refresh)
+      window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [refresh])
