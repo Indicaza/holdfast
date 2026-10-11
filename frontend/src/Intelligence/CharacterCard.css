@@ -1,0 +1,45 @@
+.intel-character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr));
+  gap: var(--space-3);
+}
+
+.character-card {
+  --armory-pad: 1rem;
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .7rem .75rem;
+  padding: .95rem .9rem .95rem 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(201, 168, 90, .26);
+  border-radius: .7rem;
+  background:
+    radial-gradient(ellipse 45% 85% at 0% 0%, color-mix(in srgb, var(--armory-class-color, #c4a667) 11%, transparent), transparent),
+    linear-gradient(180deg, #121c2a, #090e16);
+  box-shadow: 0 .6rem 1.4rem rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .04);
+  color: inherit;
+  transition: border-color .14s ease, box-shadow .14s ease, background-color .14s ease;
+}
+
+.character-card:hover,
+.character-card:focus-visible {
+  border-color: rgba(231, 201, 127, .6);
+  outline: none;
+  box-shadow:
+    0 .8rem 1.8rem rgba(0, 0, 0, .4),
+    0 0 0 1px rgba(231, 201, 127, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+.unit-frame--card {
+  --portrait: 3.9rem;
+  --plate: 11.5rem;
+}
+
+/* The sync meter sits on the card's right edge, vertically centered. */
+.character-card > .sync-badge {
+  margin-left: auto;
+}

@@ -117,7 +117,7 @@ export function SyncBadge({ lastSeenAt, showLabel = false, focusable = false }) 
         <span className="sync-badge__meter" aria-hidden="true">
           {[1, 2, 3].map((bar) => <i key={bar} className={bar <= meaning.bars ? 'is-lit' : undefined} />)}
         </span>
-        {age}
+        <span className="sync-badge__age">{age}</span>
       </span>
       {anchor ? (
         <FloatingTooltip anchor={anchor} side="left" className="sync-tooltip">

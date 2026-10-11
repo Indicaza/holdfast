@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
+import { raceScene } from './characterArt.js'
 import { canonicalEquipmentSlot } from './model.js'
 import './CharacterArmoryV2.css'
 
@@ -17,16 +18,6 @@ const EMPTY_SLOT_ART = {
   MAINHAND: 'mainhand', OFFHAND: 'secondaryhand', RANGED: 'ranged',
 }
 
-// Race backdrops behind the character (DressUpBackground-<Race> in game).
-const RACE_SCENES = {
-  human: 'human', dwarf: 'dwarf', 'night elf': 'nightelf', nightelf: 'nightelf', gnome: 'gnome',
-  orc: 'orc', undead: 'scourge', scourge: 'scourge', tauren: 'tauren', troll: 'troll',
-}
-
-function raceScene(race) {
-  const key = RACE_SCENES[String(race || '').trim().toLowerCase()]
-  return key ? `/armory-art/race-${key}.webp` : null
-}
 
 function slotLabel(value) {
   const labels = {

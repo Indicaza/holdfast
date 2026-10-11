@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { useSession } from '../Auth/sessionContext.js'
@@ -58,6 +58,24 @@ function MemberBilletControl({
   const session = useSession()
   const [busyId, setBusyId] = useState(null)
   const [message, setMessage] = useState('')
+  const menuRef = useRef(null)
+
+  // A click anywhere else, or Escape, closes the menu.
+  useEffect(() => {
+    function close(event) {
+      const menu = menuRef.current
+      if (!menu?.open) return
+      if (event.type === 'keydown' ? event.key !== 'Escape' : menu.contains(event.target)) return
+      menu.open = false
+      if (event.type === 'keydown') menu.querySelector('summary')?.focus()
+    }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [])
 
   if (!session.hasPermission('members.billet.assign')) {
     return null
@@ -174,6 +192,7 @@ function MemberBilletControl({
 
   return (
     <details
+      ref={menuRef}
       className={
         compact
           ? 'member-billet-control member-billet-control--compact'

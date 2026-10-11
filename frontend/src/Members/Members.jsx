@@ -3,7 +3,16 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
+import CharacterLine from '../Intelligence/CharacterLine.jsx'
+import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
+import { normalizeIntelligence } from '../Intelligence/model.js'
+import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
+import RankPlate from './RankPlate.jsx'
+import { classIdentity } from '../Intelligence/classIdentity.js'
+import WowIcon from '../WowAssets/WowIcon.jsx'
+import RepBar from './RepBar.jsx'
+import { syncedCharacterIndex } from './syncedCharacters.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Members.css'
@@ -27,27 +36,20 @@ function memberName(member) {
   return member?.displayName || member?.username || 'Member'
 }
 
-function joinedLabel(value) {
-  if (!value) return 'Member'
+// The Discord picture, else the main character's class portrait.
+function MemberAvatar({ member, mainCharacter = null }) {
+  const classIcon = classIdentity(mainCharacter?.className).iconFileId
+  if (!member.avatarUrl && classIcon) {
+    return <WowIcon iconFileId={classIcon} label={mainCharacter.className} size={64} />
+  }
 
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return 'Member'
-
-  return `Joined ${new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    year: 'numeric',
-  }).format(date)}`
-}
-
-function MemberAvatar({ member }) {
   if (member.avatarUrl) {
     return (
       <img
         src={member.avatarUrl}
         alt=""
-        width="72"
-        height="72"
+        width="64"
+        height="64"
         decoding="async"
       />
     )
@@ -56,61 +58,101 @@ function MemberAvatar({ member }) {
   return <span aria-hidden="true">{member.initials || '?'}</span>
 }
 
-function MemberCard({ member }) {
-  const contribution = member.contribution || {}
+function memberTier(member) {
+  if (member.rankMeta?.isOfficer) return 'officer'
+  if (member.rankMeta?.isLeadership) return 'nco'
+  return 'enlisted'
+}
+
+const RANK_GROUPS = [
+  { id: 'officer', title: 'Officers', detail: 'Appointed leadership' },
+  { id: 'nco', title: 'Non-commissioned officers', detail: 'Sergeants who lead the work' },
+  { id: 'enlisted', title: 'Enlisted', detail: 'Recruits, Privates and Corporals' },
+]
+
+// The member's characters, main first: synced ones as unit frames (they open
+// the armory), listed-only ones by name.
+function memberCharacters(member, synced) {
+  const listed = Array.isArray(member.profile?.characters) ? member.profile.characters : []
+  const ordered = [...listed].sort((left, right) => Number(Boolean(right.isMain)) - Number(Boolean(left.isMain)))
+  const seen = new Set()
+  return ordered
+    .map((character) => ({ listed: character, synced: synced.find(character) }))
+    .filter((pair) => !pair.synced || (!seen.has(pair.synced.id) && seen.add(pair.synced.id)))
+}
+
+function MemberCard({ member, isSelf, synced, charactersReady, onOpenCharacter }) {
   const activeAssignments = Number(member.activeAssignmentCount) || 0
+  const characters = memberCharacters(member, synced)
+  const [lead, ...rest] = characters
 
   return (
-    <a className="members-page__card" href={`/members/${member.id}`}>
-      <div className="members-page__avatar">
-        <MemberAvatar member={member} />
-      </div>
-
-      <div className="members-page__identity">
-        <div className="members-page__name-line">
-          <h2>{memberName(member)}</h2>
-          {member.rank ? (
-            <span className="members-page__role">{member.rank}</span>
-          ) : null}
+    <article className={`member-card member-card--${memberTier(member)}${isSelf ? ' member-card--self' : ''}`}>
+      <header className="member-card__head">
+        <span className="member-card__avatar">
+          <MemberAvatar member={member} mainCharacter={lead?.synced} />
+        </span>
+        <div className="member-card__who">
+          <h2>
+            <a className="member-card__link" href={`/members/${member.id}`}>
+              {memberName(member)}
+            </a>
+            {isSelf ? <span className="member-card__you">You</span> : null}
+            {activeAssignments ? (
+              <span
+                className="member-card__duty"
+                role="img"
+                aria-label={`On assignment: ${activeAssignments} active ${activeAssignments === 1 ? 'objective' : 'objectives'}`}
+                title={`${activeAssignments} active ${activeAssignments === 1 ? 'objective' : 'objectives'}`}
+              />
+            ) : null}
+          </h2>
+          <RankPlate member={member} size="xs" variant="plain" />
         </div>
-        <p>@{member.username}</p>
-        {member.billets?.length ? (
-          <div className="billet-badges members-page__billets">
-            {member.billets.map((billet) => (
-              <span key={billet.id}>{billet.name}</span>
-            ))}
-          </div>
-        ) : null}
-        {member.mainCharacter ? (
-          <span className="members-page__character">
-            {member.mainCharacter.name}
-            {member.mainCharacter.className
-              ? ` · ${member.mainCharacter.className}`
-              : ''}
+      </header>
+
+      <div className="member-card__characters">
+        {lead?.synced ? (
+          <CharacterLine character={lead.synced} onOpen={onOpenCharacter} portrait={false} />
+        ) : lead && !charactersReady ? (
+          <span className="member-card__pending" aria-hidden="true" />
+        ) : lead ? (
+          <span className="member-card__listed">
+            {lead.listed.name}
+            <small>{[lead.listed.race, lead.listed.className].filter(Boolean).join(' ') || 'Not synced yet'}</small>
           </span>
         ) : (
-          <span>{joinedLabel(member.guildJoinedAt || member.firstSeenAt)}</span>
+          <span className="member-card__listed member-card__listed--empty">No characters yet</span>
         )}
+        {rest.length ? <span className="member-card__more" title={`${rest.length} more ${rest.length === 1 ? 'character' : 'characters'}`}>+{rest.length}</span> : null}
       </div>
 
-      <div className="members-page__member-meta">
-        <div className="members-page__service">
-          <span>Rep</span>
-          <strong>{Number(contribution.rep) || 0}</strong>
-        </div>
+      <RepBar member={member} variant="hairline" className="member-card__rep" />
+    </article>
+  )
+}
 
-        <div
-          className={`members-page__assignment ${
-            activeAssignments ? 'members-page__assignment--active' : ''
-          }`}
-        >
-          <strong>{activeAssignments}</strong>
-          <span>{activeAssignments === 1 ? 'active assignment' : 'active assignments'}</span>
-        </div>
-      </div>
+function DirectorySummary({ members, syncedCount }) {
+  const officers = members.filter((member) => member.rankMeta?.isOfficer).length
+  const ncos = members.filter((member) => !member.rankMeta?.isOfficer && member.rankMeta?.isLeadership).length
+  const onAssignment = members.filter((member) => Number(member.activeAssignmentCount) > 0).length
+  const stats = [
+    ['Members', members.length],
+    ['Officers', officers],
+    ['NCOs', ncos],
+    ['On assignment', onAssignment],
+    ['Characters synced', syncedCount],
+  ]
 
-      <span className="members-page__open" aria-hidden="true">›</span>
-    </a>
+  return (
+    <dl className="members-page__summary" aria-label="Guild at a glance">
+      {stats.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -161,6 +203,16 @@ function Members() {
   })
   const directory = data || EMPTY_DIRECTORY
   const status = directoryStatus === 'idle' ? 'ready' : directoryStatus === 'missing' ? 'error' : directoryStatus
+
+  // Synced characters, shared with GuildOS (and cached with it).
+  const { data: intelligence, status: intelligenceStatus } = useLiveResource('/api/intelligence', {
+    topics: ['intelligence', 'members'],
+    select: normalizeIntelligence,
+    enabled: session.authenticated,
+  })
+  const synced = useMemo(() => syncedCharacterIndex(intelligence?.characters), [intelligence])
+  const charactersReady = intelligenceStatus !== 'loading'
+  const [selectedCharacterId, openCharacter] = useCharacterParam()
 
   const visibleMembers = useMemo(() => {
     const members = directory.members.filter((member) => {
@@ -268,6 +320,8 @@ function Members() {
       intro="Find people, see what they are working on, and open their service record."
       className="members-page"
     >
+      {status === 'ready' ? <DirectorySummary members={directory.members} syncedCount={synced.size} /> : null}
+
       {status === 'error' ? (
         <p className="members-page__state members-page__state--error">
           The member directory could not be loaded.
@@ -333,23 +387,42 @@ function Members() {
 
             <p className="members-page__result-count" aria-live="polite">
               <span>
-                Showing <strong>{visibleMembers.length}</strong>{' '}
-                {visibleMembers.length === 1 ? 'member' : 'members'}
+                Showing <strong>{visibleMembers.length}</strong> of{' '}
+                <strong>{directory.members.length}</strong>{' '}
+                {directory.members.length === 1 ? 'member' : 'members'}
               </span>
-              <span>
-                <strong>{directory.summary.activeAssignmentCount}</strong>{' '}
-                active {directory.summary.activeAssignmentCount === 1 ? 'assignment' : 'assignments'}
-              </span>
+              <span className="members-page__search-hint">Press <kbd>/</kbd> to search</span>
             </p>
 
           </section>
 
           {visibleMembers.length ? (
-            <section className="members-page__list" aria-label="Holdfast members">
-              {visibleMembers.map((member) => (
-                <MemberCard key={member.id} member={member} />
-              ))}
-            </section>
+            sort === 'rank' ? (
+              RANK_GROUPS.map((group) => {
+                const members = visibleMembers.filter((member) => memberTier(member) === group.id)
+                if (!members.length) return null
+                return (
+                  <section className="members-page__group" key={group.id} aria-labelledby={`members-group-${group.id}`}>
+                    <header className="members-page__group-heading">
+                      <h2 id={`members-group-${group.id}`}>{group.title}</h2>
+                      <span>{group.detail}</span>
+                      <strong>{members.length}</strong>
+                    </header>
+                    <div className="members-page__list">
+                      {members.map((member) => (
+                        <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} synced={synced} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })
+            ) : (
+              <section className="members-page__list" aria-label="Holdfast members">
+                {visibleMembers.map((member) => (
+                  <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} synced={synced} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
+                ))}
+              </section>
+            )
           ) : (
             <section className="members-page__empty">
               <h2>No members found.</h2>
@@ -367,6 +440,8 @@ function Members() {
           )}
         </>
       )}
+
+      <CharacterProfileModal characterId={selectedCharacterId} onClose={() => openCharacter('')} />
     </PageShell>
   )
 }

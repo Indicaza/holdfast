@@ -1,0 +1,155 @@
+.rank-plate {
+  --plate-insignia: 1.9rem;
+  --plate-rank-size: var(--font-size-md);
+  --plate-billet-size: var(--font-size-sm);
+  --plate-tone: var(--color-accent-bright);
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--plate-tone) 34%, transparent);
+  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--plate-tone) 14%, transparent), transparent 75%),
+    rgba(3, 8, 15, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.rank-plate--enlisted {
+  --plate-tone: #9eb6cf;
+}
+
+.rank-plate--nco {
+  --plate-tone: #d9b46a;
+}
+
+.rank-plate--officer {
+  --plate-tone: #f0d590;
+}
+
+.rank-plate--sm {
+  --plate-insignia: 1.45rem;
+  --plate-rank-size: var(--font-size-sm);
+  --plate-billet-size: var(--font-size-xs);
+  gap: 0.45rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.3rem;
+}
+
+.rank-plate--lg {
+  --plate-insignia: 2.6rem;
+  --plate-rank-size: var(--font-size-lg);
+  --plate-billet-size: var(--font-size-body);
+  gap: 0.8rem;
+  padding: 0.4rem 1.15rem 0.4rem 0.5rem;
+}
+
+.rank-plate__insignia {
+  display: grid;
+  flex: none;
+  width: var(--plate-insignia);
+  height: var(--plate-insignia);
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--plate-tone) 16%, transparent), transparent 70%);
+  color: var(--plate-tone);
+}
+
+.rank-plate__insignia .rank-insignia--entry {
+  width: 100%;
+  height: 100%;
+}
+
+.rank-plate__insignia .rank-insignia__entry-mark {
+  width: 62%;
+  height: 62%;
+}
+
+.rank-plate__insignia .rank-insignia__entry-mark::after {
+  width: 26%;
+  height: 26%;
+  margin-top: 37%;
+}
+
+.rank-plate__insignia .rank-insignia__entry-label {
+  display: none;
+}
+
+.rank-plate__text {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.55rem;
+  row-gap: 0.1rem;
+}
+
+.rank-plate__rank {
+  color: var(--plate-tone);
+  font-family: var(--font-display);
+  font-size: var(--plate-rank-size);
+  font-weight: var(--font-weight-display);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.rank-plate__billet {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  color: var(--color-text-strong);
+  font-size: var(--plate-billet-size);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* A small diamond joins rank and each billet into one title. */
+.rank-plate__billet::before {
+  width: 0.32em;
+  height: 0.32em;
+  flex: none;
+  align-self: center;
+  background: var(--plate-tone);
+  content: '';
+  opacity: 0.7;
+  transform: rotate(45deg);
+}
+
+/* Plain: the same title as quiet text, for dense lists. */
+.rank-plate--plain {
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.rank-plate--plain .rank-plate__insignia {
+  background: none;
+}
+
+.rank-plate--plain .rank-plate__rank {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.rank-plate--plain .rank-plate__billet {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.02em;
+}
+
+.rank-plate--plain .rank-plate__billet::before {
+  width: 0.25em;
+  height: 0.25em;
+  opacity: 0.5;
+}
+
+.rank-plate--xs {
+  --plate-insignia: 1.15rem;
+}
