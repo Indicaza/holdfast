@@ -119,8 +119,8 @@ test("Skinning observations flow into the generic Farming Intelligence source br
     assert.equal(detail.source.kind, "creature");
     assert.equal(detail.summary.observations, 1);
     assert.deepEqual(detail.outputs.map((output) => [output.name, output.drops]), [
-      ["Light Hide", 1],
       ["Light Leather", 1],
+      ["Light Hide", 1],
     ]);
     assert.equal(detail.byBountifulHarvest.every((entry) => entry.rank === "unknown"), true);
   }));
