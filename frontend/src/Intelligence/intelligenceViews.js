@@ -28,6 +28,13 @@ const intelligenceViews = Object.freeze([
     section: 'guild',
   },
   {
+    id: 'farming',
+    label: 'Farming',
+    description: 'Sources, drops, and rates',
+    icon: 'farming',
+    section: 'guild',
+  },
+  {
     id: 'audit',
     label: 'Audit Log',
     description: 'Administrative activity and safety history',

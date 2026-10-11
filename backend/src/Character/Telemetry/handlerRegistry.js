@@ -1,5 +1,6 @@
 import { characterTelemetryHandler } from "./handlers/character.js";
 import { equipmentTelemetryHandler } from "./handlers/equipment.js";
+import { gatheringLootTelemetryHandler } from "./handlers/gatheringLoot.js";
 import { inventorySnapshotTelemetryHandler } from "./handlers/inventorySnapshot.js";
 import { professionSnapshotTelemetryHandler } from "./handlers/professionSnapshot.js";
 import { professionsTelemetryHandler } from "./handlers/professions.js";
@@ -15,6 +16,7 @@ const handlers = new Map(
     professionSnapshotTelemetryHandler,
     talentsTelemetryHandler,
     inventorySnapshotTelemetryHandler,
+    gatheringLootTelemetryHandler,
   ].map((handler) => [handler.eventType, handler]),
 );
 

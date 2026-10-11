@@ -10,6 +10,7 @@ import CharacterCard from './CharacterCard.jsx'
 import CharacterProfileModal from './CharacterProfileModal.jsx'
 import { useCharacterParam } from './useCharacterParam.js'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
+import FarmingIntelligence from './Farming/FarmingIntelligence.jsx'
 import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
@@ -28,6 +29,8 @@ const VIEW_ALIASES = Object.freeze({
   composition: 'roster',
   professions: 'roster',
   recipes: 'craft',
+  herbalism: 'farming',
+  gathering: 'farming',
   admin: 'audit',
   sync: 'guildweaver',
 })
@@ -277,6 +280,7 @@ function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCh
     return <CharacterBrowser characters={data.characters} onOpenCharacter={onOpenCharacter} query={searches.characters} onQueryChange={(value) => onSearchChange('characters', value)} />
   }
   if (activeView === 'craft') return <CraftFinder input={searches.craft} onInputChange={(value) => onSearchChange('craft', value)} />
+  if (activeView === 'farming') return <FarmingIntelligence input={searches.farming} onInputChange={(value) => onSearchChange('farming', value)} />
   if (activeView === 'audit' && session.hasPermission('audit.view')) return <Suspense fallback={<p className="intel-muted">Opening the audit log…</p>}><AuditLog /></Suspense>
   if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <Suspense fallback={<p className="intel-muted">Opening the Guildweaver console…</p>}><GuildweaverConsole /></Suspense>
   return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
@@ -295,7 +299,7 @@ export default function GuildIntelligence() {
   // this member may see once permissions are known.
   const [activeView, setActiveView] = useState(() => readViewFromLocation(intelligenceViews))
   // Searches survive switching between workspaces.
-  const [searches, setSearches] = useState({ characters: '', craft: '' })
+  const [searches, setSearches] = useState({ characters: '', craft: '', farming: '' })
   const [selectedCharacterId, openCharacter] = useCharacterParam()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {

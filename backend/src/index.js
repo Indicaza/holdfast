@@ -4,12 +4,13 @@ import { assertProductionEnvironment } from "./Config/environment.js";
 import { startDiscordRankReconciler } from "./Discord/rankSync.js";
 import { startDiscordBilletReconciler } from "./Discord/billetSync.js";
 import { ensureRuntimeDataDirectory, runtimeDataDirectory } from "./Data/runtimeData.js";
-import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
+import { guildDatabaseFile, withGuildDatabase, withGuildTransaction } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations } from "./Data/startupBackup.js";
 import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
 import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
 import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildReadModel.js";
+import { backfillEconomicObservationsInDatabase } from "./Economy/economicObservationRepository.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -42,6 +43,14 @@ const readModelRebuild = ensureCharacterReadModelCurrent();
 
 if (readModelRebuild) {
   console.log("Rebuilt the character read model", readModelRebuild);
+}
+
+// Economic events whose raw records arrived before they could be analysed
+// become farming observations. Idempotent; bounded by raw retention.
+const economicBackfill = withGuildTransaction(backfillEconomicObservationsInDatabase);
+
+if (economicBackfill.created) {
+  console.log("Recorded economic observations from stored telemetry", economicBackfill);
 }
 
 const app = createApp();

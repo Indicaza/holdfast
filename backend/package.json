@@ -11,6 +11,7 @@
     "dev": "nodemon --config nodemon.json src/index.js",
     "dev:seed": "node scripts/seedDevelopment.js",
     "dev:seed:characters": "node scripts/seedDevelopmentCharacters.js",
+    "dev:seed:farming": "node scripts/seedDevelopmentFarming.js",
     "start": "node src/index.js",
     "lint": "node scripts/checkSyntax.js",
     "backup": "node scripts/backupData.js",
