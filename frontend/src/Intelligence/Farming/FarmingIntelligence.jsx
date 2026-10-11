@@ -42,10 +42,14 @@ function SourceCard({ source, onOpen }) {
         onClick={() => onOpen(source.sourceKey, match?.itemKey || '')}
       >
         <span className="farm-card__head">
-          <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={44} />
+          <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={42} />
           <span className="farm-card__identity">
             <strong>{source.name}</strong>
             <small>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</small>
+          </span>
+          <span className="farm-card__gathers">
+            <b>{formatCount(source.observations)}</b>
+            <small>gathers</small>
           </span>
         </span>
         {match ? (
@@ -55,11 +59,6 @@ function SourceCard({ source, onOpen }) {
             <ConfidencePips confidence={match.confidence} />
           </span>
         ) : null}
-        <span className="farm-card__stats">
-          <span><b>{formatCount(source.observations)}</b>Gathers</span>
-          <span><b>{formatCount(source.zones)}</b>{source.zones === 1 ? 'Zone' : 'Zones'}</span>
-          <span><b>{formatCount(source.characters)}</b>{source.characters === 1 ? 'Character' : 'Characters'}</span>
-        </span>
       </button>
     </li>
   )

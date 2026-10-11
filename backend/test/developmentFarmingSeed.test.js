@@ -17,6 +17,7 @@ test("development farming seed is idempotent and varied enough to exercise every
       const first = seedDevelopmentFarming({ logger: quiet });
       assert.ok(first.created > 20000);
       assert.equal(first.skipped, 0);
+      assert.equal(first.replaced, 0);
       assert.equal(seedDevelopmentFarming({ logger: quiet }).created, 0);
     } finally {
       process.env.NODE_ENV = previous;
@@ -43,4 +44,10 @@ test("development farming seed is idempotent and varied enough to exercise every
     assert.deepEqual(ranks, [0, 1, 2, 3, 4, 5, "unknown"]);
     assert.ok(peacebloom.bySkill.length >= 6);
     assert.ok(readFarmingSource("herbalism:herb-node:peacebloom", { filters: { build: "70245" } }).summary.observations < peacebloom.summary.observations);
+
+    // Bountiful Harvest is shared by Herbalism, Mining and Skinning.
+    const copper = readFarmingSource("mining:ore-vein:copper-vein", { item: "item:2770" });
+    assert.deepEqual(copper.facets.ranks.map((rank) => rank.value), [0, 1, 2, 3, 4, 5, "unknown"]);
+    const perVein = (rank) => copper.byBountifulHarvest.find((row) => row.rank === rank).avgQuantityPerObservation;
+    assert.ok(perVein(5) > perVein(0), "higher ranks yield more ore per vein");
   }));

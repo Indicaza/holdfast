@@ -102,6 +102,9 @@ gathering_loot ─ ingest ─ raw record (bounded, for debugging)
 - Observations are idempotent by `observationId`; raw records are pruned but
   observations are kept. Raw economic events that predate a collector are
   backfilled on startup.
+- Bountiful Harvest (one Legacy Professions talent shared by Herbalism,
+  Mining and Skinning) is stored per observation whatever the discipline; a
+  missing rank is unknown, not rank 0.
 - Rates are always successes over every eligible observation under the same
   filters, with a Wilson interval and a confidence label
   (`Economy/farmingStatistics.js`).

@@ -83,7 +83,7 @@ test('farming intelligence finds sources by item and recomputes the source modal
   await peacebloom.click()
   const modal = page.getByRole('dialog', { name: 'Peacebloom' })
   await expect(modal.getByRole('heading', { name: 'Peacebloom' })).toBeVisible()
-  await expect(modal.locator('.farm-header__facts')).toContainText('30')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('30gathers')
   const lichen = modal.locator('.farm-loot__row').filter({ hasText: 'Frilled Lichen' })
   await expect(lichen).toHaveAttribute('aria-pressed', 'true')
   await expect(lichen).toContainText('3 drops')
@@ -98,7 +98,8 @@ test('farming intelligence finds sources by item and recomputes the source modal
   expect(window.scroll, 'the window itself never scrolls').toBeLessThanOrEqual(window.client)
 
   await modal.getByRole('combobox').first().selectOption('Duskwood')
-  await expect(modal.locator('.farm-header__facts')).toContainText('15 / 30')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('15of 30 gathers')
+  await expect(modal.locator('.farm-chip.is-active')).toHaveCount(1)
   await expect(lichen).toContainText('20.0%')
 
   await page.setViewportSize({ width: 360, height: 760 })

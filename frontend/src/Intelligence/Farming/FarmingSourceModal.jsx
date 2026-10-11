@@ -61,26 +61,20 @@ function RankPips({ rank, maxRanks = 5 }) {
 function SourceHeader({ detail, filtered }) {
   const { source, summary } = detail
   const icon = detail.outputs[0]
-  const builds = summary.builds.map((build) => build.build)
 
   return (
     <header className="farm-header">
       <span className="farm-header__portrait">
-        <WowIcon iconFileId={icon?.iconFileDataId} itemId={icon?.itemId} label={source.name} quality={icon?.qualityId} size={60} />
+        <WowIcon iconFileId={icon?.iconFileDataId} itemId={icon?.itemId} label={source.name} quality={icon?.qualityId} size={56} />
       </span>
       <div className="farm-header__identity">
         <h2>{source.name}</h2>
         <span>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</span>
       </div>
-      <dl className="farm-header__facts">
-        <div>
-          <dt>Gathers</dt>
-          <dd>{formatCount(summary.observations)}{filtered ? <small> / {formatCount(source.totalObservations)}</small> : null}</dd>
-        </div>
-        <div><dt>Characters</dt><dd>{formatCount(summary.characters)}</dd></div>
-        <div><dt>Zones</dt><dd>{formatCount(summary.zones)}</dd></div>
-        {builds.length ? <div><dt>{builds.length === 1 ? 'Build' : 'Builds'}</dt><dd>{builds.join(' · ')}</dd></div> : null}
-      </dl>
+      <p className="farm-header__gathers">
+        <strong>{formatCount(summary.observations)}</strong>
+        <span>{filtered ? `of ${formatCount(source.totalObservations)} gathers` : 'gathers'}</span>
+      </p>
     </header>
   )
 }
@@ -88,45 +82,48 @@ function SourceHeader({ detail, filtered }) {
 function SourceFilters({ facets, filters, onChange }) {
   const set = (key) => (event) => onChange({ ...filters, [key]: event.target.value })
   const active = activeFilterCount(filters)
+  const chip = (...keys) => `farm-chip${keys.some((key) => String(filters[key] ?? '').trim()) ? ' is-active' : ''}`
 
   return (
     <div className="farm-filters" role="group" aria-label="Filter observations">
-      <label className="farm-filter">
+      <label className={chip('zone')}>
         <span>Zone</span>
         <select value={filters.zone} onChange={set('zone')}>
-          <option value="">All zones</option>
+          <option value="">All</option>
           {facets.zones.map((zone) => <option key={zone.value} value={zone.value}>{zone.value} ({formatCount(zone.observations)})</option>)}
         </select>
       </label>
-      <div className="farm-filter farm-filter--range" role="group" aria-label="Skill range">
+      <div className={chip('skillMin', 'skillMax')} role="group" aria-label="Skill range">
         <span>Skill</span>
         <input inputMode="numeric" aria-label="Minimum skill" placeholder={facets.skill.min ?? 'min'} value={filters.skillMin} onChange={set('skillMin')} />
         <i aria-hidden="true">–</i>
         <input inputMode="numeric" aria-label="Maximum skill" placeholder={facets.skill.max ?? 'max'} value={filters.skillMax} onChange={set('skillMax')} />
       </div>
-      <div className="farm-filter farm-filter--range" role="group" aria-label="Character level range">
+      <div className={chip('levelMin', 'levelMax')} role="group" aria-label="Character level range">
         <span>Level</span>
         <input inputMode="numeric" aria-label="Minimum character level" placeholder={facets.level.min ?? 'min'} value={filters.levelMin} onChange={set('levelMin')} />
         <i aria-hidden="true">–</i>
         <input inputMode="numeric" aria-label="Maximum character level" placeholder={facets.level.max ?? 'max'} value={filters.levelMax} onChange={set('levelMax')} />
       </div>
       {facets.ranks.some((rank) => rank.value !== 'unknown') ? (
-        <label className="farm-filter">
+        <label className={chip('rank')}>
           <span>Bountiful Harvest</span>
           <select value={filters.rank} onChange={set('rank')}>
-            <option value="">Any rank</option>
+            <option value="">Any</option>
             {facets.ranks.map((rank) => <option key={rank.value} value={rank.value}>{rankLabel(rank.value)} ({formatCount(rank.observations)})</option>)}
           </select>
         </label>
       ) : null}
-      <label className="farm-filter">
-        <span>Build</span>
-        <select value={filters.build} onChange={set('build')}>
-          <option value="">All builds</option>
-          {facets.builds.map((build) => <option key={build.value} value={build.value}>{build.value} ({formatCount(build.observations)})</option>)}
-        </select>
-      </label>
-      {active ? <button type="button" className="farm-filters__reset" onClick={() => onChange({ ...EMPTY_FILTERS })}>Clear {active}</button> : null}
+      {facets.builds.length > 1 || filters.build ? (
+        <label className={chip('build')}>
+          <span>Build</span>
+          <select value={filters.build} onChange={set('build')}>
+            <option value="">All</option>
+            {facets.builds.map((build) => <option key={build.value} value={build.value}>{build.value} ({formatCount(build.observations)})</option>)}
+          </select>
+        </label>
+      ) : null}
+      {active ? <button type="button" className="farm-filters__reset" onClick={() => onChange({ ...EMPTY_FILTERS })}>Clear</button> : null}
     </div>
   )
 }
@@ -155,7 +152,7 @@ function LootPanel({ detail, onSelect }) {
                 <WowIcon iconFileId={output.iconFileDataId} itemId={output.itemId} label={output.name} quality={output.qualityId} size={36} />
                 <span className="farm-loot__item">
                   <strong className={`farm-item farm-item--q${output.qualityId ?? 1}`}>{output.name}</strong>
-                  <small>{formatCount(output.drops)} drops · ×{formatQuantity(output.avgQuantity)} each</small>
+                  <small>{formatCount(output.drops)} {output.drops === 1 ? 'drop' : 'drops'} · ×{formatQuantity(output.avgQuantity)} each</small>
                 </span>
                 <span className="farm-loot__chance">
                   <Rate entry={output} />
@@ -238,29 +235,27 @@ function AnalysisPanel({ detail }) {
 
   return (
     <section className="farm-analysis" aria-label={`${item.name} breakdown`}>
-      <header className="farm-analysis__item">
-        <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={32} />
-        <span className="farm-analysis__name">
-          <strong className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</strong>
-          <small>{formatCount(item.drops)} of {formatCount(item.observations)} gathers</small>
+      <div className="farm-analysis__bar">
+        <div className="armory-tabs farm-tabs" role="tablist" aria-label="Breakdown">
+          {tabs.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              id={`farm-tab-${entry.id}`}
+              aria-selected={active === entry.id}
+              aria-controls="farm-tab-page"
+              className="armory-tabs__tab"
+              onClick={() => setTab(entry.id)}
+            >
+              {entry.id === 'skill' ? `${disciplineLabel(detail.source.discipline)} skill` : entry.label}
+            </button>
+          ))}
+        </div>
+        <span className="farm-analysis__item" title={rateRangeText(item)}>
+          <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={22} />
+          <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>
         </span>
-        <Rate entry={item} className="farm-analysis__rate" />
-      </header>
-      <div className="armory-tabs farm-tabs" role="tablist" aria-label="Breakdown">
-        {tabs.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            role="tab"
-            id={`farm-tab-${entry.id}`}
-            aria-selected={active === entry.id}
-            aria-controls="farm-tab-page"
-            className="armory-tabs__tab"
-            onClick={() => setTab(entry.id)}
-          >
-            {entry.id === 'skill' ? `${disciplineLabel(detail.source.discipline)} skill` : entry.label}
-          </button>
-        ))}
       </div>
       <div className="farm-panel farm-analysis__page" id="farm-tab-page" role="tabpanel" aria-labelledby={`farm-tab-${active}`}>
         {active === 'skill' ? <SkillTab rows={detail.bySkill} item={item} /> : <BountifulHarvestTab rows={detail.byBountifulHarvest} />}

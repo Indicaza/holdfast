@@ -176,9 +176,11 @@ export function arcPath(start, end, { radius = 44, inner = 30, center = 50 } = {
 export function rateLinePoints(rows = [], { width = 320, height = 120, padX = 16, padY = 14 } = {}) {
   const plotted = rows.filter((row) => row.bucket !== 'unknown' && row.observations > 0)
   if (!plotted.length) return { points: [], maxRate: 0 }
-  const maxRate = Math.max(...plotted.map((row) => Number(row.high) || Number(row.rate) || 0), 0.0001)
+  // Scaled to the rates, with headroom; likely ranges are clipped to the plot,
+  // so one thin bucket's wide range cannot flatten the others.
+  const maxRate = Math.max(...plotted.map((row) => Number(row.rate) || 0), 0.0001) * 1.25
   const step = plotted.length > 1 ? (width - padX * 2) / (plotted.length - 1) : 0
-  const y = (rate) => Number((height - padY - (rate / maxRate) * (height - padY * 2)).toFixed(2))
+  const y = (rate) => Number((height - padY - (Math.min(rate, maxRate) / maxRate) * (height - padY * 2)).toFixed(2))
   return {
     maxRate,
     points: plotted.map((row, index) => ({

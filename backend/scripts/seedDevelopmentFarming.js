@@ -10,7 +10,8 @@
 // build so every chart and filter visibly responds.
 //
 // Deterministic and idempotent: observation keys are fixed, so re-running adds
-// nothing.
+// nothing. Bump FARMING_SEED_VERSION when the generated data changes; older
+// seeded observations are replaced.
 
 import { pathToFileURL } from "node:url";
 
@@ -65,6 +66,13 @@ const VEINS = [
   },
 ];
 
+const FARMING_SEED_VERSION = 2;
+const SEED_DEVICE = "dev-farming-seed";
+
+// Bountiful Harvest is one Legacy Professions talent shared by Herbalism,
+// Mining and Skinning.
+const BOUNTIFUL_HARVEST_SPELL_ID = 1225435;
+
 const BUILDS = [
   { version: "1.60.1", build: "70245", weight: 0.4 },
   { version: "1.60.1", build: "70338", weight: 0.6 },
@@ -96,6 +104,10 @@ function rankFor(random) {
   const roll = random();
   if (roll < 0.08) return null;
   return Math.min(5, Math.floor(((roll - 0.08) / 0.92) ** 1.4 * 6));
+}
+
+function bountifulHarvest(rank) {
+  return rank === null ? {} : { bountifulHarvest: { spellId: BOUNTIFUL_HARVEST_SPELL_ID, rank, maxRanks: 5 } };
 }
 
 function buildFor(random) {
@@ -139,7 +151,7 @@ function herbObservation(source, index, random, startAt) {
   }
   if (random() < lichenChance) outputs.push({ ...ITEMS.lichen, quantity: random() < 0.06 ? 2 : 1 });
   const { characterId, memberId } = characterFor(random);
-  const id = `dev-farm-${source.name.toLowerCase()}-${index}`;
+  const id = `dev-farm-v${FARMING_SEED_VERSION}-${source.name.toLowerCase()}-${index}`;
 
   return {
     memberId,
@@ -157,7 +169,7 @@ function herbObservation(source, index, random, startAt) {
         context: {
           characterLevel: level,
           profession: { ...HERBALISM, skillLevel: skill, maxSkillLevel: Math.min(300, Math.ceil((skill + 1) / 75) * 75), skillModifier: 0 },
-          modifiers: rank === null ? {} : { bountifulHarvest: { spellId: 1225435, rank, maxRanks: 5 } },
+          modifiers: bountifulHarvest(rank),
           location: { mapId: MAP_IDS[zone], zone, x: Number(random().toFixed(4)), y: Number(random().toFixed(4)) },
           trigger: { spellId: 2366, spellName: "Herbalism" },
         },
@@ -169,14 +181,17 @@ function herbObservation(source, index, random, startAt) {
 
 function veinObservation(vein, index, random, startAt) {
   const skill = skillFor(random, vein.skill);
+  const rank = rankFor(random);
   const build = buildFor(random);
   const zone = pick(random, vein.zones);
-  const outputs = [{ ...ITEMS.copperOre, quantity: 1 + Math.floor(random() * 3) }];
+  // Bountiful Harvest: more ore per vein, and gems a little more often.
+  const outputs = [{ ...ITEMS.copperOre, quantity: 1 + Math.floor(random() * 3) + (random() < (rank ?? 0) * 0.07 ? 1 : 0) }];
   for (const [item, chance] of vein.outputs) {
-    if (random() < chance * (1 + skill / 250)) outputs.push({ ...ITEMS[item], quantity: 1 + (item === "roughStone" ? Math.floor(random() * 2) : 0) });
+    const boost = item === "roughStone" ? 1 : 1 + (rank ?? 0) * 0.12;
+    if (random() < chance * boost * (1 + skill / 250)) outputs.push({ ...ITEMS[item], quantity: 1 + (item === "roughStone" ? Math.floor(random() * 2) : 0) });
   }
   const { characterId, memberId } = characterFor(random);
-  const id = `dev-farm-${vein.name.toLowerCase().replace(/\s+/g, "-")}-${index}`;
+  const id = `dev-farm-v${FARMING_SEED_VERSION}-${vein.name.toLowerCase().replace(/\s+/g, "-")}-${index}`;
 
   return {
     memberId,
@@ -194,7 +209,7 @@ function veinObservation(vein, index, random, startAt) {
         context: {
           characterLevel: Math.max(5, Math.min(60, Math.round(skill / 3 + 6 + random() * 10))),
           profession: { ...MINING, skillLevel: skill, maxSkillLevel: Math.min(300, Math.ceil((skill + 1) / 75) * 75), skillModifier: 0 },
-          modifiers: {},
+          modifiers: bountifulHarvest(rank),
           location: { mapId: MAP_IDS[zone], zone, x: Number(random().toFixed(4)), y: Number(random().toFixed(4)) },
           trigger: { spellId: 2575, spellName: "Mining" },
         },
@@ -223,15 +238,20 @@ export function seedDevelopmentFarming({ logger = console } = {}) {
     throw new Error("Development farming data cannot be seeded in production.");
   }
 
-  const counts = { created: 0, duplicate: 0, skipped: 0 };
+  const counts = { created: 0, duplicate: 0, skipped: 0, replaced: 0 };
   const receivedAt = new Date().toISOString();
   withGuildTransaction((db) => {
+    const replaced = db.prepare(`
+      DELETE FROM economic_observations
+      WHERE device_id = ? AND observation_key NOT LIKE ?
+    `).run(SEED_DEVICE, `%:dev-farm-v${FARMING_SEED_VERSION}-%`);
+    counts.replaced = Number(replaced.changes);
     for (const { memberId, characterId, envelope: observed } of developmentFarmingObservations()) {
       const result = recordEconomicObservationInDatabase(db, {
         eventType: "gathering_loot",
         envelope: observed,
         memberId,
-        deviceId: "dev-farming-seed",
+        deviceId: SEED_DEVICE,
         rawCharacterId: characterId,
         streamKey: `gathering_loot:${characterId}:${observed.payload.observationId}`,
         receivedAt,
@@ -240,7 +260,7 @@ export function seedDevelopmentFarming({ logger = console } = {}) {
     }
   });
 
-  logger.log(`Farming observations: ${counts.created} created, ${counts.duplicate} already present.`);
+  logger.log(`Farming observations: ${counts.created} created, ${counts.duplicate} already present, ${counts.replaced} from an older seed replaced.`);
   return counts;
 }
 

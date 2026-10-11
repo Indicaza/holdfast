@@ -81,7 +81,7 @@ test('the donut folds the long tail into Other and covers the whole circle', () 
   assert.match(arcPath(0, 0.25), /A44 44 0 0 1 94 50L80 50A30 30 0 0 0 50 20Z$/)
 })
 
-test('the skill line plots known buckets only and scales to the widest likely range', () => {
+test('the skill line plots known buckets only, scales to the rates and clips likely ranges', () => {
   const rows = [
     { bucket: '1-25', rate: 0.01, low: 0.005, high: 0.02, observations: 100 },
     { bucket: '26-50', rate: 0.03, low: 0.02, high: 0.04, observations: 300 },
@@ -89,11 +89,11 @@ test('the skill line plots known buckets only and scales to the widest likely ra
     { bucket: 'unknown', rate: 0.5, low: 0.1, high: 0.9, observations: 2 },
   ]
   const { points, maxRate } = rateLinePoints(rows, { width: 100, height: 100, padX: 10, padY: 10 })
-  assert.equal(maxRate, 0.04)
+  assert.ok(Math.abs(maxRate - 0.0375) < 1e-12, 'the highest rate plus headroom')
   assert.deepEqual(points.map((point) => point.bucket), ['1-25', '26-50'])
   assert.deepEqual(points.map((point) => point.x), [10, 90])
-  assert.equal(points[1].yHigh, 10)
-  assert.equal(points[1].y, 30)
+  assert.equal(points[1].y, 26)
+  assert.equal(points[1].yHigh, 10, 'a range above the plot is clipped to its top')
   assert.deepEqual(rateLinePoints([]).points, [])
   assert.equal(rateLinePoints([rows[0]], { width: 100 }).points[0].x, 50)
 })
