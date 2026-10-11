@@ -1,0 +1,125 @@
+import { expect, test } from '@playwright/test'
+import { authenticate } from '../helpers/auth.js'
+
+async function seedFishing(page, context) {
+  await authenticate(context, 'member')
+  await page.goto('/')
+
+  return page.evaluate(async () => {
+    async function json(url, options = {}) {
+      const { headers = {}, ...requestOptions } = options
+      const response = await fetch(url, { ...requestOptions, headers: { 'Content-Type': 'application/json', ...headers } })
+      const body = await response.json()
+      if (!response.ok) throw new Error(`${url}: ${response.status} ${JSON.stringify(body)}`)
+      return body
+    }
+
+    const pairing = await json('/api/bridge/pairing/start', { method: 'POST', body: JSON.stringify({ deviceName: 'Fishing Farming E2E' }) })
+    await json('/api/bridge/pairing/approve', { method: 'POST', body: JSON.stringify({ userCode: pairing.userCode }) })
+    const token = await json('/api/bridge/pairing/token', { method: 'POST', body: JSON.stringify({ deviceCode: pairing.deviceCode }) })
+
+    const run = `${Date.now()}`
+    const baseEnvelope = {
+      schemaVersion: 1,
+      gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
+      realm: 'Classic Beta PvE 2',
+      region: 'US',
+      characterId: 'character-e2e-fisher',
+      payloadSchemaVersion: 1,
+    }
+
+    for (let index = 0; index < 15; index += 1) {
+      const observationId = `e2e-fishing-cast-${run}-${index}`
+      const zone = index < 10 ? 'Elwynn Forest' : 'Stormwind City'
+      const envelope = {
+        ...baseEnvelope,
+        eventType: 'gathering_attempt',
+        capturedAt: Math.floor(Date.now() / 1000) - 200 - index,
+        payload: {
+          schemaVersion: 1,
+          activity: 'cast',
+          discipline: 'fishing',
+          observationId,
+          source: { kind: 'fishing_water', name: 'Open Water' },
+          outputs: [],
+          context: {
+            characterLevel: 22,
+            profession: { skillLineId: 356, name: 'Fishing', skillLevel: 35 + index * 3, maxSkillLevel: 150, skillModifier: 5 },
+            location: { mapId: zone === 'Elwynn Forest' ? 1429 : 1453, zone, x: 0.43, y: 0.66 },
+          },
+          capture: { accepted: true },
+        },
+      }
+      await json('/api/bridge/telemetry', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        body: JSON.stringify({ streamKey: `gathering_attempt:character-e2e-fisher:${observationId}`, kind: 'event', revision: 1, envelope }),
+      })
+    }
+
+    for (let index = 0; index < 12; index += 1) {
+      const observationId = `e2e-fishing-catch-${run}-${index}`
+      const zone = index < 8 ? 'Elwynn Forest' : 'Stormwind City'
+      const smallfish = index < 8
+      const output = smallfish
+        ? { itemId: 6291, name: 'Raw Brilliant Smallfish', qualityId: 1, iconFileDataId: 133894, quantity: 1 }
+        : { itemId: 6289, name: 'Raw Longjaw Mud Snapper', qualityId: 1, iconFileDataId: 133918, quantity: 1 }
+      const envelope = {
+        ...baseEnvelope,
+        eventType: 'gathering_loot',
+        capturedAt: Math.floor(Date.now() / 1000) - 100 - index,
+        payload: {
+          schemaVersion: 1,
+          activity: 'catch',
+          discipline: 'fishing',
+          observationId,
+          source: { kind: 'fishing_water', name: 'Open Water' },
+          outputs: [output],
+          context: {
+            characterLevel: 22,
+            profession: { skillLineId: 356, name: 'Fishing', skillLevel: 40 + index * 4, maxSkillLevel: 150, skillModifier: 5 },
+            location: { mapId: zone === 'Elwynn Forest' ? 1429 : 1453, zone, x: 0.43, y: 0.66 },
+          },
+        },
+      }
+      await json('/api/bridge/telemetry', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-fisher:${observationId}`, kind: 'event', revision: 1, envelope }),
+      })
+    }
+  })
+}
+
+test('fishing catches use the shared Farming source browser while casts stay a separate denominator', async ({ page, context }) => {
+  await seedFishing(page, context)
+  await page.goto('/intelligence#farming')
+
+  const fishing = page.getByRole('region', { name: 'Fishing' })
+  const openWater = fishing.locator('.farm-card').filter({ hasText: 'Open Water' })
+  await expect(fishing.locator('.farm-card')).toHaveCount(1)
+  await expect(openWater).toContainText('Elwynn Forest')
+  await expect(openWater).toContainText('+1')
+  await expect(openWater).toContainText('12 gathers')
+  await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Fishing' })).toBeVisible()
+
+  await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Raw Longjaw Mud Snapper')
+  const searched = page.locator('.farm-card').filter({ hasText: 'Open Water' })
+  await expect(searched).toBeVisible()
+  await expect(searched.locator('.farm-card__drops--match')).toContainText('Raw Longjaw Mud Snapper')
+  await expect(searched.locator('.farm-card__drops--match')).toContainText('33.3%')
+  await searched.click()
+
+  const modal = page.getByRole('dialog', { name: 'Open Water' })
+  await expect(modal.getByRole('heading', { name: 'Open Water' })).toBeVisible()
+  await expect(modal).toContainText('Fishing · Fishing Water')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('12gathers')
+  await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Raw Brilliant Smallfish' })).toContainText('66.7%')
+  await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Raw Longjaw Mud Snapper' })).toContainText('33.3%')
+  await expect(modal.getByRole('tab', { name: 'Fishing skill' })).toHaveAttribute('aria-selected', 'true')
+  await expect(modal.getByRole('tab', { name: 'Bountiful Harvest' })).toHaveCount(0)
+
+  await modal.getByRole('combobox').first().selectOption('Elwynn Forest')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('8of 12 gathers')
+  await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Raw Brilliant Smallfish' })).toContainText('100%')
+})
