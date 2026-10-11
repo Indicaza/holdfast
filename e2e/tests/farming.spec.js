@@ -63,11 +63,46 @@ async function seedGathering(page, context) {
         body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-farmer:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }
+    return token.deviceToken
   })
 }
 
+// One more gather, synced while the page is open.
+async function syncGather(page, deviceToken, { name, objectId, item }) {
+  await page.evaluate(async ({ deviceToken, name, objectId, item }) => {
+    const observationId = `e2e-live-${Date.now()}`
+    const response = await fetch('/api/bridge/telemetry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${deviceToken}`, 'Idempotency-Key': observationId },
+      body: JSON.stringify({
+        streamKey: `gathering_loot:character-e2e-farmer:${observationId}`,
+        kind: 'event',
+        revision: 1,
+        envelope: {
+          schemaVersion: 1,
+          eventType: 'gathering_loot',
+          capturedAt: Math.floor(Date.now() / 1000),
+          gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
+          characterId: 'character-e2e-farmer',
+          payloadSchemaVersion: 1,
+          payload: {
+            schemaVersion: 1,
+            activity: 'harvest',
+            discipline: 'herbalism',
+            observationId,
+            source: { kind: 'herb_node', name, objectId },
+            outputs: [{ ...item, quantity: 1 }],
+            context: { characterLevel: 24, profession: { skillLineId: 182, name: 'Herbalism', skillLevel: 90 }, location: { zone: 'Westfall' } },
+          },
+        },
+      }),
+    })
+    if (response.status !== 201) throw new Error(`live gather rejected: ${response.status}`)
+  }, { deviceToken, name, objectId, item })
+}
+
 test('farming intelligence finds sources by item and recomputes the source modal under filters', async ({ page, context }) => {
-  await seedGathering(page, context)
+  const deviceToken = await seedGathering(page, context)
   await page.goto('/intelligence#farming')
 
   await expect(page.getByRole('heading', { name: 'Farming', level: 1 })).toBeVisible()
@@ -114,4 +149,11 @@ test('farming intelligence finds sources by item and recomputes the source modal
   await page.keyboard.press('Escape')
   await expect(modal).toHaveCount(0)
   await expect(page).not.toHaveURL(/source=/)
+
+  // A gather synced while the page is open appears without a reload.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('')
+  await expect(page.locator('.farm-card').filter({ hasText: 'Earthroot' })).toHaveCount(0)
+  await syncGather(page, deviceToken, { name: 'Earthroot', objectId: 1619, item: { itemId: 2449, name: 'Earthroot', qualityId: 1 } })
+  await expect(page.locator('.farm-card').filter({ hasText: 'Earthroot' })).toContainText('1 gather')
 })

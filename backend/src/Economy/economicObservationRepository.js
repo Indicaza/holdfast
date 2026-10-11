@@ -14,6 +14,7 @@ function resolvedSourceKey(db, observation) {
 }
 
 function insertObservation(db, { observation, outputs }) {
+  const resolvedKey = resolvedSourceKey(db, observation);
   const result = db.prepare(`
     INSERT OR IGNORE INTO economic_observations (
       observation_key, record_id, event_type, activity, discipline,
@@ -29,7 +30,7 @@ function insertObservation(db, { observation, outputs }) {
     observation.eventType,
     observation.activity,
     observation.discipline,
-    resolvedSourceKey(db, observation),
+    resolvedKey,
     observation.sourceKind,
     observation.sourceName,
     observation.sourceObjectId,
@@ -53,7 +54,15 @@ function insertObservation(db, { observation, outputs }) {
     observation.capturedAt,
     observation.receivedAt,
   );
-  if (!result.changes) return { status: "duplicate" };
+  if (!result.changes) {
+    // Already counted. A resent copy replaces its raw record, so point the
+    // observation at the copy that is still kept.
+    if (observation.recordId) {
+      db.prepare("UPDATE economic_observations SET record_id = ? WHERE observation_key = ?")
+        .run(observation.recordId, observation.observationKey);
+    }
+    return { status: "duplicate" };
+  }
 
   const observationId = Number(result.lastInsertRowid);
   const insertOutput = db.prepare(`
@@ -72,7 +81,7 @@ function insertObservation(db, { observation, outputs }) {
       output.iconFileDataId,
     );
   }
-  return { status: "created", observationId };
+  return { status: "created", observationId, sourceKey: resolvedKey, discipline: observation.discipline };
 }
 
 // The character an observation belongs to: the website's character when the

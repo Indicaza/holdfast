@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { requireAuthenticated } from "../Auth/permissions.js";
-import { readFarmingSource, searchFarmingSources } from "./farmingRepository.js";
+import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
+import { readFarmingIngestStatus, readFarmingSource, searchFarmingSources } from "./farmingRepository.js";
 
 // Mounted at /api/intelligence/farming.
 export function createFarmingRouter() {
@@ -14,6 +14,18 @@ export function createFarmingRouter() {
     } catch (error) {
       console.error("Unable to search farming sources", error);
       res.status(500).json({ error: "farming_sources_unavailable" });
+    }
+  });
+
+  // Whether gathering telemetry is reaching Farming. Admins only: it names
+  // raw record ids.
+  router.get("/status", requirePermission("site.admin"), (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json(readFarmingIngestStatus());
+    } catch (error) {
+      console.error("Unable to read farming ingest status", error);
+      res.status(500).json({ error: "farming_status_unavailable" });
     }
   });
 

@@ -105,6 +105,14 @@ gathering_loot ─ ingest ─ raw record (bounded, for debugging)
 - Bountiful Harvest (one Legacy Professions talent shared by Herbalism,
   Mining and Skinning) is stored per observation whatever the discipline; a
   missing rank is unknown, not rank 0.
+- Each newly recorded observation publishes a `farming` live update naming
+  its source, so the farming browser and an open source window refresh in
+  place as the bridge syncs.
+- `GET /api/intelligence/farming/status` (site admins) answers "is gathering
+  telemetry reaching Farming?": raw economic events received (within raw
+  retention), how many became observations, and the record ids of any that
+  could not be analysed. A resent gather re-links its observation to the
+  newest raw copy, so resends never look like losses.
 - Rates are always successes over every eligible observation under the same
   filters, with a Wilson interval and a confidence label
   (`Economy/farmingStatistics.js`).

@@ -1,4 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
+import { ECONOMIC_EVENT_TYPES } from "./economicObservationModel.js";
 import { SKILL_BUCKET_SIZE, observedRate, skillBucket } from "./farmingStatistics.js";
 
 // Farming intelligence reads: the source browser (search by source or by
@@ -395,6 +396,58 @@ export function readFarmingSource(sourceKey, { filters: rawFilters = {}, item = 
       selectedItemKey: selected?.itemKey || null,
       bySkill,
       byBountifulHarvest,
+    };
+  });
+}
+
+// --- Ingest status ----------------------------------------------------------
+
+// Whether economic telemetry is reaching Farming: raw events received (within
+// raw retention), how many became observations, and the ones that could not
+// be analysed, with a few record ids to inspect in the Guildweaver console.
+export function readFarmingIngestStatus() {
+  return withGuildDatabase((db) => {
+    const placeholders = ECONOMIC_EVENT_TYPES.map(() => "?").join(", ");
+    const raw = db.prepare(`
+      SELECT r.event_type, COUNT(*) AS received, MAX(r.received_at) AS last_received_at,
+             SUM(CASE WHEN o.id IS NULL THEN 1 ELSE 0 END) AS unrecorded
+      FROM guildweaver_telemetry_records r
+      LEFT JOIN economic_observations o ON o.record_id = r.id
+      WHERE r.kind = 'event' AND r.event_type IN (${placeholders})
+      GROUP BY r.event_type
+    `).all(...ECONOMIC_EVENT_TYPES);
+    const unrecorded = db.prepare(`
+      SELECT r.id, r.event_type, r.received_at
+      FROM guildweaver_telemetry_records r
+      WHERE r.kind = 'event' AND r.event_type IN (${placeholders})
+        AND NOT EXISTS (SELECT 1 FROM economic_observations o WHERE o.record_id = r.id)
+      ORDER BY r.id DESC LIMIT 5
+    `).all(...ECONOMIC_EVENT_TYPES);
+    const observations = db.prepare(`
+      SELECT discipline, COUNT(*) AS observations, COUNT(DISTINCT source_key) AS sources,
+             MAX(captured_at) AS last_captured_at, MAX(received_at) AS last_received_at
+      FROM economic_observations
+      GROUP BY discipline
+      ORDER BY observations DESC
+    `).all();
+
+    return {
+      eventTypes: ECONOMIC_EVENT_TYPES,
+      raw: raw.map((row) => ({
+        eventType: row.event_type,
+        received: Number(row.received),
+        recorded: Number(row.received) - Number(row.unrecorded),
+        unrecorded: Number(row.unrecorded),
+        lastReceivedAt: row.last_received_at,
+      })),
+      unrecordedSamples: unrecorded.map((row) => ({ recordId: Number(row.id), eventType: row.event_type, receivedAt: row.received_at })),
+      observations: observations.map((row) => ({
+        discipline: row.discipline,
+        observations: Number(row.observations),
+        sources: Number(row.sources),
+        lastCapturedAt: row.last_captured_at,
+        lastReceivedAt: row.last_received_at,
+      })),
     };
   });
 }

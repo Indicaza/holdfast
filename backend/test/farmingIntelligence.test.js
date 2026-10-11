@@ -7,6 +7,7 @@ import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
 import { readLatestTelemetryState } from "../src/Character/Telemetry/telemetryStateRepository.js";
 import { readTelemetryRecord, recordTelemetry } from "../src/Character/telemetryRecordRepository.js";
 import { withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
+import { resetLiveUpdatesForTests, subscribeLiveUpdates } from "../src/Live/liveUpdateBus.js";
 import {
   backfillEconomicObservationsInDatabase,
   recordEconomicObservationInDatabase,
@@ -434,4 +435,56 @@ test("farming endpoints require a signed-in member", () =>
     assert.equal(lichen.confidence, "low");
 
     assert.equal((await request("/api/intelligence/farming/sources/herbalism:herb-node:nope", { persona: "member" })).status, 404);
+  }));
+
+async function pairBridge(request) {
+  const started = await request("/api/bridge/pairing/start", { method: "POST", body: { deviceName: "Farming bridge" } });
+  await request("/api/bridge/pairing/approve", { persona: "member", method: "POST", body: { userCode: started.json.userCode } });
+  const exchanged = await request("/api/bridge/pairing/token", { method: "POST", body: { deviceCode: started.json.deviceCode } });
+  return exchanged.json.deviceToken;
+}
+
+test("gathers synced through the bridge endpoint reach Farming, announce themselves live, and show in the ingest status", () =>
+  withHttpApp(async ({ request }) => {
+    resetLiveUpdatesForTests();
+    const events = [];
+    subscribeLiveUpdates({ memberId: memberIds.member, send: (event) => events.push(event) });
+    const token = await pairBridge(request);
+    const post = (envelope, key = envelope.payload.observationId) => request("/api/bridge/telemetry", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": `gw-${key}` },
+      body: { streamKey: `gathering_loot:character-rook:${envelope.payload.observationId}`, kind: "event", revision: 1, envelope },
+    });
+
+    const lichen = await post(gather({ outputs: [PEACEBLOOM_ITEM, LICHEN] }));
+    assert.equal(lichen.status, 201);
+    assert.equal(lichen.json.telemetryHandler, "gathering_loot");
+    assert.equal((await post(gather())).status, 201);
+    const empty = await post(gather({ outputs: [] }));
+    assert.equal(empty.status, 201, "an unanalysable gather is still accepted, so the bridge never retries it forever");
+
+    const farming = events.filter((event) => event.topics.includes("farming"));
+    assert.equal(farming.length, 2, "one live update per recorded observation");
+    assert.deepEqual(farming[0].detail, { sourceKey: PEACEBLOOM_KEY, discipline: "herbalism" });
+    assert.equal(farming[0].entityId, PEACEBLOOM_KEY);
+
+    // The bridge resending the same gather is neither counted nor announced.
+    assert.equal((await post(gather({ observationId: "obs-resent" }))).status, 201);
+    assert.equal((await post(gather({ observationId: "obs-resent" }), "obs-resent-again")).status, 201);
+    assert.equal(events.filter((event) => event.topics.includes("farming")).length, 3);
+
+    const detail = await request(`/api/intelligence/farming/sources/${PEACEBLOOM_KEY}`, { persona: "member" });
+    assert.equal(detail.json.summary.observations, 3);
+    assert.equal(detail.json.outputs.find((output) => output.name === "Frilled Lichen").drops, 1);
+
+    assert.equal((await request("/api/intelligence/farming/status", { persona: "member" })).status, 403);
+    const status = await request("/api/intelligence/farming/status", { persona: "owner" });
+    assert.equal(status.status, 200);
+    assert.deepEqual(status.json.eventTypes, ["gathering_loot"]);
+    const [raw] = status.json.raw;
+    assert.deepEqual([raw.eventType, raw.received, raw.recorded, raw.unrecorded], ["gathering_loot", 4, 3, 1], "a resend replaces its raw record and stays linked");
+    assert.equal(status.json.unrecordedSamples.length, 1, "the empty gather is listed for inspection");
+    assert.equal(status.json.observations[0].discipline, "herbalism");
+    assert.equal(status.json.observations[0].observations, 3);
+    resetLiveUpdatesForTests();
   }));

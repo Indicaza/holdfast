@@ -105,8 +105,9 @@ function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receiv
 
   // Events a handler analyses (economic observations) are recorded by that
   // handler; the transport stays unaware of what they mean.
+  let recordedEvent = null;
   if (incoming.kind === "event" && result.record && domainValidation.handler?.recordEvent) {
-    withGuildDatabase((db) => domainValidation.handler.recordEvent(db, {
+    recordedEvent = withGuildDatabase((db) => domainValidation.handler.recordEvent(db, {
       eventType: String(persistedEnvelope.eventType || incoming.eventType),
       envelope: persistedEnvelope,
       memberId,
@@ -134,6 +135,7 @@ function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receiv
     canonicalCharacterId,
     rawCharacterId,
     changedSections,
+    recordedEvent,
     handlerName: domainValidation.handler?.eventType || "opaque",
   };
 }

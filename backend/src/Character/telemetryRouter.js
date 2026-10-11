@@ -56,6 +56,16 @@ export function createTelemetryRouter() {
           permission: "site.admin",
         });
       }
+      // A new farming observation refreshes the farming browser and the
+      // window of the source it belongs to.
+      if (result.recordedEvent?.status === "created" && result.recordedEvent.sourceKey) {
+        publishLiveUpdate({
+          topics: ["farming"],
+          source: "farming.observation",
+          entityId: result.recordedEvent.sourceKey,
+          detail: { sourceKey: result.recordedEvent.sourceKey, discipline: result.recordedEvent.discipline },
+        });
+      }
       if (kind === "state") {
         publishCharacterChanged({ characterId: canonicalCharacterId, sections: result.changedSections });
       }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { apiJson } from '../../Api/apiClient.js'
+import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import Modal from '../../Modal/Modal.jsx'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
@@ -74,7 +75,7 @@ function SourceHeader({ detail, filtered }) {
       </div>
       <p className="farm-header__gathers">
         <strong>{formatCount(summary.observations)}</strong>
-        <span>{filtered ? `of ${formatCount(source.totalObservations)} gathers` : 'gathers'}</span>
+        <span>{filtered ? `of ${formatCount(source.totalObservations)} gathers` : summary.observations === 1 ? 'gather' : 'gathers'}</span>
       </p>
     </header>
   )
@@ -278,6 +279,12 @@ export default function FarmingSourceModal({ sourceKey, initialItemKey = '', onC
   const [itemKey, setItemKey] = useState(initialItemKey)
   const [state, setState] = useState({ status: 'loading', detail: null })
   const url = sourceKey ? sourceDetailUrl(sourceKey, { filters, item: itemKey }) : ''
+  // A new gather of this source refreshes the open window in place.
+  const [version, setVersion] = useState(0)
+  useLiveRefresh(['farming'], () => setVersion((current) => current + 1), {
+    matches: (event) => event.detail?.sourceKey === sourceKey,
+    debounceMs: 1000,
+  })
 
   useEffect(() => {
     if (!url) return undefined
@@ -298,7 +305,7 @@ export default function FarmingSourceModal({ sourceKey, initialItemKey = '', onC
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [url])
+  }, [url, version])
 
   if (!sourceKey) return null
   const { detail, status } = state

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { apiJson } from '../../Api/apiClient.js'
+import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
 import FarmingSourceModal, { ConfidencePips } from './FarmingSourceModal.jsx'
@@ -67,7 +68,7 @@ function SourceCard({ source, onOpen }) {
           <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={40} />
           <span className="farm-card__identity">
             <strong>{source.name}</strong>
-            <small>{formatCount(source.observations)} gathers</small>
+            <small>{formatCount(source.observations)} {source.observations === 1 ? 'gather' : 'gathers'}</small>
           </span>
           <span className="farm-card__open" aria-hidden="true">›</span>
         </span>
@@ -91,6 +92,10 @@ export default function FarmingIntelligence({ input, onInputChange }) {
     return () => window.clearTimeout(timer)
   }, [input])
 
+  // New gathers arriving from Guildweaver refresh the list in place.
+  const [version, setVersion] = useState(0)
+  useLiveRefresh(['farming'], () => setVersion((current) => current + 1), { debounceMs: 1000 })
+
   useEffect(() => {
     const controller = new AbortController()
     let active = true
@@ -104,7 +109,7 @@ export default function FarmingIntelligence({ input, onInputChange }) {
       active = false
       controller.abort()
     }
-  }, [query, discipline])
+  }, [query, discipline, version])
 
   const data = state.data
   const sources = data?.sources || []
