@@ -55,6 +55,20 @@ function CardDrops({ source }) {
   )
 }
 
+function CardZone({ source }) {
+  const zone = String(source.primaryZone || '').trim()
+  const extraZones = Math.max(0, Number(source.zones || 0) - (zone ? 1 : 0))
+  const label = zone || 'Zone unknown'
+
+  return (
+    <span className={`farm-card__zone${zone ? '' : ' farm-card__zone--unknown'}`} title={extraZones ? `${label} + ${extraZones} more zone${extraZones === 1 ? '' : 's'}` : label}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></svg>
+      <span>{label}</span>
+      {extraZones ? <em>+{extraZones}</em> : null}
+    </span>
+  )
+}
+
 function SourceCard({ source, onOpen }) {
   const match = source.matches?.[0]
   return (
@@ -68,6 +82,7 @@ function SourceCard({ source, onOpen }) {
           <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={40} />
           <span className="farm-card__identity">
             <strong>{source.name}</strong>
+            <CardZone source={source} />
             <small>{formatCount(source.observations)} {source.observations === 1 ? 'gather' : 'gathers'}</small>
           </span>
           <span className="farm-card__open" aria-hidden="true">›</span>
