@@ -27,7 +27,7 @@ test('member cards show rank and billets as one title, Rep progress and synced c
   await expect(card.locator('.rank-plate')).toContainText('Private')
   await expect(card.getByRole('progressbar', { name: /^Reputation/ })).toBeAttached()
 
-  const character = card.locator('.character-card').filter({ hasText: 'Armorytest' })
+  const character = card.locator('.character-line').filter({ hasText: 'Armorytest' })
   await expect(character).toBeVisible()
   await character.click()
   const armory = page.getByRole('dialog')
@@ -37,7 +37,7 @@ test('member cards show rank and billets as one title, Rep progress and synced c
   await expect(armory).toHaveCount(0)
 
   // Anywhere else on the card opens the profile.
-  await card.click({ position: { x: 24, y: 120 } })
+  await card.click({ position: { x: 30, y: 30 } })
   await expect(page).toHaveURL(/\/members\/e2e-member$/)
   await expect(page.locator('.member-profile__hero .rank-plate')).toContainText('Private')
   await expect(page.locator('.member-profile__rep').getByRole('progressbar', { name: /^Reputation/ })).toBeVisible()

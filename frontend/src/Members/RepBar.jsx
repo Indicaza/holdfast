@@ -21,6 +21,15 @@ export default function RepBar({ member, variant = 'full', className = '' }) {
     </div>
   )
 
+  // Hairline: just the line, for the edge of a card. The value is in its label.
+  if (variant === 'hairline') {
+    return (
+      <div className={`rep-bar rep-bar--hairline${className ? ` ${className}` : ''}`} title={`${rep.lifetimeRep.toLocaleString()} Rep · ${rep.goal}`}>
+        {bar}
+      </div>
+    )
+  }
+
   if (variant === 'compact') {
     return (
       <div className={`rep-bar rep-bar--compact${className ? ` ${className}` : ''}`}>

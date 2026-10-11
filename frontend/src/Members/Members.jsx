@@ -3,7 +3,7 @@ import Home from '../Home/Home.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
-import CharacterCard from '../Intelligence/CharacterCard.jsx'
+import CharacterLine from '../Intelligence/CharacterLine.jsx'
 import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
 import { normalizeIntelligence } from '../Intelligence/model.js'
 import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
@@ -34,19 +34,6 @@ function normalizeDirectory(result) {
 
 function memberName(member) {
   return member?.displayName || member?.username || 'Member'
-}
-
-function joinedLabel(value) {
-  if (!value) return 'Member'
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return 'Member'
-
-  return `Joined ${new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    year: 'numeric',
-  }).format(date)}`
 }
 
 // The Discord picture, else the main character's class portrait.
@@ -111,44 +98,36 @@ function MemberCard({ member, isSelf, synced, charactersReady, onOpenCharacter }
               {memberName(member)}
             </a>
             {isSelf ? <span className="member-card__you">You</span> : null}
+            {activeAssignments ? (
+              <span
+                className="member-card__duty"
+                role="img"
+                aria-label={`On assignment: ${activeAssignments} active ${activeAssignments === 1 ? 'objective' : 'objectives'}`}
+                title={`${activeAssignments} active ${activeAssignments === 1 ? 'objective' : 'objectives'}`}
+              />
+            ) : null}
           </h2>
-          <span className="member-card__handle">
-            @{member.username} · {joinedLabel(member.guildJoinedAt || member.firstSeenAt)}
-          </span>
+          <RankPlate member={member} size="xs" variant="plain" />
         </div>
-        {activeAssignments ? (
-          <span className="member-card__duty" title="Active quest objectives">
-            <i aria-hidden="true" />
-            {activeAssignments} on assignment
-          </span>
-        ) : null}
       </header>
-
-      <RankPlate member={member} size="sm" />
-      <RepBar member={member} variant="compact" />
 
       <div className="member-card__characters">
         {lead?.synced ? (
-          <CharacterCard character={lead.synced} onOpen={onOpenCharacter} showAffiliation={false} className="character-card--in-member" />
+          <CharacterLine character={lead.synced} onOpen={onOpenCharacter} portrait={false} />
         ) : lead && !charactersReady ? (
-          <div className="member-card__listed member-card__listed--pending" aria-hidden="true" />
+          <span className="member-card__pending" aria-hidden="true" />
         ) : lead ? (
-          <div className="member-card__listed">
-            <strong>{lead.listed.name}</strong>
-            <span>{[lead.listed.race, lead.listed.className].filter(Boolean).join(' ') || 'Character'}</span>
-            <small>Not synced yet</small>
-          </div>
-        ) : (
-          <div className="member-card__listed member-card__listed--empty">
-            <span>No characters listed yet.</span>
-          </div>
-        )}
-        {rest.length ? (
-          <span className="member-card__more">
-            +{rest.length} {rest.length === 1 ? 'alt' : 'alts'}
+          <span className="member-card__listed">
+            {lead.listed.name}
+            <small>{[lead.listed.race, lead.listed.className].filter(Boolean).join(' ') || 'Not synced yet'}</small>
           </span>
-        ) : null}
+        ) : (
+          <span className="member-card__listed member-card__listed--empty">No characters yet</span>
+        )}
+        {rest.length ? <span className="member-card__more" title={`${rest.length} more ${rest.length === 1 ? 'character' : 'characters'}`}>+{rest.length}</span> : null}
       </div>
+
+      <RepBar member={member} variant="hairline" className="member-card__rep" />
     </article>
   )
 }

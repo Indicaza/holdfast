@@ -1,0 +1,84 @@
+.character-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.7rem 0.45rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
+}
+
+.character-line:hover,
+.character-line:focus-visible {
+  border-color: color-mix(in srgb, var(--class-color, #c4a667) 30%, transparent);
+  background: color-mix(in srgb, var(--class-color, #c4a667) 7%, transparent);
+  outline: none;
+}
+
+.character-line__portrait {
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--class-color, #c4a667) 55%, transparent);
+  border-radius: 50%;
+  background: rgba(3, 8, 15, 0.7);
+}
+
+.character-line__portrait .wow-icon {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.character-line__text {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.character-line__text strong {
+  overflow: hidden;
+  color: var(--class-color, var(--color-text-strong));
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-line__text small {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-line__open {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.character-line:hover .character-line__open,
+.character-line:focus-visible .character-line__open {
+  opacity: 1;
+}
+
+/* Without a portrait: a short bar in the class colour. */
+.character-line__mark {
+  width: 3px;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 2px;
+  background: var(--class-color, var(--color-accent));
+  box-shadow: 0 0 0.6rem color-mix(in srgb, var(--class-color, #c4a667) 45%, transparent);
+}

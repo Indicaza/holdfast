@@ -187,3 +187,22 @@
     transition: none;
   }
 }
+
+/* Hairline: a thin gold line, no segments or text. */
+.rep-bar--hairline .rep-bar__track {
+  height: 3px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(223, 229, 236, 0.07);
+  box-shadow: none;
+}
+
+.rep-bar--hairline .rep-bar__track::after {
+  display: none;
+}
+
+.rep-bar--hairline .rep-bar__fill {
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, var(--rep-fill-start), var(--rep-fill-end));
+  box-shadow: 0 0 0.6rem rgba(242, 212, 138, 0.45);
+}

@@ -93,10 +93,7 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: end;
   gap: var(--space-4) var(--space-6);
-  margin-bottom: var(--space-6);
-  padding: var(--space-5);
-  border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.3);
+  margin-bottom: var(--space-8);
 }
 
 .members-page__search {
@@ -226,8 +223,6 @@
   justify-content: space-between;
   gap: var(--space-4);
   margin: 0;
-  padding-top: var(--space-4);
-  border-top: var(--border-subtle);
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
@@ -279,7 +274,15 @@
 
 @media (max-width: 38rem) {
   .members-page__filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+
+  .members-page__filters button {
+    min-width: 0;
+    padding-inline: var(--space-1);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
   }
 }
 
@@ -290,18 +293,23 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
-  margin: 0 0 var(--space-6);
-  overflow: hidden;
-  border: var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-border);
+  margin: 0 0 var(--space-8);
+  padding-block: var(--space-5);
+  border-block: 1px solid rgba(223, 229, 236, 0.08);
 }
 
 .members-page__summary > div {
   display: grid;
-  gap: 0.2rem;
-  padding: var(--space-4) var(--space-5);
-  background: #0a1626;
+  gap: 0.35rem;
+  padding-inline: var(--space-5);
+}
+
+.members-page__summary > div + div {
+  border-left: 1px solid rgba(223, 229, 236, 0.08);
+}
+
+.members-page__summary > div:first-child {
+  padding-left: 0;
 }
 
 .members-page__summary dt {
@@ -316,14 +324,14 @@
   margin: 0;
   color: var(--color-text-strong);
   font-family: var(--font-display);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-fib-34);
   line-height: 1;
 }
 
 /* Member cards */
 .members-page__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 23rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
   gap: var(--space-4);
 }
 
@@ -369,17 +377,17 @@
   position: relative;
   display: grid;
   min-width: 0;
-  align-content: start;
+  grid-template-rows: auto 1fr;
   gap: var(--space-4);
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-5) calc(var(--space-5) + 3px);
   overflow: hidden;
-  border: 1px solid rgba(223, 229, 236, 0.12);
+  border: 1px solid rgba(223, 229, 236, 0.09);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(ellipse 60% 70% at 0% 0%, color-mix(in srgb, var(--member-tone) 9%, transparent), transparent),
-    linear-gradient(180deg, rgba(16, 32, 54, 0.78), rgba(6, 13, 24, 0.92));
-  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 40%),
+    rgba(9, 18, 32, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: border-color var(--duration-normal) var(--ease-standard), background-color var(--duration-normal) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard);
 }
 
 .member-card--nco {
@@ -392,32 +400,33 @@
 
 .member-card:hover,
 .member-card:focus-within {
-  border-color: color-mix(in srgb, var(--member-tone) 45%, transparent);
-  box-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.34), 0 0 0 1px color-mix(in srgb, var(--member-tone) 14%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--member-tone) 32%, transparent);
+  background-color: rgba(12, 24, 42, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1.2rem 2.4rem rgba(0, 0, 0, 0.32);
 }
 
 .member-card--self {
-  border-color: rgba(196, 166, 103, 0.4);
+  border-color: rgba(196, 166, 103, 0.28);
 }
 
 .member-card__head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .member-card__avatar {
   display: grid;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3rem;
+  height: 3rem;
   place-items: center;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--member-tone) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--member-tone) 45%, transparent);
   border-radius: 50%;
   background: rgba(3, 8, 15, 0.7);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--member-tone) 8%, transparent);
   color: var(--member-tone);
   font-family: var(--font-display);
   font-size: var(--font-size-md);
@@ -427,24 +436,29 @@
 .member-card__avatar .wow-icon {
   width: 100%;
   height: 100%;
+  border: 0;
+  border-radius: 0;
   object-fit: cover;
 }
 
 .member-card__who {
   display: grid;
   min-width: 0;
-  gap: 0.15rem;
+  justify-items: start;
+  gap: 0.35rem;
 }
 
 .member-card__who h2 {
   display: flex;
   min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: var(--space-2);
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-display);
+  letter-spacing: -0.01em;
   line-height: 1.1;
 }
 
@@ -456,8 +470,7 @@
   white-space: nowrap;
 }
 
-/* The whole card opens the profile; the character card above it opens the
-   armory instead. */
+/* The whole card opens the profile; the character line opens the armory. */
 .member-card__link::after {
   position: absolute;
   inset: 0;
@@ -477,50 +490,21 @@
 
 .member-card__you {
   flex: none;
-  padding: 0.1rem 0.45rem;
-  border: 1px solid rgba(196, 166, 103, 0.45);
-  border-radius: var(--radius-pill);
   color: var(--color-accent-bright);
   font-family: var(--font-body);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
-.member-card__handle {
-  overflow: hidden;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .member-card__duty {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
-  border: 1px solid rgba(98, 196, 128, 0.4);
-  border-radius: var(--radius-pill);
-  background: rgba(61, 220, 90, 0.07);
-  color: #9fe3b1;
-  font-size: 0.68rem;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.member-card__duty i {
   width: 0.45rem;
   height: 0.45rem;
+  flex: none;
   border-radius: 50%;
-  background: #3ddc5a;
-  box-shadow: 0 0 0.5rem #3ddc5a;
-}
-
-.member-card .rank-plate {
-  justify-self: start;
+  background: #4fd27a;
+  box-shadow: 0 0 0 3px rgba(79, 210, 122, 0.14);
 }
 
 .member-card__characters {
@@ -529,116 +513,43 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: var(--space-3);
+  align-self: end;
+  gap: var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(223, 229, 236, 0.06);
 }
 
-.member-card__characters .character-card {
+.member-card__characters .character-line {
   min-width: 0;
   flex: 1;
-  padding: 0.6rem 0.75rem;
 }
 
 .member-card__listed {
   display: grid;
   min-width: 0;
   flex: 1;
-  gap: 0.1rem;
-  padding: 0.7rem 0.9rem;
-  border: 1px dashed rgba(223, 229, 236, 0.16);
-  border-radius: 0.7rem;
-  color: var(--color-text-muted);
+  gap: 0.05rem;
+  padding: 0.45rem var(--space-2);
+  color: var(--color-text);
   font-size: var(--font-size-sm);
-}
-
-.member-card__listed strong {
-  color: var(--color-text-strong);
-  font-family: var(--font-display);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-display);
 }
 
 .member-card__listed small {
   color: var(--color-text-muted);
-  font-size: 0.68rem;
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
+  font-size: var(--font-size-xs);
 }
 
 .member-card__listed--empty {
-  align-content: center;
-  min-height: 3.5rem;
-}
-
-.member-card__more {
-  flex: none;
-  padding: 0.3rem 0.6rem;
-  border: var(--border-subtle);
-  border-radius: var(--radius-pill);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
-  white-space: nowrap;
+  font-style: italic;
 }
 
-@media (max-width: 56rem) {
-  .members-page__summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 38rem) {
-  .members-page__summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .members-page__summary > div:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .members-page__search-hint {
-    display: none;
-  }
-
-  .member-card {
-    padding: var(--space-4);
-  }
-
-  .member-card__head {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .member-card__duty {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .member-card {
-    transition: none;
-  }
-
-  .member-card:hover,
-  .member-card:focus-within {
-    transform: none;
-  }
-}
-
-/* The character inside a member card: same unit frame, slimmer plate, so the
-   sync meter stays on its line. */
-.member-card__characters .character-card--in-member {
-  flex-wrap: nowrap;
-}
-
-.member-card__characters .character-card--in-member .unit-frame--card {
-  --portrait: 3.2rem;
-  --plate: min(10rem, 100%);
-  min-width: 0;
-}
-
-.member-card__listed--pending {
-  min-height: 4.6rem;
-  border-style: solid;
-  border-color: rgba(223, 229, 236, 0.08);
+.member-card__pending {
+  height: 2.6rem;
+  flex: 1;
+  border-radius: var(--radius-md);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
   background-size: 200% 100%;
   animation: member-card-pending 1.4s ease-in-out infinite;
@@ -650,14 +561,56 @@
   }
 }
 
+.member-card__more {
+  flex: none;
+  margin-right: var(--space-2);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+/* Rep runs along the card's bottom edge. */
+.member-card__rep {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+@media (max-width: 56rem) {
+  .members-page__summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: var(--space-5);
+  }
+
+  .members-page__summary > div,
+  .members-page__summary > div:first-child {
+    padding-inline: 0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 38rem) {
+  .members-page__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .members-page__search-hint {
+    display: none;
+  }
+
+  .member-card {
+    padding: var(--space-4) var(--space-4) calc(var(--space-4) + 3px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .member-card__listed--pending {
+  .member-card {
+    transition: none;
+  }
+
+  .member-card__pending {
     animation: none;
   }
 }
 
-/* In the directory the sync meter speaks for itself (its tooltip has the
-   date), leaving the frame room beside an alts count. */
-.member-card__characters .character-card--in-member .sync-badge__age {
-  display: none;
-}
