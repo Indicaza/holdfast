@@ -213,6 +213,45 @@
   font-variant-numeric: tabular-nums;
 }
 
+.farm-card__zone {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .3rem;
+  color: var(--farm-brass);
+  font-size: .75rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.farm-card__zone svg {
+  width: .78rem;
+  height: .78rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.farm-card__zone > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farm-card__zone em {
+  flex: 0 0 auto;
+  color: var(--farm-faint);
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.farm-card__zone--unknown {
+  color: var(--farm-faint);
+  font-weight: 500;
+}
+
 .farm-card__open {
   color: var(--farm-faint);
   font-size: 1.4rem;
@@ -663,14 +702,24 @@
   border: 1px solid transparent;
   border-radius: .4rem;
   background: transparent;
+  box-shadow: none;
   color: inherit;
+  filter: none;
   font: inherit;
   text-align: left;
+  transform: none;
+  translate: 0;
   cursor: pointer;
+  transition: none;
 }
 
 .farm-loot__row:hover {
-  background: rgba(255, 255, 255, .035);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  translate: 0;
 }
 
 .farm-loot__row:focus-visible {
@@ -678,7 +727,8 @@
   outline-offset: -2px;
 }
 
-.farm-loot__row.is-selected {
+.farm-loot__row.is-selected,
+.farm-loot__row.is-selected:hover {
   border-color: rgba(255, 209, 0, .3);
   background: linear-gradient(90deg, rgba(255, 209, 0, .12), rgba(255, 209, 0, .02));
 }
