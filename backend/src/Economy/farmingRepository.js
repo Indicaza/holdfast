@@ -82,6 +82,15 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
         COUNT(*) AS observations,
         COUNT(DISTINCT NULLIF(o.character_key, '')) AS characters,
         COUNT(DISTINCT NULLIF(o.zone, '')) AS zones,
+        (
+          SELECT zone_observation.zone
+          FROM economic_observations zone_observation
+          WHERE zone_observation.source_key = o.source_key
+            AND zone_observation.zone <> ''
+          GROUP BY zone_observation.zone
+          ORDER BY COUNT(*) DESC, zone_observation.zone ASC
+          LIMIT 1
+        ) AS primary_zone,
         MAX(o.captured_at) AS last_observed_at
       FROM economic_observations o
       ${where}
@@ -108,6 +117,7 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
         observations,
         characters: Number(row.characters),
         zones: Number(row.zones),
+        primaryZone: row.primary_zone || "",
         lastObservedAt: row.last_observed_at,
         icon: outputs.get(row.source_key)?.[0] || null,
         // What else it drops, beyond the output it is named for.
