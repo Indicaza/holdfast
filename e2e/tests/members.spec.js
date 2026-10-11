@@ -45,6 +45,25 @@ test('member cards show rank and billets as one title, Rep progress and synced c
   const profileCharacter = page.locator('.member-profile__character-grid .character-card').filter({ hasText: 'Armorytest' })
   await profileCharacter.click()
   await expect(page.getByRole('dialog')).toHaveAttribute('aria-label', 'Armorytest')
+  // Page heading styles never reach the modal (it renders on <body>).
+  const nameSize = await page.locator('.armory-header .unit-frame__name').evaluate((name) => parseFloat(getComputedStyle(name).fontSize))
+  expect(nameSize).toBeLessThan(16)
+})
+
+test('the billet menu closes on a click elsewhere or Escape', async ({ browser }) => {
+  const context = await browser.newContext()
+  await authenticate(context, 'commander')
+  const page = await context.newPage()
+  await page.goto('/members/e2e-member')
+  const menu = page.locator('.member-billet-control')
+  await menu.locator('summary').click()
+  await expect(menu).toHaveAttribute('open', '')
+  await page.locator('.member-profile__crumbs').click()
+  await expect(menu).not.toHaveAttribute('open', '')
+  await menu.locator('summary').click()
+  await page.keyboard.press('Escape')
+  await expect(menu).not.toHaveAttribute('open', '')
+  await context.close()
 })
 
 test('sorting by rank groups officers, NCOs and enlisted members', async ({ browser }) => {

@@ -9,7 +9,10 @@ import { normalizeIntelligence } from '../Intelligence/model.js'
 import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
 import MemberAccessModal from './MemberAccessModal.jsx'
 import RankPlate from './RankPlate.jsx'
+import { classIdentity } from '../Intelligence/classIdentity.js'
+import WowIcon from '../WowAssets/WowIcon.jsx'
 import RepBar from './RepBar.jsx'
+import { syncedCharacterIndex } from './syncedCharacters.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Members.css'
@@ -46,7 +49,13 @@ function joinedLabel(value) {
   }).format(date)}`
 }
 
-function MemberAvatar({ member }) {
+// The Discord picture, else the main character's class portrait.
+function MemberAvatar({ member, mainCharacter = null }) {
+  const classIcon = classIdentity(mainCharacter?.className).iconFileId
+  if (!member.avatarUrl && classIcon) {
+    return <WowIcon iconFileId={classIcon} label={mainCharacter.className} size={64} />
+  }
+
   if (member.avatarUrl) {
     return (
       <img
@@ -76,22 +85,25 @@ const RANK_GROUPS = [
 
 // The member's characters, main first: synced ones as unit frames (they open
 // the armory), listed-only ones by name.
-function memberCharacters(member, syncedById) {
+function memberCharacters(member, synced) {
   const listed = Array.isArray(member.profile?.characters) ? member.profile.characters : []
   const ordered = [...listed].sort((left, right) => Number(Boolean(right.isMain)) - Number(Boolean(left.isMain)))
-  return ordered.map((character) => ({ listed: character, synced: syncedById.get(character.id) || null }))
+  const seen = new Set()
+  return ordered
+    .map((character) => ({ listed: character, synced: synced.find(character) }))
+    .filter((pair) => !pair.synced || (!seen.has(pair.synced.id) && seen.add(pair.synced.id)))
 }
 
-function MemberCard({ member, isSelf, syncedById, charactersReady, onOpenCharacter }) {
+function MemberCard({ member, isSelf, synced, charactersReady, onOpenCharacter }) {
   const activeAssignments = Number(member.activeAssignmentCount) || 0
-  const characters = memberCharacters(member, syncedById)
+  const characters = memberCharacters(member, synced)
   const [lead, ...rest] = characters
 
   return (
     <article className={`member-card member-card--${memberTier(member)}${isSelf ? ' member-card--self' : ''}`}>
       <header className="member-card__head">
         <span className="member-card__avatar">
-          <MemberAvatar member={member} />
+          <MemberAvatar member={member} mainCharacter={lead?.synced} />
         </span>
         <div className="member-card__who">
           <h2>
@@ -219,10 +231,7 @@ function Members() {
     select: normalizeIntelligence,
     enabled: session.authenticated,
   })
-  const syncedById = useMemo(
-    () => new Map((intelligence?.characters || []).map((character) => [character.id, character])),
-    [intelligence],
-  )
+  const synced = useMemo(() => syncedCharacterIndex(intelligence?.characters), [intelligence])
   const charactersReady = intelligenceStatus !== 'loading'
   const [selectedCharacterId, openCharacter] = useCharacterParam()
 
@@ -332,7 +341,7 @@ function Members() {
       intro="Find people, see what they are working on, and open their service record."
       className="members-page"
     >
-      {status === 'ready' ? <DirectorySummary members={directory.members} syncedCount={syncedById.size} /> : null}
+      {status === 'ready' ? <DirectorySummary members={directory.members} syncedCount={synced.size} /> : null}
 
       {status === 'error' ? (
         <p className="members-page__state members-page__state--error">
@@ -422,7 +431,7 @@ function Members() {
                     </header>
                     <div className="members-page__list">
                       {members.map((member) => (
-                        <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} syncedById={syncedById} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
+                        <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} synced={synced} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
                       ))}
                     </div>
                   </section>
@@ -431,7 +440,7 @@ function Members() {
             ) : (
               <section className="members-page__list" aria-label="Holdfast members">
                 {visibleMembers.map((member) => (
-                  <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} syncedById={syncedById} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
+                  <MemberCard key={member.id} member={member} isSelf={member.id === session.user?.id} synced={synced} charactersReady={charactersReady} onOpenCharacter={openCharacter} />
                 ))}
               </section>
             )

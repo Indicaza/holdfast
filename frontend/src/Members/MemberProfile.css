@@ -439,6 +439,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-4) clamp(var(--space-5), 3vw, var(--space-8));
+  min-height: 17rem;
   padding: clamp(var(--space-6), 3.5vw, var(--space-10));
   border: 1px solid color-mix(in srgb, var(--member-tone) 34%, transparent);
   border-radius: var(--radius-xl);
@@ -542,13 +543,10 @@
 }
 
 .member-profile__actions {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  align-self: start;
-  justify-content: flex-end;
   gap: var(--space-2);
+  margin-top: var(--space-1);
 }
 
 .member-profile__action {
@@ -980,4 +978,234 @@
   justify-content: center;
   padding: var(--space-4);
   border-top: var(--border-subtle);
+}
+
+/* Hero art: the main character's homeland, softly out of focus, and their
+   class crest as a watermark. Members without a synced main keep the plain
+   banner and the rook. */
+.member-profile__hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.member-profile__hero-scene,
+.member-profile__hero-crest {
+  position: absolute;
+  display: block;
+}
+
+.member-profile__hero-scene {
+  inset: -12%;
+  background: var(--hero-scene, none) center / cover no-repeat;
+  filter: blur(18px) saturate(1.35);
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+.member-profile__hero-crest {
+  top: -18%;
+  right: -4%;
+  width: min(44%, 30rem);
+  height: 140%;
+  background: var(--hero-crest, none) center / contain no-repeat;
+  filter: sepia(1) saturate(1.7) brightness(2.4) contrast(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.28;
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 40%, transparent 75%);
+}
+
+/* A shade keeps the text side readable whatever the scene. */
+.member-profile__hero-art::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 11, 20, 0.94) 0%, rgba(5, 11, 20, 0.78) 38%, rgba(5, 11, 20, 0.3) 100%),
+    linear-gradient(0deg, rgba(5, 11, 20, 0.55), transparent 45%),
+    radial-gradient(ellipse 50% 80% at 85% 50%, color-mix(in srgb, var(--class-color, #c4a667) 14%, transparent), transparent);
+  content: '';
+}
+
+.member-profile__hero--featured::after {
+  display: none;
+}
+
+.member-profile__hero > *:not(.member-profile__hero-art) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Avatar: the Discord picture, else the main's class portrait with level. */
+.member-profile__avatar {
+  overflow: visible;
+}
+
+.member-profile__avatar > img,
+.member-profile__avatar .member-profile__avatar-icon {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.member-profile__avatar .member-profile__avatar-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-profile__avatar-level {
+  position: absolute;
+  right: 2%;
+  bottom: 2%;
+  display: grid;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  place-items: center;
+  padding-inline: 0.3rem;
+  border: 2px solid color-mix(in srgb, var(--member-tone) 75%, transparent);
+  border-radius: var(--radius-pill);
+  background: #0b0f17;
+  color: #ffd100;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  box-shadow: 0 0.3rem 0.8rem rgba(0, 0, 0, 0.6);
+}
+
+/* The main character, featured beside the member. */
+.member-profile__main {
+  display: grid;
+  width: min(100%, 22rem);
+  align-self: center;
+  justify-items: stretch;
+  gap: var(--space-2);
+}
+
+.member-profile__main-label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.member-profile__main .character-card {
+  flex-wrap: nowrap;
+  box-shadow:
+    0 1rem 2.4rem rgba(0, 0, 0, 0.45),
+    0 0 2.2rem color-mix(in srgb, var(--class-color, #c4a667) 18%, transparent);
+}
+
+.member-profile__main .unit-frame--card {
+  --plate: min(11rem, 100%);
+  min-width: 0;
+}
+
+.member-profile__main-class {
+  color: var(--class-color, var(--color-text));
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+/* Character tiles */
+.member-profile__character-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--class-color, #c4a667) 22%, transparent);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 70% 60% at 0% 0%, color-mix(in srgb, var(--class-color, #c4a667) 10%, transparent), transparent),
+    rgba(3, 8, 15, 0.45);
+}
+
+.member-profile__character-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  padding-inline: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.member-profile__character-class {
+  color: var(--class-color, var(--color-text));
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.member-profile__character-tile .member-profile__professions {
+  padding-inline: var(--space-1);
+}
+
+/* Stat icons */
+.member-profile__stats article {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-3);
+}
+
+.member-profile__stats article > span,
+.member-profile__stats article > strong {
+  grid-column: 2;
+}
+
+.member-profile__stat-icon {
+  grid-row: 1 / span 2;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(196, 166, 103, 0.28);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 166, 103, 0.12), transparent 70%);
+  fill: none;
+  stroke: var(--color-accent-bright);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+/* Current work and the service record side by side. */
+.member-profile__activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.member-profile__activity-grid > .member-profile__section {
+  margin-top: var(--space-6);
+}
+
+.member-profile__activity-grid .member-profile__assignments {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.member-profile__activity-grid .member-profile__empty {
+  padding: var(--space-5) var(--space-6);
+}
+
+.member-profile__activity-grid .member-profile__empty strong {
+  font-size: var(--font-size-md);
+}
+
+@media (max-width: 64rem) {
+  .member-profile__activity-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .member-profile__main {
+    grid-column: 1 / -1;
+    width: min(100%, 24rem);
+  }
 }

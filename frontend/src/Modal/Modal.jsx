@@ -1,5 +1,10 @@
 import { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import './Modal.css'
+
+// Open modals, innermost last: only the top one answers Escape and Tab (a
+// sign-in gate can sit under the join flow it opened).
+const openModals = []
 
 function Modal({
   eyebrow,
@@ -26,8 +31,11 @@ function Modal({
     const previousFocus = document.activeElement
     document.body.style.overflow = 'hidden'
 
+    const panel = panelRef.current
+    openModals.push(panel)
+
     function handleKeyDown(event) {
-      if (panelRef.current?.closest('[inert]')) return
+      if (openModals.at(-1) !== panel || panel?.closest('[inert]')) return
       if (event.key === 'Escape' && onCloseRef.current) {
         event.preventDefault()
         onCloseRef.current()
@@ -66,6 +74,7 @@ function Modal({
     panelRef.current?.querySelector('button, a[href], input, select, textarea')?.focus()
 
     return () => {
+      openModals.splice(openModals.indexOf(panel), 1)
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', handleKeyDown)
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
@@ -82,7 +91,8 @@ function Modal({
 
   const dialogLabel = ariaLabel || title || 'Dialog'
 
-  return (
+  // Rendered on <body>, so page styles (headings, layout) never reach inside.
+  return createPortal(
     <div className={`modal modal--${size}`} role="presentation" onMouseDown={handleBackdrop}>
       <section
         ref={panelRef}
@@ -119,7 +129,8 @@ function Modal({
 
         <div className="modal__body">{children}</div>
       </section>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

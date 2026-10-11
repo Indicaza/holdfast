@@ -13,6 +13,10 @@ import CharacterCard from '../Intelligence/CharacterCard.jsx'
 import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
 import { normalizeIntelligence } from '../Intelligence/model.js'
 import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
+import { raceScene, statsArt } from '../Intelligence/characterArt.js'
+import { classIdentity } from '../Intelligence/classIdentity.js'
+import { syncedCharacterIndex } from './syncedCharacters.js'
+import WowIcon from '../WowAssets/WowIcon.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './MemberProfile.css'
@@ -49,7 +53,12 @@ function formatNumber(value) {
   return (Number(value) || 0).toLocaleString()
 }
 
-function MemberAvatar({ member }) {
+function MemberAvatar({ member, mainCharacter = null }) {
+  const classIcon = classIdentity(mainCharacter?.className).iconFileId
+  if (!member.avatarUrl && classIcon) {
+    return <WowIcon iconFileId={classIcon} label={mainCharacter.className} size={128} className="member-profile__avatar-icon" />
+  }
+
   if (member.avatarUrl) {
     return (
       <img
@@ -122,6 +131,21 @@ function ProfileMessage({ title, body }) {
   )
 }
 
+const STAT_ICONS = {
+  marks: <><circle cx="12" cy="12" r="8" /><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H10a2 2 0 0 0 0 4h5" /></>,
+  objectives: <><path d="M5 12.5l4.5 4.5L19 7.5" /></>,
+  assignments: <><path d="M6 21V4M6 4h11l-2.5 4L17 12H6" /></>,
+  active: <><circle cx="12" cy="12" r="8" /><path d="M12 8v4.5l3 1.8" /></>,
+}
+
+function StatIcon({ name }) {
+  return (
+    <svg className="member-profile__stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+      {STAT_ICONS[name]}
+    </svg>
+  )
+}
+
 function characterDescriptor(character) {
   return [character?.race, character?.spec || character?.className]
     .filter(Boolean)
@@ -149,12 +173,24 @@ function ListedCharacter({ character }) {
   )
 }
 
-function Characters({ member, syncedById, charactersReady, editable, onEdit, onOpenCharacter }) {
+function Characters({ member, synced: syncedIndex, charactersReady, editable, onEdit, onOpenCharacter }) {
   const profile = member.profile || {}
   const listed = Array.isArray(profile.characters) ? profile.characters : []
   const ordered = [...listed].sort((left, right) => Number(Boolean(right.isMain)) - Number(Boolean(left.isMain)))
-  const synced = ordered.map((character) => syncedById.get(character.id)).filter(Boolean)
-  const unsynced = charactersReady ? ordered.filter((character) => !syncedById.has(character.id)) : []
+  // Two listings can name one synced character (listed before and after its
+  // first sync); it shows once.
+  const seen = new Set()
+  const pairs = ordered
+    .map((character) => ({ listed: character, synced: syncedIndex.find(character) }))
+    .filter((pair) => {
+      if (!pair.synced) return true
+      if (seen.has(pair.synced.id)) return false
+      seen.add(pair.synced.id)
+      return true
+    })
+  const synced = pairs.filter((pair) => pair.synced).map((pair) => pair.synced)
+  const listedById = new Map(pairs.filter((pair) => pair.synced).map((pair) => [pair.synced.id, pair.listed]))
+  const unsynced = charactersReady ? pairs.filter((pair) => !pair.synced).map((pair) => pair.listed) : []
   const hasAbout = profile.timezone || profile.availability || profile.bio
 
   return (
@@ -166,8 +202,8 @@ function Characters({ member, syncedById, charactersReady, editable, onEdit, onO
         </div>
         <div className="member-profile__section-meta">
           <span>
-            {listed.length
-              ? `${listed.length} ${listed.length === 1 ? 'character' : 'characters'}${synced.length ? ` · ${synced.length} synced` : ''}`
+            {pairs.length
+              ? `${pairs.length} ${pairs.length === 1 ? 'character' : 'characters'}${synced.length ? ` · ${synced.length} synced` : ''}`
               : 'No characters listed'}
           </span>
           {editable ? (
@@ -185,9 +221,23 @@ function Characters({ member, syncedById, charactersReady, editable, onEdit, onO
           ) : null}
           {synced.length ? (
             <div className="member-profile__character-grid">
-              {synced.map((character) => (
-                <CharacterCard key={character.id} character={character} onOpen={onOpenCharacter} showAffiliation={false} />
-              ))}
+              {synced.map((character) => {
+                const professions = listedById.get(character.id)?.professions || []
+                return (
+                  <article className="member-profile__character-tile" key={character.id} style={{ '--class-color': classIdentity(character.className).color }}>
+                    <CharacterCard character={character} onOpen={onOpenCharacter} showAffiliation={false} />
+                    <div className="member-profile__character-meta">
+                      <span className="member-profile__character-class">{characterDescriptor(character) || 'Adventurer'}</span>
+                      {character.realm ? <span>{character.realm}</span> : null}
+                    </div>
+                    {professions.length ? (
+                      <div className="member-profile__professions">
+                        {professions.map((profession) => <span key={profession}>{profession}</span>)}
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
             </div>
           ) : null}
           {unsynced.length ? (
@@ -275,11 +325,14 @@ function MemberProfile({ memberId }) {
     select: normalizeIntelligence,
     enabled: session.authenticated,
   })
-  const syncedById = useMemo(
-    () => new Map((intelligence.data?.characters || []).map((character) => [character.id, character])),
-    [intelligence.data],
-  )
+  const synced = useMemo(() => syncedCharacterIndex(intelligence.data?.characters), [intelligence.data])
   const charactersReady = intelligence.status !== 'loading'
+  // The member's main as Guildweaver knows it: the hero's art and featured card.
+  const mainCharacter = useMemo(() => {
+    const listed = Array.isArray(profile.data?.member?.profile?.characters) ? profile.data.member.profile.characters : []
+    const main = listed.find((character) => character.isMain) || listed[0]
+    return synced.find(main) || listed.map((character) => synced.find(character)).find(Boolean) || null
+  }, [profile.data, synced])
   const [selectedCharacterId, openCharacter] = useCharacterParam()
 
   const profileUrl = useMemo(() => {
@@ -360,6 +413,13 @@ function MemberProfile({ memberId }) {
   const canManageRank = session.hasPermission('members.rank.manage')
   const canManageBillets = session.hasPermission('members.billet.assign')
   const tier = member.rankMeta?.isOfficer ? 'officer' : member.rankMeta?.isLeadership ? 'nco' : 'enlisted'
+  const heroArt = mainCharacter
+    ? {
+        '--hero-scene': raceScene(mainCharacter.race) ? `url("${raceScene(mainCharacter.race)}")` : 'none',
+        '--hero-crest': statsArt(mainCharacter.className),
+        '--class-color': classIdentity(mainCharacter.className).color,
+      }
+    : undefined
 
   return (
     <PageShell className="member-profile member-profile--loaded">
@@ -369,9 +429,19 @@ function MemberProfile({ memberId }) {
         <span>{displayName(member)}</span>
       </nav>
 
-      <section className={`member-profile__hero member-profile__hero--${tier}`} aria-labelledby="member-profile-name">
+      <section
+        className={`member-profile__hero member-profile__hero--${tier}${mainCharacter ? ' member-profile__hero--featured' : ''}`}
+        style={heroArt}
+        aria-labelledby="member-profile-name"
+      >
+        <div className="member-profile__hero-art" aria-hidden="true">
+          <span className="member-profile__hero-scene" />
+          <span className="member-profile__hero-crest" />
+        </div>
+
         <div className="member-profile__avatar">
-          <MemberAvatar member={member} />
+          <MemberAvatar member={member} mainCharacter={mainCharacter} />
+          {mainCharacter?.level && !member.avatarUrl ? <b className="member-profile__avatar-level">{mainCharacter.level}</b> : null}
         </div>
 
         <div className="member-profile__identity">
@@ -384,20 +454,27 @@ function MemberProfile({ memberId }) {
             <span className="member-profile__tenure">{tenureText(member)}</span>
           </p>
           <RankPlate member={member} size="lg" className="member-profile__rank-plate" />
-        </div>
-
-        <div className="member-profile__actions">
-          <button className="member-profile__action" type="button" onClick={copyProfile}>
-            {copied ? 'Link copied' : 'Share profile'}
-          </button>
-          {isSelf ? (
-            <button className="member-profile__action member-profile__action--primary" type="button" onClick={() => setEditing(true)}>
-              Edit profile
+          <div className="member-profile__actions">
+            <button className="member-profile__action" type="button" onClick={copyProfile}>
+              {copied ? 'Link copied' : 'Share profile'}
             </button>
-          ) : null}
+            {isSelf ? (
+              <button className="member-profile__action member-profile__action--primary" type="button" onClick={() => setEditing(true)}>
+                Edit profile
+              </button>
+            ) : null}
+          </div>
         </div>
 
-        {canManageRank || canManageBillets ? (
+        {mainCharacter ? (
+          <aside className="member-profile__main" aria-label="Main character">
+            <span className="member-profile__main-label">Main character</span>
+            <CharacterCard character={mainCharacter} onOpen={openCharacter} showAffiliation={false} />
+            <span className="member-profile__main-class">{characterDescriptor(mainCharacter)}</span>
+          </aside>
+        ) : null}
+
+        {!isSelf && (canManageRank || canManageBillets) ? (
           <div className="member-profile__command" aria-label="Rank and billet management">
             <span className="member-profile__command-label">Officer tools</span>
             {canManageRank ? (
@@ -420,18 +497,22 @@ function MemberProfile({ memberId }) {
 
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>
+          <StatIcon name="marks" />
           <span>Marks earned</span>
           <strong>{formatNumber(contribution.marks)}</strong>
         </article>
         <article>
+          <StatIcon name="objectives" />
           <span>Objectives complete</span>
           <strong>{formatNumber(contribution.completedObjectives)}</strong>
         </article>
         <article>
+          <StatIcon name="assignments" />
           <span>Active assignments</span>
           <strong>{formatNumber(assignments.length)}</strong>
         </article>
         <article>
+          <StatIcon name="active" />
           <span>Last active</span>
           <strong className="member-profile__stat-date">{member.lastActivityAt ? formatDate(member.lastActivityAt) : '—'}</strong>
         </article>
@@ -439,13 +520,14 @@ function MemberProfile({ memberId }) {
 
       <Characters
         member={member}
-        syncedById={syncedById}
+        synced={synced}
         charactersReady={charactersReady}
         editable={isSelf}
         onEdit={() => setEditing(true)}
         onOpenCharacter={openCharacter}
       />
 
+      <div className="member-profile__activity-grid">
       <section
         className="member-profile__section"
         aria-labelledby="member-assignments-title"
@@ -579,6 +661,8 @@ function MemberProfile({ memberId }) {
           </div>
         )}
       </section>
+
+      </div>
 
       <CharacterProfileModal characterId={selectedCharacterId} onClose={() => openCharacter('')} />
 
