@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
-import FarmingSourceModal, { ConfidenceTag } from './FarmingSourceModal.jsx'
+import FarmingSourceModal, { ConfidencePips } from './FarmingSourceModal.jsx'
 import { disciplineLabel, formatCount, formatRate, rateRangeText, sourceKindLabel, sourcesUrl } from './farmingModel.js'
 import './FarmingIntelligence.css'
 
@@ -32,33 +32,33 @@ function useSourceParam() {
   return [sourceKey, open]
 }
 
-function SourceRow({ source, onOpen }) {
+function SourceCard({ source, onOpen }) {
+  const match = source.matches[0]
   return (
     <li>
-      <button type="button" className="farm-source" onClick={() => onOpen(source.sourceKey, source.matches[0]?.itemKey || '')}>
-        <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={36} />
-        <span className="farm-source__identity">
-          <strong>{source.name}</strong>
-          <small>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</small>
+      <button
+        type="button"
+        className={`farm-card farm-card--${source.discipline}`}
+        onClick={() => onOpen(source.sourceKey, match?.itemKey || '')}
+      >
+        <span className="farm-card__head">
+          <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={44} />
+          <span className="farm-card__identity">
+            <strong>{source.name}</strong>
+            <small>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</small>
+          </span>
         </span>
-        {source.matches.length ? (
-          <span className="farm-source__matches">
-            {source.matches.map((match) => (
-              <span key={match.itemKey} className="farm-source__match" title={rateRangeText(match)}>
-                <span className={`farm-item farm-item--q${match.qualityId ?? 1}`}>{match.name}</span>
-                <b className={`farm-rate farm-rate--${match.confidence}`}>{formatRate(match.rate)}</b>
-                <ConfidenceTag confidence={match.confidence} />
-              </span>
-            ))}
+        {match ? (
+          <span className="farm-card__match" title={rateRangeText(match)}>
+            <span className={`farm-item farm-item--q${match.qualityId ?? 1}`}>{match.name}</span>
+            <b className={`farm-rate farm-rate--${match.confidence}`}>{formatRate(match.rate)}</b>
+            <ConfidencePips confidence={match.confidence} />
           </span>
-        ) : (
-          <span className="farm-source__meta">
-            {formatCount(source.characters)} {source.characters === 1 ? 'character' : 'characters'} · {formatCount(source.zones)} {source.zones === 1 ? 'zone' : 'zones'}
-          </span>
-        )}
-        <span className="farm-source__count">
-          <strong>{formatCount(source.observations)}</strong>
-          <small>observations</small>
+        ) : null}
+        <span className="farm-card__stats">
+          <span><b>{formatCount(source.observations)}</b>Gathers</span>
+          <span><b>{formatCount(source.zones)}</b>{source.zones === 1 ? 'Zone' : 'Zones'}</span>
+          <span><b>{formatCount(source.characters)}</b>{source.characters === 1 ? 'Character' : 'Characters'}</span>
         </span>
       </button>
     </li>
@@ -105,20 +105,22 @@ export default function FarmingIntelligence({ input, onInputChange }) {
 
   return (
     <section className="farming">
-      <h2 className="farming__title">Farming Intelligence</h2>
-      <label className="farming__search">
-        <input type="search" aria-label="Search items or sources" value={input} onChange={(event) => onInputChange(event.target.value)} placeholder="Search items or sources…" />
-      </label>
-      {disciplines.length ? (
-        <div className="farming__disciplines" role="group" aria-label="Discipline">
-          <button type="button" aria-pressed={!discipline} onClick={() => setDiscipline('')}>All</button>
-          {disciplines.map((entry) => (
-            <button key={entry.discipline} type="button" aria-pressed={discipline === entry.discipline} onClick={() => setDiscipline(entry.discipline)}>
-              {disciplineLabel(entry.discipline)}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      <div className="farming__toolbar">
+        <label className="farming__search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
+          <input type="search" aria-label="Search items or sources" value={input} onChange={(event) => onInputChange(event.target.value)} placeholder="Search items or sources…" />
+        </label>
+        {disciplines.length ? (
+          <div className="farming__disciplines" role="group" aria-label="Discipline">
+            <button type="button" aria-pressed={!discipline} onClick={() => setDiscipline('')}>All</button>
+            {disciplines.map((entry) => (
+              <button key={entry.discipline} type="button" aria-pressed={discipline === entry.discipline} onClick={() => setDiscipline(entry.discipline)}>
+                {disciplineLabel(entry.discipline)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {state.status === 'error' ? <p className="intel-error">Farming intelligence is unavailable right now.</p> : null}
       {state.status === 'loading' ? <p className="intel-muted">Reading gathering observations…</p> : null}
@@ -128,12 +130,9 @@ export default function FarmingIntelligence({ input, onInputChange }) {
         </EmptyTelemetry>
       ) : null}
       {sources.length ? (
-        <div className="farming__sources">
-          <h3>Sources{query ? <small> producing or named “{query}”</small> : null}</h3>
-          <ul>
-            {sources.map((source) => <SourceRow key={source.sourceKey} source={source} onOpen={open} />)}
-          </ul>
-        </div>
+        <ul className="farming__grid" aria-label={query ? `Sources producing or named ${query}` : 'Sources'}>
+          {sources.map((source) => <SourceCard key={source.sourceKey} source={source} onOpen={open} />)}
+        </ul>
       ) : null}
 
       {sourceKey ? (

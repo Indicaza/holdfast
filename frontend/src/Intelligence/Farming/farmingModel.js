@@ -1,6 +1,8 @@
 // Farming intelligence: formatting and chart geometry for the source browser
 // and source modal. Pure, so it is tested without a browser.
 
+export const CONFIDENCE_LEVELS = Object.freeze(['low', 'medium', 'high', 'very_high'])
+
 export const CONFIDENCE_LABELS = Object.freeze({
   low: 'Low',
   medium: 'Medium',
