@@ -130,6 +130,25 @@ textarea {
   transition-duration: 70ms !important;
 }
 
+/* Dense table rows must remain geometry-stable. The global button interaction
+   scale can otherwise make a full-width row overflow its scroll container. */
+.farm-loot__row {
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0;
+  --interactive-press-scale: 1;
+}
+
+@media (hover: hover) {
+  .farm-loot__row:not(:disabled):not([aria-disabled="true"]):hover {
+    filter: none;
+  }
+}
+
+.farm-loot__row:not(:disabled):not([aria-disabled="true"]):active {
+  filter: none;
+  translate: 0;
+}
+
 :where(button:disabled, [role="button"][aria-disabled="true"]) {
   filter: saturate(0.72);
   opacity: 0.58;
