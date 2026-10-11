@@ -8,6 +8,7 @@ import {
   DEFAULT_RANK_AUTHORITY,
 } from "../Guild/authorityPolicy.js";
 import { notificationMigration } from "../Notification/notificationMigration.js";
+import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
@@ -789,6 +790,7 @@ const migrations = [
   },
   notificationMigration,
   guildweaverTablesMigration,
+  economicObservationMigration,
 ];
 
 function configureDatabase(db) {

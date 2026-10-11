@@ -74,3 +74,39 @@ or a recreated stream therefore never freezes a section.
 4. Tests: ingest it, then read it back through `readCharacterArmoryFromReadModel`.
 
 Nothing else reads it, so nothing else can disagree about it.
+
+## Events: economic observations
+
+Not all telemetry is character state. `gathering_loot` (and later fishing,
+creature loot, disenchanting and crafting) is an **event**: something that
+happened once, with a unique stream key per observation. Events never touch
+the character read model.
+
+```
+gathering_loot ─ ingest ─ raw record (bounded, for debugging)
+                    └─ handler.recordEvent ─ economic_observations         (one row per gather)
+                                             economic_observation_outputs  (one row per item)
+                                                   │
+                         Economy/farmingRepository ┴─ GET /api/intelligence/farming/sources[/:sourceKey]
+```
+
+- A handler with `recordEvent` (`Telemetry/handlers/gatheringLoot.js`) is
+  how an event reaches its domain; the transport stays generic. Every
+  well-formed envelope is accepted (so the raw record is kept); payloads the
+  domain cannot analyse are skipped.
+- `Economy/economicObservationModel.js` normalizes a payload into one
+  observation (source, context, build) and its merged outputs. A source is
+  identified by discipline, kind and name (`herbalism:herb-node:peacebloom`),
+  so the several game objects of one herb are one source, and an unnamed node
+  joins the named source with the same object id.
+- Observations are idempotent by `observationId`; raw records are pruned but
+  observations are kept. Raw economic events that predate a collector are
+  backfilled on startup.
+- Rates are always successes over every eligible observation under the same
+  filters, with a Wilson interval and a confidence label
+  (`Economy/farmingStatistics.js`).
+
+To add a collector (mining, skinning, fishing…): emit the same
+source / outputs / context shape under a new `discipline`, add its event type
+to `ECONOMIC_EVENT_TYPES` and register a handler like `gatheringLoot.js`.
+The source browser and modal pick it up unchanged.

@@ -9,6 +9,7 @@ import {
   readQuestsFromDatabase,
 } from "../src/Quest/questRepository.js";
 import { seedDevelopmentCharacters } from "./seedDevelopmentCharacters.js";
+import { seedDevelopmentFarming } from "./seedDevelopmentFarming.js";
 
 dotenv.config();
 
@@ -185,6 +186,7 @@ async function run() {
   });
 
   await seedDevelopmentCharacters();
+  seedDevelopmentFarming();
 
   console.log(`Development data ready in ${runtimeDataDirectory()}`);
   console.log(`Seeded ${developmentMembers.length} local personas and ${questAction}.`);

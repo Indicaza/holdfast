@@ -37,6 +37,16 @@ function ViewIcon({ name }) {
     )
   }
 
+  if (name === 'farming') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 21v-8" />
+        <path d="M12 13c0-4 2.6-7 7-7 0 4.2-2.8 7-7 7Z" />
+        <path d="M12 15c0-3.3-2.2-5.5-6-5.5 0 3.4 2.4 5.5 6 5.5Z" />
+      </svg>
+    )
+  }
+
   if (name === 'audit') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">

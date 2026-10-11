@@ -102,6 +102,8 @@ Do not add development identities, bypasses, or fixtures to production-specific 
 
 Snapshots go through the same pairing, sync, and telemetry repositories as the Guildweaver bridge. Seeding is idempotent within a day.
 
+It also seeds about 21,000 synthetic gathering observations for **GuildOS → Farming** (`npm run dev:seed:farming` runs just that part): Peacebloom, Silverleaf, Briarthorn, Mageroyal, Earthroot, a 14-gather Kingsblood sample and a Copper Vein, with Frilled Lichen rates that vary by Herbalism skill, Bountiful Harvest rank, zone and build. Item ids and icons are real; the rates are invented. Re-running adds nothing.
+
 To add a real capture, save its `talent_tree_definition` envelope into `seed/devData/talentTrees/` and delete the matching `synthetic-*.json`. Then re-run `node scripts/devData/recordGameData.mjs <community-listfile.csv>` (from [wowdev/wow-listfile](https://github.com/wowdev/wow-listfile/releases)) to refresh item and icon data, and `npm run dev:seed`. Re-running `buildSyntheticTalentTrees.mjs <community-listfile.csv>` regenerates synthetic trees only for classes without a capture.
 
 ## Real Discord development
