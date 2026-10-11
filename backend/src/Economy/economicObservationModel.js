@@ -39,13 +39,15 @@ export function slug(value) {
 // and name. One herb has several game object ids (Peacebloom spawns as more
 // than one object), and the same creature can be skinned and looted with
 // different drop tables, so neither the object id nor the name alone is
-// enough. A source the client could not name falls back to its object id.
-export function economicSourceKey({ discipline, kind, name, objectId }) {
+// enough. A source the client could not name falls back to its typed id.
+export function economicSourceKey({ discipline, kind, name, objectId, npcId }) {
   const prefix = `${slug(discipline) || "unknown"}:${slug(kind) || "source"}`;
   const named = slug(name);
   if (named) return `${prefix}:${named}`;
-  const id = integer(objectId);
-  return id && id > 0 ? `${prefix}:object-${id}` : `${prefix}:unknown`;
+  const npc = integer(npcId);
+  if (npc && npc > 0) return `${prefix}:npc-${npc}`;
+  const object = integer(objectId);
+  return object && object > 0 ? `${prefix}:object-${object}` : `${prefix}:unknown`;
 }
 
 export function economicItemKey({ itemId, name }) {
@@ -124,7 +126,7 @@ export function economicObservationFromTelemetry({
   const location = isObject(context.location) ? context.location : {};
   const gameBuild = isObject(envelope.gameBuild) ? envelope.gameBuild : {};
   const observationId = text(payload.observationId, 200);
-  const sourceObjectId = integer(source.objectId);
+  const sourceEntityId = integer(source.objectId ?? source.npcId);
 
   return {
     observation: {
@@ -136,10 +138,16 @@ export function economicObservationFromTelemetry({
       eventType: text(eventType, 120),
       activity: slug(payload.activity),
       discipline,
-      sourceKey: economicSourceKey({ discipline, kind: source.kind, name: source.name, objectId: source.objectId }),
+      sourceKey: economicSourceKey({
+        discipline,
+        kind: source.kind,
+        name: source.name,
+        objectId: source.objectId,
+        npcId: source.npcId,
+      }),
       sourceKind: slug(source.kind),
       sourceName: text(source.name),
-      sourceObjectId: sourceObjectId && sourceObjectId > 0 ? sourceObjectId : null,
+      sourceObjectId: sourceEntityId && sourceEntityId > 0 ? sourceEntityId : null,
       memberId: text(memberId, 160),
       deviceId: text(deviceId, 160),
       characterKey: text(characterKey, 240),
