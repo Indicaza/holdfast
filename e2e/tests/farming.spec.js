@@ -63,6 +63,51 @@ async function seedGathering(page, context) {
         body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-farmer:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }
+
+    const miningGathers = Array.from({ length: 12 }, (_, index) => ({
+      zone: index < 8 ? 'Dun Morogh' : 'Elwynn Forest',
+      malachite: index < 2,
+      roughStone: index % 2 === 0,
+      skill: 35 + index * 4,
+    }))
+
+    for (const [index, gather] of miningGathers.entries()) {
+      const observationId = `e2e-mining-${run}-${index}`
+      const outputs = [
+        { itemId: 2770, name: 'Copper Ore', qualityId: 1, iconFileDataId: 134566, quantity: index % 3 === 0 ? 3 : 2 },
+        ...(gather.roughStone ? [{ itemId: 2835, name: 'Rough Stone', qualityId: 1, iconFileDataId: 135242, quantity: 1 }] : []),
+        ...(gather.malachite ? [{ itemId: 774, name: 'Malachite', qualityId: 2, iconFileDataId: 134106, quantity: 1 }] : []),
+      ]
+      const envelope = {
+        schemaVersion: 1,
+        eventType: 'gathering_loot',
+        capturedAt: Math.floor(Date.now() / 1000) - 100 - index,
+        gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
+        realm: 'Classic Beta PvE 2',
+        region: 'US',
+        characterId: 'character-e2e-miner',
+        payloadSchemaVersion: 1,
+        payload: {
+          schemaVersion: 1,
+          activity: 'harvest',
+          discipline: 'mining',
+          observationId,
+          source: { kind: 'ore_vein', name: 'Copper Vein', objectId: 1731 },
+          outputs,
+          context: {
+            characterLevel: 18,
+            profession: { skillLineId: 186, name: 'Mining', skillLevel: gather.skill, maxSkillLevel: 150, skillModifier: 5 },
+            location: { mapId: gather.zone === 'Dun Morogh' ? 1426 : 1429, zone: gather.zone, x: 0.51, y: 0.42 },
+          },
+        },
+      }
+      await json('/api/bridge/telemetry', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-miner:${observationId}`, kind: 'event', revision: 1, envelope }),
+      })
+    }
+
     return token.deviceToken
   })
 }
@@ -110,6 +155,14 @@ test('farming intelligence finds sources by item and recomputes the source modal
   await expect(herbalism.locator('.farm-card')).toHaveCount(2)
   await expect(herbalism.locator('.farm-card').filter({ hasText: 'Peacebloom' }).locator('.farm-card__drops')).toContainText('Frilled Lichen')
   await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Herbalism' })).toBeVisible()
+
+  const mining = page.getByRole('region', { name: 'Mining' })
+  const copperVein = mining.locator('.farm-card').filter({ hasText: 'Copper Vein' })
+  await expect(mining.locator('.farm-card')).toHaveCount(1)
+  await expect(copperVein).toContainText('Dun Morogh')
+  await expect(copperVein).toContainText('+1')
+  await expect(copperVein.locator('.farm-card__drops')).toContainText('Malachite')
+  await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Mining' })).toBeVisible()
 
   await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Frilled Lichen')
   const peacebloom = page.locator('.farm-card').filter({ hasText: 'Peacebloom' })
@@ -170,4 +223,22 @@ test('farming intelligence finds sources by item and recomputes the source modal
   await expect(page.locator('.farm-card').filter({ hasText: 'Earthroot' })).toHaveCount(0)
   await syncGather(page, deviceToken, { name: 'Earthroot', objectId: 1619, item: { itemId: 2449, name: 'Earthroot', qualityId: 1 } })
   await expect(page.locator('.farm-card').filter({ hasText: 'Earthroot' })).toContainText('1 gather')
+
+  // Mining uses the same source browser/modal contract without Herbalism-only analysis.
+  await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Copper Ore')
+  const searchedCopperVein = page.locator('.farm-card').filter({ hasText: 'Copper Vein' })
+  await expect(searchedCopperVein).toBeVisible()
+  await expect(searchedCopperVein.locator('.farm-card__drops--match')).toContainText('Copper Ore')
+  await expect(searchedCopperVein.locator('.farm-card__drops--match')).toContainText('100%')
+  await searchedCopperVein.click()
+
+  const miningModal = page.getByRole('dialog', { name: 'Copper Vein' })
+  await expect(miningModal.getByRole('heading', { name: 'Copper Vein' })).toBeVisible()
+  await expect(miningModal).toContainText('Mining · Vein')
+  await expect(miningModal.locator('.farm-header__gathers')).toHaveText('12gathers')
+  await expect(miningModal.locator('.farm-loot__row').filter({ hasText: 'Copper Ore' })).toContainText('100%')
+  await expect(miningModal.locator('.farm-loot__row').filter({ hasText: 'Rough Stone' })).toContainText('50.0%')
+  await expect(miningModal.locator('.farm-loot__row').filter({ hasText: 'Malachite' })).toContainText('16.7%')
+  await expect(miningModal.getByRole('tab', { name: 'Mining skill' })).toHaveAttribute('aria-selected', 'true')
+  await expect(miningModal.getByRole('tab', { name: 'Bountiful Harvest' })).toHaveCount(0)
 })
