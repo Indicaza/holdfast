@@ -565,7 +565,7 @@ function MemberProfile({ memberId }) {
             {activity.length > SERVICE_PREVIEW ? (
               <div className="member-profile__service-more">
                 <button className="member-profile__edit" type="button" onClick={() => setShowAllService((value) => !value)}>
-                  {showAllService ? 'Show recent only' : `Show all ${activity.length}`}
+                  {showAllService ? 'Show recent only' : `Show ${activity.length - SERVICE_PREVIEW} more`}
                 </button>
               </div>
             ) : null}
