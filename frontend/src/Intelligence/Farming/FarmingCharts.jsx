@@ -1,4 +1,4 @@
-import { arcPath, confidenceLabel, donutSegments, formatCount, formatRate, rateLinePoints } from './farmingModel.js'
+import { arcPath, confidenceLabel, donutSegments, formatCount, formatRate, rateBars, rateLinePoints } from './farmingModel.js'
 
 // Output share by quantity. A glance, not the record: the loot rows beside it
 // carry the same colours and are authoritative, since a 0.5% drop is a sliver
@@ -33,11 +33,6 @@ export function SkillRateLine({ rows, itemName }) {
   const line = points.map((point, index) => `${index ? 'L' : 'M'}${point.x} ${point.y}`).join('')
   const baseline = HEIGHT - PAD_Y
   const area = `${line}L${points.at(-1).x} ${baseline}L${points[0].x} ${baseline}Z`
-  const gridlines = [0, 0.5, 1].map((fraction) => ({
-    y: baseline - fraction * (HEIGHT - PAD_Y * 2),
-    label: formatRate(maxRate * fraction),
-  }))
-
   return (
     <svg className="farm-line" viewBox={`0 0 ${WIDTH} ${HEIGHT + 16}`} role="img" aria-label={`${itemName} drop rate by skill`}>
       <defs>
@@ -46,12 +41,7 @@ export function SkillRateLine({ rows, itemName }) {
           <stop offset="1" stopColor="#ffd100" stopOpacity="0" />
         </linearGradient>
       </defs>
-      {gridlines.map((gridline) => (
-        <g key={gridline.y} className="farm-line__grid">
-          <line x1={PAD_X} x2={WIDTH - 8} y1={gridline.y} y2={gridline.y} />
-          <text x={PAD_X - 6} y={gridline.y + 3}>{gridline.label}</text>
-        </g>
-      ))}
+      <Gridlines maxRate={maxRate} />
       {points.map((point) => (
         <line key={`range-${point.bucket}`} className="farm-line__range" x1={point.x} x2={point.x} y1={point.yHigh} y2={point.yLow} />
       ))}
@@ -64,6 +54,41 @@ export function SkillRateLine({ rows, itemName }) {
             <title>{`Skill ${point.bucket}: ${formatRate(point.rate)} (${formatCount(point.drops)} of ${formatCount(point.observations)}) · ${confidenceLabel(point.confidence)} confidence`}</title>
           </circle>
           <text className="farm-line__label" x={point.x} y={HEIGHT + 12}>{point.bucket}</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function Gridlines({ maxRate }) {
+  const baseline = HEIGHT - PAD_Y
+  return [0, 0.5, 1].map((fraction) => {
+    const y = baseline - fraction * (HEIGHT - PAD_Y * 2)
+    return (
+      <g key={fraction} className="farm-line__grid">
+        <line x1={PAD_X} x2={WIDTH - 8} y1={y} y2={y} />
+        <text x={PAD_X - 6} y={y + 3}>{formatRate(maxRate * fraction)}</text>
+      </g>
+    )
+  })
+}
+
+// Drop rate at each Bountiful Harvest rank. Thin samples are hollow bars, so
+// a tall bar resting on a handful of gathers does not read as a finding.
+export function RankRateBars({ rows, itemName }) {
+  const { bars, maxRate } = rateBars(rows, { width: WIDTH, height: HEIGHT, padX: PAD_X, padY: PAD_Y })
+  if (bars.length < 2) return null
+
+  return (
+    <svg className="farm-line farm-bars" viewBox={`0 0 ${WIDTH} ${HEIGHT + 16}`} role="img" aria-label={`${itemName} drop rate by Bountiful Harvest rank`}>
+      <Gridlines maxRate={maxRate} />
+      {bars.map((bar) => (
+        <g key={bar.rank} className={`farm-bars__bar farm-bars__bar--${bar.confidence}`}>
+          <rect x={bar.x} y={bar.y} width={bar.width} height={Math.max(bar.height, 1)} rx="3" />
+          <rect className="farm-line__hit" x={bar.x - 4} y={PAD_Y} width={bar.width + 8} height={HEIGHT - PAD_Y * 2}>
+            <title>{`Rank ${bar.rank}: ${formatRate(bar.rate)} (${formatCount(bar.drops)} of ${formatCount(bar.observations)}) · ${confidenceLabel(bar.confidence)} confidence`}</title>
+          </rect>
+          <text className="farm-line__label" x={bar.center} y={HEIGHT + 12}>{bar.rank}</text>
         </g>
       ))}
     </svg>

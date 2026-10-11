@@ -4,7 +4,7 @@ import { apiJson } from '../../Api/apiClient.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
 import FarmingSourceModal, { ConfidencePips } from './FarmingSourceModal.jsx'
-import { disciplineLabel, formatCount, formatRate, rateRangeText, sourceKindLabel, sourcesUrl } from './farmingModel.js'
+import { disciplineLabel, formatCount, formatRate, groupSourcesByDiscipline, rateRangeText, sourcesUrl } from './farmingModel.js'
 import './FarmingIntelligence.css'
 
 // The open source lives in the URL (?source=), like the open character.
@@ -32,8 +32,30 @@ function useSourceParam() {
   return [sourceKey, open]
 }
 
+// What a source is worth gathering for, beyond the output it is named for:
+// the item searched for when there is a search, otherwise its other drops.
+function CardDrops({ source }) {
+  const matches = source.matches || []
+  const searched = matches.length > 0
+  const drops = (searched ? matches : source.drops) || []
+  if (!drops.length) return <span className="farm-card__none">No other drops seen yet</span>
+
+  return (
+    <ul className={`farm-card__drops${searched ? ' farm-card__drops--match' : ''}`}>
+      {drops.slice(0, 3).map((drop) => (
+        <li key={drop.itemKey} title={rateRangeText(drop)}>
+          <WowIcon iconFileId={drop.iconFileDataId} itemId={drop.itemId} label={drop.name} quality={drop.qualityId} size={20} />
+          <span className={`farm-item farm-item--q${drop.qualityId ?? 1}`}>{drop.name}</span>
+          <b className={`farm-rate farm-rate--${drop.confidence}`}>{formatRate(drop.rate)}</b>
+          <ConfidencePips confidence={drop.confidence} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function SourceCard({ source, onOpen }) {
-  const match = source.matches[0]
+  const match = source.matches?.[0]
   return (
     <li>
       <button
@@ -42,23 +64,14 @@ function SourceCard({ source, onOpen }) {
         onClick={() => onOpen(source.sourceKey, match?.itemKey || '')}
       >
         <span className="farm-card__head">
-          <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={42} />
+          <WowIcon iconFileId={source.icon?.iconFileDataId} itemId={source.icon?.itemId} label={source.name} quality={source.icon?.qualityId} size={40} />
           <span className="farm-card__identity">
             <strong>{source.name}</strong>
-            <small>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</small>
+            <small>{formatCount(source.observations)} gathers</small>
           </span>
-          <span className="farm-card__gathers">
-            <b>{formatCount(source.observations)}</b>
-            <small>gathers</small>
-          </span>
+          <span className="farm-card__open" aria-hidden="true">›</span>
         </span>
-        {match ? (
-          <span className="farm-card__match" title={rateRangeText(match)}>
-            <span className={`farm-item farm-item--q${match.qualityId ?? 1}`}>{match.name}</span>
-            <b className={`farm-rate farm-rate--${match.confidence}`}>{formatRate(match.rate)}</b>
-            <ConfidencePips confidence={match.confidence} />
-          </span>
-        ) : null}
+        <CardDrops source={source} />
       </button>
     </li>
   )
@@ -129,9 +142,17 @@ export default function FarmingIntelligence({ input, onInputChange }) {
         </EmptyTelemetry>
       ) : null}
       {sources.length ? (
-        <ul className="farming__grid" aria-label={query ? `Sources producing or named ${query}` : 'Sources'}>
-          {sources.map((source) => <SourceCard key={source.sourceKey} source={source} onOpen={open} />)}
-        </ul>
+        groupSourcesByDiscipline(sources).map((group) => (
+          <section key={group.discipline} className={`farming__group farming__group--${group.discipline}`} aria-label={group.label}>
+            <h3>
+              {group.label}
+              <small>{group.sources.length} {group.sources.length === 1 ? 'source' : 'sources'}</small>
+            </h3>
+            <ul className="farming__grid">
+              {group.sources.map((source) => <SourceCard key={source.sourceKey} source={source} onOpen={open} />)}
+            </ul>
+          </section>
+        ))
       ) : null}
 
       {sourceKey ? (

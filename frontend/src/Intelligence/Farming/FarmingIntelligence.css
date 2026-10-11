@@ -1,16 +1,17 @@
-/* Farming intelligence: a grid of source cards styled like game tooltips,
-   and a source window built on the character armory's frame (fixed size,
-   panels scroll inside it). Rates always travel with their sample size and a
-   confidence meter; thin samples look visibly less certain. */
+/* Farming intelligence: source cards grouped by discipline, and a source
+   window built on the character armory's frame. The window reads top to
+   bottom: what drops, then (for the drop you pick) what changes its chance.
+   Rates travel with their sample; only a low sample says so in words. */
 
 .farming,
 .modal__panel--armory:has(.farm-modal) {
   --farm-gold: #ffd100;
   --farm-brass: #c9a85a;
   --farm-line: rgba(201, 168, 90, .3);
+  --farm-hair: rgba(255, 255, 255, .055);
   --farm-ink: #ece6d6;
-  --farm-muted: rgba(220, 214, 200, .6);
-  --farm-faint: rgba(220, 214, 200, .38);
+  --farm-muted: rgba(220, 214, 200, .62);
+  --farm-faint: rgba(220, 214, 200, .4);
   --farm-page: #0d1520;
   --farm-other: #6b7280;
 }
@@ -21,7 +22,7 @@
   display: grid;
   width: min(100%, 76rem);
   margin-inline: auto;
-  gap: 1.1rem;
+  gap: 1.6rem;
 }
 
 .farming__toolbar {
@@ -83,11 +84,11 @@
 .farming__disciplines button {
   padding: .4rem .9rem;
   border: 1px solid rgba(201, 168, 90, .2);
-  border-radius: .4rem;
-  background: linear-gradient(180deg, #151d29, #0a0f17);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .25);
   color: var(--farm-muted);
   font: inherit;
-  font-size: .85rem;
+  font-size: .82rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -98,57 +99,81 @@
 
 .farming__disciplines button[aria-pressed="true"] {
   border-color: rgba(255, 209, 0, .45);
-  background: linear-gradient(180deg, rgba(255, 209, 0, .14), rgba(255, 209, 0, .04));
+  background: rgba(255, 209, 0, .08);
   color: var(--farm-gold);
+}
+
+.farming__group {
+  --farm-accent: var(--farm-brass);
+  display: grid;
+  gap: .7rem;
+}
+
+.farming__group--herbalism { --farm-accent: #5cc466; }
+.farming__group--mining { --farm-accent: #d8935a; }
+.farming__group--skinning { --farm-accent: #c49a6c; }
+.farming__group--fishing { --farm-accent: #5aa8ff; }
+
+.farming__group h3 {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  margin: 0;
+  color: var(--farm-gold);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.farming__group h3::before {
+  width: .5rem;
+  height: .5rem;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--farm-accent);
+  box-shadow: 0 0 .6rem var(--farm-accent);
+  content: "";
+}
+
+.farming__group h3 small {
+  color: var(--farm-faint);
+  font-family: var(--font-body);
+  font-size: .75rem;
+  font-weight: 500;
 }
 
 .farming__grid {
   display: grid;
   margin: 0;
   padding: 0;
-  grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
-  gap: .8rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: .75rem;
   list-style: none;
 }
 
-/* A source card reads like an in-game tooltip: dark glass, brass edge, a
-   thin line of the discipline's colour along the top. */
+/* A source card reads like an in-game tooltip: dark glass, a brass edge,
+   the source on top and what else it drops beneath. */
 .farm-card {
-  --farm-accent: #c9a85a;
   position: relative;
   display: grid;
   width: 100%;
   height: 100%;
   align-content: start;
-  gap: .75rem;
+  gap: .7rem;
   overflow: hidden;
-  padding: .85rem .95rem;
-  border: 1px solid rgba(201, 168, 90, .24);
+  padding: .8rem .9rem .85rem;
+  border: 1px solid rgba(201, 168, 90, .22);
   border-radius: .55rem;
   background:
-    radial-gradient(ellipse 70% 60% at 0% 0%, color-mix(in srgb, var(--farm-accent) 10%, transparent), transparent),
+    radial-gradient(ellipse 70% 70% at 0% 0%, color-mix(in srgb, var(--farm-accent) 9%, transparent), transparent),
     linear-gradient(180deg, rgba(17, 25, 38, .97), rgba(7, 11, 18, .98));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 .7rem 1.6rem rgba(0, 0, 0, .3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 .7rem 1.6rem rgba(0, 0, 0, .28);
   color: var(--farm-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
   transition: border-color .15s ease, box-shadow .15s ease, translate .15s ease;
 }
-
-.farm-card::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--farm-accent), transparent);
-  content: "";
-  opacity: .75;
-}
-
-.farm-card--herbalism { --farm-accent: #4fbf5a; }
-.farm-card--mining { --farm-accent: #d08a4a; }
-.farm-card--skinning { --farm-accent: #b98b5e; }
-.farm-card--fishing { --farm-accent: #4a9eff; }
 
 .farm-card:hover,
 .farm-card:focus-visible {
@@ -161,71 +186,83 @@
 .farm-card__head {
   display: flex;
   align-items: center;
-  gap: .8rem;
+  gap: .75rem;
   min-width: 0;
-}
-
-.farm-card__gathers {
-  display: grid;
-  margin-left: auto;
-  justify-items: end;
-  line-height: 1.15;
-}
-
-.farm-card__gathers b {
-  color: var(--farm-ink);
-  font-size: 1.05rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-}
-
-.farm-card__gathers small {
-  color: var(--farm-faint);
-  font-size: .64rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
 }
 
 .farm-card__identity {
   display: grid;
   min-width: 0;
-  gap: .1rem;
+  flex: 1 1 auto;
+  gap: .05rem;
 }
 
 .farm-card__identity strong {
   overflow: hidden;
   color: #fff;
   font-family: var(--font-display);
-  font-size: 1.12rem;
+  font-size: 1.1rem;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .farm-card__identity small {
-  color: color-mix(in srgb, var(--farm-accent) 70%, var(--farm-ink));
-  font-size: .76rem;
-  font-weight: 600;
-  letter-spacing: .04em;
+  color: var(--farm-muted);
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.farm-card__match {
-  display: flex;
+.farm-card__open {
+  color: var(--farm-faint);
+  font-size: 1.4rem;
+  line-height: 1;
+  transition: color .15s ease, translate .15s ease;
+}
+
+.farm-card:hover .farm-card__open,
+.farm-card:focus-visible .farm-card__open {
+  color: var(--farm-gold);
+  translate: 2px 0;
+}
+
+.farm-card__drops {
+  display: grid;
+  margin: 0;
+  padding: .55rem 0 0;
+  gap: .3rem;
+  border-top: 1px solid var(--farm-hair);
+  list-style: none;
+}
+
+.farm-card__drops li {
+  display: grid;
   align-items: center;
-  gap: .55rem;
-  padding: .45rem .6rem;
-  border: 1px solid rgba(255, 255, 255, .06);
-  border-radius: .4rem;
-  background: rgba(0, 0, 0, .28);
-  font-size: .86rem;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: .5rem;
+  font-size: .84rem;
 }
 
-.farm-card__match .farm-item {
-  flex: 1 1 auto;
+.farm-card__drops .farm-item {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.farm-card__drops--match {
+  margin-top: .1rem;
+  padding: .45rem .55rem;
+  border: 1px solid rgba(255, 209, 0, .22);
+  border-radius: .4rem;
+  background: rgba(255, 209, 0, .05);
+}
+
+.farm-card__none {
+  padding-top: .55rem;
+  border-top: 1px solid var(--farm-hair);
+  color: var(--farm-faint);
+  font-size: .78rem;
+  font-style: italic;
 }
 
 /* --- Shared marks ------------------------------------------------------- */
@@ -245,17 +282,27 @@
   font-weight: 650;
 }
 
-.farm-rate--medium { color: rgba(236, 230, 214, .82); font-weight: 550; }
+.farm-rate--medium { color: rgba(236, 230, 214, .84); font-weight: 550; }
 .farm-rate--low { color: var(--farm-faint); font-style: italic; font-weight: 400; }
 
 .farm-muted {
   color: var(--farm-muted);
 }
 
+.farm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Confidence meter: four rising bars. */
 .farm-pips {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: .4rem;
   vertical-align: middle;
 }
@@ -285,18 +332,54 @@
 
 .farm-pips__label {
   color: var(--farm-faint);
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .05em;
-  text-transform: uppercase;
+  font-size: .66rem;
+  font-style: italic;
   white-space: nowrap;
+}
+
+/* Talent rank: n/5 and five diamonds, like a talent's rank pips. */
+.farm-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.farm-rank__value {
+  min-width: 1.9rem;
+  color: var(--farm-ink);
+}
+
+.farm-rank__pips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.farm-rank__pips i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(201, 168, 90, .45);
+  rotate: 45deg;
+}
+
+.farm-rank__pips i.is-lit {
+  border-color: var(--farm-gold);
+  background: var(--farm-gold);
+  box-shadow: 0 0 4px rgba(255, 209, 0, .45);
+}
+
+.farm-rank--unknown {
+  color: var(--farm-faint);
+  font-weight: 500;
 }
 
 /* --- Source window ------------------------------------------------------ */
 
+/* Sized to its content (capped by the screen), so a source with two drops
+   is a small window and one with ten is a tall one. */
 .modal__panel--armory:has(.farm-modal) {
-  width: min(100%, 70rem);
-  height: min(100%, 47rem);
+  width: min(100%, 60rem);
+  height: auto;
+  max-height: min(100%, 54rem);
 }
 
 .farm-modal {
@@ -304,23 +387,15 @@
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: .85rem;
-  padding: var(--armory-pad);
-  background: radial-gradient(ellipse 45% 9rem at 0% 0%, rgba(79, 191, 90, .07), transparent);
-  transition: opacity .16s ease;
-}
-
-.farm-modal.is-refreshing .farm-modal__body {
-  opacity: .65;
+  gap: .9rem;
+  padding: var(--armory-pad) calc(var(--armory-pad) + .2rem) calc(var(--armory-pad) + .2rem);
+  background: radial-gradient(ellipse 45% 9rem at 0% 0%, rgba(92, 196, 102, .07), transparent);
 }
 
 .farm-modal__state {
   display: grid;
-  flex: 1 1 auto;
+  min-height: 24rem;
   place-items: center;
-  border: 1px solid var(--farm-line);
-  border-radius: .5rem;
-  background: var(--farm-page);
 }
 
 .farm-header {
@@ -350,7 +425,7 @@
   margin: 0;
   color: var(--farm-gold);
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
   font-weight: 500;
   line-height: 1.1;
   text-shadow: 0 1px 0 #000, 0 0 1rem rgba(255, 209, 0, .12);
@@ -372,7 +447,7 @@
 
 .farm-header__gathers strong {
   color: var(--farm-ink);
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
@@ -400,7 +475,7 @@
   height: 2rem;
   align-items: center;
   gap: .35rem;
-  padding: 0 .3rem 0 .7rem;
+  padding: 0 .3rem 0 .75rem;
   border: 1px solid rgba(201, 168, 90, .18);
   border-radius: 999px;
   background: rgba(0, 0, 0, .3);
@@ -445,8 +520,10 @@
   font-weight: 600;
 }
 
+/* Each dropdown is as wide as what it shows, not its longest option. */
 .farm-chip select {
   max-width: 10rem;
+  field-sizing: content;
   cursor: pointer;
 }
 
@@ -485,49 +562,40 @@
   text-decoration: underline;
 }
 
-/* Body: loot on the left, the selected item's breakdown on the right. Each
-   panel scrolls inside itself; the window never does. */
 .farm-modal__body {
-  display: grid;
+  display: flex;
   min-height: 0;
   flex: 1 1 auto;
-  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
-  gap: 1rem;
+  flex-direction: column;
+  gap: 1.1rem;
   transition: opacity .16s ease;
+}
+
+.farm-modal.is-refreshing .farm-modal__body {
+  opacity: .6;
 }
 
 .farm-panel {
   min-width: 0;
-  min-height: 0;
   border: 1px solid var(--farm-line);
   border-radius: .5rem;
   background: var(--farm-page);
   box-shadow: inset 0 0 2rem rgba(0, 0, 0, .35);
 }
 
-.farm-panel__footnote {
-  margin: 0;
-  padding: .55rem .9rem .7rem;
-  color: var(--farm-faint);
-  font-size: .72rem;
-  line-height: 1.45;
-}
-
-.farm-loot {
+.farm-section-head {
   display: flex;
-  flex-direction: column;
-}
-
-.farm-panel__header {
-  display: flex;
-  flex: 0 0 auto;
   align-items: center;
-  gap: .9rem;
-  padding: .8rem .9rem;
-  border-bottom: 1px solid rgba(201, 168, 90, .14);
+  gap: 1rem;
+  padding: .75rem 1rem .6rem;
 }
 
-.farm-panel__header h3 {
+.farm-section-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.farm-section-head h3 {
   margin: 0;
   color: var(--farm-gold);
   font-family: var(--font-display);
@@ -535,34 +603,51 @@
   font-weight: 500;
 }
 
-.farm-panel__header p {
-  margin: .1rem 0 0;
-  color: var(--farm-muted);
-  font-size: .8rem;
+.farm-section-head p {
+  margin: .15rem 0 0;
+  color: var(--farm-faint);
+  font-size: .76rem;
 }
 
-.farm-donut {
-  width: 3.6rem;
-  height: 3.6rem;
-  flex: 0 0 auto;
-}
-
-.farm-donut__track {
-  fill: none;
-  stroke: rgba(255, 255, 255, .05);
-  stroke-width: 18;
-}
-
-.farm-donut path {
-  stroke: var(--farm-page);
-  stroke-width: 1.5;
-}
-
-.farm-loot__list {
+/* Drops: a table of buttons, so a whole row selects. */
+.farm-drops {
+  display: flex;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  flex-direction: column;
+}
+
+.farm-drops__columns,
+.farm-loot__row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 5.5rem 5rem 4.5rem 7.5rem;
+  gap: .75rem;
+  padding: 0 1rem 0 .75rem;
+}
+
+.farm-drops__columns {
+  padding-bottom: .4rem;
+  border-bottom: 1px solid rgba(201, 168, 90, .16);
+  color: var(--farm-faint);
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.farm-drops__columns span:not(:first-child) {
+  text-align: right;
+}
+
+.farm-drops__columns span:first-child {
+  padding-left: .55rem;
+}
+
+.farm-drops__list {
+  min-height: 0;
   margin: 0;
-  padding: .35rem;
+  padding: .3rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
@@ -571,12 +656,10 @@
 }
 
 .farm-loot__row {
-  display: grid;
+  position: relative;
   width: 100%;
-  align-items: center;
-  grid-template-columns: 3px auto minmax(0, 1fr) auto;
-  gap: .7rem;
-  padding: .5rem .6rem .5rem .4rem;
+  min-height: 2.75rem;
+  padding-left: .45rem;
   border: 1px solid transparent;
   border-radius: .4rem;
   background: transparent;
@@ -596,99 +679,145 @@
 }
 
 .farm-loot__row.is-selected {
-  border-color: rgba(255, 209, 0, .28);
-  background: linear-gradient(90deg, rgba(255, 209, 0, .11), rgba(255, 209, 0, .02));
+  border-color: rgba(255, 209, 0, .3);
+  background: linear-gradient(90deg, rgba(255, 209, 0, .12), rgba(255, 209, 0, .02));
 }
 
-.farm-loot__swatch {
-  width: 3px;
-  height: 1.9rem;
-  border-radius: 2px;
+/* The selected row points down at the breakdown it drives. */
+.farm-loot__row.is-selected::after {
+  position: absolute;
+  bottom: -5px;
+  left: 2.2rem;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid rgba(255, 209, 0, .45);
+  border-bottom: 1px solid rgba(255, 209, 0, .45);
+  background: #17190f;
+  content: "";
+  rotate: 45deg;
 }
 
 .farm-loot__item {
-  display: grid;
+  display: flex;
   min-width: 0;
-  gap: .1rem;
+  align-items: center;
+  gap: .6rem;
 }
 
 .farm-loot__item strong {
   overflow: hidden;
-  font-size: .95rem;
+  font-size: .92rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.farm-loot__item small {
-  color: var(--farm-faint);
-  font-size: .74rem;
-  font-variant-numeric: tabular-nums;
+.farm-loot__swatch {
+  width: 3px;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  border-radius: 2px;
 }
 
 .farm-loot__chance {
-  display: grid;
-  justify-items: end;
-  gap: .2rem;
+  font-size: 1rem;
+  text-align: right;
 }
 
-.farm-loot__chance .farm-rate {
-  font-size: 1.08rem;
+.farm-loot__num {
+  color: var(--farm-muted);
+  font-size: .84rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
-/* Analysis */
+.farm-donut {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: 0 0 auto;
+}
 
-.farm-analysis {
+.farm-donut__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, .05);
+  stroke-width: 18;
+}
+
+.farm-donut path {
+  stroke: var(--farm-page);
+  stroke-width: 1.5;
+}
+
+/* Breakdown of the selected drop: title and book tabs on one bar, then a
+   page with the chart beside its table. */
+.farm-breakdown-panel {
   display: flex;
-  min-width: 0;
   min-height: 0;
+  flex: 0 0 auto;
   flex-direction: column;
 }
 
-.farm-analysis__bar {
+.farm-breakdown-panel__bar {
   display: flex;
-  flex: 0 0 auto;
   align-items: flex-end;
-  gap: .75rem;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.farm-analysis__item {
+.farm-breakdown-panel__title {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: .45rem;
-  margin: 0 .2rem .45rem auto;
-  font-size: .88rem;
+  gap: .5rem;
+  margin: 0 0 .5rem .15rem;
+  font-size: .98rem;
   font-weight: 600;
 }
 
-.farm-analysis__item .farm-item {
+.farm-breakdown-panel__title .farm-item {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farm-breakdown-panel__title small {
+  color: var(--farm-faint);
+  font-size: .78rem;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .farm-tabs {
   flex: 0 1 auto;
   min-width: 0;
+  margin-right: .5rem;
 }
 
-.farm-analysis__page {
-  min-height: 0;
-  flex: 1 1 auto;
-  padding: .85rem .9rem .2rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-color: rgba(201, 168, 90, .35) transparent;
-  scrollbar-width: thin;
+.farm-breakdown-panel__page {
+  padding: 1rem 1rem .75rem;
 }
 
-.farm-analysis__page .farm-panel__footnote {
-  padding-inline: 0;
+.farm-breakdown {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.4rem;
+}
+
+.farm-breakdown__chart {
+  display: grid;
+  gap: .4rem;
+}
+
+.farm-note {
+  margin: 0;
+  color: var(--farm-faint);
+  font-size: .72rem;
+  line-height: 1.45;
 }
 
 .farm-empty {
-  margin: 1rem 0;
+  margin: .5rem 0;
   color: var(--farm-muted);
   font-size: .85rem;
 }
@@ -701,17 +830,17 @@
 
 .farm-table th,
 .farm-table td {
-  height: 2.05rem;
-  padding: 0 .5rem;
+  height: 1.95rem;
+  padding: 0 .45rem;
   border-bottom: 1px solid rgba(255, 255, 255, .045);
   text-align: left;
 }
 
 .farm-table thead th {
-  height: 1.7rem;
+  height: 1.6rem;
   border-bottom-color: rgba(201, 168, 90, .18);
   color: var(--farm-faint);
-  font-size: .66rem;
+  font-size: .64rem;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -732,49 +861,11 @@
   text-align: right;
 }
 
-/* Talent rank: n/5 and five diamonds, like a talent's rank pips. */
-.farm-rank {
-  display: inline-flex;
-  align-items: center;
-  gap: .55rem;
-}
-
-.farm-rank__value {
-  min-width: 1.9rem;
-  color: var(--farm-ink);
-}
-
-.farm-rank__pips {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.farm-rank__pips i {
-  width: 6px;
-  height: 6px;
-  border: 1px solid rgba(201, 168, 90, .45);
-  background: transparent;
-  rotate: 45deg;
-}
-
-.farm-rank__pips i.is-lit {
-  border-color: var(--farm-gold);
-  background: var(--farm-gold);
-  box-shadow: 0 0 4px rgba(255, 209, 0, .45);
-}
-
-.farm-rank--unknown {
-  color: var(--farm-faint);
-  font-weight: 500;
-}
-
-/* Rate by skill */
+/* Charts */
 
 .farm-line {
   display: block;
   width: 100%;
-  max-height: 11rem;
-  margin-bottom: .6rem;
   overflow: visible;
 }
 
@@ -827,31 +918,62 @@
   fill: transparent;
 }
 
-/* Narrow windows: panels stack at their natural height and the body scrolls
-   as one page. */
+.farm-bars__bar rect:first-child {
+  fill: var(--farm-gold);
+  fill-opacity: .85;
+}
+
+.farm-bars__bar--low rect:first-child,
+.farm-bars__bar--medium rect:first-child {
+  fill: rgba(255, 209, 0, .12);
+  stroke: rgba(255, 209, 0, .7);
+  stroke-width: 1;
+}
+
+.farm-bars__bar:hover rect:first-child {
+  fill-opacity: 1;
+}
+
+/* Narrow windows: the drop table drops its secondary columns, the chart
+   stacks over its table, and the body scrolls as one page. */
 @media (max-width: 52rem) {
   .farm-modal__body {
-    display: flex;
-    flex-direction: column;
     overflow-y: auto;
   }
 
-  .farm-modal__body > *,
-  .farm-loot__list,
-  .farm-analysis__page {
-    min-height: auto;
+  .farm-drops,
+  .farm-drops__list {
     flex: 0 0 auto;
-  }
-
-  .farm-loot__list {
     overflow: visible;
   }
 
-  .farm-analysis__page {
-    overflow: auto hidden;
+  .farm-drops__columns,
+  .farm-loot__row {
+    grid-template-columns: minmax(0, 1fr) 4.5rem 3rem;
   }
 
-  .farm-analysis__item {
+  .farm-drops__columns span:nth-child(3),
+  .farm-drops__columns span:nth-child(4),
+  .farm-loot__num {
     display: none;
+  }
+
+  .farm-loot__row .farm-pips__label,
+  .farm-drops__columns span:last-child {
+    visibility: hidden;
+  }
+
+  .farm-breakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .farm-breakdown-panel__bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .25rem;
+  }
+
+  .farm-breakdown-panel__page {
+    overflow-x: auto;
   }
 }

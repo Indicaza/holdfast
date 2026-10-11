@@ -90,7 +90,7 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
     `).all(...params, Math.min(SOURCE_LIMIT, Math.max(1, Number(limit) || SOURCE_LIMIT)));
 
     const sourceKeys = rows.map((row) => row.source_key);
-    const icons = sourceIcons(db, sourceKeys);
+    const outputs = sourceOutputs(db, sourceKeys);
     const matches = matchedItemKeys?.length ? sourceItemMatches(db, sourceKeys, matchedItemKeys) : new Map();
 
     const sources = rows.map((row) => {
@@ -108,7 +108,12 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
         characters: Number(row.characters),
         zones: Number(row.zones),
         lastObservedAt: row.last_observed_at,
-        icon: icons.get(row.source_key) || null,
+        icon: outputs.get(row.source_key)?.[0] || null,
+        // What else it drops, beyond the output it is named for.
+        drops: (outputs.get(row.source_key) || []).slice(1).map((output) => ({
+          ...output,
+          ...observedRate(output.drops, observations),
+        })),
         matchedBy: query && row.source_name.toLowerCase().includes(query.toLowerCase()) ? "source" : query ? "output" : null,
         matches: sourceMatches,
       };
@@ -131,23 +136,34 @@ function disciplineCounts(db) {
   }));
 }
 
-// A source looks like its most common output (Peacebloom the herb for
-// Peacebloom the node).
-function sourceIcons(db, sourceKeys) {
+// A source's outputs, most common first: the first is what the source looks
+// like (Peacebloom the herb for Peacebloom the node), the next few are what
+// else it is worth gathering for.
+const PREVIEW_OUTPUTS = 4;
+
+function sourceOutputs(db, sourceKeys) {
   if (!sourceKeys.length) return new Map();
   const rows = db.prepare(`
-    SELECT source_key, item_key, item_id, item_name, quality_id, icon_file_data_id FROM (
+    SELECT source_key, item_key, item_id, item_name, quality_id, icon_file_data_id, drops FROM (
       SELECT
         o.source_key, i.item_key, MAX(i.item_id) AS item_id, MAX(i.item_name) AS item_name,
         MAX(i.quality_id) AS quality_id, MAX(i.icon_file_data_id) AS icon_file_data_id,
+        COUNT(*) AS drops,
         ROW_NUMBER() OVER (PARTITION BY o.source_key ORDER BY COUNT(*) DESC, i.item_key) AS position
       FROM economic_observations o
       JOIN economic_observation_outputs i ON i.observation_id = o.id
       WHERE o.source_key IN (${sourceKeys.map(() => "?").join(", ")})
       GROUP BY o.source_key, i.item_key
-    ) WHERE position = 1
-  `).all(...sourceKeys);
-  return new Map(rows.map((row) => [row.source_key, itemView(row)]));
+    ) WHERE position <= ?
+    ORDER BY source_key, position
+  `).all(...sourceKeys, PREVIEW_OUTPUTS);
+  const bySource = new Map();
+  for (const row of rows) {
+    const list = bySource.get(row.source_key) || [];
+    list.push({ ...itemView(row), drops: Number(row.drops) });
+    bySource.set(row.source_key, list);
+  }
+  return bySource;
 }
 
 function sourceItemMatches(db, sourceKeys, itemKeys) {

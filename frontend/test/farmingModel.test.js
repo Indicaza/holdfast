@@ -10,7 +10,9 @@ import {
   donutSegments,
   formatCount,
   formatRate,
+  groupSourcesByDiscipline,
   rankLabel,
+  rateBars,
   rateLinePoints,
   rateRangeText,
   sourceDetailUrl,
@@ -96,4 +98,33 @@ test('the skill line plots known buckets only, scales to the rates and clips lik
   assert.equal(points[1].yHigh, 10, 'a range above the plot is clipped to its top')
   assert.deepEqual(rateLinePoints([]).points, [])
   assert.equal(rateLinePoints([rows[0]], { width: 100 }).points[0].x, 50)
+})
+
+test('rank bars sit on one baseline, scale to the rates and skip unknown ranks', () => {
+  const rows = [
+    { rank: 0, rate: 0.02, observations: 100 },
+    { rank: 5, rate: 0.04, observations: 50 },
+    { rank: 'unknown', rate: 0.5, observations: 3 },
+  ]
+  const { bars, maxRate } = rateBars(rows, { width: 134, height: 100, padX: 34, padY: 10, gap: 10 })
+  assert.equal(maxRate, 0.05)
+  assert.deepEqual(bars.map((bar) => bar.rank), [0, 5])
+  assert.deepEqual(bars.map((bar) => bar.y + bar.height), [90, 90])
+  assert.equal(bars[1].height, 64)
+  assert.equal(bars[0].height, 32)
+  assert.equal(bars[0].width, 28)
+  assert.deepEqual(rateBars([]).bars, [])
+})
+
+test('sources group by discipline in the order they arrive', () => {
+  const groups = groupSourcesByDiscipline([
+    { sourceKey: 'a', discipline: 'herbalism' },
+    { sourceKey: 'b', discipline: 'mining' },
+    { sourceKey: 'c', discipline: 'herbalism' },
+  ])
+  assert.deepEqual(groups.map((group) => [group.label, group.sources.map((source) => source.sourceKey)]), [
+    ['Herbalism', ['a', 'c']],
+    ['Mining', ['b']],
+  ])
+  assert.deepEqual(groupSourcesByDiscipline(), [])
 })

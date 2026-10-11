@@ -245,6 +245,8 @@ test("search finds a source by its name and every source producing an item", () 
     ]);
     assert.deepEqual(all.disciplines, [{ discipline: "herbalism", observations: 65, sources: 3 }]);
     assert.equal(all.sources[0].icon.itemId, 2447, "a source shows its most common output");
+    assert.deepEqual(all.sources[0].drops.map((drop) => [drop.name, drop.drops, drop.rate]), [["Frilled Lichen", 2, 2 / 40]], "cards preview what else a source drops");
+    assert.deepEqual(all.sources[2].drops, []);
 
     const bySource = searchFarmingSources({ q: "peace" });
     assert.deepEqual(bySource.sources.map((source) => source.name), ["Peacebloom"]);

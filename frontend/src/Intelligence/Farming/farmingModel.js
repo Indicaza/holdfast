@@ -192,3 +192,46 @@ export function rateLinePoints(rows = [], { width = 320, height = 120, padX = 16
     })),
   }
 }
+
+// --- Rank bars ---------------------------------------------------------------
+
+// Bars for the drop rate at each Bountiful Harvest rank, scaled like the skill
+// line. Unknown ranks stay in the table only.
+export function rateBars(rows = [], { width = 320, height = 150, padX = 34, padY = 14, gap = 10 } = {}) {
+  const plotted = rows.filter((row) => row.rank !== 'unknown' && row.observations > 0)
+  if (!plotted.length) return { bars: [], maxRate: 0 }
+  const maxRate = Math.max(...plotted.map((row) => Number(row.rate) || 0), 0.0001) * 1.25
+  const slot = (width - padX - 8) / plotted.length
+  const barWidth = Math.max(4, Math.min(28, slot - gap))
+  const baseline = height - padY
+  const scale = (rate) => (Math.min(Number(rate) || 0, maxRate) / maxRate) * (height - padY * 2)
+  return {
+    maxRate,
+    bars: plotted.map((row, index) => {
+      const barHeight = Number(scale(row.rate).toFixed(2))
+      const center = padX + slot * index + slot / 2
+      return {
+        ...row,
+        x: Number((center - barWidth / 2).toFixed(2)),
+        center: Number(center.toFixed(2)),
+        width: Number(barWidth.toFixed(2)),
+        y: Number((baseline - barHeight).toFixed(2)),
+        height: barHeight,
+      }
+    }),
+  }
+}
+
+// --- Source browser ----------------------------------------------------------
+
+// Sources grouped by discipline, keeping the server's order (most gathered
+// first) inside each group and ordering groups by their busiest source.
+export function groupSourcesByDiscipline(sources = []) {
+  const groups = new Map()
+  for (const source of sources) {
+    const group = groups.get(source.discipline) || { discipline: source.discipline, label: disciplineLabel(source.discipline), sources: [] }
+    group.sources.push(source)
+    groups.set(source.discipline, group)
+  }
+  return [...groups.values()]
+}
