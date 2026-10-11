@@ -6,9 +6,9 @@ import { useLiveResource } from '../Live/useLiveResource.js'
 import Home from '../Home/Home.jsx'
 import MemberAccessModal from '../Members/MemberAccessModal.jsx'
 import WowIcon from '../WowAssets/WowIcon.jsx'
-import { SyncBadge, UnitFrame } from './CharacterIdentity.jsx'
+import CharacterCard from './CharacterCard.jsx'
 import CharacterProfileModal from './CharacterProfileModal.jsx'
-import { classIdentity } from './classIdentity.js'
+import { useCharacterParam } from './useCharacterParam.js'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
@@ -52,34 +52,6 @@ function freshSyncCount(characters, hours = 24) {
     const timestamp = new Date(character.lastSeenAt || '').getTime()
     return Number.isFinite(timestamp) && timestamp >= cutoff
   }).length
-}
-
-function CharacterCard({ character, onOpen }) {
-  function handleClick(event) {
-    if (!onOpen || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    event.preventDefault()
-    onOpen(character.id)
-  }
-
-  const vitals = character.vitals || {}
-  return (
-    <a
-      className="character-card"
-      href={`/intelligence?character=${encodeURIComponent(character.id)}`}
-      onClick={handleClick}
-      style={{ '--armory-class-color': classIdentity(character.className).color }}
-    >
-      <UnitFrame
-        character={character}
-        health={{ max: vitals.healthMax }}
-        power={{ max: vitals.powerMax, token: vitals.powerToken }}
-        nameAs="strong"
-        className="unit-frame--card"
-        showAffiliation
-      />
-      <SyncBadge lastSeenAt={character.lastSeenAt} />
-    </a>
-  )
 }
 
 function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
@@ -310,19 +282,6 @@ function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCh
   return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
 }
 
-// The open character lives in the URL (?character=), so a refresh, a shared
-// link or Back/Forward reopens it, and nothing else on the page can close it.
-function readCharacterFromLocation() {
-  return new URLSearchParams(window.location.search).get('character') || ''
-}
-
-function writeCharacterToLocation(characterId) {
-  const url = new URL(window.location.href)
-  if (characterId) url.searchParams.set('character', characterId)
-  else url.searchParams.delete('character')
-  if (url.href !== window.location.href) window.history.pushState(null, '', url)
-}
-
 export default function GuildIntelligence() {
   const session = useSession()
   const { status: summaryStatus, data: summary } = useLiveResource('/api/intelligence', {
@@ -337,7 +296,7 @@ export default function GuildIntelligence() {
   const [activeView, setActiveView] = useState(() => readViewFromLocation(intelligenceViews))
   // Searches survive switching between workspaces.
   const [searches, setSearches] = useState({ characters: '', craft: '' })
-  const [selectedCharacterId, setSelectedCharacterId] = useState(readCharacterFromLocation)
+  const [selectedCharacterId, openCharacter] = useCharacterParam()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -354,17 +313,6 @@ export default function GuildIntelligence() {
     if (view.permission === 'site.admin') return canInspectGuildweaver
     return true
   }), [canAudit, canInspectGuildweaver])
-
-  useEffect(() => {
-    const syncCharacter = () => setSelectedCharacterId(readCharacterFromLocation())
-    window.addEventListener('popstate', syncCharacter)
-    return () => window.removeEventListener('popstate', syncCharacter)
-  }, [])
-
-  function openCharacter(characterId) {
-    setSelectedCharacterId(characterId)
-    writeCharacterToLocation(characterId)
-  }
 
   useEffect(() => {
     if (!session.authenticated) return undefined

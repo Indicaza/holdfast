@@ -7,10 +7,17 @@ import MemberAccessModal from './MemberAccessModal.jsx'
 import MemberProfileEditor from './MemberProfileEditor.jsx'
 import MemberBilletControl from './MemberBilletControl.jsx'
 import MemberRankControl from './MemberRankControl.jsx'
-import RankInsignia from './RankInsignia.jsx'
+import RankPlate from './RankPlate.jsx'
+import RepBar from './RepBar.jsx'
+import CharacterCard from '../Intelligence/CharacterCard.jsx'
+import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
+import { normalizeIntelligence } from '../Intelligence/model.js'
+import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './MemberProfile.css'
+
+const SERVICE_PREVIEW = 6
 
 function displayName(member) {
   return member?.displayName || member?.username || 'Member'
@@ -80,202 +87,6 @@ function Reward({ reward }) {
   )
 }
 
-function fallbackRepProgression(rank, lifetimeRep) {
-  const rep = Math.max(0, Number(lifetimeRep) || 0)
-  const floors = {
-    Recruit: { start: 0, end: 3000, nextRank: 'Corporal', label: 'Corporal breakpoint' },
-    Private: { start: 0, end: 3000, nextRank: 'Corporal', label: 'Corporal breakpoint' },
-    Corporal: { start: 3000, end: 9000, nextRank: 'Sergeant', label: 'Sergeant Rep floor' },
-    Sergeant: { start: 9000, end: 21000, nextRank: 'Master Sergeant', label: 'Master Sergeant Rep floor' },
-    'Master Sergeant': { start: 21000, end: 42000, nextRank: 'Sergeant Major', label: 'Sergeant Major Rep floor' },
-  }
-
-  const target = floors[rank]
-
-  if (!target) {
-    return {
-      mode: 'lifetime',
-      lifetimeRep: rep,
-      segmentStart: 0,
-      segmentEnd: 42000,
-      segmentSize: 42000,
-      remaining: null,
-      progress: Math.min(1, rep / 42000),
-      thresholdMet: rep >= 42000,
-      nextRank: null,
-      label: 'Lifetime Rep',
-      detail:
-        rank === 'Sergeant Major'
-          ? 'All enlisted Rep floors are met. Rep continues accumulating.'
-          : 'Officer progression is separate from Rep.',
-    }
-  }
-
-  const segmentSize = target.end - target.start
-  const segmentEarned = Math.min(
-    segmentSize,
-    Math.max(0, rep - target.start),
-  )
-
-  return {
-    mode: 'eligibility',
-    lifetimeRep: rep,
-    segmentStart: target.start,
-    segmentEnd: target.end,
-    segmentSize,
-    remaining: Math.max(0, target.end - rep),
-    progress: segmentEarned / segmentSize,
-    thresholdMet: rep >= target.end,
-    nextRank: target.nextRank,
-    label: target.label,
-    detail:
-      rep >= target.end
-        ? 'Rep requirement met. Promotion is still a leadership decision.'
-        : `${formatNumber(target.end - rep)} Rep remaining.`,
-  }
-}
-
-
-function officerRepMilestone(lifetimeRep) {
-  const rep = Math.max(0, Number(lifetimeRep) || 0)
-  const milestones = [3000, 9000, 21000, 42000]
-  const next = milestones.find((value) => rep < value)
-
-  if (!next) {
-    return {
-      mode: 'lifetime',
-      lifetimeRep: rep,
-      segmentStart: 0,
-      segmentEnd: 42000,
-      segmentSize: 42000,
-      remaining: null,
-      progress: 1,
-      thresholdMet: true,
-      nextRank: null,
-      label: 'Lifetime Rep',
-      detail: 'Officer rank is by appointment. Rep continues recording contribution independently.',
-    }
-  }
-
-  const previous = milestones.filter((value) => value < next).at(-1) || 0
-  const segmentSize = next - previous
-  const segmentEarned = Math.max(0, rep - previous)
-
-  return {
-    mode: 'milestone',
-    lifetimeRep: rep,
-    segmentStart: previous,
-    segmentEnd: next,
-    segmentSize,
-    remaining: next - rep,
-    progress: segmentEarned / segmentSize,
-    thresholdMet: false,
-    nextRank: null,
-    label: `${formatNumber(next)} Rep milestone`,
-    detail: 'Officer rank is by appointment. Rep continues recording contribution independently.',
-  }
-}
-
-function RankProgress({ member, management = null }) {
-  const lifetimeRep = Number(member.contribution?.rep) || 0
-  const isOfficer = Boolean(member.rankMeta?.isOfficer)
-  const progression = isOfficer
-    ? officerRepMilestone(lifetimeRep)
-    : member.repProgression ||
-      fallbackRepProgression(member.rank || 'Recruit', lifetimeRep)
-
-  const percent = Math.min(
-    100,
-    Math.max(0, (Number(progression.progress) || 0) * 100),
-  )
-  const segmentCurrent =
-    progression.mode === 'eligibility' || progression.mode === 'milestone'
-      ? Math.min(
-          Math.max(lifetimeRep - Number(progression.segmentStart || 0), 0),
-          Number(progression.segmentSize || 0),
-        )
-      : Math.min(lifetimeRep, Number(progression.segmentEnd || 42000))
-
-  let note = progression.detail
-
-  if (member.rank === 'Recruit') {
-    note =
-      `${formatNumber(progression.remaining)} Rep to the Corporal contribution breakpoint. Private is an onboarding promotion.`
-  } else if (progression.mode === 'eligibility' && progression.thresholdMet) {
-    note =
-      'Rep floor met. Promotion still depends on trust, recommendation, qualification, and guild need.'
-  } else if (progression.mode === 'eligibility') {
-    note =
-      `${formatNumber(progression.remaining)} Rep to ${progression.nextRank || progression.label} eligibility.`
-  } else if (progression.mode === 'milestone') {
-    note =
-      `${formatNumber(progression.remaining)} Rep to the next service milestone. Officer rank is by appointment.`
-  }
-
-  return (
-    <section
-      className="member-profile__progress"
-      aria-labelledby="member-rank-title"
-    >
-      <div className="member-profile__progress-rank">
-        <div className="member-profile__progress-insignia">
-          <RankInsignia rank={member.rank} />
-        </div>
-
-        <div>
-          <span>Guild rank</span>
-          <h2 id="member-rank-title">{member.rank || 'Recruit'}</h2>
-          {management ? (
-            <div className="member-profile__rank-management">
-              {management}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="member-profile__progress-rep">
-        <div className="member-profile__progress-heading">
-          <span>Reputation</span>
-          <strong>{formatNumber(lifetimeRep)} Rep</strong>
-        </div>
-
-        <div
-          className="member-profile__progress-bar"
-          role="progressbar"
-          aria-label={progression.label}
-          aria-valuemin="0"
-          aria-valuemax={
-            Number(progression.segmentSize) ||
-            Number(progression.segmentEnd) ||
-            42000
-          }
-          aria-valuenow={segmentCurrent}
-        >
-          <span
-            className="member-profile__progress-fill"
-            data-has-progress={lifetimeRep > 0}
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-
-        <div className="member-profile__progress-scale">
-          <span>{formatNumber(progression.segmentStart || 0)}</span>
-          <strong>
-            {progression.mode === 'eligibility'
-              ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this tier`
-              : progression.mode === 'milestone'
-                ? `${formatNumber(segmentCurrent)} / ${formatNumber(progression.segmentSize)} this milestone`
-                : `${formatNumber(lifetimeRep)} lifetime`}
-          </strong>
-          <span>{formatNumber(progression.segmentEnd || 42000)}</span>
-        </div>
-
-        <p className="member-profile__progress-note">{note}</p>
-      </div>
-    </section>
-  )
-}
-
 function ProfileLoading() {
   return (
     <PageShell className="member-profile member-profile--loaded">
@@ -312,30 +123,20 @@ function ProfileMessage({ title, body }) {
 }
 
 function characterDescriptor(character) {
-  return [character?.race, character?.className, character?.spec]
+  return [character?.race, character?.spec || character?.className]
     .filter(Boolean)
-    .join(' · ')
+    .join(' ')
 }
 
-function CharacterCard({ character, main = false }) {
-  if (!character) {
-    return null
-  }
-
+// A character listed on the profile that Guildweaver has not synced yet.
+function ListedCharacter({ character }) {
   return (
-    <article
-      className={`member-profile__character ${
-        main ? 'member-profile__character--main' : ''
-      }`}
-    >
+    <article className={`member-profile__listed${character.isMain ? ' member-profile__listed--main' : ''}`}>
       <div>
-        <span>{main ? 'Main character' : 'Alt'}</span>
+        {character.isMain ? <span className="member-profile__listed-main">Main</span> : null}
         <h3>{character.name}</h3>
-        {characterDescriptor(character) ? (
-          <p>{characterDescriptor(character)}</p>
-        ) : null}
+        {characterDescriptor(character) ? <p>{characterDescriptor(character)}</p> : null}
       </div>
-
       {character.professions?.length ? (
         <div className="member-profile__professions">
           {character.professions.map((profession) => (
@@ -343,156 +144,99 @@ function CharacterCard({ character, main = false }) {
           ))}
         </div>
       ) : null}
+      <small>Not synced yet</small>
     </article>
   )
 }
 
-function BilletPanel({ member, billets, canManage, onUpdated }) {
-  const assigned = Array.isArray(member.billets) ? member.billets : []
-
-  if (!assigned.length && !canManage) {
-    return null
-  }
-
-  const label = assigned.length === 1 ? 'Billet' : 'Billets'
-  const value = assigned.length
-    ? assigned.map((billet) => billet.name).join(' · ')
-    : 'None assigned'
-
-  return (
-    <section
-      className={
-        canManage
-          ? 'member-profile__billet-strip member-profile__billet-strip--admin'
-          : 'member-profile__billet-strip'
-      }
-      aria-label="Guild billets"
-    >
-      <div className="member-profile__billet-summary">
-        <span>{label}</span>
-        <strong>{value}</strong>
-      </div>
-
-      {canManage ? (
-        <MemberBilletControl
-          member={member}
-          billets={billets}
-          onUpdated={onUpdated}
-          triggerLabel="Manage billets"
-          showCount={false}
-        />
-      ) : null}
-    </section>
-  )
-}
-
-function PlayerIdentity({ member, editable, onEdit }) {
+function Characters({ member, syncedById, charactersReady, editable, onEdit, onOpenCharacter }) {
   const profile = member.profile || {}
-  const characters = Array.isArray(profile.characters)
-    ? profile.characters
-    : []
-  const mainCharacter =
-    member.mainCharacter ||
-    characters.find((character) => character.isMain) ||
-    characters[0] ||
-    null
-  const alts = characters.filter(
-    (character) => !mainCharacter || character.id !== mainCharacter.id,
-  )
-  const hasContact =
-    profile.timezone || profile.availability || profile.bio
-  const hasIdentity = mainCharacter || alts.length || hasContact
-
-  if (!hasIdentity && !editable) {
-    return null
-  }
+  const listed = Array.isArray(profile.characters) ? profile.characters : []
+  const ordered = [...listed].sort((left, right) => Number(Boolean(right.isMain)) - Number(Boolean(left.isMain)))
+  const synced = ordered.map((character) => syncedById.get(character.id)).filter(Boolean)
+  const unsynced = charactersReady ? ordered.filter((character) => !syncedById.has(character.id)) : []
+  const hasAbout = profile.timezone || profile.availability || profile.bio
 
   return (
-    <section
-      className="member-profile__section member-profile__player"
-      aria-labelledby="member-player-title"
-    >
+    <section className="member-profile__section member-profile__player" aria-labelledby="member-player-title">
       <div className="member-profile__section-heading">
         <div>
-          <p>Player</p>
-          <h2 id="member-player-title">In Azeroth</h2>
+          <p>In Azeroth</p>
+          <h2 id="member-player-title">Characters</h2>
         </div>
-
-        {editable ? (
-          <button
-            className="member-profile__edit"
-            type="button"
-            onClick={onEdit}
-          >
-            Edit profile
-          </button>
-        ) : null}
-      </div>
-
-      {hasIdentity ? (
-        <div
-          className={`member-profile__player-body ${
-            hasContact ? '' : 'member-profile__player-body--characters-only'
-          }`}
-        >
-          <div className="member-profile__characters">
-            {mainCharacter ? (
-              <CharacterCard character={mainCharacter} main />
-            ) : (
-              <div className="member-profile__player-empty">
-                <strong>No main character listed.</strong>
-                <span>Add your main so guildmates know who to look for in game.</span>
-              </div>
-            )}
-
-            {alts.length ? (
-              <div className="member-profile__alts">
-                {alts.map((character) => (
-                  <CharacterCard key={character.id} character={character} />
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          {hasContact ? (
-            <aside className="member-profile__contact">
-              <dl>
-                {profile.timezone ? (
-                  <div>
-                    <dt>Timezone</dt>
-                    <dd>{profile.timezone}</dd>
-                  </div>
-                ) : null}
-                {profile.availability ? (
-                  <div>
-                    <dt>Usually around</dt>
-                    <dd>{profile.availability}</dd>
-                  </div>
-                ) : null}
-              </dl>
-
-              {profile.bio ? (
-                <div className="member-profile__bio">
-                  <span>About</span>
-                  <p>{profile.bio}</p>
-                </div>
-              ) : null}
-            </aside>
+        <div className="member-profile__section-meta">
+          <span>
+            {listed.length
+              ? `${listed.length} ${listed.length === 1 ? 'character' : 'characters'}${synced.length ? ` · ${synced.length} synced` : ''}`
+              : 'No characters listed'}
+          </span>
+          {editable ? (
+            <button className="member-profile__edit" type="button" onClick={onEdit}>
+              Edit profile
+            </button>
           ) : null}
         </div>
-      ) : (
-        <button
-          className="member-profile__identity-empty"
-          type="button"
-          onClick={onEdit}
-        >
-          <strong>Build your guild card</strong>
-          <span>
-            Add your BattleTag, main character, class, spec, professions, and
-            when you usually play.
-          </span>
-        </button>
-      )}
+      </div>
+
+      <div className={`member-profile__player-body${hasAbout ? '' : ' member-profile__player-body--characters-only'}`}>
+        <div className="member-profile__characters">
+          {!charactersReady && listed.length ? (
+            <div className="member-profile__characters-pending" aria-label="Loading characters" />
+          ) : null}
+          {synced.length ? (
+            <div className="member-profile__character-grid">
+              {synced.map((character) => (
+                <CharacterCard key={character.id} character={character} onOpen={onOpenCharacter} showAffiliation={false} />
+              ))}
+            </div>
+          ) : null}
+          {unsynced.length ? (
+            <div className="member-profile__listed-grid">
+              {unsynced.map((character) => (
+                <ListedCharacter key={character.id || character.name} character={character} />
+              ))}
+            </div>
+          ) : null}
+          {!listed.length ? (
+            editable ? (
+              <button className="member-profile__identity-empty" type="button" onClick={onEdit}>
+                <strong>Add your characters</strong>
+                <span>List your main and alts so guildmates know who to look for in game. Guildweaver fills in gear, talents and professions once it syncs.</span>
+              </button>
+            ) : (
+              <div className="member-profile__empty">
+                <strong>No characters listed yet.</strong>
+                <span>Characters appear here once they are added to the profile or synced by Guildweaver.</span>
+              </div>
+            )
+          ) : null}
+        </div>
+
+        {hasAbout ? (
+          <aside className="member-profile__contact">
+            {profile.bio ? (
+              <div className="member-profile__bio">
+                <span>About</span>
+                <p>{profile.bio}</p>
+              </div>
+            ) : null}
+            <dl>
+              {profile.timezone ? (
+                <div>
+                  <dt>Timezone</dt>
+                  <dd>{profile.timezone}</dd>
+                </div>
+              ) : null}
+              {profile.availability ? (
+                <div>
+                  <dt>Usually around</dt>
+                  <dd>{profile.availability}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </aside>
+        ) : null}
+      </div>
     </section>
   )
 }
@@ -501,6 +245,7 @@ function MemberProfile({ memberId }) {
   const session = useSession()
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [showAllService, setShowAllService] = useState(false)
 
   const isSelfRoute = memberId === 'me'
   const endpoint = isSelfRoute
@@ -523,6 +268,19 @@ function MemberProfile({ memberId }) {
       : profile.status === 'ready' && billetCatalog.status === 'loading'
         ? 'loading'
         : profile.status
+
+  // Synced characters, shared with GuildOS and the directory (and cached).
+  const intelligence = useLiveResource('/api/intelligence', {
+    topics: ['intelligence', 'members'],
+    select: normalizeIntelligence,
+    enabled: session.authenticated,
+  })
+  const syncedById = useMemo(
+    () => new Map((intelligence.data?.characters || []).map((character) => [character.id, character])),
+    [intelligence.data],
+  )
+  const charactersReady = intelligence.status !== 'loading'
+  const [selectedCharacterId, openCharacter] = useCharacterParam()
 
   const profileUrl = useMemo(() => {
     if (!member?.id) return ''
@@ -599,6 +357,9 @@ function MemberProfile({ memberId }) {
   const assignments = member.assignments || []
   const activity = member.activity || []
   const isSelf = member.id === session.user?.id
+  const canManageRank = session.hasPermission('members.rank.manage')
+  const canManageBillets = session.hasPermission('members.billet.assign')
+  const tier = member.rankMeta?.isOfficer ? 'officer' : member.rankMeta?.isLeadership ? 'nco' : 'enlisted'
 
   return (
     <PageShell className="member-profile member-profile--loaded">
@@ -608,66 +369,54 @@ function MemberProfile({ memberId }) {
         <span>{displayName(member)}</span>
       </nav>
 
-      <section className="member-profile__hero" aria-labelledby="member-profile-name">
+      <section className={`member-profile__hero member-profile__hero--${tier}`} aria-labelledby="member-profile-name">
         <div className="member-profile__avatar">
           <MemberAvatar member={member} />
         </div>
 
         <div className="member-profile__identity">
-          <div className="member-profile__name-line">
-            <h1 id="member-profile-name">{displayName(member)}</h1>
-          </div>
-
-          <div className="member-profile__meta-row">
-            <p className="member-profile__username">@{member.username}</p>
+          <h1 id="member-profile-name">{displayName(member)}</h1>
+          <p className="member-profile__meta-row">
+            <span className="member-profile__username">@{member.username}</span>
             {member.profile?.battleTag ? (
-              <span className="member-profile__battletag">
-                {member.profile.battleTag}
-              </span>
+              <span className="member-profile__battletag">{member.profile.battleTag}</span>
             ) : null}
-            <button
-              className="member-profile__share"
-              type="button"
-              onClick={copyProfile}
-            >
-              {copied ? 'Copied' : 'Share profile'}
+            <span className="member-profile__tenure">{tenureText(member)}</span>
+          </p>
+          <RankPlate member={member} size="lg" className="member-profile__rank-plate" />
+        </div>
+
+        <div className="member-profile__actions">
+          <button className="member-profile__action" type="button" onClick={copyProfile}>
+            {copied ? 'Link copied' : 'Share profile'}
+          </button>
+          {isSelf ? (
+            <button className="member-profile__action member-profile__action--primary" type="button" onClick={() => setEditing(true)}>
+              Edit profile
             </button>
-            {isSelf ? (
-              <button
-                className="member-profile__share"
-                type="button"
-                onClick={() => setEditing(true)}
-              >
-                Edit profile
-              </button>
+          ) : null}
+        </div>
+
+        {canManageRank || canManageBillets ? (
+          <div className="member-profile__command" aria-label="Rank and billet management">
+            <span className="member-profile__command-label">Officer tools</span>
+            {canManageRank ? (
+              <MemberRankControl member={member} onUpdated={(updatedMember) => setMember(updatedMember)} />
+            ) : null}
+            {canManageBillets ? (
+              <MemberBilletControl
+                member={member}
+                billets={billets}
+                onUpdated={(updatedMember) => setMember(updatedMember)}
+                triggerLabel="Manage billets"
+                showCount={false}
+              />
             ) : null}
           </div>
-          <p className="member-profile__tenure">{tenureText(member)}</p>
-        </div>
+        ) : null}
       </section>
 
-      <RankProgress
-        member={member}
-        management={
-          session.hasPermission('members.rank.manage') ? (
-            <MemberRankControl
-              member={member}
-              onUpdated={(updatedMember) => {
-                setMember(updatedMember)
-              }}
-            />
-          ) : null
-        }
-      />
-
-      <BilletPanel
-        member={member}
-        billets={billets}
-        canManage={session.hasPermission('members.billet.assign')}
-        onUpdated={(updatedMember) => {
-          setMember(updatedMember)
-        }}
-      />
+      <RepBar member={member} className="member-profile__rep" />
 
       <section className="member-profile__stats" aria-label="Member service totals">
         <article>
@@ -682,12 +431,19 @@ function MemberProfile({ memberId }) {
           <span>Active assignments</span>
           <strong>{formatNumber(assignments.length)}</strong>
         </article>
+        <article>
+          <span>Last active</span>
+          <strong className="member-profile__stat-date">{member.lastActivityAt ? formatDate(member.lastActivityAt) : '—'}</strong>
+        </article>
       </section>
 
-      <PlayerIdentity
+      <Characters
         member={member}
+        syncedById={syncedById}
+        charactersReady={charactersReady}
         editable={isSelf}
         onEdit={() => setEditing(true)}
+        onOpenCharacter={openCharacter}
       />
 
       <section
@@ -790,7 +546,7 @@ function MemberProfile({ memberId }) {
 
         {activity.length ? (
           <div className="member-profile__service-list">
-            {activity.map((entry) => (
+            {(showAllService ? activity : activity.slice(0, SERVICE_PREVIEW)).map((entry) => (
               <article className="member-profile__activity" key={entry.id}>
                 <div className="member-profile__activity-main">
                   <p>{entry.questTitle}</p>
@@ -806,6 +562,13 @@ function MemberProfile({ memberId }) {
                 </div>
               </article>
             ))}
+            {activity.length > SERVICE_PREVIEW ? (
+              <div className="member-profile__service-more">
+                <button className="member-profile__edit" type="button" onClick={() => setShowAllService((value) => !value)}>
+                  {showAllService ? 'Show recent only' : `Show all ${activity.length}`}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="member-profile__empty">
@@ -816,6 +579,8 @@ function MemberProfile({ memberId }) {
           </div>
         )}
       </section>
+
+      <CharacterProfileModal characterId={selectedCharacterId} onClose={() => openCharacter('')} />
 
       {editing ? (
         <MemberProfileEditor
