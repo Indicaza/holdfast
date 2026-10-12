@@ -36,7 +36,7 @@ function object(value) {
 // Farming results carry the canonical client description under `item`, while
 // Armory/inventory items are already flat. Catalog metadata is an older
 // fallback. Normalize all three into the one shape GameTooltip renders.
-export function gameTooltipItem(value) {
+function gameTooltipItem(value) {
   if (!value || typeof value !== 'object') return null
   const outer = object(value)
   const described = object(outer.item)
