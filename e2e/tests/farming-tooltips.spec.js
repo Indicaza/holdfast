@@ -90,7 +90,7 @@ async function seedRichFarmingItem(page, context) {
         payload: {
           schemaVersion: 1,
           activity: 'harvest',
-          discipline: 'herbalism',
+          discipline: 'tooltip_test',
           observationId,
           source: { kind: 'herb_node', name: sourceName, objectId: 990001 },
           outputs: [
