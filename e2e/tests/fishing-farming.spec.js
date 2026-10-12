@@ -102,8 +102,8 @@ test('fishing catches use zone-scoped Farming sources while casts stay a separat
 
   await expect(elwynn).toBeVisible()
   await expect(stormwind).toBeVisible()
-  await expect(elwynn).toContainText('8 gathers')
-  await expect(stormwind).toContainText('4 gathers')
+  await expect(elwynn).toContainText('8 catches')
+  await expect(stormwind).toContainText('4 catches')
   await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Fishing' })).toBeVisible()
 
   await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Raw Longjaw Mud Snapper')
