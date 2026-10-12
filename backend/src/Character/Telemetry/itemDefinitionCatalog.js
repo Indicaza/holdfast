@@ -23,6 +23,23 @@ function richerTooltip(current, definition) {
   return current?.tooltip || definition?.tooltip || null;
 }
 
+function presentText(primary, fallback = "") {
+  const value = String(primary ?? "").trim();
+  return value || String(fallback ?? "").trim();
+}
+
+function presentNumber(primary, fallback = null) {
+  if (primary !== null && primary !== undefined && primary !== "") {
+    const parsed = Number(primary);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  if (fallback !== null && fallback !== undefined && fallback !== "") {
+    const parsed = Number(fallback);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 export function readItemDefinitionCatalogInDatabase(db) {
   const catalog = new Map();
   const rows = db.prepare(`
@@ -62,9 +79,18 @@ export function mergeItemDefinition(item, catalog) {
   return {
     ...described,
     ...source,
-    name: source.name || described.name || "",
-    qualityId: source.qualityId ?? source.quality ?? described.qualityId ?? described.quality ?? null,
-    iconFileDataId: source.iconFileDataId ?? source.iconFileId ?? described.iconFileDataId ?? described.iconFileId ?? null,
+    name: presentText(source.name, described.name),
+    itemLink: presentText(source.itemLink, described.itemLink),
+    qualityId: presentNumber(source.qualityId ?? source.quality, described.qualityId ?? described.quality),
+    iconFileDataId: presentNumber(source.iconFileDataId ?? source.iconFileId, described.iconFileDataId ?? described.iconFileId),
+    itemLevel: presentNumber(source.itemLevel, described.itemLevel),
+    requiredLevel: presentNumber(source.requiredLevel, described.requiredLevel),
+    bindType: presentNumber(source.bindType, described.bindType),
+    equipLocation: presentText(source.equipLocation, described.equipLocation),
+    sellPrice: presentNumber(source.sellPrice, described.sellPrice),
+    stackCount: presentNumber(source.stackCount, described.stackCount),
+    description: presentText(source.description, described.description),
+    isCraftingReagent: source.isCraftingReagent ?? described.isCraftingReagent ?? null,
     itemClass: Object.keys(sourceClass).length ? sourceClass : describedClass,
     itemSubclass: Object.keys(sourceSubclass).length ? sourceSubclass : describedSubclass,
     stats: { ...object(described.stats), ...object(source.stats) },
