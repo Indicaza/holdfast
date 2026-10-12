@@ -5,6 +5,7 @@ import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import Modal from '../../Modal/Modal.jsx'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
+import { GameTooltipHover } from '../GameTooltip.jsx'
 import '../CharacterProfileModal.css'
 import { OutputDonut, RankRateBars, SkillRateLine } from './FarmingCharts.jsx'
 import {
@@ -17,6 +18,7 @@ import {
   formatCount,
   formatQuantity,
   formatRate,
+  observationLabel,
   rankLabel,
   rateRangeText,
   sourceDetailUrl,
@@ -60,9 +62,21 @@ function RankPips({ rank, maxRanks = 5 }) {
   )
 }
 
+function TooltipItem({ item, size = 28, strong = true }) {
+  const content = (
+    <span className="farm-item-hover">
+      <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />
+      {strong ? <strong className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</strong> : <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>}
+    </span>
+  )
+  return <GameTooltipHover item={item.item || item}>{content}</GameTooltipHover>
+}
+
 function SourceHeader({ detail, filtered }) {
   const { source, summary } = detail
   const icon = detail.outputs[0]
+  const onlyZone = detail.facets?.zones?.length === 1 ? detail.facets.zones[0].value : ''
+  const shownZone = detail.filters?.zone || onlyZone
 
   return (
     <header className="farm-header">
@@ -72,10 +86,16 @@ function SourceHeader({ detail, filtered }) {
       <div className="farm-header__identity">
         <h2>{source.name}</h2>
         <span>{disciplineLabel(source.discipline)}{source.kind ? ` · ${sourceKindLabel(source.kind)}` : ''}</span>
+        {shownZone ? (
+          <span className="farm-header__location">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" /><circle cx="12" cy="10" r="2" /></svg>
+            {shownZone}
+          </span>
+        ) : null}
       </div>
       <p className="farm-header__gathers">
         <strong>{formatCount(summary.observations)}</strong>
-        <span>{filtered ? `of ${formatCount(source.totalObservations)} gathers` : summary.observations === 1 ? 'gather' : 'gathers'}</span>
+        <span>{filtered ? `of ${formatCount(source.totalObservations)} ${observationLabel(source.discipline, source.totalObservations)}` : observationLabel(source.discipline, summary.observations)}</span>
       </p>
     </header>
   )
@@ -88,13 +108,15 @@ function SourceFilters({ facets, filters, onChange }) {
 
   return (
     <div className="farm-filters" role="group" aria-label="Filter observations">
-      <label className={chip('zone')}>
-        <span>Zone</span>
-        <select value={filters.zone} onChange={set('zone')}>
-          <option value="">All</option>
-          {facets.zones.map((zone) => <option key={zone.value} value={zone.value}>{zone.value} ({formatCount(zone.observations)})</option>)}
-        </select>
-      </label>
+      {facets.zones.length > 1 ? (
+        <label className={chip('zone')}>
+          <span>Zone</span>
+          <select value={filters.zone} onChange={set('zone')}>
+            <option value="">All</option>
+            {facets.zones.map((zone) => <option key={zone.value} value={zone.value}>{zone.value} ({formatCount(zone.observations)})</option>)}
+          </select>
+        </label>
+      ) : null}
       <div className={chip('skillMin', 'skillMax')} role="group" aria-label="Skill range">
         <span>Skill</span>
         <input inputMode="numeric" aria-label="Minimum skill" placeholder={facets.skill.min ?? 'min'} value={filters.skillMin} onChange={set('skillMin')} />
@@ -135,15 +157,17 @@ function SourceFilters({ facets, filters, onChange }) {
 function DropsPanel({ detail, onSelect }) {
   const swatches = new Map(donutSegments(detail.outputs).map((segment) => [segment.key, segment.color]))
   const items = detail.outputs.reduce((sum, output) => sum + output.quantity, 0)
+  const showDonut = detail.summary.observations >= 8 && detail.outputs.length >= 3
+  const noun = observationLabel(detail.source.discipline, detail.summary.observations)
 
   return (
     <section className="farm-panel farm-drops" aria-label="Drop table">
       <header className="farm-section-head">
         <div>
           <h3>Drops</h3>
-          <p>{formatCount(items)} items from {formatCount(detail.summary.observations)} gathers · select one to see what changes its chance</p>
+          <p>{formatCount(items)} items from {formatCount(detail.summary.observations)} {noun} · select one to see what changes its chance</p>
         </div>
-        <OutputDonut outputs={detail.outputs} />
+        {showDonut ? <OutputDonut outputs={detail.outputs} /> : null}
       </header>
       <div className="farm-drops__columns" aria-hidden="true">
         <span>Item</span><span>Chance</span><span>Drops</span><span>Avg qty</span><span>Confidence</span>
@@ -156,8 +180,7 @@ function DropsPanel({ detail, onSelect }) {
               <button type="button" className={`farm-loot__row${selected ? ' is-selected' : ''}`} aria-pressed={selected} onClick={() => onSelect(output.itemKey)}>
                 <span className="farm-loot__item">
                   <span className="farm-loot__swatch" style={{ background: swatches.get(output.itemKey) || 'var(--farm-other)' }} aria-hidden="true" />
-                  <WowIcon iconFileId={output.iconFileDataId} itemId={output.itemId} label={output.name} quality={output.qualityId} size={28} />
-                  <strong className={`farm-item farm-item--q${output.qualityId ?? 1}`}>{output.name}</strong>
+                  <TooltipItem item={output} />
                 </span>
                 <Rate entry={output} className="farm-loot__chance" />
                 <span className="farm-loot__num">{formatCount(output.drops)}</span>
@@ -172,15 +195,15 @@ function DropsPanel({ detail, onSelect }) {
   )
 }
 
-function BreakdownTable({ rows, label, renderKey, quantity = false }) {
+function BreakdownTable({ rows, label, renderKey, observationHeading = 'Observations', quantity = false }) {
   return (
     <table className="farm-table">
       <thead>
         <tr>
           <th scope="col">{label}</th>
           <th scope="col" className="num">Chance</th>
-          {quantity ? <th scope="col" className="num">Per gather</th> : null}
-          <th scope="col" className="num">Gathers</th>
+          {quantity ? <th scope="col" className="num">Per attempt</th> : null}
+          <th scope="col" className="num">{observationHeading}</th>
           <th scope="col" className="num"><span className="farm-sr">Confidence</span></th>
         </tr>
       </thead>
@@ -199,27 +222,33 @@ function BreakdownTable({ rows, label, renderKey, quantity = false }) {
   )
 }
 
-function SkillTab({ rows, item }) {
-  if (!rows.length) return <p className="farm-empty">No skill readings for these gathers.</p>
+function SkillTab({ rows, item, discipline }) {
+  if (!rows.length) return <p className="farm-empty">No skill readings for these observations.</p>
+  const plotted = rows.filter((row) => row.bucket !== 'unknown' && row.observations > 0)
+  const samples = rows.reduce((sum, row) => sum + Number(row.observations || 0), 0)
+  const showChart = samples >= 12 && plotted.length >= 2
   return (
     <div className="farm-breakdown">
-      <SkillRateLine rows={rows} itemName={item.name} />
-      <BreakdownTable rows={rows} label="Skill" renderKey={(row) => (row.bucket === 'unknown' ? 'Unknown' : row.bucket)} />
+      {showChart ? <SkillRateLine rows={rows} itemName={item.name} /> : <p className="farm-analysis-hint">More observations across multiple skill bands will unlock the trend chart.</p>}
+      <BreakdownTable rows={rows} label="Skill" observationHeading={observationLabel(discipline, 2)} renderKey={(row) => (row.bucket === 'unknown' ? 'Unknown' : row.bucket)} />
     </div>
   )
 }
 
-function BountifulHarvestTab({ rows, item }) {
+function BountifulHarvestTab({ rows, item, discipline }) {
   const tentative = rows.some((row) => row.confidence === 'low' || row.confidence === 'medium')
+  const ranked = rows.filter((row) => row.rank !== 'unknown' && row.observations > 0)
+  const samples = rows.reduce((sum, row) => sum + Number(row.observations || 0), 0)
+  const showChart = samples >= 12 && ranked.length >= 2
   return (
     <div className="farm-breakdown">
       <div className="farm-breakdown__chart">
-        <RankRateBars rows={rows} itemName={item.name} />
+        {showChart ? <RankRateBars rows={rows} itemName={item.name} /> : <p className="farm-analysis-hint">More observations across multiple ranks will unlock the comparison chart.</p>}
         <p className="farm-note">
-          Observed outcomes, not proven effects.{tentative ? ' Some ranks need more gathers to compare.' : ''} Ranks also differ in skill and zone; filter to compare like with like.
+          Observed outcomes, not proven effects.{tentative ? ' Some ranks need more observations to compare.' : ''} Ranks also differ in skill and zone; filter to compare like with like.
         </p>
       </div>
-      <BreakdownTable rows={rows} label="Rank" quantity renderKey={(row) => <RankPips rank={row.rank} />} />
+      <BreakdownTable rows={rows} label="Rank" observationHeading={observationLabel(discipline, 2)} quantity renderKey={(row) => <RankPips rank={row.rank} />} />
     </div>
   )
 }
@@ -242,8 +271,7 @@ function BreakdownPanel({ detail }) {
     <section className="farm-breakdown-panel" aria-label={`${item.name} breakdown`}>
       <div className="farm-breakdown-panel__bar">
         <h3 className="farm-breakdown-panel__title">
-          <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={24} />
-          <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>
+          <TooltipItem item={item} size={24} />
           <small>drop chance</small>
         </h3>
         <div className="armory-tabs farm-tabs" role="tablist" aria-label="Breakdown">
@@ -264,7 +292,9 @@ function BreakdownPanel({ detail }) {
         </div>
       </div>
       <div className="farm-panel farm-breakdown-panel__page" id="farm-tab-page" role="tabpanel" aria-labelledby={`farm-tab-${active}`}>
-        {active === 'skill' ? <SkillTab rows={detail.bySkill} item={item} /> : <BountifulHarvestTab rows={detail.byBountifulHarvest} item={item} />}
+        {active === 'skill'
+          ? <SkillTab rows={detail.bySkill} item={item} discipline={detail.source.discipline} />
+          : <BountifulHarvestTab rows={detail.byBountifulHarvest} item={item} discipline={detail.source.discipline} />}
       </div>
     </section>
   )
@@ -274,8 +304,8 @@ function BreakdownPanel({ detail }) {
 // rank and context. Built on the character armory's frame, sized to its
 // content: the window never scrolls; if a long drop table outgrows the
 // screen, the table scrolls inside itself.
-export default function FarmingSourceModal({ sourceKey, initialItemKey = '', onClose }) {
-  const [filters, setFilters] = useState(() => ({ ...EMPTY_FILTERS }))
+export default function FarmingSourceModal({ sourceKey, initialItemKey = '', initialZone = '', onClose }) {
+  const [filters, setFilters] = useState(() => ({ ...EMPTY_FILTERS, zone: initialZone }))
   const [itemKey, setItemKey] = useState(initialItemKey)
   const [state, setState] = useState({ status: 'loading', detail: null })
   const url = sourceKey ? sourceDetailUrl(sourceKey, { filters, item: itemKey }) : ''
@@ -325,7 +355,7 @@ export default function FarmingSourceModal({ sourceKey, initialItemKey = '', onC
               </div>
             ) : (
               <div className="farm-modal__state">
-                <EmptyTelemetry title="No gathers match these filters.">Widen or clear the filters to see this source again.</EmptyTelemetry>
+                <EmptyTelemetry title="No observations match these filters.">Widen or clear the filters to see this source again.</EmptyTelemetry>
               </div>
             )}
           </>

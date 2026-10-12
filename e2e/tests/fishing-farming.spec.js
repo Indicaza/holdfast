@@ -102,8 +102,8 @@ test('fishing catches use zone-scoped Farming sources while casts stay a separat
 
   await expect(elwynn).toBeVisible()
   await expect(stormwind).toBeVisible()
-  await expect(elwynn).toContainText('8 gathers')
-  await expect(stormwind).toContainText('4 gathers')
+  await expect(elwynn).toContainText('8 catches')
+  await expect(stormwind).toContainText('4 catches')
   await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Fishing' })).toBeVisible()
 
   await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Raw Longjaw Mud Snapper')
@@ -115,9 +115,9 @@ test('fishing catches use zone-scoped Farming sources while casts stay a separat
 
   const stormwindModal = page.getByRole('dialog', { name: 'Open Water' })
   await expect(stormwindModal.getByRole('heading', { name: 'Open Water' })).toBeVisible()
-  await expect(stormwindModal).toContainText('Fishing · Fishing Water')
+  await expect(stormwindModal).toContainText('Fishing · Open water')
   await expect(stormwindModal).toContainText('Stormwind City')
-  await expect(stormwindModal.locator('.farm-header__gathers')).toHaveText('4gathers')
+  await expect(stormwindModal.locator('.farm-header__gathers')).toHaveText('4catches')
   await expect(stormwindModal.locator('.farm-loot__row').filter({ hasText: 'Raw Longjaw Mud Snapper' })).toContainText('100%')
   await expect(stormwindModal.locator('.farm-loot__row').filter({ hasText: 'Raw Brilliant Smallfish' })).toHaveCount(0)
   await expect(stormwindModal.getByRole('tab', { name: 'Fishing skill' })).toHaveAttribute('aria-selected', 'true')
@@ -132,6 +132,6 @@ test('fishing catches use zone-scoped Farming sources while casts stay a separat
 
   const elwynnModal = page.getByRole('dialog', { name: 'Open Water' })
   await expect(elwynnModal).toContainText('Elwynn Forest')
-  await expect(elwynnModal.locator('.farm-header__gathers')).toHaveText('8gathers')
+  await expect(elwynnModal.locator('.farm-header__gathers')).toHaveText('8catches')
   await expect(elwynnModal.locator('.farm-loot__row').filter({ hasText: 'Raw Brilliant Smallfish' })).toContainText('100%')
 })

@@ -20,12 +20,30 @@ const DISCIPLINE_LABELS = Object.freeze({
   crafting: 'Crafting',
 })
 
+const OBSERVATION_NOUNS = Object.freeze({
+  herbalism: ['gather', 'gathers'],
+  mining: ['gather', 'gathers'],
+  skinning: ['skin', 'skins'],
+  fishing: ['catch', 'catches'],
+  loot: ['loot', 'loots'],
+  disenchanting: ['disenchant', 'disenchants'],
+  crafting: ['craft', 'crafts'],
+})
+
 const SOURCE_KIND_LABELS = Object.freeze({
   'herb-node': 'Herb',
   'ore-vein': 'Vein',
   creature: 'Creature',
   'fishing-pool': 'Pool',
+  'fishing-water': 'Open water',
 })
+
+export const FARMING_SORTS = Object.freeze([
+  { id: 'observations', label: 'Most observed' },
+  { id: 'chance', label: 'Highest drop chance' },
+  { id: 'confidence', label: 'Strongest signal' },
+  { id: 'recent', label: 'Recently observed' },
+])
 
 // Categorical slots for the output donut (dark surface). The table beside it
 // carries identity too, so colour is never the only key.
@@ -48,6 +66,11 @@ export function titleCase(value) {
 
 export function disciplineLabel(discipline) {
   return DISCIPLINE_LABELS[discipline] || titleCase(discipline) || 'Unknown'
+}
+
+export function observationLabel(discipline, count) {
+  const forms = OBSERVATION_NOUNS[discipline] || ['observation', 'observations']
+  return Number(count) === 1 ? forms[0] : forms[1]
 }
 
 export function sourceKindLabel(kind) {
@@ -112,10 +135,12 @@ export function sourceDetailUrl(sourceKey, { filters = {}, item = '' } = {}) {
   return `/api/intelligence/farming/sources/${encodeURIComponent(sourceKey)}${query ? `?${query}` : ''}`
 }
 
-export function sourcesUrl({ query = '', discipline = '' } = {}) {
+export function sourcesUrl({ query = '', discipline = '', zone = '', sort = 'observations' } = {}) {
   const params = new URLSearchParams()
   if (query.trim()) params.set('q', query.trim())
   if (discipline) params.set('discipline', discipline)
+  if (zone) params.set('zone', zone)
+  if (sort && sort !== 'observations') params.set('sort', sort)
   const search = params.toString()
   return `/api/intelligence/farming/sources${search ? `?${search}` : ''}`
 }
@@ -224,8 +249,7 @@ export function rateBars(rows = [], { width = 320, height = 150, padX = 34, padY
 
 // --- Source browser ----------------------------------------------------------
 
-// Sources grouped by discipline, keeping the server's order (most gathered
-// first) inside each group and ordering groups by their busiest source.
+// Sources grouped by discipline, keeping the server's order inside each group.
 export function groupSourcesByDiscipline(sources = []) {
   const groups = new Map()
   for (const source of sources) {

@@ -10,7 +10,12 @@ export function createFarmingRouter() {
   router.get("/sources", requireAuthenticated, (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
-      res.json(searchFarmingSources({ q: req.query?.q, discipline: req.query?.discipline }));
+      res.json(searchFarmingSources({
+        q: req.query?.q,
+        discipline: req.query?.discipline,
+        zone: req.query?.zone,
+        sort: req.query?.sort,
+      }));
     } catch (error) {
       console.error("Unable to search farming sources", error);
       res.status(500).json({ error: "farming_sources_unavailable" });

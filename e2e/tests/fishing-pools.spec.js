@@ -138,8 +138,8 @@ test('fishing pools and open water remain distinct across zones', async ({ page,
   await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Fishing' })).toBeVisible()
 
   const openWater = fishing.locator('.farm-card').filter({ hasText: 'Open Water' })
-  await expect(openWater.filter({ hasText: 'Westfall' })).toContainText('6 gathers')
-  await expect(openWater.filter({ hasText: 'Darkshore' })).toContainText('4 gathers')
+  await expect(openWater.filter({ hasText: 'Westfall' })).toContainText('6 catches')
+  await expect(openWater.filter({ hasText: 'Darkshore' })).toContainText('4 catches')
 
   const oilySchools = fishing.locator('.farm-card').filter({ hasText: 'Oily Blackmouth School' })
   await expect(oilySchools).toHaveCount(2)
@@ -163,7 +163,7 @@ test('fishing pools and open water remain distinct across zones', async ({ page,
   const modal = page.getByRole('dialog', { name: 'Oily Blackmouth School' })
   await expect(modal).toBeVisible()
   await expect(modal).toContainText('Darkshore')
-  await expect(modal.locator('.farm-header__gathers')).toHaveText('5gathers')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('5catches')
   await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Oily Blackmouth' })).toContainText('100%')
   await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Stranglekelp' })).toContainText('40.0%')
   await expect(modal.getByRole('tab', { name: 'Fishing skill' })).toHaveAttribute('aria-selected', 'true')
