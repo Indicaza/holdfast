@@ -120,13 +120,14 @@ test("persisted fishing observations are re-keyed by their stored map and zone",
     insert.run("old-westfall", "fishing:fishing-water:open-water", 1436, "Westfall", when, when);
 
     assert.equal(repairFishingSourceKeysInDatabase(db), 2);
-    assert.deepEqual(
-      db.prepare("SELECT zone, source_key FROM economic_observations ORDER BY zone").all(),
-      [
-        { zone: "Elwynn Forest", source_key: "fishing:fishing-water:map-1429" },
-        { zone: "Westfall", source_key: "fishing:fishing-water:map-1436" },
-      ],
-    );
+    const repaired = db
+      .prepare("SELECT zone, source_key FROM economic_observations ORDER BY zone")
+      .all()
+      .map((row) => ({ zone: row.zone, source_key: row.source_key }));
+    assert.deepEqual(repaired, [
+      { zone: "Elwynn Forest", source_key: "fishing:fishing-water:map-1429" },
+      { zone: "Westfall", source_key: "fishing:fishing-water:map-1436" },
+    ]);
     assert.equal(repairFishingSourceKeysInDatabase(db), 0, "repair remains idempotent");
   } finally {
     db.close();
