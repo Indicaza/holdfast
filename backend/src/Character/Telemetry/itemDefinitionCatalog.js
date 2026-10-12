@@ -15,12 +15,40 @@ function tooltipLines(value) {
   return Array.isArray(tooltip.lines) ? tooltip.lines : [];
 }
 
+export function isFullBlizzardTooltip(value) {
+  const tooltip = object(value?.tooltip ?? value);
+  const lines = Array.isArray(tooltip.lines) ? tooltip.lines : [];
+  if (!lines.length) return false;
+  if (tooltip.source !== "GameTooltip") return false;
+  // Older Guildweaver snapshots predate the explicit flags but GameTooltip
+  // still means the hidden client-rendered scanner, so keep them compatible.
+  if (tooltip.complete === undefined && tooltip.rendered === undefined) return true;
+  return tooltip.complete === true && tooltip.rendered === true;
+}
+
+function inventoryRendered(value) {
+  const tooltip = object(value?.tooltip);
+  return isFullBlizzardTooltip(value) && tooltip.method === "SetInventoryItem";
+}
+
 function richerTooltip(current, definition) {
-  const currentLines = tooltipLines(current);
-  const definitionLines = tooltipLines(definition);
-  if (currentLines.length >= definitionLines.length && currentLines.length) return current.tooltip;
-  if (definitionLines.length) return definition.tooltip;
-  return current?.tooltip || definition?.tooltip || null;
+  const currentFull = isFullBlizzardTooltip(current);
+  const definitionFull = isFullBlizzardTooltip(definition);
+
+  // The live equipment-slot render contains per-instance state (durability,
+  // enchants, charges, binding) and always beats a generic hyperlink render.
+  if (inventoryRendered(current)) return current.tooltip;
+  if (inventoryRendered(definition)) return definition.tooltip;
+  if (currentFull && !definitionFull) return current.tooltip;
+  if (definitionFull && !currentFull) return definition.tooltip;
+  if (currentFull && definitionFull) {
+    return tooltipLines(current).length >= tooltipLines(definition).length ? current.tooltip : definition.tooltip;
+  }
+
+  // Do not let an old provisional C_TooltipInfo catalog entry replace an
+  // equipment tooltip. The frontend will show a syncing state until a real
+  // GameTooltip capture arrives rather than manufacturing missing lines.
+  return current?.tooltip || null;
 }
 
 function presentText(primary, fallback = "") {
