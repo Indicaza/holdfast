@@ -163,7 +163,7 @@ test('fishing pools and open water remain distinct across zones', async ({ page,
   const modal = page.getByRole('dialog', { name: 'Oily Blackmouth School' })
   await expect(modal).toBeVisible()
   await expect(modal).toContainText('Darkshore')
-  await expect(modal.locator('.farm-header__gathers')).toHaveText('5gathers')
+  await expect(modal.locator('.farm-header__gathers')).toHaveText('5catches')
   await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Oily Blackmouth' })).toContainText('100%')
   await expect(modal.locator('.farm-loot__row').filter({ hasText: 'Stranglekelp' })).toContainText('40.0%')
   await expect(modal.getByRole('tab', { name: 'Fishing skill' })).toHaveAttribute('aria-selected', 'true')
