@@ -29,6 +29,84 @@ function integer(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function array(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function object(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function nullableNumber(value, fallback = null) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+// The generic equipment normalizer predates rich item telemetry and intentionally
+// kept only the fields needed to draw paper-doll slots. Guildweaver now sends the
+// actual rendered Blizzard GameTooltip, so overlay the raw item telemetry back
+// onto every normalized item for all supported snapshot schemas. Schema v3 gets
+// its richer adapter later as well; this closes the same loss for v1/v2 and for
+// modular equipment streams.
+function normalizeRichEquipment(snapshot) {
+  const rawItems = Array.isArray(snapshot?.equipment)
+    ? snapshot.equipment
+    : array(snapshot?.equipment?.slots ?? snapshot?.gear);
+  const normalized = normalizeEquipment(snapshot);
+
+  return normalized.map((item, index) => {
+    const raw = object(
+      rawItems.find((candidate) => {
+        const candidateSlot = nullableNumber(candidate?.slotId);
+        const itemSlot = nullableNumber(item?.slotId);
+        if (candidateSlot !== null && itemSlot !== null) return candidateSlot === itemSlot;
+        const candidateId = nullableNumber(candidate?.itemId ?? candidate?.itemID ?? candidate?.id);
+        return candidateId !== null && candidateId === nullableNumber(item?.itemId);
+      }) ?? rawItems[index],
+    );
+    const tooltip = object(raw.tooltip);
+    const itemClass = object(raw.itemClass);
+    const itemSubclass = object(raw.itemSubclass);
+
+    return {
+      ...raw,
+      ...item,
+      itemLink: item.itemLink || text(raw.itemLink ?? raw.link, 2000),
+      itemString: item.itemString || text(raw.itemString ?? raw.rawItemString, 2000),
+      rawItemString: text(raw.rawItemString ?? raw.itemString, 2000),
+      quality: nullableNumber(raw.qualityId ?? raw.quality, item.quality),
+      qualityId: nullableNumber(raw.qualityId ?? raw.quality, item.quality),
+      itemLevel: nullableNumber(raw.itemLevel ?? raw.ilevel ?? raw.level, item.itemLevel),
+      requiredLevel: nullableNumber(raw.requiredLevel),
+      iconFileId: nullableNumber(raw.iconFileDataId ?? raw.iconFileId ?? raw.icon, item.iconFileId),
+      iconFileDataId: nullableNumber(raw.iconFileDataId ?? raw.iconFileId ?? raw.icon, item.iconFileId),
+      bindType: nullableNumber(raw.bindType),
+      equipLocation: text(raw.equipLocation, 96),
+      expansionId: nullableNumber(raw.expansionId),
+      setId: nullableNumber(raw.setId),
+      stackCount: nullableNumber(raw.stackCount),
+      sellPrice: nullableNumber(raw.sellPrice),
+      isCraftingReagent: raw.isCraftingReagent === undefined ? null : Boolean(raw.isCraftingReagent),
+      itemClass,
+      itemClassId: nullableNumber(itemClass.id),
+      itemClassName: text(itemClass.name, 120),
+      classId: nullableNumber(itemClass.id),
+      class: text(itemClass.name, 120),
+      itemSubclass,
+      itemSubclassId: nullableNumber(itemSubclass.id),
+      itemSubclassName: text(itemSubclass.name, 120),
+      subclassId: nullableNumber(itemSubclass.id),
+      subclass: text(itemSubclass.name, 120),
+      stats: object(raw.stats),
+      durability: object(raw.durability),
+      spell: object(raw.spell),
+      tooltip,
+      tooltipLines: array(tooltip.lines).map((line) => ({ ...object(line) })),
+    };
+  });
+}
+
 // Enrichment stages are optional: one malformed section must never take the
 // whole character modal down with it.
 function stage(armory, label, transform) {
@@ -113,7 +191,7 @@ export function composeCharacterArmory({ character, sections, talentDefinitions 
       isMain: Boolean(character.is_main),
     },
     stats: stats(snapshot),
-    equipment: normalizeEquipment(snapshot),
+    equipment: normalizeRichEquipment(snapshot),
     talents: normalizeTalents(snapshot),
     professions,
     recipes: normalizeRecipes(snapshot, professions),
