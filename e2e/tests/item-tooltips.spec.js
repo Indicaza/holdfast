@@ -60,7 +60,7 @@ async function seedItemDefinitions(page) {
             { blank: true },
             { left: 'Durability 80 / 80', leftColor: { r: 1, g: 1, b: 1 } },
             { left: 'Requires Level 30', leftColor: { r: 1, g: 1, b: 1 } },
-            { left: 'Equip: The stone remembers every blow.', leftColor: { r: 0, g: 1, b: 0 } },
+            { left: 'Equip: Catalog-only text must not leak into the live slot tooltip.', leftColor: { r: 0, g: 1, b: 0 } },
           ],
         },
       },
@@ -148,6 +148,7 @@ test('Armory renders the full client-captured Blizzard equipment tooltip verbati
   await helmSlot.hover()
   const helmTooltip = page.getByRole('tooltip').filter({ hasText: 'Golem Skull Helm' })
   await expect(helmTooltip).toBeVisible()
+  await expect(helmTooltip).toContainText('Item Level 35')
   await expect(helmTooltip).toContainText('Binds when equipped')
   await expect(helmTooltip).toContainText('Head')
   await expect(helmTooltip).toContainText('Plate')
@@ -156,8 +157,8 @@ test('Armory renders the full client-captured Blizzard equipment tooltip verbati
   await expect(helmTooltip).toContainText('+14 Stamina')
   await expect(helmTooltip).toContainText('Durability 80 / 80')
   await expect(helmTooltip).toContainText('Requires Level 30')
-  await expect(helmTooltip).toContainText('Equip: The stone remembers every blow.')
   await expect(helmTooltip).toContainText('Sell Price:')
+  await expect(helmTooltip).not.toContainText('Catalog-only text must not leak')
   await expect(helmTooltip).not.toContainText('Item #')
   await expect(helmTooltip).not.toContainText('Full Blizzard tooltip is still syncing')
 
@@ -165,6 +166,7 @@ test('Armory renders the full client-captured Blizzard equipment tooltip verbati
   await axeSlot.hover()
   const axeTooltip = page.getByRole('tooltip').filter({ hasText: 'Whirlwind Axe' })
   await expect(axeTooltip).toBeVisible()
+  await expect(axeTooltip).toContainText('Item Level 40')
   await expect(axeTooltip).toContainText('Binds when picked up')
   await expect(axeTooltip).toContainText('Two-Hand')
   await expect(axeTooltip).toContainText('Axe')
