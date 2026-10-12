@@ -148,7 +148,10 @@ test('fishing pools and open water remain distinct across zones', async ({ page,
 
   const restrictedPool = fishing.locator('.farm-card').filter({ hasText: 'Fishing Pool' })
   await expect(restrictedPool).toContainText('Darkshore')
-  await expect(restrictedPool.locator('.farm-card__drops')).toContainText('Firefin Snapper')
+  await restrictedPool.click()
+  const restrictedModal = page.getByRole('dialog', { name: 'Fishing Pool' })
+  await expect(restrictedModal.locator('.farm-loot__row').filter({ hasText: 'Firefin Snapper' })).toContainText('100%')
+  await page.keyboard.press('Escape')
 
   await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Oily Blackmouth')
   const searchedSchools = page.locator('.farm-card').filter({ hasText: 'Oily Blackmouth School' })
