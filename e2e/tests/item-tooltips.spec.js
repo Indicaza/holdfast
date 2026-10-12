@@ -46,15 +46,21 @@ async function seedItemDefinitions(page) {
           ITEM_MOD_STAMINA_SHORT: 14,
         },
         tooltip: {
-          source: 'C_TooltipInfo',
+          source: 'GameTooltip',
+          method: 'SetInventoryItem',
+          rendered: true,
+          complete: true,
           lines: [
             { left: 'Golem Skull Helm', leftColor: { r: 0, g: 0.44, b: 0.87 } },
-            { left: 'Item Level 35', leftColor: { r: 1, g: 0.82, b: 0 } },
             { left: 'Binds when equipped', leftColor: { r: 1, g: 1, b: 1 } },
             { left: 'Head', right: 'Plate', leftColor: { r: 1, g: 1, b: 1 }, rightColor: { r: 1, g: 1, b: 1 } },
+            { left: '242 Armor', leftColor: { r: 1, g: 1, b: 1 } },
             { left: '+13 Strength', leftColor: { r: 1, g: 1, b: 1 } },
             { left: '+14 Stamina', leftColor: { r: 1, g: 1, b: 1 } },
+            { blank: true },
+            { left: 'Durability 80 / 80', leftColor: { r: 1, g: 1, b: 1 } },
             { left: 'Requires Level 30', leftColor: { r: 1, g: 1, b: 1 } },
+            { left: 'Equip: The stone remembers every blow.', leftColor: { r: 0, g: 1, b: 0 } },
           ],
         },
       },
@@ -68,6 +74,7 @@ async function seedItemDefinitions(page) {
         iconFileDataId: 132402,
         bindType: 1,
         equipLocation: 'INVTYPE_2HWEAPON',
+        sellPrice: 8432,
         itemClass: { id: 2, name: 'Weapon' },
         itemSubclass: { id: 1, name: 'Two-Handed Axes' },
         stats: {
@@ -75,9 +82,21 @@ async function seedItemDefinitions(page) {
           ITEM_MOD_STAMINA_SHORT: 14,
         },
         tooltip: {
-          source: 'C_TooltipInfo',
+          source: 'GameTooltip',
+          method: 'SetInventoryItem',
+          rendered: true,
+          complete: true,
           lines: [
             { left: 'Whirlwind Axe', leftColor: { r: 0, g: 0.44, b: 0.87 } },
+            { left: 'Binds when picked up', leftColor: { r: 1, g: 1, b: 1 } },
+            { left: 'Two-Hand', right: 'Axe', leftColor: { r: 1, g: 1, b: 1 }, rightColor: { r: 1, g: 1, b: 1 } },
+            { left: '102 - 154 Damage', right: 'Speed 3.60', leftColor: { r: 1, g: 1, b: 1 }, rightColor: { r: 1, g: 1, b: 1 } },
+            { left: '(35.6 damage per second)', leftColor: { r: 1, g: 1, b: 1 } },
+            { left: '+15 Strength', leftColor: { r: 1, g: 1, b: 1 } },
+            { left: '+14 Stamina', leftColor: { r: 1, g: 1, b: 1 } },
+            { blank: true },
+            { left: 'Durability 100 / 100', leftColor: { r: 1, g: 1, b: 1 } },
+            { left: 'Requires Level 30', leftColor: { r: 1, g: 1, b: 1 } },
           ],
         },
       },
@@ -113,7 +132,7 @@ async function seedItemDefinitions(page) {
   })
 }
 
-test('Armory uses canonical Forever item definitions and fills sparse captures', async ({ page, context }) => {
+test('Armory renders the full client-captured Blizzard equipment tooltip verbatim', async ({ page, context }) => {
   await seedArmory(page, context)
   await seedItemDefinitions(page)
   await page.goto('/intelligence#characters')
@@ -129,22 +148,32 @@ test('Armory uses canonical Forever item definitions and fills sparse captures',
   await helmSlot.hover()
   const helmTooltip = page.getByRole('tooltip').filter({ hasText: 'Golem Skull Helm' })
   await expect(helmTooltip).toBeVisible()
-  await expect(helmTooltip).toContainText('Item Level 35')
   await expect(helmTooltip).toContainText('Binds when equipped')
   await expect(helmTooltip).toContainText('Head')
   await expect(helmTooltip).toContainText('Plate')
+  await expect(helmTooltip).toContainText('242 Armor')
   await expect(helmTooltip).toContainText('+13 Strength')
   await expect(helmTooltip).toContainText('+14 Stamina')
+  await expect(helmTooltip).toContainText('Durability 80 / 80')
   await expect(helmTooltip).toContainText('Requires Level 30')
+  await expect(helmTooltip).toContainText('Equip: The stone remembers every blow.')
   await expect(helmTooltip).toContainText('Sell Price:')
+  await expect(helmTooltip).not.toContainText('Item #')
+  await expect(helmTooltip).not.toContainText('Full Blizzard tooltip is still syncing')
 
   const axeSlot = profile.getByRole('button', { name: 'Main Hand: Whirlwind Axe' })
   await axeSlot.hover()
   const axeTooltip = page.getByRole('tooltip').filter({ hasText: 'Whirlwind Axe' })
   await expect(axeTooltip).toBeVisible()
-  await expect(axeTooltip).toContainText('Item Level 40')
   await expect(axeTooltip).toContainText('Binds when picked up')
+  await expect(axeTooltip).toContainText('Two-Hand')
+  await expect(axeTooltip).toContainText('Axe')
+  await expect(axeTooltip).toContainText('102 - 154 Damage')
+  await expect(axeTooltip).toContainText('Speed 3.60')
+  await expect(axeTooltip).toContainText('(35.6 damage per second)')
   await expect(axeTooltip).toContainText('+15 Strength')
   await expect(axeTooltip).toContainText('+14 Stamina')
+  await expect(axeTooltip).toContainText('Durability 100 / 100')
   await expect(axeTooltip).toContainText('Requires Level 30')
+  await expect(axeTooltip).toContainText('Sell Price:')
 })
