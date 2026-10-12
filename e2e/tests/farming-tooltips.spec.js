@@ -52,7 +52,10 @@ async function seedRichFarmingItem(page, context) {
           itemSubclass: { id: 9, name: 'Herb' },
           isCraftingReagent: true,
           tooltip: {
-            source: 'C_TooltipInfo',
+            source: 'GameTooltip',
+            method: 'SetHyperlink',
+            rendered: true,
+            complete: true,
             lines: [
               { left: 'Frilled Lichen', leftColor: { r: 0.12, g: 1, b: 0 } },
               { left: 'Crafting Reagent', leftColor: { r: 0.4, g: 0.73, b: 1 } },
@@ -124,7 +127,7 @@ async function seedRichFarmingItem(page, context) {
   })
 }
 
-test('farming cards use an icon grid and shared rich item tooltips', async ({ page, context }) => {
+test('farming cards use an icon grid and the full rendered Blizzard item tooltip', async ({ page, context }) => {
   const { sourceName } = await seedRichFarmingItem(page, context)
   await page.goto('/intelligence#farming')
 
@@ -143,6 +146,7 @@ test('farming cards use an icon grid and shared rich item tooltips', async ({ pa
   await expect(tooltip).toBeVisible()
   await expect(tooltip).toContainText('Crafting Reagent')
   await expect(tooltip).toContainText('Sell Price:')
+  await expect(tooltip).not.toContainText('Full Blizzard tooltip is still syncing')
 
   await page.getByRole('searchbox', { name: 'Search items or sources' }).fill('Frilled Lichen')
   const searchedCard = page.locator('.farm-card').filter({ hasText: sourceName })
