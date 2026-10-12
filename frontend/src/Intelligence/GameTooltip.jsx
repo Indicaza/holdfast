@@ -146,7 +146,7 @@ export function GameTooltipBody({ item: value }) {
   const title = capturedHasTitle ? first : { left: item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item' }
   const exactBody = capturedHasTitle ? captured.slice(1) : captured
   const exactDetails = exactBody.filter((line) => !line.blank && (line.left || line.right))
-  const fallback = exactDetails.length > 0 ? [] : fallbackWithoutDuplicates(exactBody, metadataLines(item))
+  const fallback = exactDetails.length < 2 ? fallbackWithoutDuplicates(exactBody, metadataLines(item)) : []
   const body = [...exactBody, ...fallback]
   const price = Number(item.sellPrice) > 0 ? coins(item.sellPrice) : null
 
