@@ -35,18 +35,43 @@ export function slug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function fishingLocationKey(mapId, zone) {
+  const map = integer(mapId);
+  if (map && map > 0) return `map-${map}`;
+  const namedZone = slug(zone);
+  return namedZone ? `zone-${namedZone}` : "location-unknown";
+}
+
 // Sources are identified by what players recognise them as: discipline, kind
 // and name. One herb has several game object ids (Peacebloom spawns as more
 // than one object), and the same creature can be skinned and looted with
 // different drop tables, so neither the object id nor the name alone is
-// enough. A source the client could not name falls back to its typed id.
-export function economicSourceKey({ discipline, kind, name, objectId, npcId }) {
-  const prefix = `${slug(discipline) || "unknown"}:${slug(kind) || "source"}`;
+// enough. Fishing is intentionally location-sensitive: "Open Water" is not a
+// global source because its catch table changes by map/zone, and named pools
+// stay separated by location for the same reason.
+export function economicSourceKey({ discipline, kind, name, objectId, npcId, mapId, zone }) {
+  const disciplineKey = slug(discipline) || "unknown";
+  const kindKey = slug(kind) || "source";
+  const prefix = `${disciplineKey}:${kindKey}`;
   const named = slug(name);
+  const object = integer(objectId);
+
+  if (disciplineKey === "fishing") {
+    const location = fishingLocationKey(mapId, zone);
+    if (kindKey === "fishing-water") return `${prefix}:${location}`;
+    if (kindKey === "fishing-pool") {
+      if (named && named !== "fishing-pool") return `${prefix}:${named}:${location}`;
+      if (object && object > 0) return `${prefix}:object-${object}:${location}`;
+      return `${prefix}:${named || "unknown"}:${location}`;
+    }
+    if (named) return `${prefix}:${named}:${location}`;
+    if (object && object > 0) return `${prefix}:object-${object}:${location}`;
+    return `${prefix}:unknown:${location}`;
+  }
+
   if (named) return `${prefix}:${named}`;
   const npc = integer(npcId);
   if (npc && npc > 0) return `${prefix}:npc-${npc}`;
-  const object = integer(objectId);
   return object && object > 0 ? `${prefix}:object-${object}` : `${prefix}:unknown`;
 }
 
@@ -144,6 +169,8 @@ export function economicObservationFromTelemetry({
         name: source.name,
         objectId: source.objectId,
         npcId: source.npcId,
+        mapId: location.mapId,
+        zone: location.zone,
       }),
       sourceKind: slug(source.kind),
       sourceName: text(source.name),
