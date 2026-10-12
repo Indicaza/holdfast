@@ -54,15 +54,11 @@ function useSourceParam() {
   return [sourceKey, open]
 }
 
-function FarmItem({ item, size = 20, strong = false }) {
+function FarmItem({ item, size = 20 }) {
   const body = (
     <span className="farm-item-hover">
       <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />
-      {strong ? (
-        <strong className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</strong>
-      ) : (
-        <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>
-      )}
+      <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>
     </span>
   )
   return <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover>
@@ -133,7 +129,7 @@ function SourceCard({ source, onOpen }) {
 // One searchable browser of everything the guild has gathered from. Search a
 // source to find it, or an item to find every source that produced it.
 export default function FarmingIntelligence({ input, onInputChange }) {
-  const initialBrowser = useRef(readBrowserStateFromLocation()).current
+  const [initialBrowser] = useState(readBrowserStateFromLocation)
   const [query, setQuery] = useState(() => input.trim() || initialBrowser.query.trim())
   const [discipline, setDiscipline] = useState(initialBrowser.discipline)
   const [zone, setZone] = useState(initialBrowser.zone)
@@ -265,7 +261,7 @@ export default function FarmingIntelligence({ input, onInputChange }) {
       ) : null}
 
       {sourceKey ? (
-        <FarmingSourceModal key={sourceKey} sourceKey={sourceKey} initialItemKey={initialItemKey} onClose={() => open('')} />
+        <FarmingSourceModal key={sourceKey} sourceKey={sourceKey} initialItemKey={initialItemKey} initialZone={zone} onClose={() => open('')} />
       ) : null}
     </section>
   )
