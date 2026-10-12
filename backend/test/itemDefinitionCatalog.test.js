@@ -1,9 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { mergeItemDefinition } from "../src/Character/Telemetry/itemDefinitionCatalog.js";
+import { isFullBlizzardTooltip, mergeItemDefinition } from "../src/Character/Telemetry/itemDefinitionCatalog.js";
 
-test("canonical item definitions enrich sparse equipment without losing instance fields", () => {
+function renderedTooltip(lines, method = "SetHyperlink") {
+  return {
+    source: "GameTooltip",
+    method,
+    rendered: true,
+    complete: true,
+    lines,
+  };
+}
+
+test("canonical rendered item definitions enrich sparse equipment without losing instance fields", () => {
   const catalog = new Map([
     ["item:11746", {
       itemId: 11746,
@@ -18,14 +28,13 @@ test("canonical item definitions enrich sparse equipment without losing instance
       itemClass: { id: 4, name: "Armor" },
       itemSubclass: { id: 4, name: "Plate" },
       stats: { ITEM_MOD_STRENGTH_SHORT: 13, ITEM_MOD_STAMINA_SHORT: 14 },
-      tooltip: {
-        source: "C_TooltipInfo",
-        lines: [
-          { left: "Golem Skull Helm" },
-          { left: "Item Level 35" },
-          { left: "+13 Strength" },
-        ],
-      },
+      tooltip: renderedTooltip([
+        { left: "Golem Skull Helm" },
+        { left: "Head", right: "Plate" },
+        { left: "120 Armor" },
+        { left: "+13 Strength" },
+        { left: "Durability 91 / 100" },
+      ]),
     }],
   ]);
 
@@ -56,16 +65,60 @@ test("canonical item definitions enrich sparse equipment without losing instance
   assert.equal(merged.sellPrice, 12345);
   assert.equal(merged.itemSubclass.name, "Plate");
   assert.equal(merged.stats.ITEM_MOD_STRENGTH_SHORT, 13);
-  assert.equal(merged.tooltip.lines.length, 3);
-  assert.equal(merged.tooltipLines[2].left, "+13 Strength");
+  assert.equal(isFullBlizzardTooltip(merged), true);
+  assert.equal(merged.tooltip.lines[2].left, "120 Armor");
+  assert.equal(merged.tooltipLines[4].left, "Durability 91 / 100");
 });
 
-test("a richer per-instance equipment tooltip beats an older canonical definition", () => {
+test("provisional C_TooltipInfo catalog data never replaces an equipment tooltip", () => {
+  const catalog = new Map([
+    ["item:3287", {
+      itemId: 3287,
+      name: "Tribal Pants",
+      tooltip: {
+        source: "C_TooltipInfo",
+        complete: false,
+        rendered: false,
+        lines: [
+          { left: "Tribal Pants" },
+          { left: "Leather" },
+          { left: "Requires Level 7" },
+        ],
+      },
+    }],
+  ]);
+
+  const current = {
+    itemId: 3287,
+    name: "Tribal Pants",
+    tooltip: renderedTooltip([
+      { left: "Tribal Pants" },
+      { left: "Legs", right: "Leather" },
+      { left: "41 Armor" },
+      { left: "+4 Agility" },
+      { left: "Durability 45 / 45" },
+      { left: "Requires Level 7" },
+    ], "SetInventoryItem"),
+  };
+
+  const merged = mergeItemDefinition(current, catalog);
+  assert.equal(merged.tooltip.method, "SetInventoryItem");
+  assert.equal(merged.tooltip.lines[2].left, "41 Armor");
+  assert.equal(merged.tooltip.lines.some((line) => line.left === "+4 Agility"), true);
+});
+
+test("slot-rendered equipment tooltip beats a generic rendered definition", () => {
   const catalog = new Map([
     ["item:6975", {
       itemId: 6975,
       name: "Whirlwind Axe",
-      tooltip: { lines: [{ left: "Whirlwind Axe" }] },
+      tooltip: renderedTooltip([
+        { left: "Whirlwind Axe" },
+        { left: "Two-Hand", right: "Axe" },
+        { left: "102 - 154 Damage" },
+        { left: "+15 Strength" },
+        { left: "+14 Stamina" },
+      ]),
       stats: { ITEM_MOD_STRENGTH_SHORT: 15 },
     }],
   ]);
@@ -74,17 +127,16 @@ test("a richer per-instance equipment tooltip beats an older canonical definitio
     itemId: 6975,
     name: "Whirlwind Axe",
     stats: { ITEM_MOD_STAMINA_SHORT: 14 },
-    tooltip: {
-      source: "C_TooltipInfo",
-      lines: [
-        { left: "Whirlwind Axe" },
-        { left: "+14 Stamina" },
-      ],
-    },
+    tooltip: renderedTooltip([
+      { left: "Whirlwind Axe" },
+      { left: "Two-Hand", right: "Axe" },
+      { left: "102 - 154 Damage" },
+      { left: "Durability 65 / 65" },
+    ], "SetInventoryItem"),
   }, catalog);
 
-  assert.equal(merged.tooltip.lines.length, 2);
-  assert.equal(merged.tooltip.lines[1].left, "+14 Stamina");
+  assert.equal(merged.tooltip.method, "SetInventoryItem");
+  assert.equal(merged.tooltip.lines[3].left, "Durability 65 / 65");
   assert.equal(merged.stats.ITEM_MOD_STRENGTH_SHORT, 15);
   assert.equal(merged.stats.ITEM_MOD_STAMINA_SHORT, 14);
 });
