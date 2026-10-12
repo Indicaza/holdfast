@@ -1,16 +1,16 @@
 /* GameTooltip: the client's near-black tooltip with its thin grey-blue edge,
-   the item name a size up, lines in the colors the client gave them, right
-   column text pushed to the edge. Rendered in document.body. */
+   the item name a size up, exact client line colors, and right-column text
+   pushed to the edge. Rendered in document.body. */
 
 .item-tooltip.game-tooltip {
   width: max-content;
   min-width: 11rem;
-  max-width: min(20rem, 86vw);
+  max-width: min(22rem, 86vw);
   gap: .08rem;
   padding: .55rem .7rem .6rem;
   border: 1px solid rgba(160, 172, 196, .55);
   border-radius: .3rem;
-  background: rgba(3, 4, 12, .95);
+  background: rgba(3, 4, 12, .97);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .9), 0 .6rem 1.5rem rgba(0, 0, 0, .55);
   color: #fff;
   font-size: .78rem;
@@ -25,7 +25,13 @@
   display: flex;
   justify-content: space-between;
   gap: 1.5rem;
+  color: #fff;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.game-tooltip__line > span:first-child {
+  min-width: 0;
 }
 
 .game-tooltip__blank {
@@ -41,10 +47,19 @@
 .game-tooltip__right {
   flex: 0 0 auto;
   text-align: right;
+  white-space: pre;
 }
 
 .game-tooltip__price .wow-money {
   margin-left: .2rem;
+}
+
+.game-tooltip__pending {
+  max-width: 18rem;
+  color: rgba(255, 255, 255, .62);
+  font-size: .72rem;
+  font-style: italic;
+  white-space: normal;
 }
 
 /* Money: white figures with the game's coin icons. */
