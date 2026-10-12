@@ -8,6 +8,7 @@ import { resolveGameDataBundle } from "../GameData/gameDataCatalog.js";
 import { sanitizeArmoryPayload } from "./armorySanitizer.js";
 import { searchCraftFinderWithSkill } from "./craftFinderRepository.js";
 import { readCharacterArmoryFromReadModel, readCharacterCards } from "./ReadModel/readModelReader.js";
+import { enrichEquipmentWithItemDefinitions } from "./Telemetry/itemDefinitionCatalog.js";
 import { searchRecipes } from "./telemetryProjection.js";
 
 const ARMORY_HYDRATION_BUDGET_MS = 1500;
@@ -83,23 +84,29 @@ function resolveGameDataSafely(resolver, references, options) {
   }
 }
 
-// Adds Blizzard game data (names, icons, tooltips the client did not send)
-// to an armory composed from the character read model.
+// Client-captured item definitions are the highest-fidelity shared source for
+// Forever-specific item text. Fold them into equipment before the external
+// Blizzard-data fallback so Armory, Farming, Bags and Professions all converge
+// on the same GameTooltip data as Guildweaver learns more about an item.
 export async function prepareCharacterArmory(armory, {
   provider,
   icons,
   gameDataResolver = resolveGameDataBundle,
   hydrationDeadlineMs = ARMORY_HYDRATION_BUDGET_MS,
 } = {}) {
-  const references = armoryReferences(armory);
-  const gameBuild = armoryBuildKey(armory);
+  const preparedArmory = {
+    ...armory,
+    equipment: enrichEquipmentWithItemDefinitions(armory?.equipment),
+  };
+  const references = armoryReferences(preparedArmory);
+  const gameBuild = armoryBuildKey(preparedArmory);
   const providerStatus = provider
     ? await hydrateSafely(provider, references, { gameBuild }, hydrationDeadlineMs)
     : {};
   const gameData = resolveGameDataSafely(gameDataResolver, references, { gameBuild });
 
   return sanitizeArmoryPayload({
-    ...armory,
+    ...preparedArmory,
     gameData: {
       ...gameData,
       provider: providerStatus,
