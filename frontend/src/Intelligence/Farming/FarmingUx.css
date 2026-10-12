@@ -1,0 +1,137 @@
+.farming__finder-row {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(180px, 240px) minmax(190px, 240px);
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.farming__select {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 15, 24, 0.72);
+  color: var(--text-muted, #8793a1);
+}
+
+.farming__select > span {
+  flex: 0 0 auto;
+  color: rgba(221, 226, 232, 0.55);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.farming__select select {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #e8ebef;
+  font: inherit;
+  cursor: pointer;
+}
+
+.farming__select select option {
+  background: #0d1824;
+  color: #e8ebef;
+}
+
+.farm-card__drop-wrap {
+  display: block;
+  min-width: 0;
+}
+
+.farm-card__match-label {
+  display: block;
+  margin: 7px 0 3px;
+  color: rgba(212, 175, 55, 0.78);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.farm-item-hover {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  cursor: help;
+}
+
+.farm-item-hover .farm-item {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farm-card__drops .farm-item-hover {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.farm-header__location {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: 3px;
+  color: rgba(226, 190, 65, 0.9) !important;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.farm-header__location svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.farm-analysis-hint {
+  display: grid;
+  min-height: 112px;
+  margin: 0;
+  padding: 18px;
+  place-items: center;
+  border: 1px dashed rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  color: rgba(194, 201, 210, 0.5);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .farming__finder-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .farming__search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .farming__finder-row {
+    grid-template-columns: 1fr;
+  }
+
+  .farming__search {
+    grid-column: auto;
+  }
+
+  .farming__select {
+    min-height: 40px;
+  }
+}
