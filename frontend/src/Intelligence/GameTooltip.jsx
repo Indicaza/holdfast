@@ -1,13 +1,8 @@
 import { useId, useState } from 'react'
 
 import { FloatingTooltip } from '../WowAssets/WowIcon.jsx'
-import { EQUIP_SLOT_NAMES, coins } from './inventoryModel.js'
+import { coins } from './inventoryModel.js'
 import './GameTooltip.css'
-
-// GameTooltip as the client draws it. Captured client lines are authoritative;
-// structured item metadata only fills gaps when a tooltip was not fully cached
-// yet. This keeps Forever-specific item text exact without leaving sparse
-// one-line tooltips across the app.
 
 const COINS = [
   ['gold', 'gold'],
@@ -34,15 +29,15 @@ function object(value) {
 }
 
 // Farming results carry the canonical client description under `item`, while
-// Armory/inventory items are already flat. Catalog metadata is an older
-// fallback. Normalize all three into the one shape GameTooltip renders.
+// Armory and inventory items are already flat. Normalize identity only; the
+// tooltip itself remains untouched client data.
 function gameTooltipItem(value) {
   if (!value || typeof value !== 'object') return null
   const outer = object(value)
   const described = object(outer.item)
   const catalog = object(outer.catalog)
   const metadata = object(catalog.metadata)
-  const merged = { ...outer, ...metadata, ...described }
+  const merged = { ...metadata, ...outer, ...described }
 
   return {
     ...merged,
@@ -50,7 +45,7 @@ function gameTooltipItem(value) {
     itemLink: described.itemLink || outer.itemLink || metadata.itemLink || '',
     name: described.name || outer.name || metadata.name || '',
     qualityId: described.qualityId ?? described.quality ?? outer.qualityId ?? outer.quality ?? metadata.qualityId ?? metadata.quality ?? null,
-    iconFileDataId: described.iconFileDataId ?? described.iconFileId ?? outer.iconFileDataId ?? outer.iconFileId ?? metadata.iconFileDataId ?? metadata.iconFileId ?? null,
+    sellPrice: described.sellPrice ?? outer.sellPrice ?? metadata.sellPrice ?? null,
     tooltip: Object.keys(object(described.tooltip)).length
       ? described.tooltip
       : Object.keys(object(outer.tooltip)).length
@@ -68,14 +63,13 @@ function gameTooltipItem(value) {
 
 function color(value) {
   if (!value || typeof value !== 'object') return undefined
-  const channel = (part) => Math.round(Math.max(0, Math.min(1, Number(part) || 0)) * 255)
-  return { color: `rgb(${channel(value.r)}, ${channel(value.g)}, ${channel(value.b)})` }
+  const channels = ['r', 'g', 'b'].map((part) => Number(value[part]))
+  if (!channels.every(Number.isFinite)) return undefined
+  const [r, g, b] = channels.map((part) => Math.round(Math.max(0, Math.min(1, part)) * 255))
+  const alpha = Number(value.a)
+  if (Number.isFinite(alpha)) return { color: `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})` }
+  return { color: `rgb(${r}, ${g}, ${b})` }
 }
-
-const SELL_PRICE_LINE = /^sell price:?\s*$/i
-const WHITE = { r: 1, g: 1, b: 1 }
-const NORMAL = { r: 1, g: 0.82, b: 0 }
-const GREEN = { r: 0, g: 1, b: 0 }
 
 function capturedLines(item) {
   const source = Array.isArray(item?.tooltip?.lines)
@@ -83,85 +77,93 @@ function capturedLines(item) {
     : Array.isArray(item?.tooltipLines)
       ? item.tooltipLines
       : []
-  return source
-    .map((line) => {
-      const entry = object(line)
-      return {
-        ...entry,
-        left: entry.left ?? entry.leftText ?? entry.text ?? '',
-        right: entry.right ?? entry.rightText ?? '',
-        leftColor: entry.leftColor ?? entry.color,
-      }
-    })
-    .filter((line) => line && (line.blank || line.left || line.right) && !SELL_PRICE_LINE.test(String(line.left || '').trim()))
+
+  return source.map((line) => {
+    const entry = object(line)
+    return {
+      ...entry,
+      left: entry.left ?? entry.leftText ?? entry.text ?? '',
+      right: entry.right ?? entry.rightText ?? '',
+      leftColor: entry.leftColor ?? entry.color,
+    }
+  }).filter((line) => line.blank || line.sellPrice || line.left || line.right)
 }
 
-function statName(key) {
-  return String(key).replace(/^ITEM_MOD_/, '').replace(/_SHORT$/, '').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
+function isItem(item) {
+  return Number(item?.itemId) > 0 || /(?:^|\|H)item:\d+/i.test(String(item?.itemLink || ''))
 }
 
-function metadataLines(item) {
-  const lines = []
-  if (Number(item.itemLevel) > 0) lines.push({ left: `Item Level ${item.itemLevel}`, leftColor: NORMAL })
-  if (item.isBound) lines.push({ left: 'Soulbound', leftColor: WHITE })
-  else if (Number(item.bindType) === 1) lines.push({ left: 'Binds when picked up', leftColor: WHITE })
-  else if (Number(item.bindType) === 2) lines.push({ left: 'Binds when equipped', leftColor: WHITE })
-  const slot = EQUIP_SLOT_NAMES[item.equipLocation]
-  const subclass = item.itemSubclass?.name || item.itemSubclassName || item.subclass
-  if (slot) lines.push({ left: slot, right: subclass, leftColor: WHITE, rightColor: WHITE })
-  for (const [key, value] of Object.entries(item.stats || {})) {
-    if (Number.isFinite(Number(value))) lines.push({ left: `${Number(value) > 0 ? '+' : ''}${value} ${statName(key)}`, leftColor: WHITE })
-  }
-  if (Number(item.requiredLevel) > 1) lines.push({ left: `Requires Level ${item.requiredLevel}`, leftColor: WHITE })
-  if (item.spell?.name) lines.push({ left: `Use: ${item.spell.name}`, leftColor: GREEN })
-  if (item.isCraftingReagent) lines.push({ left: 'Crafting Reagent', leftColor: { r: 0.4, g: 0.73, b: 1 } })
-  if (item.description) lines.push({ left: String(item.description), leftColor: NORMAL })
-  return lines
+function fullBlizzardTooltip(item) {
+  const tooltip = object(item?.tooltip)
+  const lines = capturedLines(item)
+  if (!lines.length || tooltip.source !== 'GameTooltip') return false
+  // Backward compatibility for rendered scans captured before Guildweaver
+  // started writing explicit completeness markers.
+  if (tooltip.complete === undefined && tooltip.rendered === undefined) return true
+  return tooltip.complete === true && tooltip.rendered === true
 }
 
-function sameText(left, right) {
-  return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase()
+function sellPriceAlreadyCaptured(lines) {
+  return lines.some((line) => line.sellPrice || /^sell\s+price\s*:/i.test(String(line.left || '').trim()))
 }
 
-function lineKey(line) {
-  return `${String(line?.left || '').trim().toLowerCase()}|${String(line?.right || '').trim().toLowerCase()}`
-}
-
-function fallbackWithoutDuplicates(existing, fallback) {
-  const seen = new Set(existing.filter((line) => !line.blank).map(lineKey))
-  return fallback.filter((line) => {
-    const key = lineKey(line)
-    if (!key || seen.has(key)) return false
-    seen.add(key)
-    return true
+function CapturedRows({ lines, quality }) {
+  return lines.map((line, index) => {
+    if (line.blank || line.sellPrice) {
+      return <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" />
+    }
+    const title = index === 0
+    const style = line.offset ? { paddingLeft: `${line.offset}px` } : undefined
+    return (
+      <div key={`${index}:${line.left}:${line.right || ''}`} className={`game-tooltip__line${title ? ` game-tooltip__title item-quality-${quality}` : ''}`} style={style}>
+        <span style={color(line.leftColor)}>{line.left}</span>
+        {line.right ? <span className="game-tooltip__right" style={color(line.rightColor)}>{line.right}</span> : null}
+      </div>
+    )
   })
 }
 
 export function GameTooltipBody({ item: value }) {
   const item = gameTooltipItem(value) || {}
-  const captured = capturedLines(item)
+  const lines = capturedLines(item)
   const quality = Number(item.qualityId ?? item.quality) || 0
-  const first = captured[0]
-  const capturedHasTitle = Boolean(first?.left && item.name && sameText(first.left, item.name))
-  const title = capturedHasTitle ? first : { left: item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item' }
-  const exactBody = capturedHasTitle ? captured.slice(1) : captured
-  const exactDetails = exactBody.filter((line) => !line.blank && (line.left || line.right))
-  const fallback = exactDetails.length < 2 ? fallbackWithoutDuplicates(exactBody, metadataLines(item)) : []
-  const body = [...exactBody, ...fallback]
-  const price = Number(item.sellPrice) > 0 ? coins(item.sellPrice) : null
+  const actualItem = isItem(item)
+  const full = fullBlizzardTooltip(item)
+
+  // For real items, never manufacture a tooltip from metadata. If the client
+  // has not sent its rendered GameTooltip yet, say so and wait for Guildweaver
+  // to self-heal the definition.
+  if (actualItem && !full) {
+    return (
+      <>
+        <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
+          <span>{item.name || 'Item tooltip'}</span>
+        </div>
+        <div className="game-tooltip__pending">Full Blizzard tooltip is still syncing…</div>
+      </>
+    )
+  }
+
+  // Non-item controls (profession buttons, recipe spells) may legitimately
+  // provide captured spell lines or a small textual description.
+  if (!lines.length) {
+    return (
+      <>
+        <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
+          <span>{item.name || 'Tooltip'}</span>
+        </div>
+        {item.description ? <div className="game-tooltip__line"><span>{String(item.description)}</span></div> : null}
+      </>
+    )
+  }
+
+  const price = actualItem && Number(item.sellPrice) > 0 && !sellPriceAlreadyCaptured(lines)
+    ? coins(item.sellPrice)
+    : null
 
   return (
     <>
-      <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
-        <span style={capturedHasTitle ? color(title.leftColor) : undefined}>{title.left || item.name}</span>
-        {title.right ? <span style={color(title.rightColor)}>{title.right}</span> : null}
-      </div>
-      {body.map((line, index) => (line.blank ? <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" /> : (
-        <div key={`${index}:${line.left}:${line.right || ''}`} className="game-tooltip__line" style={line.offset ? { paddingLeft: `${line.offset}px` } : undefined}>
-          <span style={color(line.leftColor) || color(NORMAL)}>{line.left}</span>
-          {line.right ? <span className="game-tooltip__right" style={color(line.rightColor) || color(NORMAL)}>{line.right}</span> : null}
-        </div>
-      )))}
+      <CapturedRows lines={lines} quality={quality} />
       {price ? (
         <div className="game-tooltip__line game-tooltip__price">
           <span>Sell Price: <Money money={price} /></span>
