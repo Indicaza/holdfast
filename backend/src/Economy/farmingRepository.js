@@ -1,3 +1,4 @@
+import { parseTelemetryJson } from "../Character/Telemetry/telemetryJson.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { ECONOMIC_EVENT_TYPES } from "./economicObservationModel.js";
 import { SKILL_BUCKET_SIZE, observedRate, skillBucket } from "./farmingStatistics.js";
@@ -8,6 +9,8 @@ import { SKILL_BUCKET_SIZE, observedRate, skillBucket } from "./farmingStatistic
 // writes.
 
 const SOURCE_LIMIT = 200;
+const CONFIDENCE_ORDER = Object.freeze({ low: 0, medium: 1, high: 2, very_high: 3 });
+const SOURCE_SORTS = new Set(["observations", "chance", "confidence", "recent"]);
 
 function text(value, maxLength = 120) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -27,28 +30,69 @@ function displayName(row) {
   return row.source_name || (row.source_object_id ? `Object ${row.source_object_id}` : "Unknown source");
 }
 
-function itemView(row) {
-  return {
+function itemCatalog(db) {
+  const catalog = new Map();
+  const rows = db.prepare(`
+    SELECT payload_json
+    FROM guildweaver_telemetry_latest_state
+    WHERE event_type = 'item_definition'
+    ORDER BY captured_at DESC, received_at DESC
+  `).all();
+
+  for (const row of rows) {
+    const payload = parseTelemetryJson(row.payload_json, {});
+    const itemKey = text(payload?.itemKey, 200);
+    const item = payload?.item;
+    if (!itemKey || !item || typeof item !== "object" || Array.isArray(item) || catalog.has(itemKey)) continue;
+    catalog.set(itemKey, item);
+  }
+  return catalog;
+}
+
+function itemView(row, catalog = new Map()) {
+  const base = {
     itemKey: row.item_key,
     itemId: row.item_id === null ? null : Number(row.item_id),
     name: row.item_name || (row.item_id ? `Item ${row.item_id}` : "Unknown item"),
     qualityId: row.quality_id === null ? null : Number(row.quality_id),
     iconFileDataId: row.icon_file_data_id === null ? null : Number(row.icon_file_data_id),
   };
+  const described = catalog.get(base.itemKey);
+  const item = described ? {
+    ...described,
+    itemId: Number(described.itemId) || base.itemId,
+    name: text(described.name) || base.name,
+    qualityId: described.qualityId ?? described.quality ?? base.qualityId,
+    iconFileDataId: described.iconFileDataId ?? base.iconFileDataId,
+  } : { ...base };
+  return { ...base, item };
+}
+
+function browserScope({ discipline = "", zone = "" } = {}) {
+  const clauses = [];
+  const params = [];
+  if (discipline) {
+    clauses.push("o.discipline = ?");
+    params.push(discipline);
+  }
+  if (zone) {
+    clauses.push("o.zone = ?");
+    params.push(zone);
+  }
+  return { clauses, params };
 }
 
 // --- Source browser -------------------------------------------------------
 
-export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_LIMIT } = {}) {
+export function searchFarmingSources({ q = "", discipline = "", zone = "", sort = "observations", limit = SOURCE_LIMIT } = {}) {
   return withGuildDatabase((db) => {
     const query = text(q);
     const disciplineFilter = text(discipline, 60).toLowerCase();
-    const clauses = [];
-    const params = [];
-    if (disciplineFilter) {
-      clauses.push("o.discipline = ?");
-      params.push(disciplineFilter);
-    }
+    const zoneFilter = text(zone);
+    const sortKey = SOURCE_SORTS.has(text(sort, 40).toLowerCase()) ? text(sort, 40).toLowerCase() : "observations";
+    const scope = browserScope({ discipline: disciplineFilter, zone: zoneFilter });
+    const clauses = [...scope.clauses];
+    const params = [...scope.params];
 
     let matchedItemKeys = null;
     if (query) {
@@ -60,18 +104,23 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
       `).all(pattern, numeric).map((row) => row.item_key);
 
       const itemPlaceholders = matchedItemKeys.map(() => "?").join(", ");
+      const zoneMatch = zoneFilter ? "AND so.zone = ?" : "";
       clauses.push(`(
         LOWER(o.source_name) LIKE ? ESCAPE '\\'
         ${matchedItemKeys.length ? `OR o.source_key IN (
           SELECT DISTINCT so.source_key FROM economic_observations so
           JOIN economic_observation_outputs si ON si.observation_id = so.id
-          WHERE si.item_key IN (${itemPlaceholders})
+          WHERE si.item_key IN (${itemPlaceholders}) ${zoneMatch}
         )` : ""}
       )`);
       params.push(pattern, ...matchedItemKeys);
+      if (matchedItemKeys.length && zoneFilter) params.push(zoneFilter);
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+    const sqlOrder = sortKey === "recent"
+      ? "last_observed_at DESC, observations DESC, source_name ASC"
+      : "observations DESC, source_name ASC";
     const rows = db.prepare(`
       SELECT
         o.source_key,
@@ -87,6 +136,7 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
           FROM economic_observations zone_observation
           WHERE zone_observation.source_key = o.source_key
             AND zone_observation.zone <> ''
+            ${zoneFilter ? "AND zone_observation.zone = ?" : ""}
           GROUP BY zone_observation.zone
           ORDER BY COUNT(*) DESC, zone_observation.zone ASC
           LIMIT 1
@@ -95,13 +145,16 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
       FROM economic_observations o
       ${where}
       GROUP BY o.source_key
-      ORDER BY observations DESC, source_name ASC
+      ORDER BY ${sqlOrder}
       LIMIT ?
-    `).all(...params, Math.min(SOURCE_LIMIT, Math.max(1, Number(limit) || SOURCE_LIMIT)));
+    `).all(...(zoneFilter ? [zoneFilter, ...params] : params), Math.min(SOURCE_LIMIT, Math.max(1, Number(limit) || SOURCE_LIMIT)));
 
     const sourceKeys = rows.map((row) => row.source_key);
-    const outputs = sourceOutputs(db, sourceKeys);
-    const matches = matchedItemKeys?.length ? sourceItemMatches(db, sourceKeys, matchedItemKeys) : new Map();
+    const catalog = itemCatalog(db);
+    const outputs = sourceOutputs(db, sourceKeys, { zone: zoneFilter, catalog });
+    const matches = matchedItemKeys?.length
+      ? sourceItemMatches(db, sourceKeys, matchedItemKeys, { zone: zoneFilter, catalog })
+      : new Map();
 
     const sources = rows.map((row) => {
       const observations = Number(row.observations);
@@ -117,7 +170,7 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
         observations,
         characters: Number(row.characters),
         zones: Number(row.zones),
-        primaryZone: row.primary_zone || "",
+        primaryZone: zoneFilter || row.primary_zone || "",
         lastObservedAt: row.last_observed_at,
         icon: outputs.get(row.source_key)?.[0] || null,
         // What else it drops, beyond the output it is named for.
@@ -130,18 +183,59 @@ export function searchFarmingSources({ q = "", discipline = "", limit = SOURCE_L
       };
     });
 
-    return { query, discipline: disciplineFilter, disciplines: disciplineCounts(db), sources };
+    if (sortKey === "chance") {
+      sources.sort((left, right) => {
+        const leftRate = left.matches[0]?.rate ?? left.drops[0]?.rate ?? 0;
+        const rightRate = right.matches[0]?.rate ?? right.drops[0]?.rate ?? 0;
+        return rightRate - leftRate || right.observations - left.observations || left.name.localeCompare(right.name);
+      });
+    } else if (sortKey === "confidence") {
+      sources.sort((left, right) => {
+        const leftConfidence = CONFIDENCE_ORDER[left.matches[0]?.confidence ?? left.drops[0]?.confidence] ?? -1;
+        const rightConfidence = CONFIDENCE_ORDER[right.matches[0]?.confidence ?? right.drops[0]?.confidence] ?? -1;
+        return rightConfidence - leftConfidence || right.observations - left.observations || left.name.localeCompare(right.name);
+      });
+    }
+
+    return {
+      query,
+      discipline: disciplineFilter,
+      zone: zoneFilter,
+      sort: sortKey,
+      disciplines: disciplineCounts(db, zoneFilter),
+      zones: zoneCounts(db, disciplineFilter),
+      sources,
+    };
   });
 }
 
-function disciplineCounts(db) {
+function disciplineCounts(db, zone = "") {
+  const where = zone ? "WHERE zone = ?" : "";
+  const params = zone ? [zone] : [];
   return db.prepare(`
     SELECT discipline, COUNT(*) AS observations, COUNT(DISTINCT source_key) AS sources
     FROM economic_observations
+    ${where}
     GROUP BY discipline
     ORDER BY observations DESC
-  `).all().map((row) => ({
+  `).all(...params).map((row) => ({
     discipline: row.discipline,
+    observations: Number(row.observations),
+    sources: Number(row.sources),
+  }));
+}
+
+function zoneCounts(db, discipline = "") {
+  const where = discipline ? "WHERE zone <> '' AND discipline = ?" : "WHERE zone <> ''";
+  const params = discipline ? [discipline] : [];
+  return db.prepare(`
+    SELECT zone, COUNT(*) AS observations, COUNT(DISTINCT source_key) AS sources
+    FROM economic_observations
+    ${where}
+    GROUP BY zone
+    ORDER BY observations DESC, zone ASC
+  `).all(...params).map((row) => ({
+    zone: row.zone,
     observations: Number(row.observations),
     sources: Number(row.sources),
   }));
@@ -152,8 +246,9 @@ function disciplineCounts(db) {
 // else it is worth gathering for.
 const PREVIEW_OUTPUTS = 4;
 
-function sourceOutputs(db, sourceKeys) {
+function sourceOutputs(db, sourceKeys, { zone = "", catalog = new Map() } = {}) {
   if (!sourceKeys.length) return new Map();
+  const zoneClause = zone ? "AND o.zone = ?" : "";
   const rows = db.prepare(`
     SELECT source_key, item_key, item_id, item_name, quality_id, icon_file_data_id, drops FROM (
       SELECT
@@ -163,22 +258,23 @@ function sourceOutputs(db, sourceKeys) {
         ROW_NUMBER() OVER (PARTITION BY o.source_key ORDER BY COUNT(*) DESC, i.item_key) AS position
       FROM economic_observations o
       JOIN economic_observation_outputs i ON i.observation_id = o.id
-      WHERE o.source_key IN (${sourceKeys.map(() => "?").join(", ")})
+      WHERE o.source_key IN (${sourceKeys.map(() => "?").join(", ")}) ${zoneClause}
       GROUP BY o.source_key, i.item_key
     ) WHERE position <= ?
     ORDER BY source_key, position
-  `).all(...sourceKeys, PREVIEW_OUTPUTS);
+  `).all(...sourceKeys, ...(zone ? [zone] : []), PREVIEW_OUTPUTS);
   const bySource = new Map();
   for (const row of rows) {
     const list = bySource.get(row.source_key) || [];
-    list.push({ ...itemView(row), drops: Number(row.drops) });
+    list.push({ ...itemView(row, catalog), drops: Number(row.drops) });
     bySource.set(row.source_key, list);
   }
   return bySource;
 }
 
-function sourceItemMatches(db, sourceKeys, itemKeys) {
-  if (!sourceKeys.length) return new Map();
+function sourceItemMatches(db, sourceKeys, itemKeys, { zone = "", catalog = new Map() } = {}) {
+  if (!sourceKeys.length || !itemKeys.length) return new Map();
+  const zoneClause = zone ? "AND o.zone = ?" : "";
   const rows = db.prepare(`
     SELECT
       o.source_key, i.item_key, MAX(i.item_id) AS item_id, MAX(i.item_name) AS item_name,
@@ -187,14 +283,14 @@ function sourceItemMatches(db, sourceKeys, itemKeys) {
     FROM economic_observations o
     JOIN economic_observation_outputs i ON i.observation_id = o.id
     WHERE o.source_key IN (${sourceKeys.map(() => "?").join(", ")})
-      AND i.item_key IN (${itemKeys.map(() => "?").join(", ")})
+      AND i.item_key IN (${itemKeys.map(() => "?").join(", ")}) ${zoneClause}
     GROUP BY o.source_key, i.item_key
     ORDER BY drops DESC
-  `).all(...sourceKeys, ...itemKeys);
+  `).all(...sourceKeys, ...itemKeys, ...(zone ? [zone] : []));
   const bySource = new Map();
   for (const row of rows) {
     const list = bySource.get(row.source_key) || [];
-    list.push({ ...itemView(row), drops: Number(row.drops) });
+    list.push({ ...itemView(row, catalog), drops: Number(row.drops) });
     bySource.set(row.source_key, list);
   }
   return bySource;
@@ -347,6 +443,7 @@ export function readFarmingSource(sourceKey, { filters: rawFilters = {}, item = 
       WHERE source_key = ? AND source_object_id IS NOT NULL
       ORDER BY id
     `).all(key).map((row) => Number(row.id));
+    const catalog = itemCatalog(db);
 
     const outputs = db.prepare(`
       SELECT
@@ -362,7 +459,7 @@ export function readFarmingSource(sourceKey, { filters: rawFilters = {}, item = 
       const drops = Number(row.drops);
       const quantity = Number(row.quantity);
       return {
-        ...itemView(row),
+        ...itemView(row, catalog),
         ...observedRate(drops, observations),
         drops,
         quantity,
