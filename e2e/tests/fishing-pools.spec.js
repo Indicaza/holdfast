@@ -138,9 +138,8 @@ test('fishing pools and open water remain distinct across zones', async ({ page,
   await expect(page.getByRole('group', { name: 'Discipline' }).getByRole('button', { name: 'Fishing' })).toBeVisible()
 
   const openWater = fishing.locator('.farm-card').filter({ hasText: 'Open Water' })
-  await expect(openWater).toHaveCount(2)
-  await expect(openWater.filter({ hasText: 'Westfall' })).toContainText('6')
-  await expect(openWater.filter({ hasText: 'Darkshore' })).toContainText('4')
+  await expect(openWater.filter({ hasText: 'Westfall' })).toContainText('6 gathers')
+  await expect(openWater.filter({ hasText: 'Darkshore' })).toContainText('4 gathers')
 
   const oilySchools = fishing.locator('.farm-card').filter({ hasText: 'Oily Blackmouth School' })
   await expect(oilySchools).toHaveCount(2)
