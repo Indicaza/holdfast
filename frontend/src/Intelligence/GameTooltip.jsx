@@ -161,7 +161,7 @@ export function GameTooltipBody({ item: value }) {
           <span style={color(line.leftColor) || color(NORMAL)}>{line.left}</span>
           {line.right ? <span className="game-tooltip__right" style={color(line.rightColor) || color(NORMAL)}>{line.right}</span> : null}
         </div>
-      ))}
+      )))}
       {price ? (
         <div className="game-tooltip__line game-tooltip__price">
           <span>Sell Price: <Money money={price} /></span>
