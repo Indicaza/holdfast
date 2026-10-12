@@ -1,16 +1,69 @@
 import { parseTelemetryJson } from "../Character/Telemetry/telemetryJson.js";
-import { ECONOMIC_EVENT_TYPES, economicObservationFromTelemetry } from "./economicObservationModel.js";
+import {
+  ECONOMIC_EVENT_TYPES,
+  economicObservationFromTelemetry,
+  economicSourceKey,
+} from "./economicObservationModel.js";
 
-// A source the client could not name joins the named source that shares its
-// object id, so an unnamed Peacebloom gather still counts as Peacebloom.
 function resolvedSourceKey(db, observation) {
   if (observation.sourceName || !observation.sourceObjectId) return observation.sourceKey;
+
+  const clauses = [
+    "discipline = ?",
+    "source_kind = ?",
+    "source_object_id = ?",
+    "source_name <> ''",
+  ];
+  const params = [
+    observation.discipline,
+    observation.sourceKind,
+    observation.sourceObjectId,
+  ];
+
+  if (observation.discipline === "fishing") {
+    if (observation.mapId) {
+      clauses.push("map_id = ?");
+      params.push(observation.mapId);
+    } else if (observation.zone) {
+      clauses.push("zone = ?");
+      params.push(observation.zone);
+    }
+  }
+
   const named = db.prepare(`
     SELECT source_key FROM economic_observations
-    WHERE discipline = ? AND source_kind = ? AND source_object_id = ? AND source_name <> ''
+    WHERE ${clauses.join(" AND ")}
     ORDER BY id DESC LIMIT 1
-  `).get(observation.discipline, observation.sourceKind, observation.sourceObjectId);
+  `).get(...params);
   return named?.source_key || observation.sourceKey;
+}
+
+export function repairFishingSourceKeysInDatabase(db) {
+  const rows = db.prepare(`
+    SELECT id, source_key, source_kind, source_name, source_object_id, map_id, zone
+    FROM economic_observations
+    WHERE discipline = 'fishing'
+    ORDER BY id
+  `).all();
+  const update = db.prepare("UPDATE economic_observations SET source_key = ? WHERE id = ?");
+  let repaired = 0;
+
+  for (const row of rows) {
+    const sourceKey = economicSourceKey({
+      discipline: "fishing",
+      kind: row.source_kind,
+      name: row.source_name,
+      objectId: row.source_object_id,
+      mapId: row.map_id,
+      zone: row.zone,
+    });
+    if (sourceKey && sourceKey !== row.source_key) {
+      update.run(sourceKey, row.id);
+      repaired += 1;
+    }
+  }
+
+  return repaired;
 }
 
 function insertObservation(db, { observation, outputs }) {
@@ -55,8 +108,6 @@ function insertObservation(db, { observation, outputs }) {
     observation.receivedAt,
   );
   if (!result.changes) {
-    // Already counted. A resent copy replaces its raw record, so point the
-    // observation at the copy that is still kept.
     if (observation.recordId) {
       db.prepare("UPDATE economic_observations SET record_id = ? WHERE observation_key = ?")
         .run(observation.recordId, observation.observationKey);
@@ -84,8 +135,6 @@ function insertObservation(db, { observation, outputs }) {
   return { status: "created", observationId, sourceKey: resolvedKey, discipline: observation.discipline };
 }
 
-// The character an observation belongs to: the website's character when the
-// telemetry is associated with one, otherwise the addon's id for it.
 function characterKey({ canonicalCharacterId, memberId, rawCharacterId }) {
   if (canonicalCharacterId) return canonicalCharacterId;
   return rawCharacterId ? `${memberId}:${rawCharacterId}` : "";
@@ -116,10 +165,9 @@ export function recordEconomicObservationInDatabase(db, {
   return insertObservation(db, normalized);
 }
 
-// Records economic events whose raw telemetry arrived before this table
-// existed (or before a collector was recognised). Idempotent: observations
-// already recorded are skipped by their key.
 export function backfillEconomicObservationsInDatabase(db) {
+  repairFishingSourceKeysInDatabase(db);
+
   const placeholders = ECONOMIC_EVENT_TYPES.map(() => "?").join(", ");
   const rows = db.prepare(`
     SELECT r.id, r.device_id, r.member_id, r.stream_key, r.event_type, r.character_id, r.received_at, r.envelope_json
