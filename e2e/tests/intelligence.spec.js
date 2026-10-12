@@ -28,6 +28,23 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   const helmTooltip = page.getByRole('tooltip').filter({ hasText: 'Golem Skull Helm' })
   await expect(helmTooltip).toBeVisible()
   await expect(helmTooltip).toContainText('Item Level 35')
+  await expect(helmTooltip).toContainText('Binds when equipped')
+  await expect(helmTooltip).toContainText('+13 Strength')
+  await expect(helmTooltip).toContainText('+14 Stamina')
+  await expect(helmTooltip).toContainText('Requires Level 30')
+
+  // A title-only client capture must not collapse back to a useless one-line
+  // tooltip. Structured metadata fills the missing lines until the next sync
+  // gives us the complete client GameTooltip.
+  const axeSlot = profile.getByRole('button', { name: 'Main Hand: Whirlwind Axe' })
+  await axeSlot.hover()
+  const axeTooltip = page.getByRole('tooltip').filter({ hasText: 'Whirlwind Axe' })
+  await expect(axeTooltip).toBeVisible()
+  await expect(axeTooltip).toContainText('Item Level 40')
+  await expect(axeTooltip).toContainText('Binds when picked up')
+  await expect(axeTooltip).toContainText('+15 Strength')
+  await expect(axeTooltip).toContainText('+14 Stamina')
+  await expect(axeTooltip).toContainText('Requires Level 30')
 
   await profile.getByRole('tab', { name: /^Talents/ }).click()
   await expect(profile.locator('.talent-node')).toHaveCount(2)
