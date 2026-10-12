@@ -1,14 +1,8 @@
 import { useId, useState } from 'react'
 
 import { FloatingTooltip } from '../WowAssets/WowIcon.jsx'
-import { EQUIP_SLOT_NAMES, coins } from './inventoryModel.js'
+import { coins } from './inventoryModel.js'
 import './GameTooltip.css'
-
-// GameTooltip as the client draws it for an item in the bags: every line the
-// addon captured from the bag slot, in order and in the client's colors (left
-// and right columns), then the stack's sell price in coins. Items captured
-// before their tooltip loaded fall back to the same lines built from the
-// item's metadata.
 
 const COINS = [
   ['gold', 'gold'],
@@ -16,7 +10,6 @@ const COINS = [
   ['copperRemainder', 'copper'],
 ]
 
-// MoneyFrame: gold and silver once there are any, copper always.
 export function Money({ money, className = '' }) {
   const shown = COINS.filter((_, index) => index === COINS.length - 1 || COINS.slice(0, index + 1).some(([earlier]) => money[earlier] > 0))
   return (
@@ -31,66 +24,146 @@ export function Money({ money, className = '' }) {
   )
 }
 
+function object(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+}
+
+// Farming results carry the canonical client description under `item`, while
+// Armory and inventory items are already flat. Normalize identity only; the
+// tooltip itself remains untouched client data.
+function gameTooltipItem(value) {
+  if (!value || typeof value !== 'object') return null
+  const outer = object(value)
+  const described = object(outer.item)
+  const catalog = object(outer.catalog)
+  const metadata = object(catalog.metadata)
+  const merged = { ...metadata, ...outer, ...described }
+
+  return {
+    ...merged,
+    itemId: described.itemId ?? outer.itemId ?? metadata.itemId ?? null,
+    itemLink: described.itemLink || outer.itemLink || metadata.itemLink || '',
+    name: described.name || outer.name || metadata.name || '',
+    qualityId: described.qualityId ?? described.quality ?? outer.qualityId ?? outer.quality ?? metadata.qualityId ?? metadata.quality ?? null,
+    sellPrice: described.sellPrice ?? outer.sellPrice ?? metadata.sellPrice ?? null,
+    tooltip: Object.keys(object(described.tooltip)).length
+      ? described.tooltip
+      : Object.keys(object(outer.tooltip)).length
+        ? outer.tooltip
+        : object(metadata.tooltip),
+    tooltipLines: Array.isArray(described.tooltipLines)
+      ? described.tooltipLines
+      : Array.isArray(outer.tooltipLines)
+        ? outer.tooltipLines
+        : Array.isArray(metadata.tooltipLines)
+          ? metadata.tooltipLines
+          : [],
+  }
+}
+
 function color(value) {
   if (!value || typeof value !== 'object') return undefined
-  const channel = (part) => Math.round(Math.max(0, Math.min(1, Number(part) || 0)) * 255)
-  return { color: `rgb(${channel(value.r)}, ${channel(value.g)}, ${channel(value.b)})` }
+  const channels = ['r', 'g', 'b'].map((part) => Number(value[part]))
+  if (!channels.every(Number.isFinite)) return undefined
+  const [r, g, b] = channels.map((part) => Math.round(Math.max(0, Math.min(1, part)) * 255))
+  const alpha = Number(value.a)
+  if (Number.isFinite(alpha)) return { color: `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})` }
+  return { color: `rgb(${r}, ${g}, ${b})` }
 }
-
-const SELL_PRICE_LINE = /^sell price:?\s*$/i
-const WHITE = { r: 1, g: 1, b: 1 }
-// NORMAL_FONT_COLOR: the client's color for a line that names none.
-const NORMAL = { r: 1, g: 0.82, b: 0 }
-const GREEN = { r: 0, g: 1, b: 0 }
 
 function capturedLines(item) {
-  return (Array.isArray(item?.tooltip?.lines) ? item.tooltip.lines : [])
-    .filter((line) => line && (line.blank || line.left || line.right) && !SELL_PRICE_LINE.test(String(line.left || '').trim()))
+  const source = Array.isArray(item?.tooltip?.lines)
+    ? item.tooltip.lines
+    : Array.isArray(item?.tooltipLines)
+      ? item.tooltipLines
+      : []
+
+  return source.map((line) => {
+    const entry = object(line)
+    return {
+      ...entry,
+      left: entry.left ?? entry.leftText ?? entry.text ?? '',
+      right: entry.right ?? entry.rightText ?? '',
+      leftColor: entry.leftColor ?? entry.color,
+    }
+  }).filter((line) => line.blank || line.sellPrice || line.left || line.right)
 }
 
-function statName(key) {
-  return String(key).replace(/^ITEM_MOD_/, '').replace(/_SHORT$/, '').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase())
+function isItem(item) {
+  return Number(item?.itemId) > 0 || /(?:^|\|H)item:\d+/i.test(String(item?.itemLink || ''))
 }
 
-// The lines the client would show, from metadata alone.
-function metadataLines(item) {
-  const lines = []
-  if (item.isBound) lines.push({ left: 'Soulbound', leftColor: WHITE })
-  else if (Number(item.bindType) === 1) lines.push({ left: 'Binds when picked up', leftColor: WHITE })
-  else if (Number(item.bindType) === 2) lines.push({ left: 'Binds when equipped', leftColor: WHITE })
-  const slot = EQUIP_SLOT_NAMES[item.equipLocation]
-  const subclass = item.itemSubclass?.name
-  if (slot) lines.push({ left: slot, right: subclass, leftColor: WHITE, rightColor: WHITE })
-  for (const [key, value] of Object.entries(item.stats || {})) {
-    if (Number.isFinite(Number(value))) lines.push({ left: `${Number(value) > 0 ? '+' : ''}${value} ${statName(key)}`, leftColor: WHITE })
-  }
-  if (Number(item.requiredLevel) > 1) lines.push({ left: `Requires Level ${item.requiredLevel}`, leftColor: WHITE })
-  if (item.spell?.name) lines.push({ left: `Use: ${item.spell.name}`, leftColor: GREEN })
-  if (item.isCraftingReagent) lines.push({ left: 'Crafting Reagent', leftColor: { r: 0.4, g: 0.73, b: 1 } })
-  // Spells and labels (recipes, profession tabs) carry a description instead.
-  if (item.description) lines.push({ left: String(item.description), leftColor: NORMAL })
-  return lines
+function fullBlizzardTooltip(item) {
+  const tooltip = object(item?.tooltip)
+  const lines = capturedLines(item)
+  if (!lines.length || tooltip.source !== 'GameTooltip') return false
+  // Backward compatibility for rendered scans captured before Guildweaver
+  // started writing explicit completeness markers.
+  if (tooltip.complete === undefined && tooltip.rendered === undefined) return true
+  return tooltip.complete === true && tooltip.rendered === true
 }
 
-export function GameTooltipBody({ item }) {
-  const captured = capturedLines(item)
+function sellPriceAlreadyCaptured(lines) {
+  return lines.some((line) => line.sellPrice || /^sell\s+price\s*:/i.test(String(line.left || '').trim()))
+}
+
+function CapturedRows({ lines, quality }) {
+  return lines.map((line, index) => {
+    if (line.blank || line.sellPrice) {
+      return <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" />
+    }
+    const title = index === 0
+    const style = line.offset ? { paddingLeft: `${line.offset}px` } : undefined
+    return (
+      <div key={`${index}:${line.left}:${line.right || ''}`} className={`game-tooltip__line${title ? ` game-tooltip__title item-quality-${quality}` : ''}`} style={style}>
+        <span style={color(line.leftColor)}>{line.left}</span>
+        {line.right ? <span className="game-tooltip__right" style={color(line.rightColor)}>{line.right}</span> : null}
+      </div>
+    )
+  })
+}
+
+export function GameTooltipBody({ item: value }) {
+  const item = gameTooltipItem(value) || {}
+  const lines = capturedLines(item)
   const quality = Number(item.qualityId ?? item.quality) || 0
-  // The first captured line is the item's name.
-  const [title, ...rest] = captured.length ? captured : [{ left: item.name || `Item ${item.itemId || ''}`.trim() }, ...metadataLines(item)]
-  const price = Number(item.sellPrice) > 0 ? coins(item.sellPrice) : null
+  const actualItem = isItem(item)
+  const full = fullBlizzardTooltip(item)
+
+  // For real items, never manufacture a tooltip from metadata. If the client
+  // has not sent its rendered GameTooltip yet, say so and wait for Guildweaver
+  // to self-heal the definition.
+  if (actualItem && !full) {
+    return (
+      <>
+        <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
+          <span>{item.name || 'Item tooltip'}</span>
+        </div>
+        <div className="game-tooltip__pending">Full Blizzard tooltip is still syncing…</div>
+      </>
+    )
+  }
+
+  // Non-item controls (profession buttons, recipe spells) may legitimately
+  // provide captured spell lines or a small textual description.
+  if (!lines.length) {
+    return (
+      <>
+        <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
+          <span>{item.name || 'Tooltip'}</span>
+        </div>
+        {item.description ? <div className="game-tooltip__line"><span>{String(item.description)}</span></div> : null}
+      </>
+    )
+  }
+
+  const price = actualItem && Number(item.sellPrice) > 0 && !sellPriceAlreadyCaptured(lines)
+    ? coins(item.sellPrice)
+    : null
 
   return (
     <>
-      <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
-        <span style={captured.length ? color(title.leftColor) : undefined}>{title.left || item.name}</span>
-        {title.right ? <span style={color(title.rightColor)}>{title.right}</span> : null}
-      </div>
-      {rest.map((line, index) => (line.blank ? <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" /> : (
-        <div key={`${index}:${line.left}`} className="game-tooltip__line" style={line.offset ? { paddingLeft: `${line.offset}px` } : undefined}>
-          <span style={color(line.leftColor) || color(NORMAL)}>{line.left}</span>
-          {line.right ? <span className="game-tooltip__right" style={color(line.rightColor) || color(NORMAL)}>{line.right}</span> : null}
-        </div>
-      )))}
+      <CapturedRows lines={lines} quality={quality} />
       {price ? (
         <div className="game-tooltip__line game-tooltip__price">
           <span>Sell Price: <Money money={price} /></span>
@@ -100,8 +173,6 @@ export function GameTooltipBody({ item }) {
   )
 }
 
-// Shows a tooltip on hover, and on keyboard focus. A mouse click also focuses
-// its target; that must not leave a tooltip stuck open after the pointer moves on.
 function focusVisible(event) {
   try {
     return event.target.matches(':focus-visible')
@@ -113,8 +184,8 @@ function focusVisible(event) {
 export function GameTooltipHover({ item, children, side = 'right', className = '' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
-  if (!item) return children
-  // The wrapper is display: contents (no box), so measure the trigger inside it.
+  const normalized = gameTooltipItem(item)
+  if (!normalized) return children
   const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()
   const show = (event) => setAnchor(measure(event))
   const showOnFocus = (event) => {
@@ -133,7 +204,7 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
       {children}
       {anchor && typeof document !== 'undefined' ? (
         <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={`game-tooltip${className ? ` ${className}` : ''}`}>
-          <GameTooltipBody item={item} />
+          <GameTooltipBody item={normalized} />
         </FloatingTooltip>
       ) : null}
     </span>

@@ -46,11 +46,13 @@
 .farm-card__drop-wrap {
   display: block;
   min-width: 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--farm-hair);
 }
 
 .farm-card__match-label {
   display: block;
-  margin: 7px 0 3px;
+  margin: 0 0 0.35rem;
   color: rgba(212, 175, 55, 0.78);
   font-size: 9px;
   font-weight: 800;
@@ -74,9 +76,68 @@
   white-space: nowrap;
 }
 
-.farm-card__drops .farm-item-hover {
-  flex: 1 1 auto;
+/* Normal source cards are a quick visual index, not a miniature statistics
+   table. Search matches stay data-rich because the rate is the reason the
+   result is useful; unsearched "other drops" collapse into a compact icon
+   grid and disclose the exact item through the shared GameTooltip. */
+.farm-card__drops:not(.farm-card__drops--match) {
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(6, 28px);
+  gap: 0.38rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) li {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  min-width: 0;
+  font-size: 0;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .game-tooltip-hover,
+.farm-card__drops:not(.farm-card__drops--match) .farm-item-hover {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  overflow: visible;
+  align-items: center;
+  justify-content: center;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .farm-item-hover {
+  gap: 0;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .farm-item-hover .wow-icon {
+  flex: 0 0 auto;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .farm-item {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .farm-rate,
+.farm-card__drops:not(.farm-card__drops--match) .farm-pips {
+  display: none;
+}
+
+.farm-card__drops:not(.farm-card__drops--match) .farm-item-hover:hover .wow-icon,
+.farm-card__drops:not(.farm-card__drops--match) .farm-item-hover:focus-within .wow-icon {
+  filter: brightness(1.12);
 }
 
 .farm-header__location {
@@ -133,5 +194,9 @@
 
   .farming__select {
     min-height: 40px;
+  }
+
+  .farm-card__drops:not(.farm-card__drops--match) {
+    grid-template-columns: repeat(5, 28px);
   }
 }

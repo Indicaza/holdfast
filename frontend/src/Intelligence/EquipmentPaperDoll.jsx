@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { ItemDetailCard, ItemHoverCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
+import { ItemDetailCard, ItemIcon } from '../WowAssets/WowIcon.jsx'
 import { raceScene } from './characterArt.js'
+import { GameTooltipHover } from './GameTooltip.jsx'
 import { canonicalEquipmentSlot } from './model.js'
 import './CharacterArmoryV2.css'
 
@@ -59,7 +60,7 @@ function EquipmentSlot({ item, slot, active, onSelect, tooltipSide = 'right', ic
     </button>
   )
 
-  return item ? <ItemHoverCard item={item} side={tooltipSide}>{button}</ItemHoverCard> : button
+  return item ? <GameTooltipHover item={item} side={tooltipSide}>{button}</GameTooltipHover> : button
 }
 
 function GearSummary({ equipment, className, race }) {
