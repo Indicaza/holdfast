@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { DatabaseSync } from "node:sqlite";
 
+import { economicObservationMigration } from "../src/Economy/economicObservationMigration.js";
 import { economicObservationFromTelemetry, economicSourceKey } from "../src/Economy/economicObservationModel.js";
+import { repairFishingSourceKeysInDatabase } from "../src/Economy/economicObservationRepository.js";
 
 test("open-water fishing is scoped by map instead of collapsing globally", () => {
   const westfall = economicSourceKey({
@@ -97,4 +100,35 @@ test("telemetry normalization feeds map context into fishing source identity", (
   assert.equal(normalized.observation.zone, "Darkshore");
   assert.equal(normalized.observation.mapId, 1439);
   assert.equal(normalized.outputs[0].itemId, 6359);
+});
+
+test("persisted fishing observations are re-keyed by their stored map and zone", () => {
+  const db = new DatabaseSync(":memory:");
+
+  try {
+    economicObservationMigration.up(db);
+    const insert = db.prepare(`
+      INSERT INTO economic_observations (
+        observation_key, event_type, activity, discipline,
+        source_key, source_kind, source_name,
+        map_id, zone, captured_at, received_at
+      ) VALUES (?, 'gathering_loot', 'catch', 'fishing', ?, 'fishing-water', 'Open Water', ?, ?, ?, ?)
+    `);
+    const when = "2026-10-11T21:00:00.000Z";
+
+    insert.run("old-elwynn", "fishing:fishing-water:open-water", 1429, "Elwynn Forest", when, when);
+    insert.run("old-westfall", "fishing:fishing-water:open-water", 1436, "Westfall", when, when);
+
+    assert.equal(repairFishingSourceKeysInDatabase(db), 2);
+    assert.deepEqual(
+      db.prepare("SELECT zone, source_key FROM economic_observations ORDER BY zone").all(),
+      [
+        { zone: "Elwynn Forest", source_key: "fishing:fishing-water:map-1429" },
+        { zone: "Westfall", source_key: "fishing:fishing-water:map-1436" },
+      ],
+    );
+    assert.equal(repairFishingSourceKeysInDatabase(db), 0, "repair remains idempotent");
+  } finally {
+    db.close();
+  }
 });
