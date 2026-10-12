@@ -14,6 +14,7 @@ test("canonical item definitions enrich sparse equipment without losing instance
       iconFileDataId: 132767,
       bindType: 2,
       equipLocation: "INVTYPE_HEAD",
+      sellPrice: 12345,
       itemClass: { id: 4, name: "Armor" },
       itemSubclass: { id: 4, name: "Plate" },
       stats: { ITEM_MOD_STRENGTH_SHORT: 13, ITEM_MOD_STAMINA_SHORT: 14 },
@@ -34,6 +35,12 @@ test("canonical item definitions enrich sparse equipment without losing instance
     itemId: 11746,
     itemLink: "|Hitem:11746:17|h[Golem Skull Helm]|h",
     name: "Golem Skull Helm",
+    qualityId: null,
+    iconFileDataId: null,
+    requiredLevel: null,
+    bindType: null,
+    equipLocation: "",
+    sellPrice: null,
     enchantId: 17,
     durability: { current: 91, max: 100 },
   }, catalog);
@@ -41,6 +48,12 @@ test("canonical item definitions enrich sparse equipment without losing instance
   assert.equal(merged.slot, "HEAD");
   assert.equal(merged.enchantId, 17);
   assert.deepEqual(merged.durability, { current: 91, max: 100 });
+  assert.equal(merged.qualityId, 3);
+  assert.equal(merged.iconFileDataId, 132767);
+  assert.equal(merged.requiredLevel, 30);
+  assert.equal(merged.bindType, 2);
+  assert.equal(merged.equipLocation, "INVTYPE_HEAD");
+  assert.equal(merged.sellPrice, 12345);
   assert.equal(merged.itemSubclass.name, "Plate");
   assert.equal(merged.stats.ITEM_MOD_STRENGTH_SHORT, 13);
   assert.equal(merged.tooltip.lines.length, 3);
