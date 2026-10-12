@@ -1,12 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { apiJson } from '../../Api/apiClient.js'
 import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
+import { GameTooltipHover } from '../GameTooltip.jsx'
 import FarmingSourceModal, { ConfidencePips } from './FarmingSourceModal.jsx'
-import { disciplineLabel, formatCount, formatRate, groupSourcesByDiscipline, rateRangeText, sourcesUrl } from './farmingModel.js'
+import {
+  FARMING_SORTS,
+  disciplineLabel,
+  formatCount,
+  formatRate,
+  groupSourcesByDiscipline,
+  observationLabel,
+  rateRangeText,
+  sourcesUrl,
+} from './farmingModel.js'
 import './FarmingIntelligence.css'
+import './FarmingUx.css'
+
+function readBrowserStateFromLocation() {
+  const params = new URLSearchParams(window.location.search)
+  return {
+    query: params.get('q') || '',
+    discipline: params.get('discipline') || '',
+    zone: params.get('zone') || '',
+    sort: FARMING_SORTS.some((entry) => entry.id === params.get('sort')) ? params.get('sort') : 'observations',
+  }
+}
 
 // The open source lives in the URL (?source=), like the open character.
 function readSourceFromLocation() {
@@ -33,25 +54,41 @@ function useSourceParam() {
   return [sourceKey, open]
 }
 
+function FarmItem({ item, size = 20, strong = false }) {
+  const body = (
+    <span className="farm-item-hover">
+      <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />
+      {strong ? (
+        <strong className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</strong>
+      ) : (
+        <span className={`farm-item farm-item--q${item.qualityId ?? 1}`}>{item.name}</span>
+      )}
+    </span>
+  )
+  return <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover>
+}
+
 // What a source is worth gathering for, beyond the output it is named for:
 // the item searched for when there is a search, otherwise its other drops.
 function CardDrops({ source }) {
   const matches = source.matches || []
   const searched = matches.length > 0
   const drops = (searched ? matches : source.drops) || []
-  if (!drops.length) return <span className="farm-card__none">No other drops seen yet</span>
+  if (!drops.length) return null
 
   return (
-    <ul className={`farm-card__drops${searched ? ' farm-card__drops--match' : ''}`}>
-      {drops.slice(0, 3).map((drop) => (
-        <li key={drop.itemKey} title={rateRangeText(drop)}>
-          <WowIcon iconFileId={drop.iconFileDataId} itemId={drop.itemId} label={drop.name} quality={drop.qualityId} size={20} />
-          <span className={`farm-item farm-item--q${drop.qualityId ?? 1}`}>{drop.name}</span>
-          <b className={`farm-rate farm-rate--${drop.confidence}`}>{formatRate(drop.rate)}</b>
-          <ConfidencePips confidence={drop.confidence} />
-        </li>
-      ))}
-    </ul>
+    <div className={`farm-card__drop-wrap${searched ? ' farm-card__drop-wrap--match' : ''}`}>
+      {searched ? <span className="farm-card__match-label">Matched drop</span> : null}
+      <ul className={`farm-card__drops${searched ? ' farm-card__drops--match' : ''}`}>
+        {drops.slice(0, 3).map((drop) => (
+          <li key={drop.itemKey} title={rateRangeText(drop)}>
+            <FarmItem item={drop} />
+            <b className={`farm-rate farm-rate--${drop.confidence}`}>{formatRate(drop.rate)}</b>
+            <ConfidencePips confidence={drop.confidence} />
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -83,7 +120,7 @@ function SourceCard({ source, onOpen }) {
           <span className="farm-card__identity">
             <strong>{source.name}</strong>
             <CardZone source={source} />
-            <small>{formatCount(source.observations)} {source.observations === 1 ? 'gather' : 'gathers'}</small>
+            <small>{formatCount(source.observations)} {observationLabel(source.discipline, source.observations)}</small>
           </span>
           <span className="farm-card__open" aria-hidden="true">›</span>
         </span>
@@ -96,16 +133,51 @@ function SourceCard({ source, onOpen }) {
 // One searchable browser of everything the guild has gathered from. Search a
 // source to find it, or an item to find every source that produced it.
 export default function FarmingIntelligence({ input, onInputChange }) {
-  const [query, setQuery] = useState(() => input.trim())
-  const [discipline, setDiscipline] = useState('')
+  const initialBrowser = useRef(readBrowserStateFromLocation()).current
+  const [query, setQuery] = useState(() => input.trim() || initialBrowser.query.trim())
+  const [discipline, setDiscipline] = useState(initialBrowser.discipline)
+  const [zone, setZone] = useState(initialBrowser.zone)
+  const [sort, setSort] = useState(initialBrowser.sort)
   const [state, setState] = useState({ status: 'loading', data: null })
   const [sourceKey, openSource] = useSourceParam()
   const [initialItemKey, setInitialItemKey] = useState('')
+  const seededQuery = useRef(false)
+
+  useEffect(() => {
+    if (seededQuery.current) return
+    seededQuery.current = true
+    if (!input && initialBrowser.query) onInputChange(initialBrowser.query)
+  }, [initialBrowser.query, input, onInputChange])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setQuery(input.trim()), 180)
     return () => window.clearTimeout(timer)
   }, [input])
+
+  useEffect(() => {
+    const sync = () => {
+      const next = readBrowserStateFromLocation()
+      setDiscipline(next.discipline)
+      setZone(next.zone)
+      setSort(next.sort)
+      if (next.query !== input) onInputChange(next.query)
+    }
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [input, onInputChange])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const setOrDelete = (key, value, defaultValue = '') => {
+      if (value && value !== defaultValue) url.searchParams.set(key, value)
+      else url.searchParams.delete(key)
+    }
+    setOrDelete('q', query)
+    setOrDelete('discipline', discipline)
+    setOrDelete('zone', zone)
+    setOrDelete('sort', sort, 'observations')
+    if (url.href !== window.location.href) window.history.replaceState(null, '', url)
+  }, [query, discipline, zone, sort])
 
   // New gathers arriving from Guildweaver refresh the list in place.
   const [version, setVersion] = useState(0)
@@ -114,7 +186,7 @@ export default function FarmingIntelligence({ input, onInputChange }) {
   useEffect(() => {
     const controller = new AbortController()
     let active = true
-    apiJson(sourcesUrl({ query, discipline }), { signal: controller.signal })
+    apiJson(sourcesUrl({ query, discipline, zone, sort }), { signal: controller.signal })
       .then((data) => { if (active) setState({ status: 'ready', data }) })
       .catch((error) => {
         if (!active || error?.name === 'AbortError') return
@@ -124,11 +196,12 @@ export default function FarmingIntelligence({ input, onInputChange }) {
       active = false
       controller.abort()
     }
-  }, [query, discipline, version])
+  }, [query, discipline, zone, sort, version])
 
   const data = state.data
   const sources = data?.sources || []
   const disciplines = data?.disciplines || []
+  const zones = data?.zones || []
 
   function open(nextKey, itemKey = '') {
     setInitialItemKey(itemKey)
@@ -138,10 +211,26 @@ export default function FarmingIntelligence({ input, onInputChange }) {
   return (
     <section className="farming">
       <div className="farming__toolbar">
-        <label className="farming__search">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
-          <input type="search" aria-label="Search items or sources" value={input} onChange={(event) => onInputChange(event.target.value)} placeholder="Search items or sources…" />
-        </label>
+        <div className="farming__finder-row">
+          <label className="farming__search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
+            <input type="search" aria-label="Search items or sources" value={input} onChange={(event) => onInputChange(event.target.value)} placeholder="What do you want to farm?" />
+          </label>
+          <label className="farming__select">
+            <span>Zone</span>
+            <select value={zone} onChange={(event) => setZone(event.target.value)}>
+              <option value="">All zones</option>
+              {zone && !zones.some((entry) => entry.zone === zone) ? <option value={zone}>{zone}</option> : null}
+              {zones.map((entry) => <option key={entry.zone} value={entry.zone}>{entry.zone} ({formatCount(entry.sources)})</option>)}
+            </select>
+          </label>
+          <label className="farming__select farming__select--sort">
+            <span>Sort</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value)}>
+              {FARMING_SORTS.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+            </select>
+          </label>
+        </div>
         {disciplines.length ? (
           <div className="farming__disciplines" role="group" aria-label="Discipline">
             <button type="button" aria-pressed={!discipline} onClick={() => setDiscipline('')}>All</button>
@@ -157,8 +246,8 @@ export default function FarmingIntelligence({ input, onInputChange }) {
       {state.status === 'error' ? <p className="intel-error">Farming intelligence is unavailable right now.</p> : null}
       {state.status === 'loading' ? <p className="intel-muted">Reading gathering observations…</p> : null}
       {state.status === 'ready' && !sources.length ? (
-        <EmptyTelemetry title={query ? 'Nothing matches that search.' : 'No gathering observations yet.'}>
-          {query ? 'Try another item or source name.' : 'Sources appear once Guildweaver syncs gathering telemetry.'}
+        <EmptyTelemetry title={query || zone || discipline ? 'Nothing matches those filters.' : 'No gathering observations yet.'}>
+          {query || zone || discipline ? 'Try another item, source, zone, or discipline.' : 'Sources appear once Guildweaver syncs gathering telemetry.'}
         </EmptyTelemetry>
       ) : null}
       {sources.length ? (
