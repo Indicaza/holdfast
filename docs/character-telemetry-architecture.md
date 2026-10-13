@@ -121,3 +121,13 @@ To add a collector (mining, skinning, fishing…): emit the same
 source / outputs / context shape under a new `discipline`, add its event type
 to `ECONOMIC_EVENT_TYPES` and register a handler like `gatheringLoot.js`.
 The source browser and modal pick it up unchanged.
+
+## Farming sessions and map observations
+
+`farming_session` is an envelope-v1 event domain. Sequence-numbered cumulative records keep `sessionId`, mode, start/end, elapsed seconds, optional AFK seconds and expected harvest count. The durable projection is keyed by member + installation + session id; stale checkpoints cannot replace a final run. Gather observations join by `context.farming.sessionId`, independently of arrival order. Material rates remain unavailable until the completed run has all expected harvests and meets the 20-minute/10-harvest minimum. Yields currently mean items offered in a loot window, not verified acquisition.
+
+`GET /api/intelligence/farming/sessions` returns up to 100 recent runs, filtered by realm, build or mode, without member/device/character identities. Timed runs measure the declared interval; automatic runs estimate first-to-last gathering and split on gaps above ten minutes. Travel/waiting remains included between observations. AFK-excluded rates require a separately sufficient non-AFK window. Interrupted/open runs never produce hourly rates. The Farming page exposes both timing modes and short/incomplete samples.
+
+`GET /api/intelligence/farming/sources/:sourceKey/locations` returns up to 2,000 aggregated map points (default 500), with optional mapId/realm/region/build filters. Coordinates use UI map ids and `[0,1]` normalized positions; response points round to four decimal places while the facts retain the collector's five decimals. Locations describe `player_at_cast`, not exact object positions. Missing, null, partial, nonfinite, unsupported-system and out-of-range positions are excluded. `truncated` indicates further map cells exist. Responses include realm/build context and observation counts, not player identities or movement trails. Both endpoints require authentication.
+
+Deployment order: website first, bridge contract tests second, addon third. Existing envelope/SavedVariables versions and gathering events remain compatible. Migration 10 adds session/context fields without changing previous migration bodies or deleting data. Old observations remain useful for drop tables; they are not retroactively assigned invented farming durations.

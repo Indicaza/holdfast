@@ -9,6 +9,7 @@ import {
 } from "../Guild/authorityPolicy.js";
 import { notificationMigration } from "../Notification/notificationMigration.js";
 import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
+import { farmingSessionMigration } from "../Economy/farmingSessionMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
@@ -791,6 +792,7 @@ const migrations = [
   notificationMigration,
   guildweaverTablesMigration,
   economicObservationMigration,
+  farmingSessionMigration,
 ];
 
 function configureDatabase(db) {

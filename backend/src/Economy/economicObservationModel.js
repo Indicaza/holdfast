@@ -22,6 +22,7 @@ function integer(value) {
 }
 
 function coordinate(value) {
+  if (value == null || (typeof value === "string" && !value.trim()) || typeof value === "boolean") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : null;
 }
@@ -152,6 +153,11 @@ export function economicObservationFromTelemetry({
   const gameBuild = isObject(envelope.gameBuild) ? envelope.gameBuild : {};
   const observationId = text(payload.observationId, 200);
   const sourceEntityId = integer(source.objectId ?? source.npcId);
+  const mapId = integer(location.mapId);
+  const supportedCoordinates = !location.coordinateSystem || location.coordinateSystem === "ui_map_normalized";
+  const x = supportedCoordinates && mapId > 0 ? coordinate(location.x) : null;
+  const y = supportedCoordinates && mapId > 0 ? coordinate(location.y) : null;
+  const sessionId = text(context.farming?.sessionId, 160);
 
   return {
     observation: {
@@ -186,11 +192,16 @@ export function economicObservationFromTelemetry({
       // Missing means the client could not read the talent, not rank 0.
       bountifulHarvestRank: bountiful ? integer(bountiful.rank) : null,
       bountifulHarvestMaxRanks: bountiful ? integer(bountiful.maxRanks) : null,
-      mapId: integer(location.mapId),
+      mapId: mapId > 0 ? mapId : null,
       zone: text(location.zone),
       subzone: text(location.subzone),
-      x: coordinate(location.x),
-      y: coordinate(location.y),
+      x: x !== null && y !== null ? x : null,
+      y: x !== null && y !== null ? y : null,
+      positionKind: text(location.positionKind, 60) || "player_at_cast",
+      realm: text(envelope.realm),
+      region: text(envelope.region, 40),
+      farmingSessionKey: sessionId
+        ? JSON.stringify([text(memberId, 160), text(envelope.installationId, 160), sessionId]) : "",
       gameBuild: text(gameBuild.build, 40),
       gameVersion: text(gameBuild.version, 40),
       capturedAt: telemetryTime(envelope.capturedAt, receivedAt),

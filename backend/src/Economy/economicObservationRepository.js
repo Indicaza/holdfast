@@ -75,8 +75,9 @@ function insertObservation(db, { observation, outputs }) {
       member_id, device_id, character_key, character_level,
       skill_line_id, skill_level, max_skill_level, skill_modifier,
       bountiful_harvest_rank, bountiful_harvest_max_ranks,
-      map_id, zone, subzone, x, y, game_build, game_version, captured_at, received_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      map_id, zone, subzone, x, y, game_build, game_version, captured_at, received_at,
+      farming_session_key, realm, region, position_kind
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     observation.observationKey,
     observation.recordId,
@@ -106,6 +107,10 @@ function insertObservation(db, { observation, outputs }) {
     observation.gameVersion,
     observation.capturedAt,
     observation.receivedAt,
+    observation.farmingSessionKey,
+    observation.realm,
+    observation.region,
+    observation.positionKind,
   );
   if (!result.changes) {
     if (observation.recordId) {

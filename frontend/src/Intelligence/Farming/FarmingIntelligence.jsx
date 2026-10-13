@@ -6,6 +6,7 @@ import WowIcon from '../../WowAssets/WowIcon.jsx'
 import EmptyTelemetry from '../EmptyTelemetry.jsx'
 import { GameTooltipHover } from '../GameTooltip.jsx'
 import FarmingSourceModal, { ConfidencePips } from './FarmingSourceModal.jsx'
+import FarmingSessions from './FarmingSessions.jsx'
 import {
   FARMING_SORTS,
   disciplineLabel,
@@ -259,6 +260,8 @@ export default function FarmingIntelligence({ input, onInputChange }) {
           </section>
         ))
       ) : null}
+
+      <FarmingSessions />
 
       {sourceKey ? (
         <FarmingSourceModal key={sourceKey} sourceKey={sourceKey} initialItemKey={initialItemKey} initialZone={zone} onClose={() => open('')} />
