@@ -66,6 +66,9 @@ export function createTelemetryRouter() {
           detail: { sourceKey: result.recordedEvent.sourceKey, discipline: result.recordedEvent.discipline },
         });
       }
+      if (result.recordedEvent?.sessionChanged) {
+        publishLiveUpdate({ topics: ["farming"], source: "farming.session" });
+      }
       if (kind === "state") {
         publishCharacterChanged({ characterId: canonicalCharacterId, sections: result.changedSections });
       }

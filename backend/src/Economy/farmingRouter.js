@@ -2,10 +2,31 @@ import { Router } from "express";
 
 import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
 import { readFarmingIngestStatus, readFarmingSource, searchFarmingSources } from "./farmingRepository.js";
+import { readFarmingSessions, readFarmingLocations } from "./farmingSessionRepository.js";
 
 // Mounted at /api/intelligence/farming.
 export function createFarmingRouter() {
   const router = Router();
+
+  router.get("/sessions", requireAuthenticated, (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json(readFarmingSessions(req.query || {}));
+    } catch (error) {
+      console.error("Unable to read farming sessions", error);
+      res.status(500).json({ error: "farming_sessions_unavailable" });
+    }
+  });
+
+  router.get("/sources/:sourceKey/locations", requireAuthenticated, (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json(readFarmingLocations(req.params.sourceKey, req.query || {}));
+    } catch (error) {
+      console.error("Unable to read farming locations", error);
+      res.status(500).json({ error: "farming_locations_unavailable" });
+    }
+  });
 
   router.get("/sources", requireAuthenticated, (req, res) => {
     try {

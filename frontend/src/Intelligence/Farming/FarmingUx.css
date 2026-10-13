@@ -200,3 +200,12 @@
     grid-template-columns: repeat(5, 28px);
   }
 }
+ .farm-sessions { margin-block: 1.5rem; padding: 1rem; border: 1px solid var(--farm-border, #39404c); border-radius: 8px; }
+ .farm-sessions summary { cursor: pointer; font-weight: 600; }
+ .farm-sessions p { font-size: .875rem; opacity: .8; line-height: 1.5; }
+ .farm-sessions__filters { display: flex; flex-wrap: wrap; gap: 1rem; }
+ .farm-sessions__filters label { display: grid; gap: .3rem; font-size: .875rem; }
+ .farm-sessions__filters input, .farm-sessions__filters select { max-width: 16rem; padding: .4rem; background: var(--farm-surface, #181e28); color: inherit; border: 1px solid #39404c; border-radius: 4px; }
+ .farm-sessions__list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+ .farm-sessions__list > li { padding: .8rem; border: 1px solid #39404c; border-radius: 6px; }
+ .farm-sessions__list header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
