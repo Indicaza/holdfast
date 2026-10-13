@@ -22,7 +22,7 @@ function integer(value) {
 }
 
 function coordinate(value) {
-  if (value == null || (typeof value === "string" && !value.trim()) || typeof value === "boolean") return null;
+  if (!["number", "string"].includes(typeof value) || (typeof value === "string" && !value.trim())) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : null;
 }

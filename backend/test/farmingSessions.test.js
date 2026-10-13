@@ -123,7 +123,7 @@ test('session identity remains separate across members and installations', () =>
 }));
 
 test('coordinates preserve real zero/one edges and drop missing/partial/invalid positions', () => {
-  for (const position of [{ x: null }, { x: undefined }, { x: '' }, { x: true }, { x: -1 }, { y: 1.1 }, { x: NaN }, { mapId: null }, { coordinateSystem: 'world_xyz' }]) {
+  for (const position of [{ x: null }, { x: undefined }, { x: '' }, { x: true }, { x: [] }, { x: {} }, { x: [0.4] }, { x: -1 }, { y: 1.1 }, { x: NaN }, { mapId: null }, { coordinateSystem: 'world_xyz' }]) {
     const envelope = gather(1, 'coords', { location: position });
     const result = economicObservationFromTelemetry({ eventType: 'gathering_loot', envelope });
     assert.equal(result.observation.x, null, JSON.stringify(position));
