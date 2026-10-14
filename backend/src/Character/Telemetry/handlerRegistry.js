@@ -1,3 +1,5 @@
+import { mobLootTelemetryHandler } from "./handlers/mobLoot.js";
+import { gameItemDefinitionTelemetryHandler } from "./handlers/gameItemDefinition.js";
 import { characterTelemetryHandler } from "./handlers/character.js";
 import { equipmentTelemetryHandler } from "./handlers/equipment.js";
 import { gatheringLootTelemetryHandler } from "./handlers/gatheringLoot.js";
@@ -19,6 +21,8 @@ const handlers = new Map(
     inventorySnapshotTelemetryHandler,
     gatheringLootTelemetryHandler,
     farmingSessionTelemetryHandler,
+    mobLootTelemetryHandler,
+    gameItemDefinitionTelemetryHandler,
   ].map((handler) => [handler.eventType, handler]),
 );
 

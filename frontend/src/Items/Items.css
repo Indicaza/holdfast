@@ -1,0 +1,31 @@
+.catalog-page .page-shell__body { max-width: none; }
+.catalog-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; }
+.catalog-toolbar form { flex: 1; min-width: min(100%, 20rem); }
+.catalog-toolbar label { display: grid; gap: .5rem; font-size: .85rem; }
+.catalog-toolbar form > div { display: flex; gap: .5rem; margin-top: .5rem; }
+.catalog-toolbar input { flex: 1; min-width: 0; }
+.catalog-toolbar input, .catalog-toolbar select { padding: .75rem; border: 1px solid rgba(255,255,255,.2); border-radius: .35rem; color: var(--color-text); background: var(--color-background); }
+.catalog-page button { border: 1px solid var(--color-accent-bright); background: transparent; color: var(--color-text); border-radius: .35rem; padding: .6rem 1rem; cursor: pointer; }
+.catalog-page button:disabled { opacity: .5; cursor: default; }
+.catalog-panel { margin-top: 1.5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid rgba(255,255,255,.13); border-radius: .6rem; background: rgba(0,0,0,.15); }
+.catalog-panel h2 { margin: 0 0 1rem; font-size: 1.4rem; }
+.catalog-caption, .catalog-api { font-size: .85rem; opacity: .8; }
+.catalog-item { display: flex; align-items: start; flex-wrap: wrap; gap: 1rem; }
+.catalog-item h2 { margin-bottom: .25rem; }
+.catalog-description { width: 100%; max-width: 45rem; }
+.catalog-description p { display: flex; justify-content: space-between; gap: 1rem; margin: .35rem 0; }
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: .75rem; }
+.catalog-result { display: flex; align-items: center; gap: .8rem; padding: 1rem; border: 1px solid rgba(255,255,255,.15); border-radius: .5rem; text-decoration: none; }
+.catalog-result:hover { background: rgba(255,255,255,.05); }
+.catalog-result small, .catalog-table-wrap td > span, .catalog-recipes li > span { display: block; font-size: .8rem; opacity: .75; margin-top: .25rem; }
+.catalog-table-wrap { overflow-x: auto; margin-top: 1rem; }
+.catalog-table-wrap table { width: 100%; border-collapse: collapse; min-width: 36rem; text-align: left; }
+.catalog-table-wrap th, .catalog-table-wrap td { padding: .8rem; border-bottom: 1px solid rgba(255,255,255,.12); }
+.catalog-table-wrap th { font-size: .8rem; }
+.catalog-recipe-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.catalog-recipes { list-style: none; padding: 0 !important; }
+.catalog-recipes li + li { border-top: 1px solid rgba(255,255,255,.1); padding-top: 1rem; margin-top: 1rem; }
+.catalog-locations { margin-top: 1rem; }
+.catalog-locations summary { cursor: pointer; }
+.catalog-api, .catalog-next { display: block; margin-top: 2rem; }
+@media (max-width: 700px) { .catalog-recipe-columns { grid-template-columns: 1fr; } }

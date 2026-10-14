@@ -1,3 +1,4 @@
+import { projectPublicGameDataInDatabase } from "../../GameData/publicGameDataProjection.js";
 import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js";
 import { projectTelemetryStateInDatabase } from "../ReadModel/readModelWriter.js";
 import { ensureCharacterReadModelCurrent } from "../ReadModel/rebuildReadModel.js";
@@ -67,7 +68,7 @@ function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receiv
       eventType: String(persistedEnvelope.eventType || incoming.eventType),
     };
     const canonicalPayload = canonicalTelemetryPayload(persistedRecord);
-    storeLatestTelemetryState({
+    const latest = storeLatestTelemetryState({
       memberId,
       deviceId,
       rawCharacterId,
@@ -84,6 +85,10 @@ function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receiv
       envelope: persistedEnvelope,
       payload: canonicalPayload,
     });
+
+    if (latest?.recordId === result.record.id) {
+      withGuildDatabase((db) => projectPublicGameDataInDatabase(db, { eventType: persistedRecord.eventType, envelope: persistedEnvelope, payload: canonicalPayload }));
+    }
 
     // The character read model the website renders from (ReadModel/).
     ensureCharacterReadModelCurrent();

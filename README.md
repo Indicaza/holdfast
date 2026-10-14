@@ -115,6 +115,10 @@ The sandbox is explicitly disabled in production and production startup rejects 
 
 See [Development](docs/DEVELOPMENT.md) for the complete setup, sandbox behavior, real Discord integration setup, and test commands.
 
+## Public game knowledge
+
+Browse `/items` for observed loot sources and crafting uses. The read-only game-data API exposes whitelisted game facts while character telemetry remains private. See [Public game data](docs/PUBLIC_GAME_DATA.md) for contracts, privacy boundaries, and rollout checks.
+
 ## Testing
 
 Frontend:

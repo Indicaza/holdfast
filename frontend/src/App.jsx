@@ -19,6 +19,7 @@ const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildIntelligence = lazy(() => import('./Intelligence/GuildIntelligence.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
+const Items = lazy(() => import('./Items/Items.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
@@ -148,6 +149,14 @@ function memberProfileRoute(pathname) {
   }
 }
 
+function itemCatalogRoute(pathname, queryString) {
+  const match = pathname.match(/^\/items(?:\/(\d+))?$/)
+  if (!match) return null
+  return { component: Items, path: pathname, title: 'Item Catalog | Holdfast',
+    description: 'Community-observed item sources, dungeon loot, and crafting uses.', robots: defaultRobots,
+    props: { itemId: match[1] || null, queryString } }
+}
+
 function App() {
   // Follow client-side navigation in a transition: React keeps the current
   // page on screen while the next page's code loads, instead of falling back
@@ -157,7 +166,7 @@ function App() {
   useEffect(() => subscribeLocation(() => startNavigation(() => setHref(window.location.href))), [])
   useEffect(() => interceptLinkClicks(), [])
   const requestedPathname = normalizePathname(new URL(href).pathname)
-  const dynamicRoute = memberProfileRoute(requestedPathname)
+  const dynamicRoute = memberProfileRoute(requestedPathname) || itemCatalogRoute(requestedPathname, new URL(href).search)
   const pathname = resolvePathname(requestedPathname, Object.keys(routes))
   const route = dynamicRoute ?? (pathname
     ? routes[pathname]

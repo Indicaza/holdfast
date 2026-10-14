@@ -1,6 +1,7 @@
 export const publicNavigationLinks = [
   { label: 'Charter', href: '/charter' },
   { label: 'Ranks', href: '/ranks' },
+  { label: 'Items', href: '/items' },
   { label: 'Guildweaver', href: '/guildweaver' },
 ]
 

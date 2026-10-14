@@ -1,3 +1,4 @@
+import { backfillPublicGameData } from "./GameData/backfillPublicGameData.js";
 import dotenv from "dotenv";
 import { createApp } from "./app.js";
 import { assertProductionEnvironment } from "./Config/environment.js";
@@ -51,6 +52,11 @@ const economicBackfill = withGuildTransaction(backfillEconomicObservationsInData
 
 if (economicBackfill.created) {
   console.log("Recorded economic observations from stored telemetry", economicBackfill);
+}
+
+const publicGameBackfill = backfillPublicGameData();
+if (publicGameBackfill.observations || publicGameBackfill.states) {
+  console.log("Projected public game facts from stored telemetry", publicGameBackfill);
 }
 
 const app = createApp();

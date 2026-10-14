@@ -297,7 +297,7 @@ for (const withLegacyCompletionTable of [false, true]) {
       const upgraded = openGuildDatabase();
 
       try {
-        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        assert.deepEqual(appliedVersions(upgraded), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
         assert.deepEqual(persistentState(upgraded), before);
         assert.equal(upgraded.prepare("PRAGMA quick_check").get().quick_check, "ok");
         assert.equal(upgraded.prepare("PRAGMA foreign_key_check").all().length, 0);
