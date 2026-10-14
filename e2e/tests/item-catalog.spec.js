@@ -32,6 +32,7 @@ test('public search → dungeon source → crafting use → ingredient, with rel
   await page.getByRole('button', { name: 'Search', exact: true }).click()
   await expect(page).toHaveURL(/q=Linen\+Cloth/)
   await expect(page.locator('.catalog-result')).toHaveCount(1)
+  await expect(page.locator('.catalog-result img').first()).toHaveAttribute('loading', 'lazy')
   await page.locator('.catalog-result').click()
   await expect(page).toHaveURL(/\/items\/2589\?build=70338&locale=en_US/)
   await expect(page.getByRole('heading', { name: 'Where it was observed' })).toBeVisible()

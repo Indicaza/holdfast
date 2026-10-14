@@ -168,7 +168,12 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
     }),
     createDiscordAuthRouter(discordAuthOptions),
   );
-  app.use("/api/game-data/v1", createRateLimiter({ name: "public-game-data", windowMs: 60000, max: 120 }), createPublicGameDataRouter({ ...(developmentAuthEnabled(developmentEnv) ? { iconMediaResolver: createDevelopmentIconMediaResolver() } : {}), ...publicGameDataOptions }));
+  const gameDataJsonLimit = createRateLimiter({ name: "public-game-data-json", windowMs: 60000, max: 120 });
+  const gameDataIconLimit = createRateLimiter({ name: "public-game-data-icons", windowMs: 60000, max: 1200 });
+  app.use("/api/game-data/v1", (req, res, next) => {
+    const limiter = /^\/icons(?:\/|$)/.test(req.path) ? gameDataIconLimit : gameDataJsonLimit;
+    limiter(req, res, next);
+  }, createPublicGameDataRouter({ ...(developmentAuthEnabled(developmentEnv) ? { iconMediaResolver: createDevelopmentIconMediaResolver() } : {}), ...publicGameDataOptions }));
   app.use("/api/notifications", createNotificationRouter());
   app.use("/api/quests", createQuestCompletionRouter());
   app.use("/api/quests", createQuestRouter());
