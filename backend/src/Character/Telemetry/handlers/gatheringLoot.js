@@ -1,3 +1,5 @@
+import { gameLocale } from "../../../GameData/publicGameDataModel.js";
+import { recordGatheringFactsInDatabase } from "../../../GameData/publicGameDataProjection.js";
 import { recordEconomicObservationInDatabase } from "../../../Economy/economicObservationRepository.js";
 
 // gathering_loot: one herb node (later ore vein, skinned creature, fishing
@@ -14,6 +16,8 @@ export const gatheringLootTelemetryHandler = {
     return envelope.payload;
   },
   recordEvent(db, event) {
-    return recordEconomicObservationInDatabase(db, event);
+    const result = recordEconomicObservationInDatabase(db, event);
+    if (result.status === "created") recordGatheringFactsInDatabase(db, result.observationId, gameLocale(event.envelope?.locale));
+    return result;
   },
 };

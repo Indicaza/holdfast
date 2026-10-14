@@ -35,6 +35,24 @@ function Privacy() {
         </li>
       </ul>
 
+      <h2>Guildweaver and public game facts</h2>
+      <p>
+        If you pair Guildweaver, the bridge uploads character, equipment,
+        inventory, profession, gathering, and loot observations. Loot records
+        include source identifiers, game build, dungeon context, timestamps,
+        and your position when the client provides it. These detailed records
+        remain within the authenticated guild tools and administrative systems.
+      </p>
+      <p>
+        The public item catalog and game-data API share item definitions,
+        recipe ingredients and outputs, and aggregate observed loot sources.
+        Item descriptions come from base item IDs. Public data excludes player,
+        guild, member, device, and installation identities, inventory contents,
+        individual farming sessions, and raw corpse identifiers. Public map
+        points cover 2% of a map and require at least three contributors;
+        precise player coordinates are not public.
+      </p>
+
       <h2>Where it comes from</h2>
       <p>
         Discord identity and guild membership come from Discord OAuth and the

@@ -1,3 +1,4 @@
+import { createPublicGameDataRouter } from "./GameData/publicGameDataRouter.js";
 import cors from "cors";
 import express from "express";
 import { offsiteBackupHealth } from "./Data/offsiteBackup.js";
@@ -40,7 +41,7 @@ import {
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -167,6 +168,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions } = {}) {
     }),
     createDiscordAuthRouter(discordAuthOptions),
   );
+  app.use("/api/game-data/v1", createRateLimiter({ name: "public-game-data", windowMs: 60000, max: 120 }), createPublicGameDataRouter({ ...(developmentAuthEnabled(developmentEnv) ? { iconMediaResolver: createDevelopmentIconMediaResolver() } : {}), ...publicGameDataOptions }));
   app.use("/api/notifications", createNotificationRouter());
   app.use("/api/quests", createQuestCompletionRouter());
   app.use("/api/quests", createQuestRouter());
