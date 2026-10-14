@@ -34,7 +34,23 @@ function position(location) {
   return valid(location.x) && valid(location.y) ? { x: location.x, y: location.y } : { x: null, y: null };
 }
 
-function insertLoot(db, observation, outputs) {
+function localizedLootLabel(previous, previousLocale, value, locale) {
+  let labels = {};
+  try {
+    const decoded = JSON.parse(previous);
+    if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+      labels = Object.fromEntries(Object.entries(decoded).slice(0, 32).map(([key, label]) => [key, gameText(label)]));
+    }
+  } catch {
+    const label = gameText(previous);
+    if (label) labels[previousLocale] = label;
+  }
+  const label = gameText(value);
+  if (label && (locale in labels || Object.keys(labels).length < 32)) labels[locale] = label;
+  return JSON.stringify(labels);
+}
+
+function insertLoot(db, observation, outputs, itemContext = observation) {
   const point = position(observation.location);
   const source = observation.source;
   const instance = observation.instance || {};
@@ -45,16 +61,23 @@ function insertLoot(db, observation, outputs) {
     ON CONFLICT(observation_key) DO UPDATE SET
       source_name = CASE WHEN game_loot_observations.source_name = '' THEN excluded.source_name ELSE game_loot_observations.source_name END
   `).run(observation.key, observation.contributor, observation.gameBuild, observation.locale, observation.activity,
-    observation.discipline, source.kind, gameInteger(source.id, 1), gameText(source.name),
-    gameInteger(instance.instanceId, 1), gameText(instance.name), gameInteger(instance.difficultyId),
-    gameInteger(observation.location?.mapId, 1), gameText(observation.location?.zone), point.x, point.y,
+    observation.discipline, source.kind, gameInteger(source.id, 1), observation.namesLocale ? "" : gameText(source.name),
+    gameInteger(instance.instanceId, 1), observation.namesLocale ? "" : gameText(instance.name), gameInteger(instance.difficultyId),
+    gameInteger(observation.location?.mapId, 1), observation.namesLocale ? "" : gameText(observation.location?.zone), point.x, point.y,
     observation.location?.positionKind === "player_at_loot" ? "player_at_loot" : "player_at_cast", observation.capturedAt);
-  const row = db.prepare("SELECT id FROM game_loot_observations WHERE observation_key = ?").get(observation.key);
+  const row = db.prepare("SELECT id, locale, source_name, instance_name, zone FROM game_loot_observations WHERE observation_key = ?").get(observation.key);
+  if (observation.namesLocale) {
+    db.prepare("UPDATE game_loot_observations SET locale = 'und', source_name = ?, instance_name = ?, zone = ? WHERE id = ?").run(
+      localizedLootLabel(row.source_name, row.locale, source.name, observation.namesLocale),
+      localizedLootLabel(row.instance_name, row.locale, instance.name, observation.namesLocale),
+      localizedLootLabel(row.zone, row.locale, observation.location?.zone, observation.namesLocale), row.id,
+    );
+  }
   for (const output of outputs) {
     const itemId = gameInteger(output?.itemId, 1);
     const quantity = gameInteger(output?.quantity, 1, 100000);
     if (!itemId || !quantity) continue;
-    learnPublicItemInDatabase(db, output, observation, { capturedAt: observation.capturedAt });
+    learnPublicItemInDatabase(db, output, itemContext, { capturedAt: observation.capturedAt });
     db.prepare(`INSERT INTO game_loot_outputs (observation_id, item_id, quantity, is_quest_item) VALUES (?, ?, ?, ?)
       ON CONFLICT(observation_id, item_id) DO UPDATE SET quantity = MAX(game_loot_outputs.quantity, excluded.quantity),
         is_quest_item = MAX(game_loot_outputs.is_quest_item, excluded.is_quest_item)
@@ -66,12 +89,17 @@ function insertLoot(db, observation, outputs) {
 export function recordMobLootInDatabase(db, { envelope, memberId }) {
   const payload = envelope.payload;
   const context = gameContext(envelope);
-  return insertLoot(db, { ...context,
-    key: hash(["corpse", context.gameBuild, context.locale, envelope.region, envelope.realm, payload.source.guid]),
+  const key = hash(["corpse", context.gameBuild, envelope.region, envelope.realm, payload.source.guid]);
+  const legacyLocales = [...new Set([context.locale, "und", "en_US", "en_GB", "de_DE", "es_ES", "es_MX", "fr_FR", "it_IT", "ko_KR", "pt_BR", "ru_RU", "zh_CN", "zh_TW"])];
+  const keys = [key, ...legacyLocales.map((locale) => hash(["corpse", context.gameBuild, locale, envelope.region, envelope.realm, payload.source.guid]))];
+  const existing = db.prepare(`SELECT observation_key FROM game_loot_observations
+    WHERE observation_key IN (${keys.map(() => "?").join(",")}) ORDER BY observation_key = ? DESC, id LIMIT 1`).get(...keys, key);
+  return insertLoot(db, { ...context, locale: "und", namesLocale: context.locale,
+    key: existing?.observation_key || key,
     contributor: hash([memberId]), activity: "corpse_loot", discipline: "loot",
     source: { kind: "creature", id: payload.source.npcId, name: payload.source.name },
     location: payload.context?.location, instance: payload.context?.instance, capturedAt: timestamp(envelope.capturedAt),
-  }, payload.outputs);
+  }, payload.outputs, context);
 }
 
 export function recordGatheringFactsInDatabase(db, observationId, locale = "und") {

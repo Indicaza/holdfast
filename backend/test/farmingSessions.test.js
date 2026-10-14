@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { ingestTelemetry } from '../src/Character/Telemetry/ingestTelemetry.js';
-import { validFarmingSession, farmingSessionQuality } from '../src/Economy/farmingSessionModel.js';
+import { validFarmingSession, farmingSessionQuality, farmingSessionCoverage, FARMING_SYNC_GRACE_SECONDS } from '../src/Economy/farmingSessionModel.js';
 import { readFarmingSessions, readFarmingLocations } from '../src/Economy/farmingSessionRepository.js';
 import { economicObservationFromTelemetry } from '../src/Economy/economicObservationModel.js';
 import { withGuildDatabase, migrateGuildDatabase } from '../src/Data/database.js';
@@ -158,4 +158,42 @@ test('authenticated map endpoint groups points by map, realm and build without p
   const sessions = await request('/api/intelligence/farming/sessions?mode=manual', { persona: 'member' });
   assert.equal(sessions.status, 200);
   assert.equal(sessions.json.sessions.length, 1);
+}));
+
+
+test('farming quality expires its sync grace period and gates rates on observed coverage and sample size', () => {
+  const receivedAt = '2026-10-14T05:00:00.000Z';
+  const at = Date.parse(receivedAt);
+  const run = { status: 'complete', durationSeconds: 1800, expectedGathers: 20, observedGathers: 18, receivedAt };
+  assert.equal(farmingSessionQuality({ ...run, status: 'open', now: at }), 'in_progress');
+  assert.equal(farmingSessionQuality({ ...run, now: at + 899999 }), 'awaiting_observations');
+  assert.equal(farmingSessionQuality({ ...run, now: at + 900000 }), 'sustained');
+  assert.equal(farmingSessionQuality({ ...run, observedGathers: 17, now: at + 900000 }), 'incomplete_sync');
+  assert.equal(farmingSessionQuality({ ...run, observedGathers: 21, now: at }), 'sustained');
+  assert.equal(farmingSessionQuality({ ...run, observedGathers: 20, durationSeconds: 1199, now: at }), 'short_sample');
+  assert.equal(farmingSessionQuality({ ...run, expectedGathers: 10, observedGathers: 9, now: at + 900000 }), 'short_sample');
+  assert.equal(farmingSessionQuality({ ...run, receivedAt: 'invalid', observedGathers: 17, now: at }), 'incomplete_sync');
+  assert.equal(farmingSessionCoverage(0, 0), 1); assert.equal(farmingSessionCoverage(20, 21), 1);
+});
+
+test('partial runs recover after grace without inflating observed yields or extending grace on retries', () => withHttpApp(async () => {
+  record(session({ sessionId: 'partial', gatheringCount: 20 }));
+  for (let index = 1; index <= 18; index += 1) record(gather(index, 'partial'));
+  const received = withGuildDatabase((db) => db.prepare('SELECT received_at FROM farming_sessions').get().received_at);
+  const at = Date.parse(received);
+  let run = readFarmingSessions({}, { now: at + 1000 }).sessions[0];
+  assert.equal(run.quality, 'awaiting_observations'); assert.equal(run.coverage, 0.9); assert.equal(run.partial, true);
+  assert.equal(run.outputs[0].perHour, null);
+  record(session({ sessionId: 'partial', gatheringCount: 20 }));
+  assert.equal(withGuildDatabase((db) => db.prepare('SELECT received_at FROM farming_sessions').get().received_at), received);
+  run = readFarmingSessions({}, { now: at + FARMING_SYNC_GRACE_SECONDS * 1000 }).sessions[0];
+  assert.equal(run.quality, 'sustained'); assert.equal(run.observedGathers, 18); assert.equal(run.coverage, 0.9);
+  const cloth = run.outputs.find((item) => item.itemId === 2447);
+  assert.equal(cloth.quantity, 36); assert.equal(cloth.perHour, 72); assert.equal(cloth.perNonAfkHour, 86.4);
+  record(session({ sessionId: 'incomplete', gatheringCount: 20 }));
+  for (let index = 1; index <= 17; index += 1) record(gather(index, 'incomplete'));
+  const rows = readFarmingSessions({}, { now: at + 1000000 }).sessions;
+  const incomplete = rows.find((item) => item.expectedGathers === 20 && item.observedGathers === 17);
+  assert.equal(incomplete.quality, 'incomplete_sync'); assert.equal(incomplete.coverage, 0.85);
+  assert.equal(incomplete.outputs[0].perHour, null);
 }));
