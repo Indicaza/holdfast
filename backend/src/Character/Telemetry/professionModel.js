@@ -18,8 +18,15 @@ function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+// Empty Lua tables arrive as {} (the SavedVariables parser cannot tell an empty
+// array from an empty object), so an empty object is an empty list.
+function list(value) {
+  if (Array.isArray(value)) return value;
+  return isObject(value) && Object.keys(value).length === 0 ? [] : null;
+}
+
 function array(value) {
-  return Array.isArray(value) ? value : [];
+  return list(value) || [];
 }
 
 function text(value, maxLength = 160) {
@@ -222,9 +229,9 @@ function profession(value) {
 }
 
 export function isProfessionSnapshotPayload(payload) {
-  if (!isObject(payload) || !Array.isArray(payload.professions)) return false;
-  return payload.professions.every(
-    (entry) => isObject(entry) && (entry.recipes === undefined || entry.recipes === null || Array.isArray(entry.recipes)),
+  if (!isObject(payload) || !list(payload.professions)) return false;
+  return list(payload.professions).every(
+    (entry) => isObject(entry) && (entry.recipes === undefined || entry.recipes === null || list(entry.recipes) !== null),
   );
 }
 

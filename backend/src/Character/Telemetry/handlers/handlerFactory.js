@@ -36,6 +36,9 @@ export function objectOrMissing(value) {
   return value === undefined || value === null || isObject(value);
 }
 
+// Empty Lua tables arrive as {} (the SavedVariables parser cannot tell an empty
+// array from an empty object), so an empty object counts as an empty list.
 export function arrayOrMissing(value) {
-  return value === undefined || value === null || Array.isArray(value);
+  return value === undefined || value === null || Array.isArray(value)
+    || (isObject(value) && Object.keys(value).length === 0);
 }

@@ -93,6 +93,23 @@ test("profession_snapshot revisions replace latest state; duplicates and bad pay
     assert.equal(latest()[0].revision, 2);
   }));
 
+// A character with no professions sends an empty Lua table, which the
+// SavedVariables parser reads as {}. It must sync, not be rejected forever.
+test("profession_snapshot accepts an empty Lua table as no professions", () =>
+  withHttpApp(async () => {
+    const empty = structuredClone(fixture);
+    empty.payload.professions = {};
+    const result = ingest(empty);
+    assert.equal(result.status, "created");
+    assert.deepEqual(latest()[0].payload.professions, []);
+
+    const emptyBook = structuredClone(fixture);
+    emptyBook.capturedAt += 60;
+    emptyBook.payload.professions[0].recipes = {};
+    assert.equal(ingest(emptyBook, 2).status, "created");
+    assert.deepEqual(latest()[0].payload.professions[0].recipes, []);
+  }));
+
 test("armory uses profession telemetry and keeps legacy recipes for professions without a book", () => {
   const state = {
     revision: 4,
