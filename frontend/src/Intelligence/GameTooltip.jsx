@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 
 import { FloatingTooltip } from '../WowAssets/WowIcon.jsx'
 import { coins } from './inventoryModel.js'
+import { capturedLines, gameTooltipItem, isItem, itemTooltipPending } from './gameTooltipModel.js'
 import './GameTooltip.css'
 
 const COINS = [
@@ -24,43 +25,6 @@ export function Money({ money, className = '' }) {
   )
 }
 
-function object(value) {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
-}
-
-// Farming results carry the canonical client description under `item`, while
-// Armory and inventory items are already flat. Normalize identity only; the
-// tooltip itself remains untouched client data.
-function gameTooltipItem(value) {
-  if (!value || typeof value !== 'object') return null
-  const outer = object(value)
-  const described = object(outer.item)
-  const catalog = object(outer.catalog)
-  const metadata = object(catalog.metadata)
-  const merged = { ...metadata, ...outer, ...described }
-
-  return {
-    ...merged,
-    itemId: described.itemId ?? outer.itemId ?? metadata.itemId ?? null,
-    itemLink: described.itemLink || outer.itemLink || metadata.itemLink || '',
-    name: described.name || outer.name || metadata.name || '',
-    qualityId: described.qualityId ?? described.quality ?? outer.qualityId ?? outer.quality ?? metadata.qualityId ?? metadata.quality ?? null,
-    sellPrice: described.sellPrice ?? outer.sellPrice ?? metadata.sellPrice ?? null,
-    tooltip: Object.keys(object(described.tooltip)).length
-      ? described.tooltip
-      : Object.keys(object(outer.tooltip)).length
-        ? outer.tooltip
-        : object(metadata.tooltip),
-    tooltipLines: Array.isArray(described.tooltipLines)
-      ? described.tooltipLines
-      : Array.isArray(outer.tooltipLines)
-        ? outer.tooltipLines
-        : Array.isArray(metadata.tooltipLines)
-          ? metadata.tooltipLines
-          : [],
-  }
-}
-
 function color(value) {
   if (!value || typeof value !== 'object') return undefined
   const channels = ['r', 'g', 'b'].map((part) => Number(value[part]))
@@ -69,38 +33,6 @@ function color(value) {
   const alpha = Number(value.a)
   if (Number.isFinite(alpha)) return { color: `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})` }
   return { color: `rgb(${r}, ${g}, ${b})` }
-}
-
-function capturedLines(item) {
-  const source = Array.isArray(item?.tooltip?.lines)
-    ? item.tooltip.lines
-    : Array.isArray(item?.tooltipLines)
-      ? item.tooltipLines
-      : []
-
-  return source.map((line) => {
-    const entry = object(line)
-    return {
-      ...entry,
-      left: entry.left ?? entry.leftText ?? entry.text ?? '',
-      right: entry.right ?? entry.rightText ?? '',
-      leftColor: entry.leftColor ?? entry.color,
-    }
-  }).filter((line) => line.blank || line.sellPrice || line.left || line.right)
-}
-
-function isItem(item) {
-  return Number(item?.itemId) > 0 || /(?:^|\|H)item:\d+/i.test(String(item?.itemLink || ''))
-}
-
-function fullBlizzardTooltip(item) {
-  const tooltip = object(item?.tooltip)
-  const lines = capturedLines(item)
-  if (!lines.length || tooltip.source !== 'GameTooltip') return false
-  // Backward compatibility for rendered scans captured before Guildweaver
-  // started writing explicit completeness markers.
-  if (tooltip.complete === undefined && tooltip.rendered === undefined) return true
-  return tooltip.complete === true && tooltip.rendered === true
 }
 
 function sellPriceAlreadyCaptured(lines) {
@@ -128,12 +60,10 @@ export function GameTooltipBody({ item: value }) {
   const lines = capturedLines(item)
   const quality = Number(item.qualityId ?? item.quality) || 0
   const actualItem = isItem(item)
-  const full = fullBlizzardTooltip(item)
 
-  // For real items, never manufacture a tooltip from metadata. If the client
-  // has not sent its rendered GameTooltip yet, say so and wait for Guildweaver
-  // to self-heal the definition.
-  if (actualItem && !full) {
+  // For real items, never manufacture a tooltip from metadata. An item with
+  // no captured lines waits for Guildweaver (see itemTooltipPending).
+  if (itemTooltipPending(item)) {
     return (
       <>
         <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
