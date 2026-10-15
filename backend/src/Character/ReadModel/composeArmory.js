@@ -122,16 +122,26 @@ function latest(values) {
   return values.filter(Boolean).sort().at(-1) || null;
 }
 
+// The per-type streams (character, stats, equipment, talents) replaced the
+// whole snapshot at schema v3 and keep its v3 field names. The schemaVersion
+// on a `character` payload numbers that stream's payload, not the snapshot,
+// so identity from that stream is still a v3 snapshot.
+const DOMAIN_STREAM_SNAPSHOT_SCHEMA = 3;
+
 // One snapshot from the character's sections.
 export function composedSnapshot(sections) {
   const payload = (name) => sections[name]?.payload || {};
-  return {
+  const snapshot = {
     ...payload("identity"),
     ...payload("stats"),
     ...payload("equipment"),
     ...payload("talents"),
     ...payload("professions"),
   };
+  if (sections.identity?.source === "character") {
+    snapshot.schemaVersion = Math.max(integer(snapshot.schemaVersion, 0), DOMAIN_STREAM_SNAPSHOT_SCHEMA);
+  }
+  return snapshot;
 }
 
 export function sectionFreshness(sections) {
