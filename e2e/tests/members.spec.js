@@ -7,11 +7,11 @@ test('signed-in members can browse the directory and profiles', async ({ browser
   await authenticate(context, 'member')
   const page = await context.newPage()
 
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
   await expect(page.locator('body')).toContainText('Mira Member')
   await expect(page.locator('body')).toContainText('Owen Officer')
 
-  await page.goto('/members/e2e-member')
+  await page.goto('/holdfast/members/e2e-member')
   await expect(page.locator('body')).toContainText('Mira Member')
   await expect(page.locator('body')).toContainText('Private')
   await expect(page.locator('body')).toContainText('Browser-test guild member.')
@@ -21,7 +21,7 @@ test('signed-in members can browse the directory and profiles', async ({ browser
 
 test('member cards show rank and billets as one title, Rep progress and synced characters that open the armory', async ({ page, context }) => {
   await seedArmory(page, context)
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
 
   const card = page.locator('.member-card').filter({ hasText: 'Mira Member' })
   await expect(card.locator('.rank-plate')).toContainText('Private')
@@ -54,7 +54,7 @@ test('the billet menu closes on a click elsewhere or Escape', async ({ browser }
   const context = await browser.newContext()
   await authenticate(context, 'commander')
   const page = await context.newPage()
-  await page.goto('/members/e2e-member')
+  await page.goto('/holdfast/members/e2e-member')
   const menu = page.locator('.member-billet-control')
   await menu.locator('summary').click()
   await expect(menu).toHaveAttribute('open', '')
@@ -70,7 +70,7 @@ test('sorting by rank groups officers, NCOs and enlisted members', async ({ brow
   const context = await browser.newContext()
   await authenticate(context, 'member')
   const page = await context.newPage()
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
   await page.locator('.members-page__sort select').selectOption('rank')
   const headings = page.locator('.members-page__group-heading h2')
   await expect(headings.first()).toHaveText('Officers')

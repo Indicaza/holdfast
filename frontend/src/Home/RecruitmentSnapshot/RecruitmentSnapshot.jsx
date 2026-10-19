@@ -1,21 +1,23 @@
-import { recruitmentFacts } from '../recruitmentContent.js'
 import './RecruitmentSnapshot.css'
 
-function RecruitmentSnapshot() {
+// content: { eyebrow, title, facts } from Guild/guildHomeContent.js.
+function RecruitmentSnapshot({ content }) {
+  if (!content.facts.length) return null
+
   return (
     <section
       className="recruitment-snapshot"
       aria-labelledby="recruitment-snapshot-title"
     >
       <header className="recruitment-snapshot__header">
-        <p className="recruitment-snapshot__eyebrow">Holdfast at a glance</p>
+        <p className="recruitment-snapshot__eyebrow">{content.eyebrow}</p>
         <h2 id="recruitment-snapshot-title">
-          Find your pace. Find your people.
+          {content.title}
         </h2>
       </header>
 
       <div className="recruitment-snapshot__facts">
-        {recruitmentFacts.map((fact, index) => (
+        {content.facts.map((fact, index) => (
           <article className="recruitment-snapshot__fact" key={fact.id}>
             <div className="recruitment-snapshot__fact-topline">
               <span className="recruitment-snapshot__fact-label">{fact.label}</span>

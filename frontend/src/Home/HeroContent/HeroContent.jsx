@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
-import { heroSlides } from '../HeroStory/heroStory.js'
 import './HeroContent.css'
 
-function HeroContent({ story, onJoin }) {
-  const { authenticated, status, refresh } = useSession()
+// The home hero: the guild's heading (content from Guild/guildHomeContent.js),
+// the slideshow's captions and the guild's two calls to action.
+function HeroContent({ story, content, crest = null, actions, onJoin }) {
+  const { status, refresh } = useSession()
   const slide = story.activeSlide
   const storyRef = useRef(null)
   const [storyHeight, setStoryHeight] = useState(null)
@@ -20,10 +21,11 @@ function HeroContent({ story, onJoin }) {
 
   return (
     <section className="hero-content" aria-labelledby="holdfast-title">
-      <p className="hero-content__eyebrow">World of Warcraft · Forever · Alliance · PvP</p>
+      {crest ? <div className="hero-content__crest">{crest}</div> : null}
+      <p className="hero-content__eyebrow">{content.eyebrow}</p>
       <div className="hero-content__heading">
-        <h1 id="holdfast-title" className="hero-content__title">Holdfast</h1>
-        <p className="hero-content__motto">Servimus ut permaneat.</p>
+        <h1 id="holdfast-title" className="hero-content__title">{content.name}</h1>
+        {content.motto ? <p className="hero-content__motto">{content.motto}</p> : null}
       </div>
       <div
         className="hero-content__story-shell"
@@ -46,12 +48,12 @@ function HeroContent({ story, onJoin }) {
           <button className="hero-content__primary" type="button" disabled={status === 'loading'} onClick={refresh}>
             {status === 'loading' ? 'Checking session…' : 'Retry connection'}
           </button>
-        ) : authenticated ? (
-          <a className="hero-content__primary" href="/quests">View Quests</a>
+        ) : actions.primary.join ? (
+          <button className="hero-content__primary" type="button" onClick={onJoin}>{actions.primary.label}</button>
         ) : (
-          <button className="hero-content__primary" type="button" onClick={onJoin}>Join Holdfast</button>
+          <a className="hero-content__primary" href={actions.primary.href}>{actions.primary.label}</a>
         )}
-        <a className="hero-content__secondary" href="/charter">Read the Charter</a>
+        <a className="hero-content__secondary" href={actions.secondary.href}>{actions.secondary.label}</a>
       </div>
       <div className="hero-content__playback" role="group" aria-label="Story playback">
         <button type="button" aria-label="Previous scene" disabled={story.isLoading} onClick={() => story.playback.navigate(-1)}>
@@ -60,8 +62,8 @@ function HeroContent({ story, onJoin }) {
         <button type="button" aria-label={story.userPaused ? 'Play story' : 'Pause story'} onClick={story.playback.toggle}>
           <span aria-hidden="true">{story.userPaused ? '▶' : 'Ⅱ'}</span>
         </button>
-        <span className="hero-content__scene-count" aria-label={`Scene ${story.captionIndex + 1} of ${heroSlides.length}`}>
-          {String(story.captionIndex + 1).padStart(2, '0')} / {heroSlides.length}
+        <span className="hero-content__scene-count" aria-label={`Scene ${story.captionIndex + 1} of ${story.slides.length}`}>
+          {String(story.captionIndex + 1).padStart(2, '0')} / {story.slides.length}
         </span>
         <button type="button" aria-label="Next scene" disabled={story.isLoading} onClick={() => story.playback.navigate(1)}>
           <span aria-hidden="true">→</span>

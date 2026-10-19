@@ -4,6 +4,7 @@ import { useSession } from '../../Auth/sessionContext.js'
 import { useQuestSignup } from '../../Quests/QuestSignupFlow.jsx'
 import FoundingMission from '../FoundingMission/FoundingMission.jsx'
 import './QuestBoard.css'
+import { useGuildHref } from '../../Guild/guildContext.js'
 
 const MAX_VISIBLE_ASSIGNMENTS = 5
 const MAX_VISIBLE_REWARD_ITEMS = 3
@@ -187,6 +188,7 @@ function Reward({ reward, approval }) {
 
 function QuestBoard({ onJoin }) {
   const session = useSession()
+  const guildPath = useGuildHref()
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
   const [loaded, setLoaded] = useState(false)
   const signup = useQuestSignup({ catalog, setCatalog })
@@ -272,7 +274,7 @@ function QuestBoard({ onJoin }) {
             <small>objectives complete</small>
           </div>
           {session.authenticated ? (
-            <a className="quest-board__all-link" href="/quests">
+            <a className="quest-board__all-link" href={guildPath('/quests')}>
               View all quests
               <span aria-hidden="true">→</span>
             </a>

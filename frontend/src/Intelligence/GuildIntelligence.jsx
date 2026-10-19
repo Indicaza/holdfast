@@ -18,6 +18,7 @@ import RosterComposition from './RosterComposition.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './GuildIntelligence.css'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 // Admin-only workspaces load when first opened, not for every member.
 const AuditLog = lazy(() => import('../Admin/AuditLog.jsx'))
@@ -58,6 +59,7 @@ function freshSyncCount(characters, hours = 24) {
 }
 
 function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
+  const guildPath = useGuildHref()
   const recent = characters.slice(0, limit)
 
   return (
@@ -68,7 +70,7 @@ function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
           <h2>Recently synced</h2>
           <p>Jump back into the characters reporting most recently.</p>
         </div>
-        <a href="/members">Member directory →</a>
+        <a href={guildPath('/members')}>Member directory →</a>
       </div>
       {recent.length ? (
         <div className="intel-character-grid">
@@ -184,6 +186,7 @@ function CharacterBrowser({ characters, onOpenCharacter, query, onQueryChange })
 }
 
 function CraftFinder({ input, onInputChange }) {
+  const guildPath = useGuildHref()
   const [query, setQuery] = useState(() => input.trim())
   const [status, setStatus] = useState('idle')
   const [results, setResults] = useState([])
@@ -256,7 +259,7 @@ function CraftFinder({ input, onInputChange }) {
                 {result.crafters?.map((crafter) => {
                   const skill = professionSkillLabel(crafter, result.recipe?.professionName)
                   return (
-                    <a key={crafter.id} href={`/intelligence?character=${encodeURIComponent(crafter.id)}`}>
+                    <a key={crafter.id} href={guildPath(`/intelligence?character=${encodeURIComponent(crafter.id)}`)}>
                       <span>
                         <strong>{crafter.name}</strong>
                         <small>{skill || crafter.className || 'Character'}{crafter.realm ? ` · ${crafter.realm}` : ''}</small>
@@ -288,6 +291,7 @@ function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCh
 
 export default function GuildIntelligence() {
   const session = useSession()
+  const guildPath = useGuildHref()
   const { status: summaryStatus, data: summary } = useLiveResource('/api/intelligence', {
     topics: ['intelligence', 'members'],
     select: normalizeIntelligence,
@@ -350,13 +354,13 @@ export default function GuildIntelligence() {
     }
   }
 
-  const closeGate = () => navigate('/')
+  const closeGate = () => navigate(guildPath())
   const freshCharacters = useMemo(() => freshSyncCount(data.characters), [data.characters])
 
   if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
 
   if (session.status === 'error' || !session.authenticated) {
-    return <Home overlay={<MemberAccessModal returnTo="/intelligence" onClose={closeGate} />} />
+    return <Home overlay={<MemberAccessModal returnTo={guildPath('/intelligence')} onClose={closeGate} />} />
   }
 
   return (

@@ -7,7 +7,7 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   page.on('request', (request) => {
     if (new URL(request.url()).pathname.endsWith('/recipes')) recipeReads += 1
   })
-  await page.goto('/intelligence#characters')
+  await page.goto('/holdfast/intelligence#characters')
 
   const characterCard = page.locator('.character-card').filter({ hasText: 'Armorytest' })
   await expect(characterCard).toBeVisible()
@@ -64,7 +64,7 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
 
 test('guild intelligence behaves like a fixed app with switchable workspaces', async ({ page, context }) => {
   await seedArmory(page, context)
-  await page.goto('/intelligence')
+  await page.goto('/holdfast/intelligence')
 
   const app = page.locator('.intelligence-app')
   const topbar = page.locator('.intelligence-app__topbar')
@@ -132,7 +132,7 @@ test('guild intelligence behaves like a fixed app with switchable workspaces', a
 })
 
 test('guild intelligence remains member-gated', async ({ page }) => {
-  await page.goto('/intelligence')
+  await page.goto('/holdfast/intelligence')
   await expect(page.getByRole('dialog')).toContainText('Member sign in')
   await expect(page.getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
 })

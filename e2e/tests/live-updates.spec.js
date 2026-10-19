@@ -5,7 +5,7 @@ import { authenticate } from '../helpers/auth.js'
 // previous result as `again` to sync the same character a second time (one
 // level higher, a second later).
 async function submitTelemetry(page, again = null) {
-  await page.goto('/')
+  await page.goto('/holdfast')
   return page.evaluate(async (again) => {
     async function json(url, options = {}) {
       const { headers = {}, ...requestOptions } = options
@@ -83,7 +83,7 @@ test('Guildweaver telemetry refreshes an open Intelligence dashboard without nav
   })
 
   try {
-    await page.goto('/intelligence')
+    await page.goto('/holdfast/intelligence')
     await expect(page.getByRole('status', { name: 'Live updates: Live' })).toBeVisible()
     await expect(page.locator('.intelligence-app__topbar').getByRole('heading', { name: 'Overview' })).toBeVisible()
     const initialReads = intelligenceReads
@@ -117,7 +117,7 @@ test('an open Armory refreshes in place for its own character and ignores the re
   })
 
   try {
-    await page.goto('/intelligence#characters')
+    await page.goto('/holdfast/intelligence#characters')
     await expect(page.getByRole('status', { name: 'Live updates: Live' })).toBeVisible()
 
     const character = await submitTelemetry(senderPage)
@@ -176,14 +176,14 @@ test('another member\'s change refreshes the directory in place without remounti
 
   try {
     const liveStream = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/notifications/live')
-    await page.goto('/members')
+    await page.goto('/holdfast/members')
     await liveStream
     const search = page.locator('main input[type="search"]')
     await search.fill('Owen')
     // Tag the navbar node: a remount would replace it.
     await page.locator('.navbar').evaluate((navbar) => { navbar.dataset.probe = 'kept' })
 
-    await senderPage.goto('/')
+    await senderPage.goto('/holdfast')
     const directoryRefresh = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/guild/members')
     const saved = await senderPage.evaluate(async () => {
       const response = await fetch('/api/guild/members/me', {

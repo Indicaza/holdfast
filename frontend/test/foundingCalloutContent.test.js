@@ -18,6 +18,6 @@ test('members are sent to current guild work instead of a home-page loop', () =>
   const content = foundingCalloutContent(true)
 
   assert.equal(content.action, 'View Quests')
-  assert.equal(content.href, '/quests')
+  assert.equal(content.href, '/holdfast/quests')
   assert.equal(content.href.includes('guildos'), false)
 })

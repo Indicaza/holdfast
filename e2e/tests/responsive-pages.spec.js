@@ -25,7 +25,7 @@ test('public pages and their headings fit narrow phones and tablets', async ({ p
   await page.emulateMedia({ reducedMotion: 'reduce' })
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 844 })
-    for (const route of ['/charter', '/ranks', '/privacy', '/missing-page']) {
+    for (const route of ['/holdfast/charter', '/holdfast/ranks', '/privacy', '/missing-page']) {
       await page.goto(route)
       await page.locator('main h1:visible').first().waitFor()
       await page.evaluate(() => document.fonts.ready)
@@ -37,7 +37,7 @@ test('public pages and their headings fit narrow phones and tablets', async ({ p
 test('phone navigation, account, recruitment, and footer controls have usable touch targets', async ({ page, context }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 320, height: 568 })
-  await page.goto('/')
+  await page.goto('/holdfast')
   const controls = [
     page.locator('.navbar').getByRole('button', { name: 'Sign In', exact: true }),
     page.getByRole('button', { name: 'Toggle navigation' }),

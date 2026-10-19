@@ -98,7 +98,7 @@ export function activeFilterCount(filters) {
 }
 
 export function guildPath(slug) {
-  return `/guilds/${encodeURIComponent(slug)}`
+  return `/${encodeURIComponent(slug)}`
 }
 
 function hour(value) {

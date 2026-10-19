@@ -1,33 +1,69 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
+import { useGuild } from '../../Guild/guildContext.js'
+import { GuildCrest } from '../../Guilds/GuildCrest.jsx'
 import NotificationBell from '../../Notifications/NotificationBell.jsx'
 import {
-  primaryNavigationLinks,
+  accountMenuLinks,
+  guildNavigationLinks,
+  isActiveLink,
+  myGuildLink,
+  platformNavigationLinks,
   signInNavigationLabel,
 } from '../../navigation.js'
+import { HOLDFAST_SLUG, guildHref, guildNameFromSlug } from '../../routing.js'
 import './Navbar.css'
 
 function displayName(user) {
   return user?.guildNickname || user?.globalName || user?.username || 'Member'
 }
 
-function isActiveLink(pathname, href) {
-  if (href === '/members' || href === '/items' || href === '/guilds') {
-    return pathname === href || pathname.startsWith(`${href}/`)
-  }
-
-  return pathname === href
+// The guild's crest and name, home to its pages. Holdfast keeps its rook.
+function GuildBrand({ slug, guild }) {
+  const name = guild?.name || guildNameFromSlug(slug)
+  return (
+    <a className="navbar__brand navbar__brand--guild" href={guildHref(slug)} aria-label={`${name} home`}>
+      {slug === HOLDFAST_SLUG ? (
+        <span className="navbar__brand-mark" aria-hidden="true">♜</span>
+      ) : guild ? (
+        <span className="navbar__crest" aria-hidden="true">
+          <GuildCrest name={guild.name} accentColor={guild.accentColor} faction={guild.faction} size={30} />
+        </span>
+      ) : (
+        <span className="navbar__crest navbar__crest--loading" aria-hidden="true" />
+      )}
+      <span className="navbar__brand-name">{name}</span>
+    </a>
+  )
 }
 
-function Navbar() {
+function PlatformBrand() {
+  return (
+    <a className="navbar__brand navbar__brand--platform" href="/" aria-label="Guildweaver home">
+      <svg className="navbar__weave" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+        <path d="M4 7 C10 7 10 21 16 21 S22 7 24 7" />
+        <path d="M4 21 C10 21 10 7 16 7 S22 21 24 21" />
+      </svg>
+      <span className="navbar__brand-name">Guildweaver</span>
+    </a>
+  )
+}
+
+// variant 'platform': Guildweaver's own pages. variant 'guild': every page
+// under /:slug, for the guild in GuildContext.
+function Navbar({ variant = 'platform' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState('')
   const accountRef = useRef(null)
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const { status, authenticated, user, signIn, signOut, refresh } = useSession()
-  const links = primaryNavigationLinks(authenticated)
+  const { status, authenticated, user, guild: memberGuild, signIn, signOut, refresh } = useSession()
+  const { slug, guild } = useGuild()
+  const inGuild = variant === 'guild'
+  const links = inGuild ? guildNavigationLinks(slug, authenticated) : platformNavigationLinks
+  const myGuild = !inGuild && authenticated ? myGuildLink(memberGuild) : null
+  const accountLinks = accountMenuLinks(memberGuild)
 
   useEffect(() => {
     if (!accountOpen) {
@@ -69,17 +105,21 @@ function Navbar() {
   }
 
   return (
-    <header className="navbar">
+    <header className={`navbar navbar--${variant}`}>
       <div className="navbar__inner">
-        <a className="navbar__brand" href="/" aria-label="Holdfast home">
-          <span className="navbar__brand-mark" aria-hidden="true">♜</span>
-          <span className="navbar__brand-name">Holdfast</span>
-        </a>
+        <div className="navbar__identity">
+          {inGuild ? <GuildBrand slug={slug} guild={guild} /> : <PlatformBrand />}
+          {inGuild ? (
+            <a className="navbar__platform-link" href="/" aria-label="Back to Guildweaver">
+              <span aria-hidden="true">←</span><span className="navbar__platform-label"> Guildweaver</span>
+            </a>
+          ) : null}
+        </div>
 
         <div className="navbar__controls">
           <nav className="navbar__links" aria-label="Primary navigation">
             {links.map((link) => {
-              const active = isActiveLink(pathname, link.href)
+              const active = isActiveLink(pathname, link)
 
               return (
                 <a
@@ -92,6 +132,11 @@ function Navbar() {
                 </a>
               )
             })}
+            {myGuild ? (
+              <a className="navbar__link navbar__link--my-guild" href={myGuild.href}>
+                {myGuild.label} <span aria-hidden="true">→</span>
+              </a>
+            ) : null}
           </nav>
 
           <div className="navbar__actions">
@@ -134,9 +179,7 @@ function Navbar() {
                     </div>
 
                     <div className="navbar__account-links">
-                      <a href="/members/me">My Profile</a>
-                      <a href="/members">Members</a>
-                      <a href="/intelligence">GuildOS</a>
+                      {accountLinks.map((link) => <a key={link.href} href={link.href}>{link.label}</a>)}
                       <button type="button" onClick={handleSignOut} disabled={signingOut}>
                         {signingOut ? 'Signing out…' : 'Sign out'}
                       </button>
@@ -171,14 +214,20 @@ function Navbar() {
               key={link.href}
               className="navbar__mobile-link"
               href={link.href}
-              aria-current={isActiveLink(pathname, link.href) ? 'page' : undefined}
+              aria-current={isActiveLink(pathname, link) ? 'page' : undefined}
               onClick={() => setMenuOpen(false)}
             >
               {link.label}
             </a>
           ))}
-          {authenticated ? (
-            <a className="navbar__mobile-link" href="/members/me" aria-current={pathname === '/members/me' ? 'page' : undefined}>My Profile</a>
+          {myGuild ? (
+            <a className="navbar__mobile-link" href={myGuild.href} onClick={() => setMenuOpen(false)}>{myGuild.label} →</a>
+          ) : null}
+          {authenticated ? accountLinks.filter((link) => link.href !== myGuild?.href && !links.some((shown) => shown.href === link.href)).map((link) => (
+            <a key={link.href} className="navbar__mobile-link" href={link.href} aria-current={pathname === link.href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{link.label}</a>
+          )) : null}
+          {inGuild ? (
+            <a className="navbar__mobile-link navbar__mobile-link--platform" href="/" onClick={() => setMenuOpen(false)}>← Guildweaver · Find guilds</a>
           ) : null}
         </nav>
       </div>

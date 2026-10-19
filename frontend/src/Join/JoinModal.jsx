@@ -5,6 +5,7 @@ import Modal from '../Modal/Modal.jsx'
 import { useSession } from '../Auth/sessionContext.js'
 import './Join.css'
 import { currentReturnTo, safeReturnTo } from './joinDestination.js'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 function noticeFor(code) {
   if (code === 'not-member') {
@@ -44,6 +45,7 @@ function noticeFor(code) {
 
 function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() }) {
   const session = useSession()
+  const guildPath = useGuildHref()
   const [discordTarget, setDiscordTarget] = useState({
     appUrl: 'discord://-/channels/@me',
     webUrl: 'https://discord.com/app',
@@ -173,7 +175,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
               Open Discord
             </button>
             {/* Leaving the dialog for another page closes it. */}
-            <a className="join-action join-action--secondary" href={pendingSignup ? returnTo : '/members/me'} onClick={onClose}>
+            <a className="join-action join-action--secondary" href={pendingSignup ? returnTo : guildPath('/members/me')} onClick={onClose}>
               {pendingSignup ? 'Continue to objective' : 'Set Up My Profile'}
             </a>
           </div>
@@ -189,7 +191,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
         onClose={onClose}
       >
         <div className="join-actions join-actions--centered">
-          <a className="join-action join-action--primary" href="/members/me">
+          <a className="join-action join-action--primary" href={guildPath('/members/me')}>
             My Profile
           </a>
           <button
@@ -241,7 +243,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
         </button>
       </div>
 
-      <a className="join-charter-link" href="/charter">
+      <a className="join-charter-link" href={guildPath('/charter')}>
         Read the Charter
       </a>
 

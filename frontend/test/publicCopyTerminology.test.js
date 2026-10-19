@@ -16,8 +16,7 @@ test('member-facing operations surface is consistently branded GuildOS', () => {
   const navbar = source('Home/Navbar/Navbar.jsx')
   const shell = source('Intelligence/IntelligenceAppShell.jsx')
 
-  assert.match(app, /title: 'GuildOS \| Holdfast'/)
-  assert.match(navbar, />GuildOS<\/a>/)
+  assert.match(app, /title: \(name\) => `GuildOS \| \$\{name\}`/)
   assert.match(shell, /<strong>GuildOS<\/strong>/)
   assert.match(shell, /<span>GuildOS<\/span>/)
 

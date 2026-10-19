@@ -20,7 +20,7 @@ async function removeTestQuests(context) {
 }
 
 async function createDraft(page, title) {
-  await page.goto('/quests')
+  await page.goto('/holdfast/quests')
   await page.getByRole('button', { name: 'Create quest', exact: true }).first().click()
   await page.getByLabel('Quest title').fill(title)
   await page.getByRole('dialog').getByRole('button', { name: 'Create quest', exact: true }).click()
@@ -37,7 +37,7 @@ test('profile edits survive reload and a failed save can be retried', async ({ b
   const { context, page } = await session(browser, 'member')
   const original = (await json(context, '/api/guild/members/me')).member.profile
   try {
-    await page.goto('/members/e2e-member')
+    await page.goto('/holdfast/members/e2e-member')
     await page.getByRole('button', { name: 'Edit profile', exact: true }).first().click()
     await page.getByLabel('BattleTag', { exact: true }).fill('Guardrail#0042')
     await page.getByRole('textbox', { name: 'About', exact: true }).fill('Guardrail profile saved in the browser.')
@@ -66,12 +66,12 @@ test('leadership can persist promotions and toggle a billet assignment', async (
   const original = (await json(context, '/api/guild/members/e2e-member')).member.rank
   const { billet } = await json(context, '/api/guild/billets', { method: 'POST', data: { name: 'Guardrail Supply Lead', responsibility: 'Browser workflow fixture' } })
   try {
-    await page.goto('/ranks')
+    await page.goto('/holdfast/ranks')
     await page.getByRole('button', { name: 'Edit authority for Guardrail Supply Lead', exact: true }).click()
     await page.getByRole('checkbox', { name: /^Create quests/ }).check()
     await page.getByRole('button', { name: 'Save authority', exact: true }).click()
     await expect.poll(async () => (await json(context, '/api/guild/authority')).billets.find((scope) => scope.id === billet.id).permissions).toContain('quests.create')
-    await page.goto('/members/e2e-member')
+    await page.goto('/holdfast/members/e2e-member')
     const rank = page.getByLabel('Rank for Mira Member')
     await rank.selectOption('Sergeant')
     await expect(page.getByText(/Saved\./)).toBeVisible()
@@ -133,7 +133,7 @@ test('quest content, publication, archive, and deletion survive reloads', async 
 test('invalid imports preserve the board and a corrected import persists', async ({ browser }) => {
   const { context, page } = await session(browser, 'commander')
   try {
-    await page.goto('/quests')
+    await page.goto('/holdfast/quests')
     const before = await json(context, '/api/quests/manage')
     await page.getByRole('button', { name: 'AI / JSON', exact: true }).click()
     const input = page.getByRole('dialog').locator('textarea')
@@ -193,11 +193,11 @@ test('rejected work explains the reason and can be resubmitted without a payout'
     workspace.quests.push(source)
     await json(leader.context, '/api/quests/manage', { method: 'PUT', data: workspace })
     await json(member.context, '/api/quests/member/signup', { method: 'POST', data: { questId: source.id, objectiveId: source.objectives[0].id } })
-    await member.page.goto('/quests')
+    await member.page.goto('/holdfast/quests')
     await member.page.getByRole('button', { name: new RegExp(title) }).click()
     await member.page.getByRole('button', { name: 'Request completion', exact: true }).click()
     await expect(member.page.getByText('Ready for review', { exact: true })).toBeVisible()
-    await leader.page.goto('/quests')
+    await leader.page.goto('/holdfast/quests')
     await leader.page.getByRole('button', { name: new RegExp(title) }).click()
     await leader.page.getByRole('button', { name: 'Needs changes', exact: true }).click()
     await expect(leader.page.getByRole('button', { name: 'Send back', exact: true })).toBeDisabled()

@@ -4,13 +4,17 @@ import { interceptLinkClicks, subscribeLocation } from './Navigation/navigation.
 import RouteProgress from './Navigation/RouteProgress.jsx'
 import ResourceCacheSync from './Api/ResourceCacheSync.jsx'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
+import GuildProvider from './Guild/GuildProvider.jsx'
+import { useGuild } from './Guild/guildContext.js'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
 import SEO from './SEO/SEO.jsx'
 import {
-  isLegacyHomePath,
+  HOLDFAST_SLUG,
+  guildNameFromSlug,
+  legacyRedirectPathname,
+  matchRoute,
   normalizePathname,
-  resolvePathname,
 } from './routing.js'
 
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
@@ -34,148 +38,160 @@ const Ranks = lazy(() => import('./Ranks/Ranks.jsx'))
 const defaultRobots =
   'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
 
-const routes = {
-  '/': {
-    component: Home,
-    path: '/',
-    title: 'Holdfast | Alliance WoW Forever Guild',
-    description:
-      'Holdfast is an Alliance guild for WoW Forever focused on organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.',
+// Guildweaver's own pages, by matchRoute name.
+const platformPages = {
+  directory: {
+    component: GuildBrowser,
+    title: 'Guildweaver | Find a World of Warcraft Guild',
+    description: 'Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.',
     robots: defaultRobots,
     home: true,
+    props: (url) => ({ queryString: url.search }),
   },
-  '/quests': {
-    component: Quests,
-    path: '/quests',
-    title: 'Holdfast Quests | Alliance WoW Forever Guild',
-    description:
-      'Holdfast member quest board for guild objectives, assignments, and rewards.',
-    robots: 'noindex,nofollow',
-  },
-  '/members': {
-    component: Members,
-    path: '/members',
-    title: 'Members | Holdfast',
-    description: 'Browse the Holdfast member directory.',
-    robots: 'noindex,nofollow',
-  },
-  '/intelligence': {
-    component: GuildIntelligence,
-    path: '/intelligence',
-    title: 'GuildOS | Holdfast',
-    description: 'Holdfast GuildOS for synced characters, roster intelligence, crafting knowledge, and guild operations.',
-    robots: 'noindex,nofollow',
-  },
-  '/charter': {
-    component: Charter,
-    path: '/charter',
-    title: 'Holdfast Charter | Alliance WoW Forever Guild',
-    description:
-      'Read the Holdfast charter: service-based leadership, high standards without elitism, shared prosperity, mentorship, and a guild built to endure.',
+  register: {
+    component: RegisterGuild,
+    title: 'Register Your Guild | Guildweaver',
+    description: 'List your World of Warcraft guild on Guildweaver: be found by faction, realm and play style, show verified activity and recruit through Discord.',
     robots: defaultRobots,
   },
-  '/ranks': {
-    component: Ranks,
-    path: '/ranks',
-    title: 'Ranks & Roles | Holdfast',
-    description:
-      'Learn how Holdfast ranks, Reputation, promotion, and guild roles work.',
+  items: {
+    component: Items,
+    title: 'Item Catalog | Guildweaver',
+    description: 'Community-observed item sources, dungeon loot, and crafting uses.',
     robots: defaultRobots,
+    props: (url, route) => ({ itemId: route.itemId, queryString: url.search }),
   },
-  '/join': {
-    component: Join,
-    path: '/join',
-    title: 'Join Holdfast | Alliance WoW Forever Guild',
-    description:
-      'Join Holdfast through Discord and create your Holdfast member profile.',
-    robots: defaultRobots,
-  },
-  '/guildweaver': {
+  guildweaver: {
     component: Guildweaver,
-    path: '/guildweaver',
-    title: 'Guildweaver | Holdfast',
-    description:
-      'Download Guildweaver for Windows, macOS, or Linux and inspect the open-source bridge, addon, release pipeline, and data boundaries.',
+    title: 'Guildweaver Addon | Guildweaver',
+    description: 'Download Guildweaver for Windows, macOS, or Linux and inspect the open-source bridge, addon, release pipeline, and data boundaries.',
     robots: defaultRobots,
   },
-  '/guildweaver/connect': {
+  'guildweaver-connect': {
     component: GuildweaverConnect,
-    path: '/guildweaver/connect',
-    title: 'Connect Guildweaver | Holdfast',
-    description: 'Securely connect Guildweaver Bridge to your Holdfast member profile.',
+    title: 'Connect Guildweaver | Guildweaver',
+    description: 'Securely connect Guildweaver Bridge to your member profile.',
     robots: 'noindex,nofollow',
     // A focused pairing page opened from the bridge: no site chrome.
     navbar: false,
   },
-  '/privacy': {
+  privacy: {
     component: Privacy,
-    path: '/privacy',
-    title: 'Privacy | Holdfast',
-    description: 'Holdfast privacy information.',
+    title: 'Privacy | Guildweaver',
+    description: 'Guildweaver and Holdfast privacy information.',
     robots: 'noindex,follow',
   },
-  '/admin': {
+  admin: {
     component: Admin,
-    path: '/admin',
     title: 'Guild Control Room',
     description: 'Guild administrative control room.',
     robots: 'noindex,nofollow',
   },
-  '/admin/guildweaver': {
+  'admin-guildweaver': {
     component: GuildweaverAdmin,
-    path: '/admin/guildweaver',
-    title: 'Guildweaver Sync Console | Holdfast',
+    title: 'Guildweaver Sync Console | Guildweaver',
     description: 'Internal Guildweaver sync payload history and diagnostics.',
     robots: 'noindex,nofollow',
   },
 }
 
-function decodedSegment(value) {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
-function memberProfileRoute(pathname) {
-  const match = pathname.match(/^\/members\/([^/]+)$/)
-  if (!match) return null
-  const memberId = decodedSegment(match[1])
-  return {
-    component: MemberProfile,
-    path: pathname,
-    title: 'Member Profile | Holdfast',
-    description: 'View a Holdfast member profile and service record.',
+// A guild's pages, by section. Holdfast keeps its long-standing titles; other
+// guilds get theirs from their name.
+const guildPages = {
+  home: {
+    component: Home,
+    title: (name, holdfast) => (holdfast ? 'Holdfast | Alliance WoW Forever Guild' : `${name} | Guildweaver`),
+    description: (name, holdfast, guild) => (holdfast
+      ? 'Holdfast is an Alliance guild for WoW Forever focused on organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.'
+      : guild?.tagline || `${name} on Guildweaver: who they are, what they play and how to join.`),
+    robots: defaultRobots,
+    organization: true,
+  },
+  quests: {
+    component: Quests,
+    title: (name, holdfast) => (holdfast ? 'Holdfast Quests | Alliance WoW Forever Guild' : `Quests | ${name}`),
+    description: (name) => `${name} member quest board for guild objectives, assignments, and rewards.`,
     robots: 'noindex,nofollow',
-    props: { memberId },
-  }
+  },
+  members: {
+    component: Members,
+    title: (name) => `Members | ${name}`,
+    description: (name) => `Browse the ${name} member directory.`,
+    robots: 'noindex,nofollow',
+  },
+  member: {
+    component: MemberProfile,
+    title: (name) => `Member Profile | ${name}`,
+    description: (name) => `View a ${name} member profile and service record.`,
+    robots: 'noindex,nofollow',
+    props: (url, route) => ({ memberId: route.memberId }),
+  },
+  intelligence: {
+    component: GuildIntelligence,
+    title: (name) => `GuildOS | ${name}`,
+    description: (name) => `${name} GuildOS for synced characters, roster intelligence, crafting knowledge, and guild operations.`,
+    robots: 'noindex,nofollow',
+  },
+  charter: {
+    component: Charter,
+    title: (name, holdfast) => (holdfast ? 'Holdfast Charter | Alliance WoW Forever Guild' : `Charter | ${name}`),
+    description: (name, holdfast) => (holdfast
+      ? 'Read the Holdfast charter: service-based leadership, high standards without elitism, shared prosperity, mentorship, and a guild built to endure.'
+      : `Read the ${name} charter.`),
+    robots: defaultRobots,
+  },
+  ranks: {
+    component: Ranks,
+    title: (name) => `Ranks & Roles | ${name}`,
+    description: (name) => `Learn how ${name} ranks, Reputation, promotion, and guild roles work.`,
+    robots: defaultRobots,
+  },
+  about: {
+    component: GuildPage,
+    title: (name) => `${name} | Guildweaver`,
+    description: (name) => `${name} on Guildweaver: recruiting needs, schedule, verified roster activity and sister guilds.`,
+    robots: defaultRobots,
+    props: (url, route) => ({ slug: route.slug }),
+  },
+  join: {
+    component: Join,
+    title: () => 'Join Holdfast | Alliance WoW Forever Guild',
+    description: () => 'Join Holdfast through Discord and create your Holdfast member profile.',
+    robots: defaultRobots,
+  },
 }
 
-function itemCatalogRoute(pathname, queryString) {
-  const match = pathname.match(/^\/items(?:\/(\d+))?$/)
-  if (!match) return null
-  return { component: Items, path: pathname, title: 'Item Catalog | Holdfast',
-    description: 'Community-observed item sources, dungeon loot, and crafting uses.', robots: defaultRobots,
-    props: { itemId: match[1] || null, queryString } }
+const notFoundPage = {
+  component: NotFound,
+  title: 'Page Not Found | Guildweaver',
+  description: 'The requested page could not be found.',
+  robots: 'noindex,nofollow',
 }
 
-function guildDirectoryRoute(pathname, queryString) {
-  if (pathname === '/guilds') {
-    return { component: GuildBrowser, path: pathname, title: 'Find a Guild | Guildweaver',
-      description: 'Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.',
-      robots: defaultRobots, props: { queryString } }
-  }
-  if (pathname === '/guilds/register') {
-    return { component: RegisterGuild, path: pathname, title: 'Register Your Guild | Guildweaver',
-      description: 'List your World of Warcraft guild on Guildweaver: be found by faction, realm and play style, show verified activity and recruit through Discord.',
-      robots: defaultRobots }
-  }
-  const match = pathname.match(/^\/guilds\/([a-z0-9-]{2,40})$/)
-  if (!match) return null
-  return { component: GuildPage, path: pathname, title: 'Guild | Guildweaver',
-    description: 'A guild on Guildweaver: recruiting needs, schedule, verified roster activity and sister guilds.',
-    robots: defaultRobots, props: { slug: match[1] } }
+function GuildRoute({ page, route, url, path }) {
+  const { guild, status } = useGuild()
+  const holdfast = route.slug === HOLDFAST_SLUG
+  const name = guild?.name || guildNameFromSlug(route.slug)
+  const missing = status === 'missing'
+  const shown = missing ? notFoundPage : page
+  const Page = shown.component
+
+  return (
+    <>
+      <SEO
+        title={missing ? notFoundPage.title : page.title(name, holdfast, guild)}
+        description={missing ? notFoundPage.description : page.description(name, holdfast, guild)}
+        path={path}
+        robots={shown.robots}
+        organization={!missing && page.organization ? name : null}
+      />
+      {/* A slug no guild has is a missing page, not a guild. */}
+      <Navbar variant={missing ? 'platform' : 'guild'} />
+      <Suspense fallback={<PageLoading />}>
+        <Page key={path} {...(missing ? {} : page.props?.(url, route) || {})} />
+      </Suspense>
+    </>
+  )
 }
 
 function App() {
@@ -186,48 +202,53 @@ function App() {
   const [navigating, startNavigation] = useTransition()
   useEffect(() => subscribeLocation(() => startNavigation(() => setHref(window.location.href))), [])
   useEffect(() => interceptLinkClicks(), [])
-  const requestedPathname = normalizePathname(new URL(href).pathname)
-  const dynamicRoute = memberProfileRoute(requestedPathname) || itemCatalogRoute(requestedPathname, new URL(href).search) || guildDirectoryRoute(requestedPathname, new URL(href).search)
-  const pathname = resolvePathname(requestedPathname, Object.keys(routes))
-  const route = dynamicRoute ?? (pathname
-    ? routes[pathname]
-    : {
-        component: NotFound,
-        path: requestedPathname,
-        title: 'Page Not Found | Holdfast',
-        description: 'The requested Holdfast page could not be found.',
-        robots: 'noindex,nofollow',
-      })
-  const Page = route.component
+  const url = new URL(href)
+  const requestedPathname = normalizePathname(url.pathname)
+  const redirectPathname = legacyRedirectPathname(requestedPathname)
+  const pathname = redirectPathname || requestedPathname
+  const route = matchRoute(pathname)
 
+  // Old single-guild paths (/quests, /guilds/:slug, ...) move to where they
+  // live now, keeping the query string and hash. The server answers them with
+  // a 301 in production; this covers dev and links followed in the app.
   useEffect(() => {
-    if (isLegacyHomePath(requestedPathname)) {
-      const url = new URL(window.location.href)
-      url.pathname = '/'
-      window.history.replaceState(
-        null,
-        '',
-        `${url.pathname}${url.search}${url.hash}`,
-      )
-    }
-  }, [requestedPathname])
+    if (!redirectPathname) return
+    const current = new URL(window.location.href)
+    window.history.replaceState(null, '', `${redirectPathname}${current.search}${current.hash}`)
+  }, [redirectPathname])
+
+  // /join opens Holdfast's join flow over Holdfast's home.
+  const guildRoute = route?.name === 'join'
+    ? { name: 'guild', slug: HOLDFAST_SLUG, section: 'join' }
+    : route?.name === 'guild' ? route : null
+  const page = guildRoute ? null : (route && platformPages[route.name]) || notFoundPage
+  const Page = page?.component
 
   return (
     <>
-      <SEO
-        title={route.title}
-        description={route.description}
-        path={route.path}
-        robots={route.robots}
-        home={route.home}
-      />
+      {guildRoute ? (
+        // Keyed by slug: moving between guilds starts from a fresh listing.
+        <GuildProvider key={guildRoute.slug} slug={guildRoute.slug}>
+          <GuildRoute page={guildPages[guildRoute.section]} route={guildRoute} url={url} path={pathname} />
+        </GuildProvider>
+      ) : (
+        <>
+          <SEO
+            title={page.title}
+            description={page.description}
+            path={pathname}
+            robots={page.robots}
+            home={page.home}
+          />
 
-      {/* One navbar for the whole app: it never remounts between pages. */}
-      {route.navbar === false ? null : <Navbar />}
+          {/* One navbar per kind of page: it never remounts between pages. */}
+          {page.navbar === false ? null : <Navbar variant="platform" />}
 
-      <Suspense fallback={<PageLoading />}>
-        <Page key={route.path} {...(route.props || {})} />
-      </Suspense>
+          <Suspense fallback={<PageLoading />}>
+            <Page key={pathname} {...(page.props?.(url, route) || {})} />
+          </Suspense>
+        </>
+      )}
 
       {/* Fixed under the navbar; kept out of the navbar + page sibling pair
           that full-bleed pages are styled by (index.css). */}

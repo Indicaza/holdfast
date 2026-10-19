@@ -1,8 +1,10 @@
 import PageShell from '../PageShell/PageShell.jsx'
 import PublicJoinCallout from '../PublicJoinCallout/PublicJoinCallout.jsx'
 import './Charter.css'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 function Charter() {
+  const guildPath = useGuildHref()
   return (
     <PageShell title="Holdfast Charter" centered>
       <article className="charter">
@@ -51,7 +53,7 @@ function Charter() {
 
           <p className="charter__callout charter__callout--link">
             <strong>
-              See <a href="/ranks">Ranks &amp; Roles</a> for the plain version
+              See <a href={guildPath('/ranks')}>Ranks &amp; Roles</a> for the plain version
               of how Rep, promotion, and billets work.
             </strong>
           </p>

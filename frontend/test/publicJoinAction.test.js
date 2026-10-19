@@ -15,6 +15,10 @@ test('public page callouts send existing members to quests', () => {
   assert.deepEqual(publicJoinAction(true), {
     eyebrow: 'Member quests',
     label: 'View Quests',
-    href: '/quests',
+    href: '/holdfast/quests',
   })
+})
+
+test('member callouts link to the quest board of the guild the page is in', () => {
+  assert.equal(publicJoinAction(true, '/iron-vanguard/quests').href, '/iron-vanguard/quests')
 })

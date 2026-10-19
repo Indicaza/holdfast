@@ -153,7 +153,7 @@ export default function GuildBrowser({ queryString = '' }) {
   }, [query, retry])
 
   function update(change) {
-    navigate(`/guilds${queryFromFilters({ ...filters, ...change })}`, { replace: true, preserveScroll: true })
+    navigate(`/${queryFromFilters({ ...filters, ...change })}`, { replace: true, preserveScroll: true })
   }
 
   async function loadMore() {
@@ -207,7 +207,7 @@ export default function GuildBrowser({ queryString = '' }) {
             </form>
 
             <div className="guild-hero__actions">
-              <Button href="/guilds/register" variant="secondary" size="lg">Register your guild</Button>
+              <Button href="/register" variant="secondary" size="lg">Register your guild</Button>
               <Button href="/guildweaver" variant="ghost" size="lg">Get the addon →</Button>
             </div>
           </header>
@@ -254,7 +254,7 @@ export default function GuildBrowser({ queryString = '' }) {
                   <p>Loosen a filter, or be the first: register your guild and it will appear here.</p>
                   <div className="guild-empty__actions">
                     {filterCount ? <Button variant="secondary" onClick={() => update(emptyFilters())}>Clear filters</Button> : null}
-                    <Button variant="primary" href="/guilds/register">Register your guild</Button>
+                    <Button variant="primary" href="/register">Register your guild</Button>
                   </div>
                 </Panel>
               )}

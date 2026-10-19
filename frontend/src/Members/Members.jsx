@@ -16,6 +16,7 @@ import { syncedCharacterIndex } from './syncedCharacters.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Members.css'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 const EMPTY_DIRECTORY = {
   members: [],
@@ -82,6 +83,7 @@ function memberCharacters(member, synced) {
 }
 
 function MemberCard({ member, isSelf, synced, charactersReady, onOpenCharacter }) {
+  const guildPath = useGuildHref()
   const activeAssignments = Number(member.activeAssignmentCount) || 0
   const characters = memberCharacters(member, synced)
   const [lead, ...rest] = characters
@@ -94,7 +96,7 @@ function MemberCard({ member, isSelf, synced, charactersReady, onOpenCharacter }
         </span>
         <div className="member-card__who">
           <h2>
-            <a className="member-card__link" href={`/members/${member.id}`}>
+            <a className="member-card__link" href={guildPath(`/members/${member.id}`)}>
               {memberName(member)}
             </a>
             {isSelf ? <span className="member-card__you">You</span> : null}
@@ -158,6 +160,7 @@ function DirectorySummary({ members, syncedCount }) {
 
 function Members() {
   const session = useSession()
+  const guildPath = useGuildHref()
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -284,7 +287,7 @@ function Members() {
     })
   }, [directory.members, filter, query, session.user?.id, sort])
 
-  const closeGate = () => navigate('/')
+  const closeGate = () => navigate(guildPath())
 
   if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
 
@@ -293,7 +296,7 @@ function Members() {
       <Home
         overlay={
           <MemberAccessModal
-            returnTo="/members"
+            returnTo={guildPath('/members')}
             onClose={closeGate}
           />
         }
@@ -306,7 +309,7 @@ function Members() {
       <Home
         overlay={
           <MemberAccessModal
-            returnTo="/members"
+            returnTo={guildPath('/members')}
             onClose={closeGate}
           />
         }

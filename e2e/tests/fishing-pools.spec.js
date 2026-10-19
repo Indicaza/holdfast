@@ -3,7 +3,7 @@ import { authenticate } from '../helpers/auth.js'
 
 async function seedFishing(page, context) {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
 
   await page.evaluate(async () => {
     async function json(url, options = {}) {
@@ -131,7 +131,7 @@ async function seedFishing(page, context) {
 
 test('fishing pools and open water remain distinct across zones', async ({ page, context }) => {
   await seedFishing(page, context)
-  await page.goto('/intelligence#farming')
+  await page.goto('/holdfast/intelligence#farming')
 
   const fishing = page.getByRole('region', { name: 'Fishing' })
   await expect(fishing).toBeVisible()

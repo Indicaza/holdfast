@@ -1,11 +1,12 @@
 import { useSession } from '../Auth/sessionContext.js'
 import { publicJoinAction } from './publicJoinAction.js'
 import JoinLink from '../Join/JoinLink.jsx'
+import { useGuildHref } from '../Guild/guildContext.js'
 import './PublicJoinCallout.css'
 
 function PublicJoinCallout({ title, description }) {
   const { authenticated, status, refresh } = useSession()
-  const action = publicJoinAction(authenticated)
+  const action = publicJoinAction(authenticated, useGuildHref()('/quests'))
 
   return (
     <aside className="public-join-callout" aria-labelledby="public-join-title">

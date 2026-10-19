@@ -1,4 +1,4 @@
-import { heroSlides, initialSlideDuration, slideDuration, fadeDuration } from '../HeroStory/heroStory.js'
+import { initialSlideDuration, slideDuration, fadeDuration } from '../HeroStory/heroStory.js'
 import './HeroSlideshow.css'
 
 function getSlideStyle(slide, visit) {
@@ -25,7 +25,7 @@ function HeroSlideshow({ story }) {
   return (
     <div className={`hero-slideshow ${story.isPaused ? 'hero-slideshow--paused' : ''}`} aria-hidden="true">
       {layers.map(({ index, visit }) => {
-        const slide = heroSlides[index]
+        const slide = story.slides[index]
         const isActive = visit === story.visit
         return (
           <div

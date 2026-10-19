@@ -155,8 +155,8 @@ export default function GuildPage({ slug }) {
         <div className="guild-browser__backdrop" aria-hidden="true" />
         <div className="guild-browser__frame">
           <main className="guild-page__state">
-            {result.missing ? <><h1>Guild not found</h1><p>It may have been renamed or unlisted.</p><Button href="/guilds" size="lg">Browse guilds</Button></>
-              : result.error ? <><h1>Something went wrong</h1><p role="alert">{result.error}</p><Button href="/guilds" size="lg">Browse guilds</Button></>
+            {result.missing ? <><h1>Guild not found</h1><p>It may have been renamed or unlisted.</p><Button href="/" size="lg">Browse guilds</Button></>
+              : result.error ? <><h1>Something went wrong</h1><p role="alert">{result.error}</p><Button href="/" size="lg">Browse guilds</Button></>
               : <div className="guild-page__loading" role="status" aria-label="Loading guild"><span /><span /><span /></div>}
           </main>
           <Footer />
@@ -180,7 +180,7 @@ export default function GuildPage({ slug }) {
       <div className="guild-browser__backdrop guild-page__backdrop" aria-hidden="true" />
       <div className="guild-browser__frame">
         <main>
-          <a className="guild-back" href="/guilds"><span aria-hidden="true">←</span> All guilds</a>
+          <a className="guild-back" href="/"><span aria-hidden="true">←</span> All guilds</a>
           <header className="guild-page__hero">
             <span className="guild-page__hero-glow" aria-hidden="true" />
             <GuildCrest name={guild.name} accentColor={guild.accentColor} faction={guild.faction} size={128} />
@@ -201,7 +201,7 @@ export default function GuildPage({ slug }) {
                 <span className="guild-page__member">{mine.role === 'owner' ? 'You lead this guild' : 'You’re a member'}</span>
               ) : guild.recruiting ? (
                 <Button variant={guild.discordInviteUrl ? 'secondary' : 'primary'} size="lg"
-                  onClick={() => (authenticated ? setApplying(true) : signIn(`${guildPath(guild.slug)}?apply=1`))}>
+                  onClick={() => (authenticated ? setApplying(true) : signIn(`${guildPath(guild.slug)}/about?apply=1`))}>
                   Apply to join
                 </Button>
               ) : null}
