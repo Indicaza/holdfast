@@ -70,10 +70,16 @@ test('old paths answer with a permanent redirect that keeps the query string', a
 
 test('new paths are served by the app and APIs are never redirected', async () => {
   await withHttpApp(async ({ request }) => {
-    for (const pathname of ['/', '/holdfast', '/holdfast/quests', '/holdfast/members/me', '/register', '/iron-vanguard']) {
+    for (const pathname of ['/', '/register', '/iron-vanguard']) {
       const response = await request(pathname, { headers: { Accept: 'text/html' } })
       assert.equal(response.status, 200, pathname)
-      assert.match(response.text, /HTTP test frontend/, pathname)
+      assert.match(response.text, /<title>HTTP test frontend<\/title>/, pathname)
+    }
+    for (const pathname of ['/holdfast', '/holdfast/quests', '/holdfast/members/me']) {
+      const response = await request(pathname, { headers: { Accept: 'text/html' } })
+      assert.equal(response.status, 200, pathname)
+      assert.match(response.text, /<title>Holdfast \| Alliance WoW Forever Guild<\/title>/, pathname)
+      assert.equal(response.headers.get('cache-control'), 'no-cache', pathname)
     }
 
     const api = await request('/api/guilds/holdfast')

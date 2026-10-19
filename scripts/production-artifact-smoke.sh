@@ -123,7 +123,11 @@ smoke_http() {
   curl --fail --silent "$BASE_URL/api/health/live" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/health/ready" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/quests" | grep -q 'E2E Supply Run'
-  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/" | grep -q '<title>Holdfast | Alliance WoW Forever Guild</title>'
+  # The guild directory is the front page; a guild's pages carry its title.
+  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/" | grep -q '<title>Guildweaver | Find a World of Warcraft Guild</title>'
+  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/holdfast" | grep -q '<title>Holdfast | Alliance WoW Forever Guild</title>'
+  # Old single-guild paths move permanently, keeping the query string.
+  curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' "$BASE_URL/quests?q=supply" | grep -q '^301 .*/holdfast/quests?q=supply$'
 }
 
 echo "Booting exact production artifact for the first time..."

@@ -1,8 +1,10 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import express from "express";
+
+import { guildPageHead, withPageHead } from "./pageHead.js";
 
 function frontendDirectory() {
   const configured = String(process.env.FRONTEND_DIST_DIR || "").trim();
@@ -51,6 +53,11 @@ export function mountProductionFrontend(app) {
     }
 
     res.set("Cache-Control", "no-cache");
-    res.sendFile(indexFile);
+    const head = guildPageHead(req.path);
+    if (!head) {
+      res.sendFile(indexFile);
+      return;
+    }
+    res.type("html").send(withPageHead(readFileSync(indexFile, "utf8"), head));
   });
 }

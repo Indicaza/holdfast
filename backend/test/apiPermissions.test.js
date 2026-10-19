@@ -119,7 +119,7 @@ test('profile editing persists only allowed self-owned fields', () => withHttpAp
 test('production frontend fallback, security headers, and API errors remain distinct', () => withHttpApp(async ({ request }) => {
   const page = await request('/holdfast/charter', { headers: { Accept: 'text/html' } })
   assert.equal(page.status, 200)
-  assert.match(page.text, /HTTP test frontend/)
+  assert.match(page.text, /<title>Holdfast \| Alliance WoW Forever Guild<\/title>/)
   assert.equal(page.headers.get('cache-control'), 'no-cache')
   assert.equal(page.headers.get('x-content-type-options'), 'nosniff')
   const missing = await request('/api/missing', { headers: { Accept: 'text/html' } })
