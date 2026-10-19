@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
+import { Badge, Button, Chip, Panel, Select, TextArea, TextInput } from '../DesignSystem/index.js'
 import Footer from '../Home/Footer/Footer.jsx'
-import { FactionMark, GuildCrest } from './GuildCrest.jsx'
+import { FactionMark, GuildCrest, RealmBadge, VerifiedBadge } from './GuildCrest.jsx'
 import {
   CLASS_LABELS,
   LANGUAGE_LABELS,
@@ -45,41 +46,29 @@ function ApplyPanel({ guild, onClose }) {
 
   if (state.status === 'sent') {
     return (
-      <div className="guild-apply guild-apply--sent" role="status">
-        <h3>Application sent</h3>
+      <Panel tone="raised" padding="lg" className="guild-apply" role="status" title="Application sent" titleAs="h3">
         <p>{guild.name}&rsquo;s officers will review it. {guild.discordInviteUrl ? 'Join their Discord to say hello in the meantime.' : ''}</p>
-        <button type="button" className="guild-page__secondary" onClick={onClose}>Done</button>
-      </div>
+        <div><Button onClick={onClose}>Done</Button></div>
+      </Panel>
     )
   }
 
   return (
-    <form className="guild-apply" onSubmit={submit}>
-      <div className="guild-apply__head">
-        <h3>Apply to {guild.name}</h3>
-        <button type="button" className="guild-apply__close" onClick={onClose} aria-label="Close application">×</button>
-      </div>
+    <Panel as="form" tone="raised" padding="lg" className="guild-apply" onSubmit={submit} title={`Apply to ${guild.name}`} titleAs="h3"
+      actions={<Button variant="ghost" size="sm" className="guild-apply__close" onClick={onClose} aria-label="Close application">✕</Button>}>
       <div className="guild-apply__row">
-        <label><span>Character</span><input name="characterName" maxLength={48} required placeholder="Your main" /></label>
-        <label><span>Class</span>
-          <select name="classToken" defaultValue="">
-            <option value="" disabled>Choose a class</option>
-            {Object.entries(CLASS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label><span>Role</span>
-          <select name="role" defaultValue="">
-            <option value="">Any</option>
-            {Object.entries(ROLE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
+        <TextInput label="Character" name="characterName" maxLength={48} required placeholder="Your main" />
+        <Select label="Class" name="classToken" defaultValue="" placeholder="Choose a class" placeholderDisabled options={Object.entries(CLASS_LABELS)} />
+        <Select label="Role" name="role" defaultValue="" placeholder="Any" options={Object.entries(ROLE_LABELS)} />
       </div>
-      <label><span>Message</span><textarea name="message" rows={4} maxLength={1000} placeholder="What you play, when you play, and what you’re looking for." /></label>
-      {state.status === 'error' ? <p className="guild-apply__error" role="alert">{state.message}</p> : null}
-      <button type="submit" className="guild-page__primary" disabled={state.status === 'sending'}>
-        {state.status === 'sending' ? 'Sending…' : 'Send application'}
-      </button>
-    </form>
+      <TextArea label="Message" name="message" rows={4} maxLength={1000} placeholder="What you play, when you play, and what you’re looking for." />
+      {state.status === 'error' ? <p className="guild-alert" role="alert">{state.message}</p> : null}
+      <div>
+        <Button type="submit" variant="primary" size="lg" loading={state.status === 'sending'}>
+          {state.status === 'sending' ? 'Sending…' : 'Send application'}
+        </Button>
+      </div>
+    </Panel>
   )
 }
 
@@ -88,19 +77,15 @@ function RosterPanel({ guild }) {
   const segments = classMixSegments(stats.classMix)
   if (!stats.verified) {
     return (
-      <section className="guild-panel guild-panel--roster guild-panel--unverified">
-        <h2>Verified roster</h2>
+      <Panel tone="dashed" padding="lg" className="guild-roster guild-roster--unverified" title="Verified roster">
         <p>{guild.name} hasn&rsquo;t synced characters yet. Guilds that use the Guildweaver addon show real activity, level spread and class mix here.</p>
-        <a className="guild-page__secondary" href="/guildweaver">Get the addon</a>
-      </section>
+        <div><Button href="/guildweaver">Get the addon</Button></div>
+      </Panel>
     )
   }
   return (
-    <section className="guild-panel guild-panel--roster">
-      <div className="guild-panel__title">
-        <h2>Verified roster</h2>
-        <span className="guild-panel__live"><span className="guild-card__pulse" aria-hidden="true" />{lastActiveLabel(stats.lastActiveAt)}</span>
-      </div>
+    <Panel padding="lg" className="guild-roster" title="Verified roster"
+      actions={<span className="guild-roster__live"><span className="guild-card__pulse" aria-hidden="true" />{lastActiveLabel(stats.lastActiveAt)}</span>}>
       <div className="guild-stats">
         <div><strong>{stats.activeCharacters}</strong><span>active this week</span></div>
         <div><strong>{stats.verifiedCharacters}</strong><span>synced this month</span></div>
@@ -119,8 +104,8 @@ function RosterPanel({ guild }) {
           </ul>
         </>
       ) : null}
-      <p className="guild-panel__note">Synced by the Guildweaver addon from members&rsquo; own characters. Shown as totals only.</p>
-    </section>
+      <p className="guild-note">Synced by the Guildweaver addon from members&rsquo; own characters. Shown as totals only.</p>
+    </Panel>
   )
 }
 
@@ -170,8 +155,8 @@ export default function GuildPage({ slug }) {
         <div className="guild-browser__backdrop" aria-hidden="true" />
         <div className="guild-browser__frame">
           <main className="guild-page__state">
-            {result.missing ? <><h1>Guild not found</h1><p>It may have been renamed or unlisted.</p><a className="guild-page__secondary" href="/guilds">Browse guilds</a></>
-              : result.error ? <><h1>Something went wrong</h1><p role="alert">{result.error}</p><a className="guild-page__secondary" href="/guilds">Browse guilds</a></>
+            {result.missing ? <><h1>Guild not found</h1><p>It may have been renamed or unlisted.</p><Button href="/guilds" size="lg">Browse guilds</Button></>
+              : result.error ? <><h1>Something went wrong</h1><p role="alert">{result.error}</p><Button href="/guilds" size="lg">Browse guilds</Button></>
               : <div className="guild-page__loading" role="status" aria-label="Loading guild"><span /><span /><span /></div>}
           </main>
           <Footer />
@@ -195,29 +180,30 @@ export default function GuildPage({ slug }) {
       <div className="guild-browser__backdrop guild-page__backdrop" aria-hidden="true" />
       <div className="guild-browser__frame">
         <main>
-          <a className="guild-page__back" href="/guilds">← All guilds</a>
+          <a className="guild-back" href="/guilds"><span aria-hidden="true">←</span> All guilds</a>
           <header className="guild-page__hero">
-            <GuildCrest name={guild.name} accentColor={guild.accentColor} faction={guild.faction} size={112} />
+            <span className="guild-page__hero-glow" aria-hidden="true" />
+            <GuildCrest name={guild.name} accentColor={guild.accentColor} faction={guild.faction} size={128} />
             <div className="guild-page__identity">
               <div className="guild-card__badges">
                 <FactionMark faction={guild.faction} />
-                <span className={`guild-badge guild-badge--realm guild-badge--${guild.realmType}`}>{REALM_TYPE_LABELS[guild.realmType]}</span>
-                {guild.recruiting ? <span className="guild-badge guild-badge--recruiting">Recruiting</span> : <span className="guild-badge">Not recruiting</span>}
-                {guild.stats.verified ? <span className="guild-badge guild-badge--verified">Verified activity</span> : null}
+                <RealmBadge realmType={guild.realmType} label={REALM_TYPE_LABELS[guild.realmType]} />
+                {guild.recruiting ? <Badge tone="success">Recruiting</Badge> : <Badge>Not recruiting</Badge>}
+                {guild.stats.verified ? <VerifiedBadge>Verified activity</VerifiedBadge> : null}
               </div>
               <h1>{guild.name}</h1>
               {guild.tagline ? <p className="guild-page__tagline">{guild.tagline}</p> : null}
               <p className="guild-page__meta">{guild.realm} · {REGION_LABELS[guild.region] || guild.region} · {sizeLabel(guild.stats)}</p>
             </div>
             <div className="guild-page__actions">
-              {guild.discordInviteUrl ? <a className="guild-page__primary" href={guild.discordInviteUrl} target="_blank" rel="noreferrer noopener">Join their Discord</a> : null}
+              {guild.discordInviteUrl ? <Button variant="primary" size="lg" href={guild.discordInviteUrl} target="_blank" rel="noreferrer noopener">Join their Discord</Button> : null}
               {mine?.slug === guild.slug ? (
                 <span className="guild-page__member">{mine.role === 'owner' ? 'You lead this guild' : 'You’re a member'}</span>
               ) : guild.recruiting ? (
-                <button type="button" className={guild.discordInviteUrl ? 'guild-page__secondary' : 'guild-page__primary'}
+                <Button variant={guild.discordInviteUrl ? 'secondary' : 'primary'} size="lg"
                   onClick={() => (authenticated ? setApplying(true) : signIn(`${guildPath(guild.slug)}?apply=1`))}>
                   Apply to join
-                </button>
+                </Button>
               ) : null}
             </div>
           </header>
@@ -226,51 +212,50 @@ export default function GuildPage({ slug }) {
 
           <div className="guild-page__grid">
             <div className="guild-page__main">
-              <section className="guild-panel">
-                <h2>About</h2>
+              <Panel padding="lg" title="About" className="guild-about">
                 {guild.description ? guild.description.split(/\n{2,}/).map((paragraph, index) => <p key={index}>{paragraph}</p>)
-                  : <p className="guild-panel__muted">This guild hasn&rsquo;t written a description yet.</p>}
-                <ul className="guild-card__styles guild-card__styles--large">
-                  {guild.playStyles.map((style) => <li key={style}>{PLAY_STYLE_LABELS[style] || style}</li>)}
-                </ul>
-              </section>
+                  : <p className="guild-muted">This guild hasn&rsquo;t written a description yet.</p>}
+                {guild.playStyles.length ? (
+                  <ul className="guild-tags" aria-label="Play styles">
+                    {guild.playStyles.map((style) => <li key={style}><Chip>{PLAY_STYLE_LABELS[style] || style}</Chip></li>)}
+                  </ul>
+                ) : null}
+              </Panel>
               <RosterPanel guild={guild} />
             </div>
 
             <aside className="guild-page__side">
-              <section className="guild-panel">
-                <h2>At a glance</h2>
+              <Panel title="At a glance">
                 <dl className="guild-facts">
                   {facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
                 </dl>
-              </section>
+              </Panel>
 
               {guild.recruiting ? (
-                <section className="guild-panel">
-                  <h2>Looking for</h2>
+                <Panel title="Looking for">
                   {guild.recruitingClasses.length ? (
-                    <ul className="guild-wanted">
-                      {guild.recruitingClasses.map((token) => <li key={token} style={{ '--class-color': classColor(token) }}><span aria-hidden="true" />{CLASS_LABELS[token]}</li>)}
+                    <ul className="guild-tags">
+                      {guild.recruitingClasses.map((token) => <li key={token}><Chip color={classColor(token)}>{CLASS_LABELS[token]}</Chip></li>)}
                     </ul>
-                  ) : <p className="guild-panel__muted">Every class is welcome.</p>}
-                  {guild.recruitingRoles.length ? <p className="guild-panel__roles">{guild.recruitingRoles.map((role) => ROLE_LABELS[role]).join(' · ')}</p> : null}
-                </section>
+                  ) : <p className="guild-muted">Every class is welcome.</p>}
+                  {guild.recruitingRoles.length ? <p className="guild-roles">{guild.recruitingRoles.map((role) => ROLE_LABELS[role]).join(' · ')}</p> : null}
+                </Panel>
               ) : null}
 
               {guild.sisters?.length ? (
-                <section className="guild-panel">
-                  <h2>Sister guilds</h2>
+                <Panel title="Sister guilds">
                   <ul className="guild-sisters">
                     {guild.sisters.map((sister) => (
                       <li key={sister.id}>
                         <a href={guildPath(sister.slug)}>
-                          <GuildCrest name={sister.name} accentColor={sister.accentColor} faction={sister.faction} size={32} />
+                          <GuildCrest name={sister.name} accentColor={sister.accentColor} faction={sister.faction} size={36} />
                           <span><strong>{sister.name}</strong><small>{sister.realm}</small></span>
+                          <span className="guild-sisters__arrow" aria-hidden="true">→</span>
                         </a>
                       </li>
                     ))}
                   </ul>
-                </section>
+                </Panel>
               ) : null}
             </aside>
           </div>
