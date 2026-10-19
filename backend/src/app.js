@@ -1,13 +1,17 @@
 import { createPublicGameDataRouter } from "./GameData/publicGameDataRouter.js";
 import cors from "cors";
-import express from "express";
+import express, { Router } from "express";
 import { offsiteBackupHealth } from "./Data/offsiteBackup.js";
 import { createGuildDirectoryRouter } from "./Guild/Directory/guildDirectoryRouter.js";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
-import { requirePermission, resolveMemberAccess } from "./Auth/permissions.js";
+import {
+  requireAuthenticated,
+  requirePermission,
+  resolveMemberAccess,
+} from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { createCharacterRouter } from "./Character/characterRouter.js";
 import { createGuildweaverAdminRouter } from "./Character/guildweaverAdminRouter.js";
@@ -27,6 +31,11 @@ import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
 import { createAuthorityRouter } from "./Guild/authorityRouter.js";
+import {
+  guildContextFromSlug,
+  holdfastGuildContext,
+} from "./Guild/guildContext.js";
+import { HOLDFAST_GUILD_ID } from "./Guild/guildScope.js";
 import {
   guildweaverDownloadUrl,
   guildweaverReleaseMetadata,
@@ -71,10 +80,10 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
 
     try {
       withGuildDatabase((db) => {
-        const settings = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE id = 1").get();
+        const settings = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE guild_id = ?").get(HOLDFAST_GUILD_ID);
         if (!settings) throw new Error("Quest settings are missing");
-        if (settings.focused_quest_id && !db.prepare("SELECT id FROM quests WHERE id = ?").get(settings.focused_quest_id)) throw new Error("Featured quest is missing");
-        if (!Number(db.prepare("SELECT COUNT(*) AS count FROM rank_authority").get().count)) throw new Error("Rank authority is missing");
+        if (settings.focused_quest_id && !db.prepare("SELECT id FROM quests WHERE guild_id = ? AND id = ?").get(HOLDFAST_GUILD_ID, settings.focused_quest_id)) throw new Error("Featured quest is missing");
+        if (!Number(db.prepare("SELECT COUNT(*) AS count FROM rank_authority WHERE guild_id = ?").get(HOLDFAST_GUILD_ID).count)) throw new Error("Rank authority is missing");
         db.prepare("SELECT COUNT(*) FROM members").get();
         db.prepare("SELECT COUNT(*) FROM contribution_transactions").get();
         db.prepare("SELECT COUNT(*) FROM notifications").get();
@@ -111,7 +120,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
           let questDocument = { readable: true, error: null };
 
           try {
-            readQuestsFromDatabase(db);
+            readQuestsFromDatabase(db, HOLDFAST_GUILD_ID);
           } catch (error) {
             questDocument = {
               readable: false,
@@ -170,12 +179,44 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   );
   app.use("/api/game-data/v1", createRateLimiter({ name: "public-game-data", windowMs: 60000, max: 120 }), createPublicGameDataRouter({ ...(developmentAuthEnabled(developmentEnv) ? { iconMediaResolver: createDevelopmentIconMediaResolver() } : {}), ...publicGameDataOptions }));
   app.use("/api/notifications", createNotificationRouter());
-  app.use("/api/quests", createQuestCompletionRouter());
-  app.use("/api/quests", createQuestRouter());
   app.use("/api/guilds", createGuildDirectoryRouter());
-  app.use("/api/guild/members", createMemberRouter());
-  app.use("/api/guild/billets", createBilletRouter());
-  app.use("/api/guild/authority", createAuthorityRouter());
+
+  // Each guild's quests, roster, billets, authority and audit. The same
+  // router instances serve /api/g/:slug/... for any guild and the original
+  // unscoped paths, which stay Holdfast's for the current frontend. Every
+  // repository call inside them is scoped to req.guild.
+  const questCompletionRouter = createQuestCompletionRouter();
+  const questRouter = createQuestRouter();
+  const memberRouter = createMemberRouter();
+  const billetRouter = createBilletRouter();
+  const authorityRouter = createAuthorityRouter();
+  const auditRouter = createAuditRouter();
+
+  app.use("/api/quests", holdfastGuildContext, questCompletionRouter, questRouter);
+  app.use("/api/guild/members", holdfastGuildContext, memberRouter);
+  app.use("/api/guild/billets", holdfastGuildContext, billetRouter);
+  app.use("/api/guild/authority", holdfastGuildContext, authorityRouter);
+  app.use("/api/admin/audit", holdfastGuildContext, auditRouter);
+
+  const guildApi = Router({ mergeParams: true });
+  guildApi.get("/me", requireAuthenticated, (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({
+      guild: req.guild,
+      member: Boolean(req.auth.guildMember),
+      role: req.auth.guildMember ? req.auth.guild?.role || null : null,
+      rank: req.auth.guildMember ? req.auth.authority.memberRank : null,
+      authority: req.auth.authority,
+      permissions: req.auth.permissions,
+    });
+  });
+  guildApi.use("/quests", questCompletionRouter, questRouter);
+  guildApi.use("/members", memberRouter);
+  guildApi.use("/billets", billetRouter);
+  guildApi.use("/authority", authorityRouter);
+  guildApi.use("/audit", auditRouter);
+  app.use("/api/g/:slug", guildContextFromSlug, guildApi);
+
   app.use("/api/intelligence/farming", createFarmingRouter());
   app.use(
     "/api/intelligence",
@@ -185,7 +226,6 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
         : {},
     ),
   );
-  app.use("/api/admin/audit", createAuditRouter());
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
 
   app.get("/api/guildweaver/release", (req, res) => {

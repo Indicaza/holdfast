@@ -1,4 +1,5 @@
 import { questScopeAllowsMember } from "../Guild/authorityPolicy.js";
+import { requireGuildId } from "../Guild/guildScope.js";
 
 export class QuestCompletionError extends Error {
   constructor(code, message, status = 400) {
@@ -110,12 +111,12 @@ export function completionFingerprint(objective) {
   });
 }
 
-function rowForObjective(db, objectiveId) {
+function rowForObjective(db, guildId, objectiveId) {
   return db
     .prepare(
-      "SELECT * FROM quest_completion_requests WHERE objective_id = ?",
+      "SELECT * FROM quest_completion_requests WHERE guild_id = ? AND objective_id = ?",
     )
-    .get(objectiveId);
+    .get(requireGuildId(guildId), objectiveId);
 }
 
 function effectiveState(row, objective) {
@@ -158,10 +159,11 @@ function projectState(row, objective) {
 
 export function readCompletionStatesFromDatabase(
   db,
+  guildId,
   document,
   { questId = "", publishedOnly = true } = {},
 ) {
-
+  const id = requireGuildId(guildId);
   const quests = new Map(
     document.quests
       .filter(
@@ -182,14 +184,14 @@ export function readCompletionStatesFromDatabase(
   const rows = questId
     ? db
         .prepare(
-          "SELECT * FROM quest_completion_requests WHERE quest_id = ? ORDER BY updated_at DESC",
+          "SELECT * FROM quest_completion_requests WHERE guild_id = ? AND quest_id = ? ORDER BY updated_at DESC",
         )
-        .all(questId)
+        .all(id, questId)
     : db
         .prepare(
-          "SELECT * FROM quest_completion_requests ORDER BY updated_at DESC",
+          "SELECT * FROM quest_completion_requests WHERE guild_id = ? ORDER BY updated_at DESC",
         )
-        .all();
+        .all(id);
 
   return Object.fromEntries(
     rows
@@ -205,6 +207,7 @@ export function readCompletionStatesFromDatabase(
 
 export function requestObjectiveCompletionInDatabase({
   db,
+  guildId,
   document,
   questId,
   objectiveId,
@@ -236,7 +239,7 @@ export function requestObjectiveCompletionInDatabase({
     );
   }
 
-  const existing = rowForObjective(db, objectiveId);
+  const existing = rowForObjective(db, guildId, objectiveId);
   const existingState = effectiveState(existing, objective);
 
   if (existingState === "pending") {
@@ -260,6 +263,7 @@ export function requestObjectiveCompletionInDatabase({
   db.prepare(
     `
       INSERT INTO quest_completion_requests (
+        guild_id,
         objective_id,
         quest_id,
         status,
@@ -273,8 +277,8 @@ export function requestObjectiveCompletionInDatabase({
         reviewed_at,
         review_note,
         updated_at
-      ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, NULL, '', '', '', ?)
-      ON CONFLICT(objective_id) DO UPDATE SET
+      ) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, NULL, '', '', '', ?)
+      ON CONFLICT(guild_id, objective_id) DO UPDATE SET
         quest_id = excluded.quest_id,
         status = 'pending',
         objective_fingerprint = excluded.objective_fingerprint,
@@ -289,6 +293,7 @@ export function requestObjectiveCompletionInDatabase({
         updated_at = excluded.updated_at
     `,
   ).run(
+    requireGuildId(guildId),
     objectiveId,
     questId,
     completionFingerprint(objective),
@@ -299,18 +304,19 @@ export function requestObjectiveCompletionInDatabase({
     now,
   );
 
-  return projectState(rowForObjective(db, objectiveId), objective);
+  return projectState(rowForObjective(db, guildId, objectiveId), objective);
 }
 
 export function withdrawObjectiveCompletionInDatabase({
   db,
+  guildId,
   document,
   questId,
   objectiveId,
   memberId,
 }) {
   const { objective } = findTarget(document, questId, objectiveId);
-  const row = rowForObjective(db, objectiveId);
+  const row = rowForObjective(db, guildId, objectiveId);
 
   if (!row || row.quest_id !== questId) {
     throw new QuestCompletionError(
@@ -339,14 +345,15 @@ export function withdrawObjectiveCompletionInDatabase({
   }
 
   db.prepare(
-    "DELETE FROM quest_completion_requests WHERE objective_id = ?",
-  ).run(objectiveId);
+    "DELETE FROM quest_completion_requests WHERE guild_id = ? AND objective_id = ?",
+  ).run(guildId, objectiveId);
 
   return null;
 }
 
 export function reviewObjectiveCompletionInDatabase({
   db,
+  guildId,
   document,
   questId,
   objectiveId,
@@ -375,7 +382,7 @@ export function reviewObjectiveCompletionInDatabase({
     );
   }
 
-  const row = rowForObjective(db, objectiveId);
+  const row = rowForObjective(db, guildId, objectiveId);
 
   if (!row || row.quest_id !== questId) {
     throw new QuestCompletionError(
@@ -434,7 +441,7 @@ export function reviewObjectiveCompletionInDatabase({
         reviewed_at = ?,
         review_note = ?,
         updated_at = ?
-      WHERE objective_id = ?
+      WHERE guild_id = ? AND objective_id = ?
     `,
   ).run(
     normalizedDecision,
@@ -443,20 +450,22 @@ export function reviewObjectiveCompletionInDatabase({
     now,
     reviewNote,
     now,
+    guildId,
     objectiveId,
   );
 
-  return projectState(rowForObjective(db, objectiveId), objective);
+  return projectState(rowForObjective(db, guildId, objectiveId), objective);
 }
 
 export function assertObjectiveCompletionApprovedInDatabase(
   db,
+  guildId,
   document,
   questId,
   objectiveId,
 ) {
   const { objective } = findTarget(document, questId, objectiveId);
-  const row = rowForObjective(db, objectiveId);
+  const row = rowForObjective(db, guildId, objectiveId);
   const state = effectiveState(row, objective);
 
   if (state === "stale") {

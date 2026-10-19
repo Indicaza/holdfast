@@ -4,6 +4,10 @@ import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js"
 import { ensureCharacterReadModelSchema } from "../../Character/ReadModel/readModelSchema.js";
 import { CLASSES, PLAY_STYLES, REALM_TYPES, FACTIONS } from "./guildDirectoryModel.js";
 import { memberHasGuildPermissionInDatabase } from "./guildRoles.js";
+import {
+  DEFAULT_GUILD_TOP_RANK,
+  seedGuildOperationsInDatabase,
+} from "../guildDefaults.js";
 
 // A character counts toward a guild's verified activity when Guildweaver saw
 // it recently. Only aggregates leave this module; never player names.
@@ -302,9 +306,12 @@ export function registerGuild({ memberId, listing, now = new Date().toISOString(
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, listing.slug, listing.name, listing.faction, listing.region, listing.realm, listing.realmType, memberId, now, now);
     writeListing(db, id, listing, now);
+    // A new guild starts with its own quest board, rank ladder and billets,
+    // and its founder at the top of that ladder.
+    seedGuildOperationsInDatabase(db, id, now);
     db.prepare(`
-      INSERT INTO guild_memberships (guild_id, member_id, role, status, joined_at) VALUES (?, ?, 'owner', 'active', ?)
-    `).run(id, memberId, now);
+      INSERT INTO guild_memberships (guild_id, member_id, role, status, joined_at, rank) VALUES (?, ?, 'owner', 'active', ?, ?)
+    `).run(id, memberId, now, DEFAULT_GUILD_TOP_RANK);
     return { ok: true, slug: listing.slug };
   });
 }

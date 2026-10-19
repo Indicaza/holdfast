@@ -66,6 +66,7 @@ function seedDatabase() {
     db.prepare(
       `
         INSERT INTO quests (
+          guild_id,
           id,
           publication,
           mode,
@@ -75,7 +76,7 @@ function seedDatabase() {
           sort_order,
           created_by_member_id,
           created_at
-        ) VALUES (?, 'published', 'rotating', ?, ?, 0, 0, ?, ?)
+        ) VALUES ('guild-holdfast', ?, 'published', 'rotating', ?, ?, 0, 0, ?, ?)
       `,
     ).run(
       "restore-quest",
@@ -88,6 +89,7 @@ function seedDatabase() {
     db.prepare(
       `
         INSERT INTO objectives (
+          guild_id,
           id,
           quest_id,
           title,
@@ -98,7 +100,7 @@ function seedDatabase() {
           reward_rep,
           reward_marks,
           sort_order
-        ) VALUES (?, ?, ?, '', 'Main', 0, ?, 250, 25, 0)
+        ) VALUES ('guild-holdfast', ?, ?, ?, '', 'Main', 0, ?, 250, 25, 0)
       `,
     ).run(
       "restore-objective",
@@ -110,6 +112,7 @@ function seedDatabase() {
     db.prepare(
       `
         INSERT INTO assignments (
+          guild_id,
           objective_id,
           member_id,
           name,
@@ -118,7 +121,7 @@ function seedDatabase() {
           initials,
           avatar,
           sort_order
-        ) VALUES (?, ?, ?, 'Volunteer', '', 'RM', NULL, 0)
+        ) VALUES ('guild-holdfast', ?, ?, ?, 'Volunteer', '', 'RM', NULL, 0)
       `,
     ).run("restore-objective", "restore-member", "Restore Member");
 

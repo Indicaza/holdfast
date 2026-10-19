@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-  requireHoldfastMember,
+  requireGuildMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import {
@@ -47,10 +47,10 @@ export function createAuthorityRouter() {
     max: 60,
   });
 
-  router.get("/", requireHoldfastMember, (req, res) => {
+  router.get("/", requireGuildMember, (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
-      res.json(readAuthorityCatalog());
+      res.json(readAuthorityCatalog(req.guild.id));
     } catch (error) {
       console.error("Unable to read authority catalog", error);
       res.status(500).json({ error: "authority_catalog_unavailable" });
@@ -66,7 +66,7 @@ export function createAuthorityRouter() {
         const result = await updateRankAuthority(
           req.params.rank,
           req.body,
-          { actorMemberId: req.auth.user.id },
+          { guildId: req.guild.id, actorMemberId: req.auth.user.id },
         );
 
         if (sendAuthorityError(res, result)) return;
@@ -92,7 +92,7 @@ export function createAuthorityRouter() {
         const result = await updateBilletAuthority(
           req.params.billetId,
           req.body,
-          { actorMemberId: req.auth.user.id },
+          { guildId: req.guild.id, actorMemberId: req.auth.user.id },
         );
 
         if (sendAuthorityError(res, result)) return;

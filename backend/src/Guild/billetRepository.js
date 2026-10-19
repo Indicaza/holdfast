@@ -11,11 +11,33 @@ import {
   normalizeManagedRank,
   normalizeQuestScope,
 } from "./authorityPolicy.js";
-import { GUILD_RANKS } from "./rankSystem.js";
+import { readRankLadderFromDatabase } from "./authorityRepository.js";
+import { isHoldfastGuild, requireGuildId } from "./guildScope.js";
 
-const RESERVED_BILLET_NAMES = new Set(
-  ["@everyone", ...GUILD_RANKS].map((name) => name.toLowerCase()),
-);
+// A billet may not share a name with one of the guild's ranks (Holdfast's
+// ranks and billets are both Discord roles).
+function reservedBilletNames(db, guildId) {
+  return new Set(
+    ["@everyone", ...readRankLadderFromDatabase(db, guildId).names].map(
+      (name) => name.toLowerCase(),
+    ),
+  );
+}
+
+function activeGuildMember(db, guildId, memberId) {
+  return db
+    .prepare(
+      `
+        SELECT members.id, members.billets_managed
+        FROM guild_memberships
+        JOIN members ON members.id = guild_memberships.member_id
+        WHERE guild_memberships.guild_id = ?
+          AND guild_memberships.member_id = ?
+          AND guild_memberships.status = 'active'
+      `,
+    )
+    .get(guildId, memberId);
+}
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -34,6 +56,7 @@ function billetFromRow(row) {
 
   return {
     id: row.id,
+    guildId: row.guild_id,
     name: row.name,
     responsibility: row.responsibility || "",
     discordRoleId: row.discord_role_id || null,
@@ -52,7 +75,7 @@ function billetFromRow(row) {
   };
 }
 
-function validateBilletInput({ name, responsibility }) {
+function validateBilletInput({ name, responsibility }, reservedNames) {
   const normalizedName = normalizeText(name);
   const normalizedResponsibility = normalizeText(responsibility);
 
@@ -63,7 +86,7 @@ function validateBilletInput({ name, responsibility }) {
     };
   }
 
-  if (RESERVED_BILLET_NAMES.has(normalizedName.toLowerCase())) {
+  if (reservedNames.has(normalizedName.toLowerCase())) {
     return {
       valid: false,
       error: "reserved_name",
@@ -86,67 +109,85 @@ function validateBilletInput({ name, responsibility }) {
   };
 }
 
-function readBilletById(db, billetId) {
+function readBilletById(db, guildId, billetId) {
   return billetFromRow(
-    db.prepare("SELECT * FROM billets WHERE id = ?").get(billetId),
+    db
+      .prepare("SELECT * FROM billets WHERE guild_id = ? AND id = ?")
+      .get(requireGuildId(guildId), billetId),
   );
 }
 
-export async function readBillet(billetId) {
-  return withGuildDatabase((db) => readBilletById(db, billetId));
+export async function readBillet(guildId, billetId) {
+  return withGuildDatabase((db) => readBilletById(db, guildId, billetId));
 }
 
-export function readBilletsFromDatabase(db, { includeInactive = false } = {}) {
+export function readBilletsFromDatabase(
+  db,
+  guildId,
+  { includeInactive = false } = {},
+) {
+  const id = requireGuildId(guildId);
   const rows = includeInactive
     ? db
-        .prepare("SELECT * FROM billets ORDER BY name COLLATE NOCASE")
-        .all()
+        .prepare(
+          "SELECT * FROM billets WHERE guild_id = ? ORDER BY name COLLATE NOCASE",
+        )
+        .all(id)
     : db
         .prepare(
-          "SELECT * FROM billets WHERE active = 1 ORDER BY name COLLATE NOCASE",
+          "SELECT * FROM billets WHERE guild_id = ? AND active = 1 ORDER BY name COLLATE NOCASE",
         )
-        .all();
+        .all(id);
 
   return rows.map(billetFromRow);
 }
 
-export function readMemberBilletsFromDatabase(db, memberId) {
+export function readMemberBilletsFromDatabase(db, guildId, memberId) {
   return db
     .prepare(
       `
         SELECT billets.*
         FROM billets
         JOIN member_billets
-          ON member_billets.billet_id = billets.id
-        WHERE member_billets.member_id = ?
+          ON member_billets.guild_id = billets.guild_id
+         AND member_billets.billet_id = billets.id
+        WHERE member_billets.guild_id = ?
+          AND member_billets.member_id = ?
           AND billets.active = 1
         ORDER BY billets.name COLLATE NOCASE
       `,
     )
-    .all(memberId)
+    .all(requireGuildId(guildId), memberId)
     .map(billetFromRow);
 }
 
-export async function readBillets(options = {}) {
-  return withGuildDatabase((db) => readBilletsFromDatabase(db, options));
+export async function readBillets(guildId, options = {}) {
+  return withGuildDatabase((db) =>
+    readBilletsFromDatabase(db, guildId, options),
+  );
 }
 
 export async function createBillet(
   input,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
-  const validation = validateBilletInput(input || {});
-
-  if (!validation.valid) {
-    return { status: validation.error, billet: null };
-  }
+  const id = requireGuildId(guildId);
 
   return withGuildTransaction((db) => {
+    const validation = validateBilletInput(
+      input || {},
+      reservedBilletNames(db, id),
+    );
+
+    if (!validation.valid) {
+      return { status: validation.error, billet: null };
+    }
+
     const existing = db
       .prepare(
-        "SELECT id FROM billets WHERE name = ? COLLATE NOCASE",
+        "SELECT id FROM billets WHERE guild_id = ? AND name = ? COLLATE NOCASE",
       )
-      .get(validation.value.name);
+      .get(id, validation.value.name);
 
     if (existing) {
       return { status: "duplicate_name", billet: null };
@@ -159,16 +200,18 @@ export async function createBillet(
       `
         INSERT INTO billets (
           id,
+          guild_id,
           name,
           responsibility,
           discord_role_id,
           active,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, NULL, 1, ?, ?)
+        ) VALUES (?, ?, ?, ?, NULL, 1, ?, ?)
       `,
     ).run(
       billetId,
+      id,
       validation.value.name,
       validation.value.responsibility,
       now,
@@ -177,6 +220,7 @@ export async function createBillet(
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "billet.created",
       entityType: "billet",
@@ -189,7 +233,7 @@ export async function createBillet(
 
     return {
       status: "created",
-      billet: readBilletById(db, billetId),
+      billet: readBilletById(db, id, billetId),
     };
   });
 }
@@ -197,16 +241,21 @@ export async function createBillet(
 export async function updateBillet(
   billetId,
   input,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
-  const validation = validateBilletInput(input || {});
-
-  if (!validation.valid) {
-    return { status: validation.error, billet: null };
-  }
+  const id = requireGuildId(guildId);
 
   return withGuildTransaction((db) => {
-    const existing = readBilletById(db, billetId);
+    const validation = validateBilletInput(
+      input || {},
+      reservedBilletNames(db, id),
+    );
+
+    if (!validation.valid) {
+      return { status: validation.error, billet: null };
+    }
+
+    const existing = readBilletById(db, id, billetId);
 
     if (!existing) {
       return { status: "not-found", billet: null };
@@ -221,9 +270,9 @@ export async function updateBillet(
 
     const duplicate = db
       .prepare(
-        "SELECT id FROM billets WHERE name = ? COLLATE NOCASE AND id <> ?",
+        "SELECT id FROM billets WHERE guild_id = ? AND name = ? COLLATE NOCASE AND id <> ?",
       )
-      .get(validation.value.name, billetId);
+      .get(id, validation.value.name, billetId);
 
     if (duplicate) {
       return { status: "duplicate_name", billet: existing };
@@ -242,17 +291,19 @@ export async function updateBillet(
       `
         UPDATE billets
         SET name = ?, responsibility = ?, updated_at = ?
-        WHERE id = ?
+        WHERE guild_id = ? AND id = ?
       `,
     ).run(
       validation.value.name,
       validation.value.responsibility,
       now,
+      id,
       billetId,
     );
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "billet.updated",
       entityType: "billet",
@@ -268,17 +319,19 @@ export async function updateBillet(
 
     return {
       status: "updated",
-      billet: readBilletById(db, billetId),
+      billet: readBilletById(db, id, billetId),
     };
   });
 }
 
 export async function deleteBillet(
   billetId,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
+  const id = requireGuildId(guildId);
+
   return withGuildTransaction((db) => {
-    const existing = readBilletById(db, billetId);
+    const existing = readBilletById(db, id, billetId);
 
     if (!existing) {
       return { status: "not-found", billet: null, assignmentCount: 0 };
@@ -295,13 +348,14 @@ export async function deleteBillet(
     const assignmentCount = Number(
       db
         .prepare(
-          "SELECT COUNT(*) AS count FROM member_billets WHERE billet_id = ?",
+          "SELECT COUNT(*) AS count FROM member_billets WHERE guild_id = ? AND billet_id = ?",
         )
-        .get(billetId)?.count || 0,
+        .get(id, billetId)?.count || 0,
     );
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "billet.deleted",
       entityType: "billet",
@@ -316,7 +370,10 @@ export async function deleteBillet(
       },
     });
 
-    db.prepare("DELETE FROM billets WHERE id = ?").run(billetId);
+    db.prepare("DELETE FROM billets WHERE guild_id = ? AND id = ?").run(
+      id,
+      billetId,
+    );
 
     return {
       status: "deleted",
@@ -326,7 +383,12 @@ export async function deleteBillet(
   });
 }
 
-export async function setBilletDiscordRoleId(billetId, discordRoleId) {
+export async function setBilletDiscordRoleId(
+  billetId,
+  discordRoleId,
+  { guildId } = {},
+) {
+  const id = requireGuildId(guildId);
   const roleId = normalizeText(discordRoleId);
 
   if (!roleId) {
@@ -334,7 +396,7 @@ export async function setBilletDiscordRoleId(billetId, discordRoleId) {
   }
 
   return withGuildTransaction((db) => {
-    const existing = readBilletById(db, billetId);
+    const existing = readBilletById(db, id, billetId);
 
     if (!existing) {
       return null;
@@ -344,11 +406,11 @@ export async function setBilletDiscordRoleId(billetId, discordRoleId) {
       `
         UPDATE billets
         SET discord_role_id = ?, updated_at = ?
-        WHERE id = ?
+        WHERE guild_id = ? AND id = ?
       `,
-    ).run(roleId, new Date().toISOString(), billetId);
+    ).run(roleId, new Date().toISOString(), id, billetId);
 
-    return readBilletById(db, billetId);
+    return readBilletById(db, id, billetId);
   });
 }
 
@@ -356,18 +418,18 @@ export async function setMemberBilletAssignment(
   memberId,
   billetId,
   assigned,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
+  const id = requireGuildId(guildId);
+
   return withGuildTransaction((db) => {
-    const member = db
-      .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
-      .get(memberId);
+    const member = activeGuildMember(db, id, memberId);
 
     if (!member) {
       return { status: "member-not-found", billets: [] };
     }
 
-    const billet = readBilletById(db, billetId);
+    const billet = readBilletById(db, id, billetId);
 
     if (!billet || !billet.active) {
       return { status: "billet-not-found", billets: [] };
@@ -375,31 +437,34 @@ export async function setMemberBilletAssignment(
 
     const current = db
       .prepare(
-        "SELECT 1 FROM member_billets WHERE member_id = ? AND billet_id = ?",
+        "SELECT 1 FROM member_billets WHERE guild_id = ? AND member_id = ? AND billet_id = ?",
       )
-      .get(memberId, billetId);
+      .get(id, memberId, billetId);
 
     const now = new Date().toISOString();
 
-    db.prepare(
-      `
-        UPDATE members
-        SET billets_managed = 1, updated_at = ?
-        WHERE id = ?
-      `,
-    ).run(now, memberId);
+    // billets_managed hands Holdfast's Discord billet roles to the website.
+    if (isHoldfastGuild(id)) {
+      db.prepare(
+        `
+          UPDATE members
+          SET billets_managed = 1, updated_at = ?
+          WHERE id = ?
+        `,
+      ).run(now, memberId);
+    }
 
     if (assigned && current) {
       return {
         status: "unchanged",
-        billets: readMemberBilletsFromDatabase(db, memberId),
+        billets: readMemberBilletsFromDatabase(db, id, memberId),
       };
     }
 
     if (!assigned && !current) {
       return {
         status: "unchanged",
-        billets: readMemberBilletsFromDatabase(db, memberId),
+        billets: readMemberBilletsFromDatabase(db, id, memberId),
       };
     }
 
@@ -407,13 +472,15 @@ export async function setMemberBilletAssignment(
       db.prepare(
         `
           INSERT INTO member_billets (
+            guild_id,
             member_id,
             billet_id,
             assigned_at,
             assigned_by_member_id
-          ) VALUES (?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?)
         `,
       ).run(
+        id,
         memberId,
         billetId,
         now,
@@ -423,13 +490,14 @@ export async function setMemberBilletAssignment(
       db.prepare(
         `
           DELETE FROM member_billets
-          WHERE member_id = ? AND billet_id = ?
+          WHERE guild_id = ? AND member_id = ? AND billet_id = ?
         `,
-      ).run(memberId, billetId);
+      ).run(id, memberId, billetId);
     }
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: assigned ? "member.billet.assigned" : "member.billet.removed",
       entityType: "member",
@@ -443,6 +511,7 @@ export async function setMemberBilletAssignment(
     if (actorMemberId !== memberId) {
       createNotificationInDatabase({
         db,
+        guildId: id,
         recipientMemberId: memberId,
         type: "billet_changed",
         kind: "update",
@@ -465,29 +534,30 @@ export async function setMemberBilletAssignment(
 
     return {
       status: assigned ? "assigned" : "removed",
-      billets: readMemberBilletsFromDatabase(db, memberId),
+      billets: readMemberBilletsFromDatabase(db, id, memberId),
     };
   });
 }
 
-
+// Takes a Holdfast member's billets over from Discord. Other guilds' billets
+// are always the website's.
 export async function claimMemberBilletAuthority(
   memberId,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
+  const id = requireGuildId(guildId);
+
   return withGuildTransaction((db) => {
-    const member = db
-      .prepare("SELECT id, billets_managed FROM members WHERE id = ? AND status = 'active'")
-      .get(memberId);
+    const member = activeGuildMember(db, id, memberId);
 
     if (!member) {
       return { status: "member-not-found", billets: [] };
     }
 
-    if (Boolean(member.billets_managed)) {
+    if (!isHoldfastGuild(id) || Boolean(member.billets_managed)) {
       return {
         status: "unchanged",
-        billets: readMemberBilletsFromDatabase(db, memberId),
+        billets: readMemberBilletsFromDatabase(db, id, memberId),
       };
     }
 
@@ -503,6 +573,7 @@ export async function claimMemberBilletAuthority(
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "member.billet.authority_enabled",
       entityType: "member",
@@ -512,7 +583,7 @@ export async function claimMemberBilletAuthority(
 
     return {
       status: "claimed",
-      billets: readMemberBilletsFromDatabase(db, memberId),
+      billets: readMemberBilletsFromDatabase(db, id, memberId),
     };
   });
 }

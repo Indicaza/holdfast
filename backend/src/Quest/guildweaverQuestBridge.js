@@ -1,3 +1,5 @@
+import { withGuildDatabase } from "../Data/database.js";
+import { readMemberGuildAuthorityFromDatabase } from "../Guild/Directory/guildRoles.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
 import {
   readQuestWorkspace,
@@ -101,8 +103,28 @@ function guildweaverQuest(quest) {
   };
 }
 
+// A paired device works on its player's quest board: the quests of the one
+// guild they are an active member of.
+function memberGuildId(memberId) {
+  return withGuildDatabase(
+    (db) => readMemberGuildAuthorityFromDatabase(db, memberId)?.id || null,
+  );
+}
+
 export async function readGuildweaverQuestSnapshot(memberId) {
-  const workspace = await readQuestWorkspace();
+  const guildId = memberGuildId(memberId);
+
+  if (!guildId) {
+    return {
+      schemaVersion: 1,
+      revision: 0,
+      updatedAt: new Date().toISOString(),
+      synced: true,
+      items: [],
+    };
+  }
+
+  const workspace = await readQuestWorkspace(guildId);
   const catalog = projectQuests(workspace, memberId);
 
   return {
@@ -141,7 +163,8 @@ export async function applyGuildweaverQuestActions({ memberId, actions }) {
     return { status: "invalid", results: [] };
   }
 
-  const members = await readGuildMembers();
+  const guildId = memberGuildId(memberId);
+  const members = guildId ? await readGuildMembers(guildId) : [];
   const member = members.find((item) => item.id === memberId);
 
   if (!member) {
@@ -164,6 +187,7 @@ export async function applyGuildweaverQuestActions({ memberId, actions }) {
 
     try {
       await updateQuests(
+        guildId,
         (current) =>
           action.action === "join"
             ? signupForObjective(

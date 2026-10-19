@@ -8,6 +8,7 @@ import {
   awardObjective,
   readContributionTotals,
 } from "../src/Contribution/contributionRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -53,12 +54,14 @@ test("objective reward transactions are idempotent per member", async () => {
     };
 
     const first = await awardObjective({
+      guildId: HOLDFAST_GUILD_ID,
       quest,
       objective,
       members: [member],
       awardedBy,
     });
     const second = await awardObjective({
+      guildId: HOLDFAST_GUILD_ID,
       quest,
       objective,
       members: [member],
@@ -68,7 +71,7 @@ test("objective reward transactions are idempotent per member", async () => {
     assert.equal(first.length, 1);
     assert.deepEqual(second, []);
 
-    const totals = await readContributionTotals();
+    const totals = await readContributionTotals(HOLDFAST_GUILD_ID);
     assert.deepEqual(totals.get("member-one"), {
       rep: 250,
       marks: 75,

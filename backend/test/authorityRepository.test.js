@@ -18,6 +18,7 @@ import {
   updateGuildMemberRank,
   upsertGuildMember,
 } from "../src/Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -50,10 +51,11 @@ test("rank and billet scopes merge into effective website authority", async () =
     await upsertGuildMember({ id: "owner-one", username: "rook" });
     await upsertGuildMember({ id: "member-one", username: "finch" });
     await updateGuildMemberRank("member-one", "Corporal", {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
 
-    const before = resolveMemberAuthority("member-one");
+    const before = resolveMemberAuthority(HOLDFAST_GUILD_ID, "member-one");
     assert.deepEqual(
       new Set(before.permissions),
       new Set(["quests.create", "quests.edit"]),
@@ -67,17 +69,17 @@ test("rank and billet scopes merge into effective website authority", async () =
       marksPerQuest: 0,
     });
 
-    const quartermaster = (await readBillets()).find(
+    const quartermaster = (await readBillets(HOLDFAST_GUILD_ID)).find(
       (billet) => billet.name === "Quartermaster",
     );
     await setMemberBilletAssignment(
       "member-one",
       quartermaster.id,
       true,
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
-    const after = resolveMemberAuthority("member-one");
+    const after = resolveMemberAuthority(HOLDFAST_GUILD_ID, "member-one");
     assert.deepEqual(
       new Set(after.permissions),
       new Set([
@@ -88,7 +90,7 @@ test("rank and billet scopes merge into effective website authority", async () =
     );
     assert.equal(after.maxManagedRank, null);
 
-    const owner = resolveMemberAuthority("owner-one");
+    const owner = resolveMemberAuthority(HOLDFAST_GUILD_ID, "owner-one");
     assert.equal(owner.isOwner, true);
     assert.equal(owner.maxManagedRank, "Commander");
     assert.ok(owner.permissions.includes("authority.manage"));
@@ -114,28 +116,31 @@ test("multiple billets only add to rank authority and the highest ceiling wins",
     await upsertGuildMember({ id: "owner-one", username: "rook" });
     await upsertGuildMember({ id: "member-one", username: "leader" });
     await updateGuildMemberRank("member-one", "Lieutenant", {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
 
-    const lieutenant = resolveMemberAuthority("member-one");
+    const lieutenant = resolveMemberAuthority(HOLDFAST_GUILD_ID, "member-one");
     assert.ok(lieutenant.permissions.includes("site.admin"));
     assert.ok(lieutenant.permissions.includes("members.rank.manage"));
     assert.equal(lieutenant.maxManagedRank, "Sergeant");
 
-    const billets = await readBillets();
+    const billets = await readBillets(HOLDFAST_GUILD_ID);
     const steward = billets.find((billet) => billet.name === "Steward");
     const quartermaster = billets.find(
       (billet) => billet.name === "Quartermaster",
     );
 
     await setMemberBilletAssignment("member-one", steward.id, true, {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
     await setMemberBilletAssignment("member-one", quartermaster.id, true, {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
 
-    const combined = resolveMemberAuthority("member-one");
+    const combined = resolveMemberAuthority(HOLDFAST_GUILD_ID, "member-one");
 
     for (const permission of lieutenant.permissions) {
       assert.ok(
@@ -165,10 +170,11 @@ test("authority designers cannot edit or grant scope above their own authority",
     await upsertGuildMember({ id: "owner-one", username: "rook" });
     await upsertGuildMember({ id: "major-one", username: "major" });
     await updateGuildMemberRank("major-one", "Major", {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
 
-    const majorDefault = resolveMemberAuthority("major-one");
+    const majorDefault = resolveMemberAuthority(HOLDFAST_GUILD_ID, "major-one");
 
     const empowerMajor = await updateRankAuthority(
       "Major",
@@ -178,11 +184,11 @@ test("authority designers cannot edit or grant scope above their own authority",
         questScope: "all",
         rewardLimits: majorDefault.rewardLimits.approve,
       },
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
     assert.equal(empowerMajor.status, "updated");
 
-    const major = resolveMemberAuthority("major-one");
+    const major = resolveMemberAuthority(HOLDFAST_GUILD_ID, "major-one");
     assert.ok(major.permissions.includes("authority.manage"));
     assert.equal(major.maxManagedRank, "Sergeant Major");
 
@@ -198,7 +204,7 @@ test("authority designers cannot edit or grant scope above their own authority",
           marksPerQuest: 0,
         },
       },
-      { actorMemberId: "major-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "major-one" },
     );
     assert.equal(higherRank.status, "scope_above_actor");
 
@@ -214,7 +220,7 @@ test("authority designers cannot edit or grant scope above their own authority",
           marksPerQuest: 0,
         },
       },
-      { actorMemberId: "major-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "major-one" },
     );
     assert.equal(excessivePermission.status, "scope_above_actor");
 
@@ -230,7 +236,7 @@ test("authority designers cannot edit or grant scope above their own authority",
           marksPerQuest: 0,
         },
       },
-      { actorMemberId: "major-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "major-one" },
     );
     assert.equal(excessiveCeiling.status, "scope_above_actor");
 
@@ -246,7 +252,7 @@ test("authority designers cannot edit or grant scope above their own authority",
           marksPerQuest: 0,
         },
       },
-      { actorMemberId: "major-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "major-one" },
     );
     assert.equal(allowed.status, "updated");
   } finally {
@@ -278,7 +284,7 @@ test("authority scopes reject ceilings that grant no member-management capabilit
           marksPerQuest: 0,
         },
       },
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
     assert.equal(result.status, "ceiling_requires_member_management");
@@ -299,7 +305,7 @@ test("billet authority can be customized and appears in the catalog", async () =
 
     await upsertGuildMember({ id: "owner-one", username: "rook" });
 
-    const raidLead = (await readBillets()).find(
+    const raidLead = (await readBillets(HOLDFAST_GUILD_ID)).find(
       (billet) => billet.name === "Raid Leader",
     );
 
@@ -319,14 +325,14 @@ test("billet authority can be customized and appears in the catalog", async () =
           marksPerQuest: 20,
         },
       },
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
     assert.equal(updated.status, "updated");
     assert.equal(updated.scope.maxManagedRank, "Corporal");
     assert.ok(updated.scope.permissions.includes("members.billet.assign"));
 
-    const catalog = readAuthorityCatalog();
+    const catalog = readAuthorityCatalog(HOLDFAST_GUILD_ID);
     const catalogRaidLead = catalog.billets.find(
       (billet) => billet.id === raidLead.id,
     );

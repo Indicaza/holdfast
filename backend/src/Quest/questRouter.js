@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import {
   requireAnyPermission,
-  requireHoldfastMember,
+  requireGuildMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import { awardObjectiveInDatabase } from "../Contribution/contributionRepository.js";
@@ -183,7 +183,7 @@ export function createQuestRouter() {
 
   router.get("/", async (req, res) => {
     try {
-      const document = await readQuests();
+      const document = await readQuests(req.guild.id);
       res.set("Cache-Control", "no-store");
       res.json(projectFeaturedQuest(document));
     } catch (error) {
@@ -192,9 +192,9 @@ export function createQuestRouter() {
     }
   });
 
-  router.get("/member", requireHoldfastMember, async (req, res) => {
+  router.get("/member", requireGuildMember, async (req, res) => {
     try {
-      const document = await readQuests();
+      const document = await readQuests(req.guild.id);
       res.set("Cache-Control", "no-store");
       res.json(projectQuests(document, req.auth.user.id));
     } catch (error) {
@@ -205,7 +205,7 @@ export function createQuestRouter() {
 
   router.post(
     "/member/signup",
-    requireHoldfastMember,
+    requireGuildMember,
     memberSignupRateLimit,
     async (req, res) => {
       try {
@@ -220,18 +220,19 @@ export function createQuestRouter() {
           return;
         }
 
-        const members = await readGuildMembers();
+        const members = await readGuildMembers(req.guild.id);
         const member = members.find((item) => item.id === req.auth.user.id);
 
         if (!member) {
           res.status(403).json({
             error: "member_not_found",
-            message: "Your Holdfast member profile could not be found.",
+            message: "Your member profile in this guild could not be found.",
           });
           return;
         }
 
         const saved = await updateQuests(
+          req.guild.id,
           (current) =>
             signupForObjective(
               current,
@@ -280,7 +281,7 @@ export function createQuestRouter() {
 
   router.post(
     "/member/unassign",
-    requireHoldfastMember,
+    requireGuildMember,
     memberSignupRateLimit,
     async (req, res) => {
       try {
@@ -297,6 +298,7 @@ export function createQuestRouter() {
 
         const memberId = req.auth.user.id;
         const saved = await updateQuests(
+          req.guild.id,
           (current) =>
             leaveObjective(
               current,
@@ -348,7 +350,7 @@ export function createQuestRouter() {
     requireAnyPermission(QUEST_MANAGEMENT_PERMISSIONS),
     async (req, res) => {
       try {
-        const document = await readQuestWorkspace();
+        const document = await readQuestWorkspace(req.guild.id);
         res.set("Cache-Control", "no-store");
         res.json(document);
       } catch (error) {
@@ -374,6 +376,7 @@ export function createQuestRouter() {
     async (req, res) => {
       try {
         const saved = await updateQuests(
+          req.guild.id,
           (current) =>
             governedIncomingDocument(req.body, current, req),
           {
@@ -408,9 +411,10 @@ export function createQuestRouter() {
     async (req, res) => {
       try {
         const result = withGuildTransaction((db) => {
-          const current = readQuestsFromDatabase(db);
+          const current = readQuestsFromDatabase(db, req.guild.id);
           const revisionBefore = assertQuestRevision(
             db,
+            req.guild.id,
             Number(req.body?.revision),
           );
           const requestedLimits = req.body?.rewardLimits ?? current.rewardLimits;
@@ -422,7 +426,7 @@ export function createQuestRouter() {
           ) {
             throw new QuestGovernanceError(
               "economy_root_required",
-              "Only the Commander can change Holdfast's absolute reward guardrails.",
+              `Only the guild's owner can change ${req.guild.name}'s absolute reward guardrails.`,
               403,
             );
           }
@@ -432,21 +436,22 @@ export function createQuestRouter() {
             rewardLimits: current.rewardLimits,
           };
 
-          writeQuestEconomyToDatabase(db, {
+          writeQuestEconomyToDatabase(db, req.guild.id, {
             rewardPolicy: req.body?.rewardPolicy ?? current.rewardPolicy,
             rewardLimits: req.auth.authority?.isOwner
               ? requestedLimits
               : current.rewardLimits,
           });
 
-          const revisionAfter = questRevisionFromDatabase(db);
+          const revisionAfter = questRevisionFromDatabase(db, req.guild.id);
           const saved = {
-            ...readQuestsFromDatabase(db),
+            ...readQuestsFromDatabase(db, req.guild.id),
             revision: revisionAfter,
           };
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: req.auth.user.id,
             eventType: "quest.economy_saved",
             entityType: "quest_economy",
@@ -486,9 +491,10 @@ export function createQuestRouter() {
         const objectiveId = String(req.body?.objectiveId || "");
 
         const result = withGuildTransaction((db) => {
-          const current = readQuestsFromDatabase(db);
+          const current = readQuestsFromDatabase(db, req.guild.id);
           const revisionBefore = assertQuestRevision(
             db,
+            req.guild.id,
             Number(req.body?.revision),
           );
 
@@ -503,13 +509,14 @@ export function createQuestRouter() {
             },
           );
 
-          const saved = writeQuestsToDatabase(db, approved, {
+          const saved = writeQuestsToDatabase(db, req.guild.id, approved, {
             enforceRewardLimits: false,
           });
-          const revisionAfter = questRevisionFromDatabase(db);
+          const revisionAfter = questRevisionFromDatabase(db, req.guild.id);
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: req.auth.user.id,
             eventType: "quest.reward_approved",
             entityType: "objective",
@@ -548,9 +555,10 @@ export function createQuestRouter() {
         const objectiveId = String(req.body?.objectiveId || "");
 
         const result = withGuildTransaction((db) => {
-          const current = readQuestsFromDatabase(db);
+          const current = readQuestsFromDatabase(db, req.guild.id);
           const revisionBefore = assertQuestRevision(
             db,
+            req.guild.id,
             Number(req.body?.revision),
           );
           const currentTarget = findObjective(
@@ -609,7 +617,7 @@ export function createQuestRouter() {
             );
           }
 
-          const guildMembers = readGuildMembersFromDatabase(db);
+          const guildMembers = readGuildMembersFromDatabase(db, req.guild.id);
           const memberById = new Map(
             guildMembers.map((member) => [member.id, member]),
           );
@@ -620,13 +628,14 @@ export function createQuestRouter() {
           if (assignedMembers.length !== memberIds.length) {
             throw new QuestGovernanceError(
               "unknown_assignee",
-              "One or more assigned members are no longer in the Holdfast member directory.",
+              "One or more assigned members are no longer in this guild's member directory.",
               400,
             );
           }
 
           const awards = awardObjectiveInDatabase({
             db,
+            guildId: req.guild.id,
             quest,
             objective,
             members: assignedMembers,
@@ -635,14 +644,16 @@ export function createQuestRouter() {
 
           const saved = writeQuestsToDatabase(
             db,
+            req.guild.id,
             completeObjective(current, questId, objectiveId),
             { enforceRewardLimits: false },
           );
 
-          const revisionAfter = questRevisionFromDatabase(db);
+          const revisionAfter = questRevisionFromDatabase(db, req.guild.id);
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: req.auth.user.id,
             eventType: "quest.objective_completed",
             entityType: "objective",

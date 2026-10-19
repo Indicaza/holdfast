@@ -10,8 +10,14 @@ import {
   isValidTimeZone,
   normalizeMemberProfile,
 } from "./memberProfile.js";
-import { isGuildRank, normalizeGuildRank } from "./rankSystem.js";
+import { normalizeGuildRank } from "./rankSystem.js";
 import { readMemberBilletsFromDatabase } from "./billetRepository.js";
+import { readRankLadderFromDatabase } from "./authorityRepository.js";
+import {
+  HOLDFAST_GUILD_ID,
+  isHoldfastGuild,
+  requireGuildId,
+} from "./guildScope.js";
 
 function displayName(user) {
   return user.guildNickname || user.globalName || user.username;
@@ -111,10 +117,16 @@ function profileFromRows(profileRow, characterRows) {
   });
 }
 
-function memberFromRow(db, row) {
+// A member as one guild sees them: the account (members row) with the rank,
+// role and status of their membership in that guild. Without a membership
+// row the account's own Holdfast-era rank and status stand in. The account
+// view keeps members.status, which tracks Holdfast's Discord server.
+function memberFromRow(db, row, guildId, ladder, { accountStatus = false } = {}) {
   if (!row) {
     return null;
   }
+
+  const hasMembership = row.membership_status !== null && row.membership_status !== undefined;
 
   const profileRow = db
     .prepare("SELECT * FROM member_profiles WHERE member_id = ?")
@@ -132,13 +144,16 @@ function memberFromRow(db, row) {
     initials: row.initials,
     avatarUrl: row.avatar_url || "",
     guildJoinedAt: row.guild_joined_at || null,
-    rank: normalizeGuildRank(row.rank),
+    rank: ladder.normalize(hasMembership ? row.membership_rank : row.rank),
+    guildRole: hasMembership ? row.membership_role : null,
     rankManaged: Boolean(row.rank_managed),
     billetsManaged: Boolean(row.billets_managed),
-    status: memberStatus(row.status),
+    status: memberStatus(
+      hasMembership && !accountStatus ? row.membership_status : row.status,
+    ),
     departedAt: row.departed_at || null,
     permissions: jsonArray(row.permissions_json),
-    billets: readMemberBilletsFromDatabase(db, row.id),
+    billets: readMemberBilletsFromDatabase(db, guildId, row.id),
     profile: profileFromRows(profileRow, characterRows),
     profileUpdatedAt: row.profile_updated_at || null,
     firstSeenAt: row.first_seen_at,
@@ -146,26 +161,60 @@ function memberFromRow(db, row) {
   };
 }
 
-function readMemberById(db, memberId) {
-  const row = db.prepare("SELECT * FROM members WHERE id = ?").get(memberId);
-  return memberFromRow(db, row);
+const MEMBER_WITH_MEMBERSHIP = `
+  SELECT
+    members.*,
+    guild_memberships.rank AS membership_rank,
+    guild_memberships.role AS membership_role,
+    guild_memberships.status AS membership_status
+  FROM members
+  LEFT JOIN guild_memberships
+    ON guild_memberships.member_id = members.id
+   AND guild_memberships.guild_id = ?
+`;
+
+// The account plus its membership in guildId (Holdfast for the account
+// writes driven by Holdfast's Discord sign-in).
+function readMemberById(db, memberId, guildId = HOLDFAST_GUILD_ID) {
+  const row = db
+    .prepare(`${MEMBER_WITH_MEMBERSHIP} WHERE members.id = ?`)
+    .get(guildId, memberId);
+  return memberFromRow(db, row, guildId, readRankLadderFromDatabase(db, guildId), {
+    accountStatus: true,
+  });
 }
 
+// One member of one guild, or null when they have never been in it.
+export function readGuildMemberFromDatabase(db, guildId, memberId) {
+  const id = requireGuildId(guildId);
+  const row = db
+    .prepare(
+      `${MEMBER_WITH_MEMBERSHIP} WHERE members.id = ? AND guild_memberships.member_id IS NOT NULL`,
+    )
+    .get(id, memberId);
+  return memberFromRow(db, row, id, readRankLadderFromDatabase(db, id));
+}
+
+// A guild's roster: its active members, or everyone who was ever in it.
 export function readGuildMembersFromDatabase(
   db,
+  guildId,
   { includeDeparted = false } = {},
 ) {
-  const rows = includeDeparted
-    ? db
-        .prepare("SELECT * FROM members ORDER BY display_name COLLATE NOCASE")
-        .all()
-    : db
-        .prepare(
-          "SELECT * FROM members WHERE status = 'active' ORDER BY display_name COLLATE NOCASE",
-        )
-        .all();
+  const id = requireGuildId(guildId);
+  const ladder = readRankLadderFromDatabase(db, id);
+  const rows = db
+    .prepare(
+      `
+        ${MEMBER_WITH_MEMBERSHIP}
+        WHERE guild_memberships.member_id IS NOT NULL
+          ${includeDeparted ? "" : "AND guild_memberships.status = 'active'"}
+        ORDER BY members.display_name COLLATE NOCASE
+      `,
+    )
+    .all(id);
 
-  return rows.map((row) => memberFromRow(db, row));
+  return rows.map((row) => memberFromRow(db, row, id, ladder));
 }
 
 function writeProfile(db, memberId, profile) {
@@ -333,9 +382,9 @@ export function importMembersIntoDatabase(db, members) {
   return imported;
 }
 
-export async function readGuildMembers(options = {}) {
+export async function readGuildMembers(guildId, options = {}) {
   return withGuildDatabase((db) =>
-    readGuildMembersFromDatabase(db, options),
+    readGuildMembersFromDatabase(db, guildId, options),
   );
 }
 
@@ -364,6 +413,11 @@ export async function markGuildMemberDeparted(memberId) {
         WHERE id = ?
       `,
     ).run(now, now, memberId);
+    syncHomeGuildMembershipInDatabase(db, {
+      ...existing,
+      status: "departed",
+      departedAt: now,
+    });
 
     return readMemberById(db, memberId);
   });
@@ -428,31 +482,42 @@ export async function updateDetectedTimezone(memberId, timezone) {
   });
 }
 
+// Sets a member's rank in one guild. Holdfast also mirrors it onto the
+// account row and hands the rank over from Discord (rank_managed).
 export async function updateGuildMemberRank(
   memberId,
   rank,
-  { actorMemberId = null } = {},
+  { guildId, actorMemberId = null } = {},
 ) {
+  const id = requireGuildId(guildId);
+  const holdfast = isHoldfastGuild(id);
   const requestedRank = String(rank || "").trim();
 
-  if (!isGuildRank(requestedRank)) {
-    return { status: "invalid", member: null };
-  }
-
   return withGuildTransaction((db) => {
-    const existing = readMemberById(db, memberId);
+    const ladder = readRankLadderFromDatabase(db, id);
 
-    if (!existing) {
+    if (!ladder.isRank(requestedRank)) {
+      return { status: "invalid", member: null };
+    }
+
+    const existing = readGuildMemberFromDatabase(db, id, memberId);
+
+    if (!existing || existing.status !== "active") {
       return { status: "not-found", member: null };
     }
 
-    const ownerIds = idSet(process.env.GUILD_OWNER_DISCORD_IDS);
+    const owner = holdfast
+      ? idSet(process.env.GUILD_OWNER_DISCORD_IDS).has(memberId)
+      : existing.guildRole === "owner";
 
-    if (ownerIds.has(memberId) && requestedRank !== "Commander") {
+    if (owner && requestedRank !== ladder.top) {
       return { status: "owner-locked", member: existing };
     }
 
-    if (existing.rank === requestedRank && existing.rankManaged) {
+    if (
+      existing.rank === requestedRank &&
+      (existing.rankManaged || !holdfast)
+    ) {
       return { status: "unchanged", member: existing };
     }
 
@@ -460,14 +525,28 @@ export async function updateGuildMemberRank(
 
     db.prepare(
       `
-        UPDATE members
-        SET rank = ?, rank_managed = 1, updated_at = ?
-        WHERE id = ?
+        UPDATE guild_memberships SET rank = ?
+        WHERE guild_id = ? AND member_id = ?
       `,
-    ).run(requestedRank, now, memberId);
+    ).run(requestedRank, id, memberId);
+
+    if (holdfast) {
+      db.prepare(
+        `
+          UPDATE members
+          SET rank = ?, rank_managed = 1, updated_at = ?
+          WHERE id = ?
+        `,
+      ).run(requestedRank, now, memberId);
+    }
+
+    const guildName =
+      db.prepare("SELECT name FROM guilds WHERE id = ?").get(id)?.name ||
+      "guild";
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "member.rank.updated",
       entityType: "member",
@@ -475,18 +554,19 @@ export async function updateGuildMemberRank(
       payload: {
         beforeRank: existing.rank,
         afterRank: requestedRank,
-        authorityEnabled: !existing.rankManaged,
+        authorityEnabled: holdfast && !existing.rankManaged,
       },
     });
 
     if (existing.rank !== requestedRank && actorMemberId !== memberId) {
       createNotificationInDatabase({
         db,
+        guildId: id,
         recipientMemberId: memberId,
         type: "rank_changed",
         kind: "update",
         title: "Rank changed",
-        message: `Your Holdfast rank is now ${requestedRank}.`,
+        message: `Your ${guildName} rank is now ${requestedRank}.`,
         href: "/members/me",
         entityType: "member",
         entityId: memberId,
@@ -501,7 +581,7 @@ export async function updateGuildMemberRank(
 
     return {
       status: "updated",
-      member: readMemberById(db, memberId),
+      member: readGuildMemberFromDatabase(db, id, memberId),
     };
   });
 }
