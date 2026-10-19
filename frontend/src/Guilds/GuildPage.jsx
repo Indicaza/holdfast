@@ -128,6 +128,16 @@ export default function GuildPage({ slug }) {
   const { authenticated, signIn } = useSession()
   const [result, setResult] = useState({ loading: true })
   const [applying, setApplying] = useState(false)
+  const [mine, setMine] = useState(null)
+
+  useEffect(() => {
+    if (!authenticated) return undefined
+    const controller = new AbortController()
+    apiJson('/api/guilds/mine', { signal: controller.signal })
+      .then((body) => setMine(body.guild))
+      .catch(() => {})
+    return () => controller.abort()
+  }, [authenticated])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -148,10 +158,10 @@ export default function GuildPage({ slug }) {
 
   // Back from signing in to apply: open the application straight away.
   useEffect(() => {
-    if (authenticated && result.guild?.recruiting && new URLSearchParams(window.location.search).get('apply') === '1') {
+    if (authenticated && result.guild?.recruiting && mine?.slug !== result.guild.slug && new URLSearchParams(window.location.search).get('apply') === '1') {
       setApplying(true)
     }
-  }, [authenticated, result.guild])
+  }, [authenticated, result.guild, mine])
 
   const guild = result.guild
   if (!guild) {
@@ -201,7 +211,9 @@ export default function GuildPage({ slug }) {
             </div>
             <div className="guild-page__actions">
               {guild.discordInviteUrl ? <a className="guild-page__primary" href={guild.discordInviteUrl} target="_blank" rel="noreferrer noopener">Join their Discord</a> : null}
-              {guild.recruiting ? (
+              {mine?.slug === guild.slug ? (
+                <span className="guild-page__member">{mine.role === 'owner' ? 'You lead this guild' : 'You’re a member'}</span>
+              ) : guild.recruiting ? (
                 <button type="button" className={guild.discordInviteUrl ? 'guild-page__secondary' : 'guild-page__primary'}
                   onClick={() => (authenticated ? setApplying(true) : signIn(`${guildPath(guild.slug)}?apply=1`))}>
                   Apply to join

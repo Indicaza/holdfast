@@ -158,3 +158,81 @@ export function guildInitials(name = '') {
   const words = String(name).trim().split(/\s+/).filter(Boolean)
   return (words.length > 1 ? words[0][0] + words[1][0] : (words[0] || '?').slice(0, 2)).toUpperCase()
 }
+
+// Registration
+
+export const ACCENT_SWATCHES = ['#c4a667', '#b8432f', '#7c2b3b', '#4a7fd4', '#8fa6d8', '#5b8a4e', '#a7783a', '#8a6bc4', '#3fa3a8', '#d8b45a']
+
+export const FIELD_ERRORS = {
+  guild_name_required: 'Give your guild a name of at least two characters.',
+  guild_slug_invalid: 'Choose a name that makes a usable web address.',
+  guild_slug_taken: 'Another guild already has this name. Try a variation.',
+  guild_faction_required: 'Choose a faction.',
+  guild_region_required: 'Choose a region.',
+  guild_realm_required: 'Enter your realm.',
+  guild_realm_type_required: 'Choose your realm type.',
+  guild_play_style_required: 'Pick at least one play style.',
+  guild_timezone_invalid: 'That time zone was not recognised.',
+  guild_discord_invite_invalid: 'Use a Discord invite link, like discord.gg/yourguild.',
+  guild_raid_window_incomplete: 'Give both a start and an end time.',
+}
+
+export function registrationDraft() {
+  return {
+    name: '', tagline: '', description: '', faction: '', region: 'US', realm: '', realmType: '', language: 'en',
+    timezone: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || '' } catch { return '' } })(),
+    playStyles: [], recruiting: true, recruitingClasses: [], recruitingRoles: [], minimumLevel: 1,
+    raidDays: [], raidStart: '', raidEnd: '', voiceRequired: false, agePolicy: 'any', discordInviteUrl: '',
+    accentColor: ACCENT_SWATCHES[0],
+  }
+}
+
+export function draftSlug(name = '') {
+  return String(name).trim().toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/g, '')
+}
+
+// Which step each server-side field error belongs to, so a rejected
+// submission jumps back to the step that needs fixing.
+export const FIELD_STEPS = {
+  name: 0, slug: 0, faction: 0, region: 0, realm: 0, realmType: 0,
+  playStyles: 1, timezone: 1, raidStart: 1,
+  discordInviteUrl: 2,
+}
+
+export function stepErrors(draft, step) {
+  const errors = {}
+  if (step === 0) {
+    if (draft.name.trim().length < 2) errors.name = 'guild_name_required'
+    else if (draftSlug(draft.name).length < 3) errors.name = 'guild_slug_invalid'
+    if (!draft.faction) errors.faction = 'guild_faction_required'
+    if (draft.realm.trim().length < 2) errors.realm = 'guild_realm_required'
+    if (!draft.realmType) errors.realmType = 'guild_realm_type_required'
+  }
+  if (step === 1) {
+    if (!draft.playStyles.length) errors.playStyles = 'guild_play_style_required'
+    if (Boolean(draft.raidStart) !== Boolean(draft.raidEnd)) errors.raidStart = 'guild_raid_window_incomplete'
+  }
+  return errors
+}
+
+// The guild as its card will show it, for the live preview.
+export function previewGuild(draft) {
+  return {
+    id: 'preview',
+    slug: draftSlug(draft.name) || 'your-guild',
+    name: draft.name.trim() || 'Your Guild',
+    tagline: draft.tagline.trim() || 'Your motto goes here.',
+    faction: draft.faction || 'alliance',
+    region: draft.region,
+    realm: draft.realm.trim() || 'Your realm',
+    realmType: draft.realmType || 'normal',
+    timezone: draft.timezone,
+    playStyles: draft.playStyles,
+    recruiting: draft.recruiting,
+    recruitingClasses: draft.recruitingClasses,
+    schedule: { raidDays: draft.raidDays, raidStart: draft.raidStart, raidEnd: draft.raidEnd },
+    accentColor: draft.accentColor,
+    stats: { memberCount: 1, activeCharacters: 0, verified: false },
+  }
+}

@@ -9,8 +9,9 @@ import {
   sizeLabel,
 } from './guildDirectoryModel.js'
 
-function RecruitingPips({ classes }) {
-  if (!classes.length) return <span className="guild-card__muted">Not recruiting classes</span>
+function RecruitingPips({ recruiting, classes }) {
+  if (!recruiting) return <span className="guild-card__muted">Not recruiting</span>
+  if (!classes.length) return <span>All classes welcome</span>
   return (
     <span className="guild-card__pips" aria-label={`Recruiting ${classes.map((token) => CLASS_LABELS[token]).join(', ')}`}>
       {classes.map((token) => (
@@ -20,10 +21,11 @@ function RecruitingPips({ classes }) {
   )
 }
 
-export default function GuildCard({ guild }) {
+export default function GuildCard({ guild, preview = false }) {
   const { stats } = guild
+  const Frame = preview ? 'div' : 'a'
   return (
-    <a className="guild-card" href={guildPath(guild.slug)} style={{ '--guild-accent': guild.accentColor }}>
+    <Frame className={`guild-card${preview ? ' guild-card--preview' : ''}`} {...(preview ? {} : { href: guildPath(guild.slug) })} style={{ '--guild-accent': guild.accentColor }}>
       <span className="guild-card__glow" aria-hidden="true" />
       <div className="guild-card__head">
         <GuildCrest name={guild.name} accentColor={guild.accentColor} faction={guild.faction} size={52} />
@@ -52,7 +54,7 @@ export default function GuildCard({ guild }) {
       </ul>
 
       <dl className="guild-card__facts">
-        <div><dt>Looking for</dt><dd><RecruitingPips classes={guild.recruiting ? guild.recruitingClasses : []} /></dd></div>
+        <div><dt>Looking for</dt><dd><RecruitingPips recruiting={guild.recruiting} classes={guild.recruitingClasses} /></dd></div>
         <div><dt>Schedule</dt><dd>{scheduleSummary(guild.schedule, guild.timezone)}</dd></div>
       </dl>
 
@@ -62,6 +64,6 @@ export default function GuildCard({ guild }) {
           <span className="guild-card__active"><span className="guild-card__pulse" aria-hidden="true" />{stats.activeCharacters} active this week</span>
         ) : <span className="guild-card__muted">Activity not yet synced</span>}
       </div>
-    </a>
+    </Frame>
   )
 }
