@@ -8,6 +8,7 @@ import { resolvePermissions } from "../src/Auth/permissionResolver.js";
 import {
   requireAnyPermission,
   requireAuthenticated,
+  requireHoldfastMember,
   requirePermission,
 } from "../src/Auth/permissions.js";
 import {
@@ -367,6 +368,64 @@ test("permission middleware admits only authority granted by rank and billets", 
       throw new Error("request should not continue");
     });
     assert.equal(denied.statusCode, 403);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("Holdfast-member middleware admits Holdfast's roster and turns away other accounts", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
+  const run = async (auth) => {
+    const req = { auth: auth && { permissions: [], verifiedAt: Date.now(), ...auth } };
+    const res = response();
+    let nextCalls = 0;
+    await requireHoldfastMember(req, res, () => {
+      nextCalls += 1;
+    });
+    return { req, res, nextCalls };
+  };
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "";
+
+    const unauthenticated = await run(null);
+    assert.equal(unauthenticated.res.statusCode, 401);
+    assert.deepEqual(unauthenticated.res.body, { error: "authentication_required" });
+
+    await upsertGuildMember({ id: "323456789012345678", username: "holdfast" });
+    const member = await run({ user: { id: "323456789012345678" } });
+    assert.equal(member.nextCalls, 1);
+    assert.equal(member.req.auth.holdfastMember, true);
+    assert.equal(member.req.auth.guild.slug, "holdfast");
+
+    const outsider = await upsertGuildMember(
+      { id: "423456789012345678", username: "outsider" },
+      ["site.admin"],
+      { homeServer: false },
+    );
+    assert.equal(outsider.status, "departed");
+    assert.equal(outsider.departedAt, null);
+    assert.deepEqual(outsider.permissions, []);
+    const denied = await run({ user: { id: "423456789012345678" }, permissions: ["site.admin"] });
+    assert.equal(denied.nextCalls, 0);
+    assert.equal(denied.res.statusCode, 403);
+    assert.deepEqual(denied.res.body, { error: "holdfast_membership_required" });
+    assert.equal(denied.req.auth.guild, null);
+    assert.deepEqual(denied.req.auth.permissions, []);
+
+    // Leaving Holdfast's server records when, and leaves Holdfast.
+    const left = await upsertGuildMember(
+      { id: "323456789012345678", username: "holdfast" },
+      [],
+      { homeServer: false },
+    );
+    assert.equal(left.status, "departed");
+    assert.ok(left.departedAt);
+    assert.equal((await run({ user: { id: "323456789012345678" } })).res.statusCode, 403);
   } finally {
     restore(previous);
     await rm(directory, { recursive: true, force: true });

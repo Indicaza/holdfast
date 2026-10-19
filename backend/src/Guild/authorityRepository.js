@@ -25,6 +25,7 @@ import {
   isGuildRank,
   normalizeGuildRank,
 } from "./rankSystem.js";
+import { isActiveHoldfastMemberInDatabase } from "./Directory/guildRoles.js";
 
 function idSet(value) {
   return new Set(
@@ -159,7 +160,13 @@ export function resolveMemberAuthorityFromDatabase(
     };
   }
 
-  if (!member || member.status !== "active") {
+  // Ranks and billets are Holdfast's. A Discord user outside Holdfast's
+  // server, or a player who left Holdfast for another guild, holds none.
+  if (
+    !member ||
+    member.status !== "active" ||
+    !isActiveHoldfastMemberInDatabase(db, normalizedMemberId)
+  ) {
     return {
       permissions: [],
       maxManagedRank: null,

@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
+import { requireHoldfastMember, requirePermission } from "../Auth/permissions.js";
 import {
   createBillet,
   deleteBillet,
@@ -50,7 +50,7 @@ export function createBilletRouter() {
     max: 60,
   });
 
-  router.get("/", requireAuthenticated, async (req, res) => {
+  router.get("/", requireHoldfastMember, async (req, res) => {
     try {
       const billets = await readBillets();
       res.set("Cache-Control", "no-store");

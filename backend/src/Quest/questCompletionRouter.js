@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-  requireAuthenticated,
+  requireHoldfastMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
@@ -80,7 +80,7 @@ export function createQuestCompletionRouter() {
 
   router.get(
     "/member/completions",
-    requireAuthenticated,
+    requireHoldfastMember,
     (req, res) => {
       try {
         const questId = String(req.query?.questId || "");
@@ -108,7 +108,7 @@ export function createQuestCompletionRouter() {
 
   router.post(
     "/member/request-completion",
-    requireAuthenticated,
+    requireHoldfastMember,
     writeRateLimit,
     (req, res) => {
       const target = targetFromBody(req.body);
@@ -199,7 +199,7 @@ export function createQuestCompletionRouter() {
 
   router.post(
     "/member/withdraw-completion",
-    requireAuthenticated,
+    requireHoldfastMember,
     writeRateLimit,
     (req, res) => {
       const target = targetFromBody(req.body);

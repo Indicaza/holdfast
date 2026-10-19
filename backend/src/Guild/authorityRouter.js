@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-  requireAuthenticated,
+  requireHoldfastMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import {
@@ -47,7 +47,7 @@ export function createAuthorityRouter() {
     max: 60,
   });
 
-  router.get("/", requireAuthenticated, (req, res) => {
+  router.get("/", requireHoldfastMember, (req, res) => {
     try {
       res.set("Cache-Control", "no-store");
       res.json(readAuthorityCatalog());

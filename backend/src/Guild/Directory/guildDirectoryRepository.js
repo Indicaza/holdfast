@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js";
 import { ensureCharacterReadModelSchema } from "../../Character/ReadModel/readModelSchema.js";
 import { CLASSES, PLAY_STYLES, REALM_TYPES, FACTIONS } from "./guildDirectoryModel.js";
+import { memberHasGuildPermissionInDatabase } from "./guildRoles.js";
 
 // A character counts toward a guild's verified activity when Guildweaver saw
 // it recently. Only aggregates leave this module; never player names.
@@ -308,18 +309,11 @@ export function registerGuild({ memberId, listing, now = new Date().toISOString(
   });
 }
 
-function managerRole(db, guildId, memberId) {
-  const row = db.prepare(`
-    SELECT role FROM guild_memberships WHERE guild_id = ? AND member_id = ? AND status = 'active'
-  `).get(guildId, memberId);
-  return row && (row.role === "owner" || row.role === "officer") ? row.role : null;
-}
-
 export function updateGuildListing({ slug, memberId, listing, siteAdmin = false, now = new Date().toISOString() }) {
   return withGuildTransaction((db) => {
     const guild = db.prepare("SELECT id FROM guilds WHERE slug = ? AND status = 'active'").get(slug);
     if (!guild) return { ok: false, error: "guild_not_found" };
-    if (!siteAdmin && !managerRole(db, guild.id, memberId)) return { ok: false, error: "guild_manager_required" };
+    if (!siteAdmin && !memberHasGuildPermissionInDatabase(db, guild.id, memberId, "guild.listing.edit")) return { ok: false, error: "guild_manager_required" };
     writeListing(db, guild.id, listing, now);
     return { ok: true };
   });
@@ -353,7 +347,7 @@ export function requestSisterGuild({ slug, targetSlug, memberId, now = new Date(
     const target = db.prepare("SELECT id FROM guilds WHERE slug = ? AND status = 'active'").get(targetSlug);
     if (!guild || !target) return { ok: false, error: "guild_not_found" };
     if (guild.id === target.id) return { ok: false, error: "sister_guild_self" };
-    if (!managerRole(db, guild.id, memberId)) return { ok: false, error: "guild_manager_required" };
+    if (!memberHasGuildPermissionInDatabase(db, guild.id, memberId, "guild.sisters.manage")) return { ok: false, error: "guild_manager_required" };
     const existing = db.prepare(`
       SELECT id, status, guild_id FROM guild_links
       WHERE MIN(guild_id, linked_guild_id) = MIN(?, ?) AND MAX(guild_id, linked_guild_id) = MAX(?, ?) AND kind = 'sister'
@@ -384,7 +378,7 @@ export function respondToSisterGuild({ slug, fromSlug, memberId, accept, now = n
     const guild = db.prepare("SELECT id FROM guilds WHERE slug = ? AND status = 'active'").get(slug);
     const from = db.prepare("SELECT id FROM guilds WHERE slug = ? AND status = 'active'").get(fromSlug);
     if (!guild || !from) return { ok: false, error: "guild_not_found" };
-    if (!managerRole(db, guild.id, memberId)) return { ok: false, error: "guild_manager_required" };
+    if (!memberHasGuildPermissionInDatabase(db, guild.id, memberId, "guild.sisters.manage")) return { ok: false, error: "guild_manager_required" };
     const result = db.prepare(`
       UPDATE guild_links SET status = ?, responded_at = ?
       WHERE guild_id = ? AND linked_guild_id = ? AND kind = 'sister' AND status = 'pending'

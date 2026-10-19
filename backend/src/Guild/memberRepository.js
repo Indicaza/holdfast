@@ -528,7 +528,11 @@ export async function updateGuildMemberProfile(memberId, profile) {
   });
 }
 
-export async function upsertGuildMember(user, permissions = []) {
+// Every Discord user who signs in gets a members row: it is the account.
+// `homeServer` says whether they are in Holdfast's Discord server. Only
+// those rows are active, and only active rows join Holdfast, so a player
+// from another guild has an account with no guild until they join one.
+export async function upsertGuildMember(user, permissions = [], { homeServer = true } = {}) {
   if (!user?.id || !user?.username) {
     return null;
   }
@@ -554,9 +558,13 @@ export async function upsertGuildMember(user, permissions = []) {
       billetsManaged: existing
         ? Boolean(existing.billetsManaged)
         : true,
-      status: "active",
-      departedAt: null,
-      permissions: Array.isArray(permissions) ? permissions : [],
+      status: homeServer ? "active" : "departed",
+      departedAt: homeServer
+        ? null
+        : existing?.status === "active"
+          ? now
+          : existing?.departedAt || null,
+      permissions: homeServer && Array.isArray(permissions) ? permissions : [],
     };
 
     if (sameMemberIdentity(existing, identity)) {

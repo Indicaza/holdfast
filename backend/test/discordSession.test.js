@@ -190,20 +190,43 @@ test("stale sessions refresh identity, permissions, persistence, and cookie", as
   assert.equal(events.sessions.length, 1);
 });
 
-test("departed guild members lose their session before the request continues", async () => {
+test("members who leave Holdfast's server keep their account without Holdfast permissions", async () => {
   const { events, middleware } = harness({
     fetchImpl: async (url, options) => {
       events.fetches.push({ url: String(url), options });
       return jsonResponse({ message: "Unknown Member" }, 404);
     },
   });
-  const result = await run(middleware);
+  const result = await run(middleware, request(USER_ONE, { permissions: ["quests.edit"] }));
 
   assert.equal(result.nextCalls, 1);
-  assert.equal(result.req.auth, null);
+  assert.equal(result.req.auth.user.id, USER_ONE);
+  assert.deepEqual(result.req.auth.permissions, []);
+  assert.equal(result.req.auth.homeServer, false);
+  assert.equal(result.req.auth.verifiedAt, FIXED_NOW);
   assert.deepEqual(events.departed, [USER_ONE]);
-  assert.equal(events.cleared, 1);
-  assert.equal(events.sessions.length, 0);
+  assert.equal(events.upserts.length, 0);
+  assert.deepEqual(events.sessions, [result.req.auth]);
+});
+
+test("outside players are revalidated without being marked departed again", async () => {
+  const { events, middleware } = harness({
+    fetchImpl: async () => jsonResponse({ message: "Unknown Member" }, 404),
+  });
+  const result = await run(middleware, request(USER_ONE, { homeServer: false }));
+
+  assert.equal(result.nextCalls, 1);
+  assert.equal(result.req.auth.homeServer, false);
+  assert.deepEqual(events.departed, []);
+});
+
+test("an outside player who joins Holdfast's server gets Holdfast permissions", async () => {
+  const { events, middleware } = harness();
+  const result = await run(middleware, request(USER_ONE, { homeServer: false }));
+
+  assert.equal(result.req.auth.homeServer, true);
+  assert.deepEqual(result.req.auth.permissions, ["quests.edit"]);
+  assert.deepEqual(events.upserts[0][2], { homeServer: true });
 });
 
 test("Discord outages fail closed without deleting a valid local session", async () => {

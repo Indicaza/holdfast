@@ -7,7 +7,7 @@ import { createGuildDirectoryRouter } from "./Guild/Directory/guildDirectoryRout
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { createAuditRouter } from "./Audit/auditRouter.js";
 import { refreshDiscordSessionIfNeeded } from "./Auth/discordSession.js";
-import { requirePermission } from "./Auth/permissions.js";
+import { requirePermission, resolveMemberAccess } from "./Auth/permissions.js";
 import { attachSession, setSession } from "./Auth/session.js";
 import { createCharacterRouter } from "./Character/characterRouter.js";
 import { createGuildweaverAdminRouter } from "./Character/guildweaverAdminRouter.js";
@@ -26,7 +26,6 @@ import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
 import { createMemberRouter } from "./Guild/memberRouter.js";
 import { createBilletRouter } from "./Guild/billetRouter.js";
-import { resolveMemberAuthority } from "./Guild/authorityRepository.js";
 import { createAuthorityRouter } from "./Guild/authorityRouter.js";
 import {
   guildweaverDownloadUrl,
@@ -202,19 +201,23 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       return;
     }
 
+    // Sessions from before open sign-in were all in Holdfast's server.
+    const homeServer = req.auth.homeServer !== false;
+
     try {
-      await upsertGuildMember(req.auth.user, req.auth.permissions);
+      await upsertGuildMember(req.auth.user, req.auth.permissions, { homeServer });
     } catch (error) {
       console.error("Unable to update guild member directory", error);
     }
 
-    const authority = resolveMemberAuthority(req.auth.user.id);
+    const { authority, guild, holdfastMember } = resolveMemberAccess(req.auth.user.id);
     req.auth.permissions = authority.permissions;
     req.auth.authority = authority;
 
     setSession(res, {
       user: req.auth.user,
       permissions: authority.permissions,
+      homeServer,
       verifiedAt: req.auth.verifiedAt,
     });
 
@@ -223,6 +226,8 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       user: req.auth.user,
       permissions: authority.permissions,
       authority,
+      guild,
+      holdfastMember,
     });
   });
 
