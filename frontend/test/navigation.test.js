@@ -12,7 +12,7 @@ test('signed-out navigation keeps public information easy to reach', () => {
   assert.deepEqual(primaryNavigationLinks(false), publicNavigationLinks)
   assert.deepEqual(
     publicNavigationLinks.map((link) => link.href),
-    ['/charter', '/ranks', '/items', '/guildweaver'],
+    ['/guilds', '/charter', '/ranks', '/items', '/guildweaver'],
   )
 })
 
@@ -23,7 +23,7 @@ test('the account action is labeled as sign in rather than recruitment', () => {
 test('signed-in primary navigation stays focused and leaves GuildOS in the account menu', () => {
   assert.deepEqual(
     primaryNavigationLinks(true).map((link) => link.href),
-    ['/quests', '/members', '/charter', '/ranks', '/items', '/guildweaver'],
+    ['/quests', '/members', '/guilds', '/charter', '/ranks', '/items', '/guildweaver'],
   )
   assert.equal(primaryNavigationLinks(true).some((link) => link.href === '/intelligence'), false)
 })
@@ -33,6 +33,7 @@ test('footer leads with joining and exposes Guildweaver plus the public source r
     footerNavigationLinks.map((link) => link.href),
     [
       '/join',
+      '/guilds',
       '/charter',
       '/ranks',
       '/items',

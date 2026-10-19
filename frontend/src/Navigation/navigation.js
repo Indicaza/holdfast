@@ -21,14 +21,14 @@ export function subscribeLocation(listener) {
   }
 }
 
-export function navigate(to, { replace = false } = {}) {
+export function navigate(to, { replace = false, preserveScroll = false } = {}) {
   const url = new URL(to, window.location.href)
   if (url.href === window.location.href) return
   const samePage = url.pathname === window.location.pathname && url.search === window.location.search
   window.history[replace ? 'replaceState' : 'pushState'](null, '', url)
   // Existing listeners (hash views, modals) follow popstate.
   window.dispatchEvent(new PopStateEvent('popstate'))
-  if (!samePage && !url.hash) window.scrollTo(0, 0)
+  if (!samePage && !url.hash && !preserveScroll) window.scrollTo(0, 0)
 }
 
 // Paths the server answers itself (API, downloads, OAuth), never the app.

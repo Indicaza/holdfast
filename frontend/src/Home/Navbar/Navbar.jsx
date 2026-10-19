@@ -12,7 +12,7 @@ function displayName(user) {
 }
 
 function isActiveLink(pathname, href) {
-  if (href === '/members' || href === '/items') {
+  if (href === '/members' || href === '/items' || href === '/guilds') {
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 

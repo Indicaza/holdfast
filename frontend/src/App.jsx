@@ -19,6 +19,8 @@ const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildIntelligence = lazy(() => import('./Intelligence/GuildIntelligence.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
+const GuildBrowser = lazy(() => import('./Guilds/GuildBrowser.jsx'))
+const GuildPage = lazy(() => import('./Guilds/GuildPage.jsx'))
 const Items = lazy(() => import('./Items/Items.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
@@ -157,6 +159,19 @@ function itemCatalogRoute(pathname, queryString) {
     props: { itemId: match[1] || null, queryString } }
 }
 
+function guildDirectoryRoute(pathname, queryString) {
+  if (pathname === '/guilds') {
+    return { component: GuildBrowser, path: pathname, title: 'Find a Guild | Guildweaver',
+      description: 'Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.',
+      robots: defaultRobots, props: { queryString } }
+  }
+  const match = pathname.match(/^\/guilds\/([a-z0-9-]{2,40})$/)
+  if (!match || match[1] === 'register') return null
+  return { component: GuildPage, path: pathname, title: 'Guild | Guildweaver',
+    description: 'A guild on Guildweaver: recruiting needs, schedule, verified roster activity and sister guilds.',
+    robots: defaultRobots, props: { slug: match[1] } }
+}
+
 function App() {
   // Follow client-side navigation in a transition: React keeps the current
   // page on screen while the next page's code loads, instead of falling back
@@ -166,7 +181,7 @@ function App() {
   useEffect(() => subscribeLocation(() => startNavigation(() => setHref(window.location.href))), [])
   useEffect(() => interceptLinkClicks(), [])
   const requestedPathname = normalizePathname(new URL(href).pathname)
-  const dynamicRoute = memberProfileRoute(requestedPathname) || itemCatalogRoute(requestedPathname, new URL(href).search)
+  const dynamicRoute = memberProfileRoute(requestedPathname) || itemCatalogRoute(requestedPathname, new URL(href).search) || guildDirectoryRoute(requestedPathname, new URL(href).search)
   const pathname = resolvePathname(requestedPathname, Object.keys(routes))
   const route = dynamicRoute ?? (pathname
     ? routes[pathname]
