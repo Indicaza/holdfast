@@ -3,7 +3,7 @@ import { authenticate } from '../helpers/auth.js'
 
 async function seedFishing(page, context) {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
 
   return page.evaluate(async () => {
     async function json(url, options = {}) {
@@ -93,7 +93,7 @@ async function seedFishing(page, context) {
 
 test('fishing catches use zone-scoped Farming sources while casts stay a separate denominator', async ({ page, context }) => {
   await seedFishing(page, context)
-  await page.goto('/intelligence#farming')
+  await page.goto('/holdfast/intelligence#farming')
 
   const fishing = page.getByRole('region', { name: 'Fishing' })
   const openWater = fishing.locator('.farm-card').filter({ hasText: 'Open Water' })

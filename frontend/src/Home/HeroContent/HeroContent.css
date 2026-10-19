@@ -23,6 +23,15 @@
   pointer-events: none;
 }
 
+.hero-content__crest {
+  margin-bottom: var(--space-3);
+  filter: drop-shadow(0 0.6rem 1.2rem rgba(0, 0, 0, 0.45));
+}
+
+.hero-content__crest .guild-crest {
+  display: block;
+}
+
 .hero-content__eyebrow {
   margin-bottom: var(--space-2);
   color: var(--color-accent-bright);

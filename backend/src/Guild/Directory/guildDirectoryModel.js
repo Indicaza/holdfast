@@ -37,9 +37,16 @@ export const VISIBILITIES = Object.freeze(["public", "unlisted"]);
 export const SORTS = Object.freeze(["active", "newest", "members", "name"]);
 export const MEMBERSHIP_ROLES = Object.freeze(["owner", "officer", "member"]);
 
-const RESERVED_SLUGS = new Set([
-  "admin", "api", "guilds", "guild", "new", "register", "join", "login", "items",
+// Guild pages live at /:slug, so a slug can never be a top-level path of the
+// site: platform pages, server paths, the old single-guild paths that now
+// redirect, a guild's own sections, and the frontend's public asset folders
+// (frontend/src/routing.js RESERVED_TOP_LEVEL_SEGMENTS; a test keeps them in
+// step).
+export const RESERVED_SLUGS = new Set([
+  "admin", "api", "auth", "assets", "guilds", "guild", "guildos", "new", "register",
+  "join", "login", "logout", "signin", "signup", "settings", "account", "me", "items",
   "intelligence", "guildweaver", "members", "quests", "privacy", "charter", "ranks",
+  "about", "armory-art", "inventory-art", "profession-art", "talent-art", "wow-art",
 ]);
 
 function text(value, maxLength) {

@@ -3,7 +3,7 @@ import { authenticate } from '../helpers/auth.js'
 
 async function seedRichFarmingItem(page, context) {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
 
   return page.evaluate(async () => {
     async function json(url, options = {}) {
@@ -129,7 +129,7 @@ async function seedRichFarmingItem(page, context) {
 
 test('farming cards use an icon grid and the full rendered Blizzard item tooltip', async ({ page, context }) => {
   const { sourceName } = await seedRichFarmingItem(page, context)
-  await page.goto('/intelligence#farming')
+  await page.goto('/holdfast/intelligence#farming')
 
   const card = page.locator('.farm-card').filter({ hasText: sourceName })
   await expect(card).toBeVisible()

@@ -1,13 +1,14 @@
 import { expect, test } from '@playwright/test'
 import { authenticate } from '../helpers/auth.js'
 
-test('member GuildOS keeps the Holdfast navbar and hides privileged operations', async ({ page, context }) => {
+test('member GuildOS keeps the Holdfast guild navbar and hides privileged operations', async ({ page, context }) => {
   await authenticate(context, 'member')
-  await page.goto('/intelligence')
+  await page.goto('/holdfast/intelligence')
 
   await expect(page.locator('.navbar')).toBeVisible()
   await expect(page.locator('.navbar').getByRole('link', { name: 'Holdfast home' })).toBeVisible()
-  await expect(page.locator('.navbar__links a[href="/intelligence"]')).toHaveCount(0)
+  await expect(page.locator('.navbar__links a[href="/holdfast/intelligence"]')).toHaveText('Intelligence')
+  await expect(page.locator('.navbar__links a[href="/holdfast/intelligence"]')).toHaveAttribute('aria-current', 'page')
   await expect(page.locator('.intelligence-rail__brand-copy strong', { hasText: 'GuildOS' })).toBeVisible()
 
   const rail = page.locator('.intelligence-rail__nav')
@@ -18,17 +19,16 @@ test('member GuildOS keeps the Holdfast navbar and hides privileged operations',
 
   await page.locator('.navbar__account-button').click()
   const accountLinks = page.locator('.navbar__account-links')
-  await expect(accountLinks.getByRole('link', { name: 'GuildOS', exact: true })).toHaveAttribute('href', '/intelligence')
-  await expect(accountLinks.locator('a[href^="/intelligence"]')).toHaveCount(1)
+  await expect(accountLinks.getByRole('link', { name: 'My Profile', exact: true })).toHaveAttribute('href', '/holdfast/members/me')
 
-  await page.goto('/intelligence#audit')
+  await page.goto('/holdfast/intelligence#audit')
   await expect(page.locator('.intelligence-app__topbar').getByRole('heading', { name: 'Overview' })).toBeVisible()
   await expect(page.locator('.admin-audit')).toHaveCount(0)
 })
 
 test('commander can use audit and Guildweaver consoles inside GuildOS', async ({ page, context }) => {
   await authenticate(context, 'commander')
-  await page.goto('/intelligence')
+  await page.goto('/holdfast/intelligence')
 
   const rail = page.locator('.intelligence-rail__nav')
   const topbar = page.locator('.intelligence-app__topbar')
@@ -52,10 +52,7 @@ test('commander can use audit and Guildweaver consoles inside GuildOS', async ({
   await expect(page.getByText('Latest activity', { exact: true })).toBeVisible()
   await expect(page.getByText(/^Filters/)).toHaveCount(0)
 
-  await page.locator('.navbar__account-button').click()
-  const accountLinks = page.locator('.navbar__account-links')
-  await expect(accountLinks.getByRole('link', { name: 'GuildOS', exact: true })).toHaveAttribute('href', '/intelligence')
-  await expect(accountLinks.locator('a[href^="/intelligence"]')).toHaveCount(1)
+  await expect(page.locator('.navbar__links a[href="/holdfast/intelligence"]')).toHaveText('Intelligence')
 })
 
 test('standalone Guildweaver admin route remains available for compatibility', async ({ page, context }) => {

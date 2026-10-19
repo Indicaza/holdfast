@@ -1,4 +1,8 @@
-export function safeReturnTo(value, fallback = '/') {
+// Joining is Holdfast's: a join with nowhere safe to return to ends on
+// Holdfast's home.
+const JOIN_HOME = '/holdfast'
+
+export function safeReturnTo(value, fallback = JOIN_HOME) {
   if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return fallback
   try {
     const decoded = decodeURIComponent(value)
@@ -20,5 +24,5 @@ export function currentReturnTo() {
 
 export function joinHref(returnTo) {
   const destination = safeReturnTo(returnTo)
-  return destination === '/' ? '/join' : `/join?${new URLSearchParams({ returnTo: destination })}`
+  return destination === JOIN_HOME ? '/join' : `/join?${new URLSearchParams({ returnTo: destination })}`
 }

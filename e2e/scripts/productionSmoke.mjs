@@ -30,7 +30,7 @@ try {
   await api('/api/admin/audit?details=true', 401)
   await api('/api/quests/manage', 401)
   await api('/api/quests', 200)
-  for (const [route, title] of [['/', /Holdfast/i], ['/charter', /Holdfast Charter/i], ['/ranks', /Ranks & Roles/i]]) {
+  for (const [route, title] of [['/holdfast', /Holdfast/i], ['/holdfast/charter', /Holdfast Charter/i], ['/holdfast/ranks', /Ranks & Roles/i]]) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 30_000 })
     assert.equal(response.status(), 200)
     await expect(page).toHaveTitle(title)
@@ -39,7 +39,7 @@ try {
     await page.locator('main h1').first().waitFor({ state: 'attached' })
     assert.ok((await page.locator('main').innerText()).trim().length > 100, `Empty application page: ${route}`)
   }
-  await page.goto('/quests')
+  await page.goto('/holdfast/quests')
   await page.getByRole('heading', { name: 'Member sign in', exact: true }).waitFor()
   await page.getByRole('button', { name: 'Sign in with Discord', exact: true }).waitFor()
   assert.deepEqual(errors, [], 'Production browser errors')

@@ -242,7 +242,7 @@ export default function GuildBrowser({ queryString = '' }) {
             </form>
 
             <div className="guild-hero__actions">
-              <a className="guild-hero__primary" href="/guilds/register">Register your guild</a>
+              <a className="guild-hero__primary" href="/register">Register your guild</a>
               <a className="guild-hero__secondary" href="/guildweaver">Get the addon</a>
             </div>
           </header>
@@ -292,7 +292,7 @@ export default function GuildBrowser({ queryString = '' }) {
                   <p>Loosen a filter, or be the first: register your guild and it will appear here.</p>
                   <div className="guild-empty__actions">
                     {filterCount ? <button type="button" className="guild-empty__action" onClick={() => update(emptyFilters())}>Clear filters</button> : null}
-                    <a className="guild-empty__action guild-empty__action--primary" href="/guilds/register">Register your guild</a>
+                    <a className="guild-empty__action guild-empty__action--primary" href="/register">Register your guild</a>
                   </div>
                 </div>
               )}

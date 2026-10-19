@@ -5,7 +5,7 @@ const artwork = (page) => page.locator('.hero-slideshow__slide--active')
 const caption = (page) => page.locator('.hero-content__story')
 
 async function ready(page) {
-  await page.goto('/')
+  await page.goto('/holdfast')
   await expect(page.getByRole('button', { name: 'Next scene' })).toBeEnabled()
 }
 

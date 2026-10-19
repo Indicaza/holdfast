@@ -14,7 +14,7 @@ test.describe.serial('quest browser regression coverage', () => {
     await authenticate(context, 'member')
     const page = await context.newPage()
 
-    await page.goto('/quests')
+    await page.goto('/holdfast/quests')
     await expect(
       page.getByRole('button', { name: 'Create quest', exact: true }),
     ).toHaveCount(0)
@@ -45,7 +45,7 @@ test.describe.serial('quest browser regression coverage', () => {
     await authenticate(context, 'officer')
     const page = await context.newPage()
 
-    await page.goto('/quests')
+    await page.goto('/holdfast/quests')
     await openQuest(page)
 
     const linen = page.locator('article').filter({ hasText: 'Gather the linen' })
@@ -70,7 +70,7 @@ test.describe.serial('quest browser regression coverage', () => {
     await authenticate(context, 'member')
     const page = await context.newPage()
 
-    await page.goto('/quests')
+    await page.goto('/holdfast/quests')
     await openQuest(page)
 
     const scout = page.locator('article').filter({ hasText: 'Scout the roads' })
@@ -96,7 +96,7 @@ test.describe.serial('quest browser regression coverage', () => {
     await authenticate(context, 'commander')
     const page = await context.newPage()
 
-    await page.goto('/quests')
+    await page.goto('/holdfast/quests')
     await page.getByRole('button', { name: 'Create quest', exact: true }).first().click()
 
     const dialog = page.getByRole('dialog')

@@ -54,7 +54,7 @@ async function syncDetectedTimezone(userId) {
 function sameSession(a, b) {
   return a.status === b.status
     && a.authenticated === b.authenticated
-    && JSON.stringify([a.user, a.permissions, a.authority]) === JSON.stringify([b.user, b.permissions, b.authority])
+    && JSON.stringify([a.user, a.permissions, a.authority, a.guild, a.holdfastMember]) === JSON.stringify([b.user, b.permissions, b.authority, b.guild, b.holdfastMember])
 }
 
 function currentReturnTo() {
@@ -72,6 +72,8 @@ export function SessionProvider({ children }) {
     user: null,
     permissions: [],
     authority: null,
+    guild: null,
+    holdfastMember: false,
   })
 
   // An explicit retry shows "checking" again; background checks (focus, tab
@@ -92,6 +94,9 @@ export function SessionProvider({ children }) {
           user: data?.user ?? null,
           permissions: data?.permissions ?? [],
           authority: data?.authority ?? null,
+          // The player's own guild ({ slug, name, role }) and Holdfast membership.
+          guild: data?.guild ?? null,
+          holdfastMember: Boolean(data?.holdfastMember),
         }
 
         if (requestGeneration !== generation.current) return null
@@ -109,6 +114,8 @@ export function SessionProvider({ children }) {
           user: null,
           permissions: [],
           authority: null,
+          guild: null,
+          holdfastMember: false,
         }
 
         if (requestGeneration !== generation.current) return null
@@ -159,6 +166,8 @@ export function SessionProvider({ children }) {
       user: null,
       permissions: [],
       authority: null,
+      guild: null,
+      holdfastMember: false,
     })
   }, [])
 

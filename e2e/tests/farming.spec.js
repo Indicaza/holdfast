@@ -5,7 +5,7 @@ import { authenticate } from '../helpers/auth.js'
 // through the bridge telemetry endpoint, exactly as Guildweaver does.
 async function seedGathering(page, context) {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
 
   return page.evaluate(async () => {
     async function json(url, options = {}) {
@@ -148,7 +148,7 @@ async function syncGather(page, deviceToken, { name, objectId, item }) {
 
 test('farming intelligence finds sources by item and recomputes the source modal under filters', async ({ page, context }) => {
   const deviceToken = await seedGathering(page, context)
-  await page.goto('/intelligence#farming')
+  await page.goto('/holdfast/intelligence#farming')
 
   await expect(page.getByRole('heading', { name: 'Farming', level: 1 })).toBeVisible()
   const herbalism = page.getByRole('region', { name: 'Herbalism' })

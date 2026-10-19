@@ -1,11 +1,12 @@
 import { useSession } from '../../Auth/sessionContext.js'
 import { foundingMission } from '../recruitmentContent.js'
 import { foundingMissionAction } from './foundingMissionAction.js'
+import { useGuildHref } from '../../Guild/guildContext.js'
 import './FoundingMission.css'
 
 function FoundingMission({ onJoin }) {
   const { authenticated, status, refresh } = useSession()
-  const action = foundingMissionAction(authenticated)
+  const action = foundingMissionAction(authenticated, useGuildHref()('/quests'))
 
   return (
     <section

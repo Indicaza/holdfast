@@ -206,9 +206,25 @@ export const heroSlides = [
   },
 ]
 
-export function useHeroStory({ heroRef, blocked = false }) {
+// Every other guild's home until guild pages are editable: the same scenes
+// with captions that speak for any guild.
+const defaultCaptions = [
+  ['dungeon', 'Group Up', 'Find people to run with, learn the fights, and push a little further every week.'],
+  ['smith', 'Help Each Other', 'Gather, craft, and share. A guild with stocked shelves gives everybody more options.'],
+  ['pvp', 'Stand Together', 'When trouble comes looking, stand with your people and give them a story worth telling.'],
+  ['rag', 'Raid Night', 'Know your job, trust the people beside you, and carry your share when everything gets loud.'],
+  ['home', 'Home', 'Come back with stories and friends. Take a break when life calls; the guild will still be here.'],
+]
+
+export const defaultHeroSlides = defaultCaptions.map(([id, title, body]) => ({
+  ...heroSlides.find((slide) => slide.id === id),
+  title,
+  body,
+}))
+
+export function useHeroStory({ heroRef, blocked = false, slides = heroSlides }) {
   const [playback] = useState(() => new HeroPlayback({
-    slides: heroSlides,
+    slides,
     loadImage: loadHeroImage,
     initialDuration: initialSlideDuration,
     duration: slideDuration,
@@ -246,7 +262,8 @@ export function useHeroStory({ heroRef, blocked = false }) {
   return {
     ...state,
     playback,
-    activeSlide: heroSlides[state.captionIndex],
+    slides: playback.slides,
+    activeSlide: playback.slides[state.captionIndex],
     fadeDuration: state.reducedMotion ? 0 : fadeDuration,
   }
 }

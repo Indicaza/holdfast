@@ -38,6 +38,6 @@ test('founding mission sends visitors to recruitment and members to quests', () 
   })
   assert.deepEqual(foundingMissionAction(true), {
     label: 'View Quests',
-    href: '/quests',
+    href: '/holdfast/quests',
   })
 })

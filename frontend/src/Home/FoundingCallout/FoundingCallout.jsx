@@ -1,10 +1,11 @@
 import { useSession } from '../../Auth/sessionContext.js'
 import { foundingCalloutContent } from './foundingCalloutContent.js'
+import { useGuildHref } from '../../Guild/guildContext.js'
 import './FoundingCallout.css'
 
 function FoundingCallout({ onJoin }) {
   const { authenticated } = useSession()
-  const content = foundingCalloutContent(authenticated)
+  const content = foundingCalloutContent(authenticated, useGuildHref()('/quests'))
 
   return (
     <section

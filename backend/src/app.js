@@ -40,6 +40,7 @@ import {
   securityHeaders,
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
+import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
 export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions } = {}) {
   const app = express();
@@ -269,6 +270,8 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
     res.redirect(302, target);
   });
 
+  // Old single-guild paths, before the SPA fallback answers them as pages.
+  app.use(redirectLegacyPaths);
   mountProductionFrontend(app);
 
   app.use((error, req, res, next) => {

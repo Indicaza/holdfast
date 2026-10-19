@@ -20,6 +20,7 @@ import WowIcon from '../WowAssets/WowIcon.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './MemberProfile.css'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 const SERVICE_PREVIEW = 6
 
@@ -112,10 +113,11 @@ function ProfileLoading() {
 }
 
 function ProfileMessage({ title, body }) {
+  const guildPath = useGuildHref()
   return (
     <PageShell className="member-profile member-profile--loaded">
       <nav className="member-profile__crumbs" aria-label="Member profile navigation">
-        <a href="/members">Members</a>
+        <a href={guildPath('/members')}>Members</a>
         <span aria-hidden="true">/</span>
         <span>Profile</span>
       </nav>
@@ -124,7 +126,7 @@ function ProfileMessage({ title, body }) {
         <p>Holdfast</p>
         <h1>{title}</h1>
         <span>{body}</span>
-        <a href="/members">Back to Members</a>
+        <a href={guildPath('/members')}>Back to Members</a>
       </section>
 
     </PageShell>
@@ -293,6 +295,7 @@ function Characters({ member, synced: syncedIndex, charactersReady, editable, on
 
 function MemberProfile({ memberId }) {
   const session = useSession()
+  const guildPath = useGuildHref()
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [showAllService, setShowAllService] = useState(false)
@@ -338,8 +341,8 @@ function MemberProfile({ memberId }) {
   const profileUrl = useMemo(() => {
     if (!member?.id) return ''
 
-    return new URL(`/members/${member.id}`, window.location.origin).toString()
-  }, [member?.id])
+    return new URL(guildPath(`/members/${member.id}`), window.location.origin).toString()
+  }, [guildPath, member?.id])
 
   async function copyProfile() {
     if (!profileUrl) return
@@ -353,8 +356,8 @@ function MemberProfile({ memberId }) {
     }
   }
 
-  const returnTo = isSelfRoute ? '/members/me' : `/members/${memberId}`
-  const closeGate = () => navigate('/')
+  const returnTo = guildPath(isSelfRoute ? '/members/me' : `/members/${encodeURIComponent(memberId)}`)
+  const closeGate = () => navigate(guildPath())
 
   if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
 
@@ -424,7 +427,7 @@ function MemberProfile({ memberId }) {
   return (
     <PageShell className="member-profile member-profile--loaded">
       <nav className="member-profile__crumbs" aria-label="Member profile navigation">
-        <a href="/members">Members</a>
+        <a href={guildPath('/members')}>Members</a>
         <span aria-hidden="true">/</span>
         <span>{displayName(member)}</span>
       </nav>
@@ -544,7 +547,7 @@ function MemberProfile({ memberId }) {
                 ? `${assignments.length} active ${assignments.length === 1 ? 'objective' : 'objectives'}`
                 : 'No active objectives'}
             </span>
-            <a href="/quests">Open Quest Board</a>
+            <a href={guildPath('/quests')}>Open Quest Board</a>
           </div>
         </div>
 
@@ -588,7 +591,7 @@ function MemberProfile({ memberId }) {
                 <div className="member-profile__assignment-footer">
                   <Reward reward={assignment.reward} />
                   <a
-                    href={`/quests?q=${encodeURIComponent(assignment.questTitle)}`}
+                    href={guildPath(`/quests?q=${encodeURIComponent(assignment.questTitle)}`)}
                   >
                     View quest →
                   </a>

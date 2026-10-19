@@ -15,7 +15,7 @@ test('farming runs show timing confidence, suppress partial rates and filter mea
       outputs: [{ ...measured.outputs[0], quantity: 20, perHour: 40, perNonAfkHour: 48 }] } : measured
     await route.fulfill({ json: { sessions: mode === 'manual' ? [ready] : mode === 'automatic' ? [automatic] : [ready, automatic] } })
   })
-  await page.goto('/intelligence#farming')
+  await page.goto('/holdfast/intelligence#farming')
   const panel = page.locator('.farm-sessions')
   await panel.locator('summary').click()
   await expect(panel.getByText('Waiting for harvest sync', { exact: true })).toBeVisible()

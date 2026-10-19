@@ -135,7 +135,7 @@ async function seedItemDefinitions(page) {
 test('Armory renders the full client-captured Blizzard equipment tooltip verbatim', async ({ page, context }) => {
   await seedArmory(page, context)
   await seedItemDefinitions(page)
-  await page.goto('/intelligence#characters')
+  await page.goto('/holdfast/intelligence#characters')
 
   const characterCard = page.locator('.character-card').filter({ hasText: 'Armorytest' })
   await expect(characterCard).toBeVisible()

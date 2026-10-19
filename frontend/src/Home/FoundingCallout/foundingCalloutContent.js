@@ -1,4 +1,4 @@
-export function foundingCalloutContent(authenticated) {
+export function foundingCalloutContent(authenticated, questsHref = '/holdfast/quests') {
   if (authenticated) {
     return {
       eyebrow: 'Member quests',
@@ -6,7 +6,7 @@ export function foundingCalloutContent(authenticated) {
       description:
         'Find an objective that fits, lend a hand, or see what the guild has already accomplished.',
       action: 'View Quests',
-      href: '/quests',
+      href: questsHref,
     }
   }
 

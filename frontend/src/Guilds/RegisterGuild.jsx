@@ -367,8 +367,8 @@ export default function RegisterGuild() {
           <li><strong>Recruit on autopilot</strong><span>Applications and your Discord invite in one place.</span></li>
         </ul>
         <div className="guild-hero__actions">
-          <button type="button" className="guild-hero__primary" onClick={() => signIn('/guilds/register')}>Sign in with Discord</button>
-          <a className="guild-hero__secondary" href="/guilds">Browse guilds</a>
+          <button type="button" className="guild-hero__primary" onClick={() => signIn('/register')}>Sign in with Discord</button>
+          <a className="guild-hero__secondary" href="/">Browse guilds</a>
         </div>
       </Gate>
     )
@@ -402,7 +402,7 @@ export default function RegisterGuild() {
       <div className="guild-browser__backdrop guild-page__backdrop" aria-hidden="true" />
       <div className="guild-browser__frame">
         <main>
-          <a className="guild-page__back" href="/guilds">← All guilds</a>
+          <a className="guild-page__back" href="/">← All guilds</a>
           <header className="guild-register__head">
             <p className="guild-hero__eyebrow">Guildweaver · Register</p>
             <h1>Register your guild</h1>

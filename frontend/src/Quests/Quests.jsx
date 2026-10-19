@@ -19,6 +19,7 @@ import {
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import './Quests.css'
+import { useGuildHref } from '../Guild/guildContext.js'
 
 const QUESTS_CHANGED_KEY = 'holdfast:quests-changed'
 const EMPTY_CATALOG = { focusedQuestId: '', quests: [] }
@@ -147,6 +148,7 @@ function QuestCard({ quest, featured, creatorName, onOpen }) {
 
 function Quests() {
   const session = useSession()
+  const guildPath = useGuildHref()
   const initialSearch =
     new URLSearchParams(window.location.search).get('q') || ''
   const [catalog, setCatalog] = useState(EMPTY_CATALOG)
@@ -600,7 +602,7 @@ function Quests() {
     0,
   )
 
-  const closeGate = () => navigate('/')
+  const closeGate = () => navigate(guildPath())
   const authCode = new URLSearchParams(window.location.search).get('auth')
 
   if (session.status === 'loading' && authCode === 'connected') {
@@ -613,7 +615,7 @@ function Quests() {
     return (
       <Home
         overlay={
-          <MemberAccessModal returnTo="/quests" onClose={closeGate} />
+          <MemberAccessModal returnTo={guildPath('/quests')} onClose={closeGate} />
         }
       />
     )

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
 const githubUrl = 'https://github.com/Indicaza/holdfast'
+const siteName = 'Guildweaver'
 
 function upsertMeta(attribute, key, content) {
   let element = document.head.querySelector(`meta[${attribute}="${key}"]`)
@@ -39,7 +40,9 @@ function upsertStructuredData(data) {
   element.textContent = JSON.stringify(data)
 }
 
-function SEO({ title, description, path, robots, home = false }) {
+// home marks the site's front page (WebSite + Guildweaver organization);
+// organization names a guild whose home page this is.
+function SEO({ title, description, path, robots, home = false, organization = null }) {
   useEffect(() => {
     const origin = window.location.origin
     const url = new URL(path, origin).href
@@ -54,7 +57,7 @@ function SEO({ title, description, path, robots, home = false }) {
     upsertMeta('name', 'googlebot', robots)
 
     upsertMeta('property', 'og:type', 'website')
-    upsertMeta('property', 'og:site_name', 'Holdfast')
+    upsertMeta('property', 'og:site_name', siteName)
     upsertMeta('property', 'og:title', title)
     upsertMeta('property', 'og:description', description)
     upsertMeta('property', 'og:url', url)
@@ -85,7 +88,7 @@ function SEO({ title, description, path, robots, home = false }) {
           '@type': 'WebSite',
           '@id': websiteId,
           url: homeUrl,
-          name: 'Holdfast',
+          name: siteName,
           description,
           publisher: {
             '@id': organizationId,
@@ -95,19 +98,27 @@ function SEO({ title, description, path, robots, home = false }) {
         {
           '@type': 'Organization',
           '@id': organizationId,
-          name: 'Holdfast',
+          name: siteName,
           url: homeUrl,
           description,
           sameAs: [githubUrl],
         },
       )
+    } else if (organization) {
+      graph.push({
+        '@type': 'Organization',
+        '@id': `${url}#organization`,
+        name: organization,
+        url,
+        description,
+      })
     }
 
     upsertStructuredData({
       '@context': 'https://schema.org',
       '@graph': graph,
     })
-  }, [description, home, path, robots, title])
+  }, [description, home, organization, path, robots, title])
 
   return null
 }

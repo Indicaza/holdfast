@@ -4,7 +4,7 @@ import { authenticate } from './auth.js'
 // with equipment, talents, professions and recipes.
 export async function seedArmory(page, context) {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
 
   return page.evaluate(async () => {
     async function json(url, options = {}) {

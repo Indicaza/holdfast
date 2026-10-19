@@ -15,7 +15,7 @@ test('the member session is checked once and survives every page change', async 
     await gate
     await route.fulfill({ response })
   })
-  await page.goto('/')
+  await page.goto('/holdfast')
   // While the first check is pending, the navbar never claims "signed out".
   await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
@@ -26,7 +26,7 @@ test('the member session is checked once and survives every page change', async 
   // Page changes keep the app (and its navbar) mounted: no reload, no
   // re-check, no flash of a loading or signed-out navbar.
   const navbar = await page.locator('.navbar').elementHandle()
-  for (const href of ['/charter', '/ranks', '/members', '/quests', '/']) {
+  for (const href of ['/holdfast/charter', '/holdfast/ranks', '/holdfast/members', '/holdfast/quests', '/holdfast']) {
     await page.locator(`.navbar a[href="${href}"]`).first().click()
     await expect(page).toHaveURL((url) => url.pathname === href)
     await expect(account(page)).toBeVisible()
@@ -45,7 +45,7 @@ test('an anonymous session shows Sign in only after its check completes', async 
     await gate
     await route.continue()
   })
-  await page.goto('/')
+  await page.goto('/holdfast')
   await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
   release()
@@ -55,7 +55,7 @@ test('an anonymous session shows Sign in only after its check completes', async 
 test('a failed session check offers retry rather than a false signed-out state', async ({ page, context }) => {
   await authenticate(context, 'member')
   await page.route('**/api/me', (route) => route.fulfill({ status: 503, json: { error: 'unavailable' } }))
-  await page.goto('/')
+  await page.goto('/holdfast')
   const retry = page.locator('.navbar').getByRole('button', { name: 'Retry connection' })
   await expect(retry).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
@@ -66,7 +66,7 @@ test('a failed session check offers retry rather than a false signed-out state',
 
 test('concurrent refreshes are shared and a late response cannot reverse sign-out', async ({ page, context }) => {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
   await expect(account(page)).toBeVisible()
   let release
   let fetched
@@ -99,18 +99,18 @@ test('concurrent refreshes are shared and a late response cannot reverse sign-ou
 
 test('returning to the tab detects an expired member session', async ({ page, context }) => {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
   await expect(account(page)).toBeVisible()
   await context.clearCookies()
   await page.evaluate(() => window.dispatchEvent(new Event('focus')))
   await expect(signIn(page)).toBeVisible()
   await expect(account(page)).toHaveCount(0)
-  await expect(page.locator('.navbar__links a[href="/quests"]')).toHaveCount(0)
+  await expect(page.locator('.navbar__links a[href="/holdfast/quests"]')).toHaveCount(0)
 })
 
 test('failed sign-out is visible and leaves the verified account available', async ({ page, context }) => {
   await authenticate(context, 'member')
-  await page.goto('/')
+  await page.goto('/holdfast')
   await account(page).click()
   await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 503 }))
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
@@ -128,7 +128,7 @@ test('returning to the tab rechecks the session quietly and reports the timezone
   page.on('request', (request) => {
     if (request.method() === 'PATCH' && new URL(request.url()).pathname === '/api/guild/members/me/timezone') timezoneWrites += 1
   })
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
   await expect(account(page)).toBeVisible()
   await page.locator('.navbar').evaluate((navbar) => { navbar.dataset.probe = 'kept' })
 
@@ -152,10 +152,10 @@ test('a page whose code is still loading keeps the current page on screen', asyn
     await chunkGate
     await route.continue()
   })
-  await page.goto('/charter')
+  await page.goto('/holdfast/charter')
   await expect(page.getByRole('heading', { name: 'Holdfast Charter', level: 1 }).first()).toBeAttached()
 
-  await page.locator('.navbar a[href="/ranks"]').first().click()
+  await page.locator('.navbar a[href="/holdfast/ranks"]').first().click()
   await expect(page).toHaveURL(/\/ranks$/)
   await expect(page.locator('.route-progress--active')).toBeAttached()
   await expect(page.locator('.page-loading')).toHaveCount(0)
@@ -175,7 +175,7 @@ test('a members-only page waits for the session check without flashing the home 
     await gate
     await route.fulfill({ response })
   })
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
   await expect(page.getByText('Checking your membership…')).toBeVisible()
   await expect(page.locator('.home')).toHaveCount(0)
   await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -189,11 +189,11 @@ test('returning to a page shows its data at once without fetching it again', asy
   page.on('request', (request) => {
     if (new URL(request.url()).pathname === '/api/guild/members') directoryReads += 1
   })
-  await page.goto('/members')
+  await page.goto('/holdfast/members')
   await expect(page.locator('main input[type="search"]')).toBeVisible()
   await expect.poll(() => directoryReads).toBe(1)
 
-  await page.locator('.navbar a[href="/charter"]').first().click()
+  await page.locator('.navbar a[href="/holdfast/charter"]').first().click()
   await expect(page).toHaveURL(/\/charter$/)
   await page.goBack()
   await expect(page).toHaveURL(/\/members$/)

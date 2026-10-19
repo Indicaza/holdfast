@@ -8,12 +8,15 @@ The core principle is simple: leave the guild stronger than you found it.
 
 ## Primary pages
 
-- [Home](/): Overview of Holdfast, its identity, activities, community, and recruitment.
-- [Charter](/charter): Holdfast's principles, leadership model, standards, shared prosperity model, conduct expectations, and long-term philosophy.
+- [Find a guild](/): The Guildweaver guild directory, by faction, realm, play style and schedule.
+- [Holdfast](/holdfast): Overview of Holdfast, its identity, activities, community, and recruitment.
+- [Charter](/holdfast/charter): Holdfast's principles, leadership model, standards, shared prosperity model, conduct expectations, and long-term philosophy.
 - [Join Holdfast](/join): Information for players interested in joining the Alliance guild.
 
 ## Additional pages
 
+- [Register a guild](/register): List a guild in the Guildweaver directory.
+- [Guildweaver addon](/guildweaver): Downloads, source and data boundaries for the Guildweaver bridge and addon.
 - [Privacy](/privacy): Privacy information.
 - [Holdfast source repository](https://github.com/Indicaza/holdfast): Public source code for the Holdfast website.
 
