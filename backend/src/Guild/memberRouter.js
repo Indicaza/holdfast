@@ -1,6 +1,10 @@
 import { Router } from "express";
 
-import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
+import {
+  requireAuthenticated,
+  requireHoldfastMember,
+  requirePermission,
+} from "../Auth/permissions.js";
 import {
   readContributionTotals,
   readMemberContributionHistory,
@@ -217,7 +221,7 @@ export function createMemberRouter() {
     max: 60,
   });
 
-  router.get("/", requireAuthenticated, async (req, res) => {
+  router.get("/", requireHoldfastMember, async (req, res) => {
     try {
       const workspace = await memberWorkspace();
       const members = workspace.members.map((member) =>
@@ -241,7 +245,7 @@ export function createMemberRouter() {
     }
   });
 
-  router.get("/me", requireAuthenticated, async (req, res) => {
+  router.get("/me", requireHoldfastMember, async (req, res) => {
     try {
       const profile = await profileFor(req.auth.user.id);
 
@@ -258,6 +262,8 @@ export function createMemberRouter() {
     }
   });
 
+  // Every signed-in account keeps a timezone; the rest of the roster and
+  // profiles here are Holdfast's.
   router.patch(
     "/me/timezone",
     requireAuthenticated,
@@ -295,7 +301,7 @@ export function createMemberRouter() {
 
   router.patch(
     "/me",
-    requireAuthenticated,
+    requireHoldfastMember,
     profileWriteRateLimit,
     async (req, res) => {
     try {
@@ -320,7 +326,7 @@ export function createMemberRouter() {
   },
   );
 
-  router.get("/:memberId", requireAuthenticated, async (req, res) => {
+  router.get("/:memberId", requireHoldfastMember, async (req, res) => {
     try {
       const profile = await profileFor(req.params.memberId);
 

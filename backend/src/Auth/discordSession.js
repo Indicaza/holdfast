@@ -3,7 +3,7 @@ import {
   upsertGuildMember,
 } from "../Guild/memberRepository.js";
 import { resolvePermissions } from "./permissionResolver.js";
-import { clearSession, setSession } from "./session.js";
+import { setSession } from "./session.js";
 
 const DISCORD_API = "https://discord.com/api/v10";
 const DEFAULT_REVERIFY_SECONDS = 30 * 24 * 60 * 60;
@@ -139,7 +139,6 @@ export function createDiscordSessionRefresher({
   permissionResolver,
   markDeparted = markGuildMemberDeparted,
   upsertMember = upsertGuildMember,
-  clearSessionImpl = clearSession,
   setSessionImpl = setSession,
   cacheMaxEntries = DEFAULT_CACHE_MAX_ENTRIES,
   logger = console,
@@ -260,10 +259,20 @@ export function createDiscordSessionRefresher({
     try {
       const result = await verifyMembership(userId, req.auth.user);
 
+      // Leaving Holdfast's server leaves Holdfast but keeps the account: the
+      // player stays signed in with no Holdfast permissions.
       if (!result.member) {
-        await markDeparted(userId);
-        clearSessionImpl(res);
-        req.auth = null;
+        if (req.auth.homeServer !== false) {
+          await markDeparted(userId);
+        }
+
+        req.auth = {
+          user: result.sessionUser,
+          permissions: [],
+          homeServer: false,
+          verifiedAt: result.verifiedAt,
+        };
+        setSessionImpl(res, req.auth);
         next();
         return;
       }
@@ -271,10 +280,11 @@ export function createDiscordSessionRefresher({
       req.auth = {
         user: result.sessionUser,
         permissions: result.permissions,
+        homeServer: true,
         verifiedAt: result.verifiedAt,
       };
 
-      await upsertMember(result.sessionUser, result.permissions);
+      await upsertMember(result.sessionUser, result.permissions, { homeServer: true });
 
       setSessionImpl(res, req.auth);
       next();

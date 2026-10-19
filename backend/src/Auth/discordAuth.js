@@ -507,12 +507,9 @@ export function createDiscordAuthRouter({
         token.access_token,
       );
 
-      if (!member && mode === MEMBER_MODE) {
-        res.redirect(onboardingUrl(ready.frontendUrl, "not-member", returnTo));
-        return;
-      }
-
-      if (!member) {
+      // Recruits join Holdfast's server. Anyone else not in it signs in with
+      // an account that has no guild, and never with Holdfast permissions.
+      if (!member && mode === RECRUIT_MODE) {
         try {
           member = await addGuildMember(
             fetchImpl,
@@ -526,29 +523,33 @@ export function createDiscordAuthRouter({
         }
       }
 
-      if (!member) {
+      if (!member && mode === RECRUIT_MODE) {
         const error = new Error("Discord member join completed but member lookup failed");
         error.authCode = "join-failed";
         throw error;
       }
 
-      const permissions = permissionResolver(user.id, memberRoles(member));
+      const homeServer = Boolean(member);
+      const permissions = homeServer
+        ? permissionResolver(user.id, memberRoles(member))
+        : [];
       const sessionUser = {
         id: user.id,
         username: user.username,
         globalName:
           typeof user.global_name === "string" ? user.global_name : null,
         avatarUrl: avatarUrl(user),
-        guildNickname: typeof member.nick === "string" ? member.nick : null,
+        guildNickname: typeof member?.nick === "string" ? member.nick : null,
         guildJoinedAt:
-          typeof member.joined_at === "string" ? member.joined_at : null,
+          typeof member?.joined_at === "string" ? member.joined_at : null,
       };
 
-      await upsertMember(sessionUser, permissions);
+      await upsertMember(sessionUser, permissions, { homeServer });
 
       setSessionImpl(res, {
         user: sessionUser,
         permissions,
+        homeServer,
         verifiedAt: now(),
       });
 

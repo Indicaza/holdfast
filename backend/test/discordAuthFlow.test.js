@@ -440,37 +440,57 @@ test("existing-member login creates a constrained signed session", async () => {
       assert.equal(session.user.id, USER_ID);
       assert.equal(session.user.guildNickname, "Commander Rook");
       assert.deepEqual(session.permissions, ["quests.edit"]);
+      assert.equal(session.homeServer, true);
+      assert.deepEqual(persisted[0][2], { homeServer: true });
       assert.ok(session.verifiedAt > 0);
     },
   );
 });
 
-test("member login never joins a Discord user who is not already present", async () => {
+test("a Discord user outside Holdfast's server signs in with a guildless account", async () => {
   const discord = standardDiscordFetch({ member: false });
+  const persisted = [];
 
   await withAuthServer(
     {
       env: authEnvironment(),
       fetchImpl: discord.fetchImpl,
       now: () => FIXED_NOW,
+      permissionResolver() {
+        throw new Error("Holdfast roles must not be resolved for outside players");
+      },
+      upsertMember: async (...args) => persisted.push(args),
       logger: silentLogger,
     },
     async (baseUrl) => {
       const started = await beginAuthorization(baseUrl, {
         mode: "member",
-        returnTo: "/members/me",
+        returnTo: "/guilds/register",
       });
       const response = await finishAuthorization(baseUrl, started);
 
       assert.equal(
         response.headers.get("location"),
-        "https://holdfast.example/join?returnTo=%2Fmembers%2Fme&auth=not-member",
+        "https://holdfast.example/guilds/register?auth=connected",
       );
       assert.equal(discord.calls.length, 3);
       assert.equal(
         discord.calls.some((call) => call.options.method === "PUT"),
         false,
       );
+
+      assert.equal(persisted.length, 1);
+      const [sessionUser, permissions, options] = persisted[0];
+      assert.equal(sessionUser.id, USER_ID);
+      assert.equal(sessionUser.guildNickname, null);
+      assert.equal(sessionUser.guildJoinedAt, null);
+      assert.deepEqual(permissions, []);
+      assert.deepEqual(options, { homeServer: false });
+
+      const session = sessionFromResponse(response);
+      assert.equal(session.user.id, USER_ID);
+      assert.deepEqual(session.permissions, []);
+      assert.equal(session.homeServer, false);
     },
   );
 });

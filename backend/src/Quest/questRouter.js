@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import {
   requireAnyPermission,
-  requireAuthenticated,
+  requireHoldfastMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import { awardObjectiveInDatabase } from "../Contribution/contributionRepository.js";
@@ -192,7 +192,7 @@ export function createQuestRouter() {
     }
   });
 
-  router.get("/member", requireAuthenticated, async (req, res) => {
+  router.get("/member", requireHoldfastMember, async (req, res) => {
     try {
       const document = await readQuests();
       res.set("Cache-Control", "no-store");
@@ -205,7 +205,7 @@ export function createQuestRouter() {
 
   router.post(
     "/member/signup",
-    requireAuthenticated,
+    requireHoldfastMember,
     memberSignupRateLimit,
     async (req, res) => {
       try {
@@ -280,7 +280,7 @@ export function createQuestRouter() {
 
   router.post(
     "/member/unassign",
-    requireAuthenticated,
+    requireHoldfastMember,
     memberSignupRateLimit,
     async (req, res) => {
       try {

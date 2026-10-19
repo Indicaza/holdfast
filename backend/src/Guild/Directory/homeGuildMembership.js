@@ -1,9 +1,11 @@
 import { HOLDFAST_GUILD_ID } from "./guildDirectoryMigration.js";
 
-// Members still sign in through Holdfast's Discord server, so a member the
-// site has never placed in a guild belongs to Holdfast, and leaving that
-// server leaves Holdfast. A player who joined or founded another guild keeps
-// that guild. Called wherever a member row is written.
+// Holdfast's Discord server is Holdfast's roster: an active member row (one
+// in that server) the site has never placed in a guild belongs to Holdfast,
+// and leaving that server leaves Holdfast. A player who signed in from
+// outside the server has a departed row and no guild. A player who joined or
+// founded another guild keeps that guild. Called wherever a member row is
+// written.
 export function syncHomeGuildMembershipInDatabase(db, member, now = new Date().toISOString()) {
   const exists = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'guild_memberships'").get();
   if (!exists) return;
