@@ -201,3 +201,17 @@ test('a member leaves their guild to found another; owners must hand over first'
     assert.equal(owner.json.error, 'owner_must_transfer')
   })
 })
+
+test('the vocabulary offers a Discord server template only when one is configured', async () => {
+  await withHttpApp(async ({ request }) => {
+    const plain = await request('/api/guilds/vocabulary')
+    assert.equal(plain.json.discordTemplateUrl, '')
+    assert.ok(plain.json.realmTypes.includes('hardcore'))
+  })
+  await withHttpApp(async ({ request }) => {
+    assert.equal((await request('/api/guilds/vocabulary')).json.discordTemplateUrl, 'https://discord.new/GuildweaverRaid1')
+  }, { env: { GUILDWEAVER_DISCORD_TEMPLATE_URL: 'https://discord.new/GuildweaverRaid1' } })
+  await withHttpApp(async ({ request }) => {
+    assert.equal((await request('/api/guilds/vocabulary')).json.discordTemplateUrl, '')
+  }, { env: { GUILDWEAVER_DISCORD_TEMPLATE_URL: 'https://evil.example/discord' } })
+})

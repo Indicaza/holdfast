@@ -21,6 +21,7 @@ const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
 const GuildweaverConnect = lazy(() => import('./Guildweaver/GuildweaverConnect.jsx'))
 const GuildBrowser = lazy(() => import('./Guilds/GuildBrowser.jsx'))
 const GuildPage = lazy(() => import('./Guilds/GuildPage.jsx'))
+const RegisterGuild = lazy(() => import('./Guilds/RegisterGuild.jsx'))
 const Items = lazy(() => import('./Items/Items.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
@@ -165,8 +166,13 @@ function guildDirectoryRoute(pathname, queryString) {
       description: 'Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.',
       robots: defaultRobots, props: { queryString } }
   }
+  if (pathname === '/guilds/register') {
+    return { component: RegisterGuild, path: pathname, title: 'Register Your Guild | Guildweaver',
+      description: 'List your World of Warcraft guild on Guildweaver: be found by faction, realm and play style, show verified activity and recruit through Discord.',
+      robots: defaultRobots }
+  }
   const match = pathname.match(/^\/guilds\/([a-z0-9-]{2,40})$/)
-  if (!match || match[1] === 'register') return null
+  if (!match) return null
   return { component: GuildPage, path: pathname, title: 'Guild | Guildweaver',
     description: 'A guild on Guildweaver: recruiting needs, schedule, verified roster activity and sister guilds.',
     robots: defaultRobots, props: { slug: match[1] } }

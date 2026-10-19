@@ -47,3 +47,18 @@ test('roster facts format for cards', () => {
   assert.equal(guildInitials('Ashen Vanguard'), 'AV')
   assert.equal(guildInitials('Holdfast'), 'HO')
 })
+
+test('registration drafts validate step by step and preview as a card', async () => {
+  const { draftSlug, previewGuild, registrationDraft, stepErrors } = await import('../src/Guilds/guildDirectoryModel.js')
+  const draft = registrationDraft()
+  assert.deepEqual(Object.keys(stepErrors(draft, 0)).sort(), ['faction', 'name', 'realm', 'realmType'])
+  const named = { ...draft, name: 'Les Chevaliers d’Élune', faction: 'alliance', realm: 'Sulfuron', realmType: 'pvp' }
+  assert.deepEqual(stepErrors(named, 0), {})
+  assert.equal(draftSlug(named.name), 'les-chevaliers-d-elune')
+  assert.deepEqual(stepErrors(named, 1), { playStyles: 'guild_play_style_required' })
+  assert.deepEqual(stepErrors({ ...named, playStyles: ['raiding'], raidStart: '20:00' }, 1), { raidStart: 'guild_raid_window_incomplete' })
+  const preview = previewGuild(named)
+  assert.equal(preview.slug, 'les-chevaliers-d-elune')
+  assert.equal(preview.stats.verified, false)
+  assert.equal(previewGuild(registrationDraft()).name, 'Your Guild')
+})

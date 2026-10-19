@@ -44,6 +44,13 @@ function sendResult(res, result, successStatus = 200) {
   res.status(STATUS_BY_ERROR[result.error] || 400).json({ error: result.error });
 }
 
+// A Discord server template (https://discord.new/<code>) with Guildweaver's
+// channels and roles, offered to guilds that have no server yet.
+function discordTemplateUrl(env = process.env) {
+  const value = String(env.GUILDWEAVER_DISCORD_TEMPLATE_URL || "").trim();
+  return /^https:\/\/discord\.(?:new|com\/template)\/[A-Za-z0-9]{4,32}$/.test(value) ? value : "";
+}
+
 function slugParam(req) {
   return String(req.params.slug || "").toLowerCase().slice(0, 40);
 }
@@ -71,7 +78,7 @@ export function createGuildDirectoryRouter() {
 
   router.get("/vocabulary", (req, res) => {
     res.set("Cache-Control", "public, max-age=3600");
-    res.json(guildDirectoryVocabulary());
+    res.json({ ...guildDirectoryVocabulary(), discordTemplateUrl: discordTemplateUrl() });
   });
 
   router.get("/mine", requireAuthenticated, (req, res) => {
