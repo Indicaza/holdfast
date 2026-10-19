@@ -15,6 +15,7 @@ import {
   writeQuests,
   writeQuestsToDatabase,
 } from "../src/Quest/questRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -84,16 +85,17 @@ test("reward and objective completion roll back together", async () => {
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    await writeQuests(questDocument());
+    await writeQuests(HOLDFAST_GUILD_ID, questDocument());
 
     assert.throws(
       () =>
         withGuildTransaction((db) => {
-          const current = readQuestsFromDatabase(db);
+          const current = readQuestsFromDatabase(db, HOLDFAST_GUILD_ID);
           const quest = current.quests[0];
           const objective = quest.objectives[0];
 
           awardObjectiveInDatabase({
+            guildId: HOLDFAST_GUILD_ID,
             db,
             quest,
             objective,
@@ -105,7 +107,7 @@ test("reward and objective completion roll back together", async () => {
             },
           });
 
-          writeQuestsToDatabase(db, {
+          writeQuestsToDatabase(db, HOLDFAST_GUILD_ID, {
             ...current,
             quests: current.quests.map((item) => ({
               ...item,
@@ -121,16 +123,17 @@ test("reward and objective completion roll back together", async () => {
       /simulate failure/,
     );
 
-    const afterRollback = await readQuests();
+    const afterRollback = await readQuests(HOLDFAST_GUILD_ID);
     assert.equal(afterRollback.quests[0].objectives[0].completed, false);
-    assert.equal((await readContributionTotals()).size, 0);
+    assert.equal((await readContributionTotals(HOLDFAST_GUILD_ID)).size, 0);
 
     withGuildTransaction((db) => {
-      const current = readQuestsFromDatabase(db);
+      const current = readQuestsFromDatabase(db, HOLDFAST_GUILD_ID);
       const quest = current.quests[0];
       const objective = quest.objectives[0];
 
       awardObjectiveInDatabase({
+        guildId: HOLDFAST_GUILD_ID,
         db,
         quest,
         objective,
@@ -142,7 +145,7 @@ test("reward and objective completion roll back together", async () => {
         },
       });
 
-      writeQuestsToDatabase(db, {
+      writeQuestsToDatabase(db, HOLDFAST_GUILD_ID, {
         ...current,
         quests: current.quests.map((item) => ({
           ...item,
@@ -154,9 +157,9 @@ test("reward and objective completion roll back together", async () => {
       });
     });
 
-    const committed = await readQuests();
+    const committed = await readQuests(HOLDFAST_GUILD_ID);
     assert.equal(committed.quests[0].objectives[0].completed, true);
-    assert.deepEqual((await readContributionTotals()).get("member-one"), {
+    assert.deepEqual((await readContributionTotals(HOLDFAST_GUILD_ID)).get("member-one"), {
       rep: 250,
       marks: 75,
       completedObjectives: 1,

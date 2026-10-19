@@ -42,7 +42,7 @@ test("SQLite initializes inside the configured runtime directory", async () => {
 
     const db = openGuildDatabase();
     const settings = db
-      .prepare("SELECT * FROM quest_settings WHERE id = 1")
+      .prepare("SELECT * FROM quest_settings WHERE guild_id = 'guild-holdfast'")
       .get();
     db.close();
 
@@ -50,7 +50,7 @@ test("SQLite initializes inside the configured runtime directory", async () => {
     await access(guildDatabaseFile());
     assert.equal(settings.rep_max, 1000);
     assert.equal(settings.marks_quest_max, 1000);
-    assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
   } finally {
     restoreEnvironment(previous);
     await rm(directory, { recursive: true, force: true });

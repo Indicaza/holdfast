@@ -4,6 +4,7 @@ import {
   withGuildTransaction,
 } from "../Data/database.js";
 import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
+import { requireGuildId } from "../Guild/guildScope.js";
 import {
   QuestValidationError,
   normalizeQuestDocument,
@@ -27,32 +28,33 @@ export class QuestRevisionConflict extends Error {
   }
 }
 
-export function questRevisionFromDatabase(db) {
+// Each guild's quest workspace has its own revision, kept on its
+// quest_settings row.
+export function questRevisionFromDatabase(db, guildId) {
   const row = db
-    .prepare("SELECT value FROM app_meta WHERE key = 'quest_revision'")
-    .get();
-  const revision = Number(row?.value || 0);
+    .prepare("SELECT revision FROM quest_settings WHERE guild_id = ?")
+    .get(requireGuildId(guildId));
+  const revision = Number(row?.revision || 0);
   return Number.isInteger(revision) && revision >= 0 ? revision : 0;
 }
 
-function advanceQuestRevision(db) {
-  const revision = questRevisionFromDatabase(db) + 1;
-
-  db.prepare(
-    `
-      INSERT INTO app_meta (key, value, updated_at)
-      VALUES ('quest_revision', ?, ?)
-      ON CONFLICT(key) DO UPDATE SET
-        value = excluded.value,
-        updated_at = excluded.updated_at
-    `,
-  ).run(String(revision), new Date().toISOString());
-
-  return revision;
+function ensureQuestSettings(db, guildId) {
+  db.prepare("INSERT OR IGNORE INTO quest_settings (guild_id) VALUES (?)").run(
+    guildId,
+  );
 }
 
-export function assertQuestRevision(db, expectedRevision) {
-  const currentRevision = questRevisionFromDatabase(db);
+function advanceQuestRevision(db, guildId) {
+  ensureQuestSettings(db, guildId);
+  db.prepare(
+    "UPDATE quest_settings SET revision = revision + 1 WHERE guild_id = ?",
+  ).run(guildId);
+
+  return questRevisionFromDatabase(db, guildId);
+}
+
+export function assertQuestRevision(db, guildId, expectedRevision) {
+  const currentRevision = questRevisionFromDatabase(db, guildId);
 
   if (
     !Number.isInteger(expectedRevision) ||
@@ -77,9 +79,11 @@ function storedQuestError(error) {
   );
 }
 
-function settingsFromDatabase(db) {
+function settingsFromDatabase(db, guildId) {
   return (
-    db.prepare("SELECT * FROM quest_settings WHERE id = 1").get() || {
+    db
+      .prepare("SELECT * FROM quest_settings WHERE guild_id = ?")
+      .get(guildId) || {
       focused_quest_id: "",
       reward_policy: "",
       rep_min: 0,
@@ -105,17 +109,17 @@ function rewardLimitsFromSettings(settings) {
   };
 }
 
-function assignmentsForObjective(db, objectiveId) {
+function assignmentsForObjective(db, guildId, objectiveId) {
   return db
     .prepare(
       `
         SELECT *
         FROM assignments
-        WHERE objective_id = ?
+        WHERE guild_id = ? AND objective_id = ?
         ORDER BY sort_order, id
       `,
     )
-    .all(objectiveId)
+    .all(guildId, objectiveId)
     .map((row) => ({
       memberId: row.member_id || "",
       name: row.name,
@@ -126,17 +130,17 @@ function assignmentsForObjective(db, objectiveId) {
     }));
 }
 
-function rewardItemsForObjective(db, objectiveId) {
+function rewardItemsForObjective(db, guildId, objectiveId) {
   return db
     .prepare(
       `
         SELECT *
         FROM reward_items
-        WHERE objective_id = ?
+        WHERE guild_id = ? AND objective_id = ?
         ORDER BY sort_order, id
       `,
     )
-    .all(objectiveId)
+    .all(guildId, objectiveId)
     .map((row) => ({
       id: row.id,
       name: row.name,
@@ -144,17 +148,17 @@ function rewardItemsForObjective(db, objectiveId) {
     }));
 }
 
-function objectivesForQuest(db, questId) {
+function objectivesForQuest(db, guildId, questId) {
   return db
     .prepare(
       `
         SELECT *
         FROM objectives
-        WHERE quest_id = ?
+        WHERE guild_id = ? AND quest_id = ?
         ORDER BY sort_order, id
       `,
     )
-    .all(questId)
+    .all(guildId, questId)
     .map((row) => ({
       id: row.id,
       title: row.title,
@@ -165,7 +169,7 @@ function objectivesForQuest(db, questId) {
       reward: {
         rep: Number(row.reward_rep) || 0,
         marks: Number(row.reward_marks) || 0,
-        items: rewardItemsForObjective(db, row.id),
+        items: rewardItemsForObjective(db, guildId, row.id),
       },
       rewardApproval: {
         approvedByMemberId: row.reward_approved_by_member_id || "",
@@ -173,16 +177,18 @@ function objectivesForQuest(db, questId) {
         approvedAt: row.reward_approved_at || "",
         fingerprint: row.reward_approved_fingerprint || "",
       },
-      assignments: assignmentsForObjective(db, row.id),
+      assignments: assignmentsForObjective(db, guildId, row.id),
     }));
 }
 
-export function readQuestsFromDatabase(db) {
+export function readQuestsFromDatabase(db, guildId) {
+  const id = requireGuildId(guildId);
+
   try {
-    const settings = settingsFromDatabase(db);
+    const settings = settingsFromDatabase(db, id);
     const quests = db
-      .prepare("SELECT * FROM quests ORDER BY sort_order, id")
-      .all()
+      .prepare("SELECT * FROM quests WHERE guild_id = ? ORDER BY sort_order, id")
+      .all(id)
       .map((row) => ({
         id: row.id,
         publication: row.publication,
@@ -191,7 +197,7 @@ export function readQuestsFromDatabase(db) {
         summary: row.summary || "",
         createdByMemberId: row.created_by_member_id || "",
         createdAt: row.created_at || "",
-        objectives: objectivesForQuest(db, row.id),
+        objectives: objectivesForQuest(db, id, row.id),
         completed: Boolean(row.completed),
       }));
 
@@ -216,13 +222,16 @@ export function readQuestsFromDatabase(db) {
 
 export function writeQuestsToDatabase(
   db,
+  guildId,
   document,
   { enforceRewardLimits = true } = {},
 ) {
+  const id = requireGuildId(guildId);
   const normalized = normalizeQuestDocument(document, {
     enforceRewardLimits,
   });
 
+  ensureQuestSettings(db, id);
   db.prepare(
     `
       UPDATE quest_settings
@@ -234,7 +243,7 @@ export function writeQuestsToDatabase(
         marks_min = ?,
         marks_max = ?,
         marks_quest_max = ?
-      WHERE id = 1
+      WHERE guild_id = ?
     `,
   ).run(
     normalized.focusedQuestId,
@@ -244,13 +253,15 @@ export function writeQuestsToDatabase(
     normalized.rewardLimits.marks.min,
     normalized.rewardLimits.marks.max,
     normalized.rewardLimits.marksPerQuestMax,
+    id,
   );
 
-  db.prepare("DELETE FROM quests").run();
+  db.prepare("DELETE FROM quests WHERE guild_id = ?").run(id);
 
   const insertQuest = db.prepare(
     `
       INSERT INTO quests (
+        guild_id,
         id,
         publication,
         mode,
@@ -260,12 +271,13 @@ export function writeQuestsToDatabase(
         created_at,
         completed,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
   );
   const insertObjective = db.prepare(
     `
       INSERT INTO objectives (
+        guild_id,
         id,
         quest_id,
         title,
@@ -280,23 +292,25 @@ export function writeQuestsToDatabase(
         reward_approved_at,
         reward_approved_fingerprint,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
   );
   const insertRewardItem = db.prepare(
     `
       INSERT INTO reward_items (
+        guild_id,
         id,
         objective_id,
         name,
         quantity,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `,
   );
   const insertAssignment = db.prepare(
     `
       INSERT INTO assignments (
+        guild_id,
         objective_id,
         member_id,
         name,
@@ -305,12 +319,13 @@ export function writeQuestsToDatabase(
         initials,
         avatar,
         sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
   );
 
   normalized.quests.forEach((quest, questIndex) => {
     insertQuest.run(
+      id,
       quest.id,
       quest.publication,
       quest.mode,
@@ -324,6 +339,7 @@ export function writeQuestsToDatabase(
 
     quest.objectives.forEach((objective, objectiveIndex) => {
       insertObjective.run(
+        id,
         objective.id,
         quest.id,
         objective.title,
@@ -342,6 +358,7 @@ export function writeQuestsToDatabase(
 
       objective.reward.items.forEach((item, itemIndex) => {
         insertRewardItem.run(
+          id,
           item.id,
           objective.id,
           item.name,
@@ -352,6 +369,7 @@ export function writeQuestsToDatabase(
 
       objective.assignments.forEach((assignment, assignmentIndex) => {
         insertAssignment.run(
+          id,
           objective.id,
           assignment.memberId || null,
           assignment.name,
@@ -365,15 +383,17 @@ export function writeQuestsToDatabase(
     });
   });
 
-  advanceQuestRevision(db);
+  advanceQuestRevision(db, id);
 
   return normalized;
 }
 
 export function writeQuestEconomyToDatabase(
   db,
+  guildId,
   { rewardPolicy, rewardLimits },
 ) {
+  const id = requireGuildId(guildId);
   const normalized = normalizeQuestDocument({
     version: 1,
     focusedQuestId: "",
@@ -382,6 +402,7 @@ export function writeQuestEconomyToDatabase(
     quests: [],
   });
 
+  ensureQuestSettings(db, id);
   db.prepare(
     `
       UPDATE quest_settings
@@ -392,7 +413,7 @@ export function writeQuestEconomyToDatabase(
         marks_min = ?,
         marks_max = ?,
         marks_quest_max = ?
-      WHERE id = 1
+      WHERE guild_id = ?
     `,
   ).run(
     normalized.rewardPolicy,
@@ -401,9 +422,10 @@ export function writeQuestEconomyToDatabase(
     normalized.rewardLimits.marks.min,
     normalized.rewardLimits.marks.max,
     normalized.rewardLimits.marksPerQuestMax,
+    id,
   );
 
-  advanceQuestRevision(db);
+  advanceQuestRevision(db, id);
 
   return {
     rewardPolicy: normalized.rewardPolicy,
@@ -411,34 +433,36 @@ export function writeQuestEconomyToDatabase(
   };
 }
 
-export function importQuestsIntoDatabase(db, document) {
-  return writeQuestsToDatabase(db, document);
+export function importQuestsIntoDatabase(db, guildId, document) {
+  return writeQuestsToDatabase(db, guildId, document);
 }
 
-export async function readQuests() {
-  return withGuildDatabase((db) => readQuestsFromDatabase(db));
+export async function readQuests(guildId) {
+  return withGuildDatabase((db) => readQuestsFromDatabase(db, guildId));
 }
 
-export async function readQuestWorkspace() {
+export async function readQuestWorkspace(guildId) {
   return withGuildDatabase((db) => ({
-    ...readQuestsFromDatabase(db),
-    revision: questRevisionFromDatabase(db),
+    ...readQuestsFromDatabase(db, guildId),
+    revision: questRevisionFromDatabase(db, guildId),
   }));
 }
 
-export async function writeQuests(document) {
+export async function writeQuests(guildId, document) {
   return withGuildTransaction((db) =>
-    writeQuestsToDatabase(db, document),
+    writeQuestsToDatabase(db, guildId, document),
   );
 }
 
-export async function updateQuests(mutator, options = {}) {
+export async function updateQuests(guildId, mutator, options = {}) {
+  const id = requireGuildId(guildId);
+
   return withGuildTransaction((db) => {
-    const current = readQuestsFromDatabase(db);
-    const revisionBefore = questRevisionFromDatabase(db);
+    const current = readQuestsFromDatabase(db, id);
+    const revisionBefore = questRevisionFromDatabase(db, id);
 
     if (options.expectedRevision !== undefined) {
-      assertQuestRevision(db, options.expectedRevision);
+      assertQuestRevision(db, id, options.expectedRevision);
     }
 
     const next = mutator(current);
@@ -447,15 +471,16 @@ export async function updateQuests(mutator, options = {}) {
       throw new Error("Quest mutations must be synchronous");
     }
 
-    const saved = writeQuestsToDatabase(db, next, {
+    const saved = writeQuestsToDatabase(db, id, next, {
       enforceRewardLimits: options.enforceRewardLimits !== false,
     });
-    const revisionAfter = questRevisionFromDatabase(db);
+    const revisionAfter = questRevisionFromDatabase(db, id);
 
     if (options.audit) {
       recordAuditEventInDatabase({
         db,
         ...options.audit,
+        guildId: id,
         payload: {
           ...(options.audit.payload || {}),
           revisionBefore,

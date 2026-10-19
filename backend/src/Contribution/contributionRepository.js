@@ -2,6 +2,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { requireGuildId } from "../Guild/guildScope.js";
 import { createNotificationInDatabase } from "../Notification/notificationRepository.js";
 
 function transactionId(objectiveId, memberId) {
@@ -67,15 +68,18 @@ function rewardSummary(transaction) {
 
 export function awardObjectiveInDatabase({
   db,
+  guildId,
   quest,
   objective,
   members,
   awardedBy,
 }) {
+  const scopedGuildId = requireGuildId(guildId);
   const now = new Date().toISOString();
   const insert = db.prepare(
     `
       INSERT INTO contribution_transactions (
+        guild_id,
         id,
         type,
         member_id,
@@ -91,8 +95,8 @@ export function awardObjectiveInDatabase({
         awarded_by_member_id,
         awarded_by_username,
         awarded_by_display_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO NOTHING
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(guild_id, id) DO NOTHING
     `,
   );
   const transactions = [];
@@ -120,6 +124,7 @@ export function awardObjectiveInDatabase({
     };
 
     const result = insert.run(
+      scopedGuildId,
       transaction.id,
       transaction.type,
       transaction.memberId,
@@ -144,6 +149,7 @@ export function awardObjectiveInDatabase({
       if (summary) {
         createNotificationInDatabase({
           db,
+          guildId: scopedGuildId,
           recipientMemberId: transaction.memberId,
           type: "reward_issued",
           kind: "update",
@@ -169,13 +175,15 @@ export function awardObjectiveInDatabase({
   return transactions;
 }
 
-export function importContributionsIntoDatabase(db, document) {
+export function importContributionsIntoDatabase(db, guildId, document) {
+  const scopedGuildId = requireGuildId(guildId);
   const transactions = Array.isArray(document?.transactions)
     ? document.transactions
     : [];
   const insert = db.prepare(
     `
       INSERT INTO contribution_transactions (
+        guild_id,
         id,
         type,
         member_id,
@@ -191,8 +199,8 @@ export function importContributionsIntoDatabase(db, document) {
         awarded_by_member_id,
         awarded_by_username,
         awarded_by_display_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO NOTHING
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(guild_id, id) DO NOTHING
     `,
   );
   let imported = 0;
@@ -204,6 +212,7 @@ export function importContributionsIntoDatabase(db, document) {
 
     const awardedBy = transaction.awardedBy || {};
     const result = insert.run(
+      scopedGuildId,
       String(transaction.id),
       String(transaction.type || "objective_reward"),
       String(transaction.memberId),
@@ -227,10 +236,17 @@ export function importContributionsIntoDatabase(db, document) {
   return imported;
 }
 
-export async function awardObjective({ quest, objective, members, awardedBy }) {
+export async function awardObjective({
+  guildId,
+  quest,
+  objective,
+  members,
+  awardedBy,
+}) {
   return withGuildTransaction((db) =>
     awardObjectiveInDatabase({
       db,
+      guildId,
       quest,
       objective,
       members,
@@ -239,7 +255,9 @@ export async function awardObjective({ quest, objective, members, awardedBy }) {
   );
 }
 
-export async function readContributionTotals() {
+export async function readContributionTotals(guildId) {
+  const id = requireGuildId(guildId);
+
   return withGuildDatabase((db) => {
     const rows = db
       .prepare(
@@ -251,10 +269,11 @@ export async function readContributionTotals() {
             COALESCE(SUM(CASE WHEN type = 'objective_reward' THEN 1 ELSE 0 END), 0)
               AS completed_objectives
           FROM contribution_transactions
+          WHERE guild_id = ?
           GROUP BY member_id
         `,
       )
-      .all();
+      .all(id);
     const totals = new Map();
 
     for (const row of rows) {
@@ -269,18 +288,20 @@ export async function readContributionTotals() {
   });
 }
 
-export async function readMemberContributionHistory(memberId) {
+export async function readMemberContributionHistory(guildId, memberId) {
+  const id = requireGuildId(guildId);
+
   return withGuildDatabase((db) =>
     db
       .prepare(
         `
           SELECT *
           FROM contribution_transactions
-          WHERE member_id = ?
+          WHERE guild_id = ? AND member_id = ?
           ORDER BY created_at DESC, id DESC
         `,
       )
-      .all(memberId)
+      .all(id, memberId)
       .map(transactionFromRow),
   );
 }

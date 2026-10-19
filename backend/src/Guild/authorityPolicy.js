@@ -1,9 +1,4 @@
-import {
-  GUILD_RANKS,
-  guildRankOrder,
-  isGuildRank,
-  normalizeGuildRank,
-} from "./rankSystem.js";
+import { HOLDFAST_RANK_LADDER } from "./rankSystem.js";
 
 export const QUEST_SCOPES = ["own", "all"];
 
@@ -110,6 +105,21 @@ export const CAPABILITY_IDS = CAPABILITY_DEFINITIONS.map(
 );
 
 const CAPABILITY_SET = new Set(CAPABILITY_IDS);
+
+// Website administration and Holdfast's Discord server belong to Holdfast.
+// Other guilds design their authority from the rest.
+const HOLDFAST_ONLY_CAPABILITIES = new Set(["site.admin", "discord.manage"]);
+
+export function capabilityIdsForGuild(ladder = HOLDFAST_RANK_LADDER) {
+  return ladder.holdfast
+    ? [...CAPABILITY_IDS]
+    : CAPABILITY_IDS.filter((id) => !HOLDFAST_ONLY_CAPABILITIES.has(id));
+}
+
+export function capabilityDefinitionsForGuild(ladder = HOLDFAST_RANK_LADDER) {
+  const allowed = new Set(capabilityIdsForGuild(ladder));
+  return CAPABILITY_DEFINITIONS.filter((capability) => allowed.has(capability.id));
+}
 
 export const MEMBER_MANAGEMENT_CAPABILITIES = [
   "members.rank.manage",
@@ -297,12 +307,12 @@ export function capabilityListIsValid(value) {
   );
 }
 
-export function normalizeManagedRank(value) {
+export function normalizeManagedRank(value, ladder = HOLDFAST_RANK_LADDER) {
   if (value === null || value === undefined || value === "") {
     return null;
   }
 
-  return isGuildRank(value) ? normalizeGuildRank(value) : null;
+  return ladder.isRank(value) ? ladder.normalize(value) : null;
 }
 
 export function normalizeQuestScope(value) {
@@ -361,10 +371,11 @@ export function authorityScope(
   permissions,
   maxManagedRank = null,
   options = {},
+  ladder = HOLDFAST_RANK_LADDER,
 ) {
   return {
     permissions: normalizeCapabilityList(permissions),
-    maxManagedRank: normalizeManagedRank(maxManagedRank),
+    maxManagedRank: normalizeManagedRank(maxManagedRank, ladder),
     questScope: normalizeQuestScope(options.questScope),
     rewardLimits: normalizeRewardLimits(options.rewardLimits),
   };
@@ -391,7 +402,7 @@ function emptyQuestScopes() {
   );
 }
 
-export function mergeAuthorityScopes(scopes) {
+export function mergeAuthorityScopes(scopes, ladder = HOLDFAST_RANK_LADDER) {
   const permissions = new Set();
   let ceiling = null;
   let ceilingOrder = -1;
@@ -418,12 +429,12 @@ export function mergeAuthorityScopes(scopes) {
     }
 
     const candidate = scopeProvidesMemberManagement(scopeValue)
-      ? normalizeManagedRank(scopeValue?.maxManagedRank)
+      ? normalizeManagedRank(scopeValue?.maxManagedRank, ladder)
       : null;
 
-    if (candidate && guildRankOrder(candidate) > ceilingOrder) {
+    if (candidate && ladder.order(candidate) > ceilingOrder) {
       ceiling = candidate;
-      ceilingOrder = guildRankOrder(candidate);
+      ceilingOrder = ladder.order(candidate);
     }
 
     if (scopePermissions.includes("rewards.approve")) {
@@ -449,12 +460,15 @@ export function mergeAuthorityScopes(scopes) {
   };
 }
 
-export function fullOwnerAuthority(globalRewardLimits = {}) {
+export function fullOwnerAuthority(
+  globalRewardLimits = {},
+  ladder = HOLDFAST_RANK_LADDER,
+) {
   const limits = normalizeRewardLimits(globalRewardLimits);
 
   return {
-    permissions: [...CAPABILITY_IDS],
-    maxManagedRank: "Commander",
+    permissions: capabilityIdsForGuild(ladder),
+    maxManagedRank: ladder.top,
     questScopes: Object.fromEntries(
       QUEST_SCOPED_CAPABILITIES.map((permission) => [permission, "all"]),
     ),
@@ -480,7 +494,11 @@ function limitsWithin(candidate, available) {
   );
 }
 
-export function canDelegateScope(actorAuthority, candidateScope) {
+export function canDelegateScope(
+  actorAuthority,
+  candidateScope,
+  ladder = HOLDFAST_RANK_LADDER,
+) {
   const actorPermissions = new Set(
     normalizeCapabilityList(actorAuthority?.permissions),
   );
@@ -498,14 +516,18 @@ export function canDelegateScope(actorAuthority, candidateScope) {
 
   const requestedCeiling = normalizeManagedRank(
     candidateScope?.maxManagedRank,
+    ladder,
   );
 
   if (requestedCeiling) {
-    const actorCeiling = normalizeManagedRank(actorAuthority?.maxManagedRank);
+    const actorCeiling = normalizeManagedRank(
+      actorAuthority?.maxManagedRank,
+      ladder,
+    );
 
     if (
       !actorCeiling ||
-      guildRankOrder(requestedCeiling) > guildRankOrder(actorCeiling)
+      ladder.order(requestedCeiling) > ladder.order(actorCeiling)
     ) {
       return false;
     }
@@ -544,27 +566,31 @@ export function canDelegateScope(actorAuthority, candidateScope) {
   return true;
 }
 
-export function canManageRankValue(actorAuthority, rank) {
+export function canManageRankValue(
+  actorAuthority,
+  rank,
+  ladder = HOLDFAST_RANK_LADDER,
+) {
   if (actorAuthority?.isOwner) {
     return true;
   }
 
-  const ceiling = normalizeManagedRank(actorAuthority?.maxManagedRank);
+  const ceiling = normalizeManagedRank(actorAuthority?.maxManagedRank, ladder);
 
-  if (!ceiling || !isGuildRank(rank)) {
+  if (!ceiling || !ladder.isRank(rank)) {
     return false;
   }
 
-  return guildRankOrder(rank) <= guildRankOrder(ceiling);
+  return ladder.order(rank) <= ladder.order(ceiling);
 }
 
-export function manageableRanks(actorAuthority) {
+export function manageableRanks(actorAuthority, ladder = HOLDFAST_RANK_LADDER) {
   if (actorAuthority?.isOwner) {
-    return [...GUILD_RANKS];
+    return [...ladder.names];
   }
 
-  return GUILD_RANKS.filter((rank) =>
-    canManageRankValue(actorAuthority, rank),
+  return ladder.names.filter((rank) =>
+    canManageRankValue(actorAuthority, rank, ladder),
   );
 }
 

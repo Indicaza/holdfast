@@ -16,6 +16,7 @@ import {
   writeQuests,
 } from "../src/Quest/questRepository.js";
 import { withGuildDatabase } from "../src/Data/database.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function validDocument() {
   return {
@@ -217,7 +218,7 @@ test("stored rewards above configured caps remain readable without changing poli
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    await writeQuests(validDocument());
+    await writeQuests(HOLDFAST_GUILD_ID, validDocument());
 
     withGuildDatabase((db) => {
       db.prepare(
@@ -225,7 +226,7 @@ test("stored rewards above configured caps remain readable without changing poli
       ).run();
     });
 
-    const document = await readQuests();
+    const document = await readQuests(HOLDFAST_GUILD_ID);
 
     assert.equal(document.quests[0].objectives[0].reward.rep, 5000);
     assert.equal(document.rewardLimits.rep.max, 1000);
@@ -261,7 +262,7 @@ test("economy updates do not rewrite quest or assignment rows", async () => {
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    await writeQuests(validDocument());
+    await writeQuests(HOLDFAST_GUILD_ID, validDocument());
 
     const before = withGuildDatabase((db) => ({
       questRowId: db
@@ -278,7 +279,7 @@ test("economy updates do not rewrite quest or assignment rows", async () => {
     }));
 
     withGuildDatabase((db) =>
-      writeQuestEconomyToDatabase(db, {
+      writeQuestEconomyToDatabase(db, HOLDFAST_GUILD_ID, {
         rewardPolicy: "Keep rewards modest.",
         rewardLimits: {
           rep: { min: 0, max: 250 },
@@ -301,7 +302,7 @@ test("economy updates do not rewrite quest or assignment rows", async () => {
         )
         .get().id,
     }));
-    const document = await readQuests();
+    const document = await readQuests(HOLDFAST_GUILD_ID);
 
     assert.deepEqual(after, before);
     assert.equal(document.rewardPolicy, "Keep rewards modest.");

@@ -11,6 +11,7 @@ import {
 import { seedDevelopmentCharacters } from "./seedDevelopmentCharacters.js";
 import { seedDevelopmentFarming } from "./seedDevelopmentFarming.js";
 import { seedDevelopmentGuilds } from "./seedDevelopmentGuilds.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 dotenv.config();
 
@@ -178,10 +179,10 @@ async function run() {
 
   withGuildTransaction((db) => {
     importMembersIntoDatabase(db, developmentMembers);
-    const current = readQuestsFromDatabase(db);
+    const current = readQuestsFromDatabase(db, HOLDFAST_GUILD_ID);
 
     if (!current.quests.length || resetQuests) {
-      importQuestsIntoDatabase(db, developmentQuests);
+      importQuestsIntoDatabase(db, HOLDFAST_GUILD_ID, developmentQuests);
       questAction = resetQuests ? "reset quests to development fixtures" : "added sample quests";
     }
   });

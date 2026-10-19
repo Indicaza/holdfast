@@ -1,4 +1,5 @@
 import { publishLiveUpdate } from './liveUpdateBus.js'
+import { HOLDFAST_GUILD_ID } from '../Guild/guildScope.js'
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
@@ -6,12 +7,28 @@ function pathname(req) {
   return String(req.originalUrl || req.url || '').split('?', 1)[0]
 }
 
+// /api/g/:slug/quests is the same mutation as /api/quests, for that guild.
+const GUILD_SCOPED_PATH = /^\/api\/g\/[^/]+(\/(?:quests|members|billets|authority|audit)(?:\/.*)?)$/
+const GUILD_PATH_ALIASES = { '/members': '/guild/members', '/billets': '/guild/billets', '/authority': '/guild/authority' }
+
+function unscopedPath(path) {
+  const match = GUILD_SCOPED_PATH.exec(path)
+  if (!match) return path
+  const rest = match[1]
+  const section = `/${rest.split('/')[1]}`
+  return `/api${GUILD_PATH_ALIASES[section] || section}${rest.slice(section.length)}`
+}
+
 export function classifyLiveMutation(req) {
   if (!MUTATION_METHODS.has(String(req.method || '').toUpperCase())) return []
 
-  const path = pathname(req)
+  const rawPath = pathname(req)
+  const guildScoped = GUILD_SCOPED_PATH.test(rawPath)
+  const path = unscopedPath(rawPath)
+  const guildId = guildScoped ? req.guild?.id || null : null
   const actorId = req.auth?.user?.id ? String(req.auth.user.id) : null
-  const withActor = (event) => ({ ...event, actorId })
+  // Another guild's changes only reach that guild's members.
+  const withActor = (event) => (guildId && guildId !== HOLDFAST_GUILD_ID ? { ...event, actorId, guildId } : { ...event, actorId })
   const events = []
 
   // Character snapshots announce themselves once their read model changes
@@ -33,7 +50,9 @@ export function classifyLiveMutation(req) {
     events.push(withActor({ topics: ['notifications'], source: 'notifications', memberId: actorId }))
   }
 
-  if (events.length && !path.startsWith('/api/notifications')) {
+  // Audit visibility is a Holdfast permission; other guilds' audit history
+  // is read on demand.
+  if (events.length && !path.startsWith('/api/notifications') && (!guildId || guildId === HOLDFAST_GUILD_ID)) {
     events.push(withActor({ topics: ['audit'], source: 'mutation', permission: 'audit.view' }))
   }
 

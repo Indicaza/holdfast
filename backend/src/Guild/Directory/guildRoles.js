@@ -1,5 +1,3 @@
-import { HOLDFAST_GUILD_ID } from "./guildDirectoryMigration.js";
-
 // What a player may do in their own guild comes from their
 // guild_memberships.role, not from Holdfast's Discord roles or env lists.
 // These permissions only ever apply to the guild the membership is in.
@@ -45,14 +43,4 @@ export function readMemberGuildAuthorityFromDatabase(db, memberId) {
 export function memberHasGuildPermissionInDatabase(db, guildId, memberId, permission) {
   const guild = readMemberGuildAuthorityFromDatabase(db, memberId);
   return Boolean(guild && guild.id === guildId && guild.permissions.includes(permission));
-}
-
-export function isActiveHoldfastMemberInDatabase(db, memberId) {
-  if (!hasMembershipTable(db)) return true;
-
-  return Boolean(
-    db.prepare(`
-      SELECT 1 FROM guild_memberships WHERE guild_id = ? AND member_id = ? AND status = 'active'
-    `).get(HOLDFAST_GUILD_ID, String(memberId || "")),
-  );
 }

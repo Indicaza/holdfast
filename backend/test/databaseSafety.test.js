@@ -152,6 +152,7 @@ function seedPersistentState() {
     db.prepare(
       `
         INSERT INTO quests (
+          guild_id,
           id,
           publication,
           mode,
@@ -161,7 +162,7 @@ function seedPersistentState() {
           sort_order,
           created_by_member_id,
           created_at
-        ) VALUES (?, 'published', 'rotating', ?, ?, 0, 0, ?, ?)
+        ) VALUES ('guild-holdfast', ?, 'published', 'rotating', ?, ?, 0, 0, ?, ?)
       `,
     ).run(
       "safety-quest",
@@ -174,6 +175,7 @@ function seedPersistentState() {
     db.prepare(
       `
         INSERT INTO objectives (
+          guild_id,
           id,
           quest_id,
           title,
@@ -184,7 +186,7 @@ function seedPersistentState() {
           reward_rep,
           reward_marks,
           sort_order
-        ) VALUES (?, ?, ?, '', 'Main', 0, ?, 100, 5, 0)
+        ) VALUES ('guild-holdfast', ?, ?, ?, '', 'Main', 0, ?, 100, 5, 0)
       `,
     ).run(
       "safety-objective",
@@ -196,6 +198,7 @@ function seedPersistentState() {
     db.prepare(
       `
         INSERT INTO assignments (
+          guild_id,
           objective_id,
           member_id,
           name,
@@ -204,13 +207,14 @@ function seedPersistentState() {
           initials,
           avatar,
           sort_order
-        ) VALUES (?, ?, ?, 'Volunteer', '', 'SM', NULL, 0)
+        ) VALUES ('guild-holdfast', ?, ?, ?, 'Volunteer', '', 'SM', NULL, 0)
       `,
     ).run("safety-objective", "safety-member", "Safety Member");
 
     db.prepare(
       `
         INSERT INTO contribution_transactions (
+          guild_id,
           id,
           type,
           member_id,
@@ -223,7 +227,7 @@ function seedPersistentState() {
           marks,
           items_json,
           created_at
-        ) VALUES (?, 'objective_reward', ?, ?, ?, ?, ?, ?, 100, 5, '[]', ?)
+        ) VALUES ('guild-holdfast', ?, 'objective_reward', ?, ?, ?, ?, ?, ?, 100, 5, '[]', ?)
       `,
     ).run(
       "safety-contribution",
@@ -239,13 +243,14 @@ function seedPersistentState() {
     db.prepare(
       `
         INSERT INTO audit_events (
+          guild_id,
           actor_member_id,
           event_type,
           entity_type,
           entity_id,
           created_at,
           payload_json
-        ) VALUES (?, 'safety.seeded', 'database', 'holdfast', ?, '{}')
+        ) VALUES ('guild-holdfast', ?, 'safety.seeded', 'database', 'holdfast', ?, '{}')
       `,
     ).run("safety-member", now);
 
@@ -268,7 +273,7 @@ test("fresh database applies every migration and satisfies the schema contract",
         assert.ok(names.includes(required), `required table ${required} is missing`);
       }
 
-      assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+      assert.deepEqual(appliedMigrationVersions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
       assert.equal(db.prepare("PRAGMA quick_check").get().quick_check, "ok");
       assert.equal(db.prepare("PRAGMA foreign_key_check").all().length, 0);
     } finally {

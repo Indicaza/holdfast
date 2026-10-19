@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { readGuildMembers } from "../Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 import { GUILD_RANKS, normalizeGuildRank } from "../Guild/rankSystem.js";
 import { DiscordApiClient } from "./provisioning.js";
 
@@ -175,7 +176,7 @@ export async function reconcileDiscordMemberRanks({
 } = {}) {
   const current = rankSyncConfig(env);
   const client = discordClient(env, providedClient);
-  const members = providedMembers || (await readGuildMembers());
+  const members = providedMembers || (await readGuildMembers(HOLDFAST_GUILD_ID));
   const managedMembers = members.filter((member) => member.rankManaged);
   const liveRoles = await client.request(
     `/guilds/${current.guildId}/roles`,

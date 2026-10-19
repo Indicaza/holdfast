@@ -12,6 +12,7 @@ import {
   updateGuildMemberRank,
   upsertGuildMember,
 } from "../src/Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -87,9 +88,9 @@ test("member profile and lifecycle survive SQLite upserts", async () => {
     assert.equal(timezone.member.profile.timezone, "America/Detroit");
 
     await markGuildMemberDeparted("member-one");
-    assert.equal((await readGuildMembers()).length, 0);
+    assert.equal((await readGuildMembers(HOLDFAST_GUILD_ID)).length, 0);
 
-    const departed = await readGuildMembers({ includeDeparted: true });
+    const departed = await readGuildMembers(HOLDFAST_GUILD_ID, { includeDeparted: true });
     assert.equal(departed[0].status, "departed");
     assert.equal(departed[0].profile.battleTag, "Rook#1234");
 
@@ -133,7 +134,7 @@ test("website rank changes are persisted and owner rank stays locked", async () 
     const promoted = await updateGuildMemberRank(
       "member-two",
       "Sergeant",
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
     assert.equal(promoted.status, "updated");
@@ -143,14 +144,14 @@ test("website rank changes are persisted and owner rank stays locked", async () 
     const unchanged = await updateGuildMemberRank(
       "member-two",
       "Sergeant",
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
     assert.equal(unchanged.status, "unchanged");
 
     const invalid = await updateGuildMemberRank(
       "member-two",
       "Space Admiral",
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
     assert.equal(invalid.status, "invalid");
 
@@ -162,7 +163,7 @@ test("website rank changes are persisted and owner rank stays locked", async () 
     const locked = await updateGuildMemberRank(
       "owner-one",
       "Recruit",
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
     assert.equal(locked.status, "owner-locked");

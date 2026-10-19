@@ -4,6 +4,7 @@ import {
   withGuildDatabase,
   withGuildTransaction,
 } from "../Data/database.js";
+import { requireGuildId } from "../Guild/guildScope.js";
 
 function jsonObject(value) {
   try {
@@ -21,6 +22,7 @@ function notificationFromRow(row) {
 
   return {
     id: row.id,
+    guildId: row.guild_id,
     recipientMemberId: row.recipient_member_id,
     type: row.event_type,
     kind: row.kind,
@@ -41,16 +43,23 @@ function normalizeText(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
-function assertRecipientExists(db, memberId) {
+// A guild only notifies its own active members.
+function recipientIsGuildMember(db, guildId, memberId) {
   return Boolean(
     db
-      .prepare("SELECT 1 FROM members WHERE id = ? AND status = 'active'")
-      .get(memberId),
+      .prepare(
+        `
+          SELECT 1 FROM guild_memberships
+          WHERE guild_id = ? AND member_id = ? AND status = 'active'
+        `,
+      )
+      .get(guildId, memberId),
   );
 }
 
 export function createNotificationInDatabase({
   db,
+  guildId,
   recipientMemberId,
   type,
   kind = "update",
@@ -75,11 +84,13 @@ export function createNotificationInDatabase({
     ? normalizeText(dedupeKey, 240)
     : null;
 
+  const id = requireGuildId(guildId);
+
   if (!memberId || !eventType || !notificationTitle) {
     throw new Error("Notification recipient, type, and title are required");
   }
 
-  if (!assertRecipientExists(db, memberId)) {
+  if (!recipientIsGuildMember(db, id, memberId)) {
     return null;
   }
 
@@ -89,12 +100,13 @@ export function createNotificationInDatabase({
         `
           SELECT id
           FROM notifications
-          WHERE recipient_member_id = ?
+          WHERE guild_id = ?
+            AND recipient_member_id = ?
             AND dedupe_key = ?
             AND resolved_at IS NULL
         `,
       )
-      .get(memberId, normalizedDedupeKey);
+      .get(id, memberId, normalizedDedupeKey);
 
     if (existing) {
       db.prepare(
@@ -134,12 +146,13 @@ export function createNotificationInDatabase({
     }
   }
 
-  const id = `notification-${randomUUID()}`;
+  const notificationId = `notification-${randomUUID()}`;
 
   db.prepare(
     `
       INSERT INTO notifications (
         id,
+        guild_id,
         recipient_member_id,
         event_type,
         kind,
@@ -154,9 +167,10 @@ export function createNotificationInDatabase({
         resolved_at,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)
     `,
   ).run(
+    notificationId,
     id,
     memberId,
     eventType,
@@ -173,14 +187,20 @@ export function createNotificationInDatabase({
   );
 
   return notificationFromRow(
-    db.prepare("SELECT * FROM notifications WHERE id = ?").get(id),
+    db.prepare("SELECT * FROM notifications WHERE id = ?").get(notificationId),
   );
 }
 
 export function resolveNotificationsInDatabase(
   db,
-  { dedupeKey, recipientMemberId = null, now = new Date().toISOString() },
+  {
+    guildId,
+    dedupeKey,
+    recipientMemberId = null,
+    now = new Date().toISOString(),
+  },
 ) {
+  const id = requireGuildId(guildId);
   const normalizedDedupeKey = normalizeText(dedupeKey, 240);
 
   if (!normalizedDedupeKey) return 0;
@@ -191,22 +211,24 @@ export function resolveNotificationsInDatabase(
           `
             UPDATE notifications
             SET resolved_at = ?, updated_at = ?
-            WHERE dedupe_key = ?
+            WHERE guild_id = ?
+              AND dedupe_key = ?
               AND recipient_member_id = ?
               AND resolved_at IS NULL
           `,
         )
-        .run(now, now, normalizedDedupeKey, String(recipientMemberId))
+        .run(now, now, id, normalizedDedupeKey, String(recipientMemberId))
     : db
         .prepare(
           `
             UPDATE notifications
             SET resolved_at = ?, updated_at = ?
-            WHERE dedupe_key = ?
+            WHERE guild_id = ?
+              AND dedupe_key = ?
               AND resolved_at IS NULL
           `,
         )
-        .run(now, now, normalizedDedupeKey);
+        .run(now, now, id, normalizedDedupeKey);
 
   return Number(result.changes) || 0;
 }

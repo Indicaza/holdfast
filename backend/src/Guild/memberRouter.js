@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import {
   requireAuthenticated,
-  requireHoldfastMember,
+  requireGuildMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import {
@@ -26,16 +26,16 @@ import {
   authorityCanGrantBillet,
   authorityCanGrantRank,
   authorityCanManageTargetRank,
+  readRankLadder,
 } from "./authorityRepository.js";
+import { isHoldfastGuild } from "./guildScope.js";
 import { primaryCharacter } from "./memberProfile.js";
-import {
-  GUILD_RANKS,
-  guildRankMetadata,
-  normalizeGuildRank,
-  repProgressionForRank,
-} from "./rankSystem.js";
+import { repProgressionForLadder } from "./rankSystem.js";
 import { syncDiscordMemberRank } from "../Discord/rankSync.js";
 import { syncDiscordMemberBillets } from "../Discord/billetSync.js";
+
+// Ranks and billets are Discord roles only in Holdfast's server.
+const NO_DISCORD_SYNC = Object.freeze({ status: "not-applicable" });
 
 function emptyContribution() {
   return {
@@ -97,11 +97,11 @@ function activeAssignmentsByMember(document) {
   return assignments;
 }
 
-function projectMember(member, totals, assignments) {
+function projectMember(member, totals, assignments, ladder) {
   const contribution = totals.get(member.id) || emptyContribution();
   const activeAssignments = assignments.get(member.id) || [];
-  const rank = normalizeGuildRank(member.rank);
-  const rankMeta = guildRankMetadata(rank);
+  const rank = ladder.normalize(member.rank);
+  const rankMeta = ladder.metadata(rank);
 
   return {
     id: member.id,
@@ -113,6 +113,7 @@ function projectMember(member, totals, assignments) {
     firstSeenAt: member.firstSeenAt,
     updatedAt: member.updatedAt,
     rank,
+    guildRole: member.guildRole || null,
     rankManaged: Boolean(member.rankManaged),
     billetsManaged: Boolean(member.billetsManaged),
     rankMeta,
@@ -121,7 +122,7 @@ function projectMember(member, totals, assignments) {
     profile: member.profile,
     mainCharacter: primaryCharacter(member.profile),
     contribution,
-    repProgression: repProgressionForRank(rank, contribution.rep),
+    repProgression: repProgressionForLadder(ladder, rank, contribution.rep),
     activeAssignmentCount: activeAssignments.length,
   };
 }
@@ -143,16 +144,17 @@ function latestActivityAt(member, history) {
   return new Date(Math.max(...candidates)).toISOString();
 }
 
-async function memberWorkspace() {
+async function memberWorkspace(guildId) {
   const [members, totals] = await Promise.all([
-    readGuildMembers(),
-    readContributionTotals(),
+    readGuildMembers(guildId),
+    readContributionTotals(guildId),
   ]);
+  const ladder = readRankLadder(guildId);
 
   let assignments = new Map();
 
   try {
-    assignments = activeAssignmentsByMember(await readQuests());
+    assignments = activeAssignmentsByMember(await readQuests(guildId));
   } catch (error) {
     console.error(
       "Quest data is unavailable; serving member directory without active quest assignments",
@@ -164,22 +166,24 @@ async function memberWorkspace() {
     members,
     totals,
     assignments,
+    ladder,
   };
 }
 
-async function profileFor(memberId) {
-  const workspace = await memberWorkspace();
+async function profileFor(guildId, memberId) {
+  const workspace = await memberWorkspace(guildId);
   const member = workspace.members.find((item) => item.id === memberId);
 
   if (!member) {
     return null;
   }
 
-  const history = await readMemberContributionHistory(member.id);
+  const history = await readMemberContributionHistory(guildId, member.id);
   const projected = projectMember(
     member,
     workspace.totals,
     workspace.assignments,
+    workspace.ladder,
   );
 
   return {
@@ -221,11 +225,16 @@ export function createMemberRouter() {
     max: 60,
   });
 
-  router.get("/", requireHoldfastMember, async (req, res) => {
+  router.get("/", requireGuildMember, async (req, res) => {
     try {
-      const workspace = await memberWorkspace();
+      const workspace = await memberWorkspace(req.guild.id);
       const members = workspace.members.map((member) =>
-        projectMember(member, workspace.totals, workspace.assignments),
+        projectMember(
+          member,
+          workspace.totals,
+          workspace.assignments,
+          workspace.ladder,
+        ),
       );
 
       res.set("Cache-Control", "no-store");
@@ -245,9 +254,9 @@ export function createMemberRouter() {
     }
   });
 
-  router.get("/me", requireHoldfastMember, async (req, res) => {
+  router.get("/me", requireGuildMember, async (req, res) => {
     try {
-      const profile = await profileFor(req.auth.user.id);
+      const profile = await profileFor(req.guild.id, req.auth.user.id);
 
       if (!profile) {
         res.status(404).json({ error: "member_not_found" });
@@ -301,7 +310,7 @@ export function createMemberRouter() {
 
   router.patch(
     "/me",
-    requireHoldfastMember,
+    requireGuildMember,
     profileWriteRateLimit,
     async (req, res) => {
     try {
@@ -315,7 +324,7 @@ export function createMemberRouter() {
         return;
       }
 
-      const profile = await profileFor(req.auth.user.id);
+      const profile = await profileFor(req.guild.id, req.auth.user.id);
 
       res.set("Cache-Control", "no-store");
       res.json({ member: profile });
@@ -326,9 +335,9 @@ export function createMemberRouter() {
   },
   );
 
-  router.get("/:memberId", requireHoldfastMember, async (req, res) => {
+  router.get("/:memberId", requireGuildMember, async (req, res) => {
     try {
-      const profile = await profileFor(req.params.memberId);
+      const profile = await profileFor(req.guild.id, req.params.memberId);
 
       if (!profile) {
         res.status(404).json({ error: "member_not_found" });
@@ -349,8 +358,8 @@ export function createMemberRouter() {
     async (req, res) => {
       try {
         const [members, totals] = await Promise.all([
-          readGuildMembers(),
-          readContributionTotals(),
+          readGuildMembers(req.guild.id),
+          readContributionTotals(req.guild.id),
         ]);
 
         const enriched = members.map((member) => ({
@@ -361,7 +370,7 @@ export function createMemberRouter() {
         res.set("Cache-Control", "no-store");
         res.json({
           members: enriched,
-          ranks: GUILD_RANKS,
+          ranks: readRankLadder(req.guild.id).names,
         });
       } catch (error) {
         console.error("Unable to read guild member management directory", error);
@@ -376,7 +385,7 @@ export function createMemberRouter() {
     rankWriteRateLimit,
     async (req, res) => {
       try {
-        const members = await readGuildMembers();
+        const members = await readGuildMembers(req.guild.id);
         const target = members.find(
           (member) => member.id === req.params.memberId,
         );
@@ -395,10 +404,14 @@ export function createMemberRouter() {
           return;
         }
 
+        const ladder = readRankLadder(req.guild.id);
+
         if (
-          !authorityCanManageTargetRank(req.auth.authority, target.rank) ||
-          !authorityCanManageTargetRank(req.auth.authority, requestedRank) ||
-          !authorityCanGrantRank(req.auth.authority, requestedRank)
+          !authorityCanManageTargetRank(req.auth.authority, target.rank, ladder) ||
+          !authorityCanManageTargetRank(req.auth.authority, requestedRank, ladder) ||
+          !authorityCanGrantRank(req.auth.authority, requestedRank, {
+            guildId: req.guild.id,
+          })
         ) {
           res.status(403).json({ error: "rank_ceiling_exceeded" });
           return;
@@ -407,7 +420,7 @@ export function createMemberRouter() {
         const result = await updateGuildMemberRank(
           req.params.memberId,
           requestedRank,
-          { actorMemberId: req.auth.user.id },
+          { guildId: req.guild.id, actorMemberId: req.auth.user.id },
         );
 
         if (result.status === "invalid") {
@@ -425,10 +438,14 @@ export function createMemberRouter() {
           return;
         }
 
-        let discordSync = { status: "pending" };
+        let discordSync = isHoldfastGuild(req.guild.id)
+          ? { status: "pending" }
+          : NO_DISCORD_SYNC;
 
         try {
-          discordSync = await syncDiscordMemberRank(result.member);
+          if (isHoldfastGuild(req.guild.id)) {
+            discordSync = await syncDiscordMemberRank(result.member);
+          }
         } catch (error) {
           console.error(
             `Unable to sync Discord rank for member ${req.params.memberId}`,
@@ -437,7 +454,7 @@ export function createMemberRouter() {
         }
 
         const projectedMember =
-          (await profileFor(req.params.memberId)) || result.member;
+          (await profileFor(req.guild.id, req.params.memberId)) || result.member;
 
         res.set("Cache-Control", "no-store");
         res.json({
@@ -455,9 +472,10 @@ export function createMemberRouter() {
   async function updateBilletAssignment(req, res, assigned) {
     try {
       const [members, billets] = await Promise.all([
-        readGuildMembers(),
-        readBillets(),
+        readGuildMembers(req.guild.id),
+        readBillets(req.guild.id),
       ]);
+      const ladder = readRankLadder(req.guild.id);
       const target = members.find(
         (member) => member.id === req.params.memberId,
       );
@@ -484,8 +502,8 @@ export function createMemberRouter() {
       }
 
       if (
-        !authorityCanManageTargetRank(req.auth.authority, target.rank) ||
-        !authorityCanGrantBillet(req.auth.authority, billet)
+        !authorityCanManageTargetRank(req.auth.authority, target.rank, ladder) ||
+        !authorityCanGrantBillet(req.auth.authority, billet, ladder)
       ) {
         res.status(403).json({ error: "authority_scope_exceeded" });
         return;
@@ -495,7 +513,7 @@ export function createMemberRouter() {
         req.params.memberId,
         req.params.billetId,
         assigned,
-        { actorMemberId: req.auth.user.id },
+        { guildId: req.guild.id, actorMemberId: req.auth.user.id },
       );
 
       if (result.status === "member-not-found") {
@@ -508,14 +526,16 @@ export function createMemberRouter() {
         return;
       }
 
-      const updatedMembers = await readGuildMembers();
+      const updatedMembers = await readGuildMembers(req.guild.id);
       const member = updatedMembers.find(
         (candidate) => candidate.id === req.params.memberId,
       );
 
-      let discordSync = { status: "pending" };
+      let discordSync = isHoldfastGuild(req.guild.id)
+        ? { status: "pending" }
+        : NO_DISCORD_SYNC;
 
-      if (member) {
+      if (member && isHoldfastGuild(req.guild.id)) {
         try {
           discordSync = await syncDiscordMemberBillets(member);
         } catch (error) {
@@ -527,7 +547,7 @@ export function createMemberRouter() {
       }
 
       const projectedMember =
-        (await profileFor(req.params.memberId)) || member;
+        (await profileFor(req.guild.id, req.params.memberId)) || member;
 
       res.set("Cache-Control", "no-store");
       res.json({
@@ -547,7 +567,7 @@ export function createMemberRouter() {
     rankWriteRateLimit,
     async (req, res) => {
       try {
-        const members = await readGuildMembers();
+        const members = await readGuildMembers(req.guild.id);
         const target = members.find(
           (member) => member.id === req.params.memberId,
         );
@@ -566,7 +586,11 @@ export function createMemberRouter() {
         }
 
         if (
-          !authorityCanManageTargetRank(req.auth.authority, target.rank)
+          !authorityCanManageTargetRank(
+            req.auth.authority,
+            target.rank,
+            readRankLadder(req.guild.id),
+          )
         ) {
           res.status(403).json({ error: "rank_ceiling_exceeded" });
           return;
@@ -574,7 +598,7 @@ export function createMemberRouter() {
 
         const result = await claimMemberBilletAuthority(
           req.params.memberId,
-          { actorMemberId: req.auth.user.id },
+          { guildId: req.guild.id, actorMemberId: req.auth.user.id },
         );
 
         if (result.status === "member-not-found") {
@@ -582,14 +606,16 @@ export function createMemberRouter() {
           return;
         }
 
-        const updatedMembers = await readGuildMembers();
+        const updatedMembers = await readGuildMembers(req.guild.id);
         const member = updatedMembers.find(
           (candidate) => candidate.id === req.params.memberId,
         );
 
-        let discordSync = { status: "pending" };
+        let discordSync = isHoldfastGuild(req.guild.id)
+          ? { status: "pending" }
+          : NO_DISCORD_SYNC;
 
-        if (member) {
+        if (member && isHoldfastGuild(req.guild.id)) {
           try {
             discordSync = await syncDiscordMemberBillets(member);
           } catch (error) {
@@ -601,7 +627,7 @@ export function createMemberRouter() {
         }
 
         const projectedMember =
-          (await profileFor(req.params.memberId)) || member;
+          (await profileFor(req.guild.id, req.params.memberId)) || member;
 
         res.set("Cache-Control", "no-store");
         res.json({

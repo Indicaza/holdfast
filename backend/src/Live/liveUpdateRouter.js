@@ -30,6 +30,7 @@ export function createLiveUpdateRouter({ heartbeatMs = 20_000 } = {}) {
     const unsubscribe = subscribeLiveUpdates({
       memberId: req.auth.user.id,
       permissions: req.auth.permissions,
+      guildIds: [req.auth.guild?.id],
       send(event) {
         writeEvent(res, 'change', {
           id: event.id,
