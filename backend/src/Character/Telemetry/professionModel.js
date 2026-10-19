@@ -4,6 +4,8 @@
 // profession views). Unknown or malformed values become null rather than
 // being guessed at.
 
+import { array, list, listOrMissing } from "./luaList.js";
+
 export const PROFESSION_MODEL_VERSION = 1;
 
 const MAX_PROFESSIONS = 16;
@@ -16,10 +18,6 @@ const MAX_ITEMS = 400;
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function array(value) {
-  return Array.isArray(value) ? value : [];
 }
 
 function text(value, maxLength = 160) {
@@ -222,10 +220,9 @@ function profession(value) {
 }
 
 export function isProfessionSnapshotPayload(payload) {
-  if (!isObject(payload) || !Array.isArray(payload.professions)) return false;
-  return payload.professions.every(
-    (entry) => isObject(entry) && (entry.recipes === undefined || entry.recipes === null || Array.isArray(entry.recipes)),
-  );
+  const professions = isObject(payload) ? list(payload.professions) : null;
+  if (!professions) return false;
+  return professions.every((entry) => isObject(entry) && listOrMissing(entry.recipes));
 }
 
 export function canonicalProfessionSnapshot(payload) {

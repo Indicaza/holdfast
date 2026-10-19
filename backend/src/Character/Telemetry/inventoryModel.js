@@ -6,6 +6,8 @@
 // what each distinct item is (items), and how many of each itemId are carried
 // (totals). Unknown or malformed values become null rather than being guessed.
 
+import { array, listOrMissing } from "./luaList.js";
+
 export const INVENTORY_MODEL_VERSION = 1;
 
 const MAX_CONTAINERS = 12;
@@ -16,21 +18,6 @@ const MAX_STATS = 64;
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-// Empty Lua tables arrive as {} (the SavedVariables parser cannot tell an empty
-// array from an empty object), so an empty object is an empty list.
-function list(value) {
-  if (Array.isArray(value)) return value;
-  return isObject(value) && Object.keys(value).length === 0 ? [] : null;
-}
-
-function array(value) {
-  return list(value) || [];
-}
-
-function listOrMissing(value) {
-  return value === undefined || value === null || list(value) !== null;
 }
 
 function text(value, maxLength = 160) {
