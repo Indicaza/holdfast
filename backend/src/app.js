@@ -2,6 +2,7 @@ import { createPublicGameDataRouter } from "./GameData/publicGameDataRouter.js";
 import cors from "cors";
 import express from "express";
 import { offsiteBackupHealth } from "./Data/offsiteBackup.js";
+import { createGuildDirectoryRouter } from "./Guild/Directory/guildDirectoryRouter.js";
 
 import { createDiscordAuthRouter } from "./Auth/discordAuth.js";
 import { createAuditRouter } from "./Audit/auditRouter.js";
@@ -172,6 +173,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   app.use("/api/notifications", createNotificationRouter());
   app.use("/api/quests", createQuestCompletionRouter());
   app.use("/api/quests", createQuestRouter());
+  app.use("/api/guilds", createGuildDirectoryRouter());
   app.use("/api/guild/members", createMemberRouter());
   app.use("/api/guild/billets", createBilletRouter());
   app.use("/api/guild/authority", createAuthorityRouter());

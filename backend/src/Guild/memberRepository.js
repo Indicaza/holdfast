@@ -1,4 +1,5 @@
 import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
+import { syncHomeGuildMembershipInDatabase } from "./Directory/homeGuildMembership.js";
 import {
   withGuildDatabase,
   withGuildTransaction,
@@ -284,6 +285,7 @@ function writeMemberRow(db, member) {
     member.firstSeenAt,
     member.updatedAt,
   );
+  syncHomeGuildMembershipInDatabase(db, member);
 }
 
 export function importMembersIntoDatabase(db, members) {
