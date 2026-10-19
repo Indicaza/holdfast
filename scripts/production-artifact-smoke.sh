@@ -74,7 +74,7 @@ probe_state() {
     try {
       const count = (table) => Number(db.prepare("SELECT COUNT(*) AS count FROM " + table).get().count);
       const migration = db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get();
-      const focused = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE id = 1").get();
+      const focused = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE guild_id = ?").get("guild-holdfast");
       const quest = db.prepare("SELECT title FROM quests WHERE id = ?").get("e2e-supply-run");
       const state = {
         schemaVersion: Number(migration.version),
