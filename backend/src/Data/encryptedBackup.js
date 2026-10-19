@@ -20,7 +20,7 @@ export function verifyBackupDatabase(file) {
     if (db.prepare('PRAGMA quick_check').get().quick_check !== 'ok') throw new Error('Backup database failed integrity verification')
     if (db.prepare('PRAGMA foreign_key_check').all().length) throw new Error('Backup database has foreign key violations')
     const counts = Object.fromEntries(['members', 'quests', 'objectives', 'contribution_transactions', 'rank_authority', 'billets'].map((table) => [table, Number(db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count)]))
-    if (!db.prepare('SELECT id FROM quest_settings WHERE id = 1').get()) throw new Error('Backup database has no quest settings')
+    if (!db.prepare('SELECT 1 FROM quest_settings LIMIT 1').get()) throw new Error('Backup database has no quest settings')
     return counts
   } finally {
     db.close()

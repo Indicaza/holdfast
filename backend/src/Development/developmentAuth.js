@@ -2,6 +2,7 @@ import express from "express";
 
 import { setSession } from "../Auth/session.js";
 import { resolveMemberAuthority } from "../Guild/authorityRepository.js";
+import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 
 const DEVELOPMENT_PERSONAS = Object.freeze({
   member: {
@@ -74,7 +75,8 @@ function safeReturnTo(value) {
 
 export function createDevelopmentAuthRouter({
   env = process.env,
-  resolveAuthority = resolveMemberAuthority,
+  resolveAuthority = (memberId, authorityEnv) =>
+    resolveMemberAuthority(HOLDFAST_GUILD_ID, memberId, authorityEnv),
   writeSession = setSession,
 } = {}) {
   const router = express.Router();

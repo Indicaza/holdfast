@@ -3,6 +3,7 @@ import test from 'node:test'
 import { recordAuditEventInDatabase } from '../src/Audit/auditRepository.js'
 import { withGuildTransaction } from '../src/Data/database.js'
 import { persistentState, withHttpApp } from '../testSupport/httpHarness.js'
+import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 
 const authenticatedReads = ['/api/quests/member', '/api/quests/member/completions', '/api/guild/members', '/api/guild/members/me', '/api/guild/members/e2e-member', '/api/guild/billets', '/api/guild/authority']
 const privileged = [
@@ -48,7 +49,7 @@ for (const [method, route] of privileged) {
 }
 
 test('audit snapshots are available to authorized leadership and never anonymous visitors', () => withHttpApp(async ({ request }) => {
-  withGuildTransaction((db) => recordAuditEventInDatabase({ db, actorMemberId: 'e2e-commander', eventType: 'fixture.private', entityType: 'test', payload: { before: { secret: 'fixture' }, after: { secret: 'fixture' } } }))
+  withGuildTransaction((db) => recordAuditEventInDatabase({ db, guildId: HOLDFAST_GUILD_ID, actorMemberId: 'e2e-commander', eventType: 'fixture.private', entityType: 'test', payload: { before: { secret: 'fixture' }, after: { secret: 'fixture' } } }))
   const full = await request('/api/admin/audit?details=true', { persona: 'owner' })
   assert.equal(full.status, 200)
   assert.equal(full.json.events[0].payload.before.secret, 'fixture')

@@ -15,6 +15,7 @@ import { initializeGuildData } from "../src/Data/initializeData.js";
 import { ensureRuntimeDataDirectory } from "../src/Data/runtimeData.js";
 import { ensureCharacterReadModelSchema } from "../src/Character/ReadModel/readModelSchema.js";
 import { normalizeGuildListing } from "../src/Guild/Directory/guildDirectoryModel.js";
+import { seedGuildOperationsInDatabase } from "../src/Guild/guildDefaults.js";
 
 // Classic factions: only the Alliance has paladins and only the Horde shamans.
 const CLASSES = {
@@ -112,6 +113,7 @@ export function seedDevelopmentGuilds({ now = Date.now(), logger = console } = {
         listing.discordInviteUrl || "", listing.accentColor, createdAt, createdAt,
       );
       for (const style of listing.playStyles) db.prepare("INSERT INTO guild_play_styles (guild_id, style) VALUES (?, ?)").run(id, style);
+      seedGuildOperationsInDatabase(db, id, createdAt);
 
       const random = seededRandom(guildIndex + 7);
       for (let index = 0; index < seed.members; index += 1) {
@@ -122,8 +124,14 @@ export function seedDevelopmentGuilds({ now = Date.now(), logger = console } = {
           VALUES (?, ?, ?, 'GW', 'Initiate', 'active', ?, ?)
         `).run(memberId, memberId, name, createdAt, createdAt);
         db.prepare(`
-          INSERT OR IGNORE INTO guild_memberships (guild_id, member_id, role, status, joined_at) VALUES (?, ?, ?, 'active', ?)
-        `).run(id, memberId, index === 0 ? "owner" : index < 3 ? "officer" : "member", createdAt);
+          INSERT OR IGNORE INTO guild_memberships (guild_id, member_id, role, status, joined_at, rank) VALUES (?, ?, ?, 'active', ?, ?)
+        `).run(
+          id,
+          memberId,
+          index === 0 ? "owner" : index < 3 ? "officer" : "member",
+          createdAt,
+          index === 0 ? "Guild Master" : index < 3 ? "Officer" : "Member",
+        );
         if (index === 0) db.prepare("UPDATE guilds SET owner_member_id = ? WHERE id = ?").run(memberId, id);
         if (index >= seed.synced) continue;
 

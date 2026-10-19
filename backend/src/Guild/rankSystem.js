@@ -1,4 +1,7 @@
-const RANK_DEFINITIONS = [
+// Holdfast's ladder. Every guild keeps its own ladder in rank_authority;
+// this one seeds Holdfast's rows and backs the Holdfast-only helpers below
+// (Discord rank sync, legacy callers).
+export const HOLDFAST_RANK_DEFINITIONS = Object.freeze([
   { name: "Recruit", category: "enlisted", order: 0, leadership: false },
   { name: "Private", category: "enlisted", order: 1, leadership: false },
   { name: "Corporal", category: "enlisted", order: 2, leadership: false },
@@ -9,7 +12,9 @@ const RANK_DEFINITIONS = [
   { name: "Captain", category: "officer", order: 7, leadership: true },
   { name: "Major", category: "officer", order: 8, leadership: true },
   { name: "Commander", category: "officer", order: 9, leadership: true },
-];
+]);
+
+const RANK_DEFINITIONS = HOLDFAST_RANK_DEFINITIONS;
 
 const RANK_BY_NAME = new Map(
   RANK_DEFINITIONS.map((rank) => [rank.name, rank]),
@@ -157,3 +162,88 @@ export function repProgressionForRank(rankValue, lifetimeRepValue) {
 }
 
 export const GUILD_RANKS = RANK_DEFINITIONS.map((rank) => rank.name);
+
+// A guild's rank ladder: ranks ordered from entry (lowest) to top. Unknown or
+// empty rank names normalize to the entry rank, the way Holdfast's
+// unknown ranks become Recruit.
+export function createRankLadder(definitions, { holdfast = false } = {}) {
+  const ranks = [...(Array.isArray(definitions) ? definitions : [])]
+    .map((rank) => ({
+      name: String(rank.name),
+      category: rank.category || "member",
+      order: Number(rank.order) || 0,
+      leadership: Boolean(rank.leadership),
+    }))
+    .sort((left, right) => left.order - right.order);
+
+  if (!ranks.length) {
+    throw new Error("A guild rank ladder needs at least one rank");
+  }
+
+  const byName = new Map(ranks.map((rank) => [rank.name, rank]));
+  const entry = ranks[0].name;
+  const top = ranks[ranks.length - 1].name;
+
+  const isRank = (value) => byName.has(String(value || "").trim());
+  const normalize = (value) => {
+    const rank = String(value || "").trim();
+    return byName.has(rank) ? rank : entry;
+  };
+  const metadata = (value) => {
+    const rank = byName.get(normalize(value));
+    return {
+      name: rank.name,
+      category: rank.category,
+      order: rank.order,
+      isOfficer: rank.category === "officer",
+      isLeadership: rank.leadership,
+    };
+  };
+  const order = (value) => byName.get(normalize(value)).order;
+
+  return Object.freeze({
+    holdfast,
+    names: ranks.map((rank) => rank.name),
+    definitions: ranks,
+    entry,
+    top,
+    isRank,
+    normalize,
+    metadata,
+    order,
+    through: (value) =>
+      ranks.filter((rank) => rank.order <= order(value)).map((rank) => rank.name),
+  });
+}
+
+export const HOLDFAST_RANK_LADDER = createRankLadder(RANK_DEFINITIONS, {
+  holdfast: true,
+});
+
+// Holdfast's Rep floors only describe Holdfast's ladder. Other guilds show
+// lifetime Rep against their own ranks.
+export function repProgressionForLadder(ladder, rankValue, lifetimeRepValue) {
+  if (!ladder || ladder.holdfast) {
+    return repProgressionForRank(rankValue, lifetimeRepValue);
+  }
+
+  const rank = ladder.normalize(rankValue);
+  const lifetimeRep = Math.max(0, Number(lifetimeRepValue) || 0);
+  const scale = 10000;
+
+  return {
+    mode: "lifetime",
+    lifetimeRep,
+    currentRank: rank,
+    nextRank: null,
+    label: "Lifetime Rep",
+    detail: "Promotion is a leadership decision.",
+    segmentStart: 0,
+    segmentEnd: scale,
+    segmentEarned: Math.min(lifetimeRep, scale),
+    segmentSize: scale,
+    remaining: null,
+    progress: clamp(lifetimeRep / scale, 0, 1),
+    thresholdMet: lifetimeRep >= scale,
+  };
+}

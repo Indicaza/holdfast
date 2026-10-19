@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-  requireHoldfastMember,
+  requireGuildMember,
   requirePermission,
 } from "../Auth/permissions.js";
 import { recordAuditEventInDatabase } from "../Audit/auditRepository.js";
@@ -80,13 +80,13 @@ export function createQuestCompletionRouter() {
 
   router.get(
     "/member/completions",
-    requireHoldfastMember,
+    requireGuildMember,
     (req, res) => {
       try {
         const questId = String(req.query?.questId || "");
         const completions = withGuildDatabase((db) => {
-          const document = readQuestsFromDatabase(db);
-          return readCompletionStatesFromDatabase(db, document, {
+          const document = readQuestsFromDatabase(db, req.guild.id);
+          return readCompletionStatesFromDatabase(db, req.guild.id, document, {
             questId,
             publishedOnly: true,
           });
@@ -108,7 +108,7 @@ export function createQuestCompletionRouter() {
 
   router.post(
     "/member/request-completion",
-    requireHoldfastMember,
+    requireGuildMember,
     writeRateLimit,
     (req, res) => {
       const target = targetFromBody(req.body);
@@ -116,21 +116,22 @@ export function createQuestCompletionRouter() {
 
       try {
         const completion = withGuildTransaction((db) => {
-          const document = readQuestsFromDatabase(db);
-          const member = readGuildMembersFromDatabase(db).find(
+          const document = readQuestsFromDatabase(db, req.guild.id);
+          const member = readGuildMembersFromDatabase(db, req.guild.id).find(
             (item) => item.id === req.auth.user.id,
           );
 
           if (!member) {
             throw new QuestCompletionError(
               "member_not_found",
-              "Your Holdfast member profile could not be found.",
+              "Your member profile in this guild could not be found.",
               403,
             );
           }
 
           const saved = requestObjectiveCompletionInDatabase({
             db,
+            guildId: req.guild.id,
             document,
             ...target,
             member,
@@ -139,6 +140,7 @@ export function createQuestCompletionRouter() {
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: member.id,
             eventType: "quest.completion_requested",
             entityType: "objective",
@@ -151,21 +153,24 @@ export function createQuestCompletionRouter() {
 
           const { quest, objective } = findTarget(document, target);
           resolveNotificationsInDatabase(db, {
+            guildId: req.guild.id,
             dedupeKey: completionMemberKey(target.objectiveId),
             recipientMemberId: member.id,
           });
           resolveNotificationsInDatabase(db, {
+            guildId: req.guild.id,
             dedupeKey: completionReviewKey(target.objectiveId),
           });
 
           if (quest && objective) {
-            const reviewerIds = questReviewerMemberIdsInDatabase(db, quest, {
+            const reviewerIds = questReviewerMemberIdsInDatabase(db, req.guild.id, quest, {
               excludeMemberIds: [member.id],
             });
 
             for (const reviewerId of reviewerIds) {
               createNotificationInDatabase({
                 db,
+                guildId: req.guild.id,
                 recipientMemberId: reviewerId,
                 type: "completion_requested",
                 kind: "action",
@@ -199,7 +204,7 @@ export function createQuestCompletionRouter() {
 
   router.post(
     "/member/withdraw-completion",
-    requireHoldfastMember,
+    requireGuildMember,
     writeRateLimit,
     (req, res) => {
       const target = targetFromBody(req.body);
@@ -207,10 +212,11 @@ export function createQuestCompletionRouter() {
 
       try {
         withGuildTransaction((db) => {
-          const document = readQuestsFromDatabase(db);
+          const document = readQuestsFromDatabase(db, req.guild.id);
 
           withdrawObjectiveCompletionInDatabase({
             db,
+            guildId: req.guild.id,
             document,
             ...target,
             memberId: req.auth.user.id,
@@ -218,6 +224,7 @@ export function createQuestCompletionRouter() {
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: req.auth.user.id,
             eventType: "quest.completion_withdrawn",
             entityType: "objective",
@@ -226,6 +233,7 @@ export function createQuestCompletionRouter() {
           });
 
           resolveNotificationsInDatabase(db, {
+            guildId: req.guild.id,
             dedupeKey: completionReviewKey(target.objectiveId),
           });
         });
@@ -254,9 +262,10 @@ export function createQuestCompletionRouter() {
 
       try {
         const completion = withGuildTransaction((db) => {
-          const document = readQuestsFromDatabase(db);
+          const document = readQuestsFromDatabase(db, req.guild.id);
           const saved = reviewObjectiveCompletionInDatabase({
             db,
+            guildId: req.guild.id,
             document,
             ...target,
             decision: req.body?.decision,
@@ -268,6 +277,7 @@ export function createQuestCompletionRouter() {
 
           recordAuditEventInDatabase({
             db,
+            guildId: req.guild.id,
             actorMemberId: req.auth.user.id,
             eventType:
               saved.status === "approved"
@@ -285,9 +295,11 @@ export function createQuestCompletionRouter() {
 
           const { objective } = findTarget(document, target);
           resolveNotificationsInDatabase(db, {
+            guildId: req.guild.id,
             dedupeKey: completionReviewKey(target.objectiveId),
           });
           resolveNotificationsInDatabase(db, {
+            guildId: req.guild.id,
             dedupeKey: completionMemberKey(target.objectiveId),
             recipientMemberId: saved.requestedByMemberId,
           });
@@ -298,6 +310,7 @@ export function createQuestCompletionRouter() {
           ) {
             createNotificationInDatabase({
               db,
+              guildId: req.guild.id,
               recipientMemberId: saved.requestedByMemberId,
               type:
                 saved.status === "approved"
@@ -357,9 +370,10 @@ export function createQuestCompletionRouter() {
 
       try {
         withGuildDatabase((db) => {
-          const document = readQuestsFromDatabase(db);
+          const document = readQuestsFromDatabase(db, req.guild.id);
           assertObjectiveCompletionApprovedInDatabase(
             db,
+            req.guild.id,
             document,
             target.questId,
             target.objectiveId,

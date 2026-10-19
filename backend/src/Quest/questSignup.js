@@ -64,7 +64,7 @@ export function signupForObjective(document, member, questId, objectiveId) {
   if (!member?.id) {
     throw new QuestSignupError(
       "member_not_found",
-      "Your Holdfast member profile could not be found.",
+      "Your member profile in this guild could not be found.",
       403,
     );
   }
@@ -145,7 +145,7 @@ export function leaveObjective(document, memberId, questId, objectiveId) {
   if (!memberId) {
     throw new QuestSignupError(
       "member_not_found",
-      "Your Holdfast member profile could not be found.",
+      "Your member profile in this guild could not be found.",
       403,
     );
   }

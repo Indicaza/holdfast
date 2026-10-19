@@ -9,6 +9,7 @@ import { readGuildMembers } from "../src/Guild/memberRepository.js";
 import { resolveMemberAuthority } from "../src/Guild/authorityRepository.js";
 import { readContributionTotals } from "../src/Contribution/contributionRepository.js";
 import { readQuests } from "../src/Quest/questRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -62,10 +63,18 @@ test("invalid quest data cannot take member and contribution systems down with i
         now,
         now,
       );
+      // The roster is the guild's memberships, not every account.
+      db.prepare(
+        `
+          INSERT INTO guild_memberships (guild_id, member_id, role, status, joined_at, rank)
+          VALUES ('guild-holdfast', ?, 'member', 'active', ?, 'Commander')
+        `,
+      ).run("isolation-commander", now);
 
       db.prepare(
         `
           INSERT INTO contribution_transactions (
+            guild_id,
             id,
             type,
             member_id,
@@ -78,7 +87,7 @@ test("invalid quest data cannot take member and contribution systems down with i
             marks,
             items_json,
             created_at
-          ) VALUES (?, 'objective_reward', ?, ?, ?, ?, ?, ?, 125, 10, '[]', ?)
+          ) VALUES ('guild-holdfast', ?, 'objective_reward', ?, ?, ?, ?, ?, ?, 125, 10, '[]', ?)
         `,
       ).run(
         "isolation-contribution",
@@ -96,6 +105,7 @@ test("invalid quest data cannot take member and contribution systems down with i
       db.prepare(
         `
           INSERT INTO quests (
+            guild_id,
             id,
             publication,
             mode,
@@ -104,30 +114,30 @@ test("invalid quest data cannot take member and contribution systems down with i
             completed,
             sort_order,
             created_at
-          ) VALUES (?, 'published', 'rotating', '', '', 0, 0, ?)
+          ) VALUES ('guild-holdfast', ?, 'published', 'rotating', '', '', 0, 0, ?)
         `,
       ).run("broken-quest", now);
     });
 
     await assert.rejects(
-      () => readQuests(),
+      () => readQuests(HOLDFAST_GUILD_ID),
       /Stored quest data is invalid/,
       "quest reads should clearly fail for the deliberately corrupt quest",
     );
 
-    const members = await readGuildMembers();
+    const members = await readGuildMembers(HOLDFAST_GUILD_ID);
     assert.equal(members.length, 1);
     assert.equal(members[0].id, "isolation-commander");
     assert.equal(members[0].displayName, "Isolation Commander");
 
-    const totals = await readContributionTotals();
+    const totals = await readContributionTotals(HOLDFAST_GUILD_ID);
     assert.deepEqual(totals.get("isolation-commander"), {
       rep: 125,
       marks: 10,
       completedObjectives: 1,
     });
 
-    const authority = resolveMemberAuthority("isolation-commander");
+    const authority = resolveMemberAuthority(HOLDFAST_GUILD_ID, "isolation-commander");
     assert.equal(authority.memberRank, "Commander");
     assert.equal(authority.isOwner, true);
     assert.ok(authority.permissions.includes("site.admin"));

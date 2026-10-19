@@ -11,6 +11,7 @@ import {
   reviewObjectiveCompletionInDatabase,
   withdrawObjectiveCompletionInDatabase,
 } from "../src/Quest/questCompletion.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function document() {
   return {
@@ -75,6 +76,7 @@ test("assigned member can request completion and see pending state", () => {
   withDb((db) => {
     const source = document();
     const completion = requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -88,7 +90,7 @@ test("assigned member can request completion and see pending state", () => {
     assert.equal(completion.requestedByMemberId, "member-one");
     assert.equal(completion.requestNote, "Twenty linen deposited in the bank.");
 
-    const states = readCompletionStatesFromDatabase(db, source);
+    const states = readCompletionStatesFromDatabase(db, HOLDFAST_GUILD_ID, source);
     assert.equal(states["objective-one"].status, "pending");
   });
 });
@@ -98,6 +100,7 @@ test("unassigned member cannot request completion", () => {
     assert.throws(
       () =>
         requestObjectiveCompletionInDatabase({
+          guildId: HOLDFAST_GUILD_ID,
           db,
           document: document(),
           questId: "quest-one",
@@ -114,6 +117,7 @@ test("pending request becomes stale when objective state changes", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -124,13 +128,14 @@ test("pending request becomes stale when objective state changes", () => {
     const changed = structuredClone(source);
     changed.quests[0].objectives[0].need = "40 Linen Cloth";
 
-    const states = readCompletionStatesFromDatabase(db, changed);
+    const states = readCompletionStatesFromDatabase(db, HOLDFAST_GUILD_ID, changed);
     assert.equal(states["objective-one"].status, "stale");
 
     assert.throws(
       () =>
         assertObjectiveCompletionApprovedInDatabase(
           db,
+          HOLDFAST_GUILD_ID,
           changed,
           "quest-one",
           "objective-one",
@@ -145,6 +150,7 @@ test("reviewer cannot review their own completion request", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -155,6 +161,7 @@ test("reviewer cannot review their own completion request", () => {
     assert.throws(
       () =>
         reviewObjectiveCompletionInDatabase({
+          guildId: HOLDFAST_GUILD_ID,
           db,
           document: source,
           questId: "quest-one",
@@ -174,6 +181,7 @@ test("rejection requires a reason and assignee can resubmit", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -184,6 +192,7 @@ test("rejection requires a reason and assignee can resubmit", () => {
     assert.throws(
       () =>
         reviewObjectiveCompletionInDatabase({
+          guildId: HOLDFAST_GUILD_ID,
           db,
           document: source,
           questId: "quest-one",
@@ -198,6 +207,7 @@ test("rejection requires a reason and assignee can resubmit", () => {
     );
 
     const rejected = reviewObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -214,6 +224,7 @@ test("rejection requires a reason and assignee can resubmit", () => {
     assert.equal(rejected.reviewNote, "Deposit the materials in tab two.");
 
     const resubmitted = requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -232,6 +243,7 @@ test("authorized reviewer approval unlocks final completion", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -243,6 +255,7 @@ test("authorized reviewer approval unlocks final completion", () => {
       () =>
         assertObjectiveCompletionApprovedInDatabase(
           db,
+          HOLDFAST_GUILD_ID,
           source,
           "quest-one",
           "objective-one",
@@ -251,6 +264,7 @@ test("authorized reviewer approval unlocks final completion", () => {
     );
 
     const approved = reviewObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -265,6 +279,7 @@ test("authorized reviewer approval unlocks final completion", () => {
     assert.doesNotThrow(() =>
       assertObjectiveCompletionApprovedInDatabase(
         db,
+        HOLDFAST_GUILD_ID,
         source,
         "quest-one",
         "objective-one",
@@ -278,6 +293,7 @@ test("own-scoped reviewer cannot approve somebody else's quest", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -288,6 +304,7 @@ test("own-scoped reviewer cannot approve somebody else's quest", () => {
     assert.throws(
       () =>
         reviewObjectiveCompletionInDatabase({
+          guildId: HOLDFAST_GUILD_ID,
           db,
           document: source,
           questId: "quest-one",
@@ -307,6 +324,7 @@ test("requester can withdraw a pending request", () => {
     const source = document();
 
     requestObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -315,6 +333,7 @@ test("requester can withdraw a pending request", () => {
     });
 
     withdrawObjectiveCompletionInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       document: source,
       questId: "quest-one",
@@ -322,6 +341,6 @@ test("requester can withdraw a pending request", () => {
       memberId: "member-one",
     });
 
-    assert.deepEqual(readCompletionStatesFromDatabase(db, source), {});
+    assert.deepEqual(readCompletionStatesFromDatabase(db, HOLDFAST_GUILD_ID, source), {});
   });
 });

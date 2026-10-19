@@ -8,13 +8,17 @@ import { resolvePermissions } from "../src/Auth/permissionResolver.js";
 import {
   requireAnyPermission,
   requireAuthenticated,
+  requireGuildMember,
   requireHoldfastMember,
   requirePermission,
 } from "../src/Auth/permissions.js";
+import { withGuildDatabase } from "../src/Data/database.js";
+import { seedGuildOperationsInDatabase } from "../src/Guild/guildDefaults.js";
 import {
   updateGuildMemberRank,
   upsertGuildMember,
 } from "../src/Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function response() {
   return {
@@ -253,6 +257,7 @@ test("any-permission middleware admits one matching database capability", async 
       username: "corporal",
     });
     await updateGuildMemberRank("member-one", "Corporal", {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "owner-one",
     });
 
@@ -341,7 +346,7 @@ test("permission middleware admits only authority granted by rank and billets", 
     await updateGuildMemberRank(
       "323456789012345678",
       "Corporal",
-      { actorMemberId: "owner-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "owner-one" },
     );
 
     const req = {
@@ -426,6 +431,57 @@ test("Holdfast-member middleware admits Holdfast's roster and turns away other a
     assert.equal(left.status, "departed");
     assert.ok(left.departedAt);
     assert.equal((await run({ user: { id: "323456789012345678" } })).res.statusCode, 403);
+  } finally {
+    restore(previous);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("guild middleware checks membership and authority in the request's guild", async () => {
+  const previous = preserve();
+  const directory = await mkdtemp(path.join(os.tmpdir(), "holdfast-permissions-"));
+  const run = async (middleware, userId, guild) => {
+    const req = { guild, auth: { user: { id: userId }, permissions: [], verifiedAt: Date.now() } };
+    const res = response();
+    let nextCalls = 0;
+    await middleware(req, res, () => {
+      nextCalls += 1;
+    });
+    return { req, res, nextCalls };
+  };
+
+  try {
+    process.env.NODE_ENV = "test";
+    process.env.GUILD_DATA_DIR = directory;
+    process.env.GUILD_OWNER_DISCORD_IDS = "owner-one";
+
+    await upsertGuildMember({ id: "owner-one", username: "owner" });
+    await upsertGuildMember({ id: "outsider-one", username: "outsider" }, [], { homeServer: false });
+    const ironpine = { id: "guild-ironpine", slug: "ironpine", name: "Ironpine" };
+    withGuildDatabase((db) => {
+      const now = new Date().toISOString();
+      db.prepare("INSERT INTO guilds (id, slug, name, faction, region, realm, realm_type, owner_member_id, created_at, updated_at) VALUES (?, ?, ?, 'alliance', 'US', 'Stormrage', 'pvp', 'outsider-one', ?, ?)").run(ironpine.id, ironpine.slug, ironpine.name, now, now);
+      seedGuildOperationsInDatabase(db, ironpine.id, now);
+      db.prepare("INSERT INTO guild_memberships (guild_id, member_id, role, status, joined_at, rank) VALUES (?, 'outsider-one', 'owner', 'active', ?, 'Guild Master')").run(ironpine.id, now);
+    });
+
+    // Holdfast's configured owner is a stranger to Ironpine.
+    const holdfastOwner = await run(requireGuildMember, "owner-one", ironpine);
+    assert.equal(holdfastOwner.nextCalls, 0);
+    assert.deepEqual(holdfastOwner.res.body, { error: "guild_membership_required" });
+    assert.deepEqual(holdfastOwner.req.auth.permissions, []);
+    const holdfastOwnerEdit = await run(requirePermission("quests.edit"), "owner-one", ironpine);
+    assert.equal(holdfastOwnerEdit.res.statusCode, 403);
+
+    // Ironpine's owner holds Ironpine's authority, and none of Holdfast's.
+    const ironOwner = await run(requirePermission("quests.edit"), "outsider-one", ironpine);
+    assert.equal(ironOwner.nextCalls, 1);
+    assert.equal(ironOwner.req.auth.guildMember, true);
+    assert.equal(ironOwner.req.auth.authority.isOwner, true);
+    assert.equal((await run(requirePermission("site.admin"), "outsider-one", ironpine)).res.statusCode, 403);
+    assert.equal((await run(requireAnyPermission(["quests.edit"]), "outsider-one", undefined)).res.statusCode, 403);
+    assert.deepEqual((await run(requireGuildMember, "outsider-one", undefined)).res.body, { error: "holdfast_membership_required" });
+    assert.equal((await run(requireGuildMember, "owner-one", undefined)).nextCalls, 1);
   } finally {
     restore(previous);
     await rm(directory, { recursive: true, force: true });

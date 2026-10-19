@@ -8,10 +8,12 @@ import {
   resolveNotificationsInDatabase,
 } from '../src/Notification/notificationRepository.js'
 import { memberIds, objective, withHttpApp } from '../testSupport/httpHarness.js'
+import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 
 test('notification inbox is private and read state is owned by the recipient', () => withHttpApp(async ({ request }) => {
   const ids = withGuildTransaction((db) => {
     const member = createNotificationInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       recipientMemberId: memberIds.member,
       type: 'test_update',
@@ -20,6 +22,7 @@ test('notification inbox is private and read state is owned by the recipient', (
       href: '/members/me',
     })
     const officer = createNotificationInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       recipientMemberId: memberIds.officer,
       type: 'test_update',
@@ -55,6 +58,7 @@ test('notification inbox is private and read state is owned by the recipient', (
 test('deduped action notifications re-open and resolve as a shared work item', () => withHttpApp(async () => {
   withGuildTransaction((db) => {
     const first = createNotificationInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       recipientMemberId: memberIds.owner,
       type: 'completion_requested',
@@ -65,6 +69,7 @@ test('deduped action notifications re-open and resolve as a shared work item', (
       now: '2026-10-04T01:00:00.000Z',
     })
     const second = createNotificationInDatabase({
+      guildId: HOLDFAST_GUILD_ID,
       db,
       recipientMemberId: memberIds.owner,
       type: 'completion_requested',
@@ -81,7 +86,7 @@ test('deduped action notifications re-open and resolve as a shared work item', (
     assert.equal(inbox.notifications[0].message, 'Updated request')
     assert.equal(inbox.actionCount, 1)
 
-    assert.equal(resolveNotificationsInDatabase(db, { dedupeKey: 'completion-review:test' }), 1)
+    assert.equal(resolveNotificationsInDatabase(db, { guildId: HOLDFAST_GUILD_ID, dedupeKey: 'completion-review:test' }), 1)
     inbox = readMemberNotificationsFromDatabase(db, memberIds.owner)
     assert.equal(inbox.actionCount, 0)
     assert.ok(inbox.notifications[0].resolvedAt)

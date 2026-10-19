@@ -9,6 +9,7 @@ import { guildMigrationHistory, openGuildDatabase } from '../src/Data/database.j
 import { readQuests } from '../src/Quest/questRepository.js'
 import { readGuildMembers } from '../src/Guild/memberRepository.js'
 import { readMemberContributionHistory } from '../src/Contribution/contributionRepository.js'
+import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 
 test('released migration bodies stay immutable while new versions may be appended', async () => {
   const frozen = JSON.parse(await readFile(new URL('./fixtures/applied-migrations.json', import.meta.url)))
@@ -26,7 +27,9 @@ test('the frozen release database upgrades without losing profiles, quests, auth
     const old = new DatabaseSync(path.join(directory, 'holdfast.sqlite'))
     old.exec(sql)
     const tables = old.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT IN ('schema_migrations', 'sqlite_sequence') ORDER BY name").all().map(({ name }) => ({ name, columns: old.prepare(`PRAGMA table_info("${name}")`).all().map((column) => column.name) }))
-    const readState = (db) => Object.fromEntries(tables.map(({ name, columns }) => [name, db.prepare(`SELECT ${columns.map((column) => `"${column}"`).join(',')} FROM "${name}" ORDER BY rowid`).all()]))
+    // Migration 13 keys quest settings by guild instead of the single row id.
+    const replacedColumns = { quest_settings: ['id'] }
+    const readState = (db) => Object.fromEntries(tables.map(({ name, columns }) => [name, db.prepare(`SELECT ${columns.filter((column) => !replacedColumns[name]?.includes(column)).map((column) => `"${column}"`).join(',')} FROM "${name}" ORDER BY rowid`).all()]))
     const before = readState(old)
     assert.equal(Number(old.prepare('SELECT MAX(version) AS version FROM schema_migrations').get().version), 5)
     old.close()
@@ -36,10 +39,14 @@ test('the frozen release database upgrades without losing profiles, quests, auth
       assert.equal(upgraded.prepare('PRAGMA quick_check').get().quick_check, 'ok')
       assert.deepEqual(upgraded.prepare('PRAGMA foreign_key_check').all(), [])
       assert.ok(upgraded.prepare("SELECT name FROM sqlite_schema WHERE name = 'quest_completion_requests'").get())
+      for (const { name } of tables.filter(({ columns }) => columns.includes('guild_id') === false)) {
+        if (!upgraded.prepare(`PRAGMA table_info("${name}")`).all().some((column) => column.name === 'guild_id')) continue
+        assert.deepEqual(upgraded.prepare(`SELECT DISTINCT guild_id FROM "${name}"`).all().map((row) => row.guild_id).filter((id) => id !== 'guild-holdfast'), [], `${name} rows belong to Holdfast`)
+      }
     } finally { upgraded.close() }
-    assert.equal((await readGuildMembers()).find((member) => member.id === 'e2e-member').profile.characters[0].name, 'Frozen Rook')
-    assert.equal((await readQuests()).quests[0].title, 'E2E Supply Run')
-    assert.equal((await readMemberContributionHistory('e2e-member'))[0].marks, 5)
+    assert.equal((await readGuildMembers(HOLDFAST_GUILD_ID)).find((member) => member.id === 'e2e-member').profile.characters[0].name, 'Frozen Rook')
+    assert.equal((await readQuests(HOLDFAST_GUILD_ID)).quests[0].title, 'E2E Supply Run')
+    assert.equal((await readMemberContributionHistory(HOLDFAST_GUILD_ID, 'e2e-member'))[0].marks, 5)
   } finally {
     for (const [name, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[name]

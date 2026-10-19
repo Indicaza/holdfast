@@ -4,8 +4,9 @@ import {
   withGuildTransaction,
 } from "../Data/database.js";
 import {
-  CAPABILITY_DEFINITIONS,
   canDelegateScope,
+  capabilityDefinitionsForGuild,
+  capabilityIdsForGuild,
   capabilityListIsValid,
   fullOwnerAuthority,
   mergeAuthorityScopes,
@@ -18,14 +19,9 @@ import {
   scopeProvidesQuestAuthority,
   scopeProvidesRewardAuthority,
 } from "./authorityPolicy.js";
-import {
-  GUILD_RANKS,
-  guildRankMetadata,
-  guildRankOrder,
-  isGuildRank,
-  normalizeGuildRank,
-} from "./rankSystem.js";
-import { isActiveHoldfastMemberInDatabase } from "./Directory/guildRoles.js";
+import { createRankLadder, HOLDFAST_RANK_LADDER } from "./rankSystem.js";
+import { DEFAULT_GUILD_RANKS } from "./guildDefaults.js";
+import { isHoldfastGuild, requireGuildId } from "./guildScope.js";
 
 function idSet(value) {
   return new Set(
@@ -36,6 +32,10 @@ function idSet(value) {
   );
 }
 
+export function isHoldfastOwner(memberId, env = process.env) {
+  return idSet(env.GUILD_OWNER_DISCORD_IDS).has(String(memberId || "").trim());
+}
+
 function parsePermissions(value) {
   try {
     return normalizeCapabilityList(JSON.parse(value || "[]"));
@@ -44,13 +44,13 @@ function parsePermissions(value) {
   }
 }
 
-function rankScopeFromRow(row) {
+function rankScopeFromRow(row, ladder) {
   if (!row) return null;
 
   return {
-    rank: normalizeGuildRank(row.rank),
+    rank: ladder.normalize(row.rank),
     permissions: parsePermissions(row.permissions_json),
-    maxManagedRank: normalizeManagedRank(row.max_managed_rank),
+    maxManagedRank: normalizeManagedRank(row.max_managed_rank, ladder),
     questScope: normalizeQuestScope(row.quest_scope),
     rewardLimits: {
       repPerObjective: Number(row.reward_rep_max) || 0,
@@ -60,18 +60,19 @@ function rankScopeFromRow(row) {
   };
 }
 
-function billetScopeFromRow(row) {
+function billetScopeFromRow(row, ladder) {
   if (!row) return null;
 
   return {
     id: row.id,
+    guildId: row.guild_id,
     name: row.name,
     responsibility: row.responsibility || "",
     discordRoleId: row.discord_role_id || null,
     discordManaged: Boolean(row.discord_managed),
     active: Boolean(row.active),
     permissions: parsePermissions(row.permissions_json),
-    maxManagedRank: normalizeManagedRank(row.max_managed_rank),
+    maxManagedRank: normalizeManagedRank(row.max_managed_rank, ladder),
     questScope: normalizeQuestScope(row.quest_scope),
     rewardLimits: {
       repPerObjective: Number(row.reward_rep_max) || 0,
@@ -81,14 +82,46 @@ function billetScopeFromRow(row) {
   };
 }
 
-export function readRankAuthorityFromDatabase(db) {
+// The guild's ranks, lowest first. A guild always has rows (migration 13 and
+// registration seed them); the fallbacks only cover a database mid-repair.
+export function readRankLadderFromDatabase(db, guildId) {
+  const id = requireGuildId(guildId);
   const rows = db
-    .prepare("SELECT * FROM rank_authority ORDER BY rowid")
-    .all();
-  const byRank = new Map(rows.map((row) => [row.rank, rankScopeFromRow(row)]));
+    .prepare(
+      `
+        SELECT rank AS name, category, sort_order AS "order", leadership
+        FROM rank_authority
+        WHERE guild_id = ?
+        ORDER BY sort_order
+      `,
+    )
+    .all(id);
 
-  return GUILD_RANKS.map((rank) => ({
-    ...guildRankMetadata(rank),
+  if (!rows.length) {
+    return isHoldfastGuild(id)
+      ? HOLDFAST_RANK_LADDER
+      : createRankLadder(DEFAULT_GUILD_RANKS);
+  }
+
+  return createRankLadder(rows, { holdfast: isHoldfastGuild(id) });
+}
+
+export function readRankLadder(guildId) {
+  return withGuildDatabase((db) => readRankLadderFromDatabase(db, guildId));
+}
+
+export function readRankAuthorityFromDatabase(db, guildId) {
+  const id = requireGuildId(guildId);
+  const ladder = readRankLadderFromDatabase(db, id);
+  const rows = db
+    .prepare("SELECT * FROM rank_authority WHERE guild_id = ? ORDER BY sort_order")
+    .all(id);
+  const byRank = new Map(
+    rows.map((row) => [row.rank, rankScopeFromRow(row, ladder)]),
+  );
+
+  return ladder.names.map((rank) => ({
+    ...ladder.metadata(rank),
     ...(byRank.get(rank) || {
       rank,
       permissions: [],
@@ -97,23 +130,28 @@ export function readRankAuthorityFromDatabase(db) {
   }));
 }
 
-export function readBilletAuthorityFromDatabase(db) {
+export function readBilletAuthorityFromDatabase(db, guildId) {
+  const id = requireGuildId(guildId);
+  const ladder = readRankLadderFromDatabase(db, id);
+
   return db
     .prepare(
       `
         SELECT *
         FROM billets
-        WHERE active = 1
+        WHERE guild_id = ? AND active = 1
         ORDER BY name COLLATE NOCASE
       `,
     )
-    .all()
-    .map(billetScopeFromRow);
+    .all(id)
+    .map((row) => billetScopeFromRow(row, ladder));
 }
 
-export function readEconomyPolicyFromDatabase(db) {
+export function readEconomyPolicyFromDatabase(db, guildId) {
   const row =
-    db.prepare("SELECT * FROM quest_settings WHERE id = 1").get() || {};
+    db
+      .prepare("SELECT * FROM quest_settings WHERE guild_id = ?")
+      .get(requireGuildId(guildId)) || {};
 
   return {
     repPerObjective: Number(row.rep_max) || 0,
@@ -122,67 +160,77 @@ export function readEconomyPolicyFromDatabase(db) {
   };
 }
 
+function noAuthority(ladder) {
+  return {
+    permissions: [],
+    maxManagedRank: null,
+    questScopes: {},
+    rewardLimits: {
+      approve: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+      issue: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
+    },
+    memberRank: ladder.entry,
+    isOwner: false,
+  };
+}
+
+// What a member may do in one guild: the rank they hold there, their active
+// billets there, and full authority for the guild's owner. Holdfast's owners
+// are also configured by GUILD_OWNER_DISCORD_IDS. Nothing here reads another
+// guild's ranks, billets or memberships.
 export function resolveMemberAuthorityFromDatabase(
   db,
+  guildId,
   memberId,
   env = process.env,
 ) {
+  const id = requireGuildId(guildId);
+  const holdfast = isHoldfastGuild(id);
+  const ladder = readRankLadderFromDatabase(db, id);
   const normalizedMemberId = String(memberId || "").trim();
 
   if (!normalizedMemberId) {
-    return {
-      permissions: [],
-      maxManagedRank: null,
-      questScopes: {},
-      rewardLimits: {
-        approve: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
-        issue: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
-      },
-      memberRank: "Recruit",
-      isOwner: false,
-    };
+    return noAuthority(ladder);
   }
 
-  const ownerIds = idSet(env.GUILD_OWNER_DISCORD_IDS);
   const member = db
-    .prepare(
-      "SELECT id, rank, status FROM members WHERE id = ?",
-    )
+    .prepare("SELECT id, rank, status FROM members WHERE id = ?")
     .get(normalizedMemberId);
+  const membership = db
+    .prepare(
+      `
+        SELECT role, rank FROM guild_memberships
+        WHERE guild_id = ? AND member_id = ? AND status = 'active'
+      `,
+    )
+    .get(id, normalizedMemberId);
 
-  if (ownerIds.has(normalizedMemberId)) {
-    const authority = fullOwnerAuthority(readEconomyPolicyFromDatabase(db));
+  if (holdfast && idSet(env.GUILD_OWNER_DISCORD_IDS).has(normalizedMemberId)) {
+    const heldRank = membership?.rank || member?.rank;
     return {
-      ...authority,
-      memberRank: member?.rank
-        ? normalizeGuildRank(member.rank)
-        : "Commander",
+      ...fullOwnerAuthority(readEconomyPolicyFromDatabase(db, id), ladder),
+      memberRank: heldRank ? ladder.normalize(heldRank) : ladder.top,
     };
   }
 
-  // Ranks and billets are Holdfast's. A Discord user outside Holdfast's
-  // server, or a player who left Holdfast for another guild, holds none.
-  if (
-    !member ||
-    member.status !== "active" ||
-    !isActiveHoldfastMemberInDatabase(db, normalizedMemberId)
-  ) {
+  // A player holds rank only in the guild they are an active member of.
+  // Holdfast also requires the player to still be in its Discord server.
+  if (!member || !membership || (holdfast && member.status !== "active")) {
+    return noAuthority(ladder);
+  }
+
+  const memberRank = ladder.normalize(membership.rank);
+
+  if (membership.role === "owner") {
     return {
-      permissions: [],
-      maxManagedRank: null,
-      questScopes: {},
-      rewardLimits: {
-        approve: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
-        issue: { repPerObjective: 0, marksPerObjective: 0, marksPerQuest: 0 },
-      },
-      memberRank: "Recruit",
-      isOwner: false,
+      ...fullOwnerAuthority(readEconomyPolicyFromDatabase(db, id), ladder),
+      memberRank,
     };
   }
 
   const rankRow = db
-    .prepare("SELECT * FROM rank_authority WHERE rank = ?")
-    .get(normalizeGuildRank(member.rank));
+    .prepare("SELECT * FROM rank_authority WHERE guild_id = ? AND rank = ?")
+    .get(id, memberRank);
 
   const billetRows = db
     .prepare(
@@ -190,18 +238,23 @@ export function resolveMemberAuthorityFromDatabase(
         SELECT billets.*
         FROM billets
         JOIN member_billets
-          ON member_billets.billet_id = billets.id
-        WHERE member_billets.member_id = ?
+          ON member_billets.guild_id = billets.guild_id
+         AND member_billets.billet_id = billets.id
+        WHERE member_billets.guild_id = ?
+          AND member_billets.member_id = ?
           AND billets.active = 1
       `,
     )
-    .all(normalizedMemberId);
+    .all(id, normalizedMemberId);
 
-  const merged = mergeAuthorityScopes([
-    rankScopeFromRow(rankRow),
-    ...billetRows.map(billetScopeFromRow),
-  ]);
-  const economy = readEconomyPolicyFromDatabase(db);
+  const merged = mergeAuthorityScopes(
+    [
+      rankScopeFromRow(rankRow, ladder),
+      ...billetRows.map((row) => billetScopeFromRow(row, ladder)),
+    ],
+    ladder,
+  );
+  const economy = readEconomyPolicyFromDatabase(db, id);
 
   for (const bucket of ["approve", "issue"]) {
     merged.rewardLimits[bucket] = {
@@ -222,27 +275,30 @@ export function resolveMemberAuthorityFromDatabase(
 
   return {
     ...merged,
-    memberRank: normalizeGuildRank(member.rank),
+    memberRank,
     isOwner: false,
   };
 }
 
-export function resolveMemberAuthority(memberId, env = process.env) {
+export function resolveMemberAuthority(guildId, memberId, env = process.env) {
   return withGuildDatabase((db) =>
-    resolveMemberAuthorityFromDatabase(db, memberId, env),
+    resolveMemberAuthorityFromDatabase(db, guildId, memberId, env),
   );
 }
 
-export function readAuthorityCatalog() {
-  return withGuildDatabase((db) => ({
-    capabilities: CAPABILITY_DEFINITIONS,
-    ranks: readRankAuthorityFromDatabase(db),
-    billets: readBilletAuthorityFromDatabase(db),
-    economyPolicy: readEconomyPolicyFromDatabase(db),
-  }));
+export function readAuthorityCatalog(guildId) {
+  return withGuildDatabase((db) => {
+    const ladder = readRankLadderFromDatabase(db, guildId);
+    return {
+      capabilities: capabilityDefinitionsForGuild(ladder),
+      ranks: readRankAuthorityFromDatabase(db, guildId),
+      billets: readBilletAuthorityFromDatabase(db, guildId),
+      economyPolicy: readEconomyPolicyFromDatabase(db, guildId),
+    };
+  });
 }
 
-function validatedScopeInput(input) {
+function validatedScopeInput(input, ladder) {
   const permissions = input?.permissions;
   const maxManagedRank = input?.maxManagedRank;
   const questScope = input?.questScope ?? "own";
@@ -252,7 +308,12 @@ function validatedScopeInput(input) {
     marksPerQuest: 0,
   };
 
-  if (!capabilityListIsValid(permissions)) {
+  const guildCapabilities = new Set(capabilityIdsForGuild(ladder));
+
+  if (
+    !capabilityListIsValid(permissions) ||
+    permissions.some((permission) => !guildCapabilities.has(permission.trim()))
+  ) {
     return { valid: false, error: "invalid_permissions" };
   }
 
@@ -260,7 +321,7 @@ function validatedScopeInput(input) {
     maxManagedRank !== null &&
     maxManagedRank !== undefined &&
     maxManagedRank !== "" &&
-    !isGuildRank(maxManagedRank)
+    !ladder.isRank(maxManagedRank)
   ) {
     return { valid: false, error: "invalid_rank_ceiling" };
   }
@@ -275,7 +336,7 @@ function validatedScopeInput(input) {
 
   const scope = {
     permissions: normalizeCapabilityList(permissions),
-    maxManagedRank: normalizeManagedRank(maxManagedRank),
+    maxManagedRank: normalizeManagedRank(maxManagedRank, ladder),
     questScope: normalizeQuestScope(questScope),
     rewardLimits: normalizeRewardLimits(rewardLimits),
   };
@@ -312,37 +373,47 @@ function actorCanDesignAuthority(actorAuthority) {
   );
 }
 
-function rankScopeByName(db, rank) {
+function rankScopeByName(db, guildId, rank, ladder) {
   return rankScopeFromRow(
-    db.prepare("SELECT * FROM rank_authority WHERE rank = ?").get(rank),
+    db
+      .prepare("SELECT * FROM rank_authority WHERE guild_id = ? AND rank = ?")
+      .get(guildId, rank),
+    ladder,
   );
 }
 
-function billetScopeById(db, billetId) {
+function billetScopeById(db, guildId, billetId, ladder) {
   return billetScopeFromRow(
-    db.prepare("SELECT * FROM billets WHERE id = ?").get(billetId),
+    db
+      .prepare("SELECT * FROM billets WHERE guild_id = ? AND id = ?")
+      .get(guildId, billetId),
+    ladder,
   );
 }
 
 export async function updateRankAuthority(
   rankValue,
   input,
-  { actorMemberId = null, env = process.env } = {},
+  { guildId, actorMemberId = null, env = process.env } = {},
 ) {
-  if (!isGuildRank(rankValue)) {
-    return { status: "not-found", scope: null };
-  }
-
-  const rank = normalizeGuildRank(rankValue);
-  const validation = validatedScopeInput(input);
-
-  if (!validation.valid) {
-    return { status: validation.error, scope: null };
-  }
+  const id = requireGuildId(guildId);
 
   return withGuildTransaction((db) => {
-    const actor = resolveMemberAuthorityFromDatabase(db, actorMemberId, env);
-    const existing = rankScopeByName(db, rank);
+    const ladder = readRankLadderFromDatabase(db, id);
+
+    if (!ladder.isRank(rankValue)) {
+      return { status: "not-found", scope: null };
+    }
+
+    const rank = ladder.normalize(rankValue);
+    const validation = validatedScopeInput(input, ladder);
+
+    if (!validation.valid) {
+      return { status: validation.error, scope: null };
+    }
+
+    const actor = resolveMemberAuthorityFromDatabase(db, id, actorMemberId, env);
+    const existing = rankScopeByName(db, id, rank, ladder);
 
     if (!existing) {
       return { status: "not-found", scope: null };
@@ -354,14 +425,14 @@ export async function updateRankAuthority(
 
     if (
       !actor.isOwner &&
-      guildRankOrder(rank) >= guildRankOrder(actor.memberRank)
+      ladder.order(rank) >= ladder.order(actor.memberRank)
     ) {
       return { status: "scope_above_actor", scope: existing };
     }
 
     if (
-      (!actor.isOwner && !canDelegateScope(actor, existing)) ||
-      !canDelegateScope(actor, validation.scope)
+      (!actor.isOwner && !canDelegateScope(actor, existing, ladder)) ||
+      !canDelegateScope(actor, validation.scope, ladder)
     ) {
       return { status: "scope_above_actor", scope: existing };
     }
@@ -376,7 +447,7 @@ export async function updateRankAuthority(
           reward_rep_max = ?,
           reward_marks_max = ?,
           reward_marks_quest_max = ?
-        WHERE rank = ?
+        WHERE guild_id = ? AND rank = ?
       `,
     ).run(
       JSON.stringify(validation.scope.permissions),
@@ -385,11 +456,13 @@ export async function updateRankAuthority(
       validation.scope.rewardLimits.repPerObjective,
       validation.scope.rewardLimits.marksPerObjective,
       validation.scope.rewardLimits.marksPerQuest,
+      id,
       rank,
     );
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "authority.rank.updated",
       entityType: "rank",
@@ -402,7 +475,7 @@ export async function updateRankAuthority(
 
     return {
       status: "updated",
-      scope: rankScopeByName(db, rank),
+      scope: rankScopeByName(db, id, rank, ladder),
     };
   });
 }
@@ -410,17 +483,20 @@ export async function updateRankAuthority(
 export async function updateBilletAuthority(
   billetId,
   input,
-  { actorMemberId = null, env = process.env } = {},
+  { guildId, actorMemberId = null, env = process.env } = {},
 ) {
-  const validation = validatedScopeInput(input);
-
-  if (!validation.valid) {
-    return { status: validation.error, scope: null };
-  }
+  const id = requireGuildId(guildId);
 
   return withGuildTransaction((db) => {
-    const actor = resolveMemberAuthorityFromDatabase(db, actorMemberId, env);
-    const existing = billetScopeById(db, billetId);
+    const ladder = readRankLadderFromDatabase(db, id);
+    const validation = validatedScopeInput(input, ladder);
+
+    if (!validation.valid) {
+      return { status: validation.error, scope: null };
+    }
+
+    const actor = resolveMemberAuthorityFromDatabase(db, id, actorMemberId, env);
+    const existing = billetScopeById(db, id, billetId, ladder);
 
     if (!existing || !existing.active) {
       return { status: "not-found", scope: null };
@@ -431,8 +507,8 @@ export async function updateBilletAuthority(
     }
 
     if (
-      (!actor.isOwner && !canDelegateScope(actor, existing)) ||
-      !canDelegateScope(actor, validation.scope)
+      (!actor.isOwner && !canDelegateScope(actor, existing, ladder)) ||
+      !canDelegateScope(actor, validation.scope, ladder)
     ) {
       return { status: "scope_above_actor", scope: existing };
     }
@@ -448,7 +524,7 @@ export async function updateBilletAuthority(
           reward_marks_max = ?,
           reward_marks_quest_max = ?,
           updated_at = ?
-        WHERE id = ?
+        WHERE guild_id = ? AND id = ?
       `,
     ).run(
       JSON.stringify(validation.scope.permissions),
@@ -458,11 +534,13 @@ export async function updateBilletAuthority(
       validation.scope.rewardLimits.marksPerObjective,
       validation.scope.rewardLimits.marksPerQuest,
       new Date().toISOString(),
+      id,
       billetId,
     );
 
     recordAuditEventInDatabase({
       db,
+      guildId: id,
       actorMemberId,
       eventType: "authority.billet.updated",
       entityType: "billet",
@@ -475,7 +553,7 @@ export async function updateBilletAuthority(
 
     return {
       status: "updated",
-      scope: billetScopeById(db, billetId),
+      scope: billetScopeById(db, id, billetId, ladder),
     };
   });
 }
@@ -483,33 +561,34 @@ export async function updateBilletAuthority(
 export function authorityCanGrantBillet(
   actorAuthority,
   billetScope,
+  ladder = HOLDFAST_RANK_LADDER,
 ) {
-  return canDelegateScope(actorAuthority, billetScope);
+  return canDelegateScope(actorAuthority, billetScope, ladder);
 }
 
-export function authorityCanGrantRank(
-  actorAuthority,
-  rank,
-) {
-  if (!isGuildRank(rank)) return false;
+export function authorityCanGrantRank(actorAuthority, rank, { guildId } = {}) {
+  const id = requireGuildId(guildId);
 
   return withGuildDatabase((db) => {
-    const scope = rankScopeByName(db, normalizeGuildRank(rank));
-    return Boolean(scope && canDelegateScope(actorAuthority, scope));
+    const ladder = readRankLadderFromDatabase(db, id);
+    if (!ladder.isRank(rank)) return false;
+    const scope = rankScopeByName(db, id, ladder.normalize(rank), ladder);
+    return Boolean(scope && canDelegateScope(actorAuthority, scope, ladder));
   });
 }
 
 export function authorityCanManageTargetRank(
   actorAuthority,
   targetRank,
+  ladder = HOLDFAST_RANK_LADDER,
 ) {
   if (actorAuthority?.isOwner) return true;
 
-  const ceiling = normalizeManagedRank(actorAuthority?.maxManagedRank);
+  const ceiling = normalizeManagedRank(actorAuthority?.maxManagedRank, ladder);
 
-  if (!ceiling || !isGuildRank(targetRank)) {
+  if (!ceiling || !ladder.isRank(targetRank)) {
     return false;
   }
 
-  return guildRankOrder(targetRank) <= guildRankOrder(ceiling);
+  return ladder.order(targetRank) <= ladder.order(ceiling);
 }

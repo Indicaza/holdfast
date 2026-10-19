@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button, Chip, Panel, SearchIcon, Select, Switch, TextInput, ToggleChip } from '../DesignSystem/index.js'
 import Footer from '../Home/Footer/Footer.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import GuildCard from './GuildCard.jsx'
@@ -27,20 +28,6 @@ function apiQuery(filters, offset) {
   return params.toString()
 }
 
-function Chip({ active, onClick, children, count, tone }) {
-  return (
-    <button
-      type="button"
-      className={`guild-chip${active ? ' guild-chip--active' : ''}${tone ? ` guild-chip--${tone}` : ''}`}
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {children}
-      {count !== undefined ? <span className="guild-chip__count">{count}</span> : null}
-    </button>
-  )
-}
-
 function FilterSection({ title, children }) {
   return (
     <section className="guild-filters__section">
@@ -53,17 +40,13 @@ function FilterSection({ title, children }) {
 function Filters({ filters, facets, update, onClear }) {
   const count = activeFilterCount(filters)
   return (
-    <div className="guild-filters">
-      <div className="guild-filters__head">
-        <h2>Refine</h2>
-        {count ? <button type="button" className="guild-filters__clear" onClick={onClear}>Clear {count}</button> : null}
-      </div>
-
+    <Panel as="div" className="guild-filters" title="Refine" titleAs="h2"
+      actions={count ? <Button variant="ghost" size="sm" onClick={onClear}>Clear {count}</Button> : null}>
       <FilterSection title="Realm type">
         <div className="guild-chips">
           {Object.entries(REALM_TYPE_LABELS).map(([value, label]) => (
-            <Chip key={value} active={filters.realmType.includes(value)} count={facets?.realmTypes?.[value]}
-              onClick={() => update({ realmType: toggleValue(filters.realmType, value) })}>{label}</Chip>
+            <ToggleChip key={value} pressed={filters.realmType.includes(value)} count={facets?.realmTypes?.[value]}
+              onClick={() => update({ realmType: toggleValue(filters.realmType, value) })}>{label}</ToggleChip>
           ))}
         </div>
       </FilterSection>
@@ -71,8 +54,8 @@ function Filters({ filters, facets, update, onClear }) {
       <FilterSection title="Play style">
         <div className="guild-chips">
           {Object.entries(PLAY_STYLE_LABELS).map(([value, label]) => (
-            <Chip key={value} active={filters.style.includes(value)} count={facets?.playStyles?.[value]}
-              onClick={() => update({ style: toggleValue(filters.style, value) })}>{label}</Chip>
+            <ToggleChip key={value} pressed={filters.style.includes(value)} count={facets?.playStyles?.[value]}
+              onClick={() => update({ style: toggleValue(filters.style, value) })}>{label}</ToggleChip>
           ))}
         </div>
       </FilterSection>
@@ -80,16 +63,13 @@ function Filters({ filters, facets, update, onClear }) {
       <FilterSection title="Recruiting my class">
         <div className="guild-classes">
           {Object.entries(CLASS_LABELS).map(([value, label]) => (
-            <button key={value} type="button" className={`guild-class${filters.class === value ? ' guild-class--active' : ''}`}
-              style={{ '--class-color': classColor(value) }} aria-pressed={filters.class === value}
-              onClick={() => update({ class: filters.class === value ? '' : value })}>
-              <span className="guild-class__swatch" aria-hidden="true" />{label}
-            </button>
+            <ToggleChip key={value} className="guild-classes__chip" color={classColor(value)} pressed={filters.class === value}
+              onClick={() => update({ class: filters.class === value ? '' : value })}>{label}</ToggleChip>
           ))}
         </div>
         <div className="guild-chips guild-chips--roles">
           {Object.entries(ROLE_LABELS).map(([value, label]) => (
-            <Chip key={value} active={filters.role === value} onClick={() => update({ role: filters.role === value ? '' : value })}>{label}</Chip>
+            <ToggleChip key={value} pressed={filters.role === value} onClick={() => update({ role: filters.role === value ? '' : value })}>{label}</ToggleChip>
           ))}
         </div>
       </FilterSection>
@@ -97,36 +77,24 @@ function Filters({ filters, facets, update, onClear }) {
       <FilterSection title="Raid night">
         <div className="guild-chips guild-chips--days">
           {Object.entries(WEEKDAY_LABELS).map(([value, label]) => (
-            <Chip key={value} active={filters.day === value} onClick={() => update({ day: filters.day === value ? '' : value })}>{label}</Chip>
+            <ToggleChip key={value} pressed={filters.day === value} onClick={() => update({ day: filters.day === value ? '' : value })}>{label}</ToggleChip>
           ))}
         </div>
       </FilterSection>
 
       <FilterSection title="Region & language">
         <div className="guild-selects">
-          <label>
-            <span>Region</span>
-            <select value={filters.region[0] || ''} onChange={(event) => update({ region: event.target.value ? [event.target.value] : [] })}>
-              <option value="">Any region</option>
-              {Object.entries(REGION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>Language</span>
-            <select value={filters.language[0] || ''} onChange={(event) => update({ language: event.target.value ? [event.target.value] : [] })}>
-              <option value="">Any language</option>
-              {Object.entries(LANGUAGE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
+          <Select label="Region" placeholder="Any region" options={Object.entries(REGION_LABELS)}
+            value={filters.region[0] || ''} onChange={(event) => update({ region: event.target.value ? [event.target.value] : [] })} />
+          <Select label="Language" placeholder="Any language" options={Object.entries(LANGUAGE_LABELS)}
+            value={filters.language[0] || ''} onChange={(event) => update({ language: event.target.value ? [event.target.value] : [] })} />
         </div>
       </FilterSection>
 
-      <label className="guild-switch">
-        <input type="checkbox" checked={filters.recruiting} onChange={(event) => update({ recruiting: event.target.checked })} />
-        <span className="guild-switch__track" aria-hidden="true"><span /></span>
-        Only guilds recruiting now
-      </label>
-    </div>
+      <div className="guild-filters__section">
+        <Switch label="Only guilds recruiting now" checked={filters.recruiting} onChange={(event) => update({ recruiting: event.target.checked })} />
+      </div>
+    </Panel>
   )
 }
 
@@ -135,7 +103,7 @@ function ActivePills({ filters, update }) {
     ...filters.faction.map((value) => ({ key: `f-${value}`, label: FACTION_LABELS[value], clear: { faction: toggleValue(filters.faction, value) } })),
     ...filters.realmType.map((value) => ({ key: `r-${value}`, label: REALM_TYPE_LABELS[value], clear: { realmType: toggleValue(filters.realmType, value) } })),
     ...filters.style.map((value) => ({ key: `s-${value}`, label: PLAY_STYLE_LABELS[value], clear: { style: toggleValue(filters.style, value) } })),
-    ...(filters.class ? [{ key: 'class', label: `Needs ${CLASS_LABELS[filters.class]}`, clear: { class: '' } }] : []),
+    ...(filters.class ? [{ key: 'class', label: `Needs ${CLASS_LABELS[filters.class]}`, color: classColor(filters.class), clear: { class: '' } }] : []),
     ...(filters.role ? [{ key: 'role', label: `Needs ${ROLE_LABELS[filters.role]}`, clear: { role: '' } }] : []),
     ...(filters.day ? [{ key: 'day', label: `Raids ${WEEKDAY_LABELS[filters.day]}`, clear: { day: '' } }] : []),
     ...filters.region.map((value) => ({ key: `g-${value}`, label: REGION_LABELS[value], clear: { region: [] } })),
@@ -145,10 +113,10 @@ function ActivePills({ filters, update }) {
   ]
   if (!pills.length) return null
   return (
-    <ul className="guild-pills">
+    <ul className="guild-pills" aria-label="Active filters">
       {pills.map((pill) => (
         <li key={pill.key}>
-          <button type="button" onClick={() => update(pill.clear)} aria-label={`Remove ${pill.label}`}>{pill.label}<span aria-hidden="true">×</span></button>
+          <Chip color={pill.color} onRemove={() => update(pill.clear)} removeLabel={`Remove ${pill.label}`}>{pill.label}</Chip>
         </li>
       ))}
     </ul>
@@ -185,7 +153,7 @@ export default function GuildBrowser({ queryString = '' }) {
   }, [query, retry])
 
   function update(change) {
-    navigate(`/guilds${queryFromFilters({ ...filters, ...change })}`, { replace: true, preserveScroll: true })
+    navigate(`/${queryFromFilters({ ...filters, ...change })}`, { replace: true, preserveScroll: true })
   }
 
   async function loadMore() {
@@ -226,75 +194,69 @@ export default function GuildBrowser({ queryString = '' }) {
             }}>
               <div className="guild-search__factions" role="group" aria-label="Faction">
                 {Object.entries(FACTION_LABELS).map(([value, label]) => (
-                  <button key={value} type="button" className={`guild-search__faction guild-search__faction--${value}`}
-                    aria-pressed={filters.faction.includes(value)}
+                  <ToggleChip key={value} className="guild-search__faction" faction={value} pressed={filters.faction.includes(value)}
+                    count={facets?.factions?.[value] ?? '–'}
                     onClick={() => update({ faction: filters.faction.includes(value) ? [] : [value] })}>
-                    {label}<span>{facets?.factions?.[value] ?? '–'}</span>
-                  </button>
+                    {label}
+                  </ToggleChip>
                 ))}
               </div>
-              <label className="guild-search__field">
-                <span className="visually-hidden">Search guilds</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" /><path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                <input name="q" type="search" placeholder="Guild name, realm or motto" defaultValue={filters.q} key={filters.q} maxLength={64} />
-              </label>
-              <button type="submit" className="guild-search__submit">Search</button>
+              <TextInput className="guild-search__field" label="Search guilds" hideLabel icon={<SearchIcon />} size="lg"
+                name="q" type="search" placeholder="Guild name, realm or motto" defaultValue={filters.q} key={filters.q} maxLength={64} />
+              <Button type="submit" variant="primary" size="lg" className="guild-search__submit">Search</Button>
             </form>
 
             <div className="guild-hero__actions">
-              <a className="guild-hero__primary" href="/register">Register your guild</a>
-              <a className="guild-hero__secondary" href="/guildweaver">Get the addon</a>
+              <Button href="/register" variant="secondary" size="lg">Register your guild</Button>
+              <Button href="/guildweaver" variant="ghost" size="lg">Get the addon →</Button>
             </div>
           </header>
 
           <section className="guild-directory" aria-label="Guilds">
-            <button type="button" className="guild-directory__filters-toggle" aria-expanded={drawerOpen} onClick={() => setDrawerOpen((open) => !open)}>
-              Filters{filterCount ? ` · ${filterCount}` : ''}
-            </button>
-            <aside className={`guild-directory__rail${drawerOpen ? ' guild-directory__rail--open' : ''}`}>
+            <Button className="guild-directory__filters-toggle" block aria-expanded={drawerOpen} onClick={() => setDrawerOpen((open) => !open)}
+              icon={<svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 4h14M5 9h8M7.5 14h3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" /></svg>}>
+              {drawerOpen ? 'Hide filters' : 'Filters'}{filterCount ? ` · ${filterCount}` : ''}
+            </Button>
+            <aside className={`guild-directory__rail${drawerOpen ? ' guild-directory__rail--open' : ''}`} aria-label="Filters">
               <Filters filters={filters} facets={facets} update={update} onClear={() => update(emptyFilters())} />
             </aside>
 
             <div className="guild-directory__results">
               <div className="guild-toolbar">
                 <p className="guild-toolbar__count" aria-live="polite">
-                  {data ? <><strong>{data.total.toLocaleString()}</strong> {data.total === 1 ? 'guild' : 'guilds'}{recruitingCount ? <> · {recruitingCount} recruiting</> : null}</> : 'Searching guilds…'}
+                  {data ? <><strong>{data.total.toLocaleString()}</strong> {data.total === 1 ? 'guild' : 'guilds'}{recruitingCount ? <> · <span className="guild-toolbar__recruiting">{recruitingCount} recruiting</span></> : null}</> : 'Searching guilds…'}
                 </p>
-                <label className="guild-toolbar__sort">
-                  <span>Sort</span>
-                  <select value={filters.sort} onChange={(event) => update({ sort: event.target.value })}>
-                    {Object.entries(SORT_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </label>
+                <Select className="guild-toolbar__sort" label="Sort by" inline options={Object.entries(SORT_LABELS)}
+                  value={filters.sort} onChange={(event) => update({ sort: event.target.value })} />
               </div>
               <ActivePills filters={filters} update={update} />
 
               {result.error ? (
-                <div className="guild-empty" role="alert">
+                <Panel tone="dashed" padding="lg" className="guild-empty" role="alert">
                   <h3>Something went wrong</h3>
                   <p>{result.error}</p>
-                  <button type="button" className="guild-empty__action" onClick={() => setRetry((value) => value + 1)}>Try again</button>
-                </div>
+                  <Button variant="secondary" onClick={() => setRetry((value) => value + 1)}>Try again</Button>
+                </Panel>
               ) : !data ? <SkeletonGrid /> : guilds.length ? (
                 <>
                   <div className={`guild-grid${result.loading ? ' guild-grid--refreshing' : ''}`}>
                     {guilds.map((guild) => <GuildCard key={guild.id} guild={guild} />)}
                   </div>
                   {hasMore ? (
-                    <button type="button" className="guild-more" onClick={loadMore} disabled={extra.loading}>
+                    <Button className="guild-more" size="lg" onClick={loadMore} loading={extra.loading}>
                       {extra.loading ? 'Loading…' : 'Show more guilds'}
-                    </button>
+                    </Button>
                   ) : null}
                 </>
               ) : (
-                <div className="guild-empty">
+                <Panel tone="dashed" padding="lg" className="guild-empty">
                   <h3>No guilds match yet</h3>
                   <p>Loosen a filter, or be the first: register your guild and it will appear here.</p>
                   <div className="guild-empty__actions">
-                    {filterCount ? <button type="button" className="guild-empty__action" onClick={() => update(emptyFilters())}>Clear filters</button> : null}
-                    <a className="guild-empty__action guild-empty__action--primary" href="/register">Register your guild</a>
+                    {filterCount ? <Button variant="secondary" onClick={() => update(emptyFilters())}>Clear filters</Button> : null}
+                    <Button variant="primary" href="/register">Register your guild</Button>
                   </div>
-                </div>
+                </Panel>
               )}
             </div>
           </section>

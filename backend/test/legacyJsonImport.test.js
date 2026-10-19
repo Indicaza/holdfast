@@ -14,6 +14,7 @@ import {
   readContributionTotals,
   readMemberContributionHistory,
 } from "../src/Contribution/contributionRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -167,7 +168,7 @@ test("legacy runtime JSON imports once into a fresh SQLite database", async () =
     });
     assert.equal(second.status, "already-checked");
 
-    const members = await readGuildMembers();
+    const members = await readGuildMembers(HOLDFAST_GUILD_ID);
     assert.equal(members.length, 1);
     assert.equal(members[0].rank, "Commander");
     assert.equal(members[0].rankManaged, false);
@@ -175,18 +176,18 @@ test("legacy runtime JSON imports once into a fresh SQLite database", async () =
     assert.deepEqual(members[0].billets, []);
     assert.equal(members[0].profile.characters[0].name, "Rook");
 
-    const quests = await readQuests();
+    const quests = await readQuests(HOLDFAST_GUILD_ID);
     assert.equal(quests.focusedQuestId, "quest-one");
     assert.equal(quests.quests[0].objectives[0].assignments[0].memberId, "member-one");
 
-    const totals = await readContributionTotals();
+    const totals = await readContributionTotals(HOLDFAST_GUILD_ID);
     assert.deepEqual(totals.get("member-one"), {
       rep: 100,
       marks: 25,
       completedObjectives: 1,
     });
 
-    const history = await readMemberContributionHistory("member-one");
+    const history = await readMemberContributionHistory(HOLDFAST_GUILD_ID, "member-one");
     assert.equal(history.length, 1);
     assert.equal(legacyJsonImportStatus().status, "imported");
   } finally {

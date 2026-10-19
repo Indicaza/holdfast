@@ -8,7 +8,7 @@ export function createAuditRouter() {
 
   router.get("/", requirePermission("audit.view"), (req, res) => {
     try {
-      const events = readAuditEvents(req.query.limit, {
+      const events = readAuditEvents(req.guild.id, req.query.limit, {
         includeSnapshots: req.query.details === "true",
       });
       res.set("Cache-Control", "no-store");

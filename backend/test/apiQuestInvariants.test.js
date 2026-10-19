@@ -3,6 +3,7 @@ import test from 'node:test'
 import { withGuildDatabase } from '../src/Data/database.js'
 import { readContributionTotals } from '../src/Contribution/contributionRepository.js'
 import { objective, persistentState, withHttpApp } from '../testSupport/httpHarness.js'
+import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 
 async function workspace(request) {
   const response = await request('/api/quests/manage', { persona: 'owner' })
@@ -63,7 +64,7 @@ test('completed work pays exactly once through concurrent HTTP submissions', () 
   const results = await Promise.all([0, 1].map(() => request('/api/quests/manage/complete-objective', { method: 'POST', persona: 'officer', body })))
   assert.equal(results.filter((result) => result.status === 200).length, 1, JSON.stringify(results))
   assert.ok(results.some((result) => result.status === 409))
-  assert.deepEqual((await readContributionTotals()).get('e2e-member'), { rep: 100, marks: 5, completedObjectives: 1 })
+  assert.deepEqual((await readContributionTotals(HOLDFAST_GUILD_ID)).get('e2e-member'), { rep: 100, marks: 5, completedObjectives: 1 })
   const state = withGuildDatabase((db) => ({
     transactions: db.prepare('SELECT COUNT(*) AS count FROM contribution_transactions').get().count,
     awards: db.prepare("SELECT COUNT(*) AS count FROM audit_events WHERE event_type = 'quest.objective_completed'").get().count,
@@ -87,6 +88,6 @@ test('rejection needs a reason and resubmission and withdrawal preserve unpaid w
   assert.equal(rejected.completion.status, 'rejected')
   await successful(request, '/api/quests/member/request-completion', { method: 'POST', persona: 'member', body: { ...objective, note: 'Delivered the rest.' } }, 201)
   await successful(request, '/api/quests/member/withdraw-completion', { method: 'POST', persona: 'member', body: objective })
-  assert.equal((await readContributionTotals()).size, 0)
+  assert.equal((await readContributionTotals(HOLDFAST_GUILD_ID)).size, 0)
   assert.equal((await workspace(request)).quests[0].objectives[0].completed, false)
 }))

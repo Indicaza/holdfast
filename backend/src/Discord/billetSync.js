@@ -3,7 +3,13 @@ import {
   setBilletDiscordRoleId,
 } from "../Guild/billetRepository.js";
 import { readGuildMembers } from "../Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 import { DiscordApiClient } from "./provisioning.js";
+
+// Billet roles exist only in Holdfast's Discord server.
+function persistHoldfastBilletRoleId(billetId, roleId) {
+  return setBilletDiscordRoleId(billetId, roleId, { guildId: HOLDFAST_GUILD_ID });
+}
 
 const RECONCILE_MILLISECONDS = 24 * 60 * 60 * 1000;
 const BILLET_ROLE_COLOR = 14532989;
@@ -49,7 +55,7 @@ async function ensureBilletRole({
   client,
   guildId,
   liveRoles,
-  persistRoleId = setBilletDiscordRoleId,
+  persistRoleId = persistHoldfastBilletRoleId,
 }) {
   let role = billet.discordRoleId
     ? liveRoles.find((candidate) => candidate.id === billet.discordRoleId)
@@ -150,7 +156,7 @@ export async function ensureDiscordBilletRoles({
   client: providedClient = null,
   billets: providedBillets = null,
   liveRoles: providedRoles = null,
-  persistRoleId = setBilletDiscordRoleId,
+  persistRoleId = persistHoldfastBilletRoleId,
 } = {}) {
   const current = config(env);
 
@@ -159,7 +165,7 @@ export async function ensureDiscordBilletRoles({
   }
 
   const client = clientFor(env, providedClient);
-  const billets = providedBillets || (await readBillets());
+  const billets = providedBillets || (await readBillets(HOLDFAST_GUILD_ID));
   const liveRoles =
     providedRoles ||
     (await client.request(`/guilds/${current.guildId}/roles`));
@@ -187,7 +193,7 @@ export async function syncDiscordMemberBillets(
     billets: providedBillets = null,
     liveRoles: providedRoles = null,
     rolesByBilletId: providedRoleMap = null,
-    persistRoleId = setBilletDiscordRoleId,
+    persistRoleId = persistHoldfastBilletRoleId,
   } = {},
 ) {
   if (!member?.id) {
@@ -286,13 +292,13 @@ export async function reconcileDiscordBillets({
   client: providedClient = null,
   billets: providedBillets = null,
   members: providedMembers = null,
-  persistRoleId = setBilletDiscordRoleId,
+  persistRoleId = persistHoldfastBilletRoleId,
   logger = console,
 } = {}) {
   const current = config(env);
   const client = clientFor(env, providedClient);
-  const billets = providedBillets || (await readBillets());
-  const members = providedMembers || (await readGuildMembers());
+  const billets = providedBillets || (await readBillets(HOLDFAST_GUILD_ID));
+  const members = providedMembers || (await readGuildMembers(HOLDFAST_GUILD_ID));
   const managedMembers = members.filter((member) => member.billetsManaged);
   const liveRoles = await client.request(
     `/guilds/${current.guildId}/roles`,

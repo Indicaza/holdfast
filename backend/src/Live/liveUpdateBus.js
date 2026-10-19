@@ -10,6 +10,7 @@ function normalizeTopics(topics) {
 function canReceive(subscriber, event) {
   if (event.memberId && subscriber.memberId !== event.memberId) return false
   if (event.permission && !subscriber.permissions.includes(event.permission)) return false
+  if (event.guildId && !subscriber.guildIds.includes(event.guildId)) return false
   return true
 }
 
@@ -20,6 +21,7 @@ export function publishLiveUpdate({
   actorId = null,
   memberId = null,
   permission = null,
+  guildId = null,
   detail = null,
 } = {}) {
   const normalizedTopics = normalizeTopics(topics)
@@ -34,6 +36,7 @@ export function publishLiveUpdate({
     actorId: actorId ? String(actorId) : null,
     memberId: memberId ? String(memberId) : null,
     permission: permission ? String(permission) : null,
+    guildId: guildId ? String(guildId) : null,
     detail: detail && typeof detail === 'object' ? detail : null,
     at: new Date().toISOString(),
   }
@@ -50,10 +53,11 @@ export function publishLiveUpdate({
   return event
 }
 
-export function subscribeLiveUpdates({ memberId, permissions = [], send }) {
+export function subscribeLiveUpdates({ memberId, permissions = [], guildIds = [], send }) {
   const subscriber = {
     memberId: String(memberId || ''),
     permissions: Array.isArray(permissions) ? permissions.map(String) : [],
+    guildIds: Array.isArray(guildIds) ? guildIds.filter(Boolean).map(String) : [],
     send,
   }
   subscribers.add(subscriber)

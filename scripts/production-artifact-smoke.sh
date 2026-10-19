@@ -74,7 +74,7 @@ probe_state() {
     try {
       const count = (table) => Number(db.prepare("SELECT COUNT(*) AS count FROM " + table).get().count);
       const migration = db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get();
-      const focused = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE id = 1").get();
+      const focused = db.prepare("SELECT focused_quest_id FROM quest_settings WHERE guild_id = ?").get("guild-holdfast");
       const quest = db.prepare("SELECT title FROM quests WHERE id = ?").get("e2e-supply-run");
       const state = {
         schemaVersion: Number(migration.version),
@@ -135,7 +135,7 @@ start_container
 smoke_http
 probe_state | tee "$FIRST_STATE_FILE"
 
-grep -q '"schemaVersion":12' "$FIRST_STATE_FILE"
+grep -q '"schemaVersion":13' "$FIRST_STATE_FILE"
 grep -q '"members":3' "$FIRST_STATE_FILE"
 grep -q '"quests":1' "$FIRST_STATE_FILE"
 grep -q '"objectives":2' "$FIRST_STATE_FILE"
@@ -166,7 +166,7 @@ fi
 BACKUP_STATE="$(probe_startup_backup)"
 echo "$BACKUP_STATE"
 echo "$BACKUP_STATE" | grep -q '"files":1'
-echo "$BACKUP_STATE" | grep -q '"schemaVersion":12'
+echo "$BACKUP_STATE" | grep -q '"schemaVersion":13'
 echo "$BACKUP_STATE" | grep -q '"questTitle":"E2E Supply Run"'
 echo "$BACKUP_STATE" | grep -q '"integrity":"ok"'
 

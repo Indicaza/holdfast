@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
+import { Button, Select, Switch, TextArea, TextInput, ToggleChip } from '../DesignSystem/index.js'
 import Footer from '../Home/Footer/Footer.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import GuildCard from './GuildCard.jsx'
@@ -40,14 +41,18 @@ const REALM_TYPE_HINTS = {
   hardcore: 'One life per character',
 }
 
-function FieldError({ code }) {
-  return code ? <p className="guild-form__error" role="alert">{FIELD_ERRORS[code] || 'Check this field.'}</p> : null
+function errorText(code) {
+  return code ? FIELD_ERRORS[code] || 'Check this field.' : undefined
 }
 
-function Choice({ active, onClick, children, tone, label, className = '' }) {
+function FieldError({ code }) {
+  return code ? <p className="ds-field__error" role="alert">{errorText(code)}</p> : null
+}
+
+function Choice({ active, onClick, children, tone, faction, label }) {
   return (
-    <button type="button" className={`guild-choice${active ? ' guild-choice--active' : ''}${tone ? ` guild-choice--${tone}` : ''} ${className}`}
-      aria-pressed={active} aria-label={label} onClick={onClick}>
+    <button type="button" className={`guild-choice${active ? ' guild-choice--active' : ''}${tone ? ` guild-choice--${tone}` : ''}${faction ? ' guild-choice--faction' : ''}`}
+      data-faction={faction} aria-pressed={active} aria-label={label} onClick={onClick}>
       {children}
     </button>
   )
@@ -57,22 +62,17 @@ function IdentityStep({ draft, set, errors }) {
   const slug = draftSlug(draft.name)
   return (
     <>
-      <label className="guild-form__field">
-        <span>Guild name</span>
-        <input value={draft.name} maxLength={48} autoFocus placeholder="Ashen Vanguard" onChange={(event) => set({ name: event.target.value })} />
-        <small>{window.location.host}{guildPath(slug || 'your-guild')}</small>
-        <FieldError code={errors.name || errors.slug} />
-      </label>
-      <label className="guild-form__field">
-        <span>Motto</span>
-        <input value={draft.tagline} maxLength={120} placeholder="One line that says who you are." onChange={(event) => set({ tagline: event.target.value })} />
-      </label>
+      <TextInput label="Guild name" size="lg" value={draft.name} maxLength={48} autoFocus placeholder="Ashen Vanguard"
+        hint={`${window.location.host}${guildPath(slug || 'your-guild')}`} error={errorText(errors.name || errors.slug)}
+        onChange={(event) => set({ name: event.target.value })} />
+      <TextInput label="Motto" value={draft.tagline} maxLength={120} placeholder="One line that says who you are."
+        onChange={(event) => set({ tagline: event.target.value })} />
 
-      <fieldset className="guild-form__field">
+      <fieldset className="guild-form__group">
         <legend>Faction</legend>
         <div className="guild-form__factions">
           {Object.entries(FACTION_LABELS).map(([value, label]) => (
-            <Choice key={value} tone={value} label={label} active={draft.faction === value} onClick={() => set({ faction: value })}>
+            <Choice key={value} faction={value} label={label} active={draft.faction === value} onClick={() => set({ faction: value })}>
               <strong>{label}</strong>
             </Choice>
           ))}
@@ -81,26 +81,13 @@ function IdentityStep({ draft, set, errors }) {
       </fieldset>
 
       <div className="guild-form__row">
-        <label className="guild-form__field">
-          <span>Region</span>
-          <select value={draft.region} onChange={(event) => set({ region: event.target.value })}>
-            {Object.entries(REGION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label className="guild-form__field">
-          <span>Realm</span>
-          <input value={draft.realm} maxLength={48} placeholder="Doomhowl" onChange={(event) => set({ realm: event.target.value })} />
-          <FieldError code={errors.realm} />
-        </label>
-        <label className="guild-form__field">
-          <span>Language</span>
-          <select value={draft.language} onChange={(event) => set({ language: event.target.value })}>
-            {Object.entries(LANGUAGE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
+        <Select label="Region" value={draft.region} options={Object.entries(REGION_LABELS)} onChange={(event) => set({ region: event.target.value })} />
+        <TextInput label="Realm" value={draft.realm} maxLength={48} placeholder="Doomhowl" error={errorText(errors.realm)}
+          onChange={(event) => set({ realm: event.target.value })} />
+        <Select label="Language" value={draft.language} options={Object.entries(LANGUAGE_LABELS)} onChange={(event) => set({ language: event.target.value })} />
       </div>
 
-      <fieldset className="guild-form__field">
+      <fieldset className="guild-form__group">
         <legend>Realm type</legend>
         <div className="guild-form__realm-types">
           {Object.entries(REALM_TYPE_LABELS).map(([value, label]) => (
@@ -112,7 +99,7 @@ function IdentityStep({ draft, set, errors }) {
         <FieldError code={errors.realmType} />
       </fieldset>
 
-      <fieldset className="guild-form__field">
+      <fieldset className="guild-form__group">
         <legend>Banner colour</legend>
         <div className="guild-form__swatches">
           {ACCENT_SWATCHES.map((color) => (
@@ -129,66 +116,40 @@ function IdentityStep({ draft, set, errors }) {
 function PlayStep({ draft, set, errors }) {
   return (
     <>
-      <fieldset className="guild-form__field">
+      <fieldset className="guild-form__group">
         <legend>Play styles <em>up to five</em></legend>
         <div className="guild-chips">
           {Object.entries(PLAY_STYLE_LABELS).map(([value, label]) => (
-            <button key={value} type="button" className={`guild-chip${draft.playStyles.includes(value) ? ' guild-chip--active' : ''}`}
-              aria-pressed={draft.playStyles.includes(value)}
+            <ToggleChip key={value} pressed={draft.playStyles.includes(value)}
               disabled={!draft.playStyles.includes(value) && draft.playStyles.length >= 5}
-              onClick={() => set({ playStyles: toggleValue(draft.playStyles, value) })}>{label}</button>
+              onClick={() => set({ playStyles: toggleValue(draft.playStyles, value) })}>{label}</ToggleChip>
           ))}
         </div>
         <FieldError code={errors.playStyles} />
       </fieldset>
 
-      <fieldset className="guild-form__field">
+      <fieldset className="guild-form__group">
         <legend>Raid or event nights <em>optional</em></legend>
         <div className="guild-chips guild-chips--days">
           {Object.entries(WEEKDAY_LABELS).map(([value, label]) => (
-            <button key={value} type="button" className={`guild-chip${draft.raidDays.includes(value) ? ' guild-chip--active' : ''}`}
-              aria-pressed={draft.raidDays.includes(value)} onClick={() => set({ raidDays: toggleValue(draft.raidDays, value) })}>{label}</button>
+            <ToggleChip key={value} pressed={draft.raidDays.includes(value)} onClick={() => set({ raidDays: toggleValue(draft.raidDays, value) })}>{label}</ToggleChip>
           ))}
         </div>
       </fieldset>
 
       <div className="guild-form__row">
-        <label className="guild-form__field">
-          <span>Starts</span>
-          <input type="time" value={draft.raidStart} onChange={(event) => set({ raidStart: event.target.value })} />
-          <FieldError code={errors.raidStart} />
-        </label>
-        <label className="guild-form__field">
-          <span>Ends</span>
-          <input type="time" value={draft.raidEnd} onChange={(event) => set({ raidEnd: event.target.value })} />
-        </label>
-        <label className="guild-form__field">
-          <span>Time zone</span>
-          <input value={draft.timezone} maxLength={64} placeholder="America/Chicago" onChange={(event) => set({ timezone: event.target.value })} />
-          <FieldError code={errors.timezone} />
-        </label>
+        <TextInput label="Starts" type="time" value={draft.raidStart} error={errorText(errors.raidStart)} onChange={(event) => set({ raidStart: event.target.value })} />
+        <TextInput label="Ends" type="time" value={draft.raidEnd} onChange={(event) => set({ raidEnd: event.target.value })} />
+        <TextInput label="Time zone" value={draft.timezone} maxLength={64} placeholder="America/Chicago" error={errorText(errors.timezone)}
+          onChange={(event) => set({ timezone: event.target.value })} />
       </div>
 
       <div className="guild-form__row">
-        <label className="guild-form__field">
-          <span>Voice chat</span>
-          <select value={draft.voiceRequired ? 'yes' : 'no'} onChange={(event) => set({ voiceRequired: event.target.value === 'yes' })}>
-            <option value="no">Optional</option>
-            <option value="yes">Required for raids</option>
-          </select>
-        </label>
-        <label className="guild-form__field">
-          <span>Age</span>
-          <select value={draft.agePolicy} onChange={(event) => set({ agePolicy: event.target.value })}>
-            <option value="any">All ages</option>
-            <option value="adult">18+</option>
-          </select>
-        </label>
-        <label className="guild-form__field">
-          <span>Minimum level</span>
-          <input type="number" min={1} max={60} value={draft.minimumLevel}
-            onChange={(event) => set({ minimumLevel: Math.min(60, Math.max(1, Number.parseInt(event.target.value, 10) || 1)) })} />
-        </label>
+        <Select label="Voice chat" value={draft.voiceRequired ? 'yes' : 'no'} options={[['no', 'Optional'], ['yes', 'Required for raids']]}
+          onChange={(event) => set({ voiceRequired: event.target.value === 'yes' })} />
+        <Select label="Age" value={draft.agePolicy} options={[['any', 'All ages'], ['adult', '18+']]} onChange={(event) => set({ agePolicy: event.target.value })} />
+        <TextInput label="Minimum level" type="number" min={1} max={60} value={draft.minimumLevel}
+          onChange={(event) => set({ minimumLevel: Math.min(60, Math.max(1, Number.parseInt(event.target.value, 10) || 1)) })} />
       </div>
     </>
   )
@@ -197,44 +158,34 @@ function PlayStep({ draft, set, errors }) {
 function RecruitingStep({ draft, set, errors, templateUrl }) {
   return (
     <>
-      <label className="guild-switch guild-switch--inline">
-        <input type="checkbox" checked={draft.recruiting} onChange={(event) => set({ recruiting: event.target.checked })} />
-        <span className="guild-switch__track" aria-hidden="true"><span /></span>
-        We&rsquo;re recruiting
-      </label>
+      <Switch label="We’re recruiting" checked={draft.recruiting} onChange={(event) => set({ recruiting: event.target.checked })} />
 
       {draft.recruiting ? (
         <>
-          <fieldset className="guild-form__field">
+          <fieldset className="guild-form__group">
             <legend>Classes you need <em>leave empty for everyone</em></legend>
             <div className="guild-classes guild-classes--wide">
               {Object.entries(CLASS_LABELS).map(([value, label]) => (
-                <button key={value} type="button" className={`guild-class${draft.recruitingClasses.includes(value) ? ' guild-class--active' : ''}`}
-                  style={{ '--class-color': classColor(value) }} aria-pressed={draft.recruitingClasses.includes(value)}
-                  onClick={() => set({ recruitingClasses: toggleValue(draft.recruitingClasses, value) })}>
-                  <span className="guild-class__swatch" aria-hidden="true" />{label}
-                </button>
+                <ToggleChip key={value} className="guild-classes__chip" color={classColor(value)} pressed={draft.recruitingClasses.includes(value)}
+                  onClick={() => set({ recruitingClasses: toggleValue(draft.recruitingClasses, value) })}>{label}</ToggleChip>
               ))}
             </div>
           </fieldset>
-          <fieldset className="guild-form__field">
+          <fieldset className="guild-form__group">
             <legend>Roles</legend>
             <div className="guild-chips">
               {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                <button key={value} type="button" className={`guild-chip${draft.recruitingRoles.includes(value) ? ' guild-chip--active' : ''}`}
-                  aria-pressed={draft.recruitingRoles.includes(value)} onClick={() => set({ recruitingRoles: toggleValue(draft.recruitingRoles, value) })}>{label}</button>
+                <ToggleChip key={value} pressed={draft.recruitingRoles.includes(value)}
+                  onClick={() => set({ recruitingRoles: toggleValue(draft.recruitingRoles, value) })}>{label}</ToggleChip>
               ))}
             </div>
           </fieldset>
         </>
       ) : null}
 
-      <label className="guild-form__field">
-        <span>About your guild</span>
-        <textarea rows={6} maxLength={4000} value={draft.description}
-          placeholder="What you value, what a typical week looks like, and who will feel at home."
-          onChange={(event) => set({ description: event.target.value })} />
-      </label>
+      <TextArea label="About your guild" rows={6} maxLength={4000} value={draft.description}
+        placeholder="What you value, what a typical week looks like, and who will feel at home."
+        onChange={(event) => set({ description: event.target.value })} />
 
       <section className="guild-discord">
         <div className="guild-discord__mark" aria-hidden="true">
@@ -243,11 +194,8 @@ function RecruitingStep({ draft, set, errors, templateUrl }) {
         <div className="guild-discord__body">
           <h3>Connect your Discord</h3>
           <p>Paste a permanent invite so players can join straight from your guild page.</p>
-          <label className="guild-form__field">
-            <span className="visually-hidden">Discord invite link</span>
-            <input value={draft.discordInviteUrl} maxLength={200} placeholder="discord.gg/yourguild" onChange={(event) => set({ discordInviteUrl: event.target.value })} />
-            <FieldError code={errors.discordInviteUrl} />
-          </label>
+          <TextInput label="Discord invite link" hideLabel value={draft.discordInviteUrl} maxLength={200} placeholder="discord.gg/yourguild"
+            error={errorText(errors.discordInviteUrl)} onChange={(event) => set({ discordInviteUrl: event.target.value })} />
           <p className="guild-discord__alt">
             No server yet?{' '}
             {templateUrl
@@ -367,8 +315,8 @@ export default function RegisterGuild() {
           <li><strong>Recruit on autopilot</strong><span>Applications and your Discord invite in one place.</span></li>
         </ul>
         <div className="guild-hero__actions">
-          <button type="button" className="guild-hero__primary" onClick={() => signIn('/register')}>Sign in with Discord</button>
-          <a className="guild-hero__secondary" href="/">Browse guilds</a>
+          <Button variant="primary" size="lg" onClick={() => signIn('/register')}>Sign in with Discord</Button>
+          <Button size="lg" href="/">Browse guilds</Button>
         </div>
       </Gate>
     )
@@ -384,13 +332,13 @@ export default function RegisterGuild() {
         <p className="guild-hero__intro">
           You&rsquo;re a member of <strong>{membership.guild.name}</strong>. Players belong to one guild on Guildweaver, so leave it first to found your own.
         </p>
-        {formError ? <p className="guild-form__error" role="alert">{formError}</p> : null}
+        {formError ? <p className="guild-alert" role="alert">{formError}</p> : null}
         <div className="guild-hero__actions">
-          {membership.guild.slug ? <a className="guild-hero__secondary" href={guildPath(membership.guild.slug)}>View {membership.guild.name}</a> : null}
-          <button type="button" className="guild-hero__primary" disabled={leaving}
+          {membership.guild.slug ? <Button size="lg" href={guildPath(membership.guild.slug)}>View {membership.guild.name}</Button> : null}
+          <Button variant="danger" size="lg" loading={leaving}
             onClick={() => { if (window.confirm(`Leave ${membership.guild.name}?`)) leave() }}>
             {leaving ? 'Leaving…' : `Leave ${membership.guild.name}`}
-          </button>
+          </Button>
         </div>
       </Gate>
     )
@@ -402,7 +350,7 @@ export default function RegisterGuild() {
       <div className="guild-browser__backdrop guild-page__backdrop" aria-hidden="true" />
       <div className="guild-browser__frame">
         <main>
-          <a className="guild-page__back" href="/">← All guilds</a>
+          <a className="guild-back" href="/"><span aria-hidden="true">←</span> All guilds</a>
           <header className="guild-register__head">
             <p className="guild-hero__eyebrow">Guildweaver · Register</p>
             <h1>Register your guild</h1>
@@ -423,19 +371,19 @@ export default function RegisterGuild() {
               {step === 0 ? <IdentityStep draft={draft} set={set} errors={errors} /> : null}
               {step === 1 ? <PlayStep draft={draft} set={set} errors={errors} /> : null}
               {step === 2 ? <RecruitingStep draft={draft} set={set} errors={errors} templateUrl={templateUrl} /> : null}
-              {formError ? <p className="guild-form__error" role="alert">{formError}</p> : null}
+              {formError ? <p className="guild-alert" role="alert">{formError}</p> : null}
               <div className="guild-form__actions">
-                {step > 0 ? <button type="button" className="guild-page__secondary" onClick={() => setStep(step - 1)}>Back</button> : <span />}
-                <button type="submit" className="guild-page__primary" disabled={submitting}>
+                {step > 0 ? <Button size="lg" onClick={() => setStep(step - 1)}>Back</Button> : <span />}
+                <Button type="submit" variant="primary" size="lg" loading={submitting}>
                   {step < STEPS.length - 1 ? 'Continue' : submitting ? 'Registering…' : 'Register guild'}
-                </button>
+                </Button>
               </div>
             </form>
 
             <aside className="guild-register__preview" aria-label="Preview">
               <p className="guild-register__preview-label">Live preview</p>
               <GuildCard guild={preview} preview />
-              <p className="guild-panel__note">This is how players will see your guild in the directory. Install the Guildweaver addon to earn the verified badge.</p>
+              <p className="guild-note">This is how players will see your guild in the directory. Install the Guildweaver addon to earn the verified badge.</p>
             </aside>
           </div>
         </main>

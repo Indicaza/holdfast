@@ -11,6 +11,7 @@ import {
   updateQuests,
   writeQuests,
 } from "../src/Quest/questRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function questDocument() {
   return {
@@ -48,12 +49,13 @@ test("quest revisions reject stale admin writes and retain audit history", async
     process.env.NODE_ENV = "test";
     process.env.GUILD_DATA_DIR = directory;
 
-    await writeQuests(questDocument());
-    const opened = await readQuestWorkspace();
+    await writeQuests(HOLDFAST_GUILD_ID, questDocument());
+    const opened = await readQuestWorkspace(HOLDFAST_GUILD_ID);
 
     assert.equal(opened.revision, 1);
 
     const saved = await updateQuests(
+      HOLDFAST_GUILD_ID,
       (current) => ({ ...current, rewardPolicy: "Keep rewards useful." }),
       {
         expectedRevision: opened.revision,
@@ -74,6 +76,7 @@ test("quest revisions reject stale admin writes and retain audit history", async
     await assert.rejects(
       () =>
         updateQuests(
+          HOLDFAST_GUILD_ID,
           (current) => ({ ...current, rewardPolicy: "Stale overwrite" }),
           {
             expectedRevision: opened.revision,
@@ -85,11 +88,11 @@ test("quest revisions reject stale admin writes and retain audit history", async
         error.currentRevision === 2,
     );
 
-    const afterConflict = await readQuestWorkspace();
+    const afterConflict = await readQuestWorkspace(HOLDFAST_GUILD_ID);
     assert.equal(afterConflict.revision, 2);
     assert.equal(afterConflict.rewardPolicy, "Keep rewards useful.");
 
-    const events = readAuditEvents(100, { includeSnapshots: true });
+    const events = readAuditEvents(HOLDFAST_GUILD_ID, 100, { includeSnapshots: true });
     assert.equal(events.length, 1);
     assert.equal(events[0].eventType, "quest.workspace_saved");
     assert.equal(events[0].actorMemberId, "officer-one");

@@ -15,6 +15,7 @@ import {
   readGuildMembers,
   upsertGuildMember,
 } from "../src/Guild/memberRepository.js";
+import { HOLDFAST_GUILD_ID } from "../src/Guild/guildScope.js";
 
 function preserveEnvironment() {
   return {
@@ -49,7 +50,7 @@ test("billets can be created, described, edited, and assigned to members", async
       username: "rook",
     });
 
-    const defaults = await readBillets();
+    const defaults = await readBillets(HOLDFAST_GUILD_ID);
     assert.deepEqual(
       defaults.map((billet) => billet.name).sort(),
       ["PvP Lead", "Quartermaster", "Raid Leader", "Steward"].sort(),
@@ -60,29 +61,29 @@ test("billets can be created, described, edited, and assigned to members", async
         name: "Recruiter",
         responsibility: "Welcomes prospects and helps new members get settled.",
       },
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     assert.equal(created.status, "created");
     assert.equal(created.billet.name, "Recruiter");
 
-    const duplicate = await createBillet({
-      name: "recruiter",
-      responsibility: "",
-    });
+    const duplicate = await createBillet(
+      { name: "recruiter", responsibility: "" },
+      { guildId: HOLDFAST_GUILD_ID },
+    );
     assert.equal(duplicate.status, "duplicate_name");
 
     const assigned = await setMemberBilletAssignment(
       "member-one",
       created.billet.id,
       true,
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     assert.equal(assigned.status, "assigned");
     assert.equal(assigned.billets[0].name, "Recruiter");
 
-    let members = await readGuildMembers();
+    let members = await readGuildMembers(HOLDFAST_GUILD_ID);
     assert.equal(members[0].billets[0].name, "Recruiter");
 
     const updated = await updateBillet(
@@ -91,7 +92,7 @@ test("billets can be created, described, edited, and assigned to members", async
         name: "Recruit Lead",
         responsibility: "Owns recruiting and new-member onboarding.",
       },
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     assert.equal(updated.status, "updated");
@@ -101,12 +102,12 @@ test("billets can be created, described, edited, and assigned to members", async
       "member-one",
       created.billet.id,
       false,
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     assert.equal(removed.status, "removed");
 
-    members = await readGuildMembers();
+    members = await readGuildMembers(HOLDFAST_GUILD_ID);
     assert.deepEqual(members[0].billets, []);
   } finally {
     restoreEnvironment(previous);
@@ -128,43 +129,47 @@ test("custom billets delete cleanly while infrastructure billets stay protected"
       username: "rook",
     });
 
-    const created = await createBillet({
-      name: "Dungeon Master",
-      responsibility: "Builds dungeon groups.",
-    });
+    const created = await createBillet(
+      {
+        name: "Dungeon Master",
+        responsibility: "Builds dungeon groups.",
+      },
+      { guildId: HOLDFAST_GUILD_ID },
+    );
 
     await setMemberBilletAssignment(
       "member-one",
       created.billet.id,
       true,
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     const deleted = await deleteBillet(
       created.billet.id,
-      { actorMemberId: "member-one" },
+      { guildId: HOLDFAST_GUILD_ID, actorMemberId: "member-one" },
     );
 
     assert.equal(deleted.status, "deleted");
     assert.equal(deleted.assignmentCount, 1);
     assert.equal(
-      (await readBillets()).some((billet) => billet.id === created.billet.id),
+      (await readBillets(HOLDFAST_GUILD_ID)).some((billet) => billet.id === created.billet.id),
       false,
     );
 
-    const members = await readGuildMembers();
+    const members = await readGuildMembers(HOLDFAST_GUILD_ID);
     assert.deepEqual(members[0].billets, []);
 
-    const steward = (await readBillets()).find(
+    const steward = (await readBillets(HOLDFAST_GUILD_ID)).find(
       (billet) => billet.name === "Steward",
     );
     const protectedResult = await deleteBillet(steward.id, {
+      guildId: HOLDFAST_GUILD_ID,
       actorMemberId: "member-one",
     });
 
     assert.equal(protectedResult.status, "protected");
     assert.ok(
-      (await readBillets()).some((billet) => billet.id === steward.id),
+      (await readBillets(HOLDFAST_GUILD_ID)).some((billet) => billet.id === steward.id),
     );
   } finally {
     restoreEnvironment(previous);
@@ -181,24 +186,30 @@ test("billet validation rejects empty names and oversized responsibility text", 
     process.env.GUILD_DATA_DIR = directory;
 
     assert.equal(
-      (await createBillet({ name: " ", responsibility: "" })).status,
+      (await createBillet({ name: " ", responsibility: "" }, { guildId: HOLDFAST_GUILD_ID })).status,
       "invalid_name",
     );
     assert.equal(
       (
-        await createBillet({
-          name: "Recruiter",
-          responsibility: "x".repeat(601),
-        })
+        await createBillet(
+          {
+            name: "Recruiter",
+            responsibility: "x".repeat(601),
+          },
+          { guildId: HOLDFAST_GUILD_ID },
+        )
       ).status,
       "invalid_responsibility",
     );
     assert.equal(
       (
-        await createBillet({
-          name: "Commander",
-          responsibility: "Definitely not a billet.",
-        })
+        await createBillet(
+          {
+            name: "Commander",
+            responsibility: "Definitely not a billet.",
+          },
+          { guildId: HOLDFAST_GUILD_ID },
+        )
       ).status,
       "reserved_name",
     );

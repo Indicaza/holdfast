@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { Badge } from '../DesignSystem/index.js'
 import { FACTION_COLORS, guildInitials } from './guildDirectoryModel.js'
 
 // A heraldic shield in the guild's accent colour with its initials, edged in
@@ -30,9 +31,24 @@ export function GuildCrest({ name, accentColor = '#c4a667', faction = 'alliance'
 
 export function FactionMark({ faction }) {
   return (
-    <span className={`guild-faction guild-faction--${faction}`}>
-      <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M5 0 L10 2 V6 C10 9 7.5 11 5 12 C2.5 11 0 9 0 6 V2 Z" fill="currentColor" /></svg>
+    <Badge faction={faction === 'horde' ? 'horde' : 'alliance'}
+      icon={<svg width="11" height="13" viewBox="0 0 10 12"><path d="M5 0 L10 2 V6 C10 9 7.5 11 5 12 C2.5 11 0 9 0 6 V2 Z" fill="currentColor" /></svg>}>
       {faction === 'horde' ? 'Horde' : 'Alliance'}
-    </span>
+    </Badge>
+  )
+}
+
+const REALM_TONES = { hardcore: 'danger', pvp: 'gold', rp_pvp: 'gold', rp: 'arcane' }
+
+export function RealmBadge({ realmType, label }) {
+  return <Badge tone={REALM_TONES[realmType] || 'neutral'}>{label}</Badge>
+}
+
+export function VerifiedBadge({ children = 'Verified' }) {
+  return (
+    <Badge tone="gold" title="Activity verified by the Guildweaver addon"
+      icon={<svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 0 7.6 1.4 9.7 1.2 10.3 3.2 12 4.5 11.2 6.5 12 8.5 10.3 9.8 9.7 11.8 7.6 11.6 6 13 4.4 11.6 2.3 11.8 1.7 9.8 0 8.5.8 6.5 0 4.5 1.7 3.2 2.3 1.2 4.4 1.4Z" fill="currentColor" /><path d="m3.6 6.4 1.6 1.6 3.3-3.4" stroke="#07111f" strokeWidth="1.4" fill="none" strokeLinecap="round" /></svg>}>
+      {children}
+    </Badge>
   )
 }

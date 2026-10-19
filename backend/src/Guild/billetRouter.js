@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requireHoldfastMember, requirePermission } from "../Auth/permissions.js";
+import { requireGuildMember, requirePermission } from "../Auth/permissions.js";
 import {
   createBillet,
   deleteBillet,
@@ -12,8 +12,23 @@ import {
   deleteDiscordBilletRole,
   ensureDiscordBilletRoles,
 } from "../Discord/billetSync.js";
-import { authorityCanGrantBillet } from "./authorityRepository.js";
+import { authorityCanGrantBillet, readRankLadder } from "./authorityRepository.js";
+import { isHoldfastGuild } from "./guildScope.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
+
+// Holdfast's billets are roles in its Discord server; other guilds' billets
+// live only on the website.
+async function syncBilletRole(req, billet) {
+  if (!isHoldfastGuild(req.guild.id)) return { status: "not-applicable" };
+
+  try {
+    await ensureDiscordBilletRoles({ billets: [billet] });
+    return { status: "synced" };
+  } catch (error) {
+    console.error(`Unable to sync Discord role for billet ${billet.id}`, error);
+    return { status: "pending" };
+  }
+}
 
 function billetErrorResponse(res, status) {
   if (
@@ -50,9 +65,9 @@ export function createBilletRouter() {
     max: 60,
   });
 
-  router.get("/", requireHoldfastMember, async (req, res) => {
+  router.get("/", requireGuildMember, async (req, res) => {
     try {
-      const billets = await readBillets();
+      const billets = await readBillets(req.guild.id);
       res.set("Cache-Control", "no-store");
       res.json({ billets });
     } catch (error) {
@@ -68,26 +83,14 @@ export function createBilletRouter() {
     async (req, res) => {
       try {
         const result = await createBillet(req.body, {
+          guildId: req.guild.id,
           actorMemberId: req.auth.user.id,
         });
 
         if (billetErrorResponse(res, result.status)) return;
 
-        let discordSync = { status: "pending" };
-
-        try {
-          await ensureDiscordBilletRoles({
-            billets: [result.billet],
-          });
-          discordSync = { status: "synced" };
-        } catch (error) {
-          console.error(
-            `Unable to create Discord role for billet ${result.billet.id}`,
-            error,
-          );
-        }
-
-        const billets = await readBillets();
+        const discordSync = await syncBilletRole(req, result.billet);
+        const billets = await readBillets(req.guild.id);
         const billet =
           billets.find((item) => item.id === result.billet.id) ||
           result.billet;
@@ -107,26 +110,14 @@ export function createBilletRouter() {
     async (req, res) => {
       try {
         const result = await updateBillet(req.params.billetId, req.body, {
+          guildId: req.guild.id,
           actorMemberId: req.auth.user.id,
         });
 
         if (billetErrorResponse(res, result.status)) return;
 
-        let discordSync = { status: "pending" };
-
-        try {
-          await ensureDiscordBilletRoles({
-            billets: [result.billet],
-          });
-          discordSync = { status: "synced" };
-        } catch (error) {
-          console.error(
-            `Unable to update Discord role for billet ${result.billet.id}`,
-            error,
-          );
-        }
-
-        const billets = await readBillets();
+        const discordSync = await syncBilletRole(req, result.billet);
+        const billets = await readBillets(req.guild.id);
         const billet =
           billets.find((item) => item.id === result.billet.id) ||
           result.billet;
@@ -146,7 +137,7 @@ export function createBilletRouter() {
     writeRateLimit,
     async (req, res) => {
       try {
-        const billet = await readBillet(req.params.billetId);
+        const billet = await readBillet(req.guild.id, req.params.billetId);
 
         if (!billet) {
           res.status(404).json({ error: "billet_not_found" });
@@ -158,13 +149,21 @@ export function createBilletRouter() {
           return;
         }
 
-        if (!authorityCanGrantBillet(req.auth.authority, billet)) {
+        if (
+          !authorityCanGrantBillet(
+            req.auth.authority,
+            billet,
+            readRankLadder(req.guild.id),
+          )
+        ) {
           res.status(403).json({ error: "authority_scope_exceeded" });
           return;
         }
 
         try {
-          await deleteDiscordBilletRole(billet);
+          if (isHoldfastGuild(req.guild.id)) {
+            await deleteDiscordBilletRole(billet);
+          }
         } catch (error) {
           console.error(
             `Unable to delete Discord role for billet ${billet.id}`,
@@ -175,6 +174,7 @@ export function createBilletRouter() {
         }
 
         const result = await deleteBillet(req.params.billetId, {
+          guildId: req.guild.id,
           actorMemberId: req.auth.user.id,
         });
 

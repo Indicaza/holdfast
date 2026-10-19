@@ -98,10 +98,79 @@
 
   --focus-ring-width: 2px;
   --focus-ring-offset: 3px;
+  --focus-ring-color: var(--color-gold-300);
+  --focus-ring-halo: 0 0 0 3px rgba(221, 193, 125, 0.3);
+
+  /* Status colours */
+  --color-danger: #ff9b8a;
+  --color-danger-soft: rgba(229, 72, 54, 0.12);
+  --color-danger-border: rgba(229, 72, 54, 0.65);
+  --color-success: #9fe2b8;
+  --color-success-strong: #62c48c;
+  --color-success-soft: rgba(98, 196, 140, 0.1);
+  --color-success-border: rgba(98, 196, 140, 0.45);
+  --color-arcane: #cdb6f2;
+  --color-arcane-soft: rgba(158, 120, 214, 0.12);
+  --color-arcane-border: rgba(158, 120, 214, 0.5);
+
+  /* Surfaces for panels and form fields */
+  --gradient-panel: linear-gradient(150deg, rgba(16, 39, 66, 0.66), rgba(7, 17, 31, 0.9));
+  --gradient-panel-raised: linear-gradient(150deg, rgba(29, 69, 111, 0.5), rgba(7, 17, 31, 0.94));
+  --gradient-gold: linear-gradient(135deg, var(--color-gold-300), var(--color-gold-400));
+  --color-field: rgba(3, 8, 15, 0.62);
+  --color-field-hover: rgba(3, 8, 15, 0.8);
+  --color-chip: rgba(247, 245, 239, 0.04);
+  --color-chip-hover: rgba(247, 245, 239, 0.08);
+
+  /* Controls. Every interactive control is at least 44px tall. */
+  --control-height-sm: 2.75rem;
+  --control-height-md: 3rem;
+  --control-height-lg: 3.5rem;
+  --control-font-size: 0.9375rem;
+  --control-font-size-lg: 1rem;
+  --control-padding-x: 1.125rem;
+  --control-radius: var(--radius-button);
+
+  /* Faction palettes. Read through the --faction-* aliases below. */
+  --faction-alliance: #4a7fd4;
+  --faction-alliance-text: #b4cdf7;
+  --faction-alliance-soft: rgba(74, 127, 212, 0.16);
+  --faction-alliance-border: rgba(74, 127, 212, 0.6);
+  --faction-alliance-glow: rgba(74, 127, 212, 0.34);
+  --faction-horde: #c8463c;
+  --faction-horde-text: #f5b3ac;
+  --faction-horde-soft: rgba(200, 70, 60, 0.16);
+  --faction-horde-border: rgba(200, 70, 60, 0.6);
+  --faction-horde-glow: rgba(200, 70, 60, 0.34);
+
+  /* Outside a faction scope the aliases fall back to the house gold. */
+  --faction-primary: var(--color-gold-400);
+  --faction-text: var(--color-gold-300);
+  --faction-soft: rgba(196, 166, 103, 0.14);
+  --faction-border: var(--color-border-strong);
+  --faction-glow: rgba(196, 166, 103, 0.24);
 
   --z-background: 0;
   --z-content: 10;
   --z-nav: 50;
   --z-overlay: 80;
   --z-modal: 100;
+}
+
+/* Faction scopes: put data-faction on any element and everything inside that
+   reads --faction-* takes the faction's colours. */
+[data-faction="alliance"] {
+  --faction-primary: var(--faction-alliance);
+  --faction-text: var(--faction-alliance-text);
+  --faction-soft: var(--faction-alliance-soft);
+  --faction-border: var(--faction-alliance-border);
+  --faction-glow: var(--faction-alliance-glow);
+}
+
+[data-faction="horde"] {
+  --faction-primary: var(--faction-horde);
+  --faction-text: var(--faction-horde-text);
+  --faction-soft: var(--faction-horde-soft);
+  --faction-border: var(--faction-horde-border);
+  --faction-glow: var(--faction-horde-glow);
 }

@@ -8,6 +8,7 @@ import { runtimeDataFile } from "./runtimeData.js";
 import { importContributionsIntoDatabase } from "../Contribution/contributionRepository.js";
 import { importMembersIntoDatabase } from "../Guild/memberRepository.js";
 import { importQuestsIntoDatabase } from "../Quest/questRepository.js";
+import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 
 const IMPORT_KEY = "legacy_json_import_v1";
 
@@ -121,15 +122,17 @@ export function importLegacyJsonIfNeeded() {
       : 0;
 
     if (quests.exists) {
-      importQuestsIntoDatabase(db, quests.value);
+      importQuestsIntoDatabase(db, HOLDFAST_GUILD_ID, quests.value);
     }
 
     const importedContributions = contributions.exists
-      ? importContributionsIntoDatabase(db, contributions.value)
+      ? importContributionsIntoDatabase(db, HOLDFAST_GUILD_ID, contributions.value)
       : 0;
 
     const questCount = Number(
-      db.prepare("SELECT COUNT(*) AS count FROM quests").get().count,
+      db
+        .prepare("SELECT COUNT(*) AS count FROM quests WHERE guild_id = ?")
+        .get(HOLDFAST_GUILD_ID).count,
     );
 
     const result = {
