@@ -1,3 +1,5 @@
+import { list, listOrMissing } from "../luaList.js";
+
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -37,5 +39,12 @@ export function objectOrMissing(value) {
 }
 
 export function arrayOrMissing(value) {
-  return value === undefined || value === null || Array.isArray(value);
+  return listOrMissing(value);
+}
+
+// The payload with `field` as a list: an empty object (an empty Lua table)
+// becomes [], anything else is kept as sent.
+export function withListField(payload, field) {
+  const value = list(payload?.[field]);
+  return value && !Array.isArray(payload[field]) ? { ...payload, [field]: value } : payload;
 }

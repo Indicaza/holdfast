@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { array } from "../Character/Telemetry/luaList.js";
 import { gameContext, gameInteger, gameText, publicItemDefinition, validGameItem } from "./publicGameDataModel.js";
 
 function hash(values) {
@@ -87,12 +88,12 @@ export function recordGatheringFactsInDatabase(db, observationId, locale = "und"
 }
 
 function learnRecipes(db, payload, context, capturedAt) {
-  for (const profession of (Array.isArray(payload.professions) ? payload.professions : []).slice(0, 12)) {
-    for (const raw of (Array.isArray(profession?.recipes) ? profession.recipes : []).slice(0, 800)) {
+  for (const profession of array(payload.professions).slice(0, 12)) {
+    for (const raw of array(profession?.recipes).slice(0, 800)) {
       const recipeId = gameInteger(raw?.recipeId, 1);
       const craftedItemId = gameInteger(raw?.crafted?.itemId, 1);
       if (!recipeId || !craftedItemId) continue;
-      const reagents = (Array.isArray(raw.reagents) ? raw.reagents : []).slice(0, 16)
+      const reagents = array(raw.reagents).slice(0, 16)
         .map((entry) => ({ itemId: gameInteger(entry?.itemId, 1), quantity: gameInteger(entry?.quantity, 1, 100000), optional: entry?.required === false }))
         .filter((entry) => entry.itemId && entry.quantity);
       const previous = db.prepare("SELECT definition_json FROM public_game_recipes WHERE recipe_id = ? AND game_build = ? AND locale = ?")
