@@ -464,6 +464,7 @@ html:has(.finder) body {
 
 .finder-table {
   --row-columns: 2.75rem minmax(12rem, 1.6fr) minmax(8rem, 1fr) 12.5rem 8.25rem 4.5rem 7rem;
+  container: finder-table / inline-size;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -982,6 +983,13 @@ html:has(.finder) body {
   .finder-search kbd { display: none; }
   .finder-status { padding: 0 var(--space-3); }
 
+  .finder-detail { width: 100%; box-shadow: none; }
+  .finder-detail__head { padding: var(--space-5) var(--space-4) var(--space-4); }
+  .finder-detail__body { padding: var(--space-4) var(--space-4) var(--space-10); }
+}
+
+/* Narrow tables (phones, and the register preview): two-line rows. */
+@container finder-table (max-width: 40rem) {
   .finder-table__head { display: none; }
 
   .finder-row {
@@ -997,13 +1005,11 @@ html:has(.finder) body {
   .finder-row__identity { grid-area: identity; }
   .finder-row__recruit { grid-area: recruit; }
   .finder-row__activity { grid-area: activity; align-self: start; text-align: right; }
+  .finder-row__styles,
+  .finder-row__schedule,
   .finder-row__members { display: none; }
   .finder-activity__bar { display: none; }
   .finder-activity__value::after { content: 'active'; display: block; color: var(--color-text-muted); font-size: 0.625rem; font-weight: var(--font-weight-regular); letter-spacing: 0.06em; text-transform: uppercase; }
-
-  .finder-detail { width: 100%; box-shadow: none; }
-  .finder-detail__head { padding: var(--space-5) var(--space-4) var(--space-4); }
-  .finder-detail__body { padding: var(--space-4) var(--space-4) var(--space-10); }
 }
 
 @media (prefers-reduced-motion: reduce) {

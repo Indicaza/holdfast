@@ -851,136 +851,6 @@
 
 /* Register your guild */
 
-.guild-register__gate {
-  display: grid;
-  justify-items: center;
-  min-height: 72svh;
-  align-content: center;
-  padding-block: var(--space-20);
-  text-align: center;
-}
-
-.guild-register__gate .guild-page__loading { margin-top: var(--space-8); }
-
-.guild-register__perks {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5);
-  width: min(100%, 64rem);
-  margin: var(--space-12) 0 var(--space-4);
-  padding: 0;
-  list-style: none;
-  text-align: left;
-}
-
-.guild-register__perks li {
-  display: grid;
-  align-content: start;
-  gap: var(--space-3);
-  padding: var(--space-8) var(--space-6);
-  border: var(--border-subtle);
-  border-top: 2px solid var(--color-border-strong);
-  border-radius: var(--radius-xl);
-  background: var(--gradient-panel);
-  box-shadow: var(--shadow-soft);
-}
-
-.guild-register__perks strong {
-  color: var(--color-accent-bright);
-  font-family: var(--font-display);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-display);
-}
-
-.guild-register__perks span { color: var(--color-text); font-size: var(--control-font-size); line-height: 1.55; }
-
-.guild-register__head { padding-block: var(--space-6) var(--space-8); }
-
-.guild-register__head h1 {
-  margin-top: var(--space-4);
-  color: var(--color-text-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 5vw, var(--font-size-fib-55));
-  font-weight: var(--font-weight-display);
-  line-height: 1;
-}
-
-.guild-register__head .guild-hero__eyebrow::before { display: none; }
-
-.guild-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin: var(--space-8) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.guild-steps button {
-  --interactive-hover-scale: 1;
-  --interactive-hover-lift: 0;
-  display: flex;
-  width: 100%;
-  min-height: 4.5rem;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-5);
-  border: var(--border-subtle);
-  background: rgba(3, 8, 15, 0.45);
-  color: var(--color-text-muted);
-  text-align: left;
-}
-
-.guild-steps button:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-color); outline-offset: 2px; }
-.guild-steps button:disabled { opacity: 0.6; filter: none; cursor: default; }
-.guild-steps span:last-child { display: grid; gap: 0.1rem; }
-.guild-steps strong { color: inherit; font-size: var(--font-size-body); font-weight: var(--font-weight-semibold); }
-.guild-steps small { font-size: var(--font-size-sm); }
-
-.guild-steps__number {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: none;
-  place-items: center;
-  border: var(--border-subtle);
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: var(--font-size-md);
-}
-
-.guild-steps__current button {
-  border-color: var(--color-border-strong);
-  background: rgba(196, 166, 103, 0.12);
-  color: var(--color-text-strong);
-}
-
-.guild-steps__current .guild-steps__number,
-.guild-steps__done .guild-steps__number {
-  border-color: var(--color-accent);
-  background: var(--gradient-gold);
-  color: var(--color-blue-950);
-}
-
-.guild-register__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 26rem;
-  align-items: start;
-  gap: var(--space-8);
-  padding-bottom: var(--space-24);
-}
-
-.guild-form {
-  display: grid;
-  gap: var(--space-8);
-  padding: clamp(var(--space-6), 3vw, var(--space-10));
-  border: var(--border-subtle);
-  border-radius: var(--radius-xl);
-  background: var(--gradient-panel);
-  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  animation: guild-rise var(--duration-normal) var(--ease-standard);
-}
-
 .guild-form__group {
   display: grid;
   gap: var(--space-3);
@@ -1125,36 +995,12 @@
 .guild-discord p { color: var(--color-text-muted); font-size: var(--control-font-size); }
 .guild-discord__alt a { color: #aab3ff; text-decoration: underline; text-underline-offset: 0.2em; }
 
-.guild-form__actions {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-top: var(--space-6);
-  border-top: var(--border-subtle);
-}
-
-.guild-register__preview {
-  position: sticky;
-  top: calc(var(--nav-height) + var(--space-6));
-  display: grid;
-  gap: var(--space-4);
-}
-
-.guild-register__preview-label {
-  color: var(--color-accent-bright);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .guild-hero__title,
   .guild-card__pulse::after,
   .guild-card--skeleton,
   .guild-page__loading span,
-  .guild-apply,
-  .guild-form { animation: none; }
+  .guild-apply { animation: none; }
 }
 
 /* Narrow screens */
@@ -1169,10 +1015,6 @@
   .guild-page__hero { grid-template-columns: auto minmax(0, 1fr); gap: var(--space-8); }
   .guild-page__actions { grid-column: 1 / -1; grid-auto-flow: column; justify-content: start; }
   .guild-page__grid { grid-template-columns: minmax(0, 1fr); }
-
-  .guild-register__layout { grid-template-columns: minmax(0, 1fr); }
-  .guild-register__preview { position: static; }
-  .guild-register__perks { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 40rem) {
@@ -1197,11 +1039,7 @@
   .guild-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .guild-apply__row { grid-template-columns: minmax(0, 1fr); }
 
-  .guild-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .guild-steps button { justify-content: center; min-height: var(--control-height-md); padding: var(--space-2); }
-  .guild-steps span:last-child { display: none; }
   .guild-form__row { grid-template-columns: minmax(0, 1fr); }
   .guild-form__realm-types { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .guild-discord { grid-template-columns: minmax(0, 1fr); }
-  .guild-form__actions .ds-button { flex: 1; }
 }
