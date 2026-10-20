@@ -236,3 +236,50 @@ export function previewGuild(draft) {
     stats: { memberCount: 1, activeCharacters: 0, verified: false },
   }
 }
+
+// Guild finder
+
+// Short class names for dense rows: readable without relying on colour.
+export const CLASS_SHORT = {
+  warrior: 'War', paladin: 'Pal', hunter: 'Hun', rogue: 'Rog', priest: 'Pri',
+  shaman: 'Sha', mage: 'Mag', warlock: 'Lck', druid: 'Dru',
+}
+
+// The selected guild lives next to the filters in the query string, so a
+// shared link opens the same guild in the same search.
+export function selectedGuildFromQuery(queryString = '') {
+  const value = new URLSearchParams(queryString).get('guild') || ''
+  return /^[a-z0-9-]{2,40}$/.test(value) ? value : ''
+}
+
+export function finderHref(filters, selected = '') {
+  const params = new URLSearchParams(queryFromFilters(filters).slice(1))
+  if (selected) params.set('guild', selected)
+  const query = params.toString()
+  return query ? `/?${query}` : '/'
+}
+
+// Raid days as a compact week strip: which of Mon–Sun are raid nights.
+export function weekStrip(raidDays = []) {
+  return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => ({
+    day,
+    label: WEEKDAY_LABELS[day].slice(0, 1),
+    active: raidDays.includes(day),
+  }))
+}
+
+// Activity as a share of the roster, for the row meter.
+export function activityShare(stats = {}) {
+  const members = Number(stats.memberCount) || 0
+  const active = Number(stats.activeCharacters) || 0
+  if (!members || !active) return 0
+  return Math.min(1, active / members)
+}
+
+// Moves the keyboard selection through the visible results.
+export function stepSelection(slugs, current, delta) {
+  if (!slugs.length) return ''
+  const index = slugs.indexOf(current)
+  if (index === -1) return delta > 0 ? slugs[0] : slugs[slugs.length - 1]
+  return slugs[Math.max(0, Math.min(slugs.length - 1, index + delta))]
+}
