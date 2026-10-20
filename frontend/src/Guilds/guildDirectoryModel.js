@@ -216,25 +216,53 @@ export function stepErrors(draft, step) {
   return errors
 }
 
-// The guild as its card will show it, for the live preview.
+// The guild as the finder's row and detail will show it, for the live preview.
 export function previewGuild(draft) {
   return {
     id: 'preview',
     slug: draftSlug(draft.name) || 'your-guild',
     name: draft.name.trim() || 'Your Guild',
     tagline: draft.tagline.trim() || 'Your motto goes here.',
+    description: draft.description.trim(),
     faction: draft.faction || 'alliance',
     region: draft.region,
     realm: draft.realm.trim() || 'Your realm',
     realmType: draft.realmType || 'normal',
+    language: draft.language,
     timezone: draft.timezone,
     playStyles: draft.playStyles,
     recruiting: draft.recruiting,
     recruitingClasses: draft.recruitingClasses,
+    recruitingRoles: draft.recruitingRoles,
+    minimumLevel: draft.minimumLevel,
+    voiceRequired: draft.voiceRequired,
+    agePolicy: draft.agePolicy,
+    discordInviteUrl: draft.discordInviteUrl.trim(),
     schedule: { raidDays: draft.raidDays, raidStart: draft.raidStart, raidEnd: draft.raidEnd },
     accentColor: draft.accentColor,
     stats: { memberCount: 1, activeCharacters: 0, verified: false },
   }
+}
+
+// Required fields, in step order, for the step rail's progress meter.
+export function registrationProgress(draft) {
+  const checks = [
+    draft.name.trim().length >= 2 && draftSlug(draft.name).length >= 3,
+    Boolean(draft.faction),
+    draft.realm.trim().length >= 2,
+    Boolean(draft.realmType),
+    draft.playStyles.length > 0,
+  ]
+  return { done: checks.filter(Boolean).length, total: checks.length }
+}
+
+// The first step at or after `from` and before `to` that fails validation,
+// or -1 when the leader may move straight to `to`.
+export function firstInvalidStep(draft, from, to) {
+  for (let step = from; step < to; step += 1) {
+    if (Object.keys(stepErrors(draft, step)).length) return step
+  }
+  return -1
 }
 
 // Guild finder

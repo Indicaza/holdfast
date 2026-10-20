@@ -1,0 +1,494 @@
+/* Register your guild: the guild finder's workspace. The window never
+   scrolls; the step rail, the form and the live preview sit side by side
+   and the form scrolls inside its own pane. */
+
+html:has(.reg),
+html:has(.reg) body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.reg {
+  --reg-rail: 16.5rem;
+  --reg-preview: 25rem;
+  --finder-line: rgba(223, 229, 236, 0.08);
+  --finder-line-strong: rgba(223, 229, 236, 0.14);
+  --finder-row-hover: rgba(247, 245, 239, 0.035);
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--reg-rail) minmax(0, 1fr) var(--reg-preview);
+  height: calc(100dvh - var(--nav-height) - 1px);
+  overflow: hidden;
+  background:
+    radial-gradient(60rem 30rem at 20% -10%, rgba(29, 69, 111, 0.28), transparent 70%),
+    radial-gradient(40rem 24rem at 100% 0%, rgba(196, 166, 103, 0.05), transparent 70%),
+    var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.reg :is(button, a) { -webkit-tap-highlight-color: transparent; }
+.reg .guild-crest { flex: none; }
+
+/* Gates: signed out, loading, already in a guild */
+
+.reg--gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.reg-dialog {
+  display: grid;
+  width: min(100%, 30rem);
+  gap: var(--space-4);
+  padding: var(--space-8);
+  border: 1px solid var(--finder-line-strong);
+  border-top: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-xl);
+  background: rgba(5, 12, 23, 0.92);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  animation: reg-rise 220ms var(--ease-standard);
+}
+
+@keyframes reg-rise { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+
+.reg-dialog__eyebrow {
+  color: var(--color-accent-bright);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reg-dialog h1 {
+  margin-top: calc(var(--space-2) * -1);
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.reg-dialog__intro { color: var(--color-text); font-size: var(--font-size-sm); line-height: 1.55; }
+.reg-dialog__intro strong { color: var(--color-text-strong); }
+
+.reg-dialog__perks {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4) 0;
+  border-block: 1px solid var(--finder-line);
+  list-style: none;
+}
+
+.reg-dialog__perks li { display: flex; gap: var(--space-3); color: var(--color-text-muted); font-size: var(--font-size-xs); line-height: 1.5; }
+.reg-dialog__perks strong { display: block; color: var(--color-text-strong); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
+
+.reg-dialog__tick {
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  place-items: center;
+  margin-top: 0.1rem;
+  border-radius: 50%;
+  background: rgba(196, 166, 103, 0.16);
+  color: var(--color-accent-bright);
+}
+
+.reg-dialog__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.reg-dialog__actions .ds-button { flex: 1 1 auto; }
+
+/* Step rail */
+
+.reg-rail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--finder-line);
+  background: rgba(4, 10, 19, 0.55);
+}
+
+.reg-rail__head {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+
+.reg-rail__back { justify-self: start; color: var(--color-text-muted); }
+.reg-rail__back:hover { color: var(--color-accent-bright); }
+
+.reg-rail__head h1 {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.15;
+}
+
+.reg-progress { display: grid; gap: var(--space-2); padding: 0 var(--space-5) var(--space-5); border-bottom: 1px solid var(--finder-line); }
+
+.reg-progress__label {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reg-progress__label strong { color: var(--color-text-strong); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+.reg-progress__bar { height: 4px; overflow: hidden; border-radius: 2px; background: rgba(247, 245, 239, 0.07); }
+
+.reg-progress__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-bright));
+  transition: width var(--duration-normal) var(--ease-standard);
+}
+
+.reg-steps {
+  position: relative;
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 0.25rem;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-4) var(--space-3);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.reg-step button {
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0;
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 3.75rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md) !important;
+  background: transparent;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.reg-step button:hover { background: var(--finder-row-hover); color: var(--color-text-strong); }
+
+/* The thread joining the markers. */
+.reg-step + .reg-step button::before {
+  content: '';
+  position: absolute;
+  top: calc(-0.25rem - 0.5rem);
+  left: calc(var(--space-3) + 0.875rem);
+  width: 1px;
+  height: 1.25rem;
+  background: var(--finder-line-strong);
+}
+
+.reg-step__marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  place-items: center;
+  border: 1.5px solid rgba(223, 229, 236, 0.24);
+  border-radius: 50%;
+  background: var(--color-background);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.reg-step__text { display: grid; min-width: 0; gap: 0.1rem; }
+.reg-step__text strong { color: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
+.reg-step__text small { color: var(--color-text-muted); font-size: var(--font-size-xs); line-height: 1.35; }
+
+.reg-step--active button {
+  border-color: var(--finder-line-strong);
+  background: linear-gradient(90deg, rgba(196, 166, 103, 0.12), rgba(247, 245, 239, 0.03) 70%);
+  color: var(--color-text-strong);
+}
+
+.reg-step--current .reg-step__marker { border-color: var(--color-accent-bright); color: var(--color-accent-bright); box-shadow: 0 0 0 3px rgba(196, 166, 103, 0.16); }
+.reg-step--done .reg-step__marker { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-background); }
+.reg-step--done button { color: var(--color-text); }
+.reg-step--error .reg-step__marker { border-color: var(--color-danger); background: var(--color-danger-soft); color: var(--color-danger); }
+.reg-step--error small { color: var(--color-danger); }
+
+.reg-rail__foot {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--finder-line);
+  background: rgba(3, 8, 15, 0.6);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.reg-rail__foot .finder-link { justify-self: start; }
+
+/* Form */
+
+.reg-main {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.reg-toolbar {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-6);
+  border-bottom: 1px solid var(--finder-line);
+  background: rgba(4, 10, 19, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.reg-toolbar__title { display: flex; min-width: 0; align-items: baseline; gap: var(--space-3); }
+
+.reg-toolbar__title p {
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.reg-toolbar__title h2 {
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.2;
+  outline: 0;
+}
+
+.reg-toolbar__hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.reg-toolbar__preview { display: none; }
+
+.reg-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(223, 229, 236, 0.16) transparent;
+}
+
+.reg-fields {
+  display: grid;
+  width: min(100%, 46rem);
+  gap: var(--space-6);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+  animation: reg-step-in 200ms var(--ease-standard);
+}
+
+@keyframes reg-step-in { from { opacity: 0; transform: translateY(0.35rem); } to { opacity: 1; transform: none; } }
+
+.reg-fields .guild-form__group legend { margin-bottom: var(--space-2); }
+.reg-fields .guild-form__row { gap: var(--space-4); }
+.reg-fields .guild-form__realm-types { grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: var(--space-2); }
+.reg-fields .guild-choice { min-height: 3.75rem; padding: var(--space-2) var(--space-4); }
+.reg-fields .guild-choice--faction { min-height: 4.5rem; }
+.reg-fields .guild-discord { padding: var(--space-5); }
+
+.reg-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--finder-line);
+  background: rgba(3, 8, 15, 0.7);
+  backdrop-filter: blur(12px);
+}
+
+.reg-actions .ds-button { min-width: 8rem; }
+.reg-actions .ds-button[type="submit"] { margin-left: auto; }
+.reg-actions__preview { display: none !important; }
+
+/* Live preview */
+
+.reg-preview {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid var(--finder-line);
+  background: rgba(4, 10, 19, 0.62);
+}
+
+.reg-preview__head {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--finder-line);
+}
+
+.reg-preview__head h2 {
+  color: var(--color-text-strong);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+.reg-preview__hint { flex: 1; color: var(--color-success); font-size: var(--font-size-xs); }
+.reg-preview__hint::before { content: ''; display: inline-block; width: 0.4rem; height: 0.4rem; margin-right: 0.4rem; border-radius: 50%; background: currentColor; vertical-align: middle; box-shadow: 0 0 0.4rem currentColor; }
+.reg-preview__close { display: none; }
+
+.reg-preview__label {
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reg-preview__table {
+  flex: none;
+  overflow: visible;
+  border-bottom: 1px solid var(--finder-line);
+}
+
+.reg-preview__table .finder-row { cursor: default; border-bottom: 0; }
+
+.reg-preview__detail {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  border-top: 1px solid var(--finder-line);
+}
+
+.reg-preview__detail .finder-detail__card { animation: none; }
+
+.reg-scrim { display: none; }
+
+@media (max-width: 90rem) {
+  .reg { --reg-preview: 23rem; }
+}
+
+/* Laptop: the preview becomes a drawer over the form. */
+@media (max-width: 75rem) {
+  .reg { grid-template-columns: var(--reg-rail) minmax(0, 1fr); }
+
+  .reg-preview {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(26rem, 92vw);
+    box-shadow: -1.5rem 0 3rem rgba(0, 0, 0, 0.45);
+    background: rgba(5, 12, 23, 0.98);
+    transform: translateX(100%);
+    transition: transform var(--duration-normal) var(--ease-standard);
+  }
+
+  .reg--preview-open .reg-preview { transform: none; }
+  .reg:not(.reg--preview-open) .reg-preview { visibility: hidden; }
+  .reg-preview__close { display: inline-grid; }
+  .reg-toolbar__preview { display: inline-grid; }
+
+  .reg--preview-open .reg-scrim {
+    position: absolute;
+    z-index: 15;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(2, 6, 12, 0.35);
+    cursor: default;
+  }
+}
+
+/* Tablet and phone: one column. The steps become a strip above the form and
+   the actions stay pinned to the bottom. */
+@media (max-width: 54rem) {
+  .reg { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+
+  .reg-rail { border-right: 0; border-bottom: 1px solid var(--finder-line); }
+  .reg-rail__head { display: none; }
+  .reg-rail__foot { display: none; }
+  .reg-progress { order: 2; padding: 0; border: 0; }
+  .reg-progress__label { display: none; }
+  .reg-progress__bar { height: 2px; border-radius: 0; }
+
+  .reg-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: var(--space-2);
+    overflow: visible;
+  }
+
+  .reg-step button { min-height: 2.75rem; justify-content: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); }
+  .reg-step + .reg-step button::before { display: none; }
+  .reg-step__marker { width: 1.5rem; height: 1.5rem; font-size: 0.6875rem; }
+  .reg-step__text small { display: none; }
+  .reg-step__text strong { overflow: hidden; font-size: var(--font-size-xs); white-space: nowrap; text-overflow: ellipsis; }
+
+  .reg-toolbar { padding: var(--space-2) var(--space-4); }
+  .reg-toolbar__title p { display: none; }
+  .reg-toolbar__hint { text-align: left; }
+  .reg-toolbar__preview { display: none; }
+  .reg-fields { padding: var(--space-5) var(--space-4) var(--space-8); }
+
+  .reg-actions { padding: var(--space-2) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom)); }
+  .reg-actions .ds-button { min-width: 0; flex: 1; }
+  .reg-actions .ds-button[type="submit"] { flex: 1.4; margin-left: 0; }
+  .reg-actions__preview { display: inline-flex !important; }
+}
+
+@media (max-width: 40rem) {
+  .reg-step__text { display: none; }
+  .reg-step--active .reg-step__text { display: grid; }
+  .reg-steps { grid-template-columns: auto auto auto; justify-content: space-between; }
+  .reg-preview { width: 100%; box-shadow: none; }
+
+  /* The strip already names the step, so the toolbar gives its place and hint. */
+  .reg-toolbar { min-height: 2.75rem; }
+  .reg-toolbar__title p { display: block; }
+  .reg-toolbar__title h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .reg-toolbar__hint { text-align: right; }
+  .reg-dialog { padding: var(--space-6) var(--space-5); }
+  .reg-dialog__actions { display: grid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reg-dialog,
+  .reg-fields,
+  .reg-preview,
+  .reg-progress__bar span { animation: none; transition: none; }
+}

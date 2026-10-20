@@ -61,6 +61,19 @@ test('registration drafts validate step by step and preview as a card', async ()
   assert.equal(preview.slug, 'les-chevaliers-d-elune')
   assert.equal(preview.stats.verified, false)
   assert.equal(previewGuild(registrationDraft()).name, 'Your Guild')
+  assert.equal(previewGuild({ ...named, discordInviteUrl: ' discord.gg/x ', voiceRequired: true }).discordInviteUrl, 'discord.gg/x')
+})
+
+test('the register rail measures required fields and refuses to skip an invalid step', async () => {
+  const { firstInvalidStep, registrationDraft, registrationProgress } = await import('../src/Guilds/guildDirectoryModel.js')
+  const draft = registrationDraft()
+  assert.deepEqual(registrationProgress(draft), { done: 0, total: 5 })
+  const identity = { ...draft, name: 'Ashen Vanguard', faction: 'horde', realm: 'Doomhowl', realmType: 'hardcore' }
+  assert.deepEqual(registrationProgress(identity), { done: 4, total: 5 })
+  assert.equal(firstInvalidStep(draft, 0, 2), 0)
+  assert.equal(firstInvalidStep(identity, 0, 2), 1)
+  assert.equal(firstInvalidStep({ ...identity, playStyles: ['raiding'] }, 0, 2), -1)
+  assert.equal(firstInvalidStep(draft, 1, 1), -1)
 })
 
 test('the finder keeps the selected guild beside the filters and steps through results', async () => {
