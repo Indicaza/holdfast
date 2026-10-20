@@ -23,13 +23,32 @@ test('the guild directory is the front page and every guild drills down from its
   await expect(navbar.getByRole('link', { name: 'Item catalog' })).toHaveAttribute('href', '/items')
   await expect(navbar.getByRole('link', { name: 'Addon' })).toHaveAttribute('href', '/guildweaver')
 
-  await page.locator('a[href="/holdfast"]').first().click()
+  await page.getByRole('option', { name: /Holdfast/ }).click()
+  await expect(page).toHaveURL(/[?&]guild=holdfast/)
+  await page.getByRole('complementary', { name: 'Guild details' }).getByRole('link', { name: 'Visit guild' }).click()
   await expect(page).toHaveURL(/\/holdfast$/)
   await expect(page.getByRole('heading', { name: 'Holdfast', level: 1 })).toBeVisible()
   await expect(navbar.getByRole('link', { name: 'Holdfast home' })).toBeVisible()
   await expect(navbar.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(navbar.getByRole('link', { name: 'Back to Guildweaver' })).toHaveAttribute('href', '/')
   await expect(page.locator('html')).toHaveAttribute('data-faction', 'alliance')
+})
+
+test('the guild finder is a fixed workspace: panes scroll, the window does not', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await expect(page.getByRole('listbox', { name: 'Guilds' })).toBeVisible()
+  const windowScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)
+  expect(windowScroll).toBeLessThanOrEqual(1)
+
+  await page.keyboard.press('ArrowDown')
+  await expect(page).toHaveURL(/[?&]guild=/)
+  await expect(page.locator('[role="option"][aria-selected="true"]')).toHaveCount(1)
+  await page.keyboard.press('Escape')
+  await expect(page).not.toHaveURL(/[?&]guild=/)
+
+  await page.keyboard.press('/')
+  await expect(page.getByRole('searchbox', { name: 'Search guilds' })).toBeFocused()
 })
 
 test('old single-guild paths land on their new home with the query kept', async ({ page }) => {
