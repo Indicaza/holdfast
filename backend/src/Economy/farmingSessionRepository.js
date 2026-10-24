@@ -1,5 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
-import { FARMING_MIN_GATHERS, FARMING_MIN_SECONDS, farmingSessionQuality } from "./farmingSessionModel.js";
+import { FARMING_MIN_GATHERS, FARMING_MIN_SECONDS, FARMING_MIN_COVERAGE, FARMING_SYNC_GRACE_SECONDS, farmingSessionCoverage, farmingSessionQuality } from "./farmingSessionModel.js";
 
 function text(value, max = 160) {
   return String(value ?? "").trim().slice(0, max);
@@ -34,7 +34,7 @@ export function recordFarmingSessionInDatabase(db, { envelope, memberId, receive
   return { status: result.changes ? "updated" : "duplicate", sessionChanged: Boolean(result.changes) };
 }
 
-export function readFarmingSessions({ realm = "", build = "", mode = "", limit = 30 } = {}) {
+export function readFarmingSessions({ realm = "", build = "", mode = "", limit = 30 } = {}, { now = Date.now() } = {}) {
   return withGuildDatabase((db) => {
     const clauses = [];
     const params = [];
@@ -67,7 +67,10 @@ export function readFarmingSessions({ realm = "", build = "", mode = "", limit =
     const sessions = rows.map((row) => {
       const observedGathers = counts.get(row.session_key) || 0;
       const durationSeconds = Number(row.duration_seconds);
-      const quality = farmingSessionQuality({ status: row.status, durationSeconds, expectedGathers: row.gathering_count, observedGathers });
+      const coverage = farmingSessionCoverage(row.gathering_count, observedGathers);
+      const partial = observedGathers < row.gathering_count;
+      const quality = farmingSessionQuality({ status: row.status, durationSeconds, expectedGathers: row.gathering_count,
+        observedGathers, receivedAt: row.received_at, now });
       const eligible = quality === "sustained";
       const nonAfkSeconds = row.afk_seconds === null ? null : Math.max(0, durationSeconds - Number(row.afk_seconds));
       const outputs = (outputsBySession.get(row.session_key) || []).map((item) => ({
@@ -77,7 +80,7 @@ export function readFarmingSessions({ realm = "", build = "", mode = "", limit =
       }));
       return {
         id: Number(row.id), mode: row.mode, timing: row.mode === "manual" ? "measured" : "estimated",
-        status: row.status, quality, endReason: row.end_reason,
+        status: row.status, quality, coverage, partial, endReason: row.end_reason,
         startedAt: row.started_at, endedAt: row.ended_at, durationSeconds,
         afkSeconds: row.afk_seconds, nonAfkSeconds, expectedGathers: row.gathering_count, observedGathers,
         zone: row.zone, mapId: row.map_id, realm: row.realm, region: row.region, build: row.game_build,
@@ -85,7 +88,7 @@ export function readFarmingSessions({ realm = "", build = "", mode = "", limit =
       };
     });
     return {
-      thresholds: { minimumSeconds: FARMING_MIN_SECONDS, minimumGathers: FARMING_MIN_GATHERS },
+      thresholds: { minimumSeconds: FARMING_MIN_SECONDS, minimumGathers: FARMING_MIN_GATHERS, minimumCoverage: FARMING_MIN_COVERAGE, syncGraceSeconds: FARMING_SYNC_GRACE_SECONDS },
       sessions,
     };
   });
