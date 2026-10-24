@@ -24,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -37,7 +37,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Determine the expected deployed release after a 30-minute deploy grace period
         id: release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           result-encoding: string
           script: |
@@ -55,7 +55,7 @@ jobs:
         run: node scripts/productionSmoke.mjs
       - name: Retain browser failure evidence
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: production-smoke-failure
           path: e2e/production-smoke-failure.png
@@ -71,7 +71,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           MONITOR_RESULT: ${{ needs.smoke.result }}
         with:
