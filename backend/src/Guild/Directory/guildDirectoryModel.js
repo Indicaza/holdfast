@@ -46,7 +46,7 @@ export const RESERVED_SLUGS = new Set([
   "admin", "api", "auth", "assets", "guilds", "guild", "guildos", "new", "register",
   "join", "login", "logout", "signin", "signup", "settings", "account", "me", "items",
   "intelligence", "guildweaver", "members", "quests", "privacy", "charter", "ranks",
-  "about", "armory-art", "inventory-art", "profession-art", "talent-art", "wow-art",
+  "download", "dashboard", "about", "armory-art", "inventory-art", "profession-art", "talent-art", "wow-art",
 ]);
 
 function text(value, maxLength) {

@@ -48,6 +48,13 @@ const platformPages = {
     home: true,
     props: (url) => ({ queryString: url.search }),
   },
+  dashboard: {
+    component: GuildIntelligence,
+    title: 'Telemetry Dashboard | Guildweaver',
+    description: 'Explore synced characters, crafting knowledge, and farming telemetry. No guild registration required.',
+    robots: 'noindex,nofollow',
+    props: () => ({ platform: true }),
+  },
   register: {
     component: RegisterGuild,
     title: 'Register Your Guild | Guildweaver',

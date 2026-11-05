@@ -96,6 +96,7 @@ function ViewButton({ activeView, collapsed, onSelect, view }) {
 }
 
 export default function IntelligenceAppShell({
+  platform = false,
   activeView,
   collapsed,
   freshCharacters,
@@ -129,13 +130,13 @@ export default function IntelligenceAppShell({
   return (
     <>
       <div className={`intelligence-app ${collapsed ? 'intelligence-app--collapsed' : ''} ${mobileOpen ? 'intelligence-app--mobile-open' : ''}`}>
-        <aside className="intelligence-rail" aria-label="GuildOS navigation">
+        <aside className="intelligence-rail" aria-label={platform ? 'Telemetry navigation' : 'GuildOS navigation'}>
           <div className="intelligence-rail__brand-row">
-            <div className="intelligence-rail__brand" aria-label="GuildOS">
+            <div className="intelligence-rail__brand" aria-label={platform ? 'Telemetry' : 'GuildOS'}>
               <span className="intelligence-rail__brand-mark" aria-hidden="true">♜</span>
               <span className="intelligence-rail__brand-copy">
-                <strong>GuildOS</strong>
-                <small>Holdfast operations</small>
+                <strong>{platform ? 'Telemetry' : 'GuildOS'}</strong>
+                <small>{platform ? 'Guildweaver dashboard' : 'Holdfast operations'}</small>
               </span>
             </div>
             <button
@@ -148,8 +149,8 @@ export default function IntelligenceAppShell({
             </button>
           </div>
 
-          <nav className="intelligence-rail__nav" aria-label="GuildOS workspaces">
-            <div className="intelligence-rail__section-label">Guild</div>
+          <nav className="intelligence-rail__nav" aria-label={platform ? 'Telemetry workspaces' : 'GuildOS workspaces'}>
+            <div className="intelligence-rail__section-label">{platform ? 'Explore' : 'Guild'}</div>
             {guildViews.map((view) => (
               <ViewButton
                 activeView={activeView}
@@ -209,7 +210,7 @@ export default function IntelligenceAppShell({
                 <span />
               </button>
               <div>
-                <span>GuildOS</span>
+                <span>{platform ? 'Guildweaver' : 'GuildOS'}</span>
                 <h1>{currentView.label}</h1>
                 <p>{currentView.description}</p>
               </div>

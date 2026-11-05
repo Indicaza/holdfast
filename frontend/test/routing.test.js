@@ -101,3 +101,10 @@ test('directory cards link to the guild home at its slug', async () => {
   const { guildPath } = await import('../src/Guilds/guildDirectoryModel.js')
   assert.equal(guildPath('iron-vanguard'), '/iron-vanguard')
 })
+
+ test('player tools are platform routes, never guild slugs', () => {
+  assert.deepEqual(matchRoute('/download'), { name: 'guildweaver' })
+  assert.deepEqual(matchRoute('/dashboard'), { name: 'dashboard' })
+  assert.equal(isGuildSlug('download'), false)
+  assert.equal(isGuildSlug('dashboard'), false)
+})

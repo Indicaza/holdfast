@@ -4,9 +4,11 @@ import { guildHref } from './routing.js'
 // item catalog and addon pages, and a guild's, on every page under /:slug.
 
 export const platformNavigationLinks = [
+  { label: 'Download', href: '/download' },
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'Find guilds', href: '/' },
   { label: 'Item catalog', href: '/items' },
-  { label: 'Addon', href: '/guildweaver' },
+
 ]
 
 export const signInNavigationLabel = 'Sign In'
@@ -33,7 +35,8 @@ export function myGuildLink(memberGuild) {
 // player's own guild (Holdfast's until other guilds have rosters).
 export function accountMenuLinks(memberGuild) {
   return [
-    { label: 'My Profile', href: `${guildHref(memberGuild?.slug)}/members/me` },
+    { label: 'Dashboard', href: '/dashboard' },
+    ...(memberGuild?.slug ? [{ label: 'My Profile', href: `${guildHref(memberGuild.slug)}/members/me` }] : []),
     ...(memberGuild?.slug ? [{ label: memberGuild.name || 'My guild', href: guildHref(memberGuild.slug) }] : []),
   ]
 }

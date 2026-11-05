@@ -15,7 +15,7 @@ const hrefs = (links) => links.map((link) => link.href)
 test('the platform navbar finds guilds, items and the addon', () => {
   assert.deepEqual(
     platformNavigationLinks.map((link) => [link.label, link.href]),
-    [['Find guilds', '/'], ['Item catalog', '/items'], ['Addon', '/guildweaver']],
+    [['Download', '/download'], ['Dashboard', '/dashboard'], ['Find guilds', '/'], ['Item catalog', '/items']],
   )
 })
 
@@ -46,10 +46,11 @@ test('My guild appears only for a player in a guild', () => {
 
 test('the account menu links the player profile in their own guild', () => {
   assert.deepEqual(accountMenuLinks({ slug: 'holdfast', name: 'Holdfast' }), [
+    { label: 'Dashboard', href: '/dashboard' },
     { label: 'My Profile', href: '/holdfast/members/me' },
     { label: 'Holdfast', href: '/holdfast' },
   ])
-  assert.deepEqual(accountMenuLinks(null), [{ label: 'My Profile', href: '/holdfast/members/me' }])
+  assert.deepEqual(accountMenuLinks(null), [{ label: 'Dashboard', href: '/dashboard' }])
 })
 
 test('section links stay lit on their sub-pages; home and the directory only on themselves', () => {
@@ -58,7 +59,7 @@ test('section links stay lit on their sub-pages; home and the directory only on 
   assert.equal(isActiveLink('/holdfast/quests', home), false)
   assert.equal(isActiveLink('/holdfast/members/7', members), true)
   assert.equal(isActiveLink('/holdfast/members', members), true)
-  const [directory, items] = platformNavigationLinks
+  const [, , directory, items] = platformNavigationLinks
   assert.equal(isActiveLink('/', directory), true)
   assert.equal(isActiveLink('/items', directory), false)
   assert.equal(isActiveLink('/items/2589', items), true)

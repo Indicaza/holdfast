@@ -1,3 +1,5 @@
+import PageShell from '../PageShell/PageShell.jsx'
+import '../Guildweaver/GuildweaverConnect.css'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
@@ -58,7 +60,7 @@ function freshSyncCount(characters, hours = 24) {
   }).length
 }
 
-function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
+function RecentCharacters({ characters, limit = 6, onOpenCharacter, platform }) {
   const guildPath = useGuildHref()
   const recent = characters.slice(0, limit)
 
@@ -70,7 +72,7 @@ function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
           <h2>Recently synced</h2>
           <p>Jump back into the characters reporting most recently.</p>
         </div>
-        <a href={guildPath('/members')}>Member directory →</a>
+        <a href={platform ? '/download' : guildPath('/members')}>{platform ? 'Connect your addon →' : 'Member directory →'}</a>
       </div>
       {recent.length ? (
         <div className="intel-character-grid">
@@ -85,7 +87,7 @@ function RecentCharacters({ characters, limit = 6, onOpenCharacter }) {
   )
 }
 
-function Overview({ availableViews, data, freshCharacters, onOpenCharacter, onSelectView }) {
+function Overview({ availableViews, data, freshCharacters, onOpenCharacter, onSelectView, platform }) {
   const canAudit = availableViews.some((view) => view.id === 'audit')
   const canInspectGuildweaver = availableViews.some((view) => view.id === 'guildweaver')
 
@@ -99,20 +101,20 @@ function Overview({ availableViews, data, freshCharacters, onOpenCharacter, onSe
       </section>
 
       <div className="intelligence-overview-grid">
-        <RecentCharacters characters={data.characters} onOpenCharacter={onOpenCharacter} />
+        <RecentCharacters platform={platform} characters={data.characters} onOpenCharacter={onOpenCharacter} />
 
         <section className="intelligence-overview-tools" aria-labelledby="intelligence-tools-title">
           <span>Workspaces</span>
           <h2 id="intelligence-tools-title">Go straight to the question.</h2>
-          <p>GuildOS keeps each job focused instead of stacking every tool and dataset into one long page.</p>
+          <p>Explore synced characters, recipes, and farming observations.</p>
           <button type="button" onClick={() => onSelectView('characters')}>
             <strong>Browse characters</strong>
             <small>Search every synced armory</small>
           </button>
-          <button type="button" onClick={() => onSelectView('roster')}>
+          {!platform && <button type="button" onClick={() => onSelectView('roster')}>
             <strong>Inspect roster composition</strong>
             <small>Class, spec, and profession coverage</small>
-          </button>
+          </button>}
           <button type="button" onClick={() => onSelectView('craft')}>
             <strong>Find a crafter</strong>
             <small>Search known recipes and items</small>
@@ -185,7 +187,7 @@ function CharacterBrowser({ characters, onOpenCharacter, query, onQueryChange })
   )
 }
 
-function CraftFinder({ input, onInputChange }) {
+function CraftFinder({ input, onInputChange, platform }) {
   const guildPath = useGuildHref()
   const [query, setQuery] = useState(() => input.trim())
   const [status, setStatus] = useState('idle')
@@ -225,7 +227,7 @@ function CraftFinder({ input, onInputChange }) {
     <section className="craft-finder">
       <div className="craft-finder__heading">
         <div>
-          <span>Guild Craft Finder</span>
+          <span>Craft Finder</span>
           <h2>Who can make it?</h2>
           <p>Search synced recipes or crafted items and jump straight to the characters who know them.</p>
         </div>
@@ -237,7 +239,7 @@ function CraftFinder({ input, onInputChange }) {
         </label>
         {status === 'loading' ? <p className="intel-muted">Searching known recipes…</p> : null}
         {status === 'error' ? <p className="intel-error">Craft Finder is unavailable right now.</p> : null}
-        {status === 'idle' ? <p className="craft-finder__hint">Type at least two characters to search the guild recipe index.</p> : null}
+        {status === 'idle' ? <p className="craft-finder__hint">Type at least two characters to search the synced recipe index.</p> : null}
       </div>
       {status === 'ready' && !results.length ? (
         <EmptyTelemetry title="No synced crafter found.">
@@ -259,7 +261,7 @@ function CraftFinder({ input, onInputChange }) {
                 {result.crafters?.map((crafter) => {
                   const skill = professionSkillLabel(crafter, result.recipe?.professionName)
                   return (
-                    <a key={crafter.id} href={guildPath(`/intelligence?character=${encodeURIComponent(crafter.id)}`)}>
+                    <a key={crafter.id} href={platform ? `/dashboard?character=${encodeURIComponent(crafter.id)}` : guildPath(`/intelligence?character=${encodeURIComponent(crafter.id)}`)}>
                       <span>
                         <strong>{crafter.name}</strong>
                         <small>{skill || crafter.className || 'Character'}{crafter.realm ? ` · ${crafter.realm}` : ''}</small>
@@ -277,19 +279,19 @@ function CraftFinder({ input, onInputChange }) {
   )
 }
 
-function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCharacter, onSelectView, session, searches, onSearchChange }) {
+function Workspace({ activeView, availableViews, data, freshCharacters, onOpenCharacter, onSelectView, session, searches, onSearchChange, platform }) {
   if (activeView === 'roster') return <RosterComposition data={data} />
   if (activeView === 'characters') {
     return <CharacterBrowser characters={data.characters} onOpenCharacter={onOpenCharacter} query={searches.characters} onQueryChange={(value) => onSearchChange('characters', value)} />
   }
-  if (activeView === 'craft') return <CraftFinder input={searches.craft} onInputChange={(value) => onSearchChange('craft', value)} />
+  if (activeView === 'craft') return <CraftFinder platform={platform} input={searches.craft} onInputChange={(value) => onSearchChange('craft', value)} />
   if (activeView === 'farming') return <FarmingIntelligence input={searches.farming} onInputChange={(value) => onSearchChange('farming', value)} />
   if (activeView === 'audit' && session.hasPermission('audit.view')) return <Suspense fallback={<p className="intel-muted">Opening the audit log…</p>}><AuditLog /></Suspense>
   if (activeView === 'guildweaver' && session.hasPermission('site.admin')) return <Suspense fallback={<p className="intel-muted">Opening the Guildweaver console…</p>}><GuildweaverConsole /></Suspense>
-  return <Overview availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
+  return <Overview platform={platform} availableViews={availableViews} data={data} freshCharacters={freshCharacters} onOpenCharacter={onOpenCharacter} onSelectView={onSelectView} />
 }
 
-export default function GuildIntelligence() {
+export default function GuildIntelligence({ platform = false }) {
   const session = useSession()
   const guildPath = useGuildHref()
   const { status: summaryStatus, data: summary } = useLiveResource('/api/intelligence', {
@@ -319,8 +321,8 @@ export default function GuildIntelligence() {
   const availableViews = useMemo(() => intelligenceViews.filter((view) => {
     if (view.permission === 'audit.view') return canAudit
     if (view.permission === 'site.admin') return canInspectGuildweaver
-    return true
-  }), [canAudit, canInspectGuildweaver])
+    return !platform || view.id !== 'roster'
+  }).map((view) => platform && view.id === 'overview' ? { ...view, description: 'Synced characters and community telemetry' } : view), [canAudit, canInspectGuildweaver, platform])
 
   useEffect(() => {
     if (!session.authenticated) return undefined
@@ -357,15 +359,36 @@ export default function GuildIntelligence() {
   const closeGate = () => navigate(guildPath())
   const freshCharacters = useMemo(() => freshSyncCount(data.characters), [data.characters])
 
-  if (session.status === 'loading') return <PageLoading label="Checking your membership…" />
+  if (session.status === 'loading') return <PageLoading label="Checking your session…" />
 
   if (session.status === 'error' || !session.authenticated) {
+    if (platform) return (
+      <PageShell
+        eyebrow="Guildweaver"
+        title="Telemetry dashboard"
+        intro="View synced characters, professions, and farming data. No guild registration or membership required."
+        centered
+      >
+        <p>Download freely. Sign in with Discord to use the dashboard and connect your addon.</p>
+        <button
+          className="guildweaver-connect-button"
+          type="button"
+          onClick={() => session.status === 'error'
+            ? session.refresh()
+            : session.signIn(`${window.location.pathname}${window.location.search}${window.location.hash}`, 'member')}
+        >
+          {session.status === 'error' ? 'Retry connection' : 'Sign in with Discord'}
+        </button>
+        <p><a href="/download">Download Guildweaver</a></p>
+      </PageShell>
+    )
     return <Home overlay={<MemberAccessModal returnTo={guildPath('/intelligence')} onClose={closeGate} />} />
   }
 
   return (
     <>
       <IntelligenceAppShell
+        platform={platform}
         activeView={activeView}
         collapsed={collapsed}
         freshCharacters={freshCharacters}
@@ -376,9 +399,10 @@ export default function GuildIntelligence() {
         views={availableViews}
       >
         {status === 'loading' ? <p className="intel-muted">Reading the latest telemetry…</p> : null}
-        {status === 'error' ? <p className="intel-error">GuildOS could not be loaded.</p> : null}
+        {status === 'error' ? <p className="intel-error">Telemetry could not be loaded.</p> : null}
         {status === 'ready' ? (
           <Workspace
+            platform={platform}
             activeView={activeView}
             availableViews={availableViews}
             data={data}
