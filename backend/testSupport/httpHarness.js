@@ -60,6 +60,7 @@ export async function withHttpApp(run, options = {}) {
         method,
         redirect: 'manual',
         headers: {
+          ...(route.startsWith('/api/bridge/') ? { "X-Guildweaver-Release": "forever-live" } : {}),
           Origin: overrides.FRONTEND_URL,
           ...(persona ? { Cookie: cookie(persona) } : {}),
           ...(rawCookie ? { Cookie: rawCookie } : {}),

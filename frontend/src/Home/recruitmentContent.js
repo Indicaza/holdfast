@@ -4,7 +4,7 @@ export const recruitmentFacts = [
     label: 'Founding now',
     value: 'Launch crew forming',
     detail:
-      'We are on the Normal realm for beta, then plant Holdfast on the PvP realm at launch.',
+      'Holdfast plays Alliance on a North American RP-PvP realm in WoW Forever.',
   },
   {
     id: 'region',
@@ -33,5 +33,5 @@ export const foundingMission = {
   eyebrow: 'Founding mission',
   title: 'Help found Holdfast.',
   description:
-    'At launch, we need the first signatures on the in-game guild charter. Join us during beta, meet the crew, and help plant the flag on the PvP realm.',
+    'Join the launch crew, meet your guildmates, and help sign the in-game guild charter.',
 }

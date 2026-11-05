@@ -255,7 +255,7 @@ export async function seedArmory(page, context) {
 
     return json('/api/bridge/characters/snapshot', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.deviceToken}` },
+      headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}` },
       body: JSON.stringify({ revision: 8, snapshot }),
     })
   })

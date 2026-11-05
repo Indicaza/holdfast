@@ -337,7 +337,7 @@ function writeMemberRow(db, member) {
   syncHomeGuildMembershipInDatabase(db, member);
 }
 
-export function importMembersIntoDatabase(db, members) {
+export function importMembersIntoDatabase(db, members, { importCharacters = true } = {}) {
   if (!Array.isArray(members)) {
     return 0;
   }
@@ -374,6 +374,7 @@ export function importMembersIntoDatabase(db, members) {
       updatedAt: rawMember.updatedAt || now,
     };
 
+    if (!importCharacters) member.profile.characters = [];
     writeMemberRow(db, member);
     writeProfile(db, member.id, member.profile);
     imported += 1;

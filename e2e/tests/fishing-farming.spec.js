@@ -52,7 +52,7 @@ async function seedFishing(page, context) {
       }
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
         body: JSON.stringify({ streamKey: `gathering_attempt:character-e2e-fisher:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }
@@ -84,7 +84,7 @@ async function seedFishing(page, context) {
       }
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
         body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-fisher:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }

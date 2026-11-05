@@ -68,7 +68,7 @@ async function seedRichFarmingItem(page, context) {
     await json('/api/bridge/telemetry', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token.deviceToken}`,
+        "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`,
         'Idempotency-Key': `item-definition-${run}`,
       },
       body: JSON.stringify({
@@ -111,7 +111,7 @@ async function seedRichFarmingItem(page, context) {
       await json('/api/bridge/telemetry', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token.deviceToken}`,
+          "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`,
           'Idempotency-Key': observationId,
         },
         body: JSON.stringify({

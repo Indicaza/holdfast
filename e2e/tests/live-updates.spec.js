@@ -42,7 +42,7 @@ async function submitTelemetry(page, again = null) {
 
     const result = await json('/api/bridge/characters/snapshot', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.deviceToken}` },
+      headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}` },
       body: JSON.stringify({
         revision: again ? 10 : 9,
         snapshot: {

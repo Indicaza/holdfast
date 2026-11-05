@@ -109,3 +109,11 @@ test("raw history for large states is capped by stored size and keeps the newest
     assert.equal(ingest(2000, 6).status, "created");
     assert.deepEqual(revisions(), [6]);
   }));
+
+test("pre-launch bridges cannot repopulate game data", () => withHttpApp(async ({ base }) => {
+  for (const endpoint of ["telemetry", "characters/snapshot", "quests/actions"]) {
+    const response = await fetch(`${base}/api/bridge/${endpoint}`, { method: "POST" });
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).error, "forever_live_bridge_required");
+  }
+}));
