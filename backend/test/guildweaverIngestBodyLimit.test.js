@@ -117,3 +117,20 @@ test("pre-launch bridges cannot repopulate game data", () => withHttpApp(async (
     assert.equal((await response.json()).error, "forever_live_bridge_required");
   }
 }));
+
+test("marked beta records are refused at both ingest routes", () => withHttpApp(async ({ request }) => {
+  for (const body of [
+    { envelope: { realm: "Classic Beta PvE 2" } },
+    { envelope: { payload: { realm: "Classic Beta PvP" } } },
+    { snapshot: { realm: "PTR" } },
+  ]) {
+    const endpoint = body.snapshot ? "characters/snapshot" : "telemetry";
+    const result = await request(`/api/bridge/${endpoint}`, { method: "POST", body });
+    assert.equal(result.status, 400);
+    assert.equal(result.json.error, "beta_game_data_rejected");
+  }
+  const release = await request("/api/bridge/release");
+  assert.equal(release.status, 200);
+  assert.equal(release.json.gameRelease, "forever-live");
+  assert.equal(release.headers.get("cache-control"), "no-store");
+}));

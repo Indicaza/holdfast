@@ -86,7 +86,7 @@ async function seedRichFarmingItem(page, context) {
         eventType: 'gathering_loot',
         capturedAt: Math.floor(Date.now() / 1000) - index,
         gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
-        realm: 'Classic Beta PvE 2',
+        realm: 'Live Realm',
         region: 'US',
         characterId: `character-tooltip-${run}`,
         payloadSchemaVersion: 1,

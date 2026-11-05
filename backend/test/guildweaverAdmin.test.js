@@ -35,7 +35,7 @@ function seedSnapshot() {
         reason: 'PLAYER_LOGOUT',
         addonVersion: '0.4.0-alpha.1',
         name: 'Quill',
-        realm: 'Classic Beta PvE 2',
+        realm: 'Live Realm',
         level: 20,
         race: { name: 'Human' },
         class: { name: 'Mage' },

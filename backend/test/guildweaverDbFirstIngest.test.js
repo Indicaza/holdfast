@@ -60,7 +60,7 @@ test("Guildweaver character and generic telemetry ingest are durable before Guil
         installationId: "install-one",
         capturedAt,
         name: "Rook",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
         region: "US",
         level: 30,
         race: { name: "Human" },
@@ -89,7 +89,7 @@ test("Guildweaver character and generic telemetry ingest are durable before Guil
         eventType: "talent_tree_definition",
         capturedAt,
         installationId: "install-one",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
         region: "US",
         payload: {
           schemaVersion: 4,

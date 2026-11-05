@@ -9,10 +9,10 @@ function snapshot(overrides = {}) {
     schemaVersion: 1,
     capturedAt: 1791169200,
     addonVersion: "0.2.0-alpha.1",
-    characterKey: "classic beta pve 2:rook ravenstar",
+    characterKey: "live realm:rook ravenstar",
     guid: "Player-9999-00000001",
     name: "Rook Ravenstar",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     level: 20,
     race: { name: "Night Elf", file: "NightElf", id: 4 },
     class: { name: "Warrior", file: "WARRIOR", id: 1 },
@@ -107,7 +107,7 @@ test("Guildweaver paired device seeds a member character and retains the raw sna
     const stored = await readLatestCharacterSnapshot(character.id);
     assert.equal(stored.source, "guildweaver");
     assert.equal(stored.payload.level, 20);
-    assert.equal(stored.payload.realm, "Classic Beta PvE 2");
+    assert.equal(stored.payload.realm, "Live Realm");
     assert.equal(stored.payload.equipment[0].slot, "MainHandSlot");
   });
 });

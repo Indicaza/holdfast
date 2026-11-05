@@ -75,6 +75,18 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   });
   app.use(["/api/bridge/telemetry", "/api/bridge/characters/snapshot"], express.json({ limit: "4mb" }));
   app.use(express.json({ limit: "256kb" }));
+  app.get("/api/bridge/release", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const ready = withGuildDatabase((db) => db.prepare("SELECT 1 FROM schema_migrations WHERE version = 14 AND name = 'forever_live_cutover'").get());
+    res.status(ready ? 200 : 503).json({ gameRelease: ready ? "forever-live" : null });
+  });
+  app.post(["/api/bridge/telemetry", "/api/bridge/characters/snapshot"], (req, res, next) => {
+    const envelope = req.body?.envelope || req.body?.snapshot;
+    if ([envelope, envelope?.payload].some((value) => /\b(beta|ptr)\b/i.test(value?.realm || ""))) {
+      return res.status(400).json({ error: "beta_game_data_rejected" });
+    }
+    return next();
+  });
   app.use(attachSession);
   app.use("/api/bridge", createCharacterRouter());
   app.use("/api/bridge", createGuildweaverQuestRouter());

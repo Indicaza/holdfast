@@ -41,10 +41,10 @@ export async function seedArmory(page, context) {
       capturedAt: Math.floor(Date.now() / 1000),
       reason: 'PLAYER_EQUIPMENT_CHANGED',
       addonVersion: '0.5.0-alpha.1',
-      characterKey: 'classic beta pve 2:armorytest',
+      characterKey: 'live realm:armorytest',
       characterId: 'character-e2e-armory',
       name: 'Armorytest',
-      realm: 'Classic Beta PvE 2',
+      realm: 'Live Realm',
       region: 'US',
       level: 30,
       sex: 2,
@@ -52,7 +52,7 @@ export async function seedArmory(page, context) {
       race: { id: 4, name: 'Night Elf', file: 'NightElf' },
       class: { id: 1, name: 'Warrior', file: 'WARRIOR' },
       specialization: { index: 1, id: 73, name: 'Protection', icon: 132341, role: 'TANK' },
-      guild: { name: 'Holdfast', rankName: 'Member', rankIndex: 5, realm: 'Classic Beta PvE 2' },
+      guild: { name: 'Holdfast', rankName: 'Member', rankIndex: 5, realm: 'Live Realm' },
       gameBuild: { version: '1.60.1', build: '60001', buildDate: 'Oct 5 2026', interface: 16001 },
       equipment: [
         {
