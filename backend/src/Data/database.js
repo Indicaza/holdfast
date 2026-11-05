@@ -799,6 +799,29 @@ const migrations = [
   publicGameDataMigration,
   guildDirectoryMigration,
   guildScopedOperationsMigration,
+  {
+    version: 14,
+    name: "forever_live_cutover",
+    up(db) {
+      db.exec(`
+        DELETE FROM guildweaver_telemetry_latest_state;
+        DELETE FROM guildweaver_telemetry_stream_heads;
+        DELETE FROM guildweaver_telemetry_records;
+        DELETE FROM characters;
+        DELETE FROM guild_bank_snapshots;
+        DELETE FROM farming_sessions;
+        DELETE FROM economic_observations;
+        DELETE FROM game_loot_observations;
+        DELETE FROM public_game_recipes;
+        DELETE FROM public_game_items;
+        DELETE FROM game_data_catalog WHERE source != 'blizzard';
+      `);
+      const exists = db.prepare("SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = ?");
+      for (const table of ["telemetry_organizations", "talent_tree_definitions"]) {
+        if (exists.get(table)) db.exec(`DELETE FROM ${table}`);
+      }
+    },
+  },
 ];
 
 function configureDatabase(db) {

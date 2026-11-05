@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
-import { closeGuildDatabase, guildDatabaseFile, migrateGuildDatabase, openGuildDatabase } from '../src/Data/database.js'
+import { closeGuildDatabase, guildDatabaseFile, migrateGuildDatabase } from '../src/Data/database.js'
 import { DEFAULT_GUILD_RANKS } from '../src/Guild/guildDefaults.js'
 import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 import { readQuestWorkspace } from '../src/Quest/questRepository.js'
@@ -69,7 +69,8 @@ async function withTemporaryData(run) {
 
 test('migration 13 gives every existing row to Holdfast and seeds guilds registered before it', () => withTemporaryData(async () => {
   const before = seedVersionTwelve()
-  const db = openGuildDatabase()
+  const db = new DatabaseSync(guildDatabaseFile())
+  migrateGuildDatabase(db, { throughVersion: 13 })
 
   try {
     assert.equal(Math.max(...db.prepare('SELECT version FROM schema_migrations').all().map((row) => Number(row.version))), 13)

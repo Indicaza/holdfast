@@ -35,7 +35,7 @@ test('the frozen release database upgrades without losing profiles, quests, auth
     old.close()
     const upgraded = openGuildDatabase()
     try {
-      assert.deepEqual(readState(upgraded), before)
+      assert.deepEqual(readState(upgraded), { ...before, characters: [], character_snapshots: [], guild_bank_snapshots: [] })
       assert.equal(upgraded.prepare('PRAGMA quick_check').get().quick_check, 'ok')
       assert.deepEqual(upgraded.prepare('PRAGMA foreign_key_check').all(), [])
       assert.ok(upgraded.prepare("SELECT name FROM sqlite_schema WHERE name = 'quest_completion_requests'").get())
@@ -44,7 +44,7 @@ test('the frozen release database upgrades without losing profiles, quests, auth
         assert.deepEqual(upgraded.prepare(`SELECT DISTINCT guild_id FROM "${name}"`).all().map((row) => row.guild_id).filter((id) => id !== 'guild-holdfast'), [], `${name} rows belong to Holdfast`)
       }
     } finally { upgraded.close() }
-    assert.equal((await readGuildMembers(HOLDFAST_GUILD_ID)).find((member) => member.id === 'e2e-member').profile.characters[0].name, 'Frozen Rook')
+    assert.deepEqual((await readGuildMembers(HOLDFAST_GUILD_ID)).find((member) => member.id === 'e2e-member').profile.characters, [])
     assert.equal((await readQuests(HOLDFAST_GUILD_ID)).quests[0].title, 'E2E Supply Run')
     assert.equal((await readMemberContributionHistory(HOLDFAST_GUILD_ID, 'e2e-member'))[0].marks, 5)
   } finally {

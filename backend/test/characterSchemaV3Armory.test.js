@@ -10,18 +10,18 @@ function v3Snapshot() {
     schemaVersion: 3,
     capturedAt: 1791262800,
     characterId: "character-v3-rook",
-    characterKey: "classic beta pve 2:rook ravenstar",
+    characterKey: "live realm:rook ravenstar",
     firstName: "Rook",
     lastName: "Ravenstar",
     fullName: "Rook Ravenstar",
     name: "Rook Ravenstar",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     gameBuild: { version: "1.60.1", build: "70245", interface: 16001 },
     level: 22,
     race: { id: 4, name: "Night Elf", token: "NightElf" },
     class: { id: 1, name: "Warrior", token: "WARRIOR" },
-    guild: { name: "Holdfast", realm: "Classic Beta PvE 2" },
+    guild: { name: "Holdfast", realm: "Live Realm" },
     equipment: [
       {
         slot: "head",
@@ -245,7 +245,7 @@ test("schema v3 Armory keeps compact talent state while its definition is still 
   await withHttpApp(async ({ request }) => {
     const snapshot = v3Snapshot();
     snapshot.characterId = "character-v3-pending-definition";
-    snapshot.characterKey = "classic beta pve 2:quill riftward";
+    snapshot.characterKey = "live realm:quill riftward";
     snapshot.firstName = "Quill";
     snapshot.lastName = "Riftward";
     snapshot.fullName = "Quill Riftward";

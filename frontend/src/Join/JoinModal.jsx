@@ -230,7 +230,7 @@ function JoinModal({ onClose, returnTo: requestedReturnTo = currentReturnTo() })
       <div className="join-quick-facts" aria-label="Holdfast recruitment basics">
         <span>New players welcome</span>
         <span>No attendance requirement</span>
-        <span>PvP realm at launch</span>
+        <span>Alliance RP-PvP</span>
       </div>
 
       <div className="join-actions join-actions--single">

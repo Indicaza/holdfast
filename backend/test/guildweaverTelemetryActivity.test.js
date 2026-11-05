@@ -16,7 +16,7 @@ function record({ idempotencyKey, characterId, name, eventType, receivedAt, revi
       schemaVersion: 1,
       eventType,
       capturedAt: receivedAt,
-      realm: 'Classic Beta PvE 2',
+      realm: 'Live Realm',
       characterId,
       payload: {
         schemaVersion: 3,

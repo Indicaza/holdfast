@@ -69,7 +69,7 @@ async function seedFishing(page, context) {
         schemaVersion: 1,
         capturedAt: Math.floor(Date.now() / 1000) - index,
         gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
-        realm: 'Classic Beta PvE 2',
+        realm: 'Live Realm',
         region: 'US',
         characterId: 'character-e2e-pool-fisher',
         payloadSchemaVersion: 1,
@@ -82,7 +82,7 @@ async function seedFishing(page, context) {
 
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': attemptId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': attemptId },
         body: JSON.stringify({
           streamKey: `gathering_attempt:character-e2e-pool-fisher:${attemptId}`,
           kind: 'event',
@@ -105,7 +105,7 @@ async function seedFishing(page, context) {
 
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': catchId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': catchId },
         body: JSON.stringify({
           streamKey: `gathering_loot:character-e2e-pool-fisher:${catchId}`,
           kind: 'event',

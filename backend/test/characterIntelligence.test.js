@@ -18,7 +18,7 @@ function richSnapshot() {
     guid: "Player-1-ARMORYROOK",
     characterKey: "classic-beta:rook",
     name: "Rook",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     level: 30,
     race: { id: 4, name: "Night Elf" },

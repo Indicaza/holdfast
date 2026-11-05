@@ -118,7 +118,7 @@ export function importLegacyJsonIfNeeded() {
     }
 
     const importedMembers = members.exists
-      ? importMembersIntoDatabase(db, members.value)
+      ? importMembersIntoDatabase(db, members.value, { importCharacters: false })
       : 0;
 
     if (quests.exists) {

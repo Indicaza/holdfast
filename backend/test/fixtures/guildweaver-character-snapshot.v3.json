@@ -17,13 +17,13 @@
       "specialization": "complete"
     }
   },
-  "characterKey": "classic beta pve 2:rook ravenstar",
+  "characterKey": "live realm:rook ravenstar",
   "characterId": "character-live-contract-rook",
   "name": "Rook Ravenstar",
   "firstName": "Rook",
   "lastName": "Ravenstar",
   "fullName": "Rook Ravenstar",
-  "realm": "Classic Beta PvE 2",
+  "realm": "Live Realm",
   "region": "US",
   "gameBuild": {
     "version": "1.60.1",
@@ -47,7 +47,7 @@
     "name": "Holdfast",
     "rankName": "Commander",
     "rankIndex": 0,
-    "realm": "Classic Beta PvE 2"
+    "realm": "Live Realm"
   },
   "specialization": {
     "index": 3,

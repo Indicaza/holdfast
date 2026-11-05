@@ -107,7 +107,7 @@ async function seedItemDefinitions(page) {
       await json('/api/bridge/telemetry', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token.deviceToken}`,
+          "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`,
           'Idempotency-Key': idempotencyKey,
         },
         body: JSON.stringify({

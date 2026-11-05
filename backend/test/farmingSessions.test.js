@@ -19,7 +19,7 @@ test('migration 10 preserves existing v9 gathering locations and facts', () => {
     db.prepare(`INSERT INTO economic_observations
       (observation_key,event_type,discipline,source_key,captured_at,received_at,map_id,x,y)
       VALUES ('old','gathering_loot','mining','mining:ore-vein:copper','2026-10-13','2026-10-13',1431,0.42,0.58)`).run();
-    migrateGuildDatabase(db);
+    migrateGuildDatabase(db, { throughVersion: 10 });
     const row = db.prepare('SELECT * FROM economic_observations').get();
     assert.equal(row.observation_key, 'old');
     assert.equal(row.x, 0.42);
