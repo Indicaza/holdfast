@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiJson } from '../../Api/apiClient.js'
 import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
-import { farmingDuration, farmingRunLabel, farmingHourlyYield } from './farmingSessionModel.js'
+import { farmingDuration, farmingRunLabel, farmingHourlyYield, farmingCoverageLabel } from './farmingSessionModel.js'
 
 export default function FarmingSessions() {
   const [refresh, setRefresh] = useState(0)
@@ -24,10 +24,16 @@ export default function FarmingSessions() {
     return () => controller.abort()
   }, [refresh, mode, realm, build])
 
+  useEffect(() => {
+    if (state.status !== 'ready' || !state.sessions.some((session) => session.quality === 'awaiting_observations')) return undefined
+    const timer = window.setInterval(() => setRefresh((version) => version + 1), 60000)
+    return () => window.clearInterval(timer)
+  }, [state.status, state.sessions])
+
   return (
     <details className="farm-sessions">
       <summary>Farming runs · materials per hour</summary>
-      <p>Timed runs include travel and waiting. Automatic runs estimate the window between harvests; gaps over 10 minutes start another run. Rates need a completed run, at least 20 minutes and 10 harvests, with all harvests synced.</p>
+      <p>Timed runs include travel and waiting. Automatic runs estimate the window between harvests; gaps over 10 minutes start another run. Rates need a completed run, at least 20 minutes and 10 harvests, with at least 90% of declared harvests synced. Missing harvests get a 15-minute sync window.</p>
       <div className="farm-sessions__filters">
         <label>Timing<select aria-label="Timing" value={mode} onChange={(event) => setMode(event.target.value)}>
           <option value="">All runs</option><option value="manual">Measured</option><option value="automatic">Estimated</option>
@@ -45,6 +51,7 @@ export default function FarmingSessions() {
             <header><strong>{farmingRunLabel(session)}</strong><span>{farmingDuration(session.durationSeconds)} · {session.observedGathers} harvests</span></header>
             <p>{session.zone || 'Zone unknown'} · {session.realm || 'Realm unknown'} · build {session.build || 'unknown'}{session.classToken ? ` · ${session.classToken}` : ''}</p>
             <p>{session.timing === 'measured' ? 'Measured elapsed time' : 'Estimated observed window'}{session.afkSeconds === null ? ' · AFK time unavailable' : ` · ${farmingDuration(session.afkSeconds)} AFK`}</p>
+            {session.partial ? <p>{farmingCoverageLabel(session)}{session.quality === 'sustained' ? ' · Rates use observed materials only; missing harvests may lower the estimate.' : ''}</p> : null}
             <ul>{session.outputs.map((output) => (
               <li key={output.itemKey}>{output.name || output.itemKey}: {output.quantity} · <strong>{farmingHourlyYield(output)}</strong>
                 {output.perNonAfkHour !== null ? ` · ${output.perNonAfkHour.toFixed(1)}/hour excluding AFK` : ''}

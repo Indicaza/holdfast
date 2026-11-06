@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { createBlizzardIconMediaResolver } from '../src/GameData/blizzardIconMedia.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
@@ -126,7 +128,7 @@ test('corpse reopens, transport retries and party reports count once, with max o
   const newerBuild = structuredClone(mob); newerBuild.gameBuild.build = '70339'; ingest(newerBuild);
   assert.equal((await request(`/api/game-data/v1/items/2589?${scope}`)).json.sources[0].observations, 2);
   const foreign = structuredClone(mob); foreign.locale = 'deDE'; foreign.payload.source.name = 'Edwin van Cleef'; ingest(foreign);
-  assert.equal((await request('/api/game-data/v1/items/2589?build=70338&locale=de_DE')).json.sources[0].observations, 1);
+  assert.equal((await request('/api/game-data/v1/items/2589?build=70338&locale=de_DE')).json.sources[0].observations, 2);
 }));
 
 test('publishes map cell centers only with three independent contributors and preserves raw coordinate edges', () => withHttpApp(async ({ request }) => {
@@ -301,3 +303,97 @@ test('malformed source GUIDs return domain errors and backfill cannot publish a 
   withGuildDatabase((db) => projectPublicGameDataInDatabase(db, { eventType: 'game_item_definition', envelope: instance }));
   assert.equal(withGuildDatabase((db) => db.prepare('SELECT COUNT(*) AS n FROM public_game_items').get().n), 0);
 }));
+
+
+test('unknown-language gathering history joins localized item pages and map cells without duplicate scopes', () => withHttpApp(async ({ request }) => {
+  for (let index = 0; index < 3; index += 1) {
+    const value = structuredClone(gathering); value.payload.observationId = `legacy-locale-${index}`;
+    value.payload.context.location.coordinateSystem = 'ui_map_normalized';
+    ingest(value, { memberId: `legacy-contributor-${index}`, deviceId: `legacy-device-${index}` });
+  }
+  let scopes = (await request('/api/game-data/v1/scopes')).json.scopes;
+  assert.deepEqual(scopes, [{ gameBuild: '70338', locale: 'und', itemCount: 2 }]);
+  const localized = structuredClone(definition); localized.payload.item.itemId = 2447; localized.payload.item.name = 'Localized Peacebloom';
+  localized.payload.reference = 'item:2447'; ingest(localized);
+  scopes = (await request('/api/game-data/v1/scopes')).json.scopes;
+  assert.deepEqual(scopes, [{ gameBuild: '70338', locale: 'en_US', itemCount: 2 }]);
+  const result = (await request(`/api/game-data/v1/items/2447?${scope}`)).json;
+  assert.equal(result.item.name, 'Localized Peacebloom');
+  assert.equal(result.sources[0].observations, 3);
+  assert.equal(result.sources[0].sourceId, 1618);
+  assert.equal(result.locations.length, 1);
+  const directory = (await request(`/api/game-data/v1/items?${scope}`)).json;
+  assert.deepEqual(directory.items.map((item) => item.itemId), [2447, 249399]);
+  assert.equal(directory.items[0].locale, 'en_US');
+  const fallback = (await request(`/api/game-data/v1/items/249399?${scope}`)).json;
+  assert.equal(fallback.item.locale, 'und'); assert.equal(fallback.sources[0].observations, 3);
+  const other = structuredClone(gathering); other.gameBuild.build = 'legacy-only'; other.payload.observationId = 'legacy-only'; ingest(other);
+  assert.equal((await request('/api/game-data/v1/scopes')).json.scopes.some((entry) => entry.gameBuild === 'legacy-only' && entry.locale === 'und'), true);
+}));
+
+test('shared corpses dedupe across languages while item and source labels remain localized', () => withHttpApp(async ({ request }) => {
+  ingest(mob);
+  const translated = structuredClone(mob); translated.locale = 'deDE'; translated.payload.source.name = 'German NPC name';
+  translated.payload.outputs[0].name = 'Leinenstoff'; translated.payload.context.instance.name = 'Die Todesminen';
+  translated.payload.context.location.zone = 'German zone'; ingest(translated, { memberId: memberIds.officer, deviceId: 'german-device' });
+  assert.equal(withGuildDatabase((db) => db.prepare('SELECT COUNT(*) AS n FROM game_loot_observations').get().n), 1);
+  const english = (await request(`/api/game-data/v1/items/2589?${scope}`)).json;
+  const german = (await request('/api/game-data/v1/items/2589?build=70338&locale=de_DE')).json;
+  assert.equal(english.sources[0].observations, 1); assert.equal(german.sources[0].observations, 1);
+  assert.equal(english.sources[0].observedQuantity, 3); assert.equal(german.sources[0].observedQuantity, 3);
+  assert.equal(english.item.name, 'Linen Cloth'); assert.equal(german.item.name, 'Leinenstoff');
+  assert.equal(english.sources[0].name, 'Edwin VanCleef'); assert.equal(german.sources[0].name, 'German NPC name');
+  assert.equal(english.sources[0].instanceName, 'The Deadmines'); assert.equal(german.sources[0].instanceName, 'Die Todesminen');
+}));
+
+test('legacy locale-scoped corpse keys remain unchanged and later translated reports reuse them', () => withHttpApp(async () => {
+  ingest(mob);
+  const oldKey = createHash('sha256').update(JSON.stringify(['corpse', '70338', 'en_US', mob.region, mob.realm, mob.payload.source.guid])).digest('hex');
+  withGuildDatabase((db) => db.prepare("UPDATE game_loot_observations SET observation_key = ?, locale = 'en_US', source_name = ?")
+    .run(oldKey, 'Edwin VanCleef'));
+  const translated = structuredClone(mob); translated.locale = 'deDE'; translated.payload.source.name = 'German name'; ingest(translated);
+  const rows = withGuildDatabase((db) => db.prepare('SELECT observation_key, source_name FROM game_loot_observations').all());
+  assert.equal(rows.length, 1); assert.equal(rows[0].observation_key, oldKey);
+  assert.deepEqual(JSON.parse(rows[0].source_name), { en_US: 'Edwin VanCleef', de_DE: 'German name' });
+}));
+
+test('localized pages retain old recipe relationships and prefer translated definitions without duplicates', () => withHttpApp(async ({ request }) => {
+  const oldBook = structuredClone(professions); oldBook.gameBuild = mob.gameBuild; ingest(oldBook);
+  const base = structuredClone(definition); base.payload.item.itemId = 2862; base.payload.reference = 'item:2862'; base.payload.item.name = 'Localized crafted stone'; ingest(base);
+  let item = (await request(`/api/game-data/v1/items/2862?${scope}`)).json;
+  assert.equal(item.createdBy.length, 1); assert.equal(item.createdBy[0].recipeId, 2660);
+  assert.equal(item.references.find((reference) => reference.itemId === 2862).name, 'Localized crafted stone');
+  const oldIngredient = (await request(`/api/game-data/v1/items/2835?${scope}`)).json;
+  assert.equal(oldIngredient.usedBy.length, 1);
+  const translated = structuredClone(oldBook); translated.locale = 'enUS'; translated.payload.professions[0].recipes[0].name = 'Localized recipe'; ingest(translated);
+  item = (await request(`/api/game-data/v1/items/2862?${scope}`)).json;
+  assert.equal(item.createdBy.length, 1); assert.equal(item.createdBy[0].name, 'Localized recipe');
+}));
+
+test('catalog icon traffic has its own budget and resolved URLs remain cached', async (t) => {
+  const instant = Date.now() + 120000;
+  t.mock.method(Date, 'now', () => instant);
+  let mediaRequests = 0;
+  const resolver = createBlizzardIconMediaResolver({ env: { BLIZZARD_CLIENT_ID: 'fixture-client', BLIZZARD_CLIENT_SECRET: 'fixture-secret',
+    BLIZZARD_REGION: 'us', BLIZZARD_STATIC_NAMESPACES: 'static-us' }, now: () => instant,
+    fetchImpl: async (url) => {
+      if (String(url).includes('oauth.battle.net')) return new Response(JSON.stringify({ access_token: 'fixture-token', expires_in: 3600 }));
+      mediaRequests += 1;
+      return new Response(JSON.stringify({ results: [{ data: { assets: [{ key: 'icon', file_data_id: 132889,
+        value: 'https://render.worldofwarcraft.com/icon.png' }] } }] }));
+    } });
+  await withHttpApp(async ({ request }) => {
+    ingest(definition);
+    for (let index = 0; index < 200; index += 1) {
+      const response = await request('/api/game-data/v1/icons/132889');
+      assert.equal(response.status, 302);
+      assert.equal(response.headers.get('ratelimit-limit'), '1200');
+    }
+    assert.equal(mediaRequests, 1, 'repeat icons use the existing bounded media cache');
+    for (let index = 0; index < 120; index += 1) assert.equal((await request('/api/game-data/v1/scopes')).status, 200);
+    assert.equal((await request('/api/game-data/v1/scopes')).status, 429);
+    assert.equal((await request('/api/game-data/v1/icons/132889')).status, 302, 'JSON exhaustion leaves the icon budget usable');
+    for (let index = 201; index < 1200; index += 1) assert.equal((await request('/api/game-data/v1/icons/999')).status, 404);
+    assert.equal((await request('/api/game-data/v1/icons/132889')).status, 429, 'icons retain a finite independent limit');
+  }, { publicGameDataOptions: { iconMediaResolver: resolver } });
+});
