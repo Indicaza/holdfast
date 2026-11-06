@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { recordTelemetry } from "../src/Character/telemetryRecordRepository.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function v3Snapshot() {
   return {
@@ -151,7 +151,7 @@ function talentDefinition(snapshot) {
 }
 
 test("schema v3 character snapshots retain Armory data and rejoin talent definitions", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = v3Snapshot();
     const synced = await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -242,7 +242,7 @@ test("schema v3 character snapshots retain Armory data and rejoin talent definit
 });
 
 test("schema v3 Armory keeps compact talent state while its definition is still pending", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = v3Snapshot();
     snapshot.characterId = "character-v3-pending-definition";
     snapshot.characterKey = "live realm:quill riftward";

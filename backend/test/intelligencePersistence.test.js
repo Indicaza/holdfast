@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { withGuildDatabase } from "../src/Data/database.js";
 import { ensureTelemetryProjectionSchema } from "../src/Character/telemetryProjection.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function persistedSnapshot() {
   return {
@@ -100,7 +100,7 @@ function seedPersistedCharacter() {
 }
 
 test("GuildOS hydrates synced characters from durable DB snapshots without fresh telemetry", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const { characterId } = seedPersistedCharacter();
 
     const response = await request("/api/intelligence", { persona: "member" });
@@ -133,7 +133,7 @@ test("GuildOS hydrates synced characters from durable DB snapshots without fresh
 });
 
 test("a persisted DB-only character still opens in Armory", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const { characterId } = seedPersistedCharacter();
 
     const response = await request(

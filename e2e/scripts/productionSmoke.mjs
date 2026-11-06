@@ -30,7 +30,12 @@ try {
   await api('/api/admin/audit?details=true', 401)
   await api('/api/quests/manage', 401)
   await api('/api/quests', 200)
-  for (const [route, title] of [['/holdfast', /Holdfast/i], ['/holdfast/charter', /Holdfast Charter/i], ['/holdfast/ranks', /Ranks & Roles/i]]) {
+  // A release from before the guild switch has no /api/site and still runs
+  // the guild site.
+  const siteResponse = await context.request.get('/api/site', { timeout: 20_000 })
+  const guildFeatures = siteResponse.status() === 404 ? true : (await siteResponse.json()).guildFeatures === true
+
+  async function rendersPage(route, title) {
     const response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 30_000 })
     assert.equal(response.status(), 200)
     await expect(page).toHaveTitle(title)
@@ -39,9 +44,27 @@ try {
     await page.locator('main h1').first().waitFor({ state: 'attached' })
     assert.ok((await page.locator('main').innerText()).trim().length > 100, `Empty application page: ${route}`)
   }
-  await page.goto('/holdfast/quests')
-  await page.getByRole('heading', { name: 'Member sign in', exact: true }).waitFor()
-  await page.getByRole('button', { name: 'Sign in with Discord', exact: true }).waitFor()
+
+  if (guildFeatures) {
+    for (const [route, title] of [['/holdfast', /Holdfast/i], ['/holdfast/charter', /Holdfast Charter/i], ['/holdfast/ranks', /Ranks & Roles/i]]) {
+      await rendersPage(route, title)
+    }
+    await page.goto('/holdfast/quests')
+    await page.getByRole('heading', { name: 'Member sign in', exact: true }).waitFor()
+    await page.getByRole('button', { name: 'Sign in with Discord', exact: true }).waitFor()
+  } else {
+    // The solo site: personal data is private, guild pages are hidden.
+    await api('/api/player/overview', 401)
+    await api('/api/guilds', 404)
+    for (const [route, title] of [['/', /^Guildweaver \| /], ['/download', /Guildweaver Addon/i], ['/privacy', /Privacy/i]]) {
+      await rendersPage(route, title)
+    }
+    await page.goto('/holdfast', { waitUntil: 'domcontentloaded', timeout: 30_000 })
+    assert.equal(new URL(page.url()).pathname, '/', 'Hidden guild pages redirect to the front page')
+    await page.goto('/dashboard')
+    await page.getByRole('heading', { name: 'Your dashboard', exact: true }).waitFor()
+    await page.locator('main').getByRole('button', { name: 'Sign in with Discord', exact: true }).waitFor()
+  }
   assert.deepEqual(errors, [], 'Production browser errors')
   console.log(`Production smoke passed; release ${live.release || 'unreported'}, backups ${ready.offsiteBackup?.enabled ? 'verified' : 'disabled'}.`)
 } catch (error) {

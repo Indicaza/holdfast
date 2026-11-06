@@ -6,6 +6,8 @@ import {
   useState,
 } from 'react'
 import { apiFetch, apiJson } from '../Api/apiClient.js'
+import { clearResources } from '../Api/resourceCache.js'
+import { signInReturnTo } from './returnTo.js'
 import { SessionContext } from './sessionContext.js'
 
 function detectedTimezone() {
@@ -57,12 +59,6 @@ function sameSession(a, b) {
     && JSON.stringify([a.user, a.permissions, a.authority, a.guild, a.holdfastMember]) === JSON.stringify([b.user, b.permissions, b.authority, b.guild, b.holdfastMember])
 }
 
-function currentReturnTo() {
-  const url = new URL(window.location.href)
-  url.searchParams.delete('auth')
-  return `${url.pathname}${url.search}${url.hash}`
-}
-
 export function SessionProvider({ children }) {
   const generation = useRef(0)
   const inFlight = useRef(null)
@@ -75,6 +71,18 @@ export function SessionProvider({ children }) {
     guild: null,
     holdfastMember: false,
   })
+  // The account whose data the resource cache holds. Private data never
+  // outlives its account: a different account, or none, starts the cache
+  // over before anything renders with the new session.
+  const cachedUser = useRef(null)
+  const showSession = useCallback((next) => {
+    const userId = next.authenticated ? next.user?.id || null : null
+    if (userId !== cachedUser.current) {
+      clearResources()
+      cachedUser.current = userId
+    }
+    setSession((current) => (sameSession(current, next) ? current : next))
+  }, [])
 
   // An explicit retry shows "checking" again; background checks (focus, tab
   // return) leave what is on screen alone until they have an answer, so a
@@ -100,7 +108,7 @@ export function SessionProvider({ children }) {
         }
 
         if (requestGeneration !== generation.current) return null
-        setSession((current) => (sameSession(current, nextSession) ? current : nextSession))
+        showSession(nextSession)
 
         if (data?.authenticated && data.user?.id) {
           void syncDetectedTimezone(data.user.id)
@@ -119,7 +127,7 @@ export function SessionProvider({ children }) {
         }
 
         if (requestGeneration !== generation.current) return null
-        setSession((current) => (sameSession(current, nextSession) ? current : nextSession))
+        showSession(nextSession)
         return nextSession
       }
     })()
@@ -128,7 +136,7 @@ export function SessionProvider({ children }) {
       if (inFlight.current === request) inFlight.current = null
     })
     return request
-  }, [])
+  }, [showSession])
 
   useEffect(() => {
     refresh()
@@ -144,7 +152,7 @@ export function SessionProvider({ children }) {
     }
   }, [refresh])
 
-  const signIn = useCallback((returnTo = currentReturnTo(), mode = 'member') => {
+  const signIn = useCallback((returnTo = signInReturnTo(), mode = 'member') => {
     const params = new URLSearchParams({ returnTo, mode })
     window.location.assign(`/api/auth/discord?${params.toString()}`)
   }, [])
@@ -160,7 +168,7 @@ export function SessionProvider({ children }) {
 
     generation.current += 1
     inFlight.current = null
-    setSession({
+    showSession({
       status: 'ready',
       authenticated: false,
       user: null,
@@ -169,7 +177,7 @@ export function SessionProvider({ children }) {
       guild: null,
       holdfastMember: false,
     })
-  }, [])
+  }, [showSession])
 
   const value = useMemo(
     () => ({

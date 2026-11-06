@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Modal from '../Modal/Modal.jsx'
+import { signInReturnTo } from './returnTo.js'
 import { useSession } from './sessionContext.js'
+import { authResultMessage } from './authResult.js'
 import './AuthResultModal.css'
-
-function displayName(user) {
-  return user?.guildNickname || user?.globalName || user?.username || 'member'
-}
 
 function cleanAuthQuery() {
   const url = new URL(window.location.href)
@@ -13,152 +11,47 @@ function cleanAuthQuery() {
   return `${url.pathname}${url.search}${url.hash}`
 }
 
+// What came back from Discord sign-in (?auth=...). A successful sign-in just
+// continues on the page it returned to: the navbar shows the player's avatar
+// and the page shows their data, so there is nothing to confirm. Cancelled,
+// failed and expired sign-ins say what happened and offer to try again.
 function AuthResultModal() {
   const session = useSession()
-  const [dismissed, setDismissed] = useState(false)
-  const authCode = useMemo(
-    () => new URLSearchParams(window.location.search).get('auth'),
-    [],
-  )
-
-  if (!authCode || dismissed) {
-    return null
-  }
-
-  const currentParams = new URLSearchParams(window.location.search)
-
-  if (
-    currentParams.get('signupQuest') &&
-    currentParams.get('signupObjective')
-  ) {
-    return null
-  }
-
+  const [authCode, setAuthCode] = useState(() => new URLSearchParams(window.location.search).get('auth'))
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-
   // The join flow owns its own modal and auth messaging.
-  if (pathname === '/join') {
-    return null
-  }
+  const ownedElsewhere = pathname === '/join' || new URLSearchParams(window.location.search).get('signupQuest')
+  const confirmed = authCode === 'connected' && session.status === 'ready' && session.authenticated
 
   function close() {
     window.history.replaceState(null, '', cleanAuthQuery())
-    setDismissed(true)
+    setAuthCode(null)
   }
 
-  if (authCode === 'connected') {
-    if (session.status === 'loading') {
-      return (
-        <Modal
-          eyebrow="Discord"
-          title="Finishing sign in."
-          intro="Confirming your Holdfast member session."
-          onClose={close}
-        >
-          <div className="auth-result__loading" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-        </Modal>
-      )
+  useEffect(() => {
+    if (confirmed && !ownedElsewhere) {
+      window.history.replaceState(null, '', cleanAuthQuery())
+      setAuthCode(null)
     }
+  }, [confirmed, ownedElsewhere])
 
-    if (session.authenticated) {
-      return (
-        <Modal
-          eyebrow="Discord connected"
-          title={`Signed in as ${displayName(session.user)}.`}
-          intro="Your Holdfast member session is active."
-          onClose={close}
-        >
-          <div className="auth-result__identity">
-            <div className="auth-result__avatar" aria-hidden="true">
-              {session.user?.avatarUrl ? (
-                <img
-                  src={session.user.avatarUrl}
-                  alt=""
-                  width="64"
-                  height="64"
-                  decoding="async"
-                />
-              ) : (
-                <span>♜</span>
-              )}
-            </div>
-            <div>
-              <strong>{displayName(session.user)}</strong>
-              <span>@{session.user?.username}</span>
-            </div>
-          </div>
+  if (!authCode || ownedElsewhere || confirmed) return null
+  // Still confirming the new session: the navbar shows that it is checking.
+  if (authCode === 'connected' && session.status === 'loading') return null
 
-          <button
-            className="auth-result__primary"
-            type="button"
-            onClick={close}
-          >
-            Continue
-          </button>
-        </Modal>
-      )
-    }
-
-    return (
-      <Modal
-        eyebrow="Discord"
-        title="Sign in could not be confirmed."
-        intro="Discord returned successfully, but Holdfast could not verify the member session."
-        onClose={close}
-      >
-        <div className="auth-result__actions">
-          <button
-            className="auth-result__primary"
-            type="button"
-            onClick={() => session.signIn()}
-          >
-            Try again
-          </button>
-          <button
-            className="auth-result__secondary"
-            type="button"
-            onClick={close}
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
-    )
-  }
-
-  const cancelled = authCode === 'cancelled'
+  const message = authResultMessage(authCode, session.status)
+  const retry = () => session.status === 'error' ? session.refresh() : session.signIn(signInReturnTo())
 
   return (
-    <Modal
-      eyebrow="Discord"
-      title={cancelled ? 'Sign-in cancelled.' : 'Discord sign-in failed.'}
-      intro={
-        cancelled
-          ? 'Nothing changed. You can sign in whenever you are ready.'
-          : 'Holdfast could not finish the Discord sign-in.'
-      }
-      onClose={close}
-    >
+    <Modal eyebrow="Discord sign-in" title={message.title} intro={message.intro} onClose={close}>
       <div className="auth-result__actions">
-        {!cancelled ? (
-          <button
-            className="auth-result__primary"
-            type="button"
-            onClick={() => session.signIn()}
-          >
-            Try again
+        {message.retry ? (
+          <button className="auth-result__primary" type="button" onClick={retry}>
+            {message.retry}
           </button>
         ) : null}
-        <button
-          className="auth-result__secondary"
-          type="button"
-          onClick={close}
-        >
-          {cancelled ? 'Close' : 'Back'}
+        <button className="auth-result__secondary" type="button" onClick={close}>
+          {message.retry ? 'Not now' : 'Close'}
         </button>
       </div>
     </Modal>

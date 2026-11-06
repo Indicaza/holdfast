@@ -651,3 +651,22 @@
   box-shadow: inset 2px 0 0 var(--color-accent-bright);
   color: var(--color-accent-bright);
 }
+
+.navbar__account-initial {
+  font-family: var(--font-display);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-display);
+}
+
+.navbar__account-links a[aria-current="page"] {
+  color: var(--color-accent-bright);
+  box-shadow: inset 2px 0 0 rgba(221, 193, 125, 0.5);
+}
+
+/* Opening shows the menu at once (only closing fades visibility), so the
+   first item can take keyboard focus on the same frame. */
+.navbar__account-menu--open {
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}

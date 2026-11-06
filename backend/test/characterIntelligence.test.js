@@ -8,7 +8,7 @@ import {
   resolveGameDataBundleInDatabase,
   upsertGameDataEntityInDatabase,
 } from "../src/GameData/gameDataCatalog.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function richSnapshot() {
   return {
@@ -128,7 +128,7 @@ function richSnapshot() {
 }
 
 test("character intelligence projects rich snapshots and remains idempotent", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const anonymous = await request("/api/intelligence");
     assert.equal(anonymous.status, 401);
 
@@ -228,7 +228,7 @@ test("character intelligence projects rich snapshots and remains idempotent", as
 });
 
 test("game data catalog lets authoritative metadata replace telemetry without later regression", async () => {
-  await withHttpApp(async () => {
+  await withGuildHttpApp(async () => {
     withGuildDatabase((db) => {
       upsertGameDataEntityInDatabase(db, {
         type: "item",
@@ -268,7 +268,7 @@ test("game data catalog lets authoritative metadata replace telemetry without la
 });
 
 test("character intelligence tolerates incomplete old telemetry and schema bootstrap is repeatable", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     withGuildDatabase((db) => {
       ensureTelemetryProjectionSchema(db);
       ensureTelemetryProjectionSchema(db);

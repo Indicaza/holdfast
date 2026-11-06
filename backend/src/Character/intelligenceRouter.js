@@ -1,6 +1,7 @@
 import { Router } from "express";
 
-import { requireAuthenticated } from "../Auth/permissions.js";
+import { requireAuthenticated, requireHoldfastMember } from "../Auth/permissions.js";
+import { requireGuildFeatures } from "../Features/guildFeatures.js";
 import { sendCompressedJson } from "../Http/compressedJson.js";
 import { createBlizzardGameDataProvider } from "../GameData/blizzardGameDataProvider.js";
 import { createBlizzardIconMediaResolver } from "../GameData/blizzardIconMedia.js";
@@ -115,24 +116,14 @@ export async function prepareCharacterArmory(armory, {
   });
 }
 
-export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver } = {}) {
-  const router = Router();
-  const provider = gameDataProvider || createBlizzardGameDataProvider();
-  const icons = iconMediaResolver || createBlizzardIconMediaResolver();
-
-  router.get("/", requireAuthenticated, (req, res) => {
+// The armory and recipe-book handlers. readArmory(req) returns the composed
+// armory the request may see, or null (not found, or not the requester's to
+// see: the two are indistinguishable). The guild workspace and the player
+// dashboard share these with different readers.
+export function createArmoryHandlers({ provider, icons, readArmory }) {
+  async function armory(req, res) {
     try {
-      res.set("Cache-Control", "no-store");
-      res.json(readCharacterCards());
-    } catch (error) {
-      console.error("Unable to read guild intelligence", error);
-      res.status(500).json({ error: "intelligence_unavailable" });
-    }
-  });
-
-  router.get("/characters/:characterId", requireAuthenticated, async (req, res) => {
-    try {
-      const composed = readCharacterArmoryFromReadModel(req.params.characterId);
+      const composed = readArmory(req);
       if (!composed) {
         res.status(404).json({ error: "character_not_found" });
         return;
@@ -151,11 +142,11 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
       console.error("Unable to read character armory", error);
       res.status(500).json({ error: "character_armory_unavailable" });
     }
-  });
+  }
 
-  router.get("/characters/:characterId/recipes", requireAuthenticated, async (req, res) => {
+  async function recipes(req, res) {
     try {
-      const composed = readCharacterArmoryFromReadModel(req.params.characterId);
+      const composed = readArmory(req);
       if (!composed) {
         res.status(404).json({ error: "character_not_found" });
         return;
@@ -172,7 +163,37 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
       console.error("Unable to read character recipes", error);
       res.status(500).json({ error: "character_recipes_unavailable" });
     }
+  }
+
+  return { armory, recipes };
+}
+
+export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver } = {}) {
+  const router = Router();
+  const provider = gameDataProvider || createBlizzardGameDataProvider();
+  const icons = iconMediaResolver || createBlizzardIconMediaResolver();
+  // Guild-wide reads (every active Holdfast member's characters) are a guild
+  // feature, for Holdfast members. Anyone can sign in with Discord, so signing
+  // in alone is not enough; a player's own data lives under /api/player.
+  // Icons and game data below are public game facts any player may read.
+  const guildArmory = createArmoryHandlers({
+    provider,
+    icons,
+    readArmory: (req) => readCharacterArmoryFromReadModel(req.params.characterId),
   });
+
+  router.get("/", requireGuildFeatures, requireHoldfastMember, (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json(readCharacterCards());
+    } catch (error) {
+      console.error("Unable to read guild intelligence", error);
+      res.status(500).json({ error: "intelligence_unavailable" });
+    }
+  });
+
+  router.get("/characters/:characterId", requireGuildFeatures, requireHoldfastMember, guildArmory.armory);
+  router.get("/characters/:characterId/recipes", requireGuildFeatures, requireHoldfastMember, guildArmory.recipes);
 
   router.get("/media/icon/:fileDataId", requireAuthenticated, async (req, res) => {
     try {
@@ -218,7 +239,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
     }
   });
 
-  router.get("/recipes", requireAuthenticated, (req, res) => {
+  router.get("/recipes", requireGuildFeatures, requireHoldfastMember, (req, res) => {
     try {
       const recipes = searchRecipes(req.query?.q || "", { limit: req.query?.limit });
       res.set("Cache-Control", "no-store");
@@ -229,7 +250,7 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
     }
   });
 
-  router.get("/craft-finder", requireAuthenticated, (req, res) => {
+  router.get("/craft-finder", requireGuildFeatures, requireHoldfastMember, (req, res) => {
     try {
       const results = searchCraftFinderWithSkill(req.query?.q || "");
       res.set("Cache-Control", "no-store");

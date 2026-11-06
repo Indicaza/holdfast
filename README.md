@@ -6,6 +6,12 @@ It combines a public guild site with member tooling for onboarding, quests, rank
 
 **Leave it stronger.**
 
+## Guildweaver, solo-first
+
+The site currently runs as **Guildweaver**, a personal dashboard for any WoW Forever player: download the app, sign in with Discord, connect a computer, and see your own characters, professions, farming and sync status grouped by server. No guild is needed. Personal data is served only to its owner through `/api/player`.
+
+The guild surfaces below (directory, registration, guild pages, Holdfast's site, quests, ranks) are hidden behind one switch, `GUILDWEAVER_GUILD_FEATURES` (off by default). Their code and data are kept. See [Development](docs/DEVELOPMENT.md#guild-features).
+
 ## What exists today
 
 Holdfast currently includes:

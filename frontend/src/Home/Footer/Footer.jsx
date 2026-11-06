@@ -1,3 +1,4 @@
+import { guildFeaturesEnabled } from '../../Features/guildFeatures.js'
 import { useGuild } from '../../Guild/guildContext.js'
 import { HOLDFAST_SLUG } from '../../routing.js'
 import './Footer.css'
@@ -6,6 +7,7 @@ const sourceRepositoryUrl = 'https://github.com/Indicaza/holdfast'
 
 // Signed by the guild whose pages these are, or by Guildweaver on its own.
 function footerIdentity({ slug, guild, status }) {
+  if (!guildFeaturesEnabled) return { name: 'Guildweaver', motto: 'Your characters, synced.', maxim: '' }
   if (status === 'none') return { name: 'Guildweaver', motto: 'Find your guild. Keep it together.', maxim: '' }
   if (slug === HOLDFAST_SLUG) return { name: 'Holdfast', motto: 'Servimus ut permaneat.', maxim: 'Leave it stronger.' }
   return { name: guild?.name || '', motto: guild?.tagline || '', maxim: '' }
@@ -19,7 +21,7 @@ function Footer() {
       <div className="footer__identity">
         <div className="footer__brand">
           <span className="footer__mark" aria-hidden="true">
-            ♜
+            {guildFeaturesEnabled ? '♜' : '✦'}
           </span>
 
           <div>
@@ -33,7 +35,8 @@ function Footer() {
 
       <div className="footer__meta">
         <nav className="footer__links" aria-label="Footer links">
-          <a href="/">Find guilds</a>
+          {guildFeaturesEnabled ? <a href="/">Find guilds</a> : <a href="/dashboard">Dashboard</a>}
+          {guildFeaturesEnabled ? null : <a href="/download">Download</a>}
           <a href="/privacy">Privacy</a>
           <a href={sourceRepositoryUrl} target="_blank" rel="noreferrer">
             Source

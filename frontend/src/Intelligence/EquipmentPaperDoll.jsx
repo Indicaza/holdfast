@@ -70,7 +70,7 @@ function GearSummary({ equipment, className, race }) {
 
   return (
     <div className="paper-doll__figure" data-class={classKey(className)}>
-      <span className="paper-doll__crest" aria-hidden="true">♜</span>
+      <span className="paper-doll__crest" aria-hidden="true">✦</span>
       <strong>{className || 'Adventurer'}</strong>
       <span>{race || 'Character'}</span>
       <div className="paper-doll__gear-summary">

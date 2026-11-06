@@ -23,6 +23,12 @@ CI seeds three disposable members:
 - `officer` — Lieutenant
 - `commander` — Commander/owner
 
+Two more personas, `player` and `rival`, are Discord users with no guild. They exist once they first load a page.
+
+## Two app copies
+
+CI runs two copies of the app. The **solo** project (`*.solo.spec.js`, port 4173) checks the site as it runs today, with guild features off. The **guilds** project (every other spec, port 4174) runs with `GUILDWEAVER_GUILD_FEATURES=true`, so the guild journeys keep their coverage until the guild site returns. Each copy has its own disposable database; sessions are cookies on 127.0.0.1 and reach both.
+
 The browser receives a normally signed Holdfast session cookie. There is no E2E login route or production test backdoor. Backend authorization still resolves from the seeded member's real rank/billet authority.
 
 ## CI coverage

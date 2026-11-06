@@ -19,7 +19,7 @@ export const GUILD_SECTIONS = ['quests', 'members', 'charter', 'ranks', 'intelli
 // First path segments that are not guild slugs: the platform's pages, the
 // server's own paths, old paths that now redirect, and public asset folders.
 export const RESERVED_TOP_LEVEL_SEGMENTS = [
-  'register', 'items', 'guildweaver', 'download', 'dashboard', 'privacy', 'admin', 'join',
+  'register', 'items', 'guildweaver', 'download', 'dashboard', 'account', 'privacy', 'admin', 'join',
   'api', 'auth', 'assets',
   'guilds', 'guildos', ...GUILD_SECTIONS,
   'armory-art', 'inventory-art', 'profession-art', 'talent-art', 'wow-art',
@@ -75,19 +75,43 @@ export function legacyRedirectPathname(pathname) {
   return null
 }
 
+// Where a guild page goes while guild features are off (Features/
+// guildFeatures.js), or null when the path is not one. The server answers the
+// same paths with a temporary redirect (backend/src/Production/
+// legacyRedirects.js hiddenGuildPathname).
+export function hiddenGuildPathname(pathname) {
+  const normalized = normalizePathname(pathname)
+  if (['/guildos', '/intelligence', '/holdfast/intelligence'].includes(normalized)) return '/dashboard'
+  if (['/guilds', '/register', '/join', '/holdfast'].includes(normalized)) return '/'
+  if (/^\/(guilds|holdfast)\/.+/.test(normalized)) return '/'
+  return legacyRedirectPathname(normalized) ? '/' : null
+}
+
+// The player dashboard's sections, by path. /dashboard is the overview.
+export const DASHBOARD_SECTIONS = ['characters', 'professions', 'farming', 'sync']
+
 // What a pathname shows: { name, ...params }, or null for not found.
 //   platform pages: { name: 'directory' | 'register' | 'items' | ... }
+//   dashboard:      { name: 'dashboard', section }
 //   guild pages:    { name: 'guild', slug, section, memberId? }
+// The front page is 'directory' here; App shows the landing page instead
+// while guild features are off.
 export function matchRoute(pathname) {
   const normalized = normalizePathname(pathname)
   if (normalized === '/') return { name: 'directory' }
+
+  const dashboard = normalized.match(/^\/dashboard(?:\/([^/]+))?$/)
+  if (dashboard) {
+    const section = dashboard[1] || 'overview'
+    return section === 'overview' || DASHBOARD_SECTIONS.includes(section) ? { name: 'dashboard', section } : null
+  }
 
   const platform = {
     '/register': 'register',
     '/join': 'join',
     '/guildweaver': 'guildweaver',
     '/download': 'guildweaver',
-    '/dashboard': 'dashboard',
+    '/account': 'account',
     '/guildweaver/connect': 'guildweaver-connect',
     '/privacy': 'privacy',
     '/admin': 'admin',

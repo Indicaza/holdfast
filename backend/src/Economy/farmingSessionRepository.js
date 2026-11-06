@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { FARMING_MIN_GATHERS, FARMING_MIN_SECONDS, farmingSessionQuality } from "./farmingSessionModel.js";
+import { serverKeySql } from "../Player/playerServers.js";
 
 function text(value, max = 160) {
   return String(value ?? "").trim().slice(0, max);
@@ -34,10 +35,17 @@ export function recordFarmingSessionInDatabase(db, { envelope, memberId, receive
   return { status: result.changes ? "updated" : "duplicate", sessionChanged: Boolean(result.changes) };
 }
 
-export function readFarmingSessions({ realm = "", build = "", mode = "", limit = 30 } = {}) {
+// A player's own farming sessions. Sessions are personal activity (when and
+// where someone played), so every read names the account whose sessions it
+// returns; there is no "everyone's sessions" read.
+export function readFarmingSessions({ memberId, server = "", realm = "", build = "", mode = "", limit = 30 } = {}) {
   return withGuildDatabase((db) => {
-    const clauses = [];
-    const params = [];
+    const clauses = ["member_id = ?"];
+    const params = [text(memberId)];
+    if (server) {
+      clauses.push(`${serverKeySql("farming_sessions")} = ?`);
+      params.push(server);
+    }
     for (const [column, value] of [["realm", realm], ["game_build", build], ["mode", mode]]) {
       if (text(value)) { clauses.push(`${column} = ?`); params.push(text(value)); }
     }

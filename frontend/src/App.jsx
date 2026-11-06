@@ -9,14 +9,17 @@ import { useGuild } from './Guild/guildContext.js'
 import Home from './Home/Home.jsx'
 import PageLoading from './PageLoading/PageLoading.jsx'
 import SEO from './SEO/SEO.jsx'
+import { guildFeaturesEnabled } from './Features/guildFeatures.js'
 import {
   HOLDFAST_SLUG,
   guildNameFromSlug,
+  hiddenGuildPathname,
   legacyRedirectPathname,
   matchRoute,
   normalizePathname,
 } from './routing.js'
 
+const Account = lazy(() => import('./Account/Account.jsx'))
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const GuildweaverAdmin = lazy(() => import('./Admin/GuildweaverAdmin.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
@@ -28,8 +31,10 @@ const GuildPage = lazy(() => import('./Guilds/GuildPage.jsx'))
 const RegisterGuild = lazy(() => import('./Guilds/RegisterGuild.jsx'))
 const Items = lazy(() => import('./Items/Items.jsx'))
 const Join = lazy(() => import('./Join/Join.jsx'))
+const Landing = lazy(() => import('./Landing/Landing.jsx'))
 const MemberProfile = lazy(() => import('./Members/MemberProfile.jsx'))
 const Members = lazy(() => import('./Members/Members.jsx'))
+const PlayerDashboard = lazy(() => import('./Player/PlayerDashboard.jsx'))
 const NotFound = lazy(() => import('./NotFound/NotFound.jsx'))
 const Privacy = lazy(() => import('./Privacy/Privacy.jsx'))
 const Quests = lazy(() => import('./Quests/Quests.jsx'))
@@ -38,22 +43,48 @@ const Ranks = lazy(() => import('./Ranks/Ranks.jsx'))
 const defaultRobots =
   'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
 
+const dashboardTitles = {
+  overview: 'My Overview',
+  characters: 'My Characters',
+  professions: 'My Professions',
+  farming: 'My Farming',
+  sync: 'My Devices & Sync',
+}
+
+// The front page: Guildweaver's landing page, or the guild directory while
+// guild features are on.
+const landingPage = {
+  component: Landing,
+  title: 'Guildweaver | Your WoW Forever characters, synced',
+  description: 'Guildweaver syncs your WoW Forever characters, gear, professions and farming to a private dashboard. Free download, Discord sign-in, no guild required.',
+  robots: defaultRobots,
+  home: true,
+}
+
 // Guildweaver's own pages, by matchRoute name.
 const platformPages = {
-  directory: {
+  directory: guildFeaturesEnabled ? {
     component: GuildBrowser,
     title: 'Guildweaver | Find a World of Warcraft Guild',
     description: 'Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.',
     robots: defaultRobots,
     home: true,
     props: (url) => ({ queryString: url.search }),
-  },
+  } : landingPage,
   dashboard: {
-    component: GuildIntelligence,
-    title: 'Telemetry Dashboard | Guildweaver',
-    description: 'Explore synced characters, crafting knowledge, and farming telemetry. No guild registration required.',
+    component: PlayerDashboard,
+    title: (route) => `${dashboardTitles[route.section] || 'Dashboard'} | Guildweaver`,
+    description: 'Your synced characters, professions, farming and devices, grouped by server.',
     robots: 'noindex,nofollow',
-    props: () => ({ platform: true }),
+    props: (url, route) => ({ section: route.section }),
+    // The dashboard stays mounted while its sections change.
+    key: () => 'dashboard',
+  },
+  account: {
+    component: Account,
+    title: 'Account & Privacy | Guildweaver',
+    description: 'Your Discord identity, connected devices and what Guildweaver stores about you.',
+    robots: 'noindex,nofollow',
   },
   register: {
     component: RegisterGuild,
@@ -85,7 +116,7 @@ const platformPages = {
   privacy: {
     component: Privacy,
     title: 'Privacy | Guildweaver',
-    description: 'Guildweaver and Holdfast privacy information.',
+    description: 'What Guildweaver collects, who can see it, and how to disconnect.',
     robots: 'noindex,follow',
   },
   admin: {
@@ -211,24 +242,33 @@ function App() {
   useEffect(() => interceptLinkClicks(), [])
   const url = new URL(href)
   const requestedPathname = normalizePathname(url.pathname)
-  const redirectPathname = legacyRedirectPathname(requestedPathname)
+  // While guild features are off, guild pages are hidden and send the
+  // player to the landing page or their dashboard instead.
+  const redirectPathname = guildFeaturesEnabled
+    ? legacyRedirectPathname(requestedPathname)
+    : hiddenGuildPathname(requestedPathname)
   const pathname = redirectPathname || requestedPathname
   const route = matchRoute(pathname)
 
   // Old single-guild paths (/quests, /guilds/:slug, ...) move to where they
   // live now, keeping the query string and hash. The server answers them with
-  // a 301 in production; this covers dev and links followed in the app.
+  // a redirect in production; this covers dev and links followed in the app.
+  // A hidden guild page drops its query string: it belonged to that page.
   useEffect(() => {
     if (!redirectPathname) return
     const current = new URL(window.location.href)
-    window.history.replaceState(null, '', `${redirectPathname}${current.search}${current.hash}`)
+    const kept = guildFeaturesEnabled ? `${current.search}${current.hash}` : ''
+    window.history.replaceState(null, '', `${redirectPathname}${kept}`)
   }, [redirectPathname])
 
-  // /join opens Holdfast's join flow over Holdfast's home.
-  const guildRoute = route?.name === 'join'
-    ? { name: 'guild', slug: HOLDFAST_SLUG, section: 'join' }
+  // /join opens Holdfast's join flow over Holdfast's home. Guild pages exist
+  // only while guild features are on; otherwise a slug is a missing page.
+  const guildRoute = !guildFeaturesEnabled ? null
+    : route?.name === 'join' ? { name: 'guild', slug: HOLDFAST_SLUG, section: 'join' }
     : route?.name === 'guild' ? route : null
-  const page = guildRoute ? null : (route && platformPages[route.name]) || notFoundPage
+  const hiddenRoute = !guildFeaturesEnabled && ['guild', 'join', 'register'].includes(route?.name)
+  const page = guildRoute ? null : (!hiddenRoute && route && platformPages[route.name]) || notFoundPage
+  const pageTitle = typeof page?.title === 'function' ? page.title(route) : page?.title
   const Page = page?.component
 
   return (
@@ -241,7 +281,7 @@ function App() {
       ) : (
         <>
           <SEO
-            title={page.title}
+            title={pageTitle}
             description={page.description}
             path={pathname}
             robots={page.robots}
@@ -252,7 +292,7 @@ function App() {
           {page.navbar === false ? null : <Navbar variant="platform" />}
 
           <Suspense fallback={<PageLoading />}>
-            <Page key={pathname} {...(page.props?.(url, route) || {})} />
+            <Page key={page.key?.() || pathname} {...(page.props?.(url, route) || {})} />
           </Suspense>
         </>
       )}

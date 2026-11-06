@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 import { authenticate } from '../helpers/auth.js'
 
-const account = (page) => page.getByRole('button', { name: 'Open account menu for Mira Member' })
-const signIn = (page) => page.locator('.navbar').getByRole('button', { name: 'Sign In', exact: true })
+const account = (page) => page.getByRole('button', { name: 'Account menu for Mira Member' })
+const signIn = (page) => page.locator('.navbar').getByRole('button', { name: 'Sign in with Discord', exact: true })
 
 test('the member session is checked once and survives every page change', async ({ page, context }) => {
   await authenticate(context, 'member')
@@ -17,7 +17,7 @@ test('the member session is checked once and survives every page change', async 
   })
   await page.goto('/holdfast')
   // While the first check is pending, the navbar never claims "signed out".
-  await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Checking sign-in' })).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Join Holdfast', exact: true })).toHaveCount(0)
   release()
@@ -30,7 +30,7 @@ test('the member session is checked once and survives every page change', async 
     await page.locator(`.navbar a[href="${href}"]`).first().click()
     await expect(page).toHaveURL((url) => url.pathname === href)
     await expect(account(page)).toBeVisible()
-    await expect(page.getByRole('status', { name: 'Checking member session' })).toHaveCount(0)
+    await expect(page.getByRole('status', { name: 'Checking sign-in' })).toHaveCount(0)
     expect(await navbar.evaluate((element) => element.isConnected)).toBe(true)
   }
   // A page may revalidate in the background (without touching the navbar),
@@ -46,7 +46,7 @@ test('an anonymous session shows Sign in only after its check completes', async 
     await route.continue()
   })
   await page.goto('/holdfast')
-  await expect(page.getByRole('status', { name: 'Checking member session' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Checking sign-in' })).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
   release()
   await expect(signIn(page)).toBeVisible()
@@ -86,7 +86,7 @@ test('concurrent refreshes are shared and a late response cannot reverse sign-ou
   })
   await captured
   await account(page).click()
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click()
   await expect(signIn(page)).toBeVisible()
   const response = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/me')
   release()
@@ -113,12 +113,12 @@ test('failed sign-out is visible and leaves the verified account available', asy
   await page.goto('/holdfast')
   await account(page).click()
   await page.route('**/api/auth/logout', (route) => route.fulfill({ status: 503 }))
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click()
   await expect(page.getByRole('alert')).toHaveText('Could not sign out. Try again.')
   await expect(account(page)).toBeVisible()
   await expect(signIn(page)).toHaveCount(0)
   await page.unroute('**/api/auth/logout')
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click()
   await expect(signIn(page)).toBeVisible()
 })
 

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 const envelope = JSON.parse(
   fs.readFileSync(
@@ -13,7 +13,7 @@ const envelope = JSON.parse(
 );
 
 test("Armory consumes the canonical Guildweaver schema 2 character payload", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = structuredClone(envelope.payload);
     const first = await syncGuildweaverCharacter({
       memberId: memberIds.member,

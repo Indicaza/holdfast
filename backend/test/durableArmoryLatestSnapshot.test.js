@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { withGuildDatabase } from "../src/Data/database.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 test("Armory reads the newest durable snapshot even when the projection points at an older sparse snapshot", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const first = await syncGuildweaverCharacter({
       memberId: memberIds.member,
       deviceId: "durable-armory-device",

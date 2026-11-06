@@ -75,6 +75,21 @@ function characterByStableIdentity(db, { memberId, characterName, realm, region 
     );
 }
 
+// The id a new character of this account takes. Ids come from the upload
+// (the addon's per-install id or a game GUID), so two accounts can send the
+// same one: the same WoW install paired from a second Discord account, or a
+// forged upload. A character never changes owner, so when the id already
+// belongs to another account this account's character gets its own
+// (stable) id instead.
+export function ownedCharacterIdInDatabase(db, memberId, preferredId) {
+  const id = text(preferredId, 200);
+  if (!id) return "";
+  const member = text(memberId, 160);
+  const existing = db.prepare("SELECT member_id FROM characters WHERE id = ?").get(id);
+  if (!existing || existing.member_id === member) return id;
+  return `${id}@${member}`.slice(0, 400);
+}
+
 export function resolveGuildweaverCharacterIdentityInDatabase({
   db,
   memberId,
@@ -111,7 +126,7 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
 
   // Keep GUID/legacy/direct IDs working for characters that predate the alias
   // ledger or whose name/realm is temporarily unavailable.
-  const preferred = text(preferredCharacterId, 200);
+  const preferred = ownedCharacterIdInDatabase(db, memberId, preferredCharacterId);
   if (preferred) {
     return db
       .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")

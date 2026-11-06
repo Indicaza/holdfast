@@ -8,7 +8,7 @@ import { DEFAULT_GUILD_RANKS } from '../src/Guild/guildDefaults.js'
 import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 import { classifyLiveMutation } from '../src/Live/liveMutationObserver.js'
 import { publishLiveUpdate, resetLiveUpdatesForTests, subscribeLiveUpdates } from '../src/Live/liveUpdateBus.js'
-import { objective, persistentState, withHttpApp } from '../testSupport/httpHarness.js'
+import { objective, persistentState, withGuildHttpApp } from '../testSupport/httpHarness.js'
 
 const IRONPINE = '/api/g/ironpine-wardens'
 const ironpine = { owner: 'iron-owner', officer: 'iron-officer', member: 'iron-member' }
@@ -51,7 +51,7 @@ async function questFixture() {
   return JSON.parse(await readFile(new URL('../../e2e/fixtures/quests.json', import.meta.url)))
 }
 
-test('another guild\'s officer cannot read a guild\'s quests, members, billets, authority or audit', () => withHttpApp(async ({ request }) => {
+test('another guild\'s officer cannot read a guild\'s quests, members, billets, authority or audit', () => withGuildHttpApp(async ({ request }) => {
   await foundIronpine(request)
   const ironBillet = (await successful(request, `${IRONPINE}/billets`, { persona: ironpine.owner })).billets[0]
 
@@ -102,7 +102,7 @@ test('another guild\'s officer cannot read a guild\'s quests, members, billets, 
   assert.equal((await request('/api/g/no-such-guild/quests/member', { persona: 'member' })).status, 404)
 }))
 
-test('another guild\'s officer cannot change a guild\'s quests, members, billets or authority', () => withHttpApp(async ({ request }) => {
+test('another guild\'s officer cannot change a guild\'s quests, members, billets or authority', () => withGuildHttpApp(async ({ request }) => {
   await foundIronpine(request)
   const ironBillet = (await successful(request, `${IRONPINE}/billets`, { persona: ironpine.owner })).billets[0]
   const document = await questFixture()
@@ -166,7 +166,7 @@ test('another guild\'s officer cannot change a guild\'s quests, members, billets
   assert.deepEqual(persistentState(), before)
 }))
 
-test('guilds keep separate quest boards, ledgers and ranks even when their ids collide', () => withHttpApp(async ({ request }) => {
+test('guilds keep separate quest boards, ledgers and ranks even when their ids collide', () => withGuildHttpApp(async ({ request }) => {
   const guildId = await foundIronpine(request)
   const holdfastBefore = await successful(request, '/api/quests/manage', { persona: 'owner' })
 
@@ -221,7 +221,7 @@ test('guilds keep separate quest boards, ledgers and ranks even when their ids c
   assert.equal((await successful(request, '/api/guild/members/e2e-member', { persona: 'member' })).member.rank, 'Private')
 }))
 
-test('a registered guild starts with its own ladder and billets, and authority never crosses guilds', () => withHttpApp(async ({ request }) => {
+test('a registered guild starts with its own ladder and billets, and authority never crosses guilds', () => withGuildHttpApp(async ({ request }) => {
   const guildId = await foundIronpine(request)
 
   assert.deepEqual(readRankLadder(guildId).names, DEFAULT_GUILD_RANKS.map((rank) => rank.name))

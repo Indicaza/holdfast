@@ -1,0 +1,199 @@
+import { expect, test } from '@playwright/test'
+import { authenticate } from '../helpers/auth.js'
+import { connectAndSync } from '../helpers/player.js'
+
+// A Discord player with no guild, end to end: first run, first sync, their
+// characters by server, the armory, devices, and nobody else's data.
+
+const account = (page, name = 'Pip Player') => page.getByRole('button', { name: `Account menu for ${name}` })
+const rail = (page) => page.getByRole('navigation', { name: 'Dashboard workspaces' })
+const heading = (page) => page.locator('.intelligence-app__topbar h1')
+
+test('signed out, the dashboard asks for Discord and private data stays private', async ({ page, request }) => {
+  await page.goto('/dashboard/characters')
+  await expect(page.getByRole('heading', { name: 'Your dashboard' })).toBeVisible()
+  await expect(page.locator('main').getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
+  for (const route of ['/api/player/overview', '/api/player/characters', '/api/player/devices', '/api/player/farming']) {
+    expect((await request.get(route)).status(), route).toBe(401)
+  }
+})
+
+test('a new player follows the first-run checklist to their first sync, then sees characters by server', async ({ page, context }) => {
+  await authenticate(context, 'player')
+  await page.goto('/dashboard')
+  await expect(account(page)).toBeVisible()
+  await expect(heading(page)).toHaveText('Overview')
+  await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toBeVisible()
+  await expect(page.getByText('Connect a computer to start syncing.')).toBeVisible()
+  await expect(page.getByText('uploads arrive then, not live while you play', { exact: false })).toBeVisible()
+  await expect(rail(page).getByRole('link')).toHaveText([/^Overview/, /^Characters/, /^Professions/, /^Farming/, /^Sync/])
+
+  await connectAndSync(page, {
+    deviceName: 'Pip desktop',
+    characters: [
+      { id: 'pip-rook', name: 'Rook', realm: 'Doomhowl', level: 42 },
+      { id: 'pip-fern', name: 'Fern', realm: 'Doomhowl', level: 18 },
+      { id: 'pip-rook-sm', name: 'Rook', realm: 'Shadowmoon', level: 60 },
+    ],
+    gathers: [{ id: 'pip-herb-1', characterId: 'pip-rook', realm: 'Doomhowl' }],
+  })
+
+  // Live updates replace the checklist with the overview.
+  await expect(page.getByRole('heading', { name: 'Your characters' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toHaveCount(0)
+  const scorecards = page.getByRole('region', { name: 'Your summary' })
+  await expect(scorecards.getByText('Characters', { exact: true })).toBeVisible()
+  await expect(scorecards.locator('article').first().locator('strong')).toHaveText('3')
+  const servers = page.locator('.player-servers__list')
+  // Most recently synced first.
+  await expect(servers.locator('strong')).toHaveText(['Shadowmoon', 'Doomhowl'])
+  await expect(page.getByRole('link', { name: 'Setup help' })).toHaveAttribute('href', '/download')
+
+  // The server choice filters every tool and survives navigation.
+  await page.getByLabel('Server').selectOption({ label: 'Doomhowl (2)' })
+  await expect(page).toHaveURL(/\/dashboard\?server=us%3Adoomhowl$/)
+  await rail(page).getByRole('link', { name: /^Characters/ }).click()
+  await expect(page).toHaveURL(/\/dashboard\/characters\?server=us%3Adoomhowl$/)
+  await expect(heading(page)).toHaveText('Characters')
+  await expect(page.locator('.character-card')).toHaveCount(2)
+  await expect(page.locator('.character-card').filter({ hasText: 'Rook' })).toHaveCount(1)
+
+  await rail(page).getByRole('link', { name: /^Farming/ }).click()
+  await expect(page.getByRole('region', { name: 'Your farming summary' })).toContainText('1')
+  await expect(page.getByRole('heading', { name: 'Drop rates from every Guildweaver player' })).toBeVisible()
+
+  await page.getByLabel('Server').selectOption({ label: 'Shadowmoon (1)' })
+  await expect(page.getByText('No farming on this server yet.')).toBeVisible()
+
+  // A fresh visit remembers the server; a server the player lacks falls back
+  // to the remembered one, and All servers clears the memory.
+  await page.goto('/dashboard/characters')
+  await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
+  await expect(page.locator('.character-card')).toHaveCount(1)
+  await page.goto('/dashboard/characters?server=eu%3Asomewhere-else')
+  await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
+  await page.getByLabel('Server').selectOption({ label: 'All servers' })
+  await expect(page).toHaveURL((url) => !url.search.includes('server='))
+  await expect(page.locator('.character-card')).toHaveCount(3)
+  await page.reload()
+  await expect(page.locator('.character-card')).toHaveCount(3)
+
+  // The armory opens in place from the player's own data.
+  await page.locator('.character-card').filter({ hasText: 'Fern' }).click()
+  await expect(page).toHaveURL(/character=/)
+  await expect(page.getByRole('dialog', { name: 'Fern' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('another player cannot list, open or disconnect this player\'s things, even with direct links', async ({ page, context, browser }) => {
+  await authenticate(context, 'player')
+  await page.goto('/dashboard/characters')
+  await expect(page.locator('.character-card').first()).toBeVisible()
+  const ownCharacter = await page.evaluate(async () => (await (await fetch('/api/player/characters')).json()).characters[0].id)
+  const ownDevice = await page.evaluate(async () => (await (await fetch('/api/player/devices')).json()).devices[0].id)
+
+  const rivalContext = await browser.newContext()
+  await authenticate(rivalContext, 'rival')
+  const rival = await rivalContext.newPage()
+  await rival.goto(`/dashboard/characters?character=${encodeURIComponent(ownCharacter)}`)
+  await expect(account(rival, 'Rex Rival')).toBeVisible()
+  await expect(rival.locator('.character-card')).toHaveCount(0)
+  await expect(rival.getByRole('heading', { name: 'Character not found.' })).toBeVisible()
+  const probes = await rival.evaluate(async ({ ownCharacter, ownDevice }) => ({
+    armory: (await fetch(`/api/player/characters/${encodeURIComponent(ownCharacter)}`)).status,
+    recipes: (await fetch(`/api/player/characters/${encodeURIComponent(ownCharacter)}/recipes`)).status,
+    guildArmory: (await fetch(`/api/intelligence/characters/${encodeURIComponent(ownCharacter)}`)).status,
+    disconnect: (await fetch(`/api/player/devices/${ownDevice}/disconnect`, { method: 'POST' })).status,
+    devices: (await (await fetch('/api/player/devices')).json()).devices.length,
+    admin: (await fetch('/api/admin/guildweaver/summary')).status,
+  }), { ownCharacter, ownDevice })
+  expect(probes).toEqual({ armory: 404, recipes: 404, guildArmory: 404, disconnect: 404, devices: 0, admin: 403 })
+  await rivalContext.close()
+
+  // The player's computer still works.
+  const devices = await page.evaluate(async () => (await (await fetch('/api/player/devices')).json()).devices)
+  expect(devices.map((device) => device.status)).toEqual(['connected'])
+})
+
+test('the avatar menu reaches every personal view and signing out leaves nothing behind', async ({ page, context }) => {
+  await authenticate(context, 'player')
+  await page.goto('/dashboard/characters')
+  await expect(page.locator('.character-card').first()).toBeVisible()
+
+  await account(page).focus()
+  await page.keyboard.press('Enter')
+  const menu = page.getByRole('menu', { name: 'Account' })
+  await expect(menu.getByRole('menuitem')).toHaveText(['My Overview', 'My Characters', 'My Devices & Sync', 'Account & Privacy', 'Sign out'])
+  await expect(menu.getByRole('menuitem', { name: 'My Overview' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(menu.getByRole('menuitem', { name: 'My Characters' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(account(page)).toBeFocused()
+  await expect(account(page)).toHaveAttribute('aria-expanded', 'false')
+
+  await account(page).click()
+  await menu.getByRole('menuitem', { name: 'Account & Privacy' }).click()
+  await expect(page).toHaveURL(/\/account$/)
+  await expect(account(page)).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('heading', { name: 'Signed in with Discord' })).toBeVisible()
+  await expect(page.locator('main').getByText('@e2e-player')).toBeVisible()
+  await expect(page.locator('main')).not.toContainText(/Holdfast|rank|guild nickname/i)
+
+  await account(page).click()
+  await menu.getByRole('menuitem', { name: 'My Devices & Sync' }).click()
+  await expect(heading(page)).toHaveText('Sync')
+  await expect(page.locator('.player-device')).toHaveCount(1)
+
+  await account(page).click()
+  await menu.getByRole('menuitem', { name: 'Sign out' }).click()
+  await expect(page.locator('.navbar').getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
+  await expect(page.locator('.player-device')).toHaveCount(0)
+  await page.locator('.navbar').getByRole('link', { name: 'Dashboard' }).click()
+  await expect(page.getByRole('heading', { name: 'Your dashboard' })).toBeVisible()
+  await expect(page.locator('.character-card')).toHaveCount(0)
+})
+
+test('on a phone the site menu, the dashboard drawer and the avatar menu all work', async ({ page, context }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await authenticate(context, 'player')
+  await page.goto('/dashboard')
+  await expect(account(page)).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
+
+  const siteMenu = page.getByRole('button', { name: 'Toggle navigation' })
+  await siteMenu.click()
+  const mobileNav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await expect(mobileNav.getByRole('link', { name: 'Download' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(siteMenu).toHaveAttribute('aria-expanded', 'false')
+  await expect(siteMenu).toBeFocused()
+
+  await page.getByRole('button', { name: 'Open dashboard navigation' }).click()
+  await rail(page).getByRole('link', { name: /^Characters/ }).click()
+  await expect(heading(page)).toHaveText('Characters')
+  await expect(page.locator('.intelligence-app--mobile-open')).toHaveCount(0)
+
+  await account(page).click()
+  await page.getByRole('menu', { name: 'Account' }).getByRole('menuitem', { name: 'My Overview' }).click()
+  await expect(heading(page)).toHaveText('Overview')
+})
+
+test('disconnecting a computer asks first, then stops it uploading', async ({ page, context }) => {
+  await authenticate(context, 'player')
+  await page.goto('/dashboard/sync')
+  await expect(page.locator('.player-device')).toHaveCount(1)
+  await connectAndSync(page, { deviceName: 'Old laptop' })
+  await expect(page.locator('.player-device')).toHaveCount(2)
+  const laptop = page.locator('.player-device').filter({ hasText: 'Old laptop' })
+  await laptop.getByRole('button', { name: 'Disconnect' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Disconnect Old laptop?' })
+  await expect(dialog).toContainText('stops working at once')
+  await dialog.getByRole('button', { name: 'Keep connected' }).click()
+  await expect(laptop.locator('.ds-badge')).toHaveText('Connected')
+
+  await laptop.getByRole('button', { name: 'Disconnect' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Disconnect', exact: true }).click()
+  await expect(laptop.locator('.ds-badge')).toHaveText('Disconnected')
+  await expect(page.locator('.player-device').filter({ hasText: 'Pip desktop' }).locator('.ds-badge')).toHaveText('Connected')
+})

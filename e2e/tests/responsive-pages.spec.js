@@ -39,7 +39,7 @@ test('phone navigation, account, recruitment, and footer controls have usable to
   await page.setViewportSize({ width: 320, height: 568 })
   await page.goto('/holdfast')
   const controls = [
-    page.locator('.navbar').getByRole('button', { name: 'Sign In', exact: true }),
+    page.locator('.navbar').getByRole('button', { name: 'Sign in with Discord', exact: true }),
     page.getByRole('button', { name: 'Toggle navigation' }),
     page.locator('footer').getByRole('link', { name: 'Privacy' }),
   ]
@@ -60,7 +60,7 @@ test('phone navigation, account, recruitment, and footer controls have usable to
   await close.click()
   await authenticate(context, 'member')
   await page.reload()
-  const account = page.getByRole('button', { name: 'Open account menu for Mira Member' })
+  const account = page.getByRole('button', { name: 'Account menu for Mira Member' })
   await expect(account).toBeVisible()
   const accountBox = await account.boundingBox()
   expect(accountBox.width).toBeGreaterThanOrEqual(44)

@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 test("GuildOS character cards read vitals from modular stats telemetry", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const rawCharacterId = "character-card-vitals";
     const synced = await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -79,7 +79,7 @@ test("GuildOS character cards read vitals from modular stats telemetry", async (
 });
 
 test("GuildOS character cards find stats telemetry that arrived before the character synced", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const rawCharacterId = "character-stats-first";
     const telemetry = ingestTelemetry({
       deviceId: "device-stats-first",

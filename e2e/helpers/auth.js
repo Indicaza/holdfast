@@ -6,6 +6,26 @@ const sessionSecret =
   'holdfast-e2e-session-secret-change-me-1234567890'
 
 export const personas = {
+  // Discord users with no guild: solo Guildweaver players. Not in Holdfast's
+  // server (homeServer: false), so the site stores them without a guild.
+  player: {
+    id: 'e2e-player',
+    username: 'e2e-player',
+    globalName: 'Pip Player',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
+  rival: {
+    id: 'e2e-rival',
+    username: 'e2e-rival',
+    globalName: 'Rex Rival',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   member: {
     id: 'e2e-member',
     username: 'e2e-member',
@@ -32,10 +52,11 @@ export const personas = {
   },
 }
 
-function encodeSession(user) {
+function encodeSession({ homeServer, ...user }) {
   const session = {
     user,
     permissions: [],
+    ...(homeServer === false ? { homeServer: false } : {}),
     verifiedAt: Date.now(),
     exp: Date.now() + 60 * 60 * 1000,
   }
