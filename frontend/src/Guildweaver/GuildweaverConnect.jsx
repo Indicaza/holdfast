@@ -46,18 +46,19 @@ export default function GuildweaverConnect() {
             This pairing link is missing its connection code. Return to Guildweaver Bridge and start pairing again.
           </p>
         ) : session.status === 'loading' ? (
-          <p className="guildweaver-connect-copy">Checking your Holdfast session…</p>
+          <p className="guildweaver-connect-copy">Checking your Guildweaver session…</p>
         ) : status === 'connected' ? (
           <>
             <p className="guildweaver-connect-success">Connected.</p>
+            <a className="guildweaver-connect-button" href="/dashboard">Open dashboard</a>
             <p className="guildweaver-connect-copy">
-              Guildweaver Bridge is now linked to your Holdfast account. You can close this tab and return to the game.
+              Guildweaver Bridge is now linked to your Guildweaver account. You can open the dashboard or return to the game.
             </p>
           </>
         ) : !session.authenticated ? (
           <>
             <p className="guildweaver-connect-copy">
-              Sign in with Discord so Holdfast can securely link this Guildweaver installation to your member profile.
+              Sign in with Discord to securely connect this installation. You do not need to register or join a guild.
             </p>
             <button
               className="guildweaver-connect-button"
@@ -70,7 +71,7 @@ export default function GuildweaverConnect() {
         ) : (
           <>
             <p className="guildweaver-connect-copy">
-              Connect Guildweaver on this PC to <strong>{session.user?.globalName || session.user?.username || 'your Holdfast account'}</strong>.
+              Connect Guildweaver on this PC to <strong>{session.user?.globalName || session.user?.username || 'your Guildweaver account'}</strong>.
             </p>
             <p className="guildweaver-connect-code">{userCode}</p>
             <button

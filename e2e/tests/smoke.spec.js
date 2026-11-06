@@ -21,7 +21,7 @@ test('the guild directory is the front page and every guild drills down from its
   await expect(navbar.getByRole('link', { name: 'Guildweaver home' })).toBeVisible()
   await expect(navbar.getByRole('link', { name: 'Find guilds' })).toHaveAttribute('aria-current', 'page')
   await expect(navbar.getByRole('link', { name: 'Item catalog' })).toHaveAttribute('href', '/items')
-  await expect(navbar.getByRole('link', { name: 'Addon' })).toHaveAttribute('href', '/guildweaver')
+  await expect(navbar.getByRole('link', { name: 'Download', exact: true })).toHaveAttribute('href', '/download')
 
   await page.getByRole('option', { name: /Holdfast/ }).click()
   await expect(page).toHaveURL(/[?&]guild=holdfast/)

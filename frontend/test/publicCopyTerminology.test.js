@@ -17,8 +17,8 @@ test('member-facing operations surface is consistently branded GuildOS', () => {
   const shell = source('Intelligence/IntelligenceAppShell.jsx')
 
   assert.match(app, /title: \(name\) => `GuildOS \| \$\{name\}`/)
-  assert.match(shell, /<strong>GuildOS<\/strong>/)
-  assert.match(shell, /<span>GuildOS<\/span>/)
+  assert.match(shell, /platform \? 'Telemetry' : 'GuildOS'/)
+  assert.match(shell, /platform \? 'Guildweaver' : 'GuildOS'/)
 
   assert.doesNotMatch(navbar, />Guild Intelligence<\/a>/)
   assert.doesNotMatch(navbar, />Audit Log<\/a>/)
