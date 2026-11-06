@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '../../Auth/sessionContext.js'
 import { useGuild } from '../../Guild/guildContext.js'
@@ -12,6 +13,7 @@ import {
   signInNavigationLabel,
 } from '../../navigation.js'
 import { HOLDFAST_SLUG, guildHref, guildNameFromSlug } from '../../routing.js'
+import DevPersonaChooser from '../DevPersonaChooser/DevPersonaChooser.jsx'
 import './Navbar.css'
 
 function displayName(user) {
@@ -139,6 +141,8 @@ function Navbar({ variant = 'platform' }) {
             ) : null}
           </nav>
 
+          <DevPersonaChooser />
+
           <div className="navbar__actions">
             {status === 'loading' ? (
               <span className="navbar__session-state" role="status" aria-label="Checking member session" aria-busy="true">
@@ -209,6 +213,10 @@ function Navbar({ variant = 'platform' }) {
           className={`navbar__mobile ${menuOpen ? 'navbar__mobile--open' : ''}`}
           aria-label="Mobile navigation"
         >
+          <div className="navbar__mobile-dev-persona">
+            <DevPersonaChooser />
+          </div>
+
           {links.map((link) => (
             <a
               key={link.href}
