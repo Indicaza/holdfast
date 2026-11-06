@@ -8,10 +8,13 @@ import { readFarmingSessions, readFarmingLocations } from "./farmingSessionRepos
 export function createFarmingRouter() {
   const router = Router();
 
+  // The signed-in player's own sessions only. Sources and drop tables below
+  // are community aggregates without contributor identity.
   router.get("/sessions", requireAuthenticated, (req, res) => {
     try {
+      const { realm, build, mode, limit } = req.query || {};
       res.set("Cache-Control", "no-store");
-      res.json(readFarmingSessions(req.query || {}));
+      res.json(readFarmingSessions({ memberId: req.auth.user.id, realm, build, mode, limit }));
     } catch (error) {
       console.error("Unable to read farming sessions", error);
       res.status(500).json({ error: "farming_sessions_unavailable" });

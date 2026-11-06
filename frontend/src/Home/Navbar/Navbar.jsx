@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { signInReturnTo } from '../../Auth/returnTo.js'
 import { useSession } from '../../Auth/sessionContext.js'
+import { guildFeaturesEnabled } from '../../Features/guildFeatures.js'
 import { useGuild } from '../../Guild/guildContext.js'
 import { GuildCrest } from '../../Guilds/GuildCrest.jsx'
+import { subscribeLocation } from '../../Navigation/navigation.js'
 import NotificationBell from '../../Notifications/NotificationBell.jsx'
 import {
   accountMenuLinks,
   guildNavigationLinks,
   isActiveLink,
   myGuildLink,
-  platformNavigationLinks,
+  playerDisplayName,
+  primaryNavigationLinks,
   signInNavigationLabel,
 } from '../../navigation.js'
 import { HOLDFAST_SLUG, guildHref, guildNameFromSlug } from '../../routing.js'
 import './Navbar.css'
-
-function displayName(user) {
-  return user?.guildNickname || user?.globalName || user?.username || 'Member'
-}
 
 // The guild's crest and name, home to its pages. Holdfast keeps its rook.
 function GuildBrand({ slug, guild }) {
@@ -49,54 +49,89 @@ function PlatformBrand() {
   )
 }
 
-// variant 'platform': Guildweaver's own pages. variant 'guild': every page
-// under /:slug, for the guild in GuildContext.
-function Navbar({ variant = 'platform' }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
-  const [signingOut, setSigningOut] = useState(false)
-  const [signOutError, setSignOutError] = useState('')
-  const accountRef = useRef(null)
-  const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
-  const { status, authenticated, user, guild: memberGuild, signIn, signOut, refresh } = useSession()
-  const { slug, guild } = useGuild()
-  const inGuild = variant === 'guild'
-  const links = inGuild ? guildNavigationLinks(slug, authenticated) : platformNavigationLinks
-  const myGuild = !inGuild && authenticated ? myGuildLink(memberGuild) : null
-  const accountLinks = accountMenuLinks(memberGuild)
+function initials(name) {
+  return String(name || '?').trim().slice(0, 1).toUpperCase() || '?'
+}
 
+// Closes a popup on Escape (focus back to its button), on a press outside it,
+// and when the page changes.
+function useDismiss(open, setOpen, { containerRef, buttonRef }) {
   useEffect(() => {
-    if (!accountOpen) {
-      return undefined
-    }
-
+    if (!open) return undefined
     function handlePointerDown(event) {
-      if (!accountRef.current?.contains(event.target)) {
-        setAccountOpen(false)
-      }
+      if (!containerRef.current?.contains(event.target)) setOpen(false)
     }
-
     function handleKeyDown(event) {
-      if (event.key === 'Escape') {
-        setAccountOpen(false)
-      }
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      buttonRef.current?.focus()
     }
-
     document.addEventListener('pointerdown', handlePointerDown)
     document.addEventListener('keydown', handleKeyDown)
-
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [accountOpen])
+  }, [open, setOpen, containerRef, buttonRef])
+
+  useEffect(() => subscribeLocation(() => setOpen(false)), [setOpen])
+}
+
+// The signed-in player's avatar and menu (a menu button: arrow keys, Home and
+// End move between items; Escape and Tab close it).
+function AccountMenu({ user, links, pathname, onSignOut }) {
+  const [open, setOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState('')
+  const containerRef = useRef(null)
+  const buttonRef = useRef(null)
+  const menuRef = useRef(null)
+  const focusFirst = useRef(false)
+  const menuId = useId()
+  const name = playerDisplayName(user, { guildFeatures: guildFeaturesEnabled })
+  useDismiss(open, setOpen, { containerRef, buttonRef })
+
+  const items = useCallback(() => [...(menuRef.current?.querySelectorAll('[role="menuitem"]') || [])], [])
+
+  useEffect(() => {
+    if (open && focusFirst.current) items()[0]?.focus()
+    focusFirst.current = false
+  }, [open, items])
+
+  function openMenu(withFocus) {
+    focusFirst.current = withFocus
+    setOpen(true)
+  }
+
+  function handleButtonKeyDown(event) {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      openMenu(true)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setOpen(true)
+      requestAnimationFrame(() => items().at(-1)?.focus())
+    }
+  }
+
+  function handleMenuKeyDown(event) {
+    const list = items()
+    const index = list.indexOf(document.activeElement)
+    const move = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: list.length - 1 }[event.key]
+    if (move !== undefined) {
+      event.preventDefault()
+      list[(move + list.length) % list.length]?.focus()
+    } else if (event.key === 'Tab') {
+      setOpen(false)
+    }
+  }
 
   async function handleSignOut() {
     setSigningOut(true)
     setSignOutError('')
     try {
-      await signOut()
-      setAccountOpen(false)
+      await onSignOut()
+      setOpen(false)
     } catch {
       setSignOutError('Could not sign out. Try again.')
     } finally {
@@ -105,8 +140,79 @@ function Navbar({ variant = 'platform' }) {
   }
 
   return (
+    <div className="navbar__account" ref={containerRef}>
+      <button
+        ref={buttonRef}
+        className="navbar__account-button"
+        type="button"
+        aria-label={`Account menu for ${name}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => (open ? setOpen(false) : openMenu(false))}
+        onKeyDown={handleButtonKeyDown}
+      >
+        {user?.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" width="36" height="36" decoding="async" />
+        ) : (
+          <span className="navbar__account-initial" aria-hidden="true">{initials(name)}</span>
+        )}
+      </button>
+
+      <div
+        id={menuId}
+        ref={menuRef}
+        className={`navbar__account-menu ${open ? 'navbar__account-menu--open' : ''}`}
+        role="menu"
+        aria-label="Account"
+        onKeyDown={handleMenuKeyDown}
+      >
+        <div className="navbar__account-identity" role="presentation">
+          <strong>{name}</strong>
+          {user?.username ? <span>@{user.username}</span> : null}
+        </div>
+
+        <div className="navbar__account-links" role="presentation">
+          {links.map((link) => (
+            <a
+              key={link.href}
+              role="menuitem"
+              tabIndex={-1}
+              href={link.href}
+              aria-current={isActiveLink(pathname, link) ? 'page' : undefined}
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          <button role="menuitem" tabIndex={-1} type="button" onClick={handleSignOut} disabled={signingOut}>
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+          {signOutError ? <p className="navbar__account-error" role="alert">{signOutError}</p> : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// variant 'platform': Guildweaver's own pages. variant 'guild': every page
+// under /:slug, for the guild in GuildContext (guild features only).
+function Navbar({ variant = 'platform' }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuContainerRef = useRef(null)
+  const menuButtonRef = useRef(null)
+  const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  const { status, authenticated, user, guild: memberGuild, signIn, signOut, refresh, hasPermission } = useSession()
+  const { slug, guild } = useGuild()
+  const inGuild = variant === 'guild'
+  const links = inGuild ? guildNavigationLinks(slug, authenticated) : primaryNavigationLinks(guildFeaturesEnabled)
+  const myGuild = guildFeaturesEnabled && !inGuild && authenticated ? myGuildLink(memberGuild) : null
+  const accountLinks = accountMenuLinks(memberGuild, { guildFeatures: guildFeaturesEnabled, admin: hasPermission('site.admin') })
+  useDismiss(menuOpen, setMenuOpen, { containerRef: menuContainerRef, buttonRef: menuButtonRef })
+
+  return (
     <header className={`navbar navbar--${variant}`}>
-      <div className="navbar__inner">
+      <div className="navbar__inner" ref={menuContainerRef}>
         <div className="navbar__identity">
           {inGuild ? <GuildBrand slug={slug} guild={guild} /> : <PlatformBrand />}
           {inGuild ? (
@@ -120,7 +226,6 @@ function Navbar({ variant = 'platform' }) {
           <nav className="navbar__links" aria-label="Primary navigation">
             {links.map((link) => {
               const active = isActiveLink(pathname, link)
-
               return (
                 <a
                   key={link.href}
@@ -141,56 +246,24 @@ function Navbar({ variant = 'platform' }) {
 
           <div className="navbar__actions">
             {status === 'loading' ? (
-              <span className="navbar__session-state" role="status" aria-label="Checking member session" aria-busy="true">
-                <span aria-hidden="true">•••</span>
-              </span>
+              // Holds the avatar's place so nothing shifts when the session
+              // answers.
+              <span className="navbar__session-state" role="status" aria-label="Checking sign-in" aria-busy="true" />
             ) : status === 'error' ? (
               <button className="navbar__sign-in-button" type="button" onClick={refresh}>Retry connection</button>
             ) : !authenticated ? (
-              <button
-                className="navbar__sign-in-button"
-                type="button"
-                onClick={() => signIn()}
-              >
+              <button className="navbar__sign-in-button" type="button" onClick={() => signIn(signInReturnTo())}>
                 {signInNavigationLabel}
               </button>
             ) : (
               <>
-                <NotificationBell />
-                <div className="navbar__account" ref={accountRef}>
-                  <button
-                    className="navbar__account-button"
-                    type="button"
-                    aria-label={`Open account menu for ${displayName(user)}`}
-                    aria-expanded={accountOpen}
-                    onClick={() => setAccountOpen((open) => !open)}
-                  >
-                    {user?.avatarUrl ? (
-                      <img src={user.avatarUrl} alt="" width="36" height="36" decoding="async" />
-                    ) : (
-                      <span aria-hidden="true">♜</span>
-                    )}
-                  </button>
-
-                  <div className={`navbar__account-menu ${accountOpen ? 'navbar__account-menu--open' : ''}`}>
-                    <div className="navbar__account-identity">
-                      <strong>{displayName(user)}</strong>
-                      <span>@{user?.username}</span>
-                    </div>
-
-                    <div className="navbar__account-links">
-                      {accountLinks.map((link) => <a key={link.href} href={link.href}>{link.label}</a>)}
-                      <button type="button" onClick={handleSignOut} disabled={signingOut}>
-                        {signingOut ? 'Signing out…' : 'Sign out'}
-                      </button>
-                      {signOutError ? <p className="navbar__account-error" role="alert">{signOutError}</p> : null}
-                    </div>
-                  </div>
-                </div>
+                {guildFeaturesEnabled ? <NotificationBell /> : null}
+                <AccountMenu user={user} links={accountLinks} pathname={pathname} onSignOut={signOut} />
               </>
             )}
 
             <button
+              ref={menuButtonRef}
               className="navbar__menu-button"
               type="button"
               aria-label="Toggle navigation"
@@ -224,7 +297,7 @@ function Navbar({ variant = 'platform' }) {
             <a className="navbar__mobile-link" href={myGuild.href} onClick={() => setMenuOpen(false)}>{myGuild.label} →</a>
           ) : null}
           {authenticated ? accountLinks.filter((link) => link.href !== myGuild?.href && !links.some((shown) => shown.href === link.href)).map((link) => (
-            <a key={link.href} className="navbar__mobile-link" href={link.href} aria-current={pathname === link.href ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{link.label}</a>
+            <a key={link.href} className="navbar__mobile-link" href={link.href} aria-current={isActiveLink(pathname, link) ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{link.label}</a>
           )) : null}
           {inGuild ? (
             <a className="navbar__mobile-link navbar__mobile-link--platform" href="/" onClick={() => setMenuOpen(false)}>← Guildweaver · Find guilds</a>

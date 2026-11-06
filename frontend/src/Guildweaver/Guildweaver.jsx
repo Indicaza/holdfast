@@ -17,14 +17,14 @@ const fallbackRelease = {
 
 const syncFacts = [
   'Character identity, level, class, spec, gear, and supported professions',
-  'Supported quest, inventory, and guild activity used by Guildweaver tools',
+  'Bags, gold, recipes, and gathering, fishing and loot observations',
   'Local addon data read from WoW SavedVariables',
 ]
 
 const authorityFacts = [
   'Your Battle.net or WoW password',
-  'Authority to change rank, permissions, Rep, or Marks',
-  'Automated protected in-game guild actions',
+  'Your Discord messages or servers',
+  'Protected in-game actions: it only reads what the addon saves',
 ]
 
 const detailItems = [
@@ -68,8 +68,8 @@ export default function Guildweaver() {
       <section className="guildweaver-download-panel">
         <p className="guildweaver-release-status">{release.channelLabel} release · Windows · macOS · Linux</p>
         <GuildweaverDownload />
-        <p>No guild required. Download freely; use Discord to connect your telemetry.</p>
-        <a className="guildweaver-text-button" href="/dashboard">Open telemetry dashboard →</a>
+        <p>No guild required. Download freely, then sign in with Discord to connect your computer.</p>
+        <a className="guildweaver-text-button" href="/dashboard">Open your dashboard →</a>
         <button
           className="guildweaver-text-button"
           type="button"
@@ -160,7 +160,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Data boundary"
           title="Game facts, not credentials."
-          intro="The addon observes game data. Guild permissions remain separate."
+          intro="The addon observes game data. Your dashboard is private to you."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -197,7 +197,7 @@ export default function Guildweaver() {
             <b>↓ Local files</b>
             <span>Guildweaver Bridge</span>
             <b>↓ HTTPS</b>
-            <span>Guildweaver dashboard</span>
+            <span>Your private dashboard</span>
             <b>↕</b>
             <span>Discord</span>
           </div>

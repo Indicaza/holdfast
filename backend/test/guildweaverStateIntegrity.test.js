@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { withGuildDatabase } from "../src/Data/database.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function snapshot({
   characterId = "rook-pc",
@@ -103,7 +103,7 @@ function projectedPayload(characterId) {
 }
 
 test("partial teardown snapshots cannot erase known-good Armory sections", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const first = await syncGuildweaverCharacter({
       memberId: memberIds.member,
       deviceId: "device-pc",
@@ -157,7 +157,7 @@ test("partial teardown snapshots cannot erase known-good Armory sections", async
 });
 
 test("Mac and PC observations converge on one character and stale devices cannot time-travel Armory", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const pc = await syncGuildweaverCharacter({
       memberId: memberIds.member,
       deviceId: "device-pc",
@@ -220,7 +220,7 @@ test("Mac and PC observations converge on one character and stale devices cannot
 });
 
 test("a device that has not opened its trade skill UI cannot erase recipes learned on another device", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const pcProfession = {
       id: 164,
       name: "Blacksmithing",
@@ -296,7 +296,7 @@ test("a device that has not opened its trade skill UI cannot erase recipes learn
 });
 
 test("generic telemetry and logout checkpoints are append-only evidence, never an Armory mutation path", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const device = await pairDevice(request);
     const baseline = snapshot({ characterId: "rook-route", capturedAt: 1791450600, level: 30 });
     const ingest = await request("/api/bridge/characters/snapshot", {

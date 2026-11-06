@@ -39,7 +39,9 @@ export function classifyLiveMutation(req) {
     events.push(withActor({ topics: ['quests', 'notifications'], source: 'guildweaver.quests' }))
     events.push(withActor({ topics: ['guildweaver'], source: 'guildweaver.quests', permission: 'site.admin' }))
   } else if (path.startsWith('/api/bridge/pairing')) {
-    events.push(withActor({ topics: ['guildweaver'], source: 'guildweaver.pairing' }))
+    // Pairing is one player's business: the approving player and admins.
+    events.push(withActor({ topics: ['guildweaver'], source: 'guildweaver.pairing', permission: 'site.admin' }))
+    if (actorId) events.push(withActor({ topics: ['player'], source: 'player.pairing', memberId: actorId }))
   } else if (path.startsWith('/api/quests')) {
     events.push(withActor({ topics: ['quests', 'notifications'], source: 'quests' }))
   } else if (path.startsWith('/api/guild/members')) {

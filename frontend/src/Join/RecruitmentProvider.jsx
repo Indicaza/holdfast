@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { JoinContext } from './JoinContext.js'
 import JoinModal from './JoinModal.jsx'
+import { guildFeaturesEnabled } from '../Features/guildFeatures.js'
 import { navigate } from '../Navigation/navigation.js'
 import { currentReturnTo, safeReturnTo } from './joinDestination.js'
 
 function RecruitmentProvider({ children }) {
   const openerRef = useRef(null)
   const [join, setJoin] = useState(() => ({
-    isOpen: window.location.pathname.replace(/\/+$/, '') === '/join',
+    // /join is a guild page: hidden, with nothing to open, while guilds are off.
+    isOpen: guildFeaturesEnabled && window.location.pathname.replace(/\/+$/, '') === '/join',
     returnTo: currentReturnTo(),
   }))
   const openJoin = useCallback((returnTo, opener) => {

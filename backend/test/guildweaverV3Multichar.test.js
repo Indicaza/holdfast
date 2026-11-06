@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 async function pairBridge(request) {
   const started = await request("/api/bridge/pairing/start", {
@@ -46,7 +46,7 @@ function snapshot({ characterId, name, className, level, capturedAt }) {
 }
 
 test("schema v3 keeps multiple characters; a character's own telemetry and its legacy snapshot converge on one character", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const deviceToken = await pairBridge(request);
     const headers = { Authorization: `Bearer ${deviceToken}` };
 

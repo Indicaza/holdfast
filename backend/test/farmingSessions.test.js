@@ -69,14 +69,14 @@ test('rejects malformed farming timing and keeps unknown AFK separate', () => {
 
 test('rates wait for harvest sync, retain travel time, and dedupe retries', () => withHttpApp(async () => {
   assert.equal(record(session()).handlerName, 'farming_session');
-  assert.equal(readFarmingSessions().sessions[0].quality, 'awaiting_observations');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].quality, 'awaiting_observations');
   for (let index = 1; index <= 9; index += 1) record(gather(index));
-  let run = readFarmingSessions().sessions[0];
+  let run = readFarmingSessions({ memberId: memberIds.member }).sessions[0];
   assert.equal(run.outputs[0].perHour, null);
   record(gather(10));
   record(gather(10));
   record(session());
-  run = readFarmingSessions().sessions[0];
+  run = readFarmingSessions({ memberId: memberIds.member }).sessions[0];
   assert.equal(run.quality, 'sustained');
   assert.equal(run.observedGathers, 10);
   assert.equal(run.durationSeconds, 1800);
@@ -95,8 +95,8 @@ test('out-of-order checkpoints cannot reopen or change completed runs', () => wi
   record(session());
   record(session({ sequence: 2, status: 'open', endedAt: undefined, durationSeconds: 600 }));
   record(session({ sequence: 100, status: 'open', endedAt: undefined, durationSeconds: 2400 }));
-  assert.equal(readFarmingSessions().sessions[0].status, 'complete');
-  assert.equal(readFarmingSessions().sessions[0].durationSeconds, 1800);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].status, 'complete');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].durationSeconds, 1800);
   const invalid = record(session({ durationSeconds: -1 }));
   assert.equal(invalid.status, 'invalid');
 }));
@@ -104,22 +104,26 @@ test('out-of-order checkpoints cannot reopen or change completed runs', () => wi
 test('automatic short samples and open/manual partial samples never get hourly rates', () => withHttpApp(async () => {
   record(gather(1, 'short'));
   record(session({ sessionId: 'short', mode: 'automatic', durationSeconds: 60, endedAt: start + 60, gatheringCount: 1, afkAvailable: false }));
-  let run = readFarmingSessions({ mode: 'automatic' }).sessions[0];
+  let run = readFarmingSessions({ memberId: memberIds.member, mode: 'automatic' }).sessions[0];
   assert.equal(run.quality, 'short_sample');
   assert.equal(run.timing, 'estimated');
   assert.equal(run.outputs[0].perHour, null);
   assert.equal(run.afkSeconds, null);
   record(session({ sessionId: 'open', status: 'open', endedAt: undefined }));
-  assert.equal(readFarmingSessions({ mode: 'manual' }).sessions[0].quality, 'in_progress');
-  assert.equal(readFarmingSessions({ realm: 'other' }).sessions.length, 0);
-  assert.equal(readFarmingSessions({ build: 'other' }).sessions.length, 0);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, mode: 'manual' }).sessions[0].quality, 'in_progress');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, realm: 'other' }).sessions.length, 0);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, build: 'other' }).sessions.length, 0);
 }));
 
 test('session identity remains separate across members and installations', () => withHttpApp(async () => {
   record(session());
   record(session(), { memberId: memberIds.officer });
   record(session({}, { installationId: 'other-install' }));
-  assert.equal(readFarmingSessions().sessions.length, 3);
+  assert.equal(withGuildDatabase((db) => db.prepare('SELECT COUNT(*) AS n FROM farming_sessions').get().n), 3);
+  // Sessions are personal: each player reads only their own.
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions.length, 2);
+  assert.equal(readFarmingSessions({ memberId: memberIds.officer }).sessions.length, 1);
+  assert.equal(readFarmingSessions({ memberId: 'someone-else' }).sessions.length, 0);
 }));
 
 test('coordinates preserve real zero/one edges and drop missing/partial/invalid positions', () => {
@@ -158,4 +162,6 @@ test('authenticated map endpoint groups points by map, realm and build without p
   const sessions = await request('/api/intelligence/farming/sessions?mode=manual', { persona: 'member' });
   assert.equal(sessions.status, 200);
   assert.equal(sessions.json.sessions.length, 1);
+  const others = await request('/api/intelligence/farming/sessions?mode=manual', { persona: 'officer' });
+  assert.equal(others.json.sessions.length, 0, 'another player never sees these sessions');
 }));

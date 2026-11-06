@@ -184,7 +184,11 @@ test("a sync burst announces each changed character once, and unchanged telemetr
     const { flushCharacterChanges } = await import("../src/Live/characterChangeEvents.js");
     const { subscribeLiveUpdates } = await import("../src/Live/liveUpdateBus.js");
     const events = [];
-    const unsubscribe = subscribeLiveUpdates({ memberId: memberIds.member, send: (event) => events.push(event) });
+    const strangers = [];
+    // The owner is an active Holdfast member, so Holdfast's members hear about
+    // the character; a signed-in player outside the guild does not.
+    const unsubscribe = subscribeLiveUpdates({ memberId: memberIds.member, guildIds: ["guild-holdfast"], send: (event) => events.push(event) });
+    const unsubscribeStranger = subscribeLiveUpdates({ memberId: "outside-player", guildIds: [], send: (event) => strangers.push(event) });
     try {
       const { publishCharacterChanged } = await import("../src/Live/characterChangeEvents.js");
       await legacySnapshot(1791320000);
@@ -203,8 +207,10 @@ test("a sync burst announces each changed character once, and unchanged telemetr
       publishCharacterChanged({ characterId: repeat.canonicalCharacterId, sections: repeat.changedSections });
       flushCharacterChanges();
       assert.equal(events.length, 0);
+      assert.deepEqual(strangers.filter((event) => event.source === "character.changed"), []);
     } finally {
       unsubscribe();
+      unsubscribeStranger();
     }
   }));
 

@@ -9,6 +9,7 @@
 // whenever one changes.
 
 import {
+  ownedCharacterIdInDatabase,
   readGuildweaverCharacterAliasInDatabase,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
@@ -263,10 +264,10 @@ function resolveCharacterInDatabase(db, { memberId, deviceId, rawCharacterId, id
   if (aliased) return { characterId: aliased, associated: false };
   if (!identity) return { characterId: null, associated: false };
 
-  const member = db.prepare("SELECT id FROM members WHERE id = ? AND status = 'active'").get(memberId);
+  const member = db.prepare("SELECT id FROM members WHERE id = ?").get(memberId);
   if (!member) return { characterId: null, associated: false };
 
-  const preferredId = rawCharacterId ? `guildweaver-id:${rawCharacterId}` : "";
+  const preferredId = rawCharacterId ? ownedCharacterIdInDatabase(db, memberId, `guildweaver-id:${rawCharacterId}`) : "";
   const existing = resolveGuildweaverCharacterIdentityInDatabase({
     db,
     memberId,

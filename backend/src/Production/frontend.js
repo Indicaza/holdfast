@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import express from "express";
 
-import { guildPageHead, withPageHead } from "./pageHead.js";
+import { guildFeaturesEnabled } from "../Features/guildFeatures.js";
+import { GUILD_DIRECTORY_HEAD, guildPageHead, withGuildFeaturesMeta, withPageHead } from "./pageHead.js";
 
 function frontendDirectory() {
   const configured = String(process.env.FRONTEND_DIST_DIR || "").trim();
@@ -53,11 +54,15 @@ export function mountProductionFrontend(app) {
     }
 
     res.set("Cache-Control", "no-cache");
-    const head = guildPageHead(req.path);
-    if (!head) {
+    // The built index.html is the solo Guildweaver site's. With guild
+    // features on, the page says so (the app reads the meta tag) and guild
+    // pages and the directory get their own titles.
+    if (!guildFeaturesEnabled()) {
       res.sendFile(indexFile);
       return;
     }
-    res.type("html").send(withPageHead(readFileSync(indexFile, "utf8"), head));
+    const head = guildPageHead(req.path) || (req.path === "/" ? GUILD_DIRECTORY_HEAD : null);
+    const html = withGuildFeaturesMeta(readFileSync(indexFile, "utf8"));
+    res.type("html").send(head ? withPageHead(html, head) : html);
   });
 }

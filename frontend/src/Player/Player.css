@@ -1,0 +1,416 @@
+/* The player dashboard. Panels, scorecards and character grids come from the
+   shared intelligence styles; these are the dashboard's own pieces. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.player-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.player-server-select {
+  min-width: 12rem;
+}
+
+.player-topbar__sync {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.player-topbar__sync:hover,
+.player-topbar__sync:focus-visible {
+  border-color: var(--color-border-strong);
+  color: var(--color-accent-bright);
+}
+
+.player-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.player-dot--synced {
+  background: #74c493;
+}
+
+.player-dot--stale,
+.player-dot--no_device {
+  background: #d9a45b;
+}
+
+.player-dot--waiting_for_data,
+.player-dot--processing {
+  background: var(--color-accent-bright);
+}
+
+.player-callout {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.player-callout p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.player-callout strong {
+  color: var(--color-text-strong);
+}
+
+.player-callout--warning {
+  border-left-color: #d9a45b;
+}
+
+.player-callout--ok {
+  border-left-color: #74c493;
+}
+
+.player-callout__action {
+  justify-self: start;
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.player-callout > button,
+.player-callout > a.ds-button {
+  justify-self: start;
+}
+
+.player-setup__steps {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-setup__step {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.player-setup__step p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text);
+}
+
+.player-setup__marker {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.player-setup__step--done .player-setup__marker {
+  border-color: #74c493;
+  background: rgba(116, 196, 147, 0.12);
+  color: #a8e0be;
+}
+
+.player-setup__step--done strong {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.player-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.player-scorecard__time {
+  font-size: var(--font-size-lg) !important;
+}
+
+.player-servers__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-servers__list a {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.player-servers__list a:hover,
+.player-servers__list a:focus-visible,
+.player-servers__list a[aria-current="true"] {
+  border-color: var(--color-border-strong);
+}
+
+.player-servers__list strong {
+  color: var(--color-text-strong);
+}
+
+.player-servers__list span,
+.player-help-link {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-server-group + .player-server-group {
+  margin-top: var(--space-6);
+}
+
+.player-server-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 var(--space-3);
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.player-server-group__title small {
+  color: var(--color-text-muted);
+  font-family: var(--font-body, inherit);
+  font-size: var(--font-size-xs);
+}
+
+.player-professions {
+  margin-bottom: var(--space-5);
+}
+
+.player-professions__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-professions__list > li {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.player-professions__character {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-strong);
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-professions__character span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-professions__list ul,
+.player-farming__items,
+.player-farming__sources,
+.player-farming__recent,
+.player-help {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-professions__list ul li,
+.player-farming__items li,
+.player-farming__sources li,
+.player-farming__recent li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.player-professions__list ul li small {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+}
+
+.player-farming__items li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.player-farming__sources span,
+.player-farming__recent span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.player-farming__sources small,
+.player-farming__recent small,
+.player-farming__recent em,
+.player-farming__sources em {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-style: normal;
+}
+
+.player-farming__recent li {
+  grid-template-columns: minmax(10rem, 1fr) minmax(0, 1.4fr) auto;
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.player-community {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.player-devices {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-device {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.player-device--disconnected {
+  opacity: 0.72;
+}
+
+.player-device__name {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.player-device dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.player-device dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-device dd {
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.player-device__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-help li {
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+@media (max-width: 64rem) {
+  .player-overview-grid,
+  .player-device {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .player-device dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .player-topbar {
+    width: 100%;
+  }
+
+  .player-server-select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .player-farming__recent li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* On narrow screens the server picker and sync status get their own row
+   under the page heading. */
+@media (max-width: 54rem) {
+  .intelligence-app__topbar:has(.player-topbar) {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
+  .intelligence-app__topbar:has(.player-topbar) .intelligence-app__heading {
+    flex: 1 1 100%;
+  }
+
+  .intelligence-app__topbar:has(.player-topbar) .intelligence-app__actions {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .player-topbar {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .player-server-select {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+}

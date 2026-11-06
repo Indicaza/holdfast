@@ -4,6 +4,13 @@ import { apiJson } from '../Api/apiClient.js'
 import { useSession } from '../Auth/sessionContext.js'
 import './GuildweaverConnect.css'
 
+const PAIRING_ERRORS = {
+  pairing_not_found_or_expired: 'This code has expired or was already used. Restart pairing from Guildweaver on your computer to get a new one.',
+  pairing_already_consumed: 'This computer is already connected. You can close this page.',
+  pairing_already_approved: 'This code was approved by a different account. Restart pairing from Guildweaver on your computer.',
+  authentication_required: 'Your sign-in expired. Sign in again to connect.',
+}
+
 function currentReturnTo() {
   return `${window.location.pathname}${window.location.search}`
 }
@@ -29,7 +36,7 @@ export default function GuildweaverConnect() {
       })
       setStatus('connected')
     } catch (requestError) {
-      setError(requestError?.body?.error || requestError?.message || 'Unable to connect Guildweaver.')
+      setError(PAIRING_ERRORS[requestError?.body?.error] || 'Guildweaver could not be connected. Try again, or restart pairing from Guildweaver on your computer.')
       setStatus('error')
     }
   }
@@ -87,7 +94,7 @@ export default function GuildweaverConnect() {
         )}
 
         <p className="guildweaver-connect-note">
-          This device can sync your WoW character data. It cannot change Holdfast rank, permissions, Rep, or Marks.
+          This computer can only upload the WoW data the Guildweaver addon saves. It never sees your Battle.net password and cannot act in game. You can disconnect it any time from My Devices &amp; Sync.
         </p>
       </section>
     </main>

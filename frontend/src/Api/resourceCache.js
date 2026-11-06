@@ -16,7 +16,7 @@ const MAX_RECIPE_ENTRIES = 8
 const entries = new Map()
 
 function isRecipeResource(url) {
-  return /^\/api\/intelligence\/characters\/[^/]+\/recipes(?:[?#]|$)/.test(url)
+  return /^\/api\/(?:intelligence|player)\/characters\/[^/]+\/recipes(?:[?#]|$)/.test(url)
 }
 
 function touchResource(url, entry) {

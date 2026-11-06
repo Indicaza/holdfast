@@ -11,8 +11,19 @@ function numberOrNull(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-export function searchCraftFinderWithSkill(query = "") {
+// Recipes and the characters who know them. Without characterIds: every
+// active Holdfast member's characters (the guild Craft Finder). With
+// characterIds: only those characters, whoever owns them; the caller has
+// already narrowed them to one player's own (Player/playerRepository.js).
+export function searchCraftFinderWithSkill(query = "", { characterIds = null } = {}) {
   const normalized = text(query).toLowerCase();
+  const scoped = Array.isArray(characterIds);
+  if (scoped && !characterIds.length) return [];
+  const ids = scoped ? characterIds.map((id) => String(id)) : [];
+  const memberJoin = scoped
+    ? "JOIN members m ON m.id = c.member_id"
+    : "JOIN members m ON m.id = c.member_id AND m.status = 'active'";
+  const characterFilter = scoped ? `AND c.id IN (${ids.map(() => "?").join(", ")})` : "";
 
   return withGuildDatabase((db) => {
     ensureTelemetryProjectionSchema(db);
@@ -37,12 +48,12 @@ export function searchCraftFinderWithSkill(query = "") {
         p.skill_modifier
       FROM telemetry_recipes r
       JOIN characters c ON c.id = r.character_id
-      JOIN members m ON m.id = c.member_id AND m.status = 'active'
+      ${memberJoin}
       LEFT JOIN telemetry_characters t ON t.character_id = c.id
       LEFT JOIN telemetry_professions p
         ON p.character_id = r.character_id
         AND p.profession_key = r.profession_key
-      WHERE r.known = 1
+      WHERE r.known = 1 ${characterFilter}
         AND (
           ? = ''
           OR lower(r.name) LIKE ?
@@ -53,6 +64,7 @@ export function searchCraftFinderWithSkill(query = "") {
       ORDER BY r.name COLLATE NOCASE, p.skill_current DESC, c.name COLLATE NOCASE
       LIMIT 250
     `).all(
+      ...ids,
       normalized,
       `%${normalized}%`,
       `%${normalized}%`,

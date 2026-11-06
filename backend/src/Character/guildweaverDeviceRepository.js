@@ -71,8 +71,10 @@ export function approveGuildweaverPairing({ userCode, memberId }) {
     const now = new Date().toISOString();
     deleteExpiredPairings(db, now);
 
+    // Any signed-in account can connect a device. members.status tracks
+    // Holdfast's Discord server, not whether the account exists.
     const member = db
-      .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
+      .prepare("SELECT id FROM members WHERE id = ?")
       .get(text(memberId, 96));
 
     if (!member) {
@@ -190,7 +192,6 @@ export function authenticateGuildweaverDevice(deviceToken) {
           JOIN members m ON m.id = d.member_id
           WHERE d.token_hash = ?
             AND d.revoked_at IS NULL
-            AND m.status = 'active'
         `,
       )
       .get(sha256(deviceToken));

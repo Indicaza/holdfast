@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { recordAuditEventInDatabase } from '../src/Audit/auditRepository.js'
 import { withGuildTransaction } from '../src/Data/database.js'
-import { persistentState, withHttpApp } from '../testSupport/httpHarness.js'
+import { persistentState, withGuildHttpApp, withHttpApp } from '../testSupport/httpHarness.js'
 import { HOLDFAST_GUILD_ID } from '../src/Guild/guildScope.js'
 
 const authenticatedReads = ['/api/quests/member', '/api/quests/member/completions', '/api/guild/members', '/api/guild/members/me', '/api/guild/members/e2e-member', '/api/guild/billets', '/api/guild/authority']
@@ -117,7 +117,7 @@ test('profile editing persists only allowed self-owned fields', () => withHttpAp
   assert.deepEqual(after.json.member, other.json.member)
 }))
 
-test('production frontend fallback, security headers, and API errors remain distinct', () => withHttpApp(async ({ request }) => {
+test('production frontend fallback, security headers, and API errors remain distinct', () => withGuildHttpApp(async ({ request }) => {
   const page = await request('/holdfast/charter', { headers: { Accept: 'text/html' } })
   assert.equal(page.status, 200)
   assert.match(page.text, /<title>Holdfast \| Alliance WoW Forever Guild<\/title>/)

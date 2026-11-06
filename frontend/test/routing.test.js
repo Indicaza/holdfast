@@ -2,8 +2,10 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  DASHBOARD_SECTIONS,
   GUILD_SECTIONS,
   RESERVED_TOP_LEVEL_SEGMENTS,
+  hiddenGuildPathname,
   guildHref,
   guildNameFromSlug,
   guildSlugFromPathname,
@@ -102,9 +104,25 @@ test('directory cards link to the guild home at its slug', async () => {
   assert.equal(guildPath('iron-vanguard'), '/iron-vanguard')
 })
 
- test('player tools are platform routes, never guild slugs', () => {
+test('player tools are platform routes, never guild slugs', () => {
   assert.deepEqual(matchRoute('/download'), { name: 'guildweaver' })
-  assert.deepEqual(matchRoute('/dashboard'), { name: 'dashboard' })
-  assert.equal(isGuildSlug('download'), false)
-  assert.equal(isGuildSlug('dashboard'), false)
+  assert.deepEqual(matchRoute('/dashboard'), { name: 'dashboard', section: 'overview' })
+  assert.deepEqual(matchRoute('/account'), { name: 'account' })
+  for (const section of DASHBOARD_SECTIONS) {
+    assert.deepEqual(matchRoute(`/dashboard/${section}`), { name: 'dashboard', section })
+  }
+  assert.equal(matchRoute('/dashboard/overview/x'), null)
+  assert.equal(matchRoute('/dashboard/admin'), null)
+  for (const segment of ['download', 'dashboard', 'account']) assert.equal(isGuildSlug(segment), false, segment)
+})
+
+test('hidden guild pages send players to the landing page or their dashboard', () => {
+  assert.equal(hiddenGuildPathname('/holdfast/intelligence'), '/dashboard')
+  assert.equal(hiddenGuildPathname('/guildos'), '/dashboard')
+  for (const pathname of ['/holdfast', '/holdfast/quests', '/register', '/join', '/guilds', '/guilds/iron-vanguard', '/charter', '/members/me']) {
+    assert.equal(hiddenGuildPathname(pathname), '/', pathname)
+  }
+  for (const pathname of ['/', '/dashboard', '/dashboard/sync', '/account', '/download', '/items', '/privacy', '/admin', '/guildweaver/connect', '/iron-vanguard']) {
+    assert.equal(hiddenGuildPathname(pathname), null, pathname)
+  }
 })

@@ -35,19 +35,19 @@ export const guildweaverDownloads = Object.freeze([
 
 export const guildweaverRepositories = Object.freeze([
   Object.freeze({
-    name: 'Holdfast Website',
+    name: 'Guildweaver Website',
     href: 'https://github.com/Indicaza/holdfast',
-    description: 'The member site, guild systems, API, and Discord integration.',
+    description: 'This website: the dashboard, sign-in, API and data boundaries.',
   }),
   Object.freeze({
     name: 'Guildweaver Bridge',
     href: 'https://github.com/Indicaza/guildweaver-bridge',
-    description: 'The local companion that links WoW data to Holdfast and maintains the addon.',
+    description: 'The local companion that uploads your WoW data and keeps the addon updated.',
   }),
   Object.freeze({
     name: 'Guildweaver WoW Addon',
     href: 'https://github.com/Indicaza/guildweaver',
-    description: 'The in-game addon that reads supported character and guild data.',
+    description: 'The in-game addon that records supported character and gathering data.',
   }),
 ])
 

@@ -29,10 +29,12 @@ function mergeGameData(base = {}, extra = {}) {
 // Recipe books are most of a character's data, so they load separately the
 // first time the professions tab opens, and refresh only when profession
 // telemetry changes.
-export default function CharacterProfileModal({ characterId, onClose }) {
+// apiBase: the guild workspace reads /api/intelligence/characters; the player
+// dashboard reads the player's own characters from /api/player/characters.
+export default function CharacterProfileModal({ characterId, onClose, apiBase = '/api/intelligence/characters' }) {
   const [tab, setTab] = useState('equipment')
   const [recipesWanted, setRecipesWanted] = useState(false)
-  const url = characterId ? `/api/intelligence/characters/${encodeURIComponent(characterId)}` : null
+  const url = characterId ? `${apiBase}/${encodeURIComponent(characterId)}` : null
   const matches = useCallback((event) => event.entityId === characterId, [characterId])
   const matchesRecipes = useCallback(
     (event) => event.entityId === characterId && (event.detail?.sections || []).some((section) => RECIPE_SECTIONS.has(section)),
