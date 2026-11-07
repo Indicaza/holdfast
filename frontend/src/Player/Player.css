@@ -414,3 +414,262 @@
     min-width: 0;
   }
 }
+
+/* Character cards */
+
+.player-character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-3);
+}
+
+.player-card {
+  flex-wrap: nowrap;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  text-decoration: none;
+}
+
+.player-card__portrait {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.player-card__portrait .wow-icon,
+.player-card__glyph {
+  border-radius: 0.6rem;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--armory-class-color, #c4a667) 60%, transparent),
+    0 0.4rem 1rem rgba(0, 0, 0, 0.4);
+}
+
+.player-card__glyph {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-accent-bright);
+}
+
+.player-card__level {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -0.45rem;
+  display: grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  padding: 0 0.3rem;
+  border: 1px solid rgba(231, 201, 127, 0.6);
+  border-radius: var(--radius-pill);
+  background: #0b121c;
+  color: var(--color-accent-bright);
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 1;
+}
+
+.player-card__body {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.player-card__name,
+.player-card__kind,
+.player-card__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-card__name {
+  color: var(--armory-class-color, var(--color-text-strong));
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.player-card__kind {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.player-card__meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-card > .sync-badge {
+  flex: 0 0 auto;
+}
+
+/* Dashboard frame: compact stat tiles and a tidy header. */
+
+.intelligence-app--player .intel-scorecards article {
+  min-height: 0;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.intelligence-app--player .intel-scorecards strong {
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+}
+
+.intelligence-app--player .player-scorecard__time {
+  font-size: clamp(1.4rem, 2vw, 1.75rem) !important;
+  line-height: 1.1;
+}
+
+.player-topbar__sync {
+  min-height: 2.5rem;
+}
+
+.player-topbar__paused {
+  color: #d9a45b;
+  font-size: inherit;
+}
+
+.player-overview-grid {
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.player-overview-grid > .intel-panel {
+  min-width: 0;
+}
+
+.player-servers__list {
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 54rem) {
+  .intelligence-app--player .intelligence-app__topbar {
+    min-height: 0;
+    padding-block: var(--space-3);
+  }
+
+  .intelligence-app--player .intelligence-app__heading > div > span {
+    display: none;
+  }
+
+  .intelligence-app--player .player-topbar {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 40rem) {
+  .intelligence-app--player .intel-scorecards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .intelligence-app--player .intel-scorecards article {
+    padding: var(--space-4);
+  }
+
+  .intelligence-app--player .intel-scorecards article::after {
+    display: none;
+  }
+
+  .player-topbar__sync {
+    padding-inline: var(--space-3);
+  }
+
+  .player-card > .sync-badge .sync-badge__age {
+    display: none;
+  }
+}
+
+/* The server picker matches the sync pill beside it. */
+.player-topbar .ds-field__label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.player-topbar .ds-control {
+  min-height: 2.5rem;
+}
+
+.player-topbar .ds-control__input {
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 40rem) {
+  .player-topbar .ds-field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.intelligence-app--player .intel-scorecards article {
+  align-content: start;
+}
+
+.intelligence-app--player .player-server-group + .player-server-group {
+  margin-top: var(--space-2);
+}
+
+.intelligence-app--player .player-server-group__title {
+  margin: 0 0 var(--space-3);
+}
+
+/* Signed out: one card with the way in. */
+.player-signed-out {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+  border: 1px solid rgba(196, 166, 103, 0.26);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(196, 166, 103, 0.1), transparent 55%),
+    rgba(7, 17, 31, 0.78);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.player-signed-out p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.player-signed-out__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.player-signed-out .player-signed-out__note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 34rem) {
+  .player-signed-out__actions > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* Farming has three tiles: one row of three on wide screens. */
+@media (min-width: 72rem) {
+  .intelligence-app--player .intel-scorecards:has(> article:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.intelligence-app--player .intel-panel__heading + .armory-empty,
+.intelligence-app--player .intel-panel__heading + .player-professions__list {
+  margin-top: var(--space-5);
+}

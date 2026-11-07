@@ -8,6 +8,7 @@ import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
 import IntelligenceAppShell from '../Intelligence/IntelligenceAppShell.jsx'
 import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
 import '../Intelligence/GuildIntelligence.css'
+import { useLiveUpdates } from '../Live/liveUpdatesContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
@@ -38,16 +39,22 @@ function SignedOut({ session }) {
       title="Your dashboard"
       intro="Your characters, professions, farming and sync status, grouped by server. Private to you. No guild required."
       centered
+      compact
     >
-      <p>Sign in with Discord to see your dashboard and connect Guildweaver on your computer.</p>
-      <button
-        className="guildweaver-connect-button"
-        type="button"
-        onClick={() => (session.status === 'error' ? session.refresh() : session.signIn(signInReturnTo()))}
-      >
-        {session.status === 'error' ? 'Retry connection' : 'Sign in with Discord'}
-      </button>
-      <p><a href="/download">Download Guildweaver</a></p>
+      <div className="player-signed-out">
+        <p>Sign in with Discord to see your dashboard and connect Guildweaver on your computer.</p>
+        <div className="player-signed-out__actions">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => (session.status === 'error' ? session.refresh() : session.signIn(signInReturnTo()))}
+          >
+            {session.status === 'error' ? 'Retry connection' : 'Sign in with Discord'}
+          </Button>
+          <Button variant="secondary" size="lg" href="/download">Download Guildweaver</Button>
+        </div>
+        <p className="player-signed-out__note">Discord sign-in only identifies you. It never adds you to a server or a guild.</p>
+      </div>
     </PageShell>
   )
 }
@@ -67,6 +74,14 @@ function ServerSelector({ servers, server, onChange }) {
   )
 }
 
+// The rail's subtitle: how much the player has synced.
+function dashboardTagline(data) {
+  const characters = data?.characters?.length || 0
+  const servers = data?.servers?.length || 0
+  if (!characters) return 'Your Guildweaver data'
+  return `${characters} character${characters === 1 ? '' : 's'} · ${servers} server${servers === 1 ? '' : 's'}`
+}
+
 // The server in the URL, following Back/Forward.
 function useServerParam() {
   const [requested, setRequested] = useState(() => readServerParam())
@@ -79,6 +94,7 @@ function useServerParam() {
 }
 
 export default function PlayerDashboard({ section = 'overview' }) {
+  const live = useLiveUpdates()
   const session = useSession()
   const userId = session.authenticated ? session.user?.id || '' : ''
   const overview = useLiveResource('/api/player/overview', { topics: PLAYER_TOPICS, enabled: session.authenticated })
@@ -125,12 +141,15 @@ export default function PlayerDashboard({ section = 'overview' }) {
   const sync = overview.data?.sync
   const expired = overview.error?.status === 401
   const lastSync = sync?.lastUploadAt || sync?.lastCharacterAt
+  const paused = live.status === 'offline' || live.status === 'reconnecting'
 
   return (
     <>
       <IntelligenceAppShell
-        brand={{ name: 'Dashboard', tagline: 'Your Guildweaver data', eyebrow: serverLabel(servers, server), mark: '✦' }}
-        sectionLabel="You"
+        brand={{ name: 'Dashboard', tagline: dashboardTagline(overview.data), eyebrow: serverLabel(servers, server), mark: '✦' }}
+        sectionLabel={false}
+        showLive={false}
+        variant="player"
         activeView={section}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
@@ -145,6 +164,7 @@ export default function PlayerDashboard({ section = 'overview' }) {
               <a className="player-topbar__sync" href={dashboardHref('sync', server)} title="Your devices and sync status">
                 <span className={`player-dot player-dot--${sync?.state || 'unknown'}`} aria-hidden="true" />
                 {lastSync ? `Synced ${relativeTime(lastSync)}` : 'Not synced yet'}
+                {paused ? <small className="player-topbar__paused">· updates paused</small> : null}
               </a>
             ) : null}
           </div>
