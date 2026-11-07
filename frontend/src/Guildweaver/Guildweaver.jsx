@@ -66,17 +66,21 @@ export default function Guildweaver() {
       className="guildweaver-page"
     >
       <section className="guildweaver-download-panel">
-        <p className="guildweaver-release-status">{release.channelLabel} release · Windows · macOS · Linux</p>
+        <p className="guildweaver-release-status"><span aria-hidden="true" />{release.channelLabel} release · Windows · macOS · Linux</p>
         <GuildweaverDownload />
-        <p>No guild required. Download freely, then sign in with Discord to connect your computer.</p>
-        <a className="guildweaver-text-button" href="/dashboard">Open your dashboard →</a>
-        <button
-          className="guildweaver-text-button"
-          type="button"
-          onClick={() => setActiveModal('verification')}
-        >
-          Guildweaver is currently unsigned alpha software
-        </button>
+        <div className="guildweaver-download-panel__footer">
+          <p>No guild required. Download freely, then sign in with Discord to connect your computer.</p>
+          <div className="guildweaver-download-panel__links">
+            <a className="guildweaver-text-button" href="/dashboard">Open your dashboard →</a>
+            <button
+              className="guildweaver-text-button"
+              type="button"
+              onClick={() => setActiveModal('verification')}
+            >
+              Guildweaver is currently unsigned alpha software
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="guildweaver-section">

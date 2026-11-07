@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 
-import CharacterCard from '../Intelligence/CharacterCard.jsx'
 import EmptyTelemetry from '../Intelligence/EmptyTelemetry.jsx'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { PLAYER_TOPICS, charactersByServer, playerApiUrl } from './playerModel.js'
+import PlayerCharacterCard from './PlayerCharacterCard.jsx'
 
 // The player's characters on the chosen server, grouped under each server
 // when showing all of them. The server filters them; the search only
@@ -46,8 +46,8 @@ export default function PlayerCharacters({ server, servers, onOpenCharacter }) {
       {groups.map((group) => (
         <section key={group.server.key} className="player-server-group" aria-label={group.server.label}>
           {server ? null : <h3 className="player-server-group__title">{group.server.label} <small>{group.characters.length}</small></h3>}
-          <div className="intel-character-grid">
-            {group.characters.map((character) => <CharacterCard character={character} key={character.id} onOpen={onOpenCharacter} />)}
+          <div className="player-character-grid">
+            {group.characters.map((character) => <PlayerCharacterCard character={character} key={character.id} onOpen={onOpenCharacter} showServer={false} />)}
           </div>
         </section>
       ))}

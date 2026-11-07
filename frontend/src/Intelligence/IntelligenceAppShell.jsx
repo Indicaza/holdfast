@@ -103,6 +103,8 @@ export default function IntelligenceAppShell({
   brand = null,
   actions = null,
   sectionLabel = null,
+  showLive = true,
+  variant = null,
   activeView,
   collapsed,
   freshCharacters,
@@ -151,7 +153,7 @@ export default function IntelligenceAppShell({
 
   return (
     <>
-      <div className={`intelligence-app ${collapsed ? 'intelligence-app--collapsed' : ''} ${mobileOpen ? 'intelligence-app--mobile-open' : ''}`}>
+      <div className={`intelligence-app ${variant ? `intelligence-app--${variant}` : ''} ${collapsed ? 'intelligence-app--collapsed' : ''} ${mobileOpen ? 'intelligence-app--mobile-open' : ''}`}>
         <aside className="intelligence-rail" aria-label={`${label} navigation`}>
           <div className="intelligence-rail__brand-row">
             <div className="intelligence-rail__brand" aria-label={label}>
@@ -173,7 +175,7 @@ export default function IntelligenceAppShell({
           </div>
 
           <nav className="intelligence-rail__nav" aria-label={`${label} workspaces`}>
-            <div className="intelligence-rail__section-label">{sectionLabel || (platform ? 'Explore' : 'Guild')}</div>
+            {sectionLabel === false ? null : <div className="intelligence-rail__section-label">{sectionLabel || (platform ? 'Explore' : 'Guild')}</div>}
             {guildViews.map((view) => (
               <ViewButton
                 activeView={activeView}
@@ -241,7 +243,7 @@ export default function IntelligenceAppShell({
             </div>
 
             <div className="intelligence-app__actions">
-              <LiveStatusBadge />
+              {showLive ? <LiveStatusBadge /> : null}
               {actions ?? (
                 <div className="intelligence-app__freshness" title="Characters reporting within the last 24 hours">
                   <span aria-hidden="true" />
