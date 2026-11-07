@@ -30,6 +30,16 @@ const ICON_PATHS = {
   sparkle: <path d="M12 3c.6 4.5 1.5 5.4 6 6-4.5.6-5.4 1.5-6 6-.6-4.5-1.5-5.4-6-6 4.5-.6 5.4-1.5 6-6Z" />,
   bolt: <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z" />,
   external: <><path d="M14 4h6v6" /><path d="M20 4 11 13" /><path d="M18 14v5H5V6h5" /></>,
+  map: <><path d="m3 6.5 6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5Z" /><path d="M9 4v13.5" /><path d="M15 6.5V20" /></>,
+  plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
+  minus: <path d="M5 12h14" />,
+  globe: <><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17" /><path d="M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5Z" /></>,
+  fullscreen: <><path d="M4 9V4h5" /><path d="M20 9V4h-5" /><path d="M4 15v5h5" /><path d="M20 15v5h-5" /></>,
+  exitFullscreen: <><path d="M9 4v5H4" /><path d="M15 4v5h5" /><path d="M9 20v-5H4" /><path d="M15 20v-5h5" /></>,
+  layers: <><path d="m12 4 8.5 4.5L12 13 3.5 8.5Z" /><path d="m3.5 12.5 8.5 4.5 8.5-4.5" /><path d="m3.5 16.5 8.5 4.5 8.5-4.5" /></>,
+  expand: <><path d="m9 6 6 6-6 6" /><path d="M4 5v14" /></>,
+  shrink: <><path d="m15 6-6 6 6 6" /><path d="M20 5v14" /></>,
+  target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.5" /><path d="M12 2.5v3" /><path d="M12 18.5v3" /><path d="M2.5 12h3" /><path d="M18.5 12h3" /></>,
 }
 
 export function Icon({ name, size = 18, className = '' }) {

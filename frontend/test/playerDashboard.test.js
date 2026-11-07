@@ -67,6 +67,8 @@ test('every dashboard view has a real route and keeps the chosen server', () => 
   for (const view of DASHBOARD_VIEWS) {
     assert.deepEqual(matchRoute(dashboardHref(view.id)), { name: 'dashboard', section: view.id })
   }
+  assert.deepEqual(matchRoute('/map'), { name: 'dashboard', section: 'map' }, 'the map has its own address')
+  assert.equal(matchRoute('/dashboard/map'), null)
   assert.equal(dashboardHref('farming', 'us:doomhowl'), '/dashboard/farming?server=us%3Adoomhowl')
   assert.equal(withServer('/dashboard/characters?character=x#top', 'us:shadowmoon'), '/dashboard/characters?character=x&server=us%3Ashadowmoon#top')
   assert.equal(withServer('/dashboard?server=us%3Adoomhowl', ''), '/dashboard')

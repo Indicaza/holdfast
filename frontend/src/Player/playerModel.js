@@ -10,6 +10,10 @@ export const DASHBOARD_VIEWS = Object.freeze([
   { id: 'sync', group: 'you', label: 'Sync', description: 'Your devices and upload status', icon: 'guildweaver', path: '/dashboard/sync' },
 ])
 
+// The resource map lives in the navbar, not the dashboard's sidebar: on its
+// page the sidebar holds the map's legend instead.
+export const MAP_VIEW = Object.freeze({ id: 'map', group: 'explore', label: 'Resource map', description: 'Every herb, vein and pool on a zoomable map of Azeroth', icon: 'map', path: '/map', href: '/map' })
+
 export const DASHBOARD_GROUPS = Object.freeze([
   { id: 'explore', label: 'Explore' },
   { id: 'you', label: 'You' },

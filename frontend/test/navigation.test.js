@@ -16,15 +16,15 @@ import { matchRoute } from '../src/routing.js'
 
 const hrefs = (links) => links.map((link) => link.href)
 
-test('the solo navbar is the dashboard and the download, nothing about guilds', () => {
-  assert.deepEqual(soloNavigationLinks.map((link) => [link.label, link.href]), [['Dashboard', '/dashboard'], ['Download', '/download']])
+test('the solo navbar is the dashboard, the map and the download, nothing about guilds', () => {
+  assert.deepEqual(soloNavigationLinks.map((link) => [link.label, link.href]), [['Dashboard', '/dashboard'], ['Map', '/map'], ['Download', '/download']])
   assert.equal(primaryNavigationLinks(false), soloNavigationLinks)
 })
 
 test('with guild features on, the platform navbar finds guilds, items and the addon', () => {
   assert.deepEqual(
     platformNavigationLinks.map((link) => [link.label, link.href]),
-    [['Download', '/download'], ['Dashboard', '/dashboard'], ['Find guilds', '/'], ['Item catalog', '/items']],
+    [['Download', '/download'], ['Dashboard', '/dashboard'], ['Map', '/map'], ['Find guilds', '/'], ['Item catalog', '/items']],
   )
   assert.equal(primaryNavigationLinks(true), platformNavigationLinks)
 })
@@ -90,12 +90,14 @@ test('section links stay lit on their sub-pages; home, the directory and My Over
   assert.equal(isActiveLink('/holdfast/quests', home), false)
   assert.equal(isActiveLink('/holdfast/members/7', members), true)
   assert.equal(isActiveLink('/holdfast/members', members), true)
-  const [, , directory, items] = platformNavigationLinks
+  const [, , , directory, items] = platformNavigationLinks
   assert.equal(isActiveLink('/', directory), true)
   assert.equal(isActiveLink('/items', directory), false)
   assert.equal(isActiveLink('/items/2589', items), true)
-  const [dashboard] = soloNavigationLinks
+  const [dashboard, map] = soloNavigationLinks
   assert.equal(isActiveLink('/dashboard/characters', dashboard), true)
+  assert.equal(isActiveLink('/map', dashboard), false, 'the map is its own navbar entry')
+  assert.equal(isActiveLink('/map', map), true)
   const [overview, characters] = accountMenuLinks(null)
   assert.equal(isActiveLink('/dashboard/characters', overview), false)
   assert.equal(isActiveLink('/dashboard/characters', characters), true)

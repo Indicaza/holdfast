@@ -35,6 +35,8 @@ export default function PlayerShell({
   onToggleCollapsed,
   onToggleMobile,
   onOpenSearch,
+  fill = false,
+  sidebar = null,
   children,
 }) {
   const menuButtonRef = useRef(null)
@@ -64,6 +66,7 @@ export default function PlayerShell({
           </button>
         </div>
 
+        {sidebar || (
         <nav className="gw-side__nav" aria-label="Dashboard workspaces">
           {DASHBOARD_GROUPS.map((group) => {
             const items = views.filter((view) => view.group === group.id)
@@ -91,14 +94,17 @@ export default function PlayerShell({
             )
           })}
         </nav>
+        )}
 
         <div className="gw-side__foot">
           {syncStatus}
           <button
             type="button"
             className="gw-side__collapse"
-            aria-label={collapsed ? 'Expand dashboard navigation' : 'Collapse dashboard navigation'}
+            aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'}
             aria-pressed={collapsed}
+            aria-keyshortcuts="["
+            title={`${collapsed ? 'Expand' : 'Collapse'} the sidebar ( [ )`}
             onClick={onToggleCollapsed}
           >
             <Icon name="collapse" size={16} />
@@ -121,6 +127,17 @@ export default function PlayerShell({
           >
             <Icon name="menu" />
           </button>
+          <button
+            type="button"
+            className="gw-icon-btn gw-top__fold"
+            aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'}
+            aria-pressed={collapsed}
+            aria-keyshortcuts="["
+            title={`${collapsed ? 'Expand' : 'Collapse'} the sidebar ( [ )`}
+            onClick={onToggleCollapsed}
+          >
+            <Icon name="collapse" />
+          </button>
           <div className="gw-top__title">
             {eyebrow ? <span className="gw-eyebrow">{eyebrow}</span> : null}
             <h1>{title}</h1>
@@ -131,7 +148,7 @@ export default function PlayerShell({
             {topActions}
           </div>
         </header>
-        <main className="gw-content" id="main-content">{children}</main>
+        <main className={`gw-content${fill ? ' gw-content--fill' : ''}`} id="main-content">{children}</main>
       </div>
     </div>
   )

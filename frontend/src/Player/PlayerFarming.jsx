@@ -6,6 +6,8 @@ import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
 import { navigate } from '../Navigation/navigation.js'
 import { rateScale, sortSources, sourceHref } from './exploreModel.js'
 import { relativeTime } from './playerModel.js'
+import { atlasZone } from './Map/atlas.js'
+import ResourceMap from './Map/ResourceMap.jsx'
 import SourcePage from './SourcePage.jsx'
 import { Confidence, DisciplineTag, EmptyState, ErrorState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Zone } from './ui.jsx'
 
@@ -58,6 +60,66 @@ function NotableDrops({ source, max }) {
       ))}
       {drops.length > 2 ? <li className="gw-muted gw-drops-cell__more">+{drops.length - 2} more</li> : null}
     </ul>
+  )
+}
+
+const MAP_OPEN_KEY = 'guildweaver:drop-rates-map'
+
+function readMapOpen() {
+  try {
+    return globalThis.localStorage?.getItem(MAP_OPEN_KEY) !== 'closed'
+  } catch {
+    return true
+  }
+}
+
+// The resource map for the table's filters: the profession, the sources a
+// search matched, and the zone.
+function BrowserMap({ discipline, zone, query, sources, status }) {
+  const [open, setOpen] = useState(readMapOpen)
+  const matchKeys = query ? sources.map((source) => source.sourceKey).slice(0, 50).join(',') : ''
+  const filter = useMemo(() => ({ discipline, sources: matchKeys ? matchKeys.split(',') : [] }), [discipline, matchKeys])
+  const zoneId = zone ? atlasZone(0, zone)?.mapId || null : null
+  const focus = useMemo(() => (zoneId ? { mapId: zoneId } : 'world'), [zoneId])
+  const params = new URLSearchParams()
+  if (discipline) params.set('discipline', discipline)
+  if (matchKeys) params.set('source', matchKeys)
+  if (zoneId) params.set('zone', String(zoneId))
+  const fullHref = `/map${params.size ? `?${params}` : ''}`
+
+  function toggle() {
+    const next = !open
+    setOpen(next)
+    try {
+      globalThis.localStorage?.setItem(MAP_OPEN_KEY, next ? 'open' : 'closed')
+    } catch {
+      // Private mode: the choice lasts for this visit only.
+    }
+  }
+
+  const empty = query && status === 'ready' && !sources.length
+  return (
+    <Panel
+      id="gw-browser-map"
+      eyebrow="Where to find it"
+      title="Resource map"
+      description={open ? (query ? `Where the sources matching “${query}” are gathered.` : 'Every gather on a zoomable map of Azeroth. Click a zone to dive in.') : null}
+      actions={(
+        <>
+          <a className="gw-link" href={fullHref}>Full map <Icon name="chevron" size={14} /></a>
+          <button type="button" className="gw-btn gw-btn--ghost gw-btn--sm" onClick={toggle} aria-expanded={open} aria-controls="gw-browser-map-body">
+            {open ? 'Hide' : 'Show map'}
+          </button>
+        </>
+      )}
+      flush
+    >
+      {open && !empty ? (
+        <div id="gw-browser-map-body">
+          <ResourceMap variant="card" filter={filter} focus={focus} fullHref={fullHref} label="Resource map for these filters" />
+        </div>
+      ) : null}
+    </Panel>
   )
 }
 
@@ -161,6 +223,8 @@ function SourcesBrowser({ queryString }) {
           </select>
         </label>
       </div>
+
+      <BrowserMap discipline={discipline} zone={zone} query={query} sources={state.data?.sources || []} status={state.status} />
 
       <Panel
         id="gw-sources"

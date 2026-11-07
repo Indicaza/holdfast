@@ -4,10 +4,11 @@ import { guildHref } from './routing.js'
 // own pages, and a guild's, on every page under /:slug (only while guild
 // features are on).
 
-// The solo site: the player's dashboard and the download. Everything else a
+// The solo site: the player's dashboard, the resource map and the download. Everything else a
 // player needs lives in the dashboard or the avatar menu.
 export const soloNavigationLinks = [
   { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Map', href: '/map' },
   { label: 'Download', href: '/download' },
 ]
 
@@ -15,6 +16,7 @@ export const soloNavigationLinks = [
 export const platformNavigationLinks = [
   { label: 'Download', href: '/download' },
   { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Map', href: '/map' },
   { label: 'Find guilds', href: '/' },
   { label: 'Item catalog', href: '/items' },
 ]

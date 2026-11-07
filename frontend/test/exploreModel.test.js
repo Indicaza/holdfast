@@ -4,8 +4,6 @@ import assert from 'node:assert/strict'
 import {
   bestPlacesToFarm,
   confidenceRank,
-  hotspotCells,
-  hotspotMaps,
   paletteEntries,
   rateScale,
   sortSources,
@@ -39,32 +37,6 @@ test('rate scale covers every likely range and is never zero', () => {
   assert.equal(rateScale([{ rate: 0.02, high: 0.03 }, { rate: 0.05, high: 0.04 }]), 0.05)
   assert.equal(rateScale([]), 1)
   assert.equal(rateScale([{ rate: 1, high: 1.2 }]), 1)
-})
-
-test('hotspot cells bin points and weight them against the busiest cell', () => {
-  const cells = hotspotCells([
-    { x: 0.01, y: 0.01, observations: 2 },
-    { x: 0.02, y: 0.02, observations: 2 },
-    { x: 0.99, y: 1, observations: 1 },
-    { x: -1, y: 0.5 },
-    { x: null, y: 0.5 },
-  ], 10)
-  assert.equal(cells.length, 2)
-  const busiest = cells.at(-1)
-  assert.deepEqual({ col: busiest.col, row: busiest.row, observations: busiest.observations, weight: busiest.weight }, { col: 0, row: 0, observations: 4, weight: 1 })
-  assert.deepEqual({ col: cells[0].col, row: cells[0].row, weight: cells[0].weight }, { col: 9, row: 9, weight: 0.25 })
-})
-
-test('hotspot maps list every named map, busiest first, even without points', () => {
-  const maps = hotspotMaps(
-    [{ mapId: 1, x: 0.5, y: 0.5, observations: 3 }, { mapId: 7, x: 0.1, y: 0.1, observations: 2 }],
-    [{ mapId: 1, zone: 'Elwynn Forest', observations: 40 }, { mapId: 2, zone: 'Westfall', observations: 90 }],
-  )
-  assert.deepEqual(maps.map((map) => [map.mapId, map.zone, map.observations, map.points.length]), [
-    [2, 'Westfall', 90, 0],
-    [1, 'Elwynn Forest', 40, 1],
-    [7, null, 2, 1],
-  ])
 })
 
 test('sources sort by any column, ties by name', () => {

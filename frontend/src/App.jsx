@@ -46,6 +46,7 @@ const defaultRobots =
 const dashboardTitles = {
   overview: 'Home',
   farming: 'Drop Rates',
+  map: 'Resource Map',
   characters: 'My Characters',
   professions: 'My Professions',
   gathering: 'My Gathering',

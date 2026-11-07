@@ -11,7 +11,7 @@ test('the front page explains Guildweaver and offers download and sign-in, with 
 
   const navbar = page.locator('.navbar')
   await expect(navbar.getByRole('link', { name: 'Guildweaver home' })).toHaveAttribute('href', '/')
-  await expect(navbar.locator('.navbar__links a')).toHaveText(['Dashboard', 'Download'])
+  await expect(navbar.locator('.navbar__links a')).toHaveText(['Dashboard', 'Map', 'Download'])
   await expect(navbar.getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
 
   const main = page.locator('main')

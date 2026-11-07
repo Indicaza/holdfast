@@ -46,49 +46,6 @@ export function rateScale(entries = []) {
   return max > 0 ? Math.min(1, max) : 1
 }
 
-// Grid cells for a hotspot map: points binned into a size×size grid, each
-// cell's weight its share of the busiest cell. Coordinates are normalized
-// map positions (0–1).
-export function hotspotCells(points = [], size = 24) {
-  const cells = new Map()
-  for (const point of points) {
-    if (point?.x === null || point?.x === undefined || point?.y === null || point?.y === undefined) continue
-    const x = Number(point.x)
-    const y = Number(point.y)
-    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) continue
-    const col = Math.min(size - 1, Math.floor(x * size))
-    const row = Math.min(size - 1, Math.floor(y * size))
-    const key = `${col}:${row}`
-    const cell = cells.get(key) || { col, row, observations: 0 }
-    cell.observations += Number(point.observations) || 1
-    cells.set(key, cell)
-  }
-  const peak = Math.max(0, ...[...cells.values()].map((cell) => cell.observations))
-  return [...cells.values()]
-    .map((cell) => ({ ...cell, weight: peak ? cell.observations / peak : 0 }))
-    .sort((a, b) => a.weight - b.weight)
-}
-
-// Points grouped by map, busiest map first. `maps` (from the server) names
-// each map and counts all of its observations, so a map whose points fell
-// past the server's cap still gets a tab.
-export function hotspotMaps(points = [], maps = []) {
-  const grouped = new Map(maps.map((map) => [map.mapId, { mapId: map.mapId, zone: map.zone || null, observations: Number(map.observations) || 0, points: [] }]))
-  for (const point of points) {
-    const group = grouped.get(point.mapId) || { mapId: point.mapId, zone: null, observations: 0, points: [], counted: true }
-    group.points.push(point)
-    grouped.set(point.mapId, group)
-  }
-  return [...grouped.values()]
-    .map(({ counted, ...group }) => ({
-      ...group,
-      observations: counted || !group.observations
-        ? group.points.reduce((sum, point) => sum + (Number(point.observations) || 1), 0)
-        : group.observations,
-    }))
-    .sort((a, b) => b.observations - a.observations || a.mapId - b.mapId)
-}
-
 // Client-side ordering for the source table's columns the server does not
 // sort by.
 export function sortSources(sources = [], { key = 'observations', direction = 'desc' } = {}) {
