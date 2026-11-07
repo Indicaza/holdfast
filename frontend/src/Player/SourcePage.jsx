@@ -16,11 +16,10 @@ import {
 } from '../Intelligence/Farming/farmingModel.js'
 import '../Intelligence/Farming/FarmingIntelligence.css'
 import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
-import { hotspotCells, hotspotMaps, rateScale } from './exploreModel.js'
+import { rateScale } from './exploreModel.js'
+import ResourceMap from './Map/ResourceMap.jsx'
 import { dashboardHref, relativeTime } from './playerModel.js'
 import { Confidence, DisciplineTag, EmptyState, ErrorState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Zone } from './ui.jsx'
-
-const GRID = 24
 
 function formatDate(value) {
   const time = Date.parse(value)
@@ -55,24 +54,6 @@ function useSourceDetail(sourceKey, filters, itemKey) {
   }, [url, version])
 
   return [state, () => setVersion((current) => current + 1)]
-}
-
-// Positions for a source: every map's name and size, plus points. With a
-// mapId, the points are that map's alone, so a quieter zone is never crowded
-// out by the server's point cap.
-function useLocations(sourceKey, mapId = null) {
-  const [state, setState] = useState({ status: 'loading', data: null })
-  useEffect(() => {
-    const controller = new AbortController()
-    const params = new URLSearchParams({ limit: '2000' })
-    if (mapId) params.set('mapId', String(mapId))
-    setState((current) => ({ ...current, status: 'loading' }))
-    apiJson(`/api/intelligence/farming/sources/${encodeURIComponent(sourceKey)}/locations?${params}`, { signal: controller.signal })
-      .then((data) => { if (!controller.signal.aborted) setState({ status: 'ready', data }) })
-      .catch((error) => { if (!controller.signal.aborted && error?.name !== 'AbortError') setState({ status: 'error', data: null }) })
-    return () => controller.abort()
-  }, [sourceKey, mapId])
-  return state
 }
 
 function SourceHeader({ detail }) {
@@ -209,98 +190,6 @@ function DropTable({ detail, onSelect }) {
   )
 }
 
-function HotspotMap({ map }) {
-  const cells = useMemo(() => hotspotCells(map.points, GRID), [map.points])
-  const top = [...cells].sort((a, b) => b.observations - a.observations).slice(0, 3)
-  const step = 100 / GRID
-  return (
-    <div className="gw-map">
-      <svg className="gw-map__plot" viewBox="0 0 100 100" role="img" aria-label={`Hotspots in ${map.zone || `map ${map.mapId}`}`}>
-        <defs>
-          <filter id={`gw-blur-${map.mapId}`} x="-10%" y="-10%" width="120%" height="120%">
-            <feGaussianBlur stdDeviation="1.6" />
-          </filter>
-          <pattern id={`gw-grid-${map.mapId}`} width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M10 0H0V10" fill="none" className="gw-map__gridline" />
-          </pattern>
-        </defs>
-        <rect width="100" height="100" fill={`url(#gw-grid-${map.mapId})`} />
-        <g filter={`url(#gw-blur-${map.mapId})`}>
-          {cells.map((cell) => (
-            <circle
-              key={`${cell.col}:${cell.row}`}
-              cx={(cell.col + 0.5) * step}
-              cy={(cell.row + 0.5) * step}
-              r={step * 0.95}
-              className="gw-map__heat"
-              style={{ '--w': (cell.weight ** 1.6).toFixed(3) }}
-            />
-          ))}
-        </g>
-        {cells.map((cell) => (
-          <rect key={`hit-${cell.col}:${cell.row}`} x={cell.col * step} y={cell.row * step} width={step} height={step} className="gw-map__hit">
-            <title>{`${Math.round((cell.col + 0.5) * step)}, ${Math.round((cell.row + 0.5) * step)} · ${formatCount(cell.observations)} observed`}</title>
-          </rect>
-        ))}
-        {top.map((cell, index) => (
-          <g key={`top-${cell.col}:${cell.row}`} className="gw-map__marker">
-            <circle cx={(cell.col + 0.5) * step} cy={(cell.row + 0.5) * step} r="3.2" />
-            <text x={(cell.col + 0.5) * step} y={(cell.row + 0.5) * step + 1.3}>{index + 1}</text>
-          </g>
-        ))}
-      </svg>
-      <ol className="gw-map__spots">
-        {top.map((cell, index) => (
-          <li key={`${cell.col}:${cell.row}`}>
-            <span className="gw-map__rank">{index + 1}</span>
-            <span className="gw-map__coords">{Math.round((cell.col + 0.5) * step)}, {Math.round((cell.row + 0.5) * step)}</span>
-            <span className="gw-muted">{formatCount(cell.observations)} observed</span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  )
-}
-
-function Hotspots({ sourceKey }) {
-  const overview = useLocations(sourceKey)
-  const maps = useMemo(() => hotspotMaps(overview.data?.points || [], overview.data?.maps || []), [overview.data])
-  const [selected, setSelected] = useState(null)
-  const current = maps.find((entry) => entry.mapId === selected) || maps[0]
-  const detail = useLocations(sourceKey, current?.mapId ?? null)
-  const points = detail.data?.points || []
-  const map = current ? { ...current, points: detail.status === 'ready' ? points : [] } : null
-
-  return (
-    <Panel
-      id="gw-hotspots"
-      eyebrow="Where to look"
-      title="Hotspots"
-      description="Where players stood when they gathered or looted. Coordinates match the in-game map (0–100); the numbered spots are the busiest."
-    >
-      {overview.status === 'loading' ? <SkeletonRows rows={5} label="Loading hotspots" /> : null}
-      {overview.status === 'error' ? <p className="gw-muted">Locations are unavailable right now.</p> : null}
-      {overview.status === 'ready' && !maps.length ? <EmptyState title="No positions recorded yet." icon="pin">Positions arrive with newer Guildweaver versions.</EmptyState> : null}
-      {map ? (
-        <div className="gw-hotspots">
-          <div className="gw-hotspots__zones" role="tablist" aria-label="Zone" aria-orientation="vertical">
-            {maps.map((entry) => (
-              <button key={entry.mapId} type="button" role="tab" aria-selected={entry.mapId === map.mapId} onClick={() => setSelected(entry.mapId)}>
-                <span>{entry.zone || `Map ${entry.mapId}`}</span>
-                <small>{formatCount(entry.observations)}</small>
-              </button>
-            ))}
-          </div>
-          {detail.status === 'loading' ? <SkeletonRows rows={6} label="Loading map" /> : null}
-          {detail.status === 'error' ? <p className="gw-muted">This map could not be loaded.</p> : null}
-          {detail.status === 'ready' && map.points.length ? <HotspotMap key={map.mapId} map={map} /> : null}
-          {detail.status === 'ready' && !map.points.length ? <p className="gw-muted">No positions recorded in {map.zone || 'this map'} yet.</p> : null}
-        </div>
-      ) : null}
-    </Panel>
-  )
-}
-
 function BreakdownTable({ rows, label, renderKey, discipline }) {
   const max = rateScale(rows)
   return (
@@ -369,6 +258,30 @@ function Breakdown({ detail }) {
 }
 
 // One source's page: what it drops, where it is, and what changes the odds.
+// Where this source is gathered, on the resource map, starting in its
+// busiest zone.
+function SourceMap({ detail, sourceKey }) {
+  const filter = useMemo(() => ({ sources: [sourceKey] }), [sourceKey])
+  return (
+    <Panel
+      id="gw-source-map"
+      eyebrow="Where to look"
+      title="Resource map"
+      description={`Every spot where players gathered ${detail.source?.name || 'this source'}. Coordinates match the in-game map; the numbered spots are the busiest in the zone you're viewing.`}
+      flush
+    >
+      <ResourceMap
+        variant="card"
+        filter={filter}
+        focus="busiest"
+        defaultLegend="expanded"
+        fullHref={`/map?source=${encodeURIComponent(sourceKey)}`}
+        label={`${detail.source?.name || 'Source'} map`}
+      />
+    </Panel>
+  )
+}
+
 export default function SourcePage({ sourceKey, initialItemKey = '', initialZone = '', server = '' }) {
   const [filters, setFilters] = useState(() => ({ ...EMPTY_FILTERS, zone: initialZone }))
   const [itemKey, setItemKey] = useState(initialItemKey)
@@ -404,7 +317,7 @@ export default function SourcePage({ sourceKey, initialItemKey = '', initialZone
                 <DropTable detail={detail} onSelect={select} />
                 <Breakdown detail={detail} />
               </div>
-              <Hotspots sourceKey={sourceKey} />
+              <SourceMap detail={detail} sourceKey={sourceKey} />
             </>
           ) : (
             <EmptyState title="No observations match these filters." icon="farming" action={<button type="button" className="gw-btn" onClick={() => setFilters({ ...EMPTY_FILTERS })}>Clear filters</button>}>

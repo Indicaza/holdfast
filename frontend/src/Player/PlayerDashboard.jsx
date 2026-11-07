@@ -15,12 +15,14 @@ import CommandPalette from './CommandPalette.jsx'
 import PlayerCharacters from './PlayerCharacters.jsx'
 import PlayerFarming from './PlayerFarming.jsx'
 import PlayerGathering from './PlayerGathering.jsx'
+import PlayerMap from './PlayerMap.jsx'
 import PlayerOverview from './PlayerOverview.jsx'
 import PlayerProfessions from './PlayerProfessions.jsx'
 import PlayerShell from './PlayerShell.jsx'
 import PlayerSync from './PlayerSync.jsx'
 import {
   DASHBOARD_VIEWS,
+  MAP_VIEW,
   PLAYER_TOPICS,
   dashboardHref,
   readServerParam,
@@ -118,6 +120,21 @@ function useStoredFlag(key) {
   return [value, setValue]
 }
 
+// [ outside a text field folds the sidebar to its rail and back, on every
+// dashboard page.
+function useSidebarShortcut(toggle) {
+  useEffect(() => {
+    function onKeyDown(event) {
+      const typing = event.target instanceof HTMLElement && (event.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName))
+      if (event.key !== '[' || typing || event.metaKey || event.ctrlKey || event.altKey) return
+      event.preventDefault()
+      toggle()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [toggle])
+}
+
 // ⌘K / Ctrl+K anywhere, or / outside a text field, opens search.
 function useSearchShortcut(open) {
   useEffect(() => {
@@ -147,6 +164,10 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   const server = ready ? resolveServer({ requested, stored: storedServer(userId), servers }) : requested
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useStoredFlag('guildweaver:dashboard:rail')
+  const toggleCollapsed = useCallback(() => setCollapsed((value) => !value), [setCollapsed])
+  useSidebarShortcut(toggleCollapsed)
+  // On the map, the sidebar holds the map's legend: the map draws it here.
+  const [legendHost, setLegendHost] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
@@ -167,12 +188,13 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   }
 
   const views = useMemo(() => DASHBOARD_VIEWS.map((view) => ({ ...view, href: dashboardHref(view.id, server) })), [server])
+  const paletteViews = useMemo(() => [...views, MAP_VIEW], [views])
   const characters = useMemo(() => overview.data?.characters || [], [overview.data])
 
   if (session.status === 'loading') return <PageLoading label="Checking your session…" />
   if (session.status === 'error' || !session.authenticated) return <SignedOut session={session} />
 
-  const current = views.find((view) => view.id === section) || views[0]
+  const current = section === 'map' ? MAP_VIEW : views.find((view) => view.id === section) || views[0]
   const expired = overview.error?.status === 401
   const paused = live.status === 'offline' || live.status === 'reconnecting'
   const sourceOpen = section === 'farming' && new URLSearchParams(queryString).has('source')
@@ -184,14 +206,16 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
         activeView={current.id}
         title={current.label}
         eyebrow={current.group === 'explore' ? 'Community' : serverLabel(servers, server)}
-        description={sourceOpen ? 'One source: its drop table, hotspots, and what changes the odds' : current.description}
+        description={sourceOpen ? 'One source: its drop table, where it grows, and what changes the odds' : current.description}
         serverPicker={<ServerPicker servers={servers} server={server} onChange={changeServer} />}
         syncStatus={<SyncStatus sync={overview.data?.sync} ready={ready} paused={paused} server={server} />}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
-        onToggleCollapsed={() => setCollapsed((value) => !value)}
+        onToggleCollapsed={toggleCollapsed}
+        sidebar={section === 'map' ? <div ref={setLegendHost} className="gw-side__slot" /> : null}
         onToggleMobile={setMobileOpen}
         onOpenSearch={openSearch}
+        fill={current.id === 'map'}
       >
         {overview.status === 'loading' ? <SkeletonRows rows={8} label="Loading your dashboard" /> : null}
         {overview.status === 'error' || overview.status === 'missing' ? (
@@ -209,6 +233,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
           <>
             {section === 'overview' ? <PlayerOverview data={overview.data} server={server} onOpenCharacter={openCharacter} onOpenSearch={openSearch} /> : null}
             {section === 'farming' ? <PlayerFarming server={server} queryString={queryString} /> : null}
+            {section === 'map' ? <PlayerMap queryString={queryString} legendHost={legendHost} railed={collapsed} /> : null}
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}
@@ -216,7 +241,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
           </>
         ) : null}
       </PlayerShell>
-      <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={views} onOpenCharacter={openCharacter} />
+      <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={paletteViews} onOpenCharacter={openCharacter} />
       <CharacterProfileModal apiBase="/api/player/characters" characterId={characterId} onClose={() => openCharacter('')} />
     </>
   )

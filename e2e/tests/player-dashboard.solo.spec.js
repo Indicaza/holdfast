@@ -69,9 +69,35 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page).toHaveURL(/\/dashboard\/farming\?source=herbalism/)
   await expect(page.getByRole('heading', { name: 'Peacebloom', exact: true })).toBeVisible()
   await expect(page.getByRole('table', { name: 'Drop table' })).toContainText('100%')
+  // Its map opens on the zone it was gathered in, with the spot's in-game
+  // coordinates.
+  const sourceMap = page.getByRole('region', { name: 'Resource map' })
+  await expect(sourceMap.getByRole('navigation', { name: 'Map location' })).toContainText('Elwynn Forest')
+  await expect(sourceMap.getByRole('region', { name: 'Busiest spots in Elwynn Forest' })).toContainText('42.0, 65.0')
   await page.goBack()
   await expect(sources).toBeVisible()
 
+  // The full resource map is in the navbar; its legend is the dashboard's
+  // sidebar, which folds to a rail of resource toggles.
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Map', exact: true }).click()
+  await expect(page).toHaveURL(/\/map(\?|$)/)
+  await expect(heading(page)).toHaveText('Resource map')
+  const legend = page.getByRole('complementary', { name: 'Map legend' })
+  await expect(legend).toContainText('1 of 1 shown')
+  await legend.getByRole('checkbox', { name: /Peacebloom/ }).uncheck()
+  await expect(legend).toContainText('0 of 1 shown')
+  await legend.getByRole('button', { name: 'Show all' }).click()
+  await page.getByRole('button', { name: 'Collapse the sidebar' }).first().click()
+  await expect(legend.getByRole('button', { name: 'Hide Peacebloom' })).toBeVisible()
+  await page.getByRole('button', { name: 'Expand the sidebar' }).first().click()
+  await expect(legend).toContainText('1 of 1 shown')
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  await page.getByRole('application').focus()
+  await page.keyboard.press('0')
+  await expect(page.getByRole('navigation', { name: 'Map location' })).toHaveText('Azeroth')
+
+  // Back to the dashboard, whose sidebar is its navigation again.
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Dashboard', exact: true }).click()
   await rail(page).getByRole('link', { name: /^My gathering/ }).click()
   await expect(page.getByRole('region', { name: 'Your farming summary' })).toContainText('1')
 

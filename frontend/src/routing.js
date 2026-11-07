@@ -19,7 +19,7 @@ export const GUILD_SECTIONS = ['quests', 'members', 'charter', 'ranks', 'intelli
 // First path segments that are not guild slugs: the platform's pages, the
 // server's own paths, old paths that now redirect, and public asset folders.
 export const RESERVED_TOP_LEVEL_SEGMENTS = [
-  'register', 'items', 'guildweaver', 'download', 'dashboard', 'account', 'privacy', 'admin', 'join',
+  'register', 'items', 'guildweaver', 'download', 'dashboard', 'map', 'account', 'privacy', 'admin', 'join',
   'api', 'auth', 'assets',
   'guilds', 'guildos', ...GUILD_SECTIONS,
   'armory-art', 'inventory-art', 'profession-art', 'talent-art', 'wow-art',
@@ -99,6 +99,9 @@ export const DASHBOARD_SECTIONS = ['farming', 'characters', 'professions', 'gath
 export function matchRoute(pathname) {
   const normalized = normalizePathname(pathname)
   if (normalized === '/') return { name: 'directory' }
+  // The resource map is a page of its own in the navbar, drawn inside the
+  // dashboard's frame.
+  if (normalized === '/map') return { name: 'dashboard', section: 'map' }
 
   const dashboard = normalized.match(/^\/dashboard(?:\/([^/]+))?$/)
   if (dashboard) {
