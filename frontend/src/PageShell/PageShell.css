@@ -191,3 +191,47 @@
     overflow-wrap: anywhere;
   }
 }
+
+/* App pages (Account, signed-out dashboard): a smaller heading and a wider,
+   centred body for cards. */
+.page-shell--compact .page-shell__main {
+  width: min(100%, 68rem);
+  margin-inline: auto;
+  padding-block: clamp(var(--space-12), 6vw, var(--space-20));
+}
+
+.page-shell--compact .page-shell__header {
+  max-width: 44rem;
+}
+
+.page-shell--compact .page-shell__header h1 {
+  font-size: clamp(2.25rem, 4vw, var(--font-size-fib-55));
+  line-height: 1;
+  text-transform: none;
+}
+
+.page-shell--compact .page-shell__body {
+  max-width: none;
+  margin-top: var(--space-10);
+}
+
+.page-shell--compact.page-shell--centered .page-shell__header {
+  margin-inline: auto;
+}
+
+.page-shell--compact.page-shell--centered .page-shell__header h1 {
+  font-size: clamp(2.25rem, 4vw, var(--font-size-fib-55));
+}
+
+.page-shell--compact.page-shell--centered .page-shell__intro {
+  margin-inline: auto;
+}
+
+.page-shell--compact.page-shell--centered .page-shell__body {
+  max-width: 34rem;
+  text-align: center;
+}
+
+.page-shell--bare .page-shell__main {
+  padding-block: 0 var(--space-20);
+}

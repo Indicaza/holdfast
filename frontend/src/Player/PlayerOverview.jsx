@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import CharacterCard from '../Intelligence/CharacterCard.jsx'
+import PlayerCharacterCard from './PlayerCharacterCard.jsx'
 import { dashboardHref, onServerKey, relativeTime, setupSteps, syncStatusCopy, withServer } from './playerModel.js'
 
 export function SyncCallout({ sync, compact = false }) {
@@ -76,8 +76,8 @@ export default function PlayerOverview({ data, server, onOpenCharacter }) {
             </div>
             <a href={dashboardHref('characters', server)}>All characters →</a>
           </div>
-          <div className="intel-character-grid">
-            {characters.slice(0, 6).map((character) => <CharacterCard character={character} key={character.id} onOpen={onOpenCharacter} />)}
+          <div className="player-character-grid">
+            {characters.slice(0, 6).map((character) => <PlayerCharacterCard character={character} key={character.id} onOpen={onOpenCharacter} showServer={!server} />)}
           </div>
         </section>
 
