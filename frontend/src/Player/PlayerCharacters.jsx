@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 
-import EmptyTelemetry from '../Intelligence/EmptyTelemetry.jsx'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { PLAYER_TOPICS, charactersByServer, playerApiUrl } from './playerModel.js'
 import PlayerCharacterCard from './PlayerCharacterCard.jsx'
+import { EmptyState, ErrorState, Icon, SkeletonRows } from './ui.jsx'
 
 // The player's characters on the chosen server, grouped under each server
 // when showing all of them. The server filters them; the search only
@@ -20,37 +20,35 @@ export default function PlayerCharacters({ server, servers, onOpenCharacter }) {
   const groups = charactersByServer(shown, data?.servers || servers)
 
   return (
-    <section className="intelligence-character-browser">
-      <div className="intelligence-character-browser__heading">
-        <div>
-          <span>Armory</span>
-          <h2>Your characters</h2>
-          <p>{characters.length} character{characters.length === 1 ? '' : 's'}{server ? ' on this server' : ''}. Open one for equipment, stats, talents, professions and bags.</p>
-        </div>
-        <label className="intelligence-character-browser__search">
-          <span>Search your characters</span>
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, class, spec, realm…" />
+    <div className="gw-stack">
+      <div className="gw-toolbar">
+        <label className="gw-input gw-input--search">
+          <Icon name="search" size={16} />
+          <input type="search" aria-label="Search your characters" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, class, spec, realm…" />
         </label>
+        <p className="gw-toolbar__note">
+          <strong>{characters.length}</strong> character{characters.length === 1 ? '' : 's'}{server ? ' on this server' : ''} · open one for gear, stats, talents and bags
+        </p>
       </div>
 
-      {status === 'loading' ? <p className="intel-muted" role="status">Loading your characters…</p> : null}
-      {status === 'error' ? <p className="intel-error" role="alert">Your characters could not be loaded.</p> : null}
+      {status === 'loading' ? <SkeletonRows rows={6} label="Loading your characters" /> : null}
+      {status === 'error' ? <ErrorState>Your characters could not be loaded.</ErrorState> : null}
       {status === 'ready' && !characters.length ? (
-        <EmptyTelemetry title={server ? 'No characters on this server yet.' : 'No characters synced yet.'}>
-          A character appears after you /reload or log out with it while Guildweaver is running.
-        </EmptyTelemetry>
+        <EmptyState title={server ? 'No characters on this server yet.' : 'No characters synced yet.'} icon="characters">
+          A character appears after you <kbd>/reload</kbd> or log out with it while Guildweaver is running.
+        </EmptyState>
       ) : null}
       {status === 'ready' && characters.length && !shown.length ? (
-        <EmptyTelemetry title="No characters match.">Try a different name, class, specialization, race, or realm.</EmptyTelemetry>
+        <EmptyState title="No characters match." icon="search">Try a different name, class, specialization, race, or realm.</EmptyState>
       ) : null}
       {groups.map((group) => (
-        <section key={group.server.key} className="player-server-group" aria-label={group.server.label}>
-          {server ? null : <h3 className="player-server-group__title">{group.server.label} <small>{group.characters.length}</small></h3>}
-          <div className="player-character-grid">
+        <section key={group.server.key} className="gw-char-group" aria-label={group.server.label}>
+          {server ? null : <h2 className="gw-group-title">{group.server.label} <small>{group.characters.length}</small></h2>}
+          <div className="gw-char-grid">
             {group.characters.map((character) => <PlayerCharacterCard character={character} key={character.id} onOpen={onOpenCharacter} showServer={false} />)}
           </div>
         </section>
       ))}
-    </section>
+    </div>
   )
 }

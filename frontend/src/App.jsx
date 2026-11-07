@@ -44,10 +44,11 @@ const defaultRobots =
   'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
 
 const dashboardTitles = {
-  overview: 'My Overview',
+  overview: 'Home',
+  farming: 'Drop Rates',
   characters: 'My Characters',
   professions: 'My Professions',
-  farming: 'My Farming',
+  gathering: 'My Gathering',
   sync: 'My Devices & Sync',
 }
 
@@ -74,9 +75,9 @@ const platformPages = {
   dashboard: {
     component: PlayerDashboard,
     title: (route) => `${dashboardTitles[route.section] || 'Dashboard'} | Guildweaver`,
-    description: 'Your synced characters, professions, farming and devices, grouped by server.',
+    description: 'Community drop rates for every node, pool and creature, plus your synced characters, professions and gathering.',
     robots: 'noindex,nofollow',
-    props: (url, route) => ({ section: route.section }),
+    props: (url, route) => ({ section: route.section, queryString: url.search }),
     // The dashboard stays mounted while its sections change.
     key: () => 'dashboard',
   },

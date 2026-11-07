@@ -113,8 +113,22 @@ export function readFarmingLocations(sourceKey, { mapId = "", realm = "", region
       GROUP BY map_id, realm, region, game_build, position_kind, px, py
       ORDER BY observations DESC, map_id, px, py LIMIT ?
     `).all(...params, cappedLimit + 1);
+    // Each map's name for the hotspot view: the zone most often recorded on
+    // it, and how many observations it holds overall (points are capped).
+    const maps = new Map();
+    for (const row of db.prepare(`
+      SELECT map_id, zone, COUNT(*) AS observations
+      FROM economic_observations WHERE ${clauses.join(" AND ")}
+      GROUP BY map_id, zone ORDER BY observations DESC, map_id
+    `).all(...params)) {
+      const entry = maps.get(row.map_id) || { mapId: row.map_id, zone: row.zone || null, observations: 0 };
+      entry.zone = entry.zone || row.zone || null;
+      entry.observations += row.observations;
+      maps.set(row.map_id, entry);
+    }
     return {
       sourceKey: text(sourceKey, 240), coordinateSystem: "ui_map_normalized", truncated: points.length > cappedLimit,
+      maps: [...maps.values()].sort((a, b) => b.observations - a.observations || a.mapId - b.mapId),
       points: points.slice(0, cappedLimit).map((p) => ({ mapId: p.map_id, x: p.px, y: p.py,
         realm: p.realm, region: p.region, build: p.game_build, positionKind: p.position_kind, observations: p.observations })),
     };

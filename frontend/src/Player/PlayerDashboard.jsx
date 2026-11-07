@@ -1,22 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
-import { Button, Select } from '../DesignSystem/index.js'
+import { Button } from '../DesignSystem/index.js'
 import '../Guildweaver/GuildweaverConnect.css'
 import CharacterProfileModal from '../Intelligence/CharacterProfileModal.jsx'
-import IntelligenceAppShell from '../Intelligence/IntelligenceAppShell.jsx'
 import { useCharacterParam } from '../Intelligence/useCharacterParam.js'
-import '../Intelligence/GuildIntelligence.css'
 import { useLiveUpdates } from '../Live/liveUpdatesContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { navigate } from '../Navigation/navigation.js'
 import PageLoading from '../PageLoading/PageLoading.jsx'
 import PageShell from '../PageShell/PageShell.jsx'
+import CommandPalette from './CommandPalette.jsx'
 import PlayerCharacters from './PlayerCharacters.jsx'
 import PlayerFarming from './PlayerFarming.jsx'
+import PlayerGathering from './PlayerGathering.jsx'
 import PlayerOverview from './PlayerOverview.jsx'
 import PlayerProfessions from './PlayerProfessions.jsx'
+import PlayerShell from './PlayerShell.jsx'
 import PlayerSync from './PlayerSync.jsx'
 import {
   DASHBOARD_VIEWS,
@@ -30,19 +31,21 @@ import {
   storedServer,
   withServer,
 } from './playerModel.js'
+import { Icon, SkeletonRows } from './ui.jsx'
 import './Player.css'
+import './PlayerApp.css'
 
 function SignedOut({ session }) {
   return (
     <PageShell
       eyebrow="Guildweaver"
       title="Your dashboard"
-      intro="Your characters, professions, farming and sync status, grouped by server. Private to you. No guild required."
+      intro="Community drop rates for every herb, vein, pool and creature, plus your own characters, professions and gathering. Private to you. No guild required."
       centered
       compact
     >
       <div className="player-signed-out">
-        <p>Sign in with Discord to see your dashboard and connect Guildweaver on your computer.</p>
+        <p>Sign in with Discord to search drop rates and connect Guildweaver on your computer.</p>
         <div className="player-signed-out__actions">
           <Button
             variant="primary"
@@ -59,27 +62,31 @@ function SignedOut({ session }) {
   )
 }
 
-function ServerSelector({ servers, server, onChange }) {
-  if (!servers.length) return null
+function ServerPicker({ servers, server, onChange }) {
   return (
-    <Select
-      className="player-server-select"
-      label="Server"
-      inline
-      size="sm"
-      value={server}
-      onChange={(event) => onChange(event.target.value)}
-      options={[['', 'All servers'], ...servers.map((entry) => [entry.key, `${entry.label} (${entry.characterCount})`])]}
-    />
+    <label className="gw-server">
+      <span className="gw-server__label">Server</span>
+      <select aria-label="Server" value={server} onChange={(event) => onChange(event.target.value)} disabled={!servers.length}>
+        <option value="">All servers</option>
+        {servers.map((entry) => <option key={entry.key} value={entry.key}>{entry.label} ({entry.characterCount})</option>)}
+      </select>
+      <Icon name="sort" size={14} />
+    </label>
   )
 }
 
-// The rail's subtitle: how much the player has synced.
-function dashboardTagline(data) {
-  const characters = data?.characters?.length || 0
-  const servers = data?.servers?.length || 0
-  if (!characters) return 'Your Guildweaver data'
-  return `${characters} character${characters === 1 ? '' : 's'} · ${servers} server${servers === 1 ? '' : 's'}`
+function SyncStatus({ sync, ready, paused, server }) {
+  if (!ready) return null
+  const lastSync = sync?.lastUploadAt || sync?.lastCharacterAt
+  return (
+    <a className="gw-sync" href={dashboardHref('sync', server)} title="Your devices and sync status">
+      <span className={`gw-dot gw-dot--${sync?.state || 'unknown'}`} aria-hidden="true" />
+      <span className="gw-sync__copy">
+        <strong>{lastSync ? `Synced ${relativeTime(lastSync)}` : 'Not synced yet'}</strong>
+        {paused ? <small>Live updates paused</small> : <small>{sync?.connectedDevices ? `${sync.connectedDevices} device${sync.connectedDevices === 1 ? '' : 's'}` : 'No device connected'}</small>}
+      </span>
+    </a>
+  )
 }
 
 // The server in the URL, following Back/Forward.
@@ -93,7 +100,43 @@ function useServerParam() {
   return requested
 }
 
-export default function PlayerDashboard({ section = 'overview' }) {
+function useStoredFlag(key) {
+  const [value, setValue] = useState(() => {
+    try {
+      return window.localStorage.getItem(key) === 'collapsed'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, value ? 'collapsed' : 'expanded')
+    } catch {
+      // Remembering the sidebar is a convenience.
+    }
+  }, [key, value])
+  return [value, setValue]
+}
+
+// ⌘K / Ctrl+K anywhere, or / outside a text field, opens search.
+function useSearchShortcut(open) {
+  useEffect(() => {
+    function onKeyDown(event) {
+      const typing = event.target instanceof HTMLElement && (event.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName))
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        open()
+      } else if (event.key === '/' && !typing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault()
+        open()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+}
+
+export default function PlayerDashboard({ section = 'overview', queryString = '' }) {
   const live = useLiveUpdates()
   const session = useSession()
   const userId = session.authenticated ? session.user?.id || '' : ''
@@ -103,22 +146,12 @@ export default function PlayerDashboard({ section = 'overview' }) {
   const ready = overview.status === 'ready'
   const server = ready ? resolveServer({ requested, stored: storedServer(userId), servers }) : requested
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      return window.localStorage.getItem('guildweaver:dashboard:rail') === 'collapsed'
-    } catch {
-      return false
-    }
-  })
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('guildweaver:dashboard:rail', collapsed ? 'collapsed' : 'expanded')
-    } catch {
-      // Remembering the rail is a convenience.
-    }
-  }, [collapsed])
+  const [collapsed, setCollapsed] = useStoredFlag('guildweaver:dashboard:rail')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const openSearch = useCallback(() => setSearchOpen(true), [])
+  const closeSearch = useCallback(() => setSearchOpen(false), [])
   const [characterId, openCharacter] = useCharacterParam()
+  useSearchShortcut(session.authenticated ? openSearch : noop)
 
   // Once the player's servers are known, the URL names the server shown: the
   // remembered one, or none when the link named a server they do not have.
@@ -133,64 +166,60 @@ export default function PlayerDashboard({ section = 'overview' }) {
     navigate(withServer(`${window.location.pathname}${window.location.search}${window.location.hash}`, next), { preserveScroll: true })
   }
 
-  const views = DASHBOARD_VIEWS.map((view) => ({ ...view, href: dashboardHref(view.id, server) }))
+  const views = useMemo(() => DASHBOARD_VIEWS.map((view) => ({ ...view, href: dashboardHref(view.id, server) })), [server])
+  const characters = useMemo(() => overview.data?.characters || [], [overview.data])
 
   if (session.status === 'loading') return <PageLoading label="Checking your session…" />
   if (session.status === 'error' || !session.authenticated) return <SignedOut session={session} />
 
-  const sync = overview.data?.sync
+  const current = views.find((view) => view.id === section) || views[0]
   const expired = overview.error?.status === 401
-  const lastSync = sync?.lastUploadAt || sync?.lastCharacterAt
   const paused = live.status === 'offline' || live.status === 'reconnecting'
+  const sourceOpen = section === 'farming' && new URLSearchParams(queryString).has('source')
 
   return (
     <>
-      <IntelligenceAppShell
-        brand={{ name: 'Dashboard', tagline: dashboardTagline(overview.data), eyebrow: serverLabel(servers, server), mark: '✦' }}
-        sectionLabel={false}
-        showLive={false}
-        variant="player"
-        activeView={section}
+      <PlayerShell
+        views={views}
+        activeView={current.id}
+        title={current.label}
+        eyebrow={current.group === 'explore' ? 'Community' : serverLabel(servers, server)}
+        description={sourceOpen ? 'One source: its drop table, hotspots, and what changes the odds' : current.description}
+        serverPicker={<ServerPicker servers={servers} server={server} onChange={changeServer} />}
+        syncStatus={<SyncStatus sync={overview.data?.sync} ready={ready} paused={paused} server={server} />}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
-        onSelectView={() => setMobileOpen(false)}
         onToggleCollapsed={() => setCollapsed((value) => !value)}
         onToggleMobile={setMobileOpen}
-        views={views}
-        actions={(
-          <div className="player-topbar">
-            <ServerSelector servers={servers} server={server} onChange={changeServer} />
-            {ready ? (
-              <a className="player-topbar__sync" href={dashboardHref('sync', server)} title="Your devices and sync status">
-                <span className={`player-dot player-dot--${sync?.state || 'unknown'}`} aria-hidden="true" />
-                {lastSync ? `Synced ${relativeTime(lastSync)}` : 'Not synced yet'}
-                {paused ? <small className="player-topbar__paused">· updates paused</small> : null}
-              </a>
-            ) : null}
-          </div>
-        )}
+        onOpenSearch={openSearch}
       >
-        {overview.status === 'loading' ? <p className="intel-muted" role="status">Loading your dashboard…</p> : null}
+        {overview.status === 'loading' ? <SkeletonRows rows={8} label="Loading your dashboard" /> : null}
         {overview.status === 'error' || overview.status === 'missing' ? (
-          <div className="player-callout player-callout--warning" role="alert">
-            <strong>{expired ? 'Your session has ended.' : 'Your dashboard could not be loaded.'}</strong>
-            <p>{expired ? 'Sign in again to keep going.' : 'Guildweaver did not answer. Your data is safe; try again in a moment.'}</p>
-            <Button variant="primary" size="sm" onClick={() => (expired ? session.signIn(signInReturnTo()) : window.location.reload())}>
+          <div className="gw-callout gw-callout--warning" role="alert">
+            <div>
+              <strong>{expired ? 'Your session has ended.' : 'Your dashboard could not be loaded.'}</strong>
+              <p>{expired ? 'Sign in again to keep going.' : 'Guildweaver did not answer. Your data is safe; try again in a moment.'}</p>
+            </div>
+            <button type="button" className="gw-btn gw-btn--primary gw-btn--sm" onClick={() => (expired ? session.signIn(signInReturnTo()) : window.location.reload())}>
               {expired ? 'Sign in with Discord' : 'Try again'}
-            </Button>
+            </button>
           </div>
         ) : null}
         {ready ? (
           <>
-            {section === 'overview' ? <PlayerOverview data={overview.data} server={server} onOpenCharacter={openCharacter} /> : null}
+            {section === 'overview' ? <PlayerOverview data={overview.data} server={server} onOpenCharacter={openCharacter} onOpenSearch={openSearch} /> : null}
+            {section === 'farming' ? <PlayerFarming server={server} queryString={queryString} /> : null}
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
-            {section === 'farming' ? <PlayerFarming server={server} /> : null}
+            {section === 'gathering' ? <PlayerGathering server={server} /> : null}
             {section === 'sync' ? <PlayerSync data={overview.data} onChanged={overview.mutate} /> : null}
           </>
         ) : null}
-      </IntelligenceAppShell>
+      </PlayerShell>
+      <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={views} onOpenCharacter={openCharacter} />
       <CharacterProfileModal apiBase="/api/player/characters" characterId={characterId} onClose={() => openCharacter('')} />
     </>
   )
 }
+
+function noop() {}

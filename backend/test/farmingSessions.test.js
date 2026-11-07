@@ -151,6 +151,9 @@ test('authenticated map endpoint groups points by map, realm and build without p
   assert.equal(scoped.points[0].observations, 2);
   assert.equal(scoped.points[0].positionKind, 'player_at_cast');
   assert.equal(readFarmingLocations(key, { limit: 1 }).truncated, true);
+  assert.deepEqual(scoped.maps, [{ mapId: 1431, zone: 'Duskwood', observations: 2 }], 'each map carries its most recorded zone');
+  const capped = readFarmingLocations(key, { limit: 1 });
+  assert.equal(capped.maps.reduce((sum, map) => sum + map.observations, 0), 3, 'map totals count every observation, not only the capped points');
   const route = `/api/intelligence/farming/sources/${encodeURIComponent(key)}/locations`;
   assert.equal((await request(route)).status, 401);
   assert.equal((await request('/api/intelligence/farming/sessions')).status, 401);
