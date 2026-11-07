@@ -4,11 +4,11 @@ import { apiJson } from '../Api/apiClient.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
-import { Badge, Button } from '../DesignSystem/index.js'
-import EmptyTelemetry from '../Intelligence/EmptyTelemetry.jsx'
+import { Button } from '../DesignSystem/index.js'
 import Modal from '../Modal/Modal.jsx'
 import { SyncCallout } from './PlayerOverview.jsx'
 import { relativeTime } from './playerModel.js'
+import { EmptyState, Icon, Panel } from './ui.jsx'
 
 function formatDate(value) {
   if (!value) return 'unknown'
@@ -65,61 +65,58 @@ export default function PlayerSync({ data, onChanged }) {
   }
 
   return (
-    <>
+    <div className="gw-stack">
       <SyncCallout sync={data.sync} />
 
-      <section className="intel-panel" aria-labelledby="player-devices-title">
-        <div className="intel-panel__heading intel-panel__heading--split">
-          <div>
-            <span>Devices</span>
-            <h2 id="player-devices-title">Your connected computers</h2>
-            <p>Each computer running Guildweaver uploads with its own key. Only you can see or disconnect your devices.</p>
-          </div>
-          <a href="/download">Connect another computer →</a>
-        </div>
-
+      <Panel
+        id="player-devices"
+        eyebrow="Devices"
+        title="Your connected computers"
+        description="Each computer running Guildweaver uploads with its own key. Only you can see or disconnect your devices."
+        actions={<a className="gw-link" href="/download">Connect another computer <Icon name="chevron" size={14} /></a>}
+      >
         {!devices.length ? (
-          <EmptyTelemetry title="No computers connected yet.">
+          <EmptyState title="No computers connected yet." icon="guildweaver" action={<a className="gw-btn gw-btn--primary" href="/download">Download Guildweaver</a>}>
             Download Guildweaver and open it. It opens this site to approve the connection.
-          </EmptyTelemetry>
+          </EmptyState>
         ) : (
-          <ul className="player-devices">
-            {devices.map((device) => (
-              <li key={device.id} className={`player-device player-device--${device.status}`}>
-                <div className="player-device__name">
-                  <strong>{device.name}</strong>
-                  <Badge tone={device.status === 'connected' ? 'success' : 'neutral'}>{device.status === 'connected' ? 'Connected' : 'Disconnected'}</Badge>
-                </div>
-                <dl>
-                  <div><dt>Connected</dt><dd>{formatDate(device.connectedAt)}</dd></div>
-                  <div><dt>Last upload</dt><dd>{relativeTime(device.lastUploadAt)}</dd></div>
-                  <div><dt>Last contact</dt><dd>{relativeTime(device.lastContactAt)}</dd></div>
-                  <div><dt>Characters</dt><dd>{device.characterCount}</dd></div>
-                </dl>
-                {device.status === 'connected' ? (
-                  <Button variant="secondary" size="sm" onClick={() => setConfirming(device)}>Disconnect</Button>
-                ) : (
-                  <p className="player-device__note">Disconnected {formatDate(device.revokedAt)}.</p>
-                )}
-              </li>
-            ))}
+          <ul className="gw-devices">
+            {devices.map((device) => {
+              const connected = device.status === 'connected'
+              return (
+                <li key={device.id} className={`gw-device${connected ? '' : ' is-off'}`}>
+                  <div className="gw-device__name">
+                    <span className={`gw-dot gw-dot--${connected ? 'synced' : 'off'}`} aria-hidden="true" />
+                    <strong>{device.name}</strong>
+                    <span className={`gw-tag${connected ? ' gw-tag--ok' : ' gw-tag--quiet'}`}>{connected ? 'Connected' : 'Disconnected'}</span>
+                  </div>
+                  <dl>
+                    <div><dt>Connected</dt><dd>{formatDate(device.connectedAt)}</dd></div>
+                    <div><dt>Last upload</dt><dd>{relativeTime(device.lastUploadAt)}</dd></div>
+                    <div><dt>Last contact</dt><dd>{relativeTime(device.lastContactAt)}</dd></div>
+                    <div><dt>Characters</dt><dd>{device.characterCount}</dd></div>
+                  </dl>
+                  {connected ? (
+                    <Button variant="secondary" size="sm" onClick={() => setConfirming(device)}>Disconnect</Button>
+                  ) : (
+                    <p className="gw-muted">Disconnected {formatDate(device.revokedAt)}.</p>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
-      </section>
+      </Panel>
 
-      <section className="intel-panel" aria-labelledby="player-sync-help">
-        <div className="intel-panel__heading">
-          <span>How syncing works</span>
-          <h2 id="player-sync-help">When new data arrives</h2>
-        </div>
-        <ul className="player-help">
-          <li>WoW saves addon data only when you <kbd>/reload</kbd>, log out or exit. Guildweaver uploads it right after, so the dashboard updates then, not live while you play.</li>
-          <li>Guildweaver must be running on the computer you play on. The installer sets it to start when you sign in to your computer, and it updates itself.</li>
-          <li>Nothing arriving? Check that the device above is connected, then <kbd>/reload</kbd> in game. Type <kbd>/gw sync</kbd> to save and send immediately.</li>
+      <Panel id="player-sync-help" eyebrow="How syncing works" title="When new data arrives">
+        <ul className="gw-help">
+          <li><Icon name="bolt" size={16} /><span>WoW saves addon data only when you <kbd>/reload</kbd>, log out or exit. Guildweaver uploads it right after, so the dashboard updates then, not live while you play.</span></li>
+          <li><Icon name="guildweaver" size={16} /><span>Guildweaver must be running on the computer you play on. The installer sets it to start when you sign in, and it updates itself.</span></li>
+          <li><Icon name="search" size={16} /><span>Nothing arriving? Check that the device above is connected, then <kbd>/reload</kbd> in game. Type <kbd>/gw sync</kbd> to save and send immediately.</span></li>
         </ul>
-      </section>
+      </Panel>
 
       {confirming ? <ConfirmDisconnect device={confirming} onCancel={() => setConfirming(null)} onDisconnected={disconnected} /> : null}
-    </>
+    </div>
   )
 }

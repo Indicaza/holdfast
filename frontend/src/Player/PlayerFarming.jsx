@@ -1,118 +1,236 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import EmptyTelemetry from '../Intelligence/EmptyTelemetry.jsx'
-import FarmingIntelligence from '../Intelligence/Farming/FarmingIntelligence.jsx'
-import { disciplineLabel } from '../Intelligence/Farming/farmingModel.js'
-import { farmingDuration, farmingRunLabel } from '../Intelligence/Farming/farmingSessionModel.js'
-import { useLiveResource } from '../Live/useLiveResource.js'
-import WowIcon from '../WowAssets/WowIcon.jsx'
-import { playerApiUrl, relativeTime } from './playerModel.js'
+import { apiJson } from '../Api/apiClient.js'
+import { disciplineLabel, formatCount, observationLabel, sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
+import { useLiveRefresh } from '../Live/liveUpdatesContext.js'
+import { navigate } from '../Navigation/navigation.js'
+import { rateScale, sortSources, sourceHref } from './exploreModel.js'
+import { relativeTime } from './playerModel.js'
+import SourcePage from './SourcePage.jsx'
+import { Confidence, DisciplineTag, EmptyState, ErrorState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Zone } from './ui.jsx'
 
-const FARMING_TOPICS = ['player', 'farming']
+const COLUMNS = [
+  { key: 'name', label: 'Source', defaultDirection: 'asc' },
+  { key: 'zone', label: 'Zone', defaultDirection: 'asc', className: 'gw-hide-md' },
+  { key: 'observations', label: 'Samples', defaultDirection: 'desc', className: 'gw-col-num' },
+  { key: 'chance', label: 'Notable drops', defaultDirection: 'desc', className: 'gw-col-drops' },
+  { key: 'recent', label: 'Last seen', defaultDirection: 'desc', className: 'gw-col-num gw-hide-md' },
+]
 
-// What the player gathered, fished and looted on the chosen server. Kept
-// apart from the community drop rates below it, which pool everyone's
-// observations without saying whose they are.
-function MyFarming({ server }) {
-  const { status, data } = useLiveResource(playerApiUrl('farming', server), { topics: FARMING_TOPICS })
-
-  if (status === 'loading') return <p className="intel-muted" role="status">Loading your farming…</p>
-  if (status === 'error' || status === 'missing') return <p className="intel-error" role="alert">Your farming could not be loaded.</p>
-  if (!data?.summary?.observations) {
-    return (
-      <EmptyTelemetry title={server ? 'No farming on this server yet.' : 'No farming synced yet.'}>
-        Gather, fish, skin or loot with Guildweaver running, then /reload or log out to send it.
-      </EmptyTelemetry>
-    )
+function readBrowserState(queryString) {
+  const params = new URLSearchParams(queryString)
+  const sort = COLUMNS.some((column) => column.key === params.get('sort')) ? params.get('sort') : 'observations'
+  const column = COLUMNS.find((entry) => entry.key === sort)
+  return {
+    sortChosen: params.has('sort'),
+    query: params.get('q') || '',
+    discipline: params.get('discipline') || '',
+    zone: params.get('zone') || '',
+    sort,
+    direction: params.get('dir') === 'asc' || params.get('dir') === 'desc' ? params.get('dir') : column.defaultDirection,
   }
+}
 
+function SortHeader({ column, sort, direction, onSort }) {
+  const active = sort === column.key
   return (
-    <>
-      <section className="intel-scorecards" aria-label="Your farming summary">
-        <article><span>Gathers &amp; loots</span><strong>{data.summary.observations}</strong><small>Recorded by your characters</small></article>
-        <article><span>Sources</span><strong>{data.summary.sources}</strong><small>Nodes, pools and creatures</small></article>
-        <article><span>Last recorded</span><strong className="player-scorecard__time">{relativeTime(data.summary.lastObservedAt)}</strong><small>{data.disciplines.map((entry) => disciplineLabel(entry.discipline)).join(', ')}</small></article>
-      </section>
-
-      <div className="player-overview-grid">
-        <section className="intel-panel" aria-labelledby="player-farming-items">
-          <div className="intel-panel__heading">
-            <span>Materials</span>
-            <h2 id="player-farming-items">What you collected</h2>
-          </div>
-          <ul className="player-farming__items">
-            {data.items.map((item) => (
-              <li key={item.itemKey}>
-                <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} size={28} />
-                <span>{item.name}</span>
-                <strong>{item.quantity}</strong>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="intel-panel" aria-labelledby="player-farming-sources">
-          <div className="intel-panel__heading">
-            <span>Sources</span>
-            <h2 id="player-farming-sources">Where you farmed</h2>
-          </div>
-          <ul className="player-farming__sources">
-            {data.sources.map((source) => (
-              <li key={source.sourceKey}>
-                <span><strong>{source.name}</strong><small>{disciplineLabel(source.discipline)}{source.zone ? ` · ${source.zone}` : ''}</small></span>
-                <em>{source.observations}×</em>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="intel-panel" aria-labelledby="player-farming-recent">
-        <div className="intel-panel__heading">
-          <span>Recent</span>
-          <h2 id="player-farming-recent">Your latest gathers</h2>
-        </div>
-        <ul className="player-farming__recent">
-          {data.recent.map((entry) => (
-            <li key={entry.id}>
-              <span><strong>{entry.sourceName}</strong><small>{[entry.zone, entry.subzone].filter(Boolean).join(' · ') || 'Zone unknown'}</small></span>
-              <span>{entry.outputs.map((output) => `${output.quantity}× ${output.name}`).join(', ') || 'Nothing'}</span>
-              <em>{relativeTime(entry.capturedAt)}</em>
-            </li>
-          ))}
-        </ul>
-        {data.sessions.length ? (
-          <>
-            <h3 className="player-server-group__title">Your farming runs</h3>
-            <ul className="player-farming__recent">
-              {data.sessions.map((session) => (
-                <li key={session.id}>
-                  <span><strong>{farmingRunLabel(session)}</strong><small>{session.zone || 'Zone unknown'}</small></span>
-                  <span>{farmingDuration(session.durationSeconds)} · {session.observedGathers} harvests</span>
-                  <em>{session.outputs.slice(0, 2).map((output) => `${output.quantity}× ${output.name || output.itemKey}`).join(', ')}</em>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-      </section>
-    </>
+    <th scope="col" className={column.className} aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}>
+      <button type="button" className={`gw-th-sort${active ? ' is-active' : ''}`} onClick={() => onSort(column)}>
+        {column.label}
+        <Icon name={active ? (direction === 'asc' ? 'arrowUp' : 'arrowDown') : 'sort'} size={12} />
+      </button>
+    </th>
   )
 }
 
-export default function PlayerFarming({ server }) {
-  const [communityInput, setCommunityInput] = useState('')
+function NotableDrops({ source, max }) {
+  const searched = Boolean(source.matches?.length)
+  const drops = (searched ? source.matches : source.drops) || []
+  if (!drops.length) return <span className="gw-muted">Only {source.name}</span>
   return (
-    <>
-      <MyFarming server={server} />
-      <section className="player-community" aria-labelledby="player-community-title">
-        <div className="intel-panel__heading">
-          <span>Community</span>
-          <h2 id="player-community-title">Drop rates from every Guildweaver player</h2>
-          <p>Pooled, anonymous observations: no names, characters or accounts. Not filtered by your server.</p>
-        </div>
-        <FarmingIntelligence input={communityInput} onInputChange={setCommunityInput} sessions={false} />
-      </section>
-    </>
+    <ul className={`gw-drops-cell${searched ? ' gw-drops-cell--match' : ''}`}>
+      {drops.slice(0, 2).map((drop) => (
+        <li key={drop.itemKey}>
+          <ItemLabel item={drop} size={18} />
+          <RateBar entry={drop} max={max} compact />
+          <Confidence confidence={drop.confidence} />
+        </li>
+      ))}
+      {drops.length > 2 ? <li className="gw-muted gw-drops-cell__more">+{drops.length - 2} more</li> : null}
+    </ul>
   )
+}
+
+function SourcesBrowser({ queryString }) {
+  const [initial] = useState(() => readBrowserState(queryString))
+  const [input, setInput] = useState(initial.query)
+  const [query, setQuery] = useState(initial.query)
+  const [discipline, setDiscipline] = useState(initial.discipline)
+  const [zone, setZone] = useState(initial.zone)
+  const [sortChosen, setSortChosen] = useState(initial.sortChosen)
+  const [chosenSort, setSort] = useState(initial.sort)
+  const [chosenDirection, setDirection] = useState(initial.direction)
+  // Searching an item ranks its sources by drop chance until a column is
+  // picked by hand.
+  const bySearch = Boolean(query) && !sortChosen
+  const sort = bySearch ? 'chance' : chosenSort
+  const direction = bySearch ? 'desc' : chosenDirection
+  const [state, setState] = useState({ status: 'loading', data: null })
+  const [version, setVersion] = useState(0)
+  useLiveRefresh(['farming'], () => setVersion((current) => current + 1), { debounceMs: 1000 })
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setQuery(input.trim()), 180)
+    return () => window.clearTimeout(timer)
+  }, [input])
+
+  // The filters live in the URL, so a filtered table is a link you can share.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const put = (key, value, fallback = '') => {
+      if (value && value !== fallback) url.searchParams.set(key, value)
+      else url.searchParams.delete(key)
+    }
+    put('q', query)
+    put('discipline', discipline)
+    put('zone', zone)
+    put('sort', sortChosen ? sort : '', 'observations')
+    put('dir', sortChosen ? direction : '', COLUMNS.find((column) => column.key === sort)?.defaultDirection)
+    if (url.href !== window.location.href) window.history.replaceState(window.history.state, '', url)
+  }, [query, discipline, zone, sort, direction, sortChosen])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    apiJson(sourcesUrl({ query, discipline, zone }), { signal: controller.signal })
+      .then((data) => { if (!controller.signal.aborted) setState({ status: 'ready', data }) })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === 'AbortError') return
+        setState((current) => ({ ...current, status: 'error' }))
+      })
+    return () => controller.abort()
+  }, [query, discipline, zone, version])
+
+  const data = state.data
+  const disciplines = data?.disciplines || []
+  const zones = data?.zones || []
+  const sources = useMemo(() => sortSources(data?.sources || [], { key: sort, direction }), [data, sort, direction])
+  const max = rateScale(sources.flatMap((source) => ((source.matches?.length ? source.matches : source.drops) || []).slice(0, 2)))
+  const filtered = Boolean(query || discipline || zone)
+  const totalSamples = sources.reduce((sum, source) => sum + (Number(source.observations) || 0), 0)
+
+  function onSort(column) {
+    setSortChosen(true)
+    if (sort === column.key) {
+      setSort(column.key)
+      setDirection(direction === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSort(column.key)
+      setDirection(column.defaultDirection)
+    }
+  }
+
+  function clear() {
+    setInput('')
+    setQuery('')
+    setDiscipline('')
+    setZone('')
+  }
+
+  return (
+    <div className="gw-stack">
+      <div className="gw-toolbar">
+        <label className="gw-input gw-input--search">
+          <Icon name="search" size={16} />
+          <input type="search" aria-label="Search items or sources" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search an item or source — e.g. Frilled Lichen" />
+        </label>
+        <div className="gw-seg" role="group" aria-label="Profession">
+          <button type="button" aria-pressed={!discipline} onClick={() => setDiscipline('')}>All</button>
+          {disciplines.map((entry) => (
+            <button key={entry.discipline} type="button" aria-pressed={discipline === entry.discipline} onClick={() => setDiscipline(entry.discipline)}>
+              <DisciplineTag discipline={entry.discipline} compact />
+              {disciplineLabel(entry.discipline)}
+            </button>
+          ))}
+        </div>
+        <label className="gw-select">
+          <span>Zone</span>
+          <select value={zone} onChange={(event) => setZone(event.target.value)}>
+            <option value="">All zones</option>
+            {zone && !zones.some((entry) => entry.zone === zone) ? <option value={zone}>{zone}</option> : null}
+            {zones.map((entry) => <option key={entry.zone} value={entry.zone}>{entry.zone} ({formatCount(entry.sources)})</option>)}
+          </select>
+        </label>
+      </div>
+
+      <Panel
+        id="gw-sources"
+        title={query ? `Sources for “${query}”` : 'Every source'}
+        description={state.status === 'ready'
+          ? `${formatCount(sources.length)} source${sources.length === 1 ? '' : 's'} · ${formatCount(totalSamples)} samples${query && sources.some((source) => source.matches?.length) ? ' · rates shown for the item you searched' : ''}`
+          : 'Pooled from every Guildweaver player, without names or accounts.'}
+        actions={filtered ? <button type="button" className="gw-btn gw-btn--ghost gw-btn--sm" onClick={clear}>Clear filters</button> : null}
+        flush
+      >
+        {state.status === 'loading' ? <SkeletonRows rows={8} label="Loading sources" /> : null}
+        {state.status === 'error' ? <div className="gw-pad"><ErrorState onRetry={() => setVersion((current) => current + 1)}>Drop rates are unavailable right now.</ErrorState></div> : null}
+        {state.status === 'ready' && !sources.length ? (
+          <EmptyState title={filtered ? 'Nothing matches those filters.' : 'No gathering observations yet.'} icon="search" action={filtered ? <button type="button" className="gw-btn" onClick={clear}>Clear filters</button> : null}>
+            {filtered ? 'Try another item, source, zone or profession.' : 'Sources appear once Guildweaver syncs gathering telemetry.'}
+          </EmptyState>
+        ) : null}
+        {sources.length ? (
+          <div className="gw-table-wrap">
+            <table className="gw-table gw-table--sources" aria-label="Sources">
+              <thead>
+                <tr>{COLUMNS.map((column) => <SortHeader key={column.key} column={column} sort={sort} direction={direction} onSort={onSort} />)}</tr>
+              </thead>
+              <tbody>
+                {sources.map((source) => {
+                  const href = sourceHref(source.sourceKey, { item: source.matches?.[0]?.itemKey || '' })
+                  return (
+                    <tr
+                      key={source.sourceKey}
+                      className={`is-link gw-row--${source.discipline}`}
+                      onClick={(event) => {
+                        if (event.target.closest('a, button')) return
+                        navigate(href)
+                      }}
+                    >
+                      <td>
+                        <a className="gw-source-cell" href={href}>
+                          <ItemLabel item={{ ...source.icon, name: source.name }} size={32} tooltip={false} />
+                          <span className="gw-source-cell__meta">
+                            <DisciplineTag discipline={source.discipline} />
+                            <span className="gw-show-md"><Zone name={source.primaryZone} extra={Math.max(0, (source.zones || 0) - 1)} /></span>
+                          </span>
+                        </a>
+                      </td>
+                      <td className="gw-hide-md"><Zone name={source.primaryZone} extra={Math.max(0, (source.zones || 0) - 1)} /></td>
+                      <td className="gw-col-num">
+                        <strong>{formatCount(source.observations)}</strong>
+                        <small className="gw-cell-sub">{observationLabel(source.discipline, source.observations)}</small>
+                      </td>
+                      <td className="gw-col-drops"><NotableDrops source={source} max={max} /></td>
+                      <td className="gw-col-num gw-hide-md gw-muted">{relativeTime(source.lastObservedAt)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </Panel>
+    </div>
+  )
+}
+
+// Community drop rates: the table of every source, or one source's page when
+// the URL names it (?source=).
+export default function PlayerFarming({ server, queryString = '' }) {
+  const params = new URLSearchParams(queryString)
+  const sourceKey = params.get('source') || ''
+  if (sourceKey) {
+    return <SourcePage key={sourceKey} sourceKey={sourceKey} initialItemKey={params.get('item') || ''} initialZone={params.get('zone') || ''} server={server} />
+  }
+  return <SourcesBrowser queryString={queryString} />
 }

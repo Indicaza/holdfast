@@ -2,11 +2,17 @@
 // what to say about sync health. Components live beside this file.
 
 export const DASHBOARD_VIEWS = Object.freeze([
-  { id: 'overview', label: 'Overview', description: 'Characters, servers and sync', icon: 'overview', path: '/dashboard' },
-  { id: 'characters', label: 'Characters', description: 'Armory, gear, talents and bags', icon: 'characters', path: '/dashboard/characters' },
-  { id: 'professions', label: 'Professions', description: 'Which of your characters can craft it', icon: 'craft', path: '/dashboard/professions' },
-  { id: 'farming', label: 'Farming', description: 'Your gathering and community drop rates', icon: 'farming', path: '/dashboard/farming' },
-  { id: 'sync', label: 'Sync', description: 'Your devices and upload status', icon: 'guildweaver', path: '/dashboard/sync' },
+  { id: 'overview', group: 'explore', label: 'Home', description: 'Search drops, sources and your characters', icon: 'overview', path: '/dashboard' },
+  { id: 'farming', group: 'explore', label: 'Drop rates', description: 'Every node, pool and creature, with what it drops', icon: 'farming', path: '/dashboard/farming' },
+  { id: 'characters', group: 'you', label: 'Characters', description: 'Armory, gear, talents and bags', icon: 'characters', path: '/dashboard/characters' },
+  { id: 'professions', group: 'you', label: 'Professions', description: 'Skills, and which character can craft it', icon: 'craft', path: '/dashboard/professions' },
+  { id: 'gathering', group: 'you', label: 'My gathering', description: 'What your characters gathered, fished and looted', icon: 'gathering', path: '/dashboard/gathering' },
+  { id: 'sync', group: 'you', label: 'Sync', description: 'Your devices and upload status', icon: 'guildweaver', path: '/dashboard/sync' },
+])
+
+export const DASHBOARD_GROUPS = Object.freeze([
+  { id: 'explore', label: 'Explore' },
+  { id: 'you', label: 'You' },
 ])
 
 const SERVER_PARAM = 'server'
