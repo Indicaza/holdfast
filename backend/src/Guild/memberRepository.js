@@ -217,9 +217,44 @@ export function readGuildMembersFromDatabase(
   return rows.map((row) => memberFromRow(db, row, id, ladder));
 }
 
-function writeProfile(db, memberId, profile) {
-  const normalized = normalizeMemberProfile(profile);
+// Tables holding synced game data per character. Each one cascades from
+// characters(id), so deleting a character row erases that data too.
+const SYNCED_CHARACTER_TABLES = [
+  "character_snapshots",
+  "character_cards",
+  "character_sections",
+  "telemetry_characters",
+  "guildweaver_character_aliases",
+];
 
+// The member's characters that have synced game data. A profile save never
+// deletes these, whether or not the profile lists them: the profile holds at
+// most a dozen characters and can be edited, while the data came from the
+// game.
+function syncedCharacterIds(db, memberId) {
+  const tables = new Set(
+    db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all()
+      .map((row) => row.name),
+  );
+  const checks = SYNCED_CHARACTER_TABLES.filter((table) => tables.has(table)).map(
+    (table) => `EXISTS (SELECT 1 FROM ${table} t WHERE t.character_id = characters.id)`,
+  );
+
+  if (!checks.length) {
+    return new Set();
+  }
+
+  return new Set(
+    db
+      .prepare(`SELECT id FROM characters WHERE member_id = ? AND (${checks.join(" OR ")})`)
+      .all(memberId)
+      .map((row) => row.id),
+  );
+}
+
+function writeProfileFields(db, memberId, normalized) {
   db.prepare(
     `
       INSERT INTO member_profiles (
@@ -245,10 +280,33 @@ function writeProfile(db, memberId, profile) {
     normalized.availability,
     normalized.bio,
   );
+}
 
-  db.prepare("DELETE FROM characters WHERE member_id = ?").run(memberId);
+// Makes the member's characters match the profile's list without
+// re-creating rows: listed characters are updated in place, and only
+// unlisted characters with no synced data are removed. Characters that
+// belong to another member are never touched.
+function writeProfileCharacters(db, memberId, characters) {
+  const listed = new Set(characters.map((character) => character.id));
+  const synced = syncedCharacterIds(db, memberId);
+  const existing = db
+    .prepare("SELECT id FROM characters WHERE member_id = ? ORDER BY sort_order, id")
+    .all(memberId)
+    .map((row) => row.id);
 
-  const insertCharacter = db.prepare(
+  const remove = db.prepare("DELETE FROM characters WHERE id = ? AND member_id = ?");
+  for (const id of existing) {
+    if (!listed.has(id) && !synced.has(id)) {
+      remove.run(id, memberId);
+    }
+  }
+
+  // One main per member: the listed main replaces the current one.
+  if (characters.length) {
+    db.prepare("UPDATE characters SET is_main = 0 WHERE member_id = ? AND is_main = 1").run(memberId);
+  }
+
+  const upsert = db.prepare(
     `
       INSERT INTO characters (
         id,
@@ -261,11 +319,20 @@ function writeProfile(db, memberId, profile) {
         is_main,
         sort_order
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        race = excluded.race,
+        class_name = excluded.class_name,
+        spec = excluded.spec,
+        professions_json = excluded.professions_json,
+        is_main = excluded.is_main,
+        sort_order = excluded.sort_order
+      WHERE characters.member_id = excluded.member_id
     `,
   );
 
-  normalized.characters.forEach((character, index) => {
-    insertCharacter.run(
+  characters.forEach((character, index) => {
+    upsert.run(
       character.id,
       memberId,
       character.name,
@@ -278,7 +345,25 @@ function writeProfile(db, memberId, profile) {
     );
   });
 
+  // Synced characters the profile left out follow the listed ones.
+  const place = db.prepare("UPDATE characters SET sort_order = ? WHERE id = ? AND member_id = ?");
+  let order = characters.length;
+  for (const id of existing) {
+    if (!listed.has(id) && synced.has(id)) {
+      place.run(order, id, memberId);
+      order += 1;
+    }
+  }
+}
+
+function writeProfile(db, memberId, profile, { characters = true } = {}) {
+  const normalized = normalizeMemberProfile(profile);
+  writeProfileFields(db, memberId, normalized);
+  if (characters) {
+    writeProfileCharacters(db, memberId, normalized.characters);
+  }
   return normalized;
+
 }
 
 function writeMemberRow(db, member) {
@@ -374,9 +459,8 @@ export function importMembersIntoDatabase(db, members, { importCharacters = true
       updatedAt: rawMember.updatedAt || now,
     };
 
-    if (!importCharacters) member.profile.characters = [];
     writeMemberRow(db, member);
-    writeProfile(db, member.id, member.profile);
+    writeProfile(db, member.id, member.profile, { characters: importCharacters });
     imported += 1;
   }
 
@@ -467,7 +551,7 @@ export async function updateDetectedTimezone(memberId, timezone) {
       timezoneSource: "detected",
     });
 
-    writeProfile(db, memberId, nextProfile);
+    writeProfile(db, memberId, nextProfile, { characters: false });
     db.prepare(
       `
         UPDATE members
