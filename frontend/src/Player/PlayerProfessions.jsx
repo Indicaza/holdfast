@@ -107,16 +107,26 @@ export default function PlayerProfessions({ server, onOpenCharacter }) {
   const { status, data } = useLiveResource(playerApiUrl('professions', server), { topics: PLAYER_TOPICS })
   const characters = (data?.characters || []).filter((character) => character.professions.length)
 
+  // The recipe search only means something once a profession has synced.
+  if (status === 'ready' && !characters.length) {
+    return (
+      <div className="gw-stack">
+        <Panel id="player-professions">
+          <EmptyState title="No professions synced yet." icon="craft">
+            Open a profession window in game, then <kbd>/reload</kbd>. Its skill and recipes appear here, and you can search which character can craft what.
+          </EmptyState>
+        </Panel>
+      </div>
+    )
+  }
+
   return (
     <div className="gw-stack">
       <CraftSearch server={server} onOpenCharacter={onOpenCharacter} />
 
-      <Panel id="player-professions" title="Your professions" description="Skill levels and known recipes from each character's latest snapshot.">
+      <Panel id="player-professions" title="Your professions">
         {status === 'loading' ? <SkeletonRows rows={4} label="Loading your professions" /> : null}
         {status === 'error' ? <ErrorState>Your professions could not be loaded.</ErrorState> : null}
-        {status === 'ready' && !characters.length ? (
-          <EmptyState title="No professions synced yet." icon="craft">Open a profession window in game, then <kbd>/reload</kbd> so Guildweaver can send it.</EmptyState>
-        ) : null}
         {characters.length ? (
           <div className="gw-prof-grid">
             {characters.map((character) => (

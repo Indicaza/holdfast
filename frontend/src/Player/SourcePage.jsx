@@ -10,7 +10,6 @@ import {
   formatRate,
   observationLabel,
   rankLabel,
-  sourceKindLabel,
 } from '../Intelligence/Farming/farmingModel.js'
 import '../Intelligence/Farming/FarmingIntelligence.css'
 import { rateScale } from './exploreModel.js'
@@ -28,8 +27,6 @@ function SourceHeader({ detail }) {
   const { source, summary } = detail
   const icon = detail.outputs[0]
   const zones = detail.facets?.zones || []
-  // Two builds can share a client version; show each version once.
-  const builds = [...new Map((summary.builds || []).map((build) => [build.version || build.build, build])).values()]
   return (
     <header className={`gw-source-head gw-source-head--${source.discipline}`}>
       <div className="gw-source-head__identity">
@@ -39,8 +36,6 @@ function SourceHeader({ detail }) {
         <div>
           <div className="gw-source-head__tags">
             <DisciplineTag discipline={source.discipline} />
-            {source.kind ? <span className="gw-tag">{sourceKindLabel(source.kind)}</span> : null}
-            {builds.map((build) => <span className="gw-tag gw-tag--quiet" key={build.version || build.build}>v{build.version || build.build}</span>)}
           </div>
           <h2>{source.name}</h2>
           <p className="gw-source-head__zones">
@@ -98,7 +93,7 @@ function FilterBar({ facets, filters, onChange }) {
       ) : null}
       {facets.builds.length > 1 || filters.build ? (
         <label className={`gw-filter${on('build')}`}>
-          <span>Build</span>
+          <span>Version</span>
           <select value={filters.build} onChange={set('build')}>
             <option value="">All</option>
             {facets.builds.map((build) => <option key={build.value} value={build.value}>{build.value} ({formatCount(build.observations)})</option>)}

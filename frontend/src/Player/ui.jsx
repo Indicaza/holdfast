@@ -2,6 +2,7 @@
 // panels and states. Styles live in PlayerApp.css under .gw.
 
 import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
+import { gameTooltipItem, itemTooltipPending } from '../Intelligence/gameTooltipModel.js'
 import { CONFIDENCE_LEVELS, confidenceLabel, disciplineLabel, formatRate, rateRangeText } from '../Intelligence/Farming/farmingModel.js'
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import Tip from './Tooltip.jsx'
@@ -45,6 +46,7 @@ const ICON_PATHS = {
   target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.5" /><path d="M12 2.5v3" /><path d="M12 18.5v3" /><path d="M2.5 12h3" /><path d="M18.5 12h3" /></>,
   copy: <><rect x="8.5" y="8.5" width="11" height="11" rx="2" /><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  edit: <><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></>,
   info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><path d="M12 7.6v.4" /></>,
 }
 
@@ -75,7 +77,8 @@ export function ItemLabel({ item, size = 22, tooltip = true, muted = false }) {
       <span className={`gw-item__name gw-q${quality}${muted ? ' gw-item__name--muted' : ''}`}>{item.name || 'Unknown item'}</span>
     </span>
   )
-  return tooltip ? <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover> : body
+  const detail = gameTooltipItem(item.item || item)
+  return tooltip && detail && !itemTooltipPending(detail) ? <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover> : body
 }
 
 const CONFIDENCE_HELP = {
@@ -139,6 +142,19 @@ export function Panel({ title, description, actions, children, className = '', i
       ) : null}
       {children}
     </Tag>
+  )
+}
+
+// A column header that sorts its table: click again to reverse.
+export function SortHeader({ column, sort, direction, onSort }) {
+  const active = sort === column.key
+  return (
+    <th scope="col" className={column.className} aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}>
+      <button type="button" className={`gw-th-sort${active ? ' is-active' : ''}`} onClick={() => onSort(column)}>
+        {column.label}
+        <Icon name={active ? (direction === 'asc' ? 'arrowUp' : 'arrowDown') : 'sort'} size={12} />
+      </button>
+    </th>
   )
 }
 

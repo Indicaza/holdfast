@@ -8,7 +8,7 @@ import { rateScale, sortSources, sourceHref } from './exploreModel.js'
 import { relativeTime } from './playerModel.js'
 import { atlasZone } from './Map/atlas.js'
 import SourcePage from './SourcePage.jsx'
-import { Confidence, DisciplineTag, EmptyState, ErrorState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Zone } from './ui.jsx'
+import { Confidence, DisciplineTag, EmptyState, ErrorState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, SortHeader, Tip, Zone } from './ui.jsx'
 
 const COLUMNS = [
   { key: 'name', label: 'Source', defaultDirection: 'asc' },
@@ -30,18 +30,6 @@ function readBrowserState(queryString) {
     sort,
     direction: params.get('dir') === 'asc' || params.get('dir') === 'desc' ? params.get('dir') : column.defaultDirection,
   }
-}
-
-function SortHeader({ column, sort, direction, onSort }) {
-  const active = sort === column.key
-  return (
-    <th scope="col" className={column.className} aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}>
-      <button type="button" className={`gw-th-sort${active ? ' is-active' : ''}`} onClick={() => onSort(column)}>
-        {column.label}
-        <Icon name={active ? (direction === 'asc' ? 'arrowUp' : 'arrowDown') : 'sort'} size={12} />
-      </button>
-    </th>
-  )
 }
 
 function NotableDrops({ source, max }) {
@@ -216,9 +204,8 @@ function SourcesBrowser({ queryString }) {
                       <td>
                         <a className="gw-source-cell" href={href}>
                           <ItemLabel item={{ ...source.icon, name: source.name }} size={32} tooltip={false} />
-                          <span className="gw-source-cell__meta">
-                            <DisciplineTag discipline={source.discipline} />
-                            <span className="gw-show-md"><Zone name={source.primaryZone} extra={Math.max(0, (source.zones || 0) - 1)} /></span>
+                          <span className="gw-source-cell__meta gw-show-md">
+                            <Zone name={source.primaryZone} extra={Math.max(0, (source.zones || 0) - 1)} />
                           </span>
                         </a>
                       </td>
@@ -228,7 +215,11 @@ function SourcesBrowser({ queryString }) {
                         <small className="gw-cell-sub">{observationLabel(source.discipline, source.observations)}</small>
                       </td>
                       <td className="gw-col-drops"><NotableDrops source={source} max={max} /></td>
-                      <td className="gw-col-num gw-hide-md gw-muted">{relativeTime(source.lastObservedAt)}</td>
+                      <td className="gw-col-num gw-hide-md gw-muted">
+                        <Tip label={source.lastObservedAt ? new Date(source.lastObservedAt).toLocaleString() : 'Never'}>
+                          <span>{relativeTime(source.lastObservedAt)}</span>
+                        </Tip>
+                      </td>
                     </tr>
                   )
                 })}

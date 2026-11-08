@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 
-import { formatCount, observationLabel, sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
+import { formatCount, sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import PlayerCharacterCard from './PlayerCharacterCard.jsx'
 import { bestPlacesToFarm, rateScale, sourceHref } from './exploreModel.js'
 import { dashboardHref, onServerKey, relativeTime, setupSteps, syncStatusCopy } from './playerModel.js'
-import { Confidence, DisciplineTag, EmptyState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Stat, Zone } from './ui.jsx'
+import { Confidence, EmptyState, Icon, ItemLabel, Panel, RateBar, SkeletonRows, Stat, Zone } from './ui.jsx'
 
 const COMMUNITY_TOPICS = ['farming']
 
@@ -144,11 +144,10 @@ export default function PlayerOverview({ data, server, onOpenCharacter }) {
     <div className="gw-stack">
       {hasCharacters ? <SyncCallout sync={sync} compact /> : <SetupChecklist sync={sync} />}
 
-      <section className="gw-stats" aria-label="Your summary">
-        <Stat label="Observations" icon="farming" value={community.status === 'ready' ? formatCount(totalObservations) : '—'} foot="Pooled from every player" />
-        <Stat label="Sources tracked" icon="pin" value={community.status === 'ready' ? formatCount(sources.length) : '—'} foot={`Across ${formatCount(zones.length)} zone${zones.length === 1 ? '' : 's'}`} />
+      <section className="gw-stats gw-stats--3" aria-label="Your summary">
         <Stat label="Your characters" icon="characters" value={characters.length} foot={server ? 'On this server' : `On ${data.servers?.length || 0} server${data.servers?.length === 1 ? '' : 's'}`} />
-        <Stat label="Last sync" icon="guildweaver" value={<span className="gw-stat__time">{relativeTime(lastSync)}</span>} foot={sync.connectedDevices ? `${sync.connectedDevices} device${sync.connectedDevices === 1 ? '' : 's'} connected` : 'No device connected'} />
+        <Stat label="Last upload" icon="guildweaver" value={<span className="gw-stat__time">{relativeTime(lastSync)}</span>} foot={sync.connectedDevices ? `${sync.connectedDevices} computer${sync.connectedDevices === 1 ? '' : 's'} connected` : 'No computer connected'} />
+        <Stat label="Community samples" icon="farming" value={community.status === 'ready' ? formatCount(totalObservations) : '—'} foot={community.status === 'ready' ? `${formatCount(sources.length)} sources in ${formatCount(zones.length)} zone${zones.length === 1 ? '' : 's'}` : ''} />
       </section>
 
       <div className="gw-grid gw-grid--main">
@@ -164,31 +163,12 @@ export default function PlayerOverview({ data, server, onOpenCharacter }) {
             {community.status === 'error' ? <p className="gw-muted gw-pad">Drop rates are unavailable right now.</p> : null}
             {community.status === 'ready' ? <BestPlaces sources={sources} /> : null}
           </Panel>
-          {community.status === 'ready' && sources.length ? (
-            <Panel
-              id="gw-top-sources"
-              title="Popular sources"
-              actions={<a className="gw-link" href={dashboardHref('farming', server)}>Browse all <Icon name="chevron" size={14} /></a>}
-            >
-              <ul className="gw-source-tiles">
-                {sources.slice(0, 6).map((source) => (
-                  <li key={source.sourceKey}>
-                    <a href={sourceHref(source.sourceKey)} className={`gw-source-tile gw-source-tile--${source.discipline}`}>
-                      <ItemLabel item={{ ...source.icon, name: source.name }} size={36} tooltip={false} />
-                      <span className="gw-source-tile__meta">
-                        <DisciplineTag discipline={source.discipline} />
-                        <Zone name={source.primaryZone} extra={Math.max(0, (source.zones || 0) - 1)} />
-                      </span>
-                      <span className="gw-source-tile__count">
-                        <strong>{formatCount(source.observations)}</strong>
-                        <small>{observationLabel(source.discipline, source.observations)}</small>
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          ) : null}
+
+          <Panel id="gw-zones" title="Where people farm">
+            {community.status === 'ready' && zones.length ? <TopZones zones={zones} /> : null}
+            {community.status === 'ready' && !zones.length ? <p className="gw-muted">No zones recorded yet.</p> : null}
+            {community.status === 'loading' ? <SkeletonRows rows={4} label="Loading zones" /> : null}
+          </Panel>
         </div>
 
         <div className="gw-stack">
@@ -199,15 +179,8 @@ export default function PlayerOverview({ data, server, onOpenCharacter }) {
           >
             <YourCharacters characters={characters} server={server} onOpenCharacter={onOpenCharacter} />
           </Panel>
-
-          <Panel id="gw-zones" title="Where people farm">
-            {community.status === 'ready' && zones.length ? <TopZones zones={zones} /> : null}
-            {community.status === 'ready' && !zones.length ? <p className="gw-muted">No zones recorded yet.</p> : null}
-            {community.status === 'loading' ? <SkeletonRows rows={4} label="Loading zones" /> : null}
-          </Panel>
         </div>
       </div>
-
     </div>
   )
 }

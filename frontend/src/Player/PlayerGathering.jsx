@@ -1,5 +1,6 @@
 import { disciplineLabel, formatCount } from '../Intelligence/Farming/farmingModel.js'
 import { farmingDuration, farmingRunLabel } from '../Intelligence/Farming/farmingSessionModel.js'
+import { classIdentity } from '../Intelligence/classIdentity.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { sourceHref } from './exploreModel.js'
 import { playerApiUrl, relativeTime } from './playerModel.js'
@@ -32,11 +33,10 @@ export default function PlayerGathering({ server }) {
 
   return (
     <div className="gw-stack">
-      <section className="gw-stats" aria-label="Your farming summary">
-        <Stat label="Gathers & loots" icon="gathering" value={formatCount(data.summary.observations)} foot="Recorded by your characters" />
-        <Stat label="Sources" icon="pin" value={formatCount(data.summary.sources)} foot="Nodes, pools and creatures" />
+      <section className="gw-stats gw-stats--3" aria-label="Your farming summary">
+        <Stat label="Gathers & loots" icon="gathering" value={formatCount(data.summary.observations)} foot={`From ${formatCount(data.summary.sources)} source${data.summary.sources === 1 ? '' : 's'}`} />
         <Stat label="Materials" icon="loot" value={formatCount(data.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0))} foot={`${data.items.length} different item${data.items.length === 1 ? '' : 's'}`} />
-        <Stat label="Last recorded" icon="bolt" value={<span className="gw-stat__time">{relativeTime(data.summary.lastObservedAt)}</span>} foot={data.disciplines.map((entry) => disciplineLabel(entry.discipline)).join(', ')} />
+        <Stat label="Last gathered" icon="bolt" value={<span className="gw-stat__time">{relativeTime(data.summary.lastObservedAt)}</span>} foot={data.disciplines.map((entry) => disciplineLabel(entry.discipline)).join(', ')} />
       </section>
 
       <div className="gw-grid gw-grid--2">
@@ -73,18 +73,35 @@ export default function PlayerGathering({ server }) {
           <table className="gw-table">
             <thead>
               <tr>
-                <th scope="col">Source</th>
-                <th scope="col" className="gw-hide-sm">Where</th>
                 <th scope="col">Got</th>
+                <th scope="col">From</th>
+                <th scope="col" className="gw-hide-sm">Character</th>
                 <th scope="col" className="gw-col-num">When</th>
               </tr>
             </thead>
             <tbody>
               {data.recent.map((entry) => (
                 <tr key={entry.id}>
-                  <td><strong>{entry.sourceName}</strong></td>
-                  <td className="gw-hide-sm"><Zone name={[entry.zone, entry.subzone].filter(Boolean).join(' · ')} /></td>
-                  <td>{entry.outputs.length ? entry.outputs.map((output) => `${output.quantity}× ${output.name}`).join(', ') : <span className="gw-muted">Nothing</span>}</td>
+                  <td>
+                    {entry.outputs.length ? (
+                      <ul className="gw-got">
+                        {entry.outputs.map((output) => (
+                          <li key={output.itemKey}><span className="gw-got__qty">{formatCount(output.quantity)}×</span><ItemLabel item={output} size={20} /></li>
+                        ))}
+                      </ul>
+                    ) : <span className="gw-muted">Nothing</span>}
+                  </td>
+                  <td>
+                    <a className="gw-row-link" href={sourceHref(entry.sourceKey)}>
+                      <strong>{entry.sourceName}</strong>
+                      <Zone name={[entry.zone, entry.subzone].filter(Boolean).join(' · ')} />
+                    </a>
+                  </td>
+                  <td className="gw-hide-sm">
+                    {entry.character
+                      ? <span className="gw-class-name" style={{ '--class-color': classIdentity(entry.character.className).color || 'var(--gw-text)' }}>{entry.character.name}</span>
+                      : <span className="gw-muted">—</span>}
+                  </td>
                   <td className="gw-col-num gw-muted">{relativeTime(entry.capturedAt)}</td>
                 </tr>
               ))}
@@ -122,7 +139,7 @@ export default function PlayerGathering({ server }) {
         </Panel>
       ) : null}
 
-      <p className="gw-footnote"><Icon name="sparkle" size={12} /> Only you can see this page. Community rates pool everyone’s observations anonymously.</p>
+      <p className="gw-footnote"><Icon name="info" size={12} /> Only you can see this page.</p>
     </div>
   )
 }

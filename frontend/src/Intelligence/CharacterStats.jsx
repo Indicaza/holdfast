@@ -195,7 +195,7 @@ export default function CharacterStats({ stats = {}, className = '', level = nul
   const unitLevel = number(level) || 60
 
   if (!hasGroup(attributes) && !hasGroup(offense) && !hasGroup(defense)) {
-    return <section className="talent-empty"><span aria-hidden="true">◆</span><h3>No character-sheet telemetry yet.</h3><p>Sync this character with the current Guildweaver addon to populate live stats.</p></section>
+    return <section className="talent-empty"><span aria-hidden="true">◆</span><h3>No stats synced yet.</h3><p>Open the character sheet in game, then <kbd>/reload</kbd>.</p></section>
   }
 
   // General

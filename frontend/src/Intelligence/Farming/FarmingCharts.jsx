@@ -67,7 +67,7 @@ function Gridlines({ maxRate }) {
     return (
       <g key={fraction} className="farm-line__grid">
         <line x1={PAD_X} x2={WIDTH - 8} y1={y} y2={y} />
-        <text x={PAD_X - 6} y={y + 3}>{formatRate(maxRate * fraction)}</text>
+        <text x={PAD_X - 6} y={y + 3}>{`${Number((maxRate * fraction * 100).toFixed(2))}%`}</text>
       </g>
     )
   })

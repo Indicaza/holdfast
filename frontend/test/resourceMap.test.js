@@ -6,6 +6,7 @@ import {
   HOME_VIEW,
   MAX_ZOOM,
   busiestSpots,
+  portraitHome,
   fitBounds,
   flightPath,
   formatCoords,
@@ -229,4 +230,13 @@ test('map art: a zone is cut to its explored land, gaps closed and edges feather
   assert.equal(fade[0], 0, 'the frame fades out')
   assert.equal(fade[70 * 200 + 100], 255, 'the middle stays')
   assert.ok(fade[12 * 200 + 12] < fade[12 * 200 + 100], 'corners fade further than edges')
+})
+
+test('a tall map starts filled top to bottom; a wide one keeps the whole world', () => {
+  assert.equal(portraitHome({ width: 1200, height: 800 }), null)
+  assert.equal(portraitHome({ width: 0, height: 0 }), null)
+  const phone = portraitHome({ width: 375, height: 700 }, 800)
+  assert.ok(phone.k > 2 && phone.k <= 3, `zoomed to fill the height (k ${phone.k})`)
+  assert.equal(phone.x, 800)
+  assert.equal(phone.y, WORLD.height / 2)
 })

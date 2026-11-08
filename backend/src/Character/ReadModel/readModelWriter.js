@@ -72,6 +72,7 @@ export function applySectionsInDatabase(db, { characterId, sections, capturedAt,
   `);
 
   const changed = [];
+  let touched = false;
   for (const entry of sections) {
     const existing = read.get(characterId, entry.section);
     if (existing && entry.weak) continue;
@@ -87,10 +88,17 @@ export function applySectionsInDatabase(db, { characterId, sections, capturedAt,
     }
     const json = JSON.stringify(payload ?? {});
     write.run(characterId, entry.section, capturedAt, receivedAt, text(source, 120), sourceRecordId, sourceRevision, json);
+    touched = true;
     if (!existing || existing.payload_json !== json) changed.push(entry.section);
   }
 
   if (changed.length) refreshCharacterDerivedInDatabase(db, characterId, changed);
+  // A newer capture with the same data changes nothing else, but the card's
+  // "last synced" must still move, or the list lags behind the armory.
+  else if (touched) {
+    db.prepare("UPDATE character_cards SET last_seen_at = ? WHERE character_id = ? AND last_seen_at < ?")
+      .run(capturedAt, characterId, capturedAt);
+  }
   return changed;
 }
 

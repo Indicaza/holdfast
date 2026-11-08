@@ -10,8 +10,8 @@ export const DASHBOARD_VIEWS = Object.freeze([
   { id: 'sync', group: 'you', label: 'Sync', description: 'Your devices and upload status', icon: 'guildweaver', path: '/dashboard/sync' },
 ])
 
-// The resource map lives in the navbar, not the dashboard's sidebar: on its
-// page the sidebar holds the map's legend instead.
+// The resource map is a section like the others; on its page the sidebar
+// holds the map's legend, with the sections as a row of icons above it.
 export const MAP_VIEW = Object.freeze({ id: 'map', group: 'explore', label: 'Resource map', description: 'Every herb, vein and pool on a zoomable map of Azeroth', icon: 'map', path: '/map', href: '/map' })
 
 export const DASHBOARD_GROUPS = Object.freeze([
@@ -133,7 +133,7 @@ export function syncStatusCopy(sync = {}) {
         ? 'Nothing new has arrived recently. Make sure Guildweaver is running, then /reload or log out in WoW to save fresh data.'
         : 'No computer is connected anymore, so nothing new can arrive. Connect Guildweaver again to keep syncing.', action: sync.connectedDevices ? { label: 'Check devices', href: '/dashboard/sync' } : { label: 'Download Guildweaver', href: '/download' } }
     case 'synced':
-      return { tone: 'ok', title: 'Syncing.', body: 'New data arrives after you /reload or log out in WoW.' }
+      return { tone: 'ok', title: `Connected. Last upload ${relativeTime(sync.lastUploadAt || sync.lastCharacterAt)}.`, body: 'New data arrives each time you /reload or log out in WoW.' }
     default:
       return { tone: 'info', title: 'Checking sync status…', body: '' }
   }
@@ -150,8 +150,9 @@ export function relativeTime(value, now = Date.now()) {
   if (delta < minute) return 'just now'
   if (delta < hour) return `${Math.floor(delta / minute)}m ago`
   if (delta < day) return `${Math.floor(delta / hour)}h ago`
-  if (delta < 30 * day) return `${Math.floor(delta / day)}d ago`
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(time))
+  if (delta < 60 * day) return `${Math.floor(delta / day)}d ago`
+  if (delta < 365 * day) return `${Math.floor(delta / (30 * day))}mo ago`
+  return `${Math.floor(delta / (365 * day))}y ago`
 }
 
 // Live topics that change the player's own data: their syncs, devices and

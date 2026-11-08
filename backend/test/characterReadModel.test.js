@@ -234,3 +234,16 @@ test("a device whose revision counter reset still updates the character", () =>
     assert.equal(reset.status, "created");
     assert.equal(readCharacterArmoryFromReadModel(CHARACTER_ID).equipment[0].name, "After Reset");
   }));
+
+test("a newer capture with the same data still moves the card's last synced time", () =>
+  withHttpApp(async () => {
+    ingestCharacterIdentity({ deviceId: DEVICE, memberId: memberIds.member, characterId: RAW_ID });
+    stats(900, 1791320000);
+    // The same stats again, an hour later: nothing changed but the time.
+    stats(900, 1791323600, { revision: 2 });
+
+    const later = new Date(1791323600 * 1000).toISOString();
+    assert.equal(readCharacterArmoryFromReadModel(CHARACTER_ID).character.lastSeenAt, later);
+    const stored = withGuildDatabase((db) => db.prepare("SELECT last_seen_at FROM character_cards WHERE character_id = ?").get(CHARACTER_ID));
+    assert.equal(stored.last_seen_at, later, "the card agrees with the armory");
+  }));

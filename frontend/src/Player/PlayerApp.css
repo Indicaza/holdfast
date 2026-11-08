@@ -66,10 +66,7 @@
   display: grid;
   grid-template-columns: var(--gw-side-width) minmax(0, 1fr);
   min-height: 100svh;
-  background:
-    radial-gradient(1200px 500px at 85% -10%, rgba(233, 196, 106, 0.05), transparent 60%),
-    radial-gradient(900px 600px at -10% 110%, rgba(92, 184, 234, 0.04), transparent 60%),
-    var(--gw-bg);
+  background: var(--gw-bg);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -121,8 +118,10 @@
   gap: 0.55rem;
   min-width: 0;
   color: var(--gw-text);
-  font-family: var(--font-display, Georgia, serif);
+  font-family: var(--gw-font);
   font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 .gw-brand:hover {
@@ -492,12 +491,13 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  width: min(22rem, 32vw);
+  width: auto;
+  min-width: 9.5rem;
   height: 2.1rem;
   padding: 0 0.4rem 0 0.7rem;
   border: 1px solid var(--gw-line-2);
   border-radius: 8px;
-  background: var(--gw-panel);
+  background: transparent;
   color: var(--gw-faint);
   font-size: 13px;
   text-align: left;
@@ -941,10 +941,14 @@
   background: var(--gw-line);
 }
 
+.gw-stats.gw-stats--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .gw-stat {
   display: grid;
-  gap: 0.2rem;
-  padding: 1rem 1.15rem;
+  gap: 0.15rem;
+  padding: 0.8rem 1.1rem;
   background: var(--gw-panel);
 }
 
@@ -963,7 +967,7 @@
 
 .gw-stat__value {
   color: var(--gw-text);
-  font-size: 1.75rem;
+  font-size: 1.45rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -971,7 +975,7 @@
 }
 
 .gw-stat__time {
-  font-size: 1.35rem;
+  font-size: inherit;
 }
 
 .gw-stat__foot {
@@ -980,6 +984,13 @@
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* An item with no icon yet: the game's red question mark, made quiet. */
+.gw .wow-icon img[data-missing-icon],
+.gw-palette-layer .wow-icon img[data-missing-icon] {
+  opacity: 0.45;
+  filter: grayscale(1);
 }
 
 /* ---------------------------------------------------------------- Tables */
@@ -1710,67 +1721,32 @@
   background: linear-gradient(90deg, rgba(92, 184, 234, 0.5), var(--gw-fishing));
 }
 
-.gw-source-tiles {
+/* What one gather yielded: quantity, then the item. */
+.gw-got {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 0.75rem;
+  gap: 0.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.gw-source-tile {
-  --c: var(--gw-loot);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.6rem 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--gw-line);
-  border-radius: 10px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 7%, transparent), transparent 60%), var(--gw-bg-2);
-  transition: border-color 120ms ease, transform 120ms ease;
-}
-
-.gw-source-tile:hover {
-  border-color: color-mix(in srgb, var(--c) 45%, transparent);
-  transform: translateY(-1px);
-}
-
-.gw-source-tile .gw-item__name {
-  color: var(--gw-text);
-  font-size: 14.5px;
-}
-
-.gw-source-tile__meta {
+.gw-got li {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  gap: 0.4rem;
 }
 
-.gw-source-tile__count {
-  display: grid;
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-content: center;
+.gw-got__qty {
+  min-width: 1.6rem;
+  color: var(--gw-dim);
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-.gw-source-tile__count strong {
-  color: var(--gw-text);
-  font-size: 1.1rem;
-  font-variant-numeric: tabular-nums;
+.gw-class-name {
+  color: var(--class-color);
+  font-weight: 600;
 }
-
-.gw-source-tile__count small {
-  color: var(--gw-faint);
-  font-size: 11.5px;
-}
-
-.gw-source-tile--herbalism { --c: var(--gw-herbalism); }
-.gw-source-tile--mining { --c: var(--gw-mining); }
-.gw-source-tile--fishing { --c: var(--gw-fishing); }
-.gw-source-tile--skinning { --c: var(--gw-skinning); }
 
 /* Setup checklist */
 .gw-setup {
@@ -1995,6 +1971,55 @@
 
 .gw-char--compact .gw-char__seen {
   align-self: center;
+}
+
+/* The characters table: one row each, class-coloured name. */
+.gw-table--chars td {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.gw-char-row__name {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.gw-char-row__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--class-color) 45%, transparent);
+  border-radius: 7px;
+  color: var(--class-color);
+}
+
+.gw-char-row__name strong {
+  color: var(--class-color);
+  font-weight: 600;
+}
+
+.gw-char-row__name:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gw-char-row__main {
+  color: var(--gw-accent);
+  font-size: 12px;
+}
+
+.gw-char-row__class {
+  color: var(--gw-dim);
+}
+
+.gw-table--chars .gw-char__seen {
+  font-size: 12.5px;
 }
 
 /* ---------------------------------------------------------------- Source page */
@@ -2398,62 +2423,112 @@
 
 /* ---------------------------------------------------------------- Sync */
 
-.gw-devices {
-  display: grid;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.gw-device {
-  display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr) auto;
+.gw-devices .gw-device__name {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem 1.5rem;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid var(--gw-line);
-  border-radius: 10px;
-  background: var(--gw-bg-2);
+  gap: 0.35rem;
 }
 
-.gw-device.is-off {
-  opacity: 0.6;
-}
-
-.gw-device__name {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.gw-device__name strong {
+.gw-devices .gw-device__name strong {
   color: var(--gw-text);
-}
-
-.gw-device dl {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin: 0;
-}
-
-.gw-device dt {
-  color: var(--gw-faint);
-  font-size: 12px;
   font-weight: 600;
 }
 
-.gw-device dd {
-  margin: 0;
-  color: var(--gw-text);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+.gw-device__rename {
+  opacity: 0;
+  transition: opacity 120ms ease;
 }
 
-.gw-device > p {
-  margin: 0;
+.gw-device:hover .gw-device__rename,
+.gw-device__rename:focus-visible {
+  opacity: 1;
+}
+
+.gw-device.is-off > td {
+  color: var(--gw-faint);
+}
+
+.gw-device.is-off .gw-device__name strong {
+  color: var(--gw-dim);
+}
+
+.gw-device__actions {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.gw-rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gw-rename__input {
+  width: 14rem;
+  max-width: 100%;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--gw-accent-line);
+  border-radius: 8px;
+  outline: none;
+  background: var(--gw-bg-2);
+  color: var(--gw-text);
+  font: inherit;
+  font-size: 13.5px;
+  box-shadow: 0 0 0 3px rgba(233, 196, 106, 0.14);
+}
+
+.gw-rename__error {
+  color: var(--gw-warn);
   font-size: 12.5px;
+}
+
+/* Help that is only needed when something is wrong stays folded. */
+.gw-disclosure {
+  border: 1px solid var(--gw-line);
+  border-radius: var(--gw-radius);
+  background: var(--gw-panel);
+}
+
+.gw-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.8rem 1.1rem;
+  color: var(--gw-dim);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.gw-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gw-disclosure > summary::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 120ms ease;
+}
+
+.gw-disclosure[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.gw-disclosure > summary:hover {
+  color: var(--gw-text);
+}
+
+.gw-disclosure > .gw-help {
+  padding: 0 1.1rem 1rem;
 }
 
 .gw-help {
@@ -2683,14 +2758,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .gw-device {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .gw-device dl {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
 }
 
 @media (max-width: 860px) {
@@ -2769,6 +2836,7 @@
 
   .gw-search-trigger {
     width: 2.5rem;
+    min-width: 0;
     padding: 0;
     justify-content: center;
   }
@@ -2877,9 +2945,6 @@
     padding: 1.1rem;
   }
 
-  .gw-device dl {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 
   .gw-bars li {
     grid-template-columns: minmax(0, 1fr) 3.5rem;
@@ -2938,6 +3003,88 @@
 
   .gw-table--sources .gw-source-cell .gw-item {
     flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .gw-devices thead {
+    display: none;
+  }
+
+  .gw-devices,
+  .gw-devices tbody {
+    display: block;
+  }
+
+  .gw-devices tr.gw-device {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--gw-line);
+  }
+
+  .gw-devices tr.gw-device:last-child {
+    border-bottom: 0;
+  }
+
+  .gw-devices tr.gw-device > td,
+  .gw-devices tr.gw-device > td.gw-col-num {
+    padding: 0;
+    border: 0;
+    text-align: left !important;
+  }
+
+  .gw-devices .gw-device__cell-name {
+    grid-column: 1;
+  }
+
+  .gw-devices .gw-device__cell-status {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .gw-devices td[data-label] {
+    grid-column: 1;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 13px;
+  }
+
+  .gw-devices td[data-label]::before {
+    content: attr(data-label);
+    min-width: 6.5rem;
+    color: var(--gw-faint);
+  }
+
+  .gw-devices .gw-device__actions {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    align-self: end;
+    width: auto;
+  }
+
+  .gw-device__rename {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .gw-stats.gw-stats--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gw-stats--3 .gw-stat {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .gw-stats--3 .gw-stat__value {
+    font-size: 1.15rem;
+  }
+
+  .gw-stats--3 .gw-stat__foot {
+    white-space: normal;
   }
 }
 

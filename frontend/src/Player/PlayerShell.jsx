@@ -13,7 +13,7 @@ function SearchTrigger({ onOpen }) {
   return (
     <button type="button" className="gw-search-trigger" onClick={onOpen} aria-label="Search drops, sources and characters" aria-keyshortcuts="Meta+K Control+K /">
       <Icon name="search" size={15} />
-      <span>Search drops, nodes, pools…</span>
+      <span>Search</span>
       <kbd>{isMac() ? '⌘' : 'Ctrl'} K</kbd>
     </button>
   )

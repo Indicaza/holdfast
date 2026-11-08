@@ -196,6 +196,15 @@ export function arcPath(start, end, { radius = 44, inner = 30, center = 50 } = {
 
 // --- Rate line ---------------------------------------------------------------
 
+// The chart's top: the highest rate plus headroom, rounded up to a round
+// number so its gridlines read 2% and 4%, not 1.89% and 3.78%.
+export function niceRateMax(rates) {
+  const top = Math.max(...rates.map((rate) => Number(rate) || 0), 0.0001) * 1.1
+  const magnitude = 10 ** Math.floor(Math.log10(top))
+  const step = [1, 2, 2.5, 4, 5, 10].find((candidate) => candidate * magnitude >= top - 1e-12)
+  return Number((step * magnitude).toPrecision(6))
+}
+
 // Points for the drop-rate-by-skill chart. Buckets without a skill reading
 // stay in the table but are not plotted.
 export function rateLinePoints(rows = [], { width = 320, height = 120, padX = 16, padY = 14 } = {}) {
@@ -203,7 +212,7 @@ export function rateLinePoints(rows = [], { width = 320, height = 120, padX = 16
   if (!plotted.length) return { points: [], maxRate: 0 }
   // Scaled to the rates, with headroom; likely ranges are clipped to the plot,
   // so one thin bucket's wide range cannot flatten the others.
-  const maxRate = Math.max(...plotted.map((row) => Number(row.rate) || 0), 0.0001) * 1.25
+  const maxRate = niceRateMax(plotted.map((row) => row.rate))
   const step = plotted.length > 1 ? (width - padX * 2) / (plotted.length - 1) : 0
   const y = (rate) => Number((height - padY - (Math.min(rate, maxRate) / maxRate) * (height - padY * 2)).toFixed(2))
   return {
@@ -225,7 +234,7 @@ export function rateLinePoints(rows = [], { width = 320, height = 120, padX = 16
 export function rateBars(rows = [], { width = 320, height = 150, padX = 34, padY = 14, gap = 10 } = {}) {
   const plotted = rows.filter((row) => row.rank !== 'unknown' && row.observations > 0)
   if (!plotted.length) return { bars: [], maxRate: 0 }
-  const maxRate = Math.max(...plotted.map((row) => Number(row.rate) || 0), 0.0001) * 1.25
+  const maxRate = niceRateMax(plotted.map((row) => row.rate))
   const slot = (width - padX - 8) / plotted.length
   const barWidth = Math.max(4, Math.min(28, slot - gap))
   const baseline = height - padY

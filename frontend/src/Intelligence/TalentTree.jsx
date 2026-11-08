@@ -178,8 +178,8 @@ export default function TalentTree({ talents, className, level }) {
     return (
       <section className="talent-empty">
         <span aria-hidden="true">✦</span>
-        <h3>No talent telemetry yet.</h3>
-        <p>Guildweaver will fill this tree as soon as the addon submits talent nodes.</p>
+        <h3>No talents synced yet.</h3>
+        <p>Open the talent window in game, then <kbd>/reload</kbd>.</p>
       </section>
     )
   }
