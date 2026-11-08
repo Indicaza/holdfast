@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { disciplineLabel, formatCount, observationLabel, sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
+import { formatCount, observationLabel, sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import PlayerCharacterCard from './PlayerCharacterCard.jsx'
 import { bestPlacesToFarm, rateScale, sourceHref } from './exploreModel.js'
@@ -32,9 +32,9 @@ function SetupChecklist({ sync }) {
     <Panel
       className="gw-setup"
       id="player-setup"
-      eyebrow={`Get started · ${done} of ${steps.length}`}
       title="Three steps to your first sync."
       description="Guildweaver runs beside WoW on your computer. It installs the addon and uploads what the addon saves. Community drop rates below work without it."
+      actions={<span className="gw-tag">{done} of {steps.length} done</span>}
     >
       <ol className="gw-setup__steps">
         {steps.map((step, index) => (
@@ -52,34 +52,6 @@ function SetupChecklist({ sync }) {
       </ol>
       <SyncCallout sync={sync} />
     </Panel>
-  )
-}
-
-function SearchHero({ onOpenSearch, disciplines }) {
-  return (
-    <section className="gw-hero" aria-labelledby="gw-hero-title">
-      <div className="gw-hero__copy">
-        <span className="gw-eyebrow">Community drop rates</span>
-        <h2 id="gw-hero-title">What are you farming today?</h2>
-        <p>Real drop rates from every Guildweaver player: what each herb, vein, pool and creature gives, how often, and where.</p>
-      </div>
-      <button type="button" className="gw-hero__search" onClick={onOpenSearch}>
-        <Icon name="search" size={20} />
-        <span>Try “Frilled Lichen”, “Copper Vein” or “Swiftthistle”</span>
-        <kbd>/</kbd>
-      </button>
-      {disciplines.length ? (
-        <div className="gw-hero__chips" aria-label="Browse by profession">
-          {disciplines.map((entry) => (
-            <a key={entry.discipline} className={`gw-chip gw-chip--${entry.discipline}`} href={`${dashboardHref('farming')}?discipline=${encodeURIComponent(entry.discipline)}`}>
-              <DisciplineTag discipline={entry.discipline} compact />
-              {disciplineLabel(entry.discipline)}
-              <small>{formatCount(entry.sources)}</small>
-            </a>
-          ))}
-        </div>
-      ) : null}
-    </section>
   )
 }
 
@@ -157,7 +129,7 @@ function YourCharacters({ characters, server, onOpenCharacter }) {
   )
 }
 
-export default function PlayerOverview({ data, server, onOpenCharacter, onOpenSearch }) {
+export default function PlayerOverview({ data, server, onOpenCharacter }) {
   const community = useLiveResource(sourcesUrl({}), { topics: COMMUNITY_TOPICS })
   const characters = useMemo(() => (data.characters || []).filter((character) => onServerKey(character, server)), [data.characters, server])
   const sync = data.sync || {}
@@ -172,10 +144,8 @@ export default function PlayerOverview({ data, server, onOpenCharacter, onOpenSe
     <div className="gw-stack">
       {hasCharacters ? <SyncCallout sync={sync} compact /> : <SetupChecklist sync={sync} />}
 
-      <SearchHero onOpenSearch={onOpenSearch} disciplines={disciplines} />
-
       <section className="gw-stats" aria-label="Your summary">
-        <Stat label="Observations" icon="farming" value={community.status === 'ready' ? formatCount(totalObservations) : '—'} foot="Gathers, catches and loots pooled" />
+        <Stat label="Observations" icon="farming" value={community.status === 'ready' ? formatCount(totalObservations) : '—'} foot="Pooled from every player" />
         <Stat label="Sources tracked" icon="pin" value={community.status === 'ready' ? formatCount(sources.length) : '—'} foot={`Across ${formatCount(zones.length)} zone${zones.length === 1 ? '' : 's'}`} />
         <Stat label="Your characters" icon="characters" value={characters.length} foot={server ? 'On this server' : `On ${data.servers?.length || 0} server${data.servers?.length === 1 ? '' : 's'}`} />
         <Stat label="Last sync" icon="guildweaver" value={<span className="gw-stat__time">{relativeTime(lastSync)}</span>} foot={sync.connectedDevices ? `${sync.connectedDevices} device${sync.connectedDevices === 1 ? '' : 's'} connected` : 'No device connected'} />
@@ -185,9 +155,8 @@ export default function PlayerOverview({ data, server, onOpenCharacter, onOpenSe
         <div className="gw-stack">
           <Panel
             id="gw-best"
-            eyebrow="Where to find it"
             title="Best places to farm"
-            description="Each notable drop and the source that gives it most often. Thin samples never outrank solid ones."
+            description="Each notable drop and the source that gives it most often."
             actions={<a className="gw-link" href={dashboardHref('farming', server)}>All drop rates <Icon name="chevron" size={14} /></a>}
             flush
           >
@@ -198,7 +167,6 @@ export default function PlayerOverview({ data, server, onOpenCharacter, onOpenSe
           {community.status === 'ready' && sources.length ? (
             <Panel
               id="gw-top-sources"
-              eyebrow="Most observed"
               title="Popular sources"
               actions={<a className="gw-link" href={dashboardHref('farming', server)}>Browse all <Icon name="chevron" size={14} /></a>}
             >
@@ -226,14 +194,13 @@ export default function PlayerOverview({ data, server, onOpenCharacter, onOpenSe
         <div className="gw-stack">
           <Panel
             id="gw-your-characters"
-            eyebrow="Recently synced"
             title="Your characters"
             actions={hasCharacters ? <a className="gw-link" href={dashboardHref('characters', server)}>All characters <Icon name="chevron" size={14} /></a> : null}
           >
             <YourCharacters characters={characters} server={server} onOpenCharacter={onOpenCharacter} />
           </Panel>
 
-          <Panel id="gw-zones" eyebrow="Busiest zones" title="Where people farm">
+          <Panel id="gw-zones" title="Where people farm">
             {community.status === 'ready' && zones.length ? <TopZones zones={zones} /> : null}
             {community.status === 'ready' && !zones.length ? <p className="gw-muted">No zones recorded yet.</p> : null}
             {community.status === 'loading' ? <SkeletonRows rows={4} label="Loading zones" /> : null}

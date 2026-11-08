@@ -53,7 +53,6 @@ function CraftSearch({ server, onOpenCharacter }) {
   return (
     <Panel
       id="gw-craft"
-      eyebrow="Crafting"
       title="Which of your characters can make it?"
       description="Search your characters' known recipes by recipe or item name, or item ID."
     >
@@ -112,7 +111,7 @@ export default function PlayerProfessions({ server, onOpenCharacter }) {
     <div className="gw-stack">
       <CraftSearch server={server} onOpenCharacter={onOpenCharacter} />
 
-      <Panel id="player-professions" eyebrow="Skills" title="Your professions" description="Skill levels and known recipes from each character's latest snapshot.">
+      <Panel id="player-professions" title="Your professions" description="Skill levels and known recipes from each character's latest snapshot.">
         {status === 'loading' ? <SkeletonRows rows={4} label="Loading your professions" /> : null}
         {status === 'error' ? <ErrorState>Your professions could not be loaded.</ErrorState> : null}
         {status === 'ready' && !characters.length ? (

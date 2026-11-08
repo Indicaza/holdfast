@@ -118,7 +118,6 @@ function DropTable({ detail, onSelect }) {
   return (
     <Panel
       id="gw-drops"
-      eyebrow="Drop table"
       title="What it drops"
       description={`${formatCount(items)} items from ${formatCount(detail.summary.observations)} ${noun}. Select a drop to see what changes its chance.`}
       flush
@@ -198,7 +197,6 @@ function Breakdown({ detail }) {
   return (
     <Panel
       id="gw-breakdown"
-      eyebrow="What changes the chance"
       title={<span className="gw-breakdown-title"><ItemLabel item={item} size={24} /> <span>{formatRate(item.rate)} overall</span></span>}
       description="Observed outcomes, not proven effects. Groups also differ in zone and level; filter to compare like with like."
     >
@@ -233,7 +231,6 @@ function SourceMap({ detail, sourceKey }) {
   return (
     <Panel
       id="gw-source-map"
-      eyebrow="Where to look"
       title="Resource map"
       description={`Every spot where players gathered ${detail.source?.name || 'this source'}. Coordinates match the in-game map; the numbered spots are the busiest in the zone you're viewing.`}
       flush

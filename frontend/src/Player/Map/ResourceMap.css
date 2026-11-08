@@ -654,10 +654,8 @@
   gap: 0.45rem;
   padding: 0.35rem 0.45rem;
   color: var(--gw-dim);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -794,10 +792,8 @@
   margin: 0 0 0.35rem;
   padding: 0 0.45rem;
   color: var(--gw-accent-2);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .gw-rmap__spots button {
@@ -1238,10 +1234,8 @@
 .gw-rmap__modal-section h4 {
   margin: 0;
   color: var(--gw-dim);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
 }
 
 .gw-rmap__modal-section h4 {

@@ -13,7 +13,7 @@ import '../../Intelligence/Farming/FarmingIntelligence.css'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import { rateScale } from '../exploreModel.js'
 import { relativeTime } from '../playerModel.js'
-import { Confidence, DisciplineTag, Icon, ItemLabel, RateBar } from '../ui.jsx'
+import { Confidence, DisciplineTag, Icon, ItemLabel, RateBar, Tip } from '../ui.jsx'
 import { useSourceDetail } from '../useSourceDetail.js'
 import { formatCoords, sourceSpots, sourceZones, wayCommand } from './mapModel.js'
 
@@ -38,16 +38,17 @@ function CopyWay({ zone, x, y, copied, onCopy, compact = false }) {
   const command = wayCommand(zone, x, y)
   const done = copied === command
   return (
-    <button
-      type="button"
-      className={`gw-rmap__copy${done ? ' is-done' : ''}${compact ? ' gw-rmap__copy--compact' : ''}`}
-      onClick={() => onCopy(command)}
-      title={`Copy “${command}” for TomTom`}
-      aria-label={done ? 'Waypoint copied' : `Copy waypoint ${command}`}
-    >
-      <Icon name={done ? 'check' : 'copy'} size={13} />
-      {compact ? null : <span>{done ? 'Copied' : 'Copy waypoint'}</span>}
-    </button>
+    <Tip label={done ? 'Copied: paste it in game chat' : `Copy ${command} for TomTom`}>
+      <button
+        type="button"
+        className={`gw-rmap__copy${done ? ' is-done' : ''}${compact ? ' gw-rmap__copy--compact' : ''}`}
+        onClick={() => onCopy(command)}
+        aria-label={done ? 'Waypoint copied' : `Copy waypoint ${command}`}
+      >
+        <Icon name={done ? 'check' : 'copy'} size={13} />
+        {compact ? null : <span>{done ? 'Copied' : 'Copy waypoint'}</span>}
+      </button>
+    </Tip>
   )
 }
 
@@ -243,12 +244,14 @@ export default function ResourceDetails({
               <ul className="gw-rmap__modal-zones">
                 {zones.map((entry) => (
                   <li key={entry.zone.mapId}>
-                    <button type="button" onClick={() => onFlyToZone(entry.zone)} title={`Show ${entry.zone.name} on the map`}>
-                      <span className="gw-rmap__modal-zone-name">{entry.zone.name}</span>
-                      <span className="gw-rmap__modal-bar" aria-hidden="true"><i style={{ width: `${Math.max(4, (entry.observations / topZone) * 100)}%` }} /></span>
-                      <small>{formatCount(entry.observations)}</small>
-                      <Icon name="target" size={14} />
-                    </button>
+                    <Tip label={`Show ${entry.zone.name} on the map`}>
+                      <button type="button" onClick={() => onFlyToZone(entry.zone)}>
+                        <span className="gw-rmap__modal-zone-name">{entry.zone.name}</span>
+                        <span className="gw-rmap__modal-bar" aria-hidden="true"><i style={{ width: `${Math.max(4, (entry.observations / topZone) * 100)}%` }} /></span>
+                        <small>{formatCount(entry.observations)}</small>
+                        <Icon name="target" size={14} />
+                      </button>
+                    </Tip>
                   </li>
                 ))}
               </ul>
@@ -260,12 +263,14 @@ export default function ResourceDetails({
                 <ol className="gw-rmap__modal-spots">
                   {spots.map((entry, index) => (
                     <li key={`${entry.mapId}-${index}`}>
-                      <button type="button" className="gw-rmap__modal-spot-go" onClick={() => onFlyToSpot(entry)} title="Show this spot on the map">
-                        <span className="gw-rmap__spot-rank">{index + 1}</span>
-                        <span className="gw-rmap__modal-zone-name">{entry.zone.name}</span>
-                        <code>{formatCoords(entry.x, entry.y)}</code>
-                        <small>{formatCount(entry.observations)}</small>
-                      </button>
+                      <Tip label="Show this spot on the map">
+                        <button type="button" className="gw-rmap__modal-spot-go" onClick={() => onFlyToSpot(entry)}>
+                          <span className="gw-rmap__spot-rank">{index + 1}</span>
+                          <span className="gw-rmap__modal-zone-name">{entry.zone.name}</span>
+                          <code>{formatCoords(entry.x, entry.y)}</code>
+                          <small>{formatCount(entry.observations)}</small>
+                        </button>
+                      </Tip>
                       <CopyWay zone={entry.zone} x={entry.x} y={entry.y} copied={copied} onCopy={copy} compact />
                     </li>
                   ))}

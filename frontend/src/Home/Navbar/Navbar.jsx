@@ -37,7 +37,7 @@ function GuildBrand({ slug, guild }) {
   )
 }
 
-function PlatformBrand() {
+export function PlatformBrand() {
   return (
     <a className="navbar__brand navbar__brand--platform" href="/" aria-label="Guildweaver home">
       <svg className="navbar__weave" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
@@ -79,7 +79,7 @@ function useDismiss(open, setOpen, { containerRef, buttonRef }) {
 
 // The signed-in player's avatar and menu (a menu button: arrow keys, Home and
 // End move between items; Escape and Tab close it).
-function AccountMenu({ user, links, pathname, onSignOut }) {
+export function AccountMenu({ user, links, pathname, onSignOut }) {
   const [open, setOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState('')

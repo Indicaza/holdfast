@@ -4,6 +4,9 @@
 import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
 import { CONFIDENCE_LEVELS, confidenceLabel, disciplineLabel, formatRate, rateRangeText } from '../Intelligence/Farming/farmingModel.js'
 import WowIcon from '../WowAssets/WowIcon.jsx'
+import Tip from './Tooltip.jsx'
+
+export { Tip }
 
 const ICON_PATHS = {
   overview: <><path d="M4 11.5 12 5l8 6.5" /><path d="M6 10v9h12v-9" /><path d="M10 19v-5h4v5" /></>,
@@ -75,6 +78,13 @@ export function ItemLabel({ item, size = 22, tooltip = true, muted = false }) {
   return tooltip ? <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover> : body
 }
 
+const CONFIDENCE_HELP = {
+  very_high: 'Very high confidence: thousands of samples, the rate will hardly move',
+  high: 'High confidence: enough samples to trust the rate',
+  medium: 'Medium confidence: the rate may still shift a little',
+  low: 'Low sample: too few attempts to trust this rate yet',
+}
+
 // Four rising bars, lit to the confidence of a rate. Only a low sample says
 // so in words, because that is the reading that changes the conclusion.
 export function Confidence({ confidence, showLabel = false }) {
@@ -82,12 +92,14 @@ export function Confidence({ confidence, showLabel = false }) {
   const label = `${confidenceLabel(confidence)} confidence`
   const low = !confidence || confidence === 'low'
   return (
-    <span className={`gw-conf gw-conf--${confidence || 'low'}`} role="img" aria-label={label} title={label}>
-      <span className="gw-conf__bars" aria-hidden="true">
-        {CONFIDENCE_LEVELS.map((name, index) => <i key={name} className={index < level ? 'is-lit' : undefined} />)}
+    <Tip label={CONFIDENCE_HELP[confidence] || CONFIDENCE_HELP.low}>
+      <span className={`gw-conf gw-conf--${confidence || 'low'}`} role="img" aria-label={label}>
+        <span className="gw-conf__bars" aria-hidden="true">
+          {CONFIDENCE_LEVELS.map((name, index) => <i key={name} className={index < level ? 'is-lit' : undefined} />)}
+        </span>
+        {showLabel || low ? <span className="gw-conf__label" aria-hidden="true">{low ? 'Low sample' : confidenceLabel(confidence)}</span> : null}
       </span>
-      {showLabel || low ? <span className="gw-conf__label" aria-hidden="true">{low ? 'Low sample' : confidenceLabel(confidence)}</span> : null}
-    </span>
+    </Tip>
   )
 }
 
@@ -100,24 +112,25 @@ export function RateBar({ entry, max = 1, compact = false }) {
   const pct = (value) => `${(Math.sqrt(Math.min(1, Math.max(0, (Number(value) || 0) / scale))) * 100).toFixed(2)}%`
   const hasRange = Number.isFinite(Number(entry.low)) && Number.isFinite(Number(entry.high))
   return (
-    <span className={`gw-rate gw-rate--${entry.confidence || 'low'}${compact ? ' gw-rate--compact' : ''}`} title={rateRangeText(entry)}>
-      <span className="gw-rate__value">{formatRate(entry.rate)}</span>
-      <span className="gw-rate__track" aria-hidden="true">
-        {hasRange ? <span className="gw-rate__range" style={{ left: pct(entry.low), width: `calc(${pct(entry.high)} - ${pct(entry.low)})` }} /> : null}
-        <span className="gw-rate__fill" style={{ width: pct(entry.rate) }} />
+    <Tip label={rateRangeText(entry)}>
+      <span className={`gw-rate gw-rate--${entry.confidence || 'low'}${compact ? ' gw-rate--compact' : ''}`}>
+        <span className="gw-rate__value">{formatRate(entry.rate)}</span>
+        <span className="gw-rate__track" aria-hidden="true">
+          {hasRange ? <span className="gw-rate__range" style={{ left: pct(entry.low), width: `calc(${pct(entry.high)} - ${pct(entry.low)})` }} /> : null}
+          <span className="gw-rate__fill" style={{ width: pct(entry.rate) }} />
+        </span>
       </span>
-    </span>
+    </Tip>
   )
 }
 
-export function Panel({ title, eyebrow, description, actions, children, className = '', id, flush = false, as: Tag = 'section', ...rest }) {
+export function Panel({ title, description, actions, children, className = '', id, flush = false, as: Tag = 'section', ...rest }) {
   const headingId = id ? `${id}-title` : undefined
   return (
     <Tag className={`gw-panel${flush ? ' gw-panel--flush' : ''}${className ? ` ${className}` : ''}`} aria-labelledby={title ? headingId : undefined} id={id} {...rest}>
       {title ? (
         <header className="gw-panel__head">
           <div>
-            {eyebrow ? <span className="gw-eyebrow">{eyebrow}</span> : null}
             <h2 id={headingId}>{title}</h2>
             {description ? <p>{description}</p> : null}
           </div>
@@ -170,10 +183,12 @@ export function ErrorState({ children, onRetry }) {
 export function Zone({ name, extra = 0 }) {
   const label = String(name || '').trim()
   return (
-    <span className={`gw-zone${label ? '' : ' gw-zone--unknown'}`} title={extra ? `${label || 'Zone unknown'} and ${extra} more zone${extra === 1 ? '' : 's'}` : undefined}>
-      <Icon name="pin" size={13} />
-      <span>{label || 'Zone unknown'}</span>
-      {extra ? <em>+{extra}</em> : null}
-    </span>
+    <Tip label={extra ? `Mostly ${label || 'in an unknown zone'}, and in ${extra} more zone${extra === 1 ? '' : 's'}` : null}>
+      <span className={`gw-zone${label ? '' : ' gw-zone--unknown'}`}>
+        <Icon name="pin" size={13} />
+        <span>{label || 'Zone unknown'}</span>
+        {extra ? <em>+{extra}</em> : null}
+      </span>
+    </Tip>
   )
 }

@@ -26,9 +26,11 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toBeVisible()
   await expect(page.getByText('Connect a computer to start syncing.')).toBeVisible()
   await expect(page.getByText('so uploads arrive at those moments', { exact: false })).toBeVisible()
-  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Drop rates/, /^Characters/, /^Professions/, /^My gathering/, /^Sync/])
+  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Drop rates/, /^Resource map/, /^Characters/, /^Professions/, /^My gathering/, /^Sync/])
+  // An app, not a page of the site: its own frame, no site navbar.
+  await expect(page.locator('.navbar')).toHaveCount(0)
   // Community drop rates are there before the player has synced anything.
-  await expect(page.getByRole('heading', { name: 'What are you farming today?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Best places to farm' })).toBeVisible()
 
   await connectAndSync(page, {
     deviceName: 'Pip desktop',
@@ -77,11 +79,14 @@ test('a new player follows the first-run checklist to their first sync, then see
   await page.goBack()
   await expect(sources).toBeVisible()
 
-  // The full resource map is in the navbar; its legend is the dashboard's
-  // sidebar, which folds to a rail of resource toggles.
-  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Map', exact: true }).click()
+  // The resource map is a section like the others; its legend takes the
+  // sidebar, which folds to a rail of resource toggles, and the sections stay
+  // a row of icons above it.
+  await rail(page).getByRole('link', { name: /^Resource map/ }).click()
   await expect(page).toHaveURL(/\/map(\?|$)/)
   await expect(heading(page)).toHaveText('Resource map')
+  await expect(rail(page).getByRole('link')).toHaveCount(7)
+  await expect(rail(page).getByRole('link', { name: 'Resource map' })).toHaveAttribute('aria-current', 'page')
   const legend = page.getByRole('complementary', { name: 'Map legend' })
   await expect(legend).toContainText('1 of 1 shown')
   await legend.getByRole('checkbox', { name: /Peacebloom/ }).uncheck()
@@ -89,6 +94,9 @@ test('a new player follows the first-run checklist to their first sync, then see
   await legend.getByRole('button', { name: 'Show all' }).click()
   await page.getByRole('button', { name: 'Collapse the sidebar' }).first().click()
   await expect(legend.getByRole('button', { name: 'Hide Peacebloom' })).toBeVisible()
+  // Icon-only controls name themselves on hover.
+  await legend.getByRole('button', { name: 'Hide Peacebloom' }).hover()
+  await expect(page.getByRole('tooltip')).toHaveText(/^Hide Peacebloom/)
   await page.getByRole('button', { name: 'Expand the sidebar' }).first().click()
   await expect(legend).toContainText('1 of 1 shown')
   // A resource opens its details over the map, and everything in them is a
@@ -107,9 +115,10 @@ test('a new player follows the first-run checklist to their first sync, then see
   await page.keyboard.press('0')
   await expect(page.getByRole('navigation', { name: 'Map location' })).toHaveText('Azeroth')
 
-  // Back to the dashboard, whose sidebar is its navigation again.
-  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Dashboard', exact: true }).click()
-  await rail(page).getByRole('link', { name: /^My gathering/ }).click()
+  // Back to another section, whose sidebar is its navigation again.
+  await rail(page).getByRole('link', { name: 'My gathering' }).click()
+  await expect(heading(page)).toHaveText('My gathering')
+  await expect(page.getByRole('complementary', { name: 'Map legend' })).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Your farming summary' })).toContainText('1')
 
   await page.getByLabel('Server').selectOption({ label: 'Shadowmoon (1)' })
@@ -204,22 +213,21 @@ test('the avatar menu reaches every personal view and signing out leaves nothing
   await expect(page.locator('.gw-char')).toHaveCount(0)
 })
 
-test('on a phone the site menu, the dashboard drawer and the avatar menu all work', async ({ page, context }) => {
+test('on a phone the dashboard drawer and the avatar menu both work', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await authenticate(context, 'player')
   await page.goto('/dashboard')
   await expect(account(page)).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
 
-  const siteMenu = page.getByRole('button', { name: 'Toggle navigation' })
-  await siteMenu.click()
-  const mobileNav = page.getByRole('navigation', { name: 'Mobile navigation' })
-  await expect(mobileNav.getByRole('link', { name: 'Download' })).toBeVisible()
+  const menuButton = page.getByRole('button', { name: 'Open dashboard navigation' })
+  await menuButton.click()
+  await expect(page.getByRole('link', { name: 'Guildweaver home' })).toBeVisible()
   await page.keyboard.press('Escape')
-  await expect(siteMenu).toHaveAttribute('aria-expanded', 'false')
-  await expect(siteMenu).toBeFocused()
+  await expect(page.locator('.gw--mobile-open')).toHaveCount(0)
+  await expect(menuButton).toBeFocused()
 
-  await page.getByRole('button', { name: 'Open dashboard navigation' }).click()
+  await menuButton.click()
   await rail(page).getByRole('link', { name: /^Characters/ }).click()
   await expect(heading(page)).toHaveText('Characters')
   await expect(page.locator('.gw--mobile-open')).toHaveCount(0)
