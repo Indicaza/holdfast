@@ -20,7 +20,9 @@ function EntryIcon({ entry }) {
   return <WowIcon iconFileId={entry.item?.iconFileDataId} itemId={entry.item?.itemId} label={entry.label} quality={entry.item?.qualityId} size={28} />
 }
 
-export default function CommandPalette({ open, onClose, characters = [], views = [], onOpenCharacter }) {
+// `onOpenSource`, when given, opens a source or drop where the reader is (the
+// map opens its details over itself) instead of going to its page.
+export default function CommandPalette({ open, onClose, characters = [], views = [], onOpenCharacter, onOpenSource }) {
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
   const [sources, setSources] = useState([])
@@ -86,6 +88,7 @@ export default function CommandPalette({ open, onClose, characters = [], views =
     if (!entry) return
     onClose()
     if (entry.kind === 'character') onOpenCharacter(entry.character.id)
+    else if (onOpenSource && entry.source) onOpenSource({ ...entry.source, itemKey: entry.kind === 'drop' ? entry.item?.itemKey || '' : '' })
     else if (entry.href) navigate(entry.href)
   }
 

@@ -91,6 +91,17 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(legend.getByRole('button', { name: 'Hide Peacebloom' })).toBeVisible()
   await page.getByRole('button', { name: 'Expand the sidebar' }).first().click()
   await expect(legend).toContainText('1 of 1 shown')
+  // A resource opens its details over the map, and everything in them is a
+  // place on the map: nobody has to leave it.
+  await legend.getByRole('button', { name: 'Peacebloom details' }).click()
+  const details = page.getByRole('dialog', { name: 'Peacebloom' })
+  await expect(details.getByRole('table', { name: 'Drop table' })).toContainText('100%')
+  await expect(page).toHaveURL(/\/map\?.*resource=herbalism/)
+  await details.getByRole('button', { name: /Elwynn Forest/ }).first().click()
+  await expect(details).toBeHidden()
+  await expect(page).toHaveURL(/\/map/)
+  await expect(page).not.toHaveURL(/resource=/)
+  await expect(page.getByRole('navigation', { name: 'Map location' })).toContainText('Elwynn Forest')
   await page.getByRole('button', { name: 'Zoom in' }).click()
   await page.getByRole('application').focus()
   await page.keyboard.press('0')

@@ -40,6 +40,9 @@ const ICON_PATHS = {
   expand: <><path d="m9 6 6 6-6 6" /><path d="M4 5v14" /></>,
   shrink: <><path d="m15 6-6 6 6 6" /><path d="M20 5v14" /></>,
   target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.5" /><path d="M12 2.5v3" /><path d="M12 18.5v3" /><path d="M2.5 12h3" /><path d="M18.5 12h3" /></>,
+  copy: <><rect x="8.5" y="8.5" width="11" height="11" rx="2" /><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" /></>,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><path d="M12 7.6v.4" /></>,
 }
 
 export function Icon({ name, size = 18, className = '' }) {

@@ -206,9 +206,11 @@ export function locateWorldPoint(point) {
 }
 
 // ------------------------------------------------------------------ Map art
-// The game's own map art, when the site has it: one image per uiMapID,
-// stitched from the client's 256px map tiles and cropped to the 1002 × 668
-// the game draws. A template can point elsewhere (a CDN), like icons do.
+// The game's own map art, when the site has it: one image per uiMapID at the
+// 1002 × 668 the game draws (scripts/fetchMapArt.mjs). Azeroth is the world
+// map; each zone is its fully explored map cut to its own land, so zones
+// drawn in their rectangles join into one map. A template can point
+// elsewhere (a CDN), like icons do.
 const DEFAULT_ART_TEMPLATE = '/wow-art/maps/{uiMapId}.webp'
 
 export function mapArtUrl(uiMapId) {
