@@ -4,11 +4,18 @@
 import { WORLD, atlasZone, projectPoint } from './atlas.js'
 
 export const MIN_ZOOM = 1
-export const MAX_ZOOM = 48
+// Deep enough to read a small zone's map at about twice its native size.
+export const MAX_ZOOM = 28
 // Zoom thresholds: the world shows zone totals, a region shows heat, a zone
-// shows individual spots.
+// shows individual spots. What each level draws fades across these, never
+// switching at once (see layerWeights).
 export const REGION_ZOOM = 2.1
 export const ZONE_ZOOM = 5.5
+
+export function smoothstep(edge0, edge1, value) {
+  const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)))
+  return t * t * (3 - 2 * t)
+}
 
 export function mapUrl({ discipline = '', sources = [], item = '' } = {}) {
   const params = new URLSearchParams()
@@ -98,6 +105,111 @@ export function interpolateView(from, to, t) {
   }
 }
 
+// The view with world point `world` under screen point `anchor` at zoom k:
+// how a zoom keeps the spot under the cursor still while it animates.
+export function viewAnchored(world, anchor, k, size) {
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, k))
+  const scale = fitScale(size) * zoom
+  return clampView({
+    x: world.x - (anchor.x - size.width / 2) / scale,
+    y: world.y - (anchor.y - size.height / 2) / scale,
+    k: zoom,
+  })
+}
+
+// A camera flight that zooms out, travels and zooms back in, so a long trip
+// never smears the map past at street level (van Wijk and Nuij's optimal
+// path, as d3-zoom flies). `at(t)` takes 0–1; `duration` is in ms.
+export function flightPath(from, to, size, { rho = 1.35, minMs = 320, maxMs = 1500 } = {}) {
+  const span = (view) => (size?.width || WORLD.width) / (fitScale(size) * view.k)
+  const w0 = span(from)
+  const w1 = span(to)
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const d2 = dx * dx + dy * dy
+  const rho2 = rho * rho
+  let S
+  let at
+  if (d2 < 1e-9) {
+    S = Math.log(w1 / w0) / rho
+    at = (t) => ({ x: from.x + t * dx, y: from.y + t * dy, w: w0 * Math.exp(rho * t * S) })
+  } else {
+    const d1 = Math.sqrt(d2)
+    const b0 = (w1 * w1 - w0 * w0 + rho2 * rho2 * d2) / (2 * w0 * rho2 * d1)
+    const b1 = (w1 * w1 - w0 * w0 - rho2 * rho2 * d2) / (2 * w1 * rho2 * d1)
+    const r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0)
+    const r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1)
+    S = (r1 - r0) / rho
+    at = (t) => {
+      const s = t * S
+      const u = (w0 / (rho2 * d1)) * (Math.cosh(r0) * Math.tanh(rho * s + r0) - Math.sinh(r0))
+      return { x: from.x + u * dx, y: from.y + u * dy, w: (w0 * Math.cosh(r0)) / Math.cosh(rho * s + r0) }
+    }
+  }
+  const duration = Math.min(maxMs, Math.max(minMs, Math.abs(S) * 1000 * rho / Math.SQRT2 * 0.8))
+  return {
+    duration,
+    at(t) {
+      if (t >= 1) return { ...to }
+      if (t <= 0) return { ...from }
+      const point = at(easeInOut(t))
+      return { x: point.x, y: point.y, k: (size?.width || WORLD.width) / (fitScale(size) * point.w) }
+    },
+  }
+}
+
+// ------------------------------------------------------------------ Level of detail
+// Everything that changes with zoom fades by how big it is on screen, so
+// zooming in or out is one continuous motion.
+
+// Every zone's own map fades in over the world map together, as the
+// continents fill the screen; deeper in, the world map (too coarse to
+// enlarge further) fades out to the open sea beneath.
+export function zoneArtOpacity(k) {
+  return smoothstep(1.45, 2.3, k)
+}
+
+export function worldArtOpacity(k) {
+  return 1 - smoothstep(2.1, 3.8, k)
+}
+
+// Zone names show while a zone is big enough to name and small enough that
+// its own map's place names have not taken over.
+export function zoneLabelOpacity(zone, scale, k) {
+  const width = zone.rect.width * scale
+  const enter = zone.city ? smoothstep(55, 90, width) : smoothstep(70, 120, width)
+  const leave = 1 - smoothstep(520, 900, width)
+  return enter * leave * smoothstep(1.2, 1.5, k)
+}
+
+// Labels that would overlap a bigger zone's label give way to it. Takes
+// { zone, at, opacity } entries and the label font size; keeps the rest.
+export function placeLabels(entries, fontSize = 13) {
+  const placed = []
+  const boxes = []
+  const ordered = [...entries].sort((a, b) => (Number(a.zone.city) - Number(b.zone.city)) || (b.zone.rect.width * b.zone.rect.height - a.zone.rect.width * a.zone.rect.height))
+  for (const entry of ordered) {
+    const size = entry.zone.city ? fontSize * 0.85 : fontSize
+    const width = entry.zone.name.length * size * 0.62 + 8
+    const box = { left: entry.at.x - width / 2, right: entry.at.x + width / 2, top: entry.at.y - size, bottom: entry.at.y + size * 0.35 }
+    if (boxes.some((other) => box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)) continue
+    boxes.push(box)
+    placed.push(entry)
+  }
+  return placed
+}
+
+// How strongly each layer of points draws at zoom k: zone totals at the
+// world, heat in between, single spots up close.
+export function layerWeights(k, display = 'heat') {
+  return {
+    bubbles: 1 - smoothstep(1.55, 2.3, k),
+    heat: display === 'heat' ? 0.5 + 0.2 * smoothstep(1.4, 2.6, k) - 0.32 * smoothstep(5, 14, k) : 0,
+    dots: display === 'spots' ? 1 : smoothstep(7, 13, k),
+    markers: smoothstep(ZONE_ZOOM - 0.6, ZONE_ZOOM + 0.8, k),
+  }
+}
+
 // ------------------------------------------------------------------ Colours
 
 const PALETTES = {
@@ -181,6 +293,34 @@ export function busiestSpots(placed = [], mapId, { radius = 0.02, limit = 5 } = 
     .sort((a, b) => b.observations - a.observations)
     .slice(0, limit)
     .map((spot) => ({ ...spot, world: projectPoint(spot.zone, spot.x, spot.y) }))
+}
+
+// Where one source is gathered: per zone, busiest first.
+export function sourceZones(placed = [], sourceKey) {
+  const totals = new Map()
+  for (const point of placed) {
+    if (point.sourceKey !== sourceKey) continue
+    const entry = totals.get(point.zone.mapId) || { zone: point.zone, observations: 0 }
+    entry.observations += point.observations
+    totals.set(point.zone.mapId, entry)
+  }
+  return [...totals.values()].sort((a, b) => b.observations - a.observations)
+}
+
+// One source's busiest spots across every zone.
+export function sourceSpots(placed = [], sourceKey, { limit = 6 } = {}) {
+  const own = placed.filter((point) => point.sourceKey === sourceKey)
+  const zones = [...new Set(own.map((point) => point.zone.mapId))]
+  return zones
+    .flatMap((mapId) => busiestSpots(own, mapId, { limit }))
+    .sort((a, b) => b.observations - a.observations)
+    .slice(0, limit)
+}
+
+// The TomTom waypoint for a spot, to paste into the game's chat.
+export function wayCommand(zone, x, y) {
+  const part = (value) => (Math.min(1, Math.max(0, value)) * 100).toFixed(1)
+  return `/way ${zone.name} ${part(x)} ${part(y)}`
 }
 
 // The in-game way to write a map position: "48.2, 27.5".

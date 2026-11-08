@@ -102,6 +102,7 @@ export function paletteEntries({ query = '', sources = [], characters = [], view
         label: match.name,
         detail: `${formatRate(match.rate)} from ${source.name}${source.primaryZone ? ` · ${source.primaryZone}` : ''}`,
         item: match,
+        source,
         href: sourceHref(source.sourceKey, { item: match.itemKey }),
       })
     }
@@ -115,6 +116,7 @@ export function paletteEntries({ query = '', sources = [], characters = [], view
       label: source.name,
       detail: `${disciplineLabel(source.discipline)} · ${source.primaryZone || 'Zone unknown'} · ${formatCount(source.observations)} ${observationLabel(source.discipline, source.observations)}`,
       item: source.icon,
+      source,
       href: sourceHref(source.sourceKey),
     })
   }

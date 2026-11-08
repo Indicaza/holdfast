@@ -91,29 +91,6 @@
   stroke-linejoin: round;
 }
 
-.gw-rmap__zone {
-  fill: transparent;
-  stroke: rgba(255, 255, 255, 0.075);
-  stroke-width: 1;
-  transition: fill 160ms ease, stroke 160ms ease;
-}
-
-.gw-rmap__zone.is-hover {
-  fill: rgba(255, 255, 255, 0.035);
-  stroke: rgba(255, 255, 255, 0.16);
-}
-
-.gw-rmap__zone.is-focus {
-  fill: rgba(233, 196, 106, 0.035);
-  stroke: var(--gw-accent-line);
-}
-
-.gw-rmap__city {
-  fill: rgba(233, 196, 106, 0.06);
-  stroke: rgba(233, 196, 106, 0.35);
-  stroke-dasharray: 3 2;
-}
-
 .gw-rmap__continent-label {
   fill: rgba(231, 233, 238, 0.32);
   font-family: var(--gw-font);
@@ -123,40 +100,37 @@
   text-transform: uppercase;
 }
 
+/* Zone names, lettered like the game's own maps. Their opacity follows the
+   zoom (set inline), so they fade rather than pop. */
 .gw-rmap__zone-label {
-  fill: rgba(231, 233, 238, 0.58);
-  font-family: var(--gw-font);
-  font-size: 10.5px;
+  fill: #f1dfb2;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 12.5px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   paint-order: stroke;
-  stroke: rgba(6, 8, 12, 0.85);
-  stroke-width: 3px;
+  stroke: rgba(10, 8, 5, 0.82);
+  stroke-width: 3.2px;
   stroke-linejoin: round;
+  transition: fill 160ms ease;
 }
 
 .gw-rmap[data-level="region"] .gw-rmap__zone-label {
-  font-size: 11.5px;
+  font-size: 13.5px;
 }
 
 .gw-rmap[data-level="zone"] .gw-rmap__zone-label {
-  fill: rgba(231, 233, 238, 0.42);
-  font-size: 12px;
+  font-size: 15px;
 }
 
-.gw-rmap__zone-label.is-focus {
-  fill: var(--gw-accent-2) !important;
-  font-size: 14px !important;
-  letter-spacing: 0.04em;
-}
-
-.gw-rmap[data-level="zone"] .gw-rmap__zone-label.is-focus {
-  opacity: 0.55;
+.gw-rmap__zone-label.is-hover {
+  fill: #fff4d6;
 }
 
 .gw-rmap__zone-label--city {
-  fill: rgba(244, 213, 141, 0.7);
-  font-size: 10px !important;
+  fill: var(--gw-accent-2);
+  font-size: 11px !important;
+  letter-spacing: 0.04em;
 }
 
 /* World-level zone totals. */
@@ -197,37 +171,49 @@
   transform: translate(-50%, -50%);
 }
 
-/* ---------------------------------------------------------------- Tooltip / popover */
-
-.gw-rmap__tip,
-.gw-rmap__pop {
-  position: absolute;
-  z-index: 5;
-  border: 1px solid var(--rmap-glass-line);
-  border-radius: 10px;
-  background: var(--rmap-glass);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(14px);
-}
+/* ---------------------------------------------------------------- Tooltip */
 
 .gw-rmap__tip {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 11rem;
-  padding: 0.55rem 0.7rem;
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 12rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  border: 1px solid var(--rmap-glass-line);
+  border-left: 3px solid var(--swatch, var(--gw-accent));
+  border-radius: 10px;
+  background: var(--rmap-glass);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px);
   font-size: 12px;
-  transform: translate(-50%, calc(-100% - 16px));
+  transform: translate(-50%, calc(-100% - 18px));
   pointer-events: none;
+  animation: gw-rmap-rise 140ms ease-out;
+}
+
+@keyframes gw-rmap-rise {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 12px)); }
+}
+
+.gw-rmap__tip-icon {
+  display: grid;
+  flex: none;
+}
+
+.gw-rmap__tip-copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
 }
 
 .gw-rmap__tip strong {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  color: var(--gw-text);
   font-size: 13px;
 }
 
-.gw-rmap__tip span {
+.gw-rmap__tip-copy > span {
   color: var(--gw-dim);
 }
 
@@ -241,59 +227,6 @@
   font-family: var(--gw-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.95em;
   font-variant-numeric: tabular-nums;
-}
-
-.gw-rmap__pop {
-  width: 16.5rem;
-  padding: 0.8rem;
-  transform: translate(-50%, calc(-100% - 20px));
-  cursor: default;
-}
-
-.gw-rmap__pop header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.gw-rmap__pop header > div {
-  display: grid;
-  flex: 1;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.gw-rmap__pop header strong {
-  font-size: 14px;
-}
-
-.gw-rmap__pop dl {
-  display: grid;
-  gap: 0.3rem;
-  margin: 0.7rem 0;
-  padding: 0.6rem 0;
-  border-block: 1px solid var(--rmap-glass-line);
-  font-size: 12.5px;
-}
-
-.gw-rmap__pop dl div {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.gw-rmap__pop dt {
-  color: var(--gw-faint);
-}
-
-.gw-rmap__pop dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.gw-rmap__pop-actions {
-  display: flex;
-  gap: 0.4rem;
 }
 
 /* ---------------------------------------------------------------- Chrome */
@@ -761,14 +694,29 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.gw-rmap__legend li label {
+.gw-rmap__legend li > input[type="checkbox"] {
+  margin-left: 0.45rem;
+  cursor: pointer;
+}
+
+/* A resource's name opens its details; its checkbox shows or hides it. */
+.gw-rmap__source {
   display: flex;
   flex: 1;
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
   padding: 0.32rem 0.45rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
+}
+
+.gw-rmap__source:hover .gw-rmap__source-name {
+  color: var(--gw-accent-2);
 }
 
 .gw-rmap__legend input[type="checkbox"] {
@@ -798,28 +746,42 @@
   filter: grayscale(1);
 }
 
-.gw-rmap__solo {
+.gw-rmap__row-tools {
   position: absolute;
-  right: 0.3rem;
+  right: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-left: 1.25rem;
+  background: linear-gradient(90deg, transparent, #11151b 1.1rem);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gw-rmap__legend li:hover .gw-rmap__row-tools,
+.gw-rmap__row-tools:focus-within {
+  opacity: 1;
+}
+
+.gw-rmap__solo {
   padding: 0.15rem 0.45rem;
   border: 1px solid var(--gw-line-2);
   background: #151a21;
   color: var(--gw-dim);
   font-size: 10.5px;
   font-weight: 650;
-  opacity: 0;
   cursor: pointer;
-  transition: opacity 120ms ease;
-}
-
-.gw-rmap__legend li:hover .gw-rmap__solo,
-.gw-rmap__solo:focus-visible {
-  opacity: 1;
 }
 
 .gw-rmap__solo:hover {
   border-color: var(--gw-accent-line);
   color: var(--gw-accent-2);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .gw-rmap__row-tools {
+    opacity: 1;
+  }
 }
 
 .gw-rmap__spots {
@@ -1030,25 +992,559 @@
 
 /* ---------------------------------------------------------------- Game map art */
 
-/* Dimmed a touch so the heat reads on top of the painted maps. */
-.gw-rmap__art {
-  filter: saturate(0.9) brightness(0.78) contrast(1.05);
+/* Each zone's map fades in once it has loaded, and follows the zoom after. */
+.gw-rmap__zone-art,
+.gw-rmap__world-art {
+  transition: opacity 220ms ease-out;
 }
 
-.gw-rmap__art image {
-  transition: opacity 120ms linear;
+/* A zoom readout as a slim gauge. */
+.gw-rmap__scale {
+  position: relative;
+  flex: none;
+  width: 3.25rem;
+  height: 4px;
+  margin-left: 0.25rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.gw-rmap__zone--art {
-  stroke: transparent;
+.gw-rmap__scale i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gw-accent-line), var(--gw-accent));
 }
 
-.gw-rmap__zone--art.is-hover {
-  fill: rgba(255, 255, 255, 0.05);
-  stroke: rgba(255, 255, 255, 0.35);
+.gw-rmap__readout .gw-icon {
+  flex: none;
+  color: var(--gw-accent);
 }
 
-.gw-rmap__zone--art.is-focus {
-  fill: transparent;
-  stroke: var(--gw-accent-line);
+/* ---------------------------------------------------------------- Resource details */
+
+.gw-rmap__modal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+  background: radial-gradient(ellipse at center, rgba(5, 7, 10, 0.5), rgba(5, 7, 10, 0.78));
+  backdrop-filter: blur(3px) saturate(0.85);
+  animation: gw-rmap-fade 160ms ease-out;
+}
+
+.gw-rmap__modal {
+  --rmap-glass-line: rgba(255, 255, 255, 0.09);
+  display: flex;
+  flex-direction: column;
+  width: min(54rem, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--gw-line-2);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 60% at 0% 0%, color-mix(in srgb, var(--swatch, var(--gw-accent)) 12%, transparent), transparent 60%),
+    linear-gradient(180deg, #12161d, #0c0f14);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  color: var(--gw-text);
+  font-size: 13px;
+  outline: none;
+  animation: gw-rmap-modal 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes gw-rmap-modal {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+.gw-rmap__modal-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.1rem 1rem 1.25rem;
+  border-bottom: 1px solid var(--rmap-glass-line);
+}
+
+.gw-rmap__modal-icon {
+  display: grid;
+  flex: none;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--swatch, var(--gw-accent)) 55%, transparent);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--swatch, var(--gw-accent)) 28%, transparent);
+}
+
+.gw-rmap__modal-title {
+  display: grid;
+  flex: 1;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.gw-rmap__modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.gw-rmap__modal-title h2 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--gw-text);
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gw-rmap__modal-title p {
+  margin: 0;
+  color: var(--gw-faint);
+  font-size: 12.5px;
+}
+
+.gw-rmap__modal-title p strong {
+  color: var(--gw-dim);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.gw-rmap__modal-close {
+  display: grid;
+  flex: none;
+  align-self: flex-start;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--gw-line-2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--gw-dim);
+  cursor: pointer;
+}
+
+.gw-rmap__modal-close:hover {
+  border-color: var(--gw-accent-line);
+  color: var(--gw-text);
+}
+
+.gw-rmap__modal-spot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9rem 1.25rem 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--swatch, var(--gw-accent)) 30%, var(--gw-line));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--swatch, var(--gw-accent)) 6%, rgba(255, 255, 255, 0.02));
+}
+
+.gw-rmap__modal-spot > div {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.gw-rmap__modal-spot strong {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.gw-rmap__modal-spot strong code {
+  margin-left: 0.3rem;
+}
+
+.gw-rmap__modal-spot small {
+  color: var(--gw-faint);
+  font-size: 12px;
+}
+
+.gw-rmap__modal-spot-pin {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--swatch, var(--gw-accent)) 18%, transparent);
+  color: var(--swatch, var(--gw-accent));
+}
+
+.gw-rmap__copy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+  height: 1.9rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--gw-line-2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--gw-dim);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.gw-rmap__copy:hover {
+  border-color: var(--gw-accent-line);
+  color: var(--gw-text);
+}
+
+.gw-rmap__copy.is-done {
+  border-color: color-mix(in srgb, var(--gw-ok) 50%, transparent);
+  color: var(--gw-ok);
+}
+
+.gw-rmap__copy--compact {
+  width: 1.9rem;
+  justify-content: center;
+  padding: 0;
+}
+
+.gw-rmap__modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  min-height: 0;
+  padding: 1rem 1.25rem 1.1rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.gw-rmap__modal-section {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.gw-rmap__modal-section > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.9rem;
+}
+
+.gw-rmap__modal-section h3,
+.gw-rmap__modal-section h4 {
+  margin: 0;
+  color: var(--gw-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.gw-rmap__modal-section h4 {
+  margin-top: 0.6rem;
+}
+
+.gw-rmap__seg {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px;
+  border: 1px solid var(--gw-line-2);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.gw-rmap__seg button {
+  max-width: 12rem;
+  padding: 0.22rem 0.6rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 7px !important;
+  background: none;
+  color: var(--gw-faint);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gw-rmap__seg button[aria-pressed="true"] {
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent-2);
+}
+
+.gw-rmap__drops {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.gw-rmap__drops th {
+  padding: 0 0.5rem 0.4rem;
+  color: var(--gw-faint);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.gw-rmap__drops td {
+  padding: 0.3rem 0.5rem;
+  border-top: 1px solid var(--rmap-glass-line);
+  vertical-align: middle;
+}
+
+.gw-rmap__drops tbody tr {
+  cursor: pointer;
+}
+
+.gw-rmap__drops tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.gw-rmap__drops tbody tr.is-selected {
+  background: var(--gw-accent-soft);
+}
+
+.gw-rmap__drops .gw-rate {
+  min-width: 7rem;
+}
+
+.gw-rmap__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-rmap__drop-name {
+  display: flex;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gw-rmap__modal-chart {
+  margin: 0.4rem 0 0;
+  padding: 0.65rem 0.75rem 0.4rem;
+  border: 1px solid var(--rmap-glass-line);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.gw-rmap__modal-chart figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--gw-faint);
+  font-size: 12px;
+}
+
+.gw-rmap__modal-chart .farm-line {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 9.5rem;
+}
+
+.gw-rmap__modal-foot,
+.gw-rmap__modal-empty {
+  margin: 0.35rem 0 0;
+  color: var(--gw-faint);
+  font-size: 11.5px;
+}
+
+.gw-rmap__modal-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.25rem 0;
+  color: var(--gw-dim);
+}
+
+.gw-rmap__modal .is-refreshing {
+  opacity: 0.6;
+  transition: opacity 160ms ease;
+}
+
+.gw-rmap__modal-zones,
+.gw-rmap__modal-spots {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gw-rmap__modal-zones button,
+.gw-rmap__modal-spot-go {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.1rem;
+  padding: 0.3rem 0.55rem;
+  border: 0;
+  background: none;
+  color: var(--gw-text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gw-rmap__modal-zones button:hover,
+.gw-rmap__modal-spot-go:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.gw-rmap__modal-zones button .gw-icon {
+  flex: none;
+  color: var(--gw-faint);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gw-rmap__modal-zones button:hover .gw-icon,
+.gw-rmap__modal-zones button:focus-visible .gw-icon {
+  color: var(--gw-accent);
+  opacity: 1;
+}
+
+.gw-rmap__modal-zone-name {
+  flex: none;
+  width: 8.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gw-rmap__modal-spot-go .gw-rmap__modal-zone-name {
+  flex: 1;
+  width: auto;
+}
+
+.gw-rmap__modal-bar {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gw-rmap__modal-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--swatch, var(--gw-accent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--swatch, var(--gw-accent)) 50%, transparent);
+}
+
+.gw-rmap__modal-zones small,
+.gw-rmap__modal-spots small {
+  flex: none;
+  min-width: 2.75rem;
+  color: var(--gw-dim);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.gw-rmap__modal-spots li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gw-rmap__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--rmap-glass-line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.gw-rmap__modal-actions .gw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gw-rmap__modal-note {
+  margin-left: auto;
+  color: var(--gw-faint);
+  font-size: 11.5px;
+}
+
+@media (max-width: 760px) {
+  .gw-rmap__modal-layer {
+    place-items: end stretch;
+    padding: 0;
+  }
+
+  .gw-rmap__modal {
+    width: 100%;
+    max-height: 92%;
+    border-radius: 16px 16px 0 0;
+    animation-name: gw-rmap-sheet;
+  }
+
+  .gw-rmap__modal-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gw-rmap__modal-head {
+    padding: 0.9rem 0.9rem 0.8rem 1rem;
+  }
+
+  .gw-rmap__modal-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .gw-rmap__modal-spot {
+    flex-wrap: wrap;
+    margin-inline: 1rem;
+  }
+
+  .gw-rmap__modal-body,
+  .gw-rmap__modal-actions {
+    padding-inline: 1rem;
+  }
+
+  .gw-rmap__modal-note {
+    display: none;
+  }
+}
+
+@keyframes gw-rmap-sheet {
+  from { transform: translateY(24px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gw-rmap__modal-layer,
+  .gw-rmap__modal,
+  .gw-rmap__tip,
+  .gw-rmap__zone-art {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* The open sea under the game's maps: the world map's olive parchment, with
+   grain and mottling. Painted once on the stage, so it costs nothing while
+   the map moves; the maps' feathered edges melt into it. */
+.gw-rmap.has-art .gw-rmap__stage {
+  background-color: #857a54;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .22 0 0 0 0 .18 0 0 0 0 .1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='m' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .46 0 0 0 0 .44 0 0 0 .8 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E"),
+    radial-gradient(140% 120% at 50% 45%, transparent 45%, rgba(38, 28, 12, 0.55));
 }

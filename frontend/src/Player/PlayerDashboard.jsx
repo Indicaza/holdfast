@@ -172,6 +172,10 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
   const [characterId, openCharacter] = useCharacterParam()
+  // On the map, a resource picked in search opens over the map.
+  const [mapRequest, setMapRequest] = useState(null)
+  const openOnMap = useCallback((source) => setMapRequest({ ...source }), [])
+  useEffect(() => { if (section !== 'map') setMapRequest(null) }, [section])
   useSearchShortcut(session.authenticated ? openSearch : noop)
 
   // Once the player's servers are known, the URL names the server shown: the
@@ -233,7 +237,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
           <>
             {section === 'overview' ? <PlayerOverview data={overview.data} server={server} onOpenCharacter={openCharacter} onOpenSearch={openSearch} /> : null}
             {section === 'farming' ? <PlayerFarming server={server} queryString={queryString} /> : null}
-            {section === 'map' ? <PlayerMap queryString={queryString} legendHost={legendHost} railed={collapsed} /> : null}
+            {section === 'map' ? <PlayerMap queryString={queryString} legendHost={legendHost} railed={collapsed} openRequest={mapRequest} /> : null}
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}
@@ -241,7 +245,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
           </>
         ) : null}
       </PlayerShell>
-      <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={paletteViews} onOpenCharacter={openCharacter} />
+      <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={paletteViews} onOpenCharacter={openCharacter} onOpenSource={section === 'map' ? openOnMap : undefined} />
       <CharacterProfileModal apiBase="/api/player/characters" characterId={characterId} onClose={() => openCharacter('')} />
     </>
   )

@@ -14,24 +14,31 @@ function readMapParams(queryString) {
     sources: (params.get('source') || '').split(',').map((value) => value.trim()).filter(Boolean),
     item: params.get('item') || '',
     discipline: params.get('discipline') || '',
+    resource: params.get('resource') || '',
   }
 }
 
+function replaceParam(name, value) {
+  const url = new URL(window.location.href)
+  if (value) url.searchParams.set(name, String(value))
+  else url.searchParams.delete(name)
+  if (url.href !== window.location.href) window.history.replaceState(window.history.state, '', url)
+}
+
 // The full resource map. Links can open it on a zone (?zone=1436 or a name),
-// a source (?source=), a drop (?item=) or a profession (?discipline=); the
-// URL follows the zone being viewed so the view can be shared.
-function MapView({ queryString, legendHost, railed }) {
+// a source (?source=), a drop (?item=), a profession (?discipline=) or with a
+// resource's details open (?resource=); the URL follows the zone being viewed
+// and the details shown, so the view can be shared.
+function MapView({ queryString, legendHost, railed, openRequest }) {
   const [initial] = useState(() => readMapParams(queryString))
   const filter = useMemo(() => ({ sources: initial.sources, item: initial.item, discipline: initial.discipline }), [initial])
   const focus = useMemo(() => (initial.zone ? { mapId: initial.zone } : null), [initial])
   const filtered = Boolean(initial.sources.length || initial.item || initial.discipline)
+  const [linked] = useState(() => (initial.resource ? { sourceKey: initial.resource } : null))
+  const request = openRequest || linked
 
-  const onFocusZone = useCallback((mapId) => {
-    const url = new URL(window.location.href)
-    if (mapId) url.searchParams.set('zone', String(mapId))
-    else url.searchParams.delete('zone')
-    if (url.href !== window.location.href) window.history.replaceState(window.history.state, '', url)
-  }, [])
+  const onFocusZone = useCallback((mapId) => replaceParam('zone', mapId), [])
+  const onDetailsChange = useCallback((sourceKey) => replaceParam('resource', sourceKey), [])
 
   return (
     <div className="gw-mapview">
@@ -46,15 +53,25 @@ function MapView({ queryString, legendHost, railed }) {
           <a href="/map" className="gw-link">Show every resource</a>
         </div>
       ) : null}
-      <ResourceMap variant="full" filter={filter} focus={focus} onFocusZone={onFocusZone} legendHost={legendHost} legendRail={railed} label="Resource map of Azeroth" />
+      <ResourceMap
+        variant="full"
+        filter={filter}
+        focus={focus}
+        onFocusZone={onFocusZone}
+        onDetailsChange={onDetailsChange}
+        openRequest={request}
+        legendHost={legendHost}
+        legendRail={railed}
+        label="Resource map of Azeroth"
+      />
     </div>
   )
 }
 
 // A new filter in the URL (a link from elsewhere, or "Show every resource")
 // starts the map afresh.
-export default function PlayerMap({ queryString = '', legendHost = null, railed = false }) {
+export default function PlayerMap({ queryString = '', legendHost = null, railed = false, openRequest = null }) {
   const params = new URLSearchParams(queryString)
   const key = ['source', 'item', 'discipline'].map((name) => params.get(name) || '').join('|')
-  return <MapView key={key} queryString={queryString} legendHost={legendHost} railed={railed} />
+  return <MapView key={key} queryString={queryString} legendHost={legendHost} railed={railed} openRequest={openRequest} />
 }

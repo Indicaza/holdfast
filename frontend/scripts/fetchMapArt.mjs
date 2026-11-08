@@ -1,16 +1,24 @@
 #!/usr/bin/env node
-// Builds the resource map's art: the game's own Azeroth, continent and zone
-// maps (Classic Era), one WebP per uiMapID, cropped to the 1002 × 668 the
-// game draws them at.
+// Builds the resource map's art from the game's own maps (Classic Era), one
+// WebP per uiMapID at the 1002 × 668 the game draws them at:
+//
+// - Azeroth (947): the world map, whole. The map's base layer.
+// - Every zone: fully explored (each discovered-area overlay painted over
+//   the base art, as the game shows it once a player has been everywhere),
+//   then cut out to the zone's own land with a feathered edge. Laid over the
+//   world map in their own rectangles, the zones join into one seamless,
+//   detailed map, with no frames, fog or neighbouring zones' labels.
 //
 // The art is Blizzard's. It comes from the game client's files through
 // wago.tools, a public mirror of them: the UiMap* tables say which 256px
-// tiles make up each map, and each tile is a BLP texture. This script
-// decodes the tiles (BLP2: DXT1/3/5, palettised or raw BGRA), stitches them
-// and encodes WebP with cwebp (libwebp: `brew install webp`).
+// tiles make up each map, WorldMapOverlay* which tiles each explored area
+// adds, and each tile is a BLP texture. This script decodes the tiles (BLP2:
+// DXT1/3/5, palettised or raw BGRA), stitches them and encodes WebP with
+// cwebp (libwebp: `brew install webp`).
 //
 //   node scripts/fetchMapArt.mjs [--out public/wow-art/maps] [--cache DIR]
 //                                [--branch wow_classic_era] [--quality 82]
+//                                [--only 1429,1436]
 //
 // Tiles are cached by FileDataID, so a rerun downloads nothing it has.
 
@@ -176,6 +184,99 @@ function decodeBlp(data) {
   throw new Error(`unsupported BLP compression ${compression}`)
 }
 
+// ------------------------------------------------------------------ Masks
+
+// Squared Euclidean distance from every pixel to the nearest `inside` pixel
+// (Felzenszwalb & Huttenlocher): two passes of a 1D lower envelope.
+function distanceField(inside, width, height) {
+  const INF = 1e20
+  const field = new Float64Array(width * height)
+  for (let i = 0; i < field.length; i += 1) field[i] = inside[i] ? 0 : INF
+  const size = Math.max(width, height)
+  const f = new Float64Array(size)
+  const d = new Float64Array(size)
+  const v = new Int32Array(size)
+  const z = new Float64Array(size + 1)
+  const pass = (n, read, write) => {
+    for (let q = 0; q < n; q += 1) f[q] = read(q)
+    let k = 0
+    v[0] = 0
+    z[0] = -INF
+    z[1] = INF
+    for (let q = 1; q < n; q += 1) {
+      let s
+      for (;;) {
+        s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k])
+        if (s > z[k] || k === 0) break
+        k -= 1
+      }
+      if (s <= z[k]) { v[k] = q; z[k + 1] = INF; continue }
+      k += 1
+      v[k] = q
+      z[k] = s
+      z[k + 1] = INF
+    }
+    k = 0
+    for (let q = 0; q < n; q += 1) {
+      while (z[k + 1] < q) k += 1
+      d[q] = (q - v[k]) ** 2 + f[v[k]]
+    }
+    for (let q = 0; q < n; q += 1) write(q, d[q])
+  }
+  for (let x = 0; x < width; x += 1) pass(height, (y) => field[y * width + x], (y, value) => { field[y * width + x] = value })
+  for (let y = 0; y < height; y += 1) pass(width, (x) => field[y * width + x], (x, value) => { field[y * width + x] = value })
+  return field
+}
+
+// Pixels not reachable from the image's edge through `outside` pixels.
+function fillHoles(inside, width, height) {
+  const reached = new Uint8Array(width * height)
+  const stack = []
+  const push = (x, y) => {
+    const index = y * width + x
+    if (inside[index] || reached[index]) return
+    reached[index] = 1
+    stack.push(index)
+  }
+  for (let x = 0; x < width; x += 1) { push(x, 0); push(x, height - 1) }
+  for (let y = 0; y < height; y += 1) { push(0, y); push(width - 1, y) }
+  while (stack.length) {
+    const index = stack.pop()
+    const x = index % width
+    const y = (index - x) / width
+    if (x > 0) push(x - 1, y)
+    if (x < width - 1) push(x + 1, y)
+    if (y > 0) push(x, y - 1)
+    if (y < height - 1) push(x, y + 1)
+  }
+  return Uint8Array.from(reached, (value) => (value ? 0 : 1))
+}
+
+// A zone's own land: where the game draws its explored areas. Gaps between
+// them close, holes fill, and the edge feathers so a zone melts into its
+// neighbours and the world map beneath. Returns alpha 0–255 per pixel.
+export function landMask(coverage, width, height, { close = 22, grow = 10, feather = 14, frame = 6 } = {}) {
+  const solid = Uint8Array.from(coverage, (alpha) => (alpha > 110 ? 1 : 0))
+  const near = distanceField(solid, width, height)
+  const dilated = Uint8Array.from(near, (value) => (value <= close * close ? 1 : 0))
+  const outside = distanceField(Uint8Array.from(dilated, (value) => 1 - value), width, height)
+  const closed = fillHoles(Uint8Array.from(outside, (value) => (value > close * close ? 1 : 0)), width, height)
+  // Keep whatever the overlays drew, even thin parts the closing shaved off.
+  for (let i = 0; i < closed.length; i += 1) if (solid[i]) closed[i] = 1
+  const distance = distanceField(closed, width, height)
+  const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t))
+  const alpha = new Uint8Array(width * height)
+  for (let i = 0; i < alpha.length; i += 1) {
+    const x = i % width
+    const y = (i - x) / width
+    // The map's torn-parchment frame runs along its edges: fade it out.
+    const edge = Math.min(x, y, width - 1 - x, height - 1 - y)
+    const fade = (1 - smooth((Math.sqrt(distance[i]) - grow) / feather)) * smooth((edge - frame) / feather)
+    alpha[i] = Math.round(fade * 255)
+  }
+  return alpha
+}
+
 // ------------------------------------------------------------------ Build
 
 function writeWebp(file, width, height, rgba) {
@@ -189,7 +290,8 @@ function writeWebp(file, width, height, rgba) {
   }
 }
 
-async function buildMap(uiMapId, tiles, layer) {
+// The map's base art, stitched from its tiles and cropped to its drawn size.
+async function stitch(tiles, layer) {
   const canvasWidth = Math.ceil(layer.width / layer.tileWidth) * layer.tileWidth
   const canvas = Buffer.alloc(canvasWidth * Math.ceil(layer.height / layer.tileHeight) * layer.tileHeight * 4)
   for (const entry of tiles) {
@@ -199,13 +301,114 @@ async function buildMap(uiMapId, tiles, layer) {
       rgba.copy(canvas, target, y * width * 4, (y + 1) * width * 4)
     }
   }
-  // Crop to the map's drawn size.
   const cropped = Buffer.alloc(layer.width * layer.height * 4)
   for (let y = 0; y < layer.height; y += 1) {
     canvas.copy(cropped, y * layer.width * 4, y * canvasWidth * 4, y * canvasWidth * 4 + layer.width * 4)
   }
-  const file = path.join(OUT, `${uiMapId}.webp`)
-  writeWebp(file, layer.width, layer.height, cropped)
+  return cropped
+}
+
+// Reads an RGBA image between pixels, clamped at its edges.
+function bilinear(pixels, width, height) {
+  return (x, y, out) => {
+    const cx = Math.min(width - 1, Math.max(0, x))
+    const cy = Math.min(height - 1, Math.max(0, y))
+    const x0 = Math.floor(cx)
+    const y0 = Math.floor(cy)
+    const x1 = Math.min(width - 1, x0 + 1)
+    const y1 = Math.min(height - 1, y0 + 1)
+    const fx = cx - x0
+    const fy = cy - y0
+    for (let channel = 0; channel < 4; channel += 1) {
+      const top = pixels[(y0 * width + x0) * 4 + channel] * (1 - fx) + pixels[(y0 * width + x1) * 4 + channel] * fx
+      const bottom = pixels[(y1 * width + x0) * 4 + channel] * (1 - fx) + pixels[(y1 * width + x1) * 4 + channel] * fx
+      out[channel] = top * (1 - fy) + bottom * fy
+    }
+    return out
+  }
+}
+
+// Paints a zone's explored areas over its base art, the way the game does
+// once a player has discovered them: each overlay is a texture cut into
+// 256px tiles, the last row and column holding only what is left over.
+// Returns how much of each pixel the overlays cover.
+async function paintOverlays(rgba, layer, overlays) {
+  const coverage = new Uint8Array(layer.width * layer.height)
+  const TILE = 256
+  // The game sizes each tile's texture to the next power of two that holds
+  // it and maps the file onto that, so a file stored larger (some are) is
+  // scaled down to fit.
+  const fileSpan = (pixels) => {
+    let span = 16
+    while (span < pixels) span *= 2
+    return span
+  }
+  for (const overlay of overlays) {
+    for (const entry of overlay.tiles) {
+      const { width, height, rgba: pixels } = decodeBlp(await tile(entry.fileDataId))
+      const drawWidth = Math.min(TILE, overlay.width - entry.col * TILE)
+      const drawHeight = Math.min(TILE, overlay.height - entry.row * TILE)
+      const scaleX = width / fileSpan(drawWidth)
+      const scaleY = height / fileSpan(drawHeight)
+      const sample = bilinear(pixels, width, height)
+      const left = overlay.x + entry.col * TILE
+      const top = overlay.y + entry.row * TILE
+      const texel = [0, 0, 0, 0]
+      for (let y = 0; y < drawHeight; y += 1) {
+        const ty = top + y
+        if (ty < 0 || ty >= layer.height) continue
+        for (let x = 0; x < drawWidth; x += 1) {
+          const tx = left + x
+          if (tx < 0 || tx >= layer.width) continue
+          sample((x + 0.5) * scaleX - 0.5, (y + 0.5) * scaleY - 0.5, texel)
+          const alpha = Math.round(texel[3])
+          if (!alpha) continue
+          const target = (ty * layer.width + tx) * 4
+          const a = alpha / 255
+          for (let channel = 0; channel < 3; channel += 1) {
+            rgba[target + channel] = Math.round(texel[channel] * a + rgba[target + channel] * (1 - a))
+          }
+          const index = ty * layer.width + tx
+          coverage[index] = Math.max(coverage[index], alpha)
+        }
+      }
+    }
+  }
+  return coverage
+}
+
+// The world map's torn-parchment frame and corner pieces fade out, so the
+// map melts into the page behind it instead of ending in a ragged edge.
+export function frameFade(width, height, { inset = 22, feather = 36, corner = 64 } = {}) {
+  const alpha = new Uint8Array(width * height)
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const cx = Math.min(x, width - 1 - x)
+      const cy = Math.min(y, height - 1 - y)
+      // Distance inside a rectangle with rounded corners.
+      const edge = cx < corner && cy < corner ? corner - Math.hypot(corner - cx, corner - cy) : Math.min(cx, cy)
+      const t = Math.min(1, Math.max(0, (edge - inset) / feather))
+      alpha[y * width + x] = Math.round(t * t * (3 - 2 * t) * 255)
+    }
+  }
+  return alpha
+}
+
+async function buildMap(job) {
+  const rgba = await stitch(job.tiles, job.layer)
+  if (job.uiMapId === AZEROTH_MAP_ID) {
+    const alpha = frameFade(job.layer.width, job.layer.height)
+    for (let i = 0; i < alpha.length; i += 1) rgba[i * 4 + 3] = Math.min(rgba[i * 4 + 3], alpha[i])
+  }
+  if (job.zone) {
+    // A zone shows its own land only, fully explored, so zones sit side by
+    // side on the world map with no frames, labels or fog from their maps.
+    const coverage = await paintOverlays(rgba, job.layer, job.overlays)
+    const alpha = landMask(coverage, job.layer.width, job.layer.height)
+    for (let i = 0; i < alpha.length; i += 1) rgba[i * 4 + 3] = alpha[i]
+  }
+  const file = path.join(OUT, `${job.uiMapId}.webp`)
+  writeWebp(file, job.layer.width, job.layer.height, rgba)
   return statSync(file).size
 }
 
@@ -218,9 +421,16 @@ async function main() {
   mkdirSync(OUT, { recursive: true })
   mkdirSync(CACHE, { recursive: true })
 
+  // The world map, and every zone the atlas draws. Cities are left to the
+  // zones around them, which draw them too.
   const atlas = getAtlas()
-  const wanted = [AZEROTH_MAP_ID, ...atlas.continents.map((continent) => continent.mapId), ...atlas.zones.map((zone) => zone.mapId)]
-  const [links, arts, tileRows, layers] = await Promise.all([table('UiMapXMapArt'), table('UiMapArt'), table('UiMapArtTile'), table('UiMapArtStyleLayer')])
+  const zones = atlas.zones.filter((zone) => !zone.city).map((zone) => zone.mapId)
+  const only = args.only ? new Set(String(args.only).split(',').map(Number)) : null
+  const wanted = [AZEROTH_MAP_ID, ...zones].filter((uiMapId) => !only || only.has(uiMapId))
+  const [links, arts, tileRows, layers, overlayRows, overlayTiles] = await Promise.all([
+    table('UiMapXMapArt'), table('UiMapArt'), table('UiMapArtTile'), table('UiMapArtStyleLayer'),
+    table('WorldMapOverlay'), table('WorldMapOverlayTile'),
+  ])
 
   const jobs = []
   for (const uiMapId of wanted) {
@@ -244,11 +454,27 @@ async function main() {
       tileWidth: Number(style.TileWidth),
       tileHeight: Number(style.TileHeight),
     }
-    jobs.push({ uiMapId, tiles, layer })
+    const zone = uiMapId !== AZEROTH_MAP_ID
+    const overlays = zone
+      ? overlayRows.filter((row) => row.UiMapArtID === link.UiMapArtID).map((row) => ({
+        x: Number(row.OffsetX),
+        y: Number(row.OffsetY),
+        width: Number(row.TextureWidth),
+        height: Number(row.TextureHeight),
+        tiles: overlayTiles
+          .filter((entry) => entry.WorldMapOverlayID === row.ID && Number(entry.LayerIndex) === 0)
+          .map((entry) => ({ row: Number(entry.RowIndex), col: Number(entry.ColIndex), fileDataId: Number(entry.FileDataID) })),
+      }))
+      : []
+    if (zone && !overlays.length) console.warn(`Map ${uiMapId} has no explored areas; it is drawn whole`)
+    jobs.push({ uiMapId, tiles, layer, zone: zone && overlays.length > 0, overlays })
   }
 
   // Download every tile first, a few at a time, then stitch.
-  const all = [...new Set(jobs.flatMap((job) => job.tiles.map((entry) => entry.fileDataId)))]
+  const all = [...new Set(jobs.flatMap((job) => [
+    ...job.tiles.map((entry) => entry.fileDataId),
+    ...job.overlays.flatMap((overlay) => overlay.tiles.map((entry) => entry.fileDataId)),
+  ]))]
   let done = 0
   const queue = [...all]
   await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
@@ -262,14 +488,16 @@ async function main() {
 
   let bytes = 0
   for (const job of jobs) {
-    const size = await buildMap(job.uiMapId, job.tiles, job.layer)
+    const size = await buildMap(job)
     bytes += size
-    console.log(`${job.uiMapId}.webp  ${(size / 1024).toFixed(0)} KB`)
+    console.log(`${job.uiMapId}.webp  ${(size / 1024).toFixed(0)} KB${job.zone ? `  ${job.overlays.length} explored areas` : ''}`)
   }
   console.log(`${jobs.length} maps, ${(bytes / 1024 / 1024).toFixed(1)} MB in ${path.relative(process.cwd(), OUT) || OUT}`)
 }
 
-main().catch((error) => {
-  console.error(error.message)
-  process.exitCode = 1
-})
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error.message)
+    process.exitCode = 1
+  })
+}

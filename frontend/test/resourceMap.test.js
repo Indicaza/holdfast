@@ -7,19 +7,30 @@ import {
   MAX_ZOOM,
   busiestSpots,
   fitBounds,
+  flightPath,
   formatCoords,
   interpolateView,
+  layerWeights,
   legendGroups,
   mapUrl,
   panBy,
+  placeLabels,
   placePoints,
   sourceColors,
+  sourceSpots,
+  sourceZones,
   toScreen,
   toWorld,
+  viewAnchored,
+  wayCommand,
+  worldArtOpacity,
+  zoneArtOpacity,
+  zoneLabelOpacity,
   zoneTotals,
   zoomAt,
   zoomLevel,
 } from '../src/Player/Map/mapModel.js'
+import { frameFade, landMask } from '../scripts/fetchMapArt.mjs'
 
 const size = { width: 1000, height: 720 }
 
@@ -133,4 +144,89 @@ test('legend groups sources by profession and filters by name or drop', () => {
   assert.equal(groups[1].observations, 15)
   assert.deepEqual(legendGroups(sources, 'ore').map((group) => group.sources[0].name), ['Copper Vein'])
   assert.equal(legendGroups(sources, 'zzz').length, 0)
+})
+
+test('flights land exactly where they aim, and long ones rise above the map on the way', () => {
+  const from = fitBounds(atlasZone(1429).rect, size, 0.9)
+  const to = fitBounds(atlasZone(1411).rect, size, 0.9)
+  const path = flightPath(from, to, size)
+  assert.deepEqual(path.at(0), from)
+  assert.deepEqual(path.at(1), to)
+  assert.ok(path.at(0.5).k < Math.min(from.k, to.k) / 2, 'crossing the sea zooms out first')
+  assert.ok(path.duration >= 320 && path.duration <= 1500)
+  const near = flightPath(HOME_VIEW, { ...HOME_VIEW, k: 4 }, size)
+  assert.ok(Math.abs(near.at(1).k - 4) < 1e-9)
+  for (let t = 0; t <= 1; t += 0.1) assert.ok(Number.isFinite(near.at(t).k), 'a straight zoom has no gaps')
+})
+
+test('an animated zoom keeps the point under the cursor still at every step', () => {
+  const anchor = { x: 720, y: 180 }
+  const world = toWorld(HOME_VIEW, size, anchor)
+  for (const k of [1.4, 3, 9]) {
+    const screen = toScreen(viewAnchored(world, anchor, k, size), size, world)
+    assert.ok(Math.abs(screen.x - anchor.x) < 1e-6 && Math.abs(screen.y - anchor.y) < 1e-6)
+  }
+  assert.equal(viewAnchored(world, anchor, 1e6, size).k, MAX_ZOOM)
+})
+
+test('what the map draws fades with zoom instead of switching', () => {
+  assert.equal(zoneArtOpacity(1), 0, 'the world shows the world map')
+  assert.equal(zoneArtOpacity(3), 1, 'regions show every zone map')
+  assert.equal(worldArtOpacity(1), 1)
+  assert.equal(worldArtOpacity(6), 0, 'up close only the zones are drawn')
+  const ks = [1, 1.5, 2, 2.5, 3, 5, 8, 12, 20]
+  for (let index = 1; index < ks.length; index += 1) {
+    const [a, b] = [layerWeights(ks[index - 1]), layerWeights(ks[index])]
+    assert.ok(b.bubbles <= a.bubbles && b.dots >= a.dots && b.markers >= a.markers, `monotonic from ×${ks[index - 1]} to ×${ks[index]}`)
+    assert.ok(Math.abs(b.bubbles - a.bubbles) < 0.75, 'no layer jumps at once')
+  }
+  assert.equal(layerWeights(1, 'spots').dots, 1, 'spots show at any zoom when asked for')
+  assert.equal(layerWeights(1, 'spots').heat, 0)
+  const elwynn = atlasZone(1429)
+  assert.equal(zoneLabelOpacity(elwynn, 0.5, 1), 0, 'too small to name')
+  assert.equal(zoneLabelOpacity(elwynn, 2, 2), 1)
+  assert.equal(zoneLabelOpacity(elwynn, 20, 18), 0, 'its own map names it up close')
+})
+
+test('overlapping zone labels give way to the bigger zone', () => {
+  const at = { x: 100, y: 100 }
+  const kept = placeLabels([
+    { zone: atlasZone(1430), at, opacity: 1 },
+    { zone: atlasZone(1434), at: { x: 104, y: 102 }, opacity: 1 },
+    { zone: atlasZone(1436), at: { x: 400, y: 100 }, opacity: 1 },
+  ])
+  assert.deepEqual(kept.map((entry) => entry.zone.name).sort(), ['Stranglethorn Vale', 'Westfall'])
+})
+
+test('a resource is summed by zone and its best spots span every zone', () => {
+  const { placed } = placePoints(points, zones)
+  assert.deepEqual(sourceZones(placed, 'a').map((entry) => [entry.zone.name, entry.observations]), [['Westfall', 16], ['Elwynn Forest', 3]])
+  const spots = sourceSpots(placed, 'a', { limit: 5 })
+  assert.deepEqual(spots.map((spot) => spot.zone.name), ['Westfall', 'Elwynn Forest'])
+  assert.equal(spots[0].observations, 16)
+  assert.equal(wayCommand(atlasZone(1436), 0.4567, 0.123), '/way Westfall 45.7 12.3')
+})
+
+test('map art: a zone is cut to its explored land, gaps closed and edges feathered', () => {
+  const width = 120
+  const height = 80
+  const coverage = new Uint8Array(width * height)
+  const paint = (x0, y0, x1, y1) => {
+    for (let y = y0; y < y1; y += 1) for (let x = x0; x < x1; x += 1) coverage[y * width + x] = 255
+  }
+  // Two explored areas with a narrow gap, one with a hole in it.
+  paint(20, 20, 50, 60)
+  paint(56, 20, 90, 60)
+  coverage[40 * width + 70] = 0
+  const alpha = landMask(coverage, width, height, { close: 6, grow: 2, feather: 4, frame: 2 })
+  assert.equal(alpha[40 * width + 30], 255, 'explored land is opaque')
+  assert.equal(alpha[40 * width + 53], 255, 'the gap between areas closes')
+  assert.equal(alpha[40 * width + 70], 255, 'holes fill')
+  assert.equal(alpha[40 * width + 110], 0, 'far from the land is clear')
+  const edge = alpha[40 * width + 93]
+  assert.ok(edge > 0 && edge < 255, 'the edge feathers')
+  const fade = frameFade(200, 140, { inset: 10, feather: 20, corner: 30 })
+  assert.equal(fade[0], 0, 'the frame fades out')
+  assert.equal(fade[70 * 200 + 100], 255, 'the middle stays')
+  assert.ok(fade[12 * 200 + 12] < fade[12 * 200 + 100], 'corners fade further than edges')
 })
