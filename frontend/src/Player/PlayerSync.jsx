@@ -36,7 +36,6 @@ function ConfirmDisconnect({ device, onCancel, onDisconnected }) {
 
   return (
     <Modal
-      eyebrow="Disconnect device"
       title={`Disconnect ${device.name}?`}
       intro="Its key stops working at once, so it can no longer upload. Data it already sent stays on your dashboard. If Guildweaver is still installed there, it will open this site the next time it syncs and ask you to connect it again."
       onClose={onCancel}
@@ -70,7 +69,6 @@ export default function PlayerSync({ data, onChanged }) {
 
       <Panel
         id="player-devices"
-        eyebrow="Devices"
         title="Your connected computers"
         description="Each computer running Guildweaver uploads with its own key. Only you can see or disconnect your devices."
         actions={<a className="gw-link" href="/download">Connect another computer <Icon name="chevron" size={14} /></a>}
@@ -97,7 +95,7 @@ export default function PlayerSync({ data, onChanged }) {
                     <div><dt>Characters</dt><dd>{device.characterCount}</dd></div>
                   </dl>
                   {connected ? (
-                    <Button variant="secondary" size="sm" onClick={() => setConfirming(device)}>Disconnect</Button>
+                    <button type="button" className="gw-btn gw-btn--ghost gw-btn--sm gw-btn--danger" onClick={() => setConfirming(device)}>Disconnect</button>
                   ) : (
                     <p className="gw-muted">Disconnected {formatDate(device.revokedAt)}.</p>
                   )}
@@ -108,7 +106,7 @@ export default function PlayerSync({ data, onChanged }) {
         )}
       </Panel>
 
-      <Panel id="player-sync-help" eyebrow="How syncing works" title="When new data arrives">
+      <Panel id="player-sync-help" title="When new data arrives">
         <ul className="gw-help">
           <li><Icon name="bolt" size={16} /><span>WoW saves addon data only when you <kbd>/reload</kbd>, log out or exit. Guildweaver uploads it right after, so the dashboard updates then, not live while you play.</span></li>
           <li><Icon name="guildweaver" size={16} /><span>Guildweaver must be running on the computer you play on. The installer sets it to start when you sign in, and it updates itself.</span></li>

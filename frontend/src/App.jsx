@@ -81,6 +81,9 @@ const platformPages = {
     props: (url, route) => ({ section: route.section, queryString: url.search }),
     // The dashboard stays mounted while its sections change.
     key: () => 'dashboard',
+    // An app with its own frame: it draws the site navbar only while signed
+    // out.
+    navbar: false,
   },
   account: {
     component: Account,

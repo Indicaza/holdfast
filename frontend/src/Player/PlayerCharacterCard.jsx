@@ -1,6 +1,7 @@
 import { classIdentity } from '../Intelligence/classIdentity.js'
 import { WowIcon } from '../WowAssets/WowIcon.jsx'
 import { relativeTime } from './playerModel.js'
+import Tip from './Tooltip.jsx'
 
 function characterName(character) {
   return [character.firstName, character.lastName].filter(Boolean).join(' ') || character.name || 'Unknown character'
@@ -52,10 +53,12 @@ export default function PlayerCharacterCard({ character, onOpen, showServer = tr
           </span>
         ) : null}
       </span>
-      <span className={`gw-char__seen gw-char__seen--${state}`} title={character.lastSeenAt ? `Last synced ${new Date(character.lastSeenAt).toLocaleString()}` : 'Never synced'}>
-        <i aria-hidden="true" />
-        {relativeTime(character.lastSeenAt)}
-      </span>
+      <Tip label={character.lastSeenAt ? `Last synced ${new Date(character.lastSeenAt).toLocaleString()}` : 'Never synced'}>
+        <span className={`gw-char__seen gw-char__seen--${state}`}>
+          <i aria-hidden="true" />
+          {relativeTime(character.lastSeenAt)}
+        </span>
+      </Tip>
     </a>
   )
 }

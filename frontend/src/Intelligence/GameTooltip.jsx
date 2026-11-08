@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 import { FloatingTooltip } from '../WowAssets/WowIcon.jsx'
 import { coins } from './inventoryModel.js'
@@ -24,6 +24,8 @@ export function Money({ money, className = '' }) {
     </span>
   )
 }
+
+const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
 
 function color(value) {
   if (!value || typeof value !== 'object') return undefined
@@ -62,14 +64,15 @@ export function GameTooltipBody({ item: value }) {
   const actualItem = isItem(item)
 
   // For real items, never manufacture a tooltip from metadata. An item with
-  // no captured lines waits for Guildweaver (see itemTooltipPending).
+  // no captured lines shows only what is known for certain: its name and
+  // quality (see itemTooltipPending).
   if (itemTooltipPending(item)) {
     return (
       <>
         <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
-          <span>{item.name || 'Item tooltip'}</span>
+          <span>{item.name || 'Item'}</span>
         </div>
-        <div className="game-tooltip__pending">Full Blizzard tooltip is still syncing…</div>
+        {QUALITY_NAMES[quality] ? <div className="game-tooltip__line game-tooltip__quality"><span>{QUALITY_NAMES[quality]}</span></div> : null}
       </>
     )
   }
@@ -114,6 +117,19 @@ function focusVisible(event) {
 export function GameTooltipHover({ item, children, side = 'right', className = '' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
+  const shown = Boolean(anchor)
+  // A tooltip is placed once, against where its item was; scrolling would
+  // leave it floating over something else.
+  useEffect(() => {
+    if (!shown) return undefined
+    const hide = () => setAnchor(null)
+    window.addEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+    }
+  }, [shown])
   const normalized = gameTooltipItem(item)
   if (!normalized) return children
   const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()

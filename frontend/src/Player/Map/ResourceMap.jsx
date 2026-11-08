@@ -5,7 +5,7 @@ import { apiJson } from '../../Api/apiClient.js'
 import { disciplineLabel, formatCount } from '../../Intelligence/Farming/farmingModel.js'
 import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
-import { DisciplineTag, Icon } from '../ui.jsx'
+import { DisciplineTag, Icon, Tip } from '../ui.jsx'
 import { AZEROTH_MAP_ID, AZEROTH_RECT, atlasZone, getAtlas, locateWorldPoint, mapArtUrl } from './atlas.js'
 import {
   HOME_VIEW, MAX_ZOOM, MIN_ZOOM, ZONE_ZOOM, busiestSpots, clampView, fitBounds, fitScale, flightPath, formatCoords,
@@ -247,17 +247,18 @@ const Legend = memo(function Legend({
             const on = !hidden.has(source.sourceKey)
             return (
               <li key={source.sourceKey}>
-                <button
-                  type="button"
-                  className={on ? undefined : 'is-off'}
-                  aria-pressed={on}
-                  aria-label={`${on ? 'Hide' : 'Show'} ${source.name}`}
-                  title={`${source.name} · ${formatCount(source.observations)}`}
-                  style={{ '--swatch': colors.get(source.sourceKey) }}
-                  onClick={() => onToggle(source.sourceKey)}
-                >
-                  <SourceIcon source={source} size={24} />
-                </button>
+                <Tip label={`${on ? 'Hide' : 'Show'} ${source.name} · ${formatCount(source.observations)}`} side="right">
+                  <button
+                    type="button"
+                    className={on ? undefined : 'is-off'}
+                    aria-pressed={on}
+                    aria-label={`${on ? 'Hide' : 'Show'} ${source.name}`}
+                    style={{ '--swatch': colors.get(source.sourceKey) }}
+                    onClick={() => onToggle(source.sourceKey)}
+                  >
+                    <SourceIcon source={source} size={24} />
+                  </button>
+                </Tip>
               </li>
             )
           })}
@@ -275,18 +276,21 @@ const Legend = memo(function Legend({
           <span>{shownSources} of {totalSources} shown</span>
         </div>
         {docked ? null : <div className="gw-rmap__legend-tools">
-          <button
-            type="button"
-            className="gw-rmap__icon-btn"
-            onClick={() => onMode(expanded ? 'compact' : 'expanded')}
-            aria-label={expanded ? 'Narrow the legend' : 'Widen the legend'}
-            title={expanded ? 'Narrow' : 'Widen'}
-          >
-            <Icon name={expanded ? 'shrink' : 'expand'} size={15} />
-          </button>
-          <button type="button" className="gw-rmap__icon-btn" onClick={() => onMode('hidden')} aria-label="Hide the legend" title="Hide legend">
-            <Icon name="close" size={15} />
-          </button>
+          <Tip label={expanded ? 'Narrow legend' : 'Widen legend'}>
+            <button
+              type="button"
+              className="gw-rmap__icon-btn"
+              onClick={() => onMode(expanded ? 'compact' : 'expanded')}
+              aria-label={expanded ? 'Narrow the legend' : 'Widen the legend'}
+            >
+              <Icon name={expanded ? 'shrink' : 'expand'} size={15} />
+            </button>
+          </Tip>
+          <Tip label="Hide legend">
+            <button type="button" className="gw-rmap__icon-btn" onClick={() => onMode('hidden')} aria-label="Hide the legend">
+              <Icon name="close" size={15} />
+            </button>
+          </Tip>
         </div>}
       </header>
 
@@ -325,7 +329,7 @@ const Legend = memo(function Legend({
                   return (
                     <li key={source.sourceKey} className={on ? undefined : 'is-off'}>
                       <input type="checkbox" checked={on} onChange={() => onToggle(source.sourceKey)} aria-label={`Show ${source.name} on the map`} />
-                      <button type="button" className="gw-rmap__source" onClick={() => onDetails(source.sourceKey)} aria-label={`${source.name} details`} title={`${source.name}: drops and where to find it`}>
+                      <button type="button" className="gw-rmap__source" onClick={() => onDetails(source.sourceKey)} aria-label={`${source.name} details`}>
                         <i className="gw-rmap__swatch" style={{ '--swatch': colors.get(source.sourceKey) }} aria-hidden="true" />
                         <SourceIcon source={source} size={expanded ? 20 : 16} />
                         <span className="gw-rmap__source-name">{source.name}</span>
@@ -1086,15 +1090,25 @@ export default function ResourceMap({
 
         <div className="gw-rmap__controls">
           <div className="gw-rmap__control-group">
-            <button type="button" onClick={() => zoomBy(1.8)} aria-label="Zoom in" title="Zoom in (+)" disabled={view.k >= MAX_ZOOM - 1e-6}><Icon name="plus" size={16} /></button>
-            <button type="button" onClick={() => zoomBy(1 / 1.8)} aria-label="Zoom out" title="Zoom out (−)" disabled={view.k <= MIN_ZOOM + 1e-6}><Icon name="minus" size={16} /></button>
+            <Tip label="Zoom in" shortcut="+" side="left">
+              <button type="button" onClick={() => zoomBy(1.8)} aria-label="Zoom in" disabled={view.k >= MAX_ZOOM - 1e-6}><Icon name="plus" size={16} /></button>
+            </Tip>
+            <Tip label="Zoom out" shortcut="−" side="left">
+              <button type="button" onClick={() => zoomBy(1 / 1.8)} aria-label="Zoom out" disabled={view.k <= MIN_ZOOM + 1e-6}><Icon name="minus" size={16} /></button>
+            </Tip>
           </div>
           <div className="gw-rmap__control-group">
-            <button type="button" onClick={() => flyTo(HOME_VIEW)} aria-label="Show the whole world" title="Whole world (0)"><Icon name="globe" size={16} /></button>
-            <button type="button" onClick={toggleFullscreen} aria-label={fullscreenLabel} title={fullscreenLabel}><Icon name={fullscreen ? 'exitFullscreen' : 'fullscreen'} size={16} /></button>
+            <Tip label="Whole world" shortcut="0" side="left">
+              <button type="button" onClick={() => flyTo(HOME_VIEW)} aria-label="Show the whole world"><Icon name="globe" size={16} /></button>
+            </Tip>
+            <Tip label={fullscreenLabel} side="left">
+              <button type="button" onClick={toggleFullscreen} aria-label={fullscreenLabel}><Icon name={fullscreen ? 'exitFullscreen' : 'fullscreen'} size={16} /></button>
+            </Tip>
           </div>
           {fullHref && !fullscreen ? (
-            <a className="gw-rmap__control-link" href={fullHref} title="Open the full resource map" aria-label="Open the full resource map"><Icon name="external" size={15} /></a>
+            <Tip label="Open the full map" side="left">
+              <a className="gw-rmap__control-link" href={fullHref} aria-label="Open the full resource map"><Icon name="external" size={15} /></a>
+            </Tip>
           ) : null}
         </div>
 
@@ -1113,7 +1127,7 @@ export default function ResourceMap({
           ) : (
             <span>{level === 'zone' ? 'Click a spot for its details' : 'Scroll to zoom · click a zone to fly there'}</span>
           )}
-          <span className="gw-rmap__scale" title="Zoom" aria-hidden="true"><i style={{ width: `${Math.round((Math.log(view.k / MIN_ZOOM) / Math.log(MAX_ZOOM / MIN_ZOOM)) * 100)}%` }} /></span>
+          <span className="gw-rmap__scale" aria-hidden="true"><i style={{ width: `${Math.round((Math.log(view.k / MIN_ZOOM) / Math.log(MAX_ZOOM / MIN_ZOOM)) * 100)}%` }} /></span>
         </div>
 
         {detailsSource ? (

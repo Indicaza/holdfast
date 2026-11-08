@@ -54,6 +54,10 @@
   margin-left: .2rem;
 }
 
+.game-tooltip__quality {
+  color: rgba(255, 255, 255, .62);
+}
+
 .game-tooltip__pending {
   max-width: 18rem;
   color: rgba(255, 255, 255, .62);

@@ -40,7 +40,7 @@ export default function PlayerGathering({ server }) {
       </section>
 
       <div className="gw-grid gw-grid--2">
-        <Panel id="player-farming-items" eyebrow="Materials" title="What you collected" flush>
+        <Panel id="player-farming-items" title="What you collected" flush>
           <ul className="gw-bars">
             {data.items.map((item) => (
               <li key={item.itemKey}>
@@ -52,7 +52,7 @@ export default function PlayerGathering({ server }) {
           </ul>
         </Panel>
 
-        <Panel id="player-farming-sources" eyebrow="Sources" title="Where you farmed" flush>
+        <Panel id="player-farming-sources" title="Where you farmed" flush>
           <ul className="gw-bars">
             {data.sources.map((source) => (
               <li key={source.sourceKey}>
@@ -68,7 +68,7 @@ export default function PlayerGathering({ server }) {
         </Panel>
       </div>
 
-      <Panel id="player-farming-recent" eyebrow="Log" title="Your latest gathers" flush>
+      <Panel id="player-farming-recent" title="Your latest gathers" flush>
         <div className="gw-table-wrap">
           <table className="gw-table">
             <thead>
@@ -94,7 +94,7 @@ export default function PlayerGathering({ server }) {
       </Panel>
 
       {data.sessions.length ? (
-        <Panel id="player-farming-runs" eyebrow="Sessions" title="Your farming runs" flush>
+        <Panel id="player-farming-runs" title="Your farming runs" flush>
           <div className="gw-table-wrap">
             <table className="gw-table">
               <thead>
