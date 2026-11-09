@@ -2,7 +2,9 @@
    "card" floats it over the map. Lives inside .gw, so it uses its tokens. */
 
 .gw-rmap {
-  --rmap-glass: rgba(11, 14, 19, 0.86);
+  /* Opaque enough to read without a backdrop blur, which re-blurred the
+     moving map under every panel on every frame. */
+  --rmap-glass: rgba(11, 14, 19, 0.92);
   --rmap-glass-line: rgba(255, 255, 255, 0.09);
   --rmap-legend-expanded: 19.5rem;
   --rmap-legend-compact: 13.5rem;
@@ -146,12 +148,17 @@
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  transform: translate(-50%, -50%);
+  /* Placed by transform on its own layer: panning moves it without layout
+     or repainting its glow. */
+  top: 0;
+  left: 0;
+  transform: translate(var(--x), var(--y)) translate(-50%, -50%);
+  will-change: transform;
   animation: gw-rmap-pop 280ms ease-out both;
 }
 
 @keyframes gw-rmap-pop {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  from { opacity: 0; transform: translate(var(--x), var(--y)) translate(-50%, -50%) scale(0.6); }
 }
 
 /* Numbered busiest spots in the focused zone. */
@@ -168,7 +175,10 @@
   color: #fff;
   font-size: 11px;
   font-weight: 750;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  transform: translate(var(--x), var(--y)) translate(-50%, -50%);
+  will-change: transform;
 }
 
 /* ---------------------------------------------------------------- Tooltip */
@@ -186,7 +196,6 @@
   border-radius: 10px;
   background: var(--rmap-glass);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(14px);
   font-size: 12px;
   transform: translate(-50%, calc(-100% - 18px));
   pointer-events: none;
@@ -252,7 +261,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
   white-space: nowrap;
 }
 
@@ -294,7 +302,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
   color: var(--gw-text);
   font-size: 12.5px;
   font-weight: 600;
@@ -325,7 +332,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
 }
 
 .gw-rmap__control-group button,
@@ -355,7 +361,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px !important;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
 }
 
 .gw-rmap__display {
@@ -368,7 +373,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
 }
 
 .gw-rmap__display button {
@@ -402,7 +406,6 @@
   border: 1px solid var(--rmap-glass-line);
   border-radius: 9px;
   background: var(--rmap-glass);
-  backdrop-filter: blur(12px);
   color: var(--gw-faint);
   font-size: 12px;
   white-space: nowrap;
@@ -530,7 +533,6 @@
   border-radius: 11px;
   background: var(--rmap-glass);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(14px);
   animation: gw-rmap-slide 180ms ease-out;
 }
 
@@ -989,6 +991,33 @@
 /* ---------------------------------------------------------------- Game map art */
 
 /* Each zone's map fades in once it has loaded, and follows the zoom after. */
+/* The game's maps: images at their pixel size, placed and scaled by their
+   transform on their own GPU layers (ResourceMap's ArtLayer). */
+.gw-rmap__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gw-rmap__art img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  max-width: none;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  user-select: none;
+}
+
+/* Darkens the maps a touch as the map nears, so heat and spots read on top. */
+.gw-rmap__art-dim {
+  position: absolute;
+  inset: 0;
+  background: #05070a;
+}
+
 .gw-rmap__zone-art,
 .gw-rmap__world-art {
   transition: opacity 220ms ease-out;
