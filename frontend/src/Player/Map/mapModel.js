@@ -37,6 +37,14 @@ export function fitScale(size) {
 
 export const HOME_VIEW = Object.freeze({ x: WORLD.width / 2, y: WORLD.height / 2, k: 1 })
 
+// A tall, narrow map (a phone) shows the whole world as a thin strip. Start
+// it filled top to bottom instead, centred across on x (the busiest data).
+export function portraitHome(size, x = WORLD.width / 2) {
+  if (!size?.width || !size?.height || size.height < size.width * 1.1) return null
+  const cover = (size.height / WORLD.height) / (size.width / WORLD.width)
+  return clampView({ x, y: WORLD.height / 2, k: Math.min(cover * 0.95, 3) })
+}
+
 export function clampView(view) {
   const k = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.k))
   return {

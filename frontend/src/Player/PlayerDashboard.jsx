@@ -269,7 +269,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
         ) : null}
       </PlayerShell>
       <CommandPalette open={searchOpen} onClose={closeSearch} characters={characters} views={views} onOpenCharacter={openCharacter} onOpenSource={section === 'map' ? openOnMap : undefined} />
-      <CharacterProfileModal apiBase="/api/player/characters" characterId={characterId} onClose={() => openCharacter('')} />
+      <CharacterProfileModal apiBase="/api/player/characters" appearance="app" characterId={characterId} onClose={() => openCharacter('')} />
     </>
   )
 }

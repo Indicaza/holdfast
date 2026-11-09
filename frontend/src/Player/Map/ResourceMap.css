@@ -722,7 +722,7 @@
   width: 14px;
   height: 14px;
   margin: 0;
-  accent-color: var(--gw-accent);
+  accent-color: var(--swatch, var(--gw-accent));
 }
 
 .gw-rmap__source-name {
@@ -995,24 +995,6 @@
 }
 
 /* A zoom readout as a slim gauge. */
-.gw-rmap__scale {
-  position: relative;
-  flex: none;
-  width: 3.25rem;
-  height: 4px;
-  margin-left: 0.25rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.gw-rmap__scale i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--gw-accent-line), var(--gw-accent));
-}
-
 .gw-rmap__readout .gw-icon {
   flex: none;
   color: var(--gw-accent);

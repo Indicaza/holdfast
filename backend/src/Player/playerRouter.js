@@ -10,6 +10,7 @@ import {
   readPlayerFarming,
   readPlayerOverview,
   readPlayerProfessions,
+  renamePlayerDevice,
   revokePlayerDevice,
   searchPlayerCrafts,
 } from "./playerRepository.js";
@@ -72,6 +73,26 @@ export function createPlayerRouter({ provider, icons } = {}) {
     } catch (error) {
       console.error("Unable to disconnect player device", error);
       res.status(500).json({ error: "device_disconnect_failed" });
+    }
+  });
+
+  // Naming a device only changes its label here; its key is untouched.
+  router.post("/devices/:deviceId/rename", (req, res) => {
+    try {
+      const result = renamePlayerDevice(owner(req), req.params.deviceId, req.body?.name);
+      if (result.status === "invalid") {
+        res.status(400).json({ error: "device_name_invalid" });
+        return;
+      }
+      if (result.status === "not-found") {
+        res.status(404).json({ error: "device_not_found" });
+        return;
+      }
+      publishPlayerChanged(owner(req), "player.device.renamed");
+      res.json({ status: result.status, device: result.device });
+    } catch (error) {
+      console.error("Unable to rename player device", error);
+      res.status(500).json({ error: "device_rename_failed" });
     }
   });
 

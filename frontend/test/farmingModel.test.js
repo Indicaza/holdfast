@@ -12,6 +12,7 @@ import {
   formatRate,
   groupSourcesByDiscipline,
   rankLabel,
+  niceRateMax,
   rateBars,
   rateLinePoints,
   rateRangeText,
@@ -91,10 +92,10 @@ test('the skill line plots known buckets only, scales to the rates and clips lik
     { bucket: 'unknown', rate: 0.5, low: 0.1, high: 0.9, observations: 2 },
   ]
   const { points, maxRate } = rateLinePoints(rows, { width: 100, height: 100, padX: 10, padY: 10 })
-  assert.ok(Math.abs(maxRate - 0.0375) < 1e-12, 'the highest rate plus headroom')
+  assert.equal(maxRate, 0.04, 'the highest rate plus headroom, rounded up')
   assert.deepEqual(points.map((point) => point.bucket), ['1-25', '26-50'])
   assert.deepEqual(points.map((point) => point.x), [10, 90])
-  assert.equal(points[1].y, 26)
+  assert.equal(points[1].y, 30)
   assert.equal(points[1].yHigh, 10, 'a range above the plot is clipped to its top')
   assert.deepEqual(rateLinePoints([]).points, [])
   assert.equal(rateLinePoints([rows[0]], { width: 100 }).points[0].x, 50)
@@ -127,4 +128,13 @@ test('sources group by discipline in the order they arrive', () => {
     ['Mining', ['b']],
   ])
   assert.deepEqual(groupSourcesByDiscipline(), [])
+})
+
+test('chart tops round up to a number gridlines can show', () => {
+  assert.equal(niceRateMax([0.0279]), 0.04)
+  assert.equal(niceRateMax([0.0186, 0.0271]), 0.04)
+  assert.equal(niceRateMax([0.42]), 0.5)
+  assert.equal(niceRateMax([0.9]), 1)
+  assert.equal(niceRateMax([0.0009]), 0.001)
+  assert.equal(niceRateMax([]), 0.0002)
 })

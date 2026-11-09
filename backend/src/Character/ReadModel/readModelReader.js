@@ -84,11 +84,14 @@ export function readPlayerCharacterCards(memberId) {
   return withGuildDatabase((db) => {
     ensureCharacterReadModelSchema(db);
     return db.prepare(`
-      SELECT k.*, c.is_main
+      SELECT k.*, c.is_main,
+        -- Cards written before same-data captures moved last_seen_at lag
+        -- behind their sections; the newest section is the truth.
+        COALESCE((SELECT MAX(s.captured_at) FROM character_sections s WHERE s.character_id = k.character_id), '') AS section_seen_at
       FROM character_cards k
       JOIN characters c ON c.id = k.character_id
       WHERE c.member_id = ?
-      ORDER BY k.last_seen_at DESC, k.name COLLATE NOCASE, k.character_id
+      ORDER BY MAX(k.last_seen_at, section_seen_at) DESC, k.name COLLATE NOCASE, k.character_id
     `).all(String(memberId || "")).map((row) => ({
       id: row.character_id,
       name: row.name,
@@ -104,7 +107,7 @@ export function readPlayerCharacterCards(memberId) {
       organizationName: row.organization_name || row.guild_name,
       professions: parseTelemetryJson(row.professions_json, []),
       knownRecipeCount: Number(row.known_recipe_count) || 0,
-      lastSeenAt: row.last_seen_at || null,
+      lastSeenAt: [row.last_seen_at, row.section_seen_at].filter(Boolean).sort().at(-1) || null,
       isMain: Boolean(row.is_main),
       vitals: parseTelemetryJson(row.vitals_json, null),
     }));

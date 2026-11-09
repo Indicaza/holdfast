@@ -56,8 +56,8 @@ test('a new player follows the first-run checklist to their first sync, then see
   await rail(page).getByRole('link', { name: /^Characters/ }).click()
   await expect(page).toHaveURL(/\/dashboard\/characters\?server=us%3Adoomhowl$/)
   await expect(heading(page)).toHaveText('Characters')
-  await expect(page.locator('.gw-char')).toHaveCount(2)
-  await expect(page.locator('.gw-char').filter({ hasText: 'Rook' })).toHaveCount(1)
+  await expect(page.locator('.gw-char-row')).toHaveCount(2)
+  await expect(page.locator('.gw-char-row').filter({ hasText: 'Rook' })).toHaveCount(1)
 
   await rail(page).getByRole('link', { name: /^My gathering/ }).click()
   await expect(heading(page)).toHaveText('My gathering')
@@ -128,17 +128,17 @@ test('a new player follows the first-run checklist to their first sync, then see
   // to the remembered one, and All servers clears the memory.
   await page.goto('/dashboard/characters')
   await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
-  await expect(page.locator('.gw-char')).toHaveCount(1)
+  await expect(page.locator('.gw-char-row')).toHaveCount(1)
   await page.goto('/dashboard/characters?server=eu%3Asomewhere-else')
   await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
   await page.getByLabel('Server').selectOption({ label: 'All servers' })
   await expect(page).toHaveURL((url) => !url.search.includes('server='))
-  await expect(page.locator('.gw-char')).toHaveCount(3)
+  await expect(page.locator('.gw-char-row')).toHaveCount(3)
   await page.reload()
-  await expect(page.locator('.gw-char')).toHaveCount(3)
+  await expect(page.locator('.gw-char-row')).toHaveCount(3)
 
   // The armory opens in place from the player's own data.
-  await page.locator('.gw-char').filter({ hasText: 'Fern' }).click()
+  await page.locator('.gw-char-row').filter({ hasText: 'Fern' }).click()
   await expect(page).toHaveURL(/character=/)
   await expect(page.getByRole('dialog', { name: 'Fern' })).toBeVisible()
   await page.keyboard.press('Escape')
@@ -148,7 +148,7 @@ test('a new player follows the first-run checklist to their first sync, then see
 test('another player cannot list, open or disconnect this player\'s things, even with direct links', async ({ page, context, browser }) => {
   await authenticate(context, 'player')
   await page.goto('/dashboard/characters')
-  await expect(page.locator('.gw-char').first()).toBeVisible()
+  await expect(page.locator('.gw-char-row').first()).toBeVisible()
   const ownCharacter = await page.evaluate(async () => (await (await fetch('/api/player/characters')).json()).characters[0].id)
   const ownDevice = await page.evaluate(async () => (await (await fetch('/api/player/devices')).json()).devices[0].id)
 
@@ -157,7 +157,7 @@ test('another player cannot list, open or disconnect this player\'s things, even
   const rival = await rivalContext.newPage()
   await rival.goto(`/dashboard/characters?character=${encodeURIComponent(ownCharacter)}`)
   await expect(account(rival, 'Rex Rival')).toBeVisible()
-  await expect(rival.locator('.gw-char')).toHaveCount(0)
+  await expect(rival.locator('.gw-char-row')).toHaveCount(0)
   await expect(rival.getByRole('heading', { name: 'Character not found.' })).toBeVisible()
   const probes = await rival.evaluate(async ({ ownCharacter, ownDevice }) => ({
     armory: (await fetch(`/api/player/characters/${encodeURIComponent(ownCharacter)}`)).status,
@@ -178,7 +178,7 @@ test('another player cannot list, open or disconnect this player\'s things, even
 test('the avatar menu reaches every personal view and signing out leaves nothing behind', async ({ page, context }) => {
   await authenticate(context, 'player')
   await page.goto('/dashboard/characters')
-  await expect(page.locator('.gw-char').first()).toBeVisible()
+  await expect(page.locator('.gw-char-row').first()).toBeVisible()
 
   await account(page).focus()
   await page.keyboard.press('Enter')
@@ -254,4 +254,14 @@ test('disconnecting a computer asks first, then stops it uploading', async ({ pa
   await page.getByRole('dialog').getByRole('button', { name: 'Disconnect', exact: true }).click()
   await expect(laptop.locator('.gw-tag')).toHaveText('Disconnected')
   await expect(page.locator('.gw-device').filter({ hasText: 'Pip desktop' }).locator('.gw-tag')).toHaveText('Connected')
+
+  // Computers can be renamed in place to tell them apart.
+  await page.getByRole('button', { name: 'Rename Pip desktop' }).click()
+  const name = page.getByRole('textbox', { name: 'Name for Pip desktop' })
+  await expect(name).toBeFocused()
+  await name.fill('Living room PC')
+  await name.press('Enter')
+  await expect(page.locator('.gw-device').filter({ hasText: 'Living room PC' }).locator('.gw-tag')).toHaveText('Connected')
+  await page.reload()
+  await expect(page.locator('.gw-device').filter({ hasText: 'Living room PC' })).toHaveCount(1)
 })

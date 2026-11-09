@@ -183,7 +183,9 @@ test("players never see, open, search or change each other's data, even by id", 
     assert.deepEqual(spoofed.json.characters.map((character) => character.id).sort(), [ashCharacters[0].id, fern.id].sort());
 
     // Farming and crafting are the player's own.
-    assert.equal((await request("/api/player/farming", { rawCookie: bram.cookie })).json.summary.observations, 1);
+    const bramFarming = (await request("/api/player/farming", { rawCookie: bram.cookie })).json;
+    assert.equal(bramFarming.summary.observations, 1);
+    assert.equal(bramFarming.recent[0].character?.name, "Rook", "each gather names the character that made it");
     const ashFarming = (await request("/api/player/farming", { rawCookie: ash.cookie })).json;
     assert.equal(ashFarming.summary.observations, 0);
     assert.deepEqual(ashFarming.recent, []);
@@ -194,6 +196,8 @@ test("players never see, open, search or change each other's data, even by id", 
     assert.deepEqual(ashDevices.map((device) => device.id), [ash.deviceId]);
     const stolen = await request(`/api/player/devices/${bram.deviceId}/disconnect`, { method: "POST", rawCookie: ash.cookie });
     assert.equal(stolen.status, 404);
+    const renamedElsewhere = await request(`/api/player/devices/${bram.deviceId}/rename`, { method: "POST", rawCookie: ash.cookie, body: { name: "Mine now" } });
+    assert.equal(renamedElsewhere.status, 404, "another player's device cannot be renamed");
     assert.equal((await syncCharacter(request, bram.token, { characterId: "bram-2", name: "Kip", realm: "Doomhowl" })).status, 201, "Bram's computer still uploads");
 
     // The guild workspace is hidden while guild features are off.
@@ -211,6 +215,7 @@ test("anonymous requests read no private data", async () => {
       assert.equal(response.json.error, "authentication_required", route);
     }
     assert.equal((await request("/api/player/devices/x/disconnect", { method: "POST" })).status, 401);
+    assert.equal((await request("/api/player/devices/x/rename", { method: "POST", body: { name: "Laptop" } })).status, 401);
   });
 });
 
@@ -320,4 +325,23 @@ test("sync state follows what the website actually received", () => {
   assert.equal(playerSyncState({ devices: [{ ...connected, lastUploadAt: recent }], characters: [{ lastSeenAt: recent }], now }).state, "synced");
   assert.equal(playerSyncState({ devices: [{ ...connected, lastUploadAt: old }], characters: [{ lastSeenAt: old }], now }).state, "stale");
   assert.equal(playerSyncState({ devices: [{ status: "disconnected", lastUploadAt: recent }], characters: [{ lastSeenAt: recent }], now }).state, "stale");
+});
+
+test("a player can name their own devices to tell them apart", async () => {
+  await withHttpApp(async ({ request }) => {
+    const ash = await connectComputer(request, ASH);
+    const route = `/api/player/devices/${ash.deviceId}/rename`;
+
+    const renamed = await request(route, { method: "POST", rawCookie: ash.cookie, body: { name: "  Living   room\u0007 PC " } });
+    assert.equal(renamed.status, 200, renamed.text);
+    assert.equal(renamed.json.device.name, "Living room PC", "spaces and control characters are tidied");
+    assert.equal((await request("/api/player/devices", { rawCookie: ash.cookie })).json.devices[0].name, "Living room PC");
+
+    for (const name of ["", "   ", "x".repeat(41), undefined]) {
+      assert.equal((await request(route, { method: "POST", rawCookie: ash.cookie, body: { name } })).status, 400, JSON.stringify(name));
+    }
+    assert.equal((await request("/api/player/devices/nope/rename", { method: "POST", rawCookie: ash.cookie, body: { name: "Laptop" } })).status, 404);
+    const crossSite = await request(route, { method: "POST", rawCookie: ash.cookie, body: { name: "Evil" }, headers: { Origin: "https://evil.example" } });
+    assert.equal(crossSite.status, 403);
+  });
 });

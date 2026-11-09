@@ -128,6 +128,23 @@ export function revokePlayerDevice(memberId, deviceId) {
   });
 }
 
+// Names one of the player's devices, so several computers can be told
+// apart. Another account's device, or an unknown id, is "not-found".
+export const DEVICE_NAME_MAX = 40;
+
+export function renamePlayerDevice(memberId, deviceId, name) {
+  // Control characters and runs of spaces never make a useful name.
+  const clean = String(name ?? "").replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim();
+  if (!clean || clean.length > DEVICE_NAME_MAX) return { status: "invalid" };
+  return withGuildTransaction((db) => {
+    const owned = db.prepare("SELECT id FROM guildweaver_devices WHERE id = ? AND member_id = ?")
+      .get(text(deviceId, 96), text(memberId, 96));
+    if (!owned) return { status: "not-found" };
+    db.prepare("UPDATE guildweaver_devices SET name = ? WHERE id = ? AND member_id = ?").run(clean, owned.id, text(memberId, 96));
+    return { status: "renamed", device: deviceView(deviceRows(db, memberId).find((row) => row.id === owned.id)) };
+  });
+}
+
 // --- Professions and crafting --------------------------------------------
 
 export function readPlayerProfessions(memberId, { server = "" } = {}) {
@@ -248,8 +265,12 @@ export function readPlayerFarming(memberId, { server = "" } = {}) {
     }));
 
     const recentRows = db.prepare(`
-      SELECT o.id, o.discipline, o.source_key, o.source_name, o.zone, o.subzone, o.captured_at, o.realm, o.region
-      FROM economic_observations o WHERE o.member_id = ? ${serverClause}
+      SELECT o.id, o.discipline, o.source_key, o.source_name, o.zone, o.subzone, o.captured_at, o.realm, o.region,
+        c.id AS character_id, c.name AS character_name, c.class_name AS character_class
+      FROM economic_observations o
+      -- Only the player's own character, never another account's.
+      LEFT JOIN characters c ON c.id = o.character_key AND c.member_id = o.member_id
+      WHERE o.member_id = ? ${serverClause}
       ORDER BY o.captured_at DESC, o.id DESC LIMIT 15
     `).all(...params);
     const outputs = new Map();
@@ -288,6 +309,7 @@ export function readPlayerFarming(memberId, { server = "" } = {}) {
         zone: row.zone,
         subzone: row.subzone,
         capturedAt: row.captured_at,
+        character: row.character_id ? { id: row.character_id, name: row.character_name, className: row.character_class || "" } : null,
         outputs: outputs.get(row.id) || [],
       })),
       sessions: readFarmingSessions({ memberId: member, server, limit: 10 }).sessions,

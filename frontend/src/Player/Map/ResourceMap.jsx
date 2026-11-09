@@ -8,7 +8,7 @@ import WowIcon from '../../WowAssets/WowIcon.jsx'
 import { DisciplineTag, Icon, Tip } from '../ui.jsx'
 import { AZEROTH_MAP_ID, AZEROTH_RECT, atlasZone, getAtlas, locateWorldPoint, mapArtUrl } from './atlas.js'
 import {
-  HOME_VIEW, MAX_ZOOM, MIN_ZOOM, ZONE_ZOOM, busiestSpots, clampView, fitBounds, fitScale, flightPath, formatCoords,
+  HOME_VIEW, MAX_ZOOM, MIN_ZOOM, ZONE_ZOOM, busiestSpots, clampView, fitBounds, fitScale, flightPath, formatCoords, portraitHome,
   layerWeights, legendGroups, mapUrl, panBy, placeLabels, placePoints, smoothstep, sourceColors, toScreen, toWorld, viewAnchored,
   worldArtOpacity, zoneArtOpacity, zoneLabelOpacity, zoneTotals, zoomAt, zoomLevel,
 } from './mapModel.js'
@@ -328,9 +328,8 @@ const Legend = memo(function Legend({
                   const on = !hidden.has(source.sourceKey)
                   return (
                     <li key={source.sourceKey} className={on ? undefined : 'is-off'}>
-                      <input type="checkbox" checked={on} onChange={() => onToggle(source.sourceKey)} aria-label={`Show ${source.name} on the map`} />
+                      <input type="checkbox" checked={on} onChange={() => onToggle(source.sourceKey)} aria-label={`Show ${source.name} on the map`} style={{ '--swatch': colors.get(source.sourceKey) }} />
                       <button type="button" className="gw-rmap__source" onClick={() => onDetails(source.sourceKey)} aria-label={`${source.name} details`}>
-                        <i className="gw-rmap__swatch" style={{ '--swatch': colors.get(source.sourceKey) }} aria-hidden="true" />
                         <SourceIcon source={source} size={expanded ? 20 : 16} />
                         <span className="gw-rmap__source-name">{source.name}</span>
                         {expanded ? <small>{formatCount(source.observations)}</small> : null}
@@ -572,7 +571,10 @@ export default function ResourceMap({
       const bounds = { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) }
       const padded = { x: bounds.x - 30, y: bounds.y - 20, width: Math.max(90, bounds.width + 60), height: Math.max(60, bounds.height + 40) }
       target = fitBounds(padded, size, 0.92)
-    } else if (!first) {
+    } else if (first) {
+      const busiest = totals[0]?.zone.rect
+      target = portraitHome(size, busiest ? busiest.x + busiest.width / 2 : undefined)
+    } else {
       target = HOME_VIEW
     }
     if (!target) return
@@ -1117,18 +1119,13 @@ export default function ResourceMap({
           <button type="button" aria-pressed={display === 'spots'} onClick={() => setDisplay('spots')}>Spots</button>
         </div>
 
-        <div className="gw-rmap__readout" aria-live="off">
-          {cursor ? (
-            <>
-              <Icon name="pin" size={13} />
-              <strong>{cursor.zone.name}</strong>
-              <code>{formatCoords(cursor.x, cursor.y)}</code>
-            </>
-          ) : (
-            <span>{level === 'zone' ? 'Click a spot for its details' : 'Scroll to zoom · click a zone to fly there'}</span>
-          )}
-          <span className="gw-rmap__scale" aria-hidden="true"><i style={{ width: `${Math.round((Math.log(view.k / MIN_ZOOM) / Math.log(MAX_ZOOM / MIN_ZOOM)) * 100)}%` }} /></span>
-        </div>
+        {cursor ? (
+          <div className="gw-rmap__readout" aria-live="off">
+            <Icon name="pin" size={13} />
+            <strong>{cursor.zone.name}</strong>
+            <code>{formatCoords(cursor.x, cursor.y)}</code>
+          </div>
+        ) : null}
 
         {detailsSource ? (
           <ResourceDetails

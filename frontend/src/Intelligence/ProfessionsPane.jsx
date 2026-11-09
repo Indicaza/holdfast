@@ -435,7 +435,7 @@ export default function ProfessionsPane({ professions = [], recipes = [], recipe
   const activeRecipes = useMemo(() => (active ? recipesFor(active, recipes) : []), [active, recipes])
 
   if (!professions.length) {
-    return <EmptyTelemetry title="No profession telemetry yet.">Professions will appear after this character's next Guildweaver sync.</EmptyTelemetry>
+    return <EmptyTelemetry title="No professions synced yet.">Open a profession window in game, then <kbd>/reload</kbd>.</EmptyTelemetry>
   }
 
   return (
