@@ -48,6 +48,7 @@ const ICON_PATHS = {
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   edit: <><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></>,
   info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><path d="M12 7.6v.4" /></>,
+  user: <><circle cx="12" cy="8.5" r="3.5" /><path d="M5 19.5c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5" /></>,
 }
 
 export function Icon({ name, size = 18, className = '' }) {

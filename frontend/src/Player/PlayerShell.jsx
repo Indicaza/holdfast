@@ -21,7 +21,7 @@ function SearchTrigger({ onOpen }) {
 
 function Brand() {
   return (
-    <a className="gw-brand" href="/" aria-label="Guildweaver home">
+    <a className="gw-brand" href="/dashboard" aria-label="Guildweaver home">
       <svg className="gw-brand__mark" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
         <path d="M4 7 C10 7 10 21 16 21 S22 7 24 7" />
         <path d="M4 21 C10 21 10 7 16 7 S22 21 24 21" />

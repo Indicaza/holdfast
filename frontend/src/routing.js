@@ -88,7 +88,7 @@ export function hiddenGuildPathname(pathname) {
 }
 
 // The player dashboard's sections, by path. /dashboard is the overview.
-export const DASHBOARD_SECTIONS = ['farming', 'characters', 'professions', 'gathering', 'sync']
+export const DASHBOARD_SECTIONS = ['farming', 'characters', 'professions', 'gathering', 'sync', 'account']
 
 // What a pathname shows: { name, ...params }, or null for not found.
 //   platform pages: { name: 'directory' | 'register' | 'items' | ... }

@@ -26,11 +26,11 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toBeVisible()
   await expect(page.getByText('Connect a computer to start syncing.')).toBeVisible()
   await expect(page.getByText('so uploads arrive at those moments', { exact: false })).toBeVisible()
-  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Drop rates/, /^Resource map/, /^Characters/, /^Professions/, /^My gathering/, /^Sync/])
+  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Characters/, /^Professions/, /^Gathering/, /^Drop rates/, /^Resource map/, /^Download & sync/, /^Account/])
   // An app, not a page of the site: its own frame, no site navbar.
   await expect(page.locator('.navbar')).toHaveCount(0)
-  // Community drop rates are there before the player has synced anything.
-  await expect(page.getByRole('heading', { name: 'Best places to farm' })).toBeVisible()
+  // Community drop rates are one click away before the player has synced anything.
+  await expect(page.getByRole('link', { name: /Drop rates.*What each herb/ })).toBeVisible()
 
   await connectAndSync(page, {
     deviceName: 'Pip desktop',
@@ -46,7 +46,7 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Your characters' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toHaveCount(0)
   const scorecards = page.getByRole('region', { name: 'Your summary' })
-  await expect(scorecards.locator('article').filter({ hasText: 'Your characters' }).locator('strong')).toHaveText('3')
+  await expect(scorecards.locator('article').filter({ hasText: 'Characters' }).locator('strong')).toHaveText('3')
   // Most recently synced first.
   await expect(page.getByLabel('Server').locator('option')).toHaveText(['All servers', 'Shadowmoon (1)', 'Doomhowl (2)'])
 
@@ -59,8 +59,8 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.locator('.gw-char-row')).toHaveCount(2)
   await expect(page.locator('.gw-char-row').filter({ hasText: 'Rook' })).toHaveCount(1)
 
-  await rail(page).getByRole('link', { name: /^My gathering/ }).click()
-  await expect(heading(page)).toHaveText('My gathering')
+  await rail(page).getByRole('link', { name: /^Gathering/ }).click()
+  await expect(heading(page)).toHaveText('Gathering')
   await expect(page.getByRole('region', { name: 'Your farming summary' })).toContainText('1')
 
   // The gather is in the community drop rates too; its source opens as a page.
@@ -85,7 +85,7 @@ test('a new player follows the first-run checklist to their first sync, then see
   await rail(page).getByRole('link', { name: /^Resource map/ }).click()
   await expect(page).toHaveURL(/\/map(\?|$)/)
   await expect(heading(page)).toHaveText('Resource map')
-  await expect(rail(page).getByRole('link')).toHaveCount(7)
+  await expect(rail(page).getByRole('link')).toHaveCount(8)
   await expect(rail(page).getByRole('link', { name: 'Resource map' })).toHaveAttribute('aria-current', 'page')
   const legend = page.getByRole('complementary', { name: 'Map legend' })
   await expect(legend).toContainText('1 of 1 shown')
@@ -116,8 +116,8 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('navigation', { name: 'Map location' })).toHaveText('Azeroth')
 
   // Back to another section, whose sidebar is its navigation again.
-  await rail(page).getByRole('link', { name: 'My gathering' }).click()
-  await expect(heading(page)).toHaveText('My gathering')
+  await rail(page).getByRole('link', { name: 'Gathering' }).click()
+  await expect(heading(page)).toHaveText('Gathering')
   await expect(page.getByRole('complementary', { name: 'Map legend' })).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Your farming summary' })).toContainText('1')
 
@@ -175,7 +175,7 @@ test('another player cannot list, open or disconnect this player\'s things, even
   expect(devices.map((device) => device.status)).toEqual(['connected'])
 })
 
-test('the avatar menu reaches every personal view and signing out leaves nothing behind', async ({ page, context }) => {
+test('signed in, every page is in one app frame; signing out leaves nothing behind', async ({ page, context }) => {
   await authenticate(context, 'player')
   await page.goto('/dashboard/characters')
   await expect(page.locator('.gw-char-row').first()).toBeVisible()
@@ -183,26 +183,33 @@ test('the avatar menu reaches every personal view and signing out leaves nothing
   await account(page).focus()
   await page.keyboard.press('Enter')
   const menu = page.getByRole('menu', { name: 'Account' })
-  await expect(menu.getByRole('menuitem')).toHaveText(['My Overview', 'My Characters', 'My Devices & Sync', 'Account & Privacy', 'Sign out'])
-  await expect(menu.getByRole('menuitem', { name: 'My Overview' })).toBeFocused()
+  await expect(menu.getByRole('menuitem')).toHaveText(['Account', 'Sign out'])
+  await expect(menu.getByRole('menuitem', { name: 'Account' })).toBeFocused()
   await page.keyboard.press('ArrowDown')
-  await expect(menu.getByRole('menuitem', { name: 'My Characters' })).toBeFocused()
+  await expect(menu.getByRole('menuitem', { name: 'Sign out' })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(account(page)).toBeFocused()
   await expect(account(page)).toHaveAttribute('aria-expanded', 'false')
 
   await account(page).click()
-  await menu.getByRole('menuitem', { name: 'Account & Privacy' }).click()
-  await expect(page).toHaveURL(/\/account$/)
+  await menu.getByRole('menuitem', { name: 'Account' }).click()
+  await expect(page).toHaveURL(/\/dashboard\/account$/)
+  await expect(page.locator('.navbar')).toHaveCount(0)
   await expect(account(page)).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByRole('heading', { name: 'Signed in with Discord' })).toBeVisible()
   await expect(page.locator('main').getByText('@e2e-player')).toBeVisible()
   await expect(page.locator('main')).not.toContainText(/Holdfast|rank|guild nickname/i)
 
-  await account(page).click()
-  await menu.getByRole('menuitem', { name: 'My Devices & Sync' }).click()
-  await expect(heading(page)).toHaveText('Sync')
+  // The site's own pages open inside the app, never under a second navbar.
+  await page.goto('/download')
+  await expect(page).toHaveURL(/\/dashboard\/sync$/)
+  await expect(heading(page)).toHaveText('Download & sync')
+  await expect(page.locator('.navbar')).toHaveCount(0)
   await expect(page.locator('.gw-device')).toHaveCount(1)
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/dashboard$/)
+  await expect(heading(page)).toHaveText('Home')
+  await expect(page.locator('.navbar')).toHaveCount(0)
 
   await account(page).click()
   await menu.getByRole('menuitem', { name: 'Sign out' }).click()
@@ -233,8 +240,8 @@ test('on a phone the dashboard drawer and the avatar menu both work', async ({ p
   await expect(page.locator('.gw--mobile-open')).toHaveCount(0)
 
   await account(page).click()
-  await page.getByRole('menu', { name: 'Account' }).getByRole('menuitem', { name: 'My Overview' }).click()
-  await expect(heading(page)).toHaveText('Home')
+  await page.getByRole('menu', { name: 'Account' }).getByRole('menuitem', { name: 'Account' }).click()
+  await expect(heading(page)).toHaveText('Account')
 })
 
 test('disconnecting a computer asks first, then stops it uploading', async ({ page, context }) => {
