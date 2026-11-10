@@ -16,6 +16,7 @@ import PageShell from '../PageShell/PageShell.jsx'
 import { accountMenuLinks } from '../navigation.js'
 import CommandPalette from './CommandPalette.jsx'
 import PlayerCharacters from './PlayerCharacters.jsx'
+import PlayerDungeons from './PlayerDungeons.jsx'
 import PlayerFarming from './PlayerFarming.jsx'
 import PlayerGathering from './PlayerGathering.jsx'
 import PlayerMap from './PlayerMap.jsx'
@@ -264,6 +265,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}
+            {section === 'dungeons' ? <PlayerDungeons server={server} queryString={queryString} /> : null}
             {section === 'sync' ? <PlayerSync data={overview.data} onChanged={overview.mutate} /> : null}
           </>
         ) : null}

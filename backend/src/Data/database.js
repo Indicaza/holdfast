@@ -10,6 +10,7 @@ import {
 import { notificationMigration } from "../Notification/notificationMigration.js";
 import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
 import { farmingSessionMigration } from "../Economy/farmingSessionMigration.js";
+import { dungeonRunMigration } from "../Dungeon/dungeonRunMigration.js";
 import { publicGameDataMigration } from "../GameData/publicGameDataMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 import { guildDirectoryMigration } from "../Guild/Directory/guildDirectoryMigration.js";
@@ -822,6 +823,7 @@ const migrations = [
       }
     },
   },
+  dungeonRunMigration,
 ];
 
 function configureDatabase(db) {
