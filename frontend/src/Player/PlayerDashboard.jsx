@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
+import AccountPage from '../Account/Account.jsx'
+import '../Account/Account.css'
 import { Button } from '../DesignSystem/index.js'
 import { guildFeaturesEnabled } from '../Features/guildFeatures.js'
 import '../Guildweaver/GuildweaverConnect.css'
@@ -104,8 +106,14 @@ function SyncStatus({ sync, ready, paused, server, collapsed }) {
   )
 }
 
+// The avatar menu: the account, guild links (with guild features on) and
+// admin tools. The dashboard's own pages are in the sidebar, not repeated.
 function Account({ session }) {
-  const links = accountMenuLinks(session.guild, { guildFeatures: guildFeaturesEnabled, admin: session.hasPermission('site.admin') })
+  const links = [
+    { label: 'Account', href: '/dashboard/account' },
+    ...accountMenuLinks(session.guild, { guildFeatures: guildFeaturesEnabled, admin: session.hasPermission('site.admin') })
+      .filter((link) => !link.href.startsWith('/dashboard') && link.href !== '/account'),
+  ]
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   return (
     <div className="gw-account">
@@ -269,6 +277,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}
             {section === 'dungeons' ? <PlayerDungeons server={server} queryString={queryString} /> : null}
             {section === 'sync' ? <PlayerSync data={overview.data} onChanged={overview.mutate} /> : null}
+            {section === 'account' ? <AccountPage embedded /> : null}
           </>
         ) : null}
       </PlayerShell>

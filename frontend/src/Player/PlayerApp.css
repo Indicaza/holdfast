@@ -3293,3 +3293,70 @@
   box-shadow: none;
   color: var(--gw-bad);
 }
+
+/* ---------------------------------------------------------------- Home shortcuts */
+
+.gw-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.6rem;
+}
+
+.gw-shortcut {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--gw-line);
+  border-radius: var(--gw-radius);
+  color: var(--gw-text);
+  text-decoration: none;
+}
+
+.gw-shortcut:hover,
+.gw-shortcut:focus-visible {
+  border-color: var(--gw-accent-line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.gw-shortcut > .gw-icon:first-child {
+  color: var(--gw-accent);
+}
+
+.gw-shortcut span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.gw-shortcut small {
+  color: var(--gw-muted);
+}
+
+/* The installer inside the app: the download component without its
+   marketing-page width. */
+.gw-install .guildweaver-download,
+.gw-install .guildweaver-download__lead {
+  width: 100%;
+  max-width: none;
+  justify-items: start;
+  gap: 0.75rem;
+  margin: 0;
+  text-align: left;
+}
+
+.gw-install .guildweaver-download__lead h2 {
+  display: none;
+}
+
+/* Account inside the app: the dashboard's panels, not the site's cards. */
+.account-page--embedded .account-card {
+  border-color: var(--gw-line);
+  border-radius: var(--gw-radius);
+  background: linear-gradient(180deg, var(--gw-panel), rgba(13, 16, 20, 0.96));
+}
+
+.account-page--embedded h2 {
+  font-family: inherit;
+  font-size: 1.05rem;
+}

@@ -4,6 +4,7 @@ import { interceptLinkClicks, subscribeLocation } from './Navigation/navigation.
 import RouteProgress from './Navigation/RouteProgress.jsx'
 import ResourceCacheSync from './Api/ResourceCacheSync.jsx'
 import AuthResultModal from './Auth/AuthResultModal.jsx'
+import { useSession } from './Auth/sessionContext.js'
 import GuildProvider from './Guild/GuildProvider.jsx'
 import { useGuild } from './Guild/guildContext.js'
 import Home from './Home/Home.jsx'
@@ -52,7 +53,8 @@ const dashboardTitles = {
   professions: 'My Professions',
   gathering: 'My Gathering',
   dungeons: 'My Dungeon Runs',
-  sync: 'My Devices & Sync',
+  sync: 'Download & Sync',
+  account: 'Account',
 }
 
 // The front page: Guildweaver's landing page, or the guild directory while
@@ -239,7 +241,18 @@ function GuildRoute({ page, route, url, path }) {
   )
 }
 
+// Signed in, the app is one frame: the site's own pages a player uses (the
+// front page, the download, the account) open inside the dashboard instead
+// of a second, marketing-style navbar.
+const SIGNED_IN_HOMES = {
+  '/download': '/dashboard/sync',
+  '/guildweaver': '/dashboard/sync',
+  '/account': '/dashboard/account',
+  ...(guildFeaturesEnabled ? {} : { '/': '/dashboard' }),
+}
+
 function App() {
+  const session = useSession()
   // Follow client-side navigation in a transition: React keeps the current
   // page on screen while the next page's code loads, instead of falling back
   // to the loading screen. Links no longer reload the page.
@@ -254,7 +267,11 @@ function App() {
   const redirectPathname = guildFeaturesEnabled
     ? legacyRedirectPathname(requestedPathname)
     : hiddenGuildPathname(requestedPathname)
-  const pathname = redirectPathname || requestedPathname
+  const signedInPathname = session.authenticated ? SIGNED_IN_HOMES[requestedPathname] || null : null
+  // Until the session is known these pages would flash the signed-out
+  // version first.
+  const awaitingSession = session.status === 'loading' && Boolean(SIGNED_IN_HOMES[requestedPathname])
+  const pathname = redirectPathname || signedInPathname || requestedPathname
   const route = matchRoute(pathname)
 
   // Old single-guild paths (/quests, /guilds/:slug, ...) move to where they
@@ -267,6 +284,14 @@ function App() {
     const kept = guildFeaturesEnabled ? `${current.search}${current.hash}` : ''
     window.history.replaceState(null, '', `${redirectPathname}${kept}`)
   }, [redirectPathname])
+
+  useEffect(() => {
+    if (!signedInPathname || redirectPathname) return
+    const current = new URL(window.location.href)
+    window.history.replaceState(null, '', `${signedInPathname}${current.search}${current.hash}`)
+    // The app now follows the new address, so signing out stays on it.
+    setHref(window.location.href)
+  }, [signedInPathname, redirectPathname])
 
   // /join opens Holdfast's join flow over Holdfast's home. Guild pages exist
   // only while guild features are on; otherwise a slug is a missing page.
@@ -296,11 +321,15 @@ function App() {
           />
 
           {/* One navbar per kind of page: it never remounts between pages. */}
-          {page.navbar === false ? null : <Navbar variant="platform" />}
+          {awaitingSession ? <PageLoading label="Checking your session…" /> : (
+            <>
+              {page.navbar === false ? null : <Navbar variant="platform" />}
 
-          <Suspense fallback={<PageLoading />}>
-            <Page key={page.key?.() || pathname} {...(page.props?.(url, route) || {})} />
-          </Suspense>
+              <Suspense fallback={<PageLoading />}>
+                <Page key={page.key?.() || pathname} {...(page.props?.(url, route) || {})} />
+              </Suspense>
+            </>
+          )}
         </>
       )}
 

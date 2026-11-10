@@ -5,6 +5,7 @@ import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
 import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
 import { Button } from '../DesignSystem/index.js'
+import GuildweaverDownload from '../Guildweaver/GuildweaverDownload.jsx'
 import Modal from '../Modal/Modal.jsx'
 import { SyncCallout } from './PlayerOverview.jsx'
 import { relativeTime } from './playerModel.js'
@@ -160,12 +161,11 @@ export default function PlayerSync({ data, onChanged }) {
       <Panel
         id="player-devices"
         title="Computers"
-        actions={<a className="gw-link" href="/download">Connect another <Icon name="chevron" size={14} /></a>}
         flush
       >
         {!devices.length ? (
-          <EmptyState title="No computers connected yet." icon="guildweaver" action={<a className="gw-btn gw-btn--primary" href="/download">Download Guildweaver</a>}>
-            Download Guildweaver and open it. It opens this site to approve the connection.
+          <EmptyState title="No computers connected yet." icon="guildweaver">
+            Install Guildweaver below and open it. It opens this site to approve the connection.
           </EmptyState>
         ) : (
           <div className="gw-table-wrap">
@@ -210,6 +210,16 @@ export default function PlayerSync({ data, onChanged }) {
             </table>
           </div>
         )}
+      </Panel>
+
+      <Panel
+        id="install"
+        title={devices.length ? 'Add another computer' : 'Install Guildweaver'}
+        description="Guildweaver runs beside WoW. It installs the addon, uploads what it records, and updates itself."
+      >
+        <div className="gw-install">
+          <GuildweaverDownload />
+        </div>
       </Panel>
 
       <details className="gw-disclosure" id="player-sync-help">
