@@ -1,0 +1,92 @@
+/* Dungeon runs: the list, a run's header and its timeline. */
+
+.gw-stats.gw-stats--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .gw-stats.gw-stats--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gw-runs__sub {
+  display: block;
+  font-size: 11.5px;
+}
+
+.gw-run-status--ok {
+  border-color: rgba(90, 209, 154, 0.35);
+  background: rgba(90, 209, 154, 0.08);
+  color: var(--gw-ok);
+}
+
+.gw-run-status--info {
+  border-color: color-mix(in srgb, var(--gw-info) 40%, transparent);
+  color: var(--gw-info);
+}
+
+.gw-run-status--quiet {
+  color: var(--gw-faint);
+  border-color: var(--gw-line);
+}
+
+.gw-run-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.gw-run-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gw-run-head h2 {
+  margin: 0;
+  color: var(--gw-text);
+  font-size: 20px;
+}
+
+.gw-run-head p {
+  margin: 0.15rem 0 0;
+  font-size: 13px;
+}
+
+.gw-run-end {
+  margin: -0.5rem 0 0;
+  font-size: 13px;
+}
+
+.gw-run-timeline {
+  margin: 0;
+  padding: 0.4rem 0;
+  list-style: none;
+}
+
+.gw-run-timeline__item {
+  --c: var(--gw-line-2);
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.4rem 1.1rem;
+  border-left: 3px solid var(--c);
+  font-size: 13.5px;
+}
+
+.gw-run-timeline__item time {
+  color: var(--gw-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-run-timeline__item--ok { --c: var(--gw-ok); }
+.gw-run-timeline__item--warn { --c: var(--gw-warn); }
+.gw-run-timeline__item--info { --c: var(--gw-info); }
+
+.gw-run-empty {
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  font-size: 13px;
+}

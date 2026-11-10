@@ -1,6 +1,7 @@
 import { gameLocale } from "../../../GameData/publicGameDataModel.js";
 import { recordGatheringFactsInDatabase } from "../../../GameData/publicGameDataProjection.js";
 import { recordEconomicObservationInDatabase } from "../../../Economy/economicObservationRepository.js";
+import { linkDungeonRunLootInDatabase } from "../../../Dungeon/dungeonRunRepository.js";
 
 // gathering_loot: one herb node (later ore vein, skinned creature, fishing
 // pool…) worked and what came out of it. An event, not character state: it
@@ -17,7 +18,10 @@ export const gatheringLootTelemetryHandler = {
   },
   recordEvent(db, event) {
     const result = recordEconomicObservationInDatabase(db, event);
-    if (result.status === "created") recordGatheringFactsInDatabase(db, result.observationId, gameLocale(event.envelope?.locale));
+    if (result.status === "created") {
+      recordGatheringFactsInDatabase(db, result.observationId, gameLocale(event.envelope?.locale));
+      linkDungeonRunLootInDatabase(db, { ...event, source: "gathering", observationId: result.observationId });
+    }
     return result;
   },
 };
