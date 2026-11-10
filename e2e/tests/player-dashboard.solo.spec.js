@@ -26,7 +26,7 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toBeVisible()
   await expect(page.getByText('Connect a computer to start syncing.')).toBeVisible()
   await expect(page.getByText('so uploads arrive at those moments', { exact: false })).toBeVisible()
-  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Drop rates/, /^Resource map/, /^Characters/, /^Professions/, /^My gathering/, /^Sync/])
+  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Drop rates/, /^Resource map/, /^Characters/, /^Professions/, /^My gathering/, /^Dungeon runs/, /^Sync/])
   // An app, not a page of the site: its own frame, no site navbar.
   await expect(page.locator('.navbar')).toHaveCount(0)
   // Community drop rates are there before the player has synced anything.
@@ -85,7 +85,7 @@ test('a new player follows the first-run checklist to their first sync, then see
   await rail(page).getByRole('link', { name: /^Resource map/ }).click()
   await expect(page).toHaveURL(/\/map(\?|$)/)
   await expect(heading(page)).toHaveText('Resource map')
-  await expect(rail(page).getByRole('link')).toHaveCount(7)
+  await expect(rail(page).getByRole('link')).toHaveCount(8)
   await expect(rail(page).getByRole('link', { name: 'Resource map' })).toHaveAttribute('aria-current', 'page')
   const legend = page.getByRole('complementary', { name: 'Map legend' })
   await expect(legend).toContainText('1 of 1 shown')
