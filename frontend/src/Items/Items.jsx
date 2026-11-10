@@ -4,6 +4,10 @@ import { ItemIcon } from '../WowAssets/WowIcon.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import { catalogLink } from './catalogLinks.js'
 import './Items.css'
+import { useSession } from '../Auth/sessionContext.js'
+import '../Player/PlayerApp.css'
+import { ItemMarketPanel } from '../Market/MarketComponents.jsx'
+import { auctionHref, storedMarket } from '../Market/marketFormat.js'
 
 function CatalogIcon({ item, size }) {
   return <ItemIcon item={{ ...item, mediaUrl: item.iconFileDataId ? `/api/game-data/v1/icons/${item.iconFileDataId}` : '/wow-art/question-mark.webp' }} size={size} />
@@ -25,6 +29,23 @@ function RecipeList({ title, recipes, references, scope, truncated }) {
   </section>
 }
 
+// The item's Auction House price, for signed-in players (market data is
+// part of the signed-in app). Uses the market they last looked at.
+function ItemMarket({ itemId }) {
+  const session = useSession()
+  const marketKey = storedMarket()
+  return (
+    <section className="catalog-panel gw-embed catalog-market">
+      <h2>Auction House</h2>
+      {!session.authenticated ? <p>Sign in to see this item's Auction House prices.</p>
+        : <>
+          <ItemMarketPanel itemId={itemId} marketKey={marketKey} showHistory={false} />
+          <p><a href={auctionHref({ tab: 'history', item: itemId, market: marketKey })}>Price history and all markets →</a></p>
+        </>}
+    </section>
+  )
+}
+
 function ItemFacts({ data, scope }) {
   const { item, sources, locations, evidence } = data
   return <>
@@ -39,6 +60,7 @@ function ItemFacts({ data, scope }) {
         {item.tooltipLines.map((line, index) => <p key={index}><span>{line.left}</span><span>{line.right}</span></p>)}
       </> : <p>A full base item description has not been observed yet.</p>}</div>
     </section>
+    <ItemMarket itemId={item.itemId} />
     <section className="catalog-panel">
       <h2>Where it was observed</h2>
       <p className="catalog-caption">{evidence.note}</p>

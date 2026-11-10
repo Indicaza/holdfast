@@ -21,6 +21,9 @@ import {
 } from './dungeonRunModel.js'
 import { playerApiUrl, relativeTime } from './playerModel.js'
 import { EmptyState, ErrorState, Icon, ItemLabel, Panel, SkeletonRows, Stat } from './ui.jsx'
+import { MarketPriceCell } from '../Market/MarketComponents.jsx'
+import { auctionHref } from '../Market/marketFormat.js'
+import { useItemPrices } from '../Market/useMarket.js'
 import './PlayerDungeons.css'
 
 const TOPICS = ['player']
@@ -142,6 +145,23 @@ function RunList({ runs, filters, server }) {
   )
 }
 
+// Loot from a run with its Auction House price (lowest ask, last market
+// the player looked at) and a link to the item's market.
+function LootList({ items }) {
+  const { prices } = useItemPrices(items.map((item) => item.itemId))
+  return (
+    <ul className="gw-bars">
+      {items.map((item) => (
+        <li key={item.itemId}>
+          <a href={auctionHref({ item: item.itemId, q: item.name || '' })}><ItemLabel item={{ itemId: item.itemId, name: item.name || `Item ${item.itemId}` }} size={22} /></a>
+          <MarketPriceCell price={prices.get(item.itemId) || null} />
+          <strong>{item.quantity}×</strong>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function RunDetail({ runId, filters, server }) {
   const { status, data, error } = useLiveResource(`/api/player/dungeon-runs/${runId}`, { topics: TOPICS })
   const back = <a className="gw-btn gw-btn--sm" href={dungeonHref({ filters, server })}><Icon name="back" size={14} /> All runs</a>
@@ -189,14 +209,7 @@ function RunDetail({ runId, filters, server }) {
         </Panel>
         <Panel id="player-dungeon-loot" title="Loot recorded in this run" flush>
           {run.loot.items.length ? (
-            <ul className="gw-bars">
-              {run.loot.items.map((item) => (
-                <li key={item.itemId}>
-                  <ItemLabel item={{ itemId: item.itemId, name: item.name || `Item ${item.itemId}` }} size={22} />
-                  <strong>{item.quantity}×</strong>
-                </li>
-              ))}
-            </ul>
+            <LootList items={run.loot.items} />
           ) : <p className="gw-muted gw-run-empty">No loot linked to this run yet. Corpse loot and gathering inside the instance appear here once synced.</p>}
         </Panel>
       </div>

@@ -5,6 +5,7 @@ import { equipmentTelemetryHandler } from "./handlers/equipment.js";
 import { gatheringLootTelemetryHandler } from "./handlers/gatheringLoot.js";
 import { farmingSessionTelemetryHandler } from "./handlers/farmingSession.js";
 import { dungeonRunTelemetryHandler } from "./handlers/dungeonRun.js";
+import { auctionScanTelemetryHandler } from "./handlers/auctionScan.js";
 import { inventorySnapshotTelemetryHandler } from "./handlers/inventorySnapshot.js";
 import { professionSnapshotTelemetryHandler } from "./handlers/professionSnapshot.js";
 import { professionsTelemetryHandler } from "./handlers/professions.js";
@@ -23,6 +24,7 @@ const handlers = new Map(
     gatheringLootTelemetryHandler,
     farmingSessionTelemetryHandler,
     dungeonRunTelemetryHandler,
+    auctionScanTelemetryHandler,
     mobLootTelemetryHandler,
     gameItemDefinitionTelemetryHandler,
   ].map((handler) => [handler.eventType, handler]),

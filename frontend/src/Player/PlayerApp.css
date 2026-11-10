@@ -2,7 +2,8 @@
    .gw (and the palette layer), with its own tokens on top of the site's. */
 
 .gw,
-.gw-palette-layer {
+.gw-palette-layer,
+.gw-embed {
   --gw-bg: #08090c;
   --gw-bg-2: #0c0e12;
   --gw-panel: #101318;

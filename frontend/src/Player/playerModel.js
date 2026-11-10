@@ -4,6 +4,7 @@
 export const DASHBOARD_VIEWS = Object.freeze([
   { id: 'overview', group: 'explore', label: 'Home', description: 'Search drops, sources and your characters', icon: 'overview', path: '/dashboard' },
   { id: 'farming', group: 'explore', label: 'Drop rates', description: 'Every node, pool and creature, with what it drops', icon: 'farming', path: '/dashboard/farming' },
+  { id: 'auctions', group: 'explore', label: 'Auction House', description: 'Search prices, shopping lists, favorites and history', icon: 'auction', path: '/dashboard/auctions' },
   { id: 'characters', group: 'you', label: 'Characters', description: 'Armory, gear, talents and bags', icon: 'characters', path: '/dashboard/characters' },
   { id: 'professions', group: 'you', label: 'Professions', description: 'Skills, and which character can craft it', icon: 'craft', path: '/dashboard/professions' },
   { id: 'gathering', group: 'you', label: 'My gathering', description: 'What your characters gathered, fished and looted', icon: 'gathering', path: '/dashboard/gathering' },

@@ -12,6 +12,8 @@ import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsite
 import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
 import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildReadModel.js";
 import { backfillEconomicObservationsInDatabase } from "./Economy/economicObservationRepository.js";
+import { createBlizzardAuctionProvider } from "./Market/blizzardAuctionProvider.js";
+import { startMarketRefresher } from "./Market/marketRefresh.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -59,7 +61,11 @@ if (publicGameBackfill.observations || publicGameBackfill.states) {
   console.log("Projected public game facts from stored telemetry", publicGameBackfill);
 }
 
-const app = createApp();
+// Auction data from Blizzard's API, one house per minute at most; without
+// credentials markets fill from in-game scans only.
+const marketRefresh = startMarketRefresher({ provider: createBlizzardAuctionProvider() });
+
+const app = createApp({ marketRefresher: marketRefresh.refresher });
 const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {
@@ -77,6 +83,7 @@ function shutdown(signal) {
   stopDiscordRankReconciler();
   stopDiscordBilletReconciler();
   stopOffsiteBackupScheduler();
+  marketRefresh.stop();
 
   const forceExit = setTimeout(() => {
     console.error("Graceful shutdown timed out");

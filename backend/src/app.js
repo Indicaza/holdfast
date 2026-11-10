@@ -21,6 +21,7 @@ import { guildFeaturesEnabled, requireGuildFeatures } from "./Features/guildFeat
 import { createBlizzardGameDataProvider } from "./GameData/blizzardGameDataProvider.js";
 import { createBlizzardIconMediaResolver } from "./GameData/blizzardIconMedia.js";
 import { createPlayerRouter } from "./Player/playerRouter.js";
+import { createMarketRouter } from "./Market/marketRouter.js";
 import {
   createDevelopmentAuthRouter,
   developmentAuthEnabled,
@@ -55,7 +56,7 @@ import {
 import { mountProductionFrontend } from "./Production/frontend.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -254,6 +255,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
     : createBlizzardIconMediaResolver();
   app.use("/api/intelligence", createIntelligenceRouter({ gameDataProvider, iconMediaResolver }));
   app.use("/api/player", createPlayerRouter({ provider: gameDataProvider, icons: iconMediaResolver }));
+  app.use("/api/market", createRateLimiter({ name: "market", windowMs: 60000, max: 300 }), createMarketRouter({ refresher: marketRefresher }));
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
 
   app.get("/api/guildweaver/release", (req, res) => {

@@ -47,6 +47,7 @@ const dashboardTitles = {
   overview: 'Home',
   farming: 'Drop Rates',
   map: 'Resource Map',
+  auctions: 'Auction House',
   characters: 'My Characters',
   professions: 'My Professions',
   gathering: 'My Gathering',
