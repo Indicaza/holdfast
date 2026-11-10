@@ -1,44 +1,48 @@
-import { useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { ItemLabel } from '../Player/ui.jsx'
+import { MarketCharts } from './MarketCharts.jsx'
 import {
+  SIGNAL_TONES,
   SOURCE_LABELS,
   auctionHref,
   coinParts,
   formatAge,
+  formatAgeShort,
   formatChange,
   formatCoins,
-  historySeries,
+  formatDateTime,
   postingSuggestion,
 } from './marketFormat.js'
 import { marketWrite, useMarketResource } from './useMarket.js'
 import './Market.css'
 
-// Chart colours: categorical slots 1 and 2 of the validated dark palette,
-// checked against the panel colour (#101318) for colour-blind separation.
-const LOWEST_COLOR = '#3987e5'
-const TYPICAL_COLOR = '#d95926'
-
-export function Coins({ value, muted = false }) {
+export function Coins({ value, muted = false, compact = false }) {
   const parts = coinParts(value)
   if (!parts) return <span className="gw-coins gw-coins--none">—</span>
+  // Compact: like the game's price column, zero-value leading coins dropped.
   return (
-    <span className={`gw-coins${muted ? ' gw-coins--muted' : ''}`} aria-label={formatCoins(value)} title={formatCoins(value)}>
+    <span className={`gw-coins${muted ? ' gw-coins--muted' : ''}${compact ? ' gw-coins--compact' : ''}`} aria-label={formatCoins(value)} title={formatCoins(value)}>
       {parts.negative ? <span aria-hidden="true">−</span> : null}
-      {parts.gold ? <span className="gw-coin gw-coin--gold" aria-hidden="true">{parts.gold.toLocaleString('en-US')}<i>g</i></span> : null}
-      {parts.gold || parts.silver ? <span className="gw-coin gw-coin--silver" aria-hidden="true">{parts.silver}<i>s</i></span> : null}
-      <span className="gw-coin gw-coin--copper" aria-hidden="true">{parts.copper}<i>c</i></span>
+      {parts.gold ? <span className="gw-coin gw-coin--gold" aria-hidden="true">{parts.gold.toLocaleString('en-US')}</span> : null}
+      {parts.gold || parts.silver ? <span className="gw-coin gw-coin--silver" aria-hidden="true">{String(parts.silver).padStart(parts.gold ? 2 : 1, '0')}</span> : null}
+      <span className="gw-coin gw-coin--copper" aria-hidden="true">{String(parts.copper).padStart(parts.gold || parts.silver ? 2 : 1, '0')}</span>
     </span>
   )
 }
 
-export function Freshness({ price, showSource = true }) {
+// Where a price came from and how old it is. Stale and partial are said in
+// words, not only colour.
+export function Freshness({ price, showSource = true, short = false }) {
   if (!price) return <span className="gw-fresh gw-fresh--none">No data</span>
-  const label = `${showSource ? `${SOURCE_LABELS[price.source] || price.source} · ` : ''}${formatAge(price.ageSeconds)}`
-  const title = [label, price.complete ? 'every listing seen' : 'partial view', `confidence ${price.confidence}`, price.selectionReason].filter(Boolean).join(' · ')
+  if (price.variantsOnly) return <span className="gw-fresh" title={price.selectionReason}>{price.variants.length} versions</span>
+  const age = short ? formatAgeShort(price.ageSeconds) : formatAge(price.ageSeconds)
+  const label = `${showSource ? `${SOURCE_LABELS[price.source] || price.source} · ` : ''}${age}`
+  const title = [`Seen ${formatAge(price.ageSeconds)} (${formatDateTime(price.observedAt)})`, price.unchangedSince && price.unchangedSince !== price.observedAt ? `unchanged since ${formatDateTime(price.unchangedSince)}` : null,
+    SOURCE_LABELS[price.source], price.complete ? 'every listing seen' : 'partial view', `confidence ${price.confidence}`, price.selectionReason].filter(Boolean).join(' · ')
   return (
     <span className={`gw-fresh${price.stale ? ' gw-fresh--stale' : ''}${price.complete ? '' : ' gw-fresh--partial'}`} title={title}>
-      {price.stale ? <span aria-hidden="true">⚠ </span> : null}{label}{price.stale ? ' (stale)' : ''}
+      {price.stale ? <span aria-hidden="true">⚠ </span> : null}{label}{price.stale ? ' · stale' : ''}{!price.complete && !short ? ' · partial' : ''}
     </span>
   )
 }
@@ -47,6 +51,19 @@ export function Change({ pct }) {
   const change = formatChange(pct)
   if (!change) return <span className="gw-muted">—</span>
   return <span className={`gw-change gw-change--${change.direction}`}>{change.text}</span>
+}
+
+// The lowest ask as a share of the item's 14-day median, like the "Pct"
+// column of the game's auction addons.
+export function Pct({ value, days }) {
+  if (value === null || value === undefined) return <span className="gw-muted" title="Needs three days of history">—</span>
+  const tone = value <= 85 ? 'good' : value >= 130 ? 'bad' : 'flat'
+  return <span className={`gw-pct gw-pct--${tone}`} title={`Lowest ask is ${value}% of the median of the last ${days} observed days`}>{value}%</span>
+}
+
+export function ConfidenceBadge({ confidence }) {
+  const label = { high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence' }[confidence] || 'Unknown confidence'
+  return <span className={`gw-confb gw-confb--${confidence || 'low'}`}>{label}</span>
 }
 
 export function FavoriteButton({ itemId, favorite, onChange, size = 'sm' }) {
@@ -63,14 +80,14 @@ export function FavoriteButton({ itemId, favorite, onChange, size = 'sm' }) {
   }
   return (
     <button type="button" className={`gw-star gw-star--${size}${favorite ? ' is-on' : ''}`} onClick={toggle} disabled={busy}
-      aria-pressed={favorite} aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} title={favorite ? 'Favorited (f)' : 'Favorite (f)'}>
+      aria-pressed={favorite} aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} title={favorite ? 'Favorited (F)' : 'Favorite (F)'}>
       {favorite ? '★' : '☆'}
     </button>
   )
 }
 
 // Adds an item to one of the player's shopping lists, inline.
-export function AddToList({ itemId, defaultQuantity = 1, onAdded }) {
+export function AddToList({ itemId, defaultQuantity = 1, onAdded, label = '+ List', className = 'gw-btn gw-btn--sm' }) {
   const [open, setOpen] = useState(false)
   const lists = useMarketResource(open ? '/api/market/lists' : '')
   const [listId, setListId] = useState('')
@@ -81,13 +98,13 @@ export function AddToList({ itemId, defaultQuantity = 1, onAdded }) {
     let target = listId || lists.data?.lists?.[0]?.id
     if (!target) target = (await marketWrite('/api/market/lists', { method: 'POST', body: { name: 'Shopping list' } })).list.id
     await marketWrite(`/api/market/lists/${target}/items/${itemId}`, { body: { quantity: Number(quantity) || 1 } })
-    setMessage('Added')
+    setMessage('Added ✓')
     setOpen(false)
     onAdded?.()
   }
   if (!open) {
-    return <button type="button" className="gw-btn gw-btn--sm" onClick={(event) => { event.stopPropagation(); setOpen(true); setMessage('') }} title="Add to a shopping list (a)">
-      {message || '+ List'}
+    return <button type="button" className={className} onClick={(event) => { event.stopPropagation(); setOpen(true); setMessage('') }} title="Add to a shopping list (A)">
+      {message || label}
     </button>
   }
   return (
@@ -103,134 +120,73 @@ export function AddToList({ itemId, defaultQuantity = 1, onAdded }) {
   )
 }
 
-function scale(domain, range) {
-  const [d0, d1] = domain
-  const [r0, r1] = range
-  return (value) => (d1 === d0 ? (r0 + r1) / 2 : r0 + ((value - d0) / (d1 - d0)) * (r1 - r0))
-}
-
-// Asking-price history: lowest and typical ask as two lines on one copper
-// axis, supply as its own small bar chart below (never a second axis).
-// Hover or focus shows every value at that day; a table holds the same data.
-export function PriceHistoryChart({ points = [], height = 200 }) {
-  const series = useMemo(() => historySeries(points), [points])
-  const [hover, setHover] = useState(null)
-  const svgRef = useRef(null)
-  if (series.length < 2) {
-    return <p className="gw-muted gw-chart-empty">{series.length ? 'One day of history so far. The chart appears after a second day of data.' : 'No history yet for this market.'}</p>
-  }
-  const width = 640
-  const pad = { top: 12, right: 64, bottom: 22, left: 56 }
-  const values = series.flatMap((point) => [point.min, point.typical]).filter((value) => value !== null && value !== undefined)
-  const maxValue = Math.max(...values) * 1.08
-  const x = scale([0, series.length - 1], [pad.left, width - pad.right])
-  const y = scale([0, maxValue], [height - pad.bottom, pad.top])
-  const line = (key) => {
-    let path = ''
-    let open = false
-    series.forEach((point, index) => {
-      if (point[key] === null || point[key] === undefined) { open = false; return }
-      path += `${open ? 'L' : 'M'}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`
-      open = true
-    })
-    return path
-  }
-  const ticks = [0, 0.5, 1].map((fraction) => maxValue * fraction)
-  const last = series.at(-1)
-  // Direct labels at the line ends, pushed apart when the lines meet.
-  const endLabels = [{ text: 'Typical', value: last.typical }, { text: 'Lowest', value: last.min }]
-    .filter((label) => label.value !== null && label.value !== undefined).map((label) => ({ ...label, y: y(label.value) }))
-    .sort((a, b) => a.y - b.y)
-  if (endLabels.length === 2 && endLabels[1].y - endLabels[0].y < 13) {
-    const middle = (endLabels[0].y + endLabels[1].y) / 2
-    endLabels[0].y = middle - 6.5
-    endLabels[1].y = middle + 6.5
-  }
-  const maxQuantity = Math.max(1, ...series.map((point) => point.quantity || 0))
-  const supplyHeight = 64
-  const barWidth = Math.max(2, (width - pad.left - pad.right) / series.length - 2)
-  function pick(event) {
-    const rect = svgRef.current.getBoundingClientRect()
-    const px = ((event.clientX - rect.left) / rect.width) * width
-    const index = Math.round(((px - pad.left) / (width - pad.left - pad.right)) * (series.length - 1))
-    setHover(Math.max(0, Math.min(series.length - 1, index)))
-  }
-  const active = hover === null ? null : series[hover]
+export function SignalChips({ signals = [], limit = 4 }) {
+  if (!signals.length) return null
   return (
-    <figure className="gw-chart">
-      <figcaption className="gw-chart__legend">
-        <span><i style={{ background: LOWEST_COLOR }} />Lowest ask</span>
-        <span><i style={{ background: TYPICAL_COLOR }} />Typical ask</span>
-        <span className="gw-muted">Asking prices per unit, not sales</span>
-      </figcaption>
-      <div className="gw-chart__plot">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Price history" tabIndex={0}
-          onPointerMove={pick} onPointerLeave={() => setHover(null)}
-          onKeyDown={(event) => {
-            if (event.key === 'ArrowRight') setHover((value) => Math.min(series.length - 1, (value ?? -1) + 1))
-            if (event.key === 'ArrowLeft') setHover((value) => Math.max(0, (value ?? series.length) - 1))
-          }}>
-          {ticks.map((tick) => (
-            <g key={tick}>
-              <line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} className="gw-chart__grid" />
-              <text x={pad.left - 6} y={y(tick) + 4} textAnchor="end" className="gw-chart__axis">{formatCoins(Math.round(tick)).replace(/ \d+c$/, '')}</text>
-            </g>
-          ))}
-          <text x={pad.left} y={height - 6} className="gw-chart__axis">{series[0].day}</text>
-          <text x={width - pad.right} y={height - 6} textAnchor="end" className="gw-chart__axis">{last.day}</text>
-          <path d={line('typical')} stroke={TYPICAL_COLOR} strokeWidth="2" fill="none" />
-          <path d={line('min')} stroke={LOWEST_COLOR} strokeWidth="2" fill="none" />
-          {endLabels.map((label) => <text key={label.text} x={width - pad.right + 6} y={label.y + 4} className="gw-chart__label">{label.text}</text>)}
-          {active ? (
-            <g>
-              <line x1={x(hover)} x2={x(hover)} y1={pad.top} y2={height - pad.bottom} className="gw-chart__cross" />
-              {active.min !== null ? <circle cx={x(hover)} cy={y(active.min)} r="4" fill={LOWEST_COLOR} stroke="#101318" strokeWidth="2" /> : null}
-              {active.typical !== null ? <circle cx={x(hover)} cy={y(active.typical)} r="4" fill={TYPICAL_COLOR} stroke="#101318" strokeWidth="2" /> : null}
-            </g>
-          ) : null}
-        </svg>
-        {active ? (
-          <div className="gw-chart__tip" style={{ left: `${(x(hover) / width) * 100}%` }} role="status">
-            <strong>{active.day}</strong>
-            <span><i style={{ background: LOWEST_COLOR }} /><Coins value={active.min} /> lowest</span>
-            <span><i style={{ background: TYPICAL_COLOR }} /><Coins value={active.typical} /> typical</span>
-            <span>{(active.quantity || 0).toLocaleString('en-US')} listed</span>
-          </div>
-        ) : null}
-      </div>
-      <div className="gw-chart__supply">
-        <span className="gw-muted">Quantity listed (highest seen that day)</span>
-        <svg viewBox={`0 0 ${width} ${supplyHeight}`} role="img" aria-label="Quantity listed per day">
-          {series.map((point, index) => {
-            const h = ((point.quantity || 0) / maxQuantity) * (supplyHeight - 8)
-            return <rect key={point.day} x={x(index) - barWidth / 2} y={supplyHeight - h} width={barWidth} height={Math.max(0, h)} rx="2"
-              fill={LOWEST_COLOR} opacity={hover === index ? 1 : 0.55}><title>{`${point.day}: ${(point.quantity || 0).toLocaleString('en-US')} listed`}</title></rect>
-          })}
-        </svg>
-      </div>
-      <details className="gw-chart__table">
-        <summary>Table</summary>
-        <table className="gw-table">
-          <thead><tr><th scope="col">Day</th><th scope="col" className="gw-col-num">Lowest</th><th scope="col" className="gw-col-num">Typical</th><th scope="col" className="gw-col-num">Listed</th></tr></thead>
-          <tbody>{[...series].reverse().map((point) => (
-            <tr key={point.day}><td>{point.day}</td><td className="gw-col-num"><Coins value={point.min} /></td><td className="gw-col-num"><Coins value={point.typical} /></td>
-              <td className="gw-col-num">{(point.quantity || 0).toLocaleString('en-US')}</td></tr>
-          ))}</tbody>
-        </table>
-      </details>
-    </figure>
+    <ul className="gw-signals" aria-label="Market observations">
+      {signals.slice(0, limit).map((signal) => (
+        <li key={signal.type} className={`gw-signal gw-signal--${SIGNAL_TONES[signal.type] || 'info'}`}
+          title={`${signal.explanation} Based on ${signal.samples} observation${signal.samples === 1 ? '' : 's'}${signal.window?.from ? ` from ${formatDateTime(signal.window.from)}` : ''}; ${signal.confidence} confidence.`}>
+          {signal.title}
+        </li>
+      ))}
+    </ul>
   )
 }
 
-const BIND_LABELS = { 0: 'Not bound: tradeable', 1: 'Binds when picked up', 2: 'Binds when equipped', 3: 'Binds when used', 4: 'Quest item' }
+// The cheapest listings as the server last saw them: is the lowest ask a
+// lone listing or a real price level?
+export function PriceLadder({ points = [], stack = 1 }) {
+  if (!points.length) return <p className="gw-muted gw-small">No listing detail for this observation (a browse row or summary only).</p>
+  const max = Math.max(...points.map((point) => point[1]))
+  return (
+    <table className="gw-ladder">
+      <thead><tr><th scope="col">Unit price</th><th scope="col" className="gw-col-num">Available</th><th scope="col" aria-label="Share" /></tr></thead>
+      <tbody>{points.map(([unit, quantity]) => (
+        <tr key={unit}>
+          <td><Coins value={unit * (stack || 1)} compact /></td>
+          <td className="gw-col-num">{quantity.toLocaleString('en-US')}</td>
+          <td className="gw-ladder__bar"><span style={{ width: `${Math.max(4, (quantity / max) * 100)}%` }} /></td>
+        </tr>
+      ))}</tbody>
+    </table>
+  )
+}
 
-function CraftingCosts({ itemId, marketKey }) {
+// Current price, recent median, change, supply and confidence in one strip.
+export function MarketSummary({ summary, metrics }) {
+  if (!summary) return null
+  const median = metrics?.median7d?.value ?? null
+  return (
+    <dl className="gw-msum">
+      <div><dt>Lowest ask</dt><dd><Coins value={summary.minUnitBuyout} /></dd>{summary.minQuantity ? <small>{summary.minQuantity.toLocaleString('en-US')} at this price</small> : null}</div>
+      <div><dt>Typical ask</dt><dd><Coins value={summary.typicalUnitBuyout} /></dd></div>
+      <div><dt>7-day median</dt><dd>{median === null ? <span className="gw-muted" title={metrics?.median7d?.reason}>not enough data</span> : <Coins value={median} />}</dd>
+        {median !== null ? <small>{metrics.median7d.samples} hours observed</small> : null}</div>
+      <div><dt>24 h</dt><dd><Change pct={metrics?.change24h?.pct ?? summary.change24hPct} /></dd>{metrics?.change24h?.reason ? <small title={metrics.change24h.reason}>no comparison</small> : null}</div>
+      <div><dt>Listed</dt><dd>{summary.quantity.toLocaleString('en-US')}</dd><small>{summary.listings ? `${summary.listings} auctions` : 'auctions unknown'}{metrics?.supply?.changePct !== null && metrics?.supply?.changePct !== undefined ? ` · ${formatChange(metrics.supply.changePct).text} vs 7 d` : ''}</small></div>
+      <div><dt>Data</dt><dd><ConfidenceBadge confidence={summary.confidence} /></dd><small><Freshness price={summary} /></small></div>
+    </dl>
+  )
+}
+
+// Why this price: the selection notes, conflicts included.
+export function WhyThisPrice({ summary }) {
+  if (!summary?.notes?.length) return null
+  return (
+    <ul className="gw-why">
+      {summary.notes.map((note, index) => <li key={index} className={`gw-why--${note.code}`}>{note.text}</li>)}
+    </ul>
+  )
+}
+
+export function CraftingCosts({ itemId, marketKey }) {
   const crafting = useMarketResource(marketKey ? `/api/market/items/${itemId}/crafting?market=${encodeURIComponent(marketKey)}` : '')
   const recipes = crafting.data?.recipes || []
   if (!recipes.length) return null
   const names = crafting.data.items || {}
   return (
-    <section className="gw-market-section">
+    <section className="gw-msec">
       <h3>Crafting cost</h3>
       {recipes.map((recipe) => (
         <div key={recipe.recipeId} className="gw-craft">
@@ -240,7 +196,7 @@ function CraftingCosts({ itemId, marketKey }) {
               {recipe.reagents.map((reagent) => (
                 <tr key={reagent.itemId}>
                   <td>{reagent.quantity}× <ItemLabel item={names[reagent.itemId] || { itemId: reagent.itemId }} size={18} />{reagent.optional ? <span className="gw-muted"> (optional)</span> : null}</td>
-                  <td className="gw-col-num">{reagent.cost === null ? <span className="gw-muted">no price</span> : <Coins value={reagent.cost} />}{reagent.stale ? <span className="gw-fresh--stale"> ⚠</span> : null}</td>
+                  <td className="gw-col-num">{reagent.cost === null ? <span className="gw-muted">no price</span> : <Coins value={reagent.cost} />}{reagent.stale ? <span className="gw-fresh--stale"> ⚠ stale</span> : null}</td>
                 </tr>
               ))}
               <tr><th scope="row">Materials</th><td className="gw-col-num"><Coins value={recipe.materialCost} /></td></tr>
@@ -255,85 +211,104 @@ function CraftingCosts({ itemId, marketKey }) {
   )
 }
 
-// One item in one market: the shown price and why, every source's latest
-// evidence, vendor value, binding, crafting cost and history. Used by the
-// Auction House, the item catalog and anywhere else an item is priced.
-export function ItemMarketPanel({ itemId, marketKey: requestedMarket, mode = 'buy', showHistory = true, onFavoriteChange, range = '30d' }) {
-  const detail = useMarketResource(itemId ? `/api/market/items/${itemId}?market=${encodeURIComponent(requestedMarket || '')}` : '')
+// Evidence: every source's recent observations of this variant.
+export function Evidence({ evidence = [], basis }) {
+  if (!evidence.length) return null
+  return (
+    <details className="gw-msec">
+      <summary>Evidence ({evidence.length})</summary>
+      <div className="gw-table-wrap">
+        <table className="gw-table gw-table--dense">
+          <thead><tr><th scope="col">Source</th><th scope="col">Seen</th><th scope="col" className="gw-col-num">Lowest</th><th scope="col" className="gw-col-num">Typical</th><th scope="col" className="gw-col-num">Listed</th></tr></thead>
+          <tbody>{evidence.map((entry, index) => (
+            <tr key={index}><td>{SOURCE_LABELS[entry.source]}{entry.complete ? '' : ' (partial)'}</td>
+              <td title={entry.confirmedAt !== entry.observedAt ? `first seen ${formatDateTime(entry.observedAt)}` : undefined}>{formatDateTime(entry.confirmedAt)}</td>
+              <td className="gw-col-num"><Coins value={entry.minUnitBuyout} /></td><td className="gw-col-num"><Coins value={entry.typicalUnitBuyout} /></td><td className="gw-col-num">{entry.quantity}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <p className="gw-small gw-muted">{basis}</p>
+    </details>
+  )
+}
+
+function variantQuery(itemKey) {
+  return itemKey ? `&key=${encodeURIComponent(itemKey)}` : ''
+}
+
+// One item in one market: price and why, the cheapest listings,
+// observations, history, crafting and evidence. Used by the Auction House
+// and the item catalog.
+export function ItemMarketPanel({ itemId, itemKey = '', marketKey: requestedMarket, showHistory = true, onFavoriteChange, range = '7d', onRange,
+  onVariant, historyHref = null, stackPrices = false }) {
+  const detail = useMarketResource(itemId ? `/api/market/items/${itemId}?market=${encodeURIComponent(requestedMarket || '')}${variantQuery(itemKey)}` : '')
   // Without a chosen market, the server picks one that has the item.
   const marketKey = requestedMarket || detail.data?.marketKey || ''
-  const history = useMarketResource(itemId && marketKey && showHistory ? `/api/market/items/${itemId}/history?market=${encodeURIComponent(marketKey)}&range=${range}` : '')
+  const focusKey = detail.data?.itemKey || itemKey
+  const analysis = useMarketResource(itemId && marketKey ? `/api/market/items/${itemId}/analysis?market=${encodeURIComponent(marketKey)}${variantQuery(focusKey)}` : '')
+  const [localRange, setLocalRange] = useState(range)
+  const chartRange = onRange ? range : localRange
+  const history = useMarketResource(itemId && marketKey && showHistory ? `/api/market/items/${itemId}/history?market=${encodeURIComponent(marketKey)}&range=${chartRange}${variantQuery(focusKey)}` : '')
   const [favorite, setFavorite] = useState(null)
-  if (detail.status === 'loading') return <div className="gw-market-panel" aria-busy="true"><p className="gw-muted">Loading market data…</p></div>
-  if (detail.status === 'error') return <div className="gw-market-panel"><p className="gw-muted">Market data could not be loaded.</p></div>
+  if (detail.status === 'loading') return <div className="gw-mpanel" aria-busy="true"><div className="gw-skeleton"><div className="gw-skeleton__row" /><div className="gw-skeleton__row" /></div></div>
+  if (detail.status === 'error') return <div className="gw-mpanel"><p className="gw-muted">Market data could not be loaded. <button type="button" className="gw-btn gw-btn--xs" onClick={detail.reload}>Retry</button></p></div>
   const data = detail.data
   if (!data) return null
   const isFavorite = favorite ?? data.favorite
-  const here = data.markets.find((entry) => entry.marketKey === marketKey && !entry.variant) || data.markets.find((entry) => entry.marketKey === marketKey) || null
-  const variants = data.markets.filter((entry) => entry.marketKey === marketKey && entry.variant)
+  const here = data.variants.find((entry) => entry.itemKey === focusKey) || null
+  const stack = stackPrices ? (data.item.stackCount || 1) : 1
   const suggestion = here ? postingSuggestion({ ...here, sellPrice: data.item.sellPrice }) : null
   return (
-    <div className="gw-market-panel">
-      <header className="gw-market-panel__head">
+    <div className="gw-mpanel">
+      <header className="gw-mpanel__head">
         <ItemLabel item={data.item} size={36} />
         <FavoriteButton itemId={data.item.itemId} favorite={isFavorite} size="md" onChange={(next) => { setFavorite(next); onFavoriteChange?.(next) }} />
-        <AddToList itemId={data.item.itemId} />
       </header>
+      <p className="gw-mpanel__facts">
+        {[data.item.itemClass, data.item.itemSubclass, data.item.requiredLevel ? `Requires level ${data.item.requiredLevel}` : null,
+          data.item.itemLevel ? `Item level ${data.item.itemLevel}` : null, data.item.stackCount > 1 ? `Stacks to ${data.item.stackCount}` : null].filter(Boolean).join(' · ')}
+      </p>
+      {data.variants.length > 1 ? (
+        <label className="gw-mpanel__variant">
+          <span>Version</span>
+          <select value={focusKey} onChange={(event) => onVariant?.(event.target.value)} disabled={!onVariant} aria-label="Item version">
+            {data.variants.map((entry) => <option key={entry.itemKey} value={entry.itemKey}>{entry.label} · {formatCoins(entry.minUnitBuyout)} · {entry.quantity} listed</option>)}
+          </select>
+        </label>
+      ) : here?.variantName ? <p className="gw-small gw-muted">Version: {here.variantName}</p> : null}
       {here ? (
         <>
-          <p className="gw-small gw-muted">{data.markets.find((entry) => entry.marketKey === marketKey)?.marketName}</p>
-          <dl className="gw-market-facts">
-            <div><dt>Lowest ask</dt><dd><Coins value={here.minUnitBuyout} /></dd></div>
-            <div><dt>Typical ask</dt><dd><Coins value={here.typicalUnitBuyout} /></dd></div>
-            <div><dt>Listed</dt><dd>{here.quantity.toLocaleString('en-US')}{here.listings ? <span className="gw-muted"> in {here.listings} auctions</span> : null}</dd></div>
-            <div><dt>24 h</dt><dd><Change pct={here.change24hPct} /></dd></div>
-          </dl>
-          <p className="gw-small"><Freshness price={here} /> · confidence {here.confidence}</p>
-          <p className="gw-small gw-muted">Why this price: {here.selectionReason}.{here.conflict ? ' Sources disagree; see the evidence below.' : ''}</p>
+          <MarketSummary summary={here} metrics={analysis.data?.metrics} />
+          <SignalChips signals={analysis.data?.signals} />
+          {here.quantity === 0 ? <p className="gw-callout-inline">None listed at the last full check. The prices above are the last ones seen.</p> : null}
+          <WhyThisPrice summary={here} />
         </>
-      ) : <p className="gw-muted">No listings seen for this item in this market yet.</p>}
-      {mode === 'sell' ? (
-        <section className="gw-market-section">
-          <h3>Selling it</h3>
-          <dl className="gw-market-facts">
-            <div><dt>Vendor value</dt><dd>{data.item.sellPrice === null ? <span className="gw-muted">unknown</span> : <Coins value={data.item.sellPrice} />}</dd></div>
-            <div><dt>Starting point</dt><dd>{suggestion ? <Coins value={suggestion.unitPrice} /> : <span className="gw-muted">no market price</span>}</dd></div>
-            <div><dt>Range</dt><dd>{here ? <><Coins value={here.minUnitBuyout} /> – <Coins value={data.evidence.find((entry) => entry.maxUnitBuyout)?.maxUnitBuyout ?? null} /></> : '—'}</dd></div>
-            <div><dt>Stack size</dt><dd>{data.item.stackCount ?? '—'}</dd></div>
-          </dl>
-          <p className="gw-small gw-muted">
-            {suggestion?.belowVendor ? 'The market is below vendor value: selling to a vendor pays more. ' : ''}
-            The auction house keeps 5% of a sale (15% at Blackwater houses), and a deposit is lost if the auction expires. Post from the game; this website cannot post, buy or cancel auctions.
-          </p>
-          <p className="gw-small">{BIND_LABELS[data.item.bindType] || 'Binding not known yet'}</p>
-        </section>
-      ) : null}
-      {variants.length ? (
-        <section className="gw-market-section">
-          <h3>Other versions</h3>
-          <ul className="gw-plain">{variants.map((entry) => <li key={entry.itemKey}><code>{entry.variant}</code> · <Coins value={entry.minUnitBuyout} /> · {entry.quantity} listed</li>)}</ul>
+      ) : <p className="gw-muted">No listings seen for this item in this market yet. Prices come from Blizzard's auction API and from players' in-game auction house searches; nothing is estimated.</p>}
+      {here?.pricePoints?.length ? (
+        <section className="gw-msec">
+          <h3>Cheapest listings {stack > 1 ? <span className="gw-muted gw-small">per stack of {stack}</span> : null}</h3>
+          <PriceLadder points={here.pricePoints} stack={stack} />
         </section>
       ) : null}
       {showHistory ? (
-        <section className="gw-market-section">
-          <h3>Price history <a className="gw-small" href={auctionHref({ tab: 'history', item: data.item.itemId, market: marketKey })}>open</a></h3>
-          <PriceHistoryChart points={history.data?.points || []} height={160} />
+        <section className="gw-msec">
+          <h3>Price and supply {historyHref ? <a className="gw-small" href={historyHref}>Open history</a> : null}</h3>
+          <MarketCharts history={history.data} range={chartRange} onRange={onRange || setLocalRange} compact status={history.status} />
+        </section>
+      ) : null}
+      {here && suggestion ? (
+        <section className="gw-msec">
+          <h3>Selling it</h3>
+          <dl className="gw-mfacts">
+            <div><dt>Vendor value</dt><dd>{data.item.sellPrice === null ? <span className="gw-muted">unknown</span> : <Coins value={data.item.sellPrice} />}</dd></div>
+            <div><dt>Starting point</dt><dd><Coins value={suggestion.unitPrice} /></dd></div>
+          </dl>
+          {suggestion.belowVendor ? <p className="gw-small">The market is below vendor value: a vendor pays more.</p> : null}
         </section>
       ) : null}
       <CraftingCosts itemId={data.item.itemId} marketKey={marketKey} />
-      {data.evidence.length ? (
-        <details className="gw-market-section">
-          <summary>Evidence ({data.evidence.length})</summary>
-          <table className="gw-table gw-table--dense">
-            <thead><tr><th scope="col">Source</th><th scope="col">Seen</th><th scope="col" className="gw-col-num">Lowest</th><th scope="col" className="gw-col-num">Listed</th></tr></thead>
-            <tbody>{data.evidence.map((entry, index) => (
-              <tr key={index}><td>{SOURCE_LABELS[entry.source]}{entry.complete ? '' : ' (partial)'}</td><td>{new Date(entry.observedAt * 1000).toLocaleString()}</td>
-                <td className="gw-col-num"><Coins value={entry.minUnitBuyout} /></td><td className="gw-col-num">{entry.quantity}</td></tr>
-            ))}</tbody>
-          </table>
-          <p className="gw-small gw-muted">{data.basis}</p>
-        </details>
-      ) : null}
+      <Evidence evidence={data.evidence} basis={data.basis} />
+      {historyHref === null && marketKey ? <a className="gw-small" href={auctionHref({ tab: 'history', item: data.item.itemId, key: focusKey, market: marketKey })}>Full price history →</a> : null}
     </div>
   )
 }
@@ -341,5 +316,6 @@ export function ItemMarketPanel({ itemId, marketKey: requestedMarket, mode = 'bu
 // A compact price cell for other pages (dungeon loot, wishlists).
 export function MarketPriceCell({ price }) {
   if (!price) return <span className="gw-muted" title="No market data">—</span>
+  if (price.variantsOnly) return <span className="gw-muted" title={price.selectionReason}>{price.variants.length} versions</span>
   return <span className="gw-price-cell"><Coins value={price.minUnitBuyout ?? price.typicalUnitBuyout} /><Freshness price={price} showSource={false} /></span>
 }

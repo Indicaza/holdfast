@@ -40,7 +40,8 @@ test('member Armory modal renders equipment, talent tree, professions, recipes, 
   expect(recipeReads, 'recipe books wait for the professions tab').toBe(0)
   await profile.getByRole('tab', { name: /^Professions/ }).click()
   await expect(profile.getByRole('heading', { name: 'Blacksmithing' })).toBeVisible()
-  expect(recipeReads).toBe(1)
+  // The request is counted when its response arrives, which can trail the heading.
+  await expect.poll(() => recipeReads).toBe(1)
   await expect(profile.getByRole('meter', { name: 'Blacksmithing skill' })).toHaveText('225 + 5/225')
   await expect(profile.getByRole('heading', { name: 'Fishing' })).toBeVisible()
 

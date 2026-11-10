@@ -3,15 +3,24 @@ import test from 'node:test'
 
 import {
   auctionHref,
+  chartGaps,
+  chartSegments,
   formatAge,
   formatChange,
   formatCoins,
-  historySeries,
+  formatCoinsShort,
+  isBlankState,
+  niceMax,
   postingSuggestion,
   readAuctionState,
   readRecentSearches,
   rememberSearch,
   resolveMarket,
+  rollingMedian,
+  seriesSummary,
+  storeAuctionQuery,
+  storedAuctionQuery,
+  timeTicks,
 } from '../src/Market/marketFormat.js'
 
 function memoryStorage() {
@@ -20,16 +29,35 @@ function memoryStorage() {
 }
 
 test('auction state round-trips through the URL and drops defaults', () => {
-  const href = auctionHref({ tab: 'buy', market: 'api:us:house-113', q: 'linen', sort: 'price', dir: 'desc', page: 2, item: 2589, range: '30d' }, 'us:normal')
-  assert.equal(href, '/dashboard/auctions?server=us%3Anormal&market=api%3Aus%3Ahouse-113&q=linen&sort=price&dir=desc&page=2&item=2589')
+  const href = auctionHref({ tab: 'browse', market: 'api:us:house-113', q: 'linen', quality: '2', minLevel: '10', below: true, sort: 'price', dir: 'desc', page: 2, item: 2589,
+    key: 'i:2589', range: '7d', stack: false }, 'us:normal')
+  assert.equal(href, '/dashboard/auctions?server=us%3Anormal&market=api%3Aus%3Ahouse-113&q=linen&quality=2&minLevel=10&below=1&sort=price&dir=desc&page=2&item=2589&key=i%3A2589')
   const state = readAuctionState(href.split('?')[1])
-  assert.equal(state.tab, 'buy')
+  assert.equal(state.tab, 'browse')
   assert.equal(state.item, 2589)
   assert.equal(state.page, 2)
-  assert.equal(readAuctionState('tab=evil&sort=drop&page=-3').tab, 'buy')
+  assert.equal(state.below, true)
+  assert.equal(state.quality, '2')
+  assert.equal(state.key, 'i:2589')
+  assert.equal(readAuctionState('tab=evil&sort=drop&page=-3').tab, 'browse')
   assert.equal(readAuctionState('sort=drop').sort, 'name')
   assert.equal(readAuctionState('page=-3').page, 1)
+  assert.equal(readAuctionState('key=DROP TABLE').key, '', 'variant keys are validated')
+  assert.equal(readAuctionState('minLevel=abc').minLevel, '')
+  assert.equal(readAuctionState('quality=9').quality, '')
+  assert.equal(readAuctionState('tab=sell').tab, 'appraiser', 'old links keep working')
+  assert.equal(readAuctionState('tab=lists').tab, 'shopping')
+  assert.equal(auctionHref({ tab: 'buy' }), '/dashboard/auctions', 'the old default tab is the new default')
   assert.equal(auctionHref(), '/dashboard/auctions')
+})
+
+test('the last search is remembered and restored only for a blank visit', () => {
+  const storage = memoryStorage()
+  assert.equal(isBlankState(''), true)
+  assert.equal(isBlankState('market=api%3Aus%3Ahouse-113'), true, 'a market alone is still a blank visit')
+  assert.equal(isBlankState('q=linen'), false)
+  storeAuctionQuery('server=us&q=linen&page=2', storage)
+  assert.equal(storedAuctionQuery(storage), 'q=linen&page=2', 'the server is not remembered with the search')
 })
 
 test('coins, ages and changes read like the game', () => {
@@ -68,12 +96,33 @@ test('recent searches are bounded and deduplicated', () => {
   assert.equal(recent.filter((entry) => entry.toLowerCase() === 'item 11').length, 1)
 })
 
-test('history uses one source so lines never mix API and scan prices', () => {
-  const points = [
-    { day: '2026-11-01', source: 'official_api', minUnitBuyout: 10, typicalUnitBuyout: 12, quantity: 5 },
-    { day: '2026-11-02', source: 'official_api', minUnitBuyout: 11, typicalUnitBuyout: 12, quantity: 6 },
-    { day: '2026-11-02', source: 'addon_scan', minUnitBuyout: 3, typicalUnitBuyout: 4, quantity: 1 },
-  ]
-  assert.deepEqual(historySeries(points).map((point) => point.min), [10, 11])
-  assert.deepEqual(historySeries(points, 'addon_scan').map((point) => point.min), [3])
+test('chart lines break at gaps and missing values; nothing is drawn across them', () => {
+  const points = [{ t: 0, min: 10 }, { t: 3600, min: 12 }, { t: 7200, min: null }, { t: 10800, min: 11 }, { t: 50000, min: 9 }]
+  assert.deepEqual(chartSegments(points, 'min', 9000).map((segment) => segment.map((point) => point.t)), [[0, 3600], [10800], [50000]])
+  assert.deepEqual(chartGaps(points, 9000), [[10800, 50000]])
+  assert.deepEqual(chartSegments([], 'min', 1), [])
+})
+
+test('rolling median uses observed points only and needs three of them', () => {
+  const points = [{ t: 0, typical: 100 }, { t: 1, typical: 300 }, { t: 2, typical: 200 }, { t: 100, typical: 50 }]
+  assert.deepEqual(rollingMedian(points, 10).map((point) => point.median), [null, null, 200, null])
+})
+
+test('axes: time ticks on whole steps, round maxima, short coin labels', () => {
+  const { step, ticks } = timeTicks(0, 7 * 86400, 7)
+  assert.equal(step, 86400)
+  assert.ok(ticks.length >= 6 && ticks.length <= 8)
+  assert.deepEqual(timeTicks(10, 5).ticks, [])
+  assert.equal(niceMax(173), 200)
+  assert.equal(niceMax(0), 1)
+  assert.equal(formatCoinsShort(123456), '12g')
+  assert.equal(formatCoinsShort(45000), '4.5g')
+  assert.equal(formatCoinsShort(850), '9s')
+  assert.equal(formatCoinsShort(35), '35c')
+  assert.equal(formatCoinsShort(null), '')
+})
+
+test('series summary describes the visible window', () => {
+  assert.deepEqual(seriesSummary([{ typical: 100 }, { typical: null, min: 80 }, { typical: 150 }]), { first: 100, last: 150, low: 80, high: 150, observations: 3, changePct: 50 })
+  assert.equal(seriesSummary([]), null)
 })

@@ -17,6 +17,15 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  trader: {
+    id: 'e2e-trader',
+    username: 'e2e-trader',
+    globalName: 'Tess Trader',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   rival: {
     id: 'e2e-rival',
     username: 'e2e-rival',

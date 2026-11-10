@@ -1,6 +1,6 @@
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 import { positiveInteger } from "./marketModel.js";
-import { readPricesInDatabase } from "./marketRepository.js";
+import { itemsInDatabase, readAnalysesInDatabase, readPricesInDatabase } from "./marketRepository.js";
 
 // Favorites, shopping lists and saved searches. Every read and write names
 // the signed-in account; another account's list answers "not found".
@@ -14,32 +14,50 @@ function text(value, max = 80) {
   return String(value ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
 }
 
+// Display facts for items, from the market's item index.
 function names(db, ids) {
-  const unique = [...new Set(ids)];
-  const map = new Map();
-  if (!unique.length) return map;
-  for (const row of db.prepare(`SELECT item_id, name, quality_id, icon_file_id FROM public_game_items
-    WHERE item_id IN (${unique.map(() => "?").join(",")}) ORDER BY captured_at ASC`).all(...unique)) {
-    map.set(row.item_id, { name: row.name, qualityId: row.quality_id, iconFileDataId: row.icon_file_id });
-  }
-  return map;
+  return itemsInDatabase(db, [...new Set(ids)]);
 }
 
-function item(map, itemId) {
-  const known = map.get(itemId);
-  return { itemId, name: known?.name || `Item ${itemId}`, qualityId: known?.qualityId ?? null, iconFileDataId: known?.iconFileDataId ?? null };
+function item(lookup, itemId) {
+  const known = lookup(itemId);
+  return { itemId, name: known.name, nameKnown: known.nameKnown, qualityId: known.qualityId, iconFileDataId: known.iconFileDataId };
 }
 
 // Favorites ---------------------------------------------------------------------
 
+// Favorites with their price, recent movement and any observations, so the
+// list answers "anything worth a look?" without opening each item.
 export function readFavorites({ memberId, marketKey = "" }) {
   return withGuildDatabase((db) => {
-    const rows = db.prepare("SELECT item_id, created_at FROM market_favorites WHERE member_id = ? ORDER BY created_at DESC LIMIT ?")
+    const rows = db.prepare("SELECT item_id, created_at, alert_below, alert_above FROM market_favorites WHERE member_id = ? ORDER BY created_at DESC LIMIT ?")
       .all(text(memberId, 160), MAX_FAVORITES);
     const ids = rows.map((row) => row.item_id);
     const itemNames = names(db, ids);
     const prices = readPricesInDatabase(db, { marketKey, itemIds: ids });
-    return { marketKey: marketKey || null, favorites: rows.map((row) => ({ item: item(itemNames, row.item_id), addedAt: row.created_at, price: prices.get(row.item_id) || null })) };
+    const analyses = marketKey ? readAnalysesInDatabase(db, { marketKey, itemKeys: ids.filter((id) => prices.get(id) && !prices.get(id).variantsOnly).map((id) => `i:${id}`) }) : new Map();
+    return { marketKey: marketKey || null, favorites: rows.map((row) => {
+      const analysis = analyses.get(`i:${row.item_id}`);
+      const price = prices.get(row.item_id) || null;
+      const alert = { below: row.alert_below, above: row.alert_above };
+      const ask = price ? (price.minUnitBuyout ?? null) : null;
+      return { item: item(itemNames, row.item_id), addedAt: row.created_at, price, alert,
+        alertState: ask === null ? null : alert.below && ask <= alert.below ? "below" : alert.above && ask >= alert.above ? "above" : null,
+        metrics: analysis?.metrics ? { change24h: analysis.metrics.change24h, median7d: analysis.metrics.median7d, median30d: analysis.metrics.median30d,
+          vsTypical: analysis.metrics.vsTypical, supply: analysis.metrics.supply, coverage: analysis.metrics.coverage } : null,
+        signals: analysis?.signals || [] };
+    }) };
+  });
+}
+
+export function setFavoriteAlert({ memberId, itemId, below, above }) {
+  const id = positiveInteger(itemId);
+  if (!id) return { status: "invalid" };
+  const value = (input) => (input === null || input === "" || input === undefined ? null : positiveInteger(input, 1e12));
+  return withGuildTransaction((db) => {
+    const changed = db.prepare("UPDATE market_favorites SET alert_below = ?, alert_above = ? WHERE member_id = ? AND item_id = ?")
+      .run(value(below), value(above), text(memberId, 160), id).changes;
+    return changed ? { status: "updated" } : { status: "not-found" };
   });
 }
 

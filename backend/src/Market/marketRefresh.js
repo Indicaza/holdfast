@@ -1,5 +1,12 @@
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
-import { addMarketSnapshotItemsInDatabase, beginMarketSnapshotInDatabase, ensureMarketInDatabase, pruneMarketDataInDatabase } from "./marketRepository.js";
+import {
+  addMarketSnapshotItemsInDatabase,
+  beginMarketSnapshotInDatabase,
+  ensureMarketInDatabase,
+  finishMarketSnapshotInDatabase,
+  recordMarketCheckInDatabase,
+  runMarketMaintenanceInDatabase,
+} from "./marketRepository.js";
 
 // Large houses are stored a chunk at a time, letting requests in between,
 // so the website never pauses for a whole house.
@@ -20,6 +27,10 @@ const TICK_MS = 60_000;
 const DISCOVER_SECONDS = 6 * 3600;
 const MAX_BACKOFF_SECONDS = 6 * 3600;
 const IDLE_MULTIPLIER = 4;
+// Pruning, weekly roll-ups and reference prices run daily, with or without
+// a provider (in-game scans need them too).
+const MAINTENANCE_SECONDS = 20 * 3600;
+const MAINTENANCE_CHECK_MS = 3600_000;
 
 function nowSeconds(now) {
   return Math.floor(now() / 1000);
@@ -43,10 +54,6 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   let lastDiscovery = 0;
   let running = false;
   const stats = { ticks: 0, refreshed: 0, unchanged: 0, failed: 0, skipped: 0 };
-
-  function state(marketKey) {
-    return withGuildDatabase((db) => db.prepare("SELECT * FROM market_provider_state WHERE provider = ? AND market_key = ?").get(provider.name, marketKey));
-  }
 
   async function discover() {
     const markets = [];
@@ -82,8 +89,56 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   }
 
   function finishRun(runId, fields) {
-    withGuildDatabase((db) => db.prepare(`UPDATE market_provider_runs SET finished_at = ?, status = ?, http_status = ?, auctions = ?, snapshot_id = ?, error = ?
-      WHERE id = ?`).run(nowSeconds(now), fields.status, fields.httpStatus ?? null, fields.auctions ?? null, fields.snapshotId ?? null, fields.error || "", runId));
+    withGuildDatabase((db) => db.prepare(`UPDATE market_provider_runs SET finished_at = ?, status = ?, http_status = ?, auctions = ?, snapshot_id = ?, error = ?, detail = ?
+      WHERE id = ?`).run(nowSeconds(now), fields.status, fields.httpStatus ?? null, fields.auctions ?? null, fields.snapshotId ?? null, fields.error || "", fields.detail || "", runId));
+  }
+
+  function endpointState(marketKey) {
+    return new Map(withGuildDatabase((db) => db.prepare("SELECT * FROM market_provider_endpoints WHERE provider = ? AND market_key = ?").all(provider.name, marketKey))
+      .map((row) => [row.endpoint, row]));
+  }
+
+  // Stores one endpoint's answer: a new or unchanged snapshot (in chunks,
+  // letting requests in between), a "not modified" check, or a failure.
+  // Every outcome is recorded against that endpoint alone.
+  async function storeEndpoint(market, result, previous) {
+    const at = nowSeconds(now);
+    const scope = `api:${result.endpoint}`;
+    let outcome = { endpoint: result.endpoint, status: result.status, httpStatus: result.httpStatus ?? null };
+    if (result.status === "ok") {
+      const input = { market, sourceType: provider.sourceType, sourceId: `${provider.name}:${scope}:${result.lastModified || result.observedAt}`,
+        coverage: "full", scope, observedAt: result.observedAt, items: result.items, now: at };
+      const begun = withGuildTransaction((db) => beginMarketSnapshotInDatabase(db, input));
+      for (let start = 0; (begun.status === "recorded" || begun.status === "unchanged") && start < begun.items.length; start += CHUNK_ITEMS) {
+        await yieldToRequests();
+        withGuildTransaction((db) => addMarketSnapshotItemsInDatabase(db, { ...input, snapshotId: begun.snapshotId, observedAt: begun.observedAt,
+          items: begun.items.slice(start, start + CHUNK_ITEMS), mode: begun.status, now: at }));
+      }
+      let absent = 0;
+      if (begun.status === "recorded") {
+        await yieldToRequests();
+        absent = withGuildTransaction((db) => finishMarketSnapshotInDatabase(db, { snapshotId: begun.snapshotId, market, sourceType: provider.sourceType, now: at })).absent;
+      }
+      outcome = { ...outcome, status: begun.status === "empty" ? "empty" : begun.status, snapshotId: begun.snapshotId ?? null, auctions: result.auctions,
+        items: begun.items?.length || 0, absent, observedAt: result.observedAt };
+    } else if (result.status === "not_modified") {
+      withGuildDatabase((db) => recordMarketCheckInDatabase(db, { marketKey: market.marketKey, sourceType: provider.sourceType,
+        sourceId: `${provider.name}:${scope}:checked:${at}`, scope, outcome: "not_modified", now: at }));
+    } else if (result.status === "failed") {
+      outcome.error = result.error;
+    }
+    const failed = result.status === "failed";
+    const changed = outcome.status === "recorded";
+    withGuildDatabase((db) => db.prepare(`INSERT INTO market_provider_endpoints (provider, market_key, endpoint, last_modified, last_checked_at, last_changed_at,
+        last_success_at, last_failure_at, last_status, last_error, consecutive_failures) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(provider, market_key, endpoint) DO UPDATE SET last_modified = excluded.last_modified, last_checked_at = excluded.last_checked_at,
+        last_changed_at = COALESCE(excluded.last_changed_at, last_changed_at), last_success_at = COALESCE(excluded.last_success_at, last_success_at),
+        last_failure_at = COALESCE(excluded.last_failure_at, last_failure_at), last_status = excluded.last_status, last_error = excluded.last_error,
+        consecutive_failures = excluded.consecutive_failures`)
+      .run(provider.name, market.marketKey, result.endpoint, failed ? previous?.last_modified || "" : result.lastModified || previous?.last_modified || "", at,
+        changed ? at : null, failed ? null : at, failed ? at : null, outcome.status, failed ? String(result.error).slice(0, 120) : "",
+        failed ? (previous?.consecutive_failures || 0) + 1 : 0));
+    return outcome;
   }
 
   async function refreshOne() {
@@ -95,28 +150,38 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
     const runId = withGuildDatabase((db) => Number(db.prepare(`INSERT INTO market_provider_runs (provider, market_key, started_at, status) VALUES (?, ?, ?, 'running')`)
       .run(provider.name, row.market_key, at).lastInsertRowid));
     const interval = provider.config.refreshSeconds * (priority > 0 ? 1 : IDLE_MULTIPLIER);
+    const previous = endpointState(row.market_key);
     try {
-      const result = await provider.fetchMarket(market, { lastModified: row.last_modified });
-      let snapshot = { status: "unchanged" };
-      if (result.status === "ok") {
-        const input = { market, sourceType: provider.sourceType, sourceId: `${provider.name}:${row.market_key}`, coverage: "full",
-          observedAt: result.observedAt, items: result.items, now: nowSeconds(now) };
-        const begun = withGuildTransaction((db) => beginMarketSnapshotInDatabase(db, input));
-        snapshot = { status: begun.status, snapshotId: begun.snapshotId, items: begun.items?.length || 0 };
-        for (let start = 0; begun.status === "recorded" && start < begun.items.length; start += CHUNK_ITEMS) {
-          await yieldToRequests();
-          withGuildTransaction((db) => addMarketSnapshotItemsInDatabase(db, { ...input, snapshotId: begun.snapshotId,
-            items: begun.items.slice(start, start + CHUNK_ITEMS) }));
-        }
+      const lastModified = Object.fromEntries([...previous.entries()].map(([endpoint, state]) => [endpoint, state.last_modified]));
+      const fetched = await provider.fetchMarket(market, { lastModified });
+      const outcomes = [];
+      for (const result of Object.values(fetched.endpoints)) outcomes.push(await storeEndpoint(market, result, previous.get(result.endpoint)));
+      const failures = outcomes.filter((outcome) => outcome.status === "failed");
+      const anyChanged = outcomes.some((outcome) => outcome.status === "recorded");
+      const status = failures.length === outcomes.length ? "failed" : anyChanged ? "recorded" : "unchanged";
+      const detail = JSON.stringify({ endpoints: outcomes });
+      const auctions = outcomes.reduce((sum, outcome) => sum + (outcome.auctions || 0), 0);
+      if (status === "failed") {
+        const failuresInRow = (row.consecutive_failures || 0) + 1;
+        const permanent = Object.values(fetched.endpoints).every((result) => result.transient === false);
+        const wait = permanent ? Math.max(backoffSeconds(failuresInRow), 3600) : backoffSeconds(failuresInRow);
+        const error = failures.map((outcome) => `${outcome.endpoint}: ${outcome.error}`).join("; ").slice(0, 120);
+        withGuildDatabase((db) => db.prepare(`UPDATE market_provider_state SET last_attempt_at = ?, last_failure_at = ?, consecutive_failures = ?,
+          last_error = ?, next_due_at = ? WHERE provider = ? AND market_key = ?`).run(at, at, failuresInRow, error, at + wait, provider.name, row.market_key));
+        finishRun(runId, { status: "failed", httpStatus: failures[0]?.httpStatus, error, detail });
+        stats.failed += 1;
+        log.warn?.(`[market] ${row.market_key}: refresh failed (${error}), retry in ${Math.round(wait / 60)} min`);
+        return { status: "failed", marketKey: row.market_key, error, endpoints: outcomes };
       }
+      // One endpoint failing while the other worked: the house is refreshed
+      // on schedule and the failing endpoint shows its own error.
+      const partialError = failures.map((outcome) => `${outcome.endpoint}: ${outcome.error}`).join("; ").slice(0, 120);
       withGuildDatabase((db) => db.prepare(`UPDATE market_provider_state SET last_attempt_at = ?, last_success_at = ?, consecutive_failures = 0,
-        last_error = '', next_due_at = ?, last_modified = ? WHERE provider = ? AND market_key = ?`)
-        .run(at, at, at + interval, result.lastModified || row.last_modified || "", provider.name, row.market_key));
-      const status = result.status === "unchanged" || snapshot.status === "duplicate" ? "unchanged" : snapshot.status;
-      finishRun(runId, { status, auctions: result.auctions, snapshotId: snapshot.snapshotId });
+        last_error = ?, next_due_at = ? WHERE provider = ? AND market_key = ?`).run(at, at, partialError, at + interval, provider.name, row.market_key));
+      finishRun(runId, { status: failures.length ? `${status}_partial` : status, auctions, snapshotId: outcomes.find((outcome) => outcome.snapshotId)?.snapshotId, error: partialError, detail });
       if (status === "unchanged") stats.unchanged += 1; else stats.refreshed += 1;
-      log.info?.(`[market] ${row.market_key}: ${status}${result.auctions ? `, ${result.auctions} auctions, ${snapshot.items || 0} items` : ""}`);
-      return { status, marketKey: row.market_key };
+      log.info?.(`[market] ${row.market_key}: ${outcomes.map((outcome) => `${outcome.endpoint} ${outcome.status}${outcome.items ? ` (${outcome.items} items)` : ""}`).join(", ")}`);
+      return { status, marketKey: row.market_key, endpoints: outcomes };
     } catch (error) {
       if (error.code === "rate_limited") {
         // Our own limit: try again next tick, not a failure.
@@ -143,7 +208,6 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
     try {
       if (nowSeconds(now) - lastDiscovery > DISCOVER_SECONDS) await discover();
       const result = await refreshOne();
-      if (stats.ticks % 60 === 0) withGuildTransaction((db) => pruneMarketDataInDatabase(db, nowSeconds(now)));
       return result;
     } finally {
       running = false;
@@ -153,13 +217,28 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   return { tick, discover, refreshOne, stats: () => ({ ...stats, requestsLastHour: provider.requestsUsed?.() ?? null }) };
 }
 
+// Runs maintenance when the last run is older than MAINTENANCE_SECONDS.
+export function maintainMarketsIfDue(now = Math.floor(Date.now() / 1000)) {
+  const last = withGuildDatabase((db) => db.prepare("SELECT ran_at FROM market_maintenance WHERE name = 'rollup'").get()?.ran_at || 0);
+  if (now - last < MAINTENANCE_SECONDS) return null;
+  return withGuildTransaction((db) => runMarketMaintenanceInDatabase(db, now));
+}
+
 export function startMarketRefresher({ provider, intervalMs = TICK_MS, log = console } = {}) {
+  const maintain = () => {
+    try { maintainMarketsIfDue(); } catch (error) { log.error?.("[market] maintenance failed", error); }
+  };
+  const first = setTimeout(maintain, 60_000);
+  const maintenance = setInterval(maintain, MAINTENANCE_CHECK_MS);
+  first.unref?.();
+  maintenance.unref?.();
+  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); };
   if (!provider?.configured()) {
     log.info?.("[market] No auction data provider configured; markets fill from in-game scans only.");
-    return { stop() {}, refresher: null };
+    return { stop: stopMaintenance, refresher: null };
   }
   const refresher = createMarketRefresher({ provider, log });
   const timer = setInterval(() => { refresher.tick().catch((error) => log.error?.("[market] refresh tick failed", error)); }, intervalMs);
   timer.unref?.();
-  return { stop: () => clearInterval(timer), refresher };
+  return { stop: () => { clearInterval(timer); stopMaintenance(); }, refresher };
 }

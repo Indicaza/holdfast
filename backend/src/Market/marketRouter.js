@@ -13,13 +13,17 @@ import {
   removeShoppingListItem,
   saveSearch,
   setFavorite,
+  setFavoriteAlert,
   updateShoppingList,
   upsertShoppingListItem,
 } from "./marketPersonalRepository.js";
 import {
   noteItemInterest,
-  readItemHistory,
+
   readItemMarket,
+  readItemAnalysis,
+  readItemSeries,
+  readMarketDiagnostics,
   readMarkets,
   readPrices,
   searchMarket,
@@ -27,13 +31,13 @@ import {
   suggestItems,
 } from "./marketRepository.js";
 
-const STATUS_CODES = { invalid: 400, limit: 409, "not-found": 404 };
+const STATUS_CODES = { invalid: 400, limit: 409, "not-found": 404, conflict: 409 };
 
 // Mounted at /api/market. Market data (prices, history) is shared by every
 // signed-in player and names no one. Favorites, shopping lists and saved
 // searches belong to the signed-in account: the account always comes from
 // the session, so there is no way to read or change another player's.
-export function createMarketRouter({ refresher = null } = {}) {
+export function createMarketRouter({ refresher = null, providerConfig = null } = {}) {
   const router = Router();
   router.use(requireAuthenticated, (req, res, next) => {
     res.set("Cache-Control", "no-store");
@@ -65,7 +69,8 @@ export function createMarketRouter({ refresher = null } = {}) {
         const result = fn(req);
         const code = STATUS_CODES[result.status];
         if (code) {
-          res.status(code).json({ error: `market_${name}_${result.status.replace("-", "_")}` });
+          res.status(code).json({ error: `market_${name}_${result.status.replace("-", "_")}`, ...(result.reason ? { reason: result.reason } : {}),
+            ...(result.realms ? { realms: result.realms } : {}) });
           return;
         }
         res.json(result);
@@ -78,27 +83,41 @@ export function createMarketRouter({ refresher = null } = {}) {
 
   router.get("/markets", read("markets", () => readMarkets()));
   router.get("/search", read("search", (req) => searchMarket({
-    marketKey: market(req), q: req.query?.q, category: req.query?.category, sort: req.query?.sort,
+    marketKey: market(req), q: req.query?.q, category: req.query?.category, subcategory: req.query?.sub, quality: req.query?.quality,
+    minLevel: req.query?.minLevel, maxLevel: req.query?.maxLevel, minItemLevel: req.query?.minIlvl, maxItemLevel: req.query?.maxIlvl,
+    belowMarket: req.query?.below === "1", includeEmpty: req.query?.empty === "1", sort: req.query?.sort,
     direction: req.query?.dir, page: req.query?.page, pageSize: req.query?.pageSize,
   })));
   router.get("/suggest", read("suggest", (req) => suggestItems({ q: req.query?.q, marketKey: market(req) })));
   router.get("/items/:itemId", read("item", (req) => {
-    const result = readItemMarket({ itemId: req.params.itemId, marketKey: market(req) });
+    const result = readItemMarket({ itemId: req.params.itemId, itemKey: String(req.query?.key || ""), marketKey: market(req) });
     if (result) {
       noteItemInterest(result.item.itemId);
       result.favorite = favoriteIds(owner(req), [result.item.itemId]).length > 0;
     }
     return result;
   }));
-  router.get("/items/:itemId/history", read("history", (req) => readItemHistory({ itemId: req.params.itemId, marketKey: market(req), range: req.query?.range })));
+  // History at the resolution the range needs (24h, 7d: hourly; 30d, 90d,
+  // 1y: daily; all: weekly), per market and source, with gaps left open.
+  router.get("/items/:itemId/history", read("history", (req) => readItemSeries({ itemId: req.params.itemId, itemKey: String(req.query?.key || ""),
+    marketKey: market(req), range: String(req.query?.range || "7d") })));
+  // Metrics (medians, ranges, volatility, supply) and observations, each
+  // with its window, sample count and confidence.
+  router.get("/items/:itemId/analysis", read("analysis", (req) => readItemAnalysis({ itemId: req.params.itemId, itemKey: String(req.query?.key || ""), marketKey: market(req) })));
   router.get("/items/:itemId/crafting", read("crafting", (req) => readCraftCosts({ marketKey: market(req), itemId: req.params.itemId })));
   // Prices for many items at once: recipes, dungeon loot, wishlists.
-  router.get("/prices", read("prices", (req) => readPrices({ marketKey: market(req), itemIds: String(req.query?.items || "").split(",").slice(0, 500) })));
+  // By item id (base item; variant-only items list their variants) or by
+  // exact variant key ("i:15210:s-1081"), for tooltips that know the variant.
+  router.get("/prices", read("prices", (req) => readPrices({ marketKey: market(req), itemIds: String(req.query?.items || "").split(",").slice(0, 500),
+    itemKeys: String(req.query?.keys || "").split(",").filter(Boolean).slice(0, 500) })));
   router.get("/crafting", read("crafting", (req) => readCraftCosts({ marketKey: market(req), recipeIds: String(req.query?.recipes || "").split(",") })));
 
   router.get("/favorites", read("favorites", (req) => readFavorites({ memberId: owner(req), marketKey: market(req) })));
   router.put("/favorites/:itemId", write("favorite", (req) => setFavorite({ memberId: owner(req), itemId: req.params.itemId, favorite: true })));
   router.delete("/favorites/:itemId", write("favorite", (req) => setFavorite({ memberId: owner(req), itemId: req.params.itemId, favorite: false })));
+  // Target prices kept with a favorite, for alerts later. Nothing is sent yet.
+  router.patch("/favorites/:itemId", write("favorite", (req) => setFavoriteAlert({ memberId: owner(req), itemId: req.params.itemId,
+    below: req.body?.alertBelow, above: req.body?.alertAbove })));
 
   router.get("/lists", read("lists", (req) => readShoppingLists({ memberId: owner(req), marketKey: market(req) })));
   router.post("/lists", write("list", (req) => createShoppingList({ memberId: owner(req), name: req.body?.name, purpose: req.body?.purpose })));
@@ -118,8 +137,11 @@ export function createMarketRouter({ refresher = null } = {}) {
   router.get("/admin/status", requirePermission("site.admin"), read("status", () => ({
     provider: refresher ? refresher.stats() : null, ...readMarkets(),
   })));
-  router.post("/admin/links", requirePermission("site.admin"), write("link", (req) => (setMarketLink({ marketKey: req.body?.marketKey, linkedMarketKey: req.body?.linkedMarketKey })
-    ? { status: "linked" } : { status: "not-found" })));
+  router.get("/admin/diagnostics", requirePermission("site.admin"), read("diagnostics", () => readMarketDiagnostics({
+    refresherStats: refresher ? refresher.stats() : null, providerConfig,
+  })));
+  router.post("/admin/links", requirePermission("site.admin"), write("link", (req) => setMarketLink({ marketKey: req.body?.marketKey,
+    linkedMarketKey: req.body?.linkedMarketKey, shared: req.body?.shared === true })));
 
   return router;
 }
