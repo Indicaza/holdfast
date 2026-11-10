@@ -10,6 +10,7 @@ export const DASHBOARD_VIEWS = Object.freeze([
   { id: 'gathering', group: 'you', label: 'Gathering', description: 'What your characters gathered, fished and looted', icon: 'gathering', path: '/dashboard/gathering' },
   { id: 'dungeons', group: 'you', label: 'Dungeon runs', description: 'Your dungeon and raid runs: time, XP, gold, bosses', icon: 'dungeon', path: '/dashboard/dungeons' },
   { id: 'farming', group: 'community', label: 'Drop rates', description: 'Every node, pool and creature, with what it drops', icon: 'farming', path: '/dashboard/farming' },
+  { id: 'auctions', group: 'community', label: 'Auction House', description: 'Search prices, shopping lists, favorites and history', icon: 'auction', path: '/dashboard/auctions' },
   { id: 'sync', group: 'setup', label: 'Download & sync', description: 'Install Guildweaver and see your computers', icon: 'guildweaver', path: '/dashboard/sync' },
   { id: 'account', group: 'setup', label: 'Account', description: 'Your sign-in and what Guildweaver stores', icon: 'user', path: '/dashboard/account' },
 ])
