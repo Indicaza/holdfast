@@ -1,23 +1,27 @@
 // The player dashboard's pure logic: its URLs, the remembered server, and
 // what to say about sync health. Components live beside this file.
 
+// The signed-in app's one navigation: your data, the community's data, and
+// setup. Every signed-in page (home, download, account) lives in it.
 export const DASHBOARD_VIEWS = Object.freeze([
-  { id: 'overview', group: 'explore', label: 'Home', description: 'Search drops, sources and your characters', icon: 'overview', path: '/dashboard' },
-  { id: 'farming', group: 'explore', label: 'Drop rates', description: 'Every node, pool and creature, with what it drops', icon: 'farming', path: '/dashboard/farming' },
+  { id: 'overview', group: 'you', label: 'Home', description: 'Your characters and when they last synced', icon: 'overview', path: '/dashboard' },
   { id: 'characters', group: 'you', label: 'Characters', description: 'Armory, gear, talents and bags', icon: 'characters', path: '/dashboard/characters' },
   { id: 'professions', group: 'you', label: 'Professions', description: 'Skills, and which character can craft it', icon: 'craft', path: '/dashboard/professions' },
-  { id: 'gathering', group: 'you', label: 'My gathering', description: 'What your characters gathered, fished and looted', icon: 'gathering', path: '/dashboard/gathering' },
+  { id: 'gathering', group: 'you', label: 'Gathering', description: 'What your characters gathered, fished and looted', icon: 'gathering', path: '/dashboard/gathering' },
   { id: 'dungeons', group: 'you', label: 'Dungeon runs', description: 'Your dungeon and raid runs: time, XP, gold, bosses', icon: 'dungeon', path: '/dashboard/dungeons' },
-  { id: 'sync', group: 'you', label: 'Sync', description: 'Your devices and upload status', icon: 'guildweaver', path: '/dashboard/sync' },
+  { id: 'farming', group: 'community', label: 'Drop rates', description: 'Every node, pool and creature, with what it drops', icon: 'farming', path: '/dashboard/farming' },
+  { id: 'sync', group: 'setup', label: 'Download & sync', description: 'Install Guildweaver and see your computers', icon: 'guildweaver', path: '/dashboard/sync' },
+  { id: 'account', group: 'setup', label: 'Account', description: 'Your sign-in and what Guildweaver stores', icon: 'user', path: '/dashboard/account' },
 ])
 
 // The resource map is a section like the others; on its page the sidebar
 // holds the map's legend, with the sections as a row of icons above it.
-export const MAP_VIEW = Object.freeze({ id: 'map', group: 'explore', label: 'Resource map', description: 'Every herb, vein and pool on a zoomable map of Azeroth', icon: 'map', path: '/map', href: '/map' })
+export const MAP_VIEW = Object.freeze({ id: 'map', group: 'community', label: 'Resource map', description: 'Every herb, vein and pool on a zoomable map of Azeroth', icon: 'map', path: '/map', href: '/map' })
 
 export const DASHBOARD_GROUPS = Object.freeze([
-  { id: 'explore', label: 'Explore' },
-  { id: 'you', label: 'You' },
+  { id: 'you', label: 'Your data' },
+  { id: 'community', label: 'Community' },
+  { id: 'setup', label: 'Settings' },
 ])
 
 const SERVER_PARAM = 'server'

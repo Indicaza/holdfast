@@ -14,7 +14,9 @@ import './Account.css'
 // Account & Privacy: who the player is signed in as, what Guildweaver keeps
 // about them and who can see it. Its only controls are ones the server
 // enforces: disconnecting devices (on the Sync page) and signing out.
-export default function Account() {
+// Signed in, it is a page of the dashboard (embedded); signed out, a page of
+// the site asking to sign in.
+export default function Account({ embedded = false }) {
   const session = useSession()
   const [signOutState, setSignOutState] = useState('idle')
   const overview = useLiveResource('/api/player/overview', { topics: PLAYER_TOPICS, enabled: session.authenticated })
@@ -46,8 +48,7 @@ export default function Account() {
     }
   }
 
-  return (
-    <PageShell eyebrow="Account" title="Account & Privacy" intro="Your sign-in, what Guildweaver stores about you, and who can see it." className="account-page" compact>
+  const body = (
       <div className="account-grid">
         <section className="account-card" aria-labelledby="account-identity">
           <h2 id="account-identity">Signed in with Discord</h2>
@@ -87,6 +88,12 @@ export default function Account() {
           </ul>
         </section>
       </div>
+  )
+
+  if (embedded) return <div className="account-page account-page--embedded">{body}</div>
+  return (
+    <PageShell eyebrow="Account" title="Account & Privacy" intro="Your sign-in, what Guildweaver stores about you, and who can see it." className="account-page" compact>
+      {body}
     </PageShell>
   )
 }

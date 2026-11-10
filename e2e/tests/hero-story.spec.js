@@ -22,6 +22,19 @@ function expectTransformClose(actual, expected) {
   actualValues.forEach((value, index) => expect(value).toBeCloseTo(expectedValues[index], 5))
 }
 
+// A paused animation can still advance one frame after the class lands; wait until it holds still.
+async function settledTransform(locator) {
+  const read = () => locator.evaluate((element) => getComputedStyle(element).transform)
+  let previous = await read()
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await locator.page().waitForTimeout(50)
+    const current = await read()
+    if (current === previous) return current
+    previous = current
+  }
+  return previous
+}
+
 test('all eleven scenes stay in story order and manual playback wraps', async ({ page }) => {
   await ready(page)
   for (const [index, scene] of scenes.entries()) {
@@ -47,7 +60,7 @@ test('autoplay crossfade, caption, and drift pause together', async ({ page }) =
   await page.getByRole('button', { name: 'Pause story' }).click()
   await expect(page.locator('.hero-slideshow')).toHaveClass(/paused/)
   const art = page.locator('.hero-slideshow__slide--active .hero-slideshow__art')
-  const before = await art.evaluate((element) => getComputedStyle(element).transform)
+  const before = await settledTransform(art)
   await page.clock.runFor(30000)
   await expect(caption(page)).toHaveAttribute('data-caption', 'gnome')
   expectTransformClose(await art.evaluate((element) => getComputedStyle(element).transform), before)
