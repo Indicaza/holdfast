@@ -4,7 +4,7 @@ import { withGuildDatabase } from '../src/Data/database.js'
 import { ensureCharacterReadModelSchema } from '../src/Character/ReadModel/readModelSchema.js'
 import { normalizeGuildListing, normalizeGuildSearch, guildSlug, validSlug } from '../src/Guild/Directory/guildDirectoryModel.js'
 import { HOLDFAST_GUILD_ID } from '../src/Guild/Directory/guildDirectoryMigration.js'
-import { withHttpApp, memberIds } from '../testSupport/httpHarness.js'
+import { withGuildHttpApp, memberIds } from '../testSupport/httpHarness.js'
 
 const listing = (change = {}) => ({
   name: 'Ashen Vanguard',
@@ -70,7 +70,7 @@ test('listing input is normalized and every required directory field is enforced
 })
 
 test('Holdfast is seeded as the first guild and existing members join it', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const memberships = withGuildDatabase((db) => db.prepare("SELECT guild_id, member_id FROM guild_memberships WHERE status = 'active'").all())
     assert.ok(memberships.length >= 3)
     assert.ok(memberships.every((row) => row.guild_id === HOLDFAST_GUILD_ID))
@@ -87,7 +87,7 @@ test('Holdfast is seeded as the first guild and existing members join it', async
 })
 
 test('a player registers a guild, it is listed with filters, and they cannot found a second one', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     addFreeAgent('founder')
     assert.equal((await request('/api/guilds', { method: 'POST', body: listing() })).status, 401)
 
@@ -130,7 +130,7 @@ test('a player registers a guild, it is listed with filters, and they cannot fou
 })
 
 test('verified roster stats come from recently synced characters, as aggregates only', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const now = Date.now()
     const recent = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString()
     const stale = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString()
@@ -150,7 +150,7 @@ test('verified roster stats come from recently synced characters, as aggregates 
 })
 
 test('applications and sister guilds need the right people on both sides', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     addFreeAgent('founder')
     addFreeAgent('applicant')
     await request('/api/guilds', { method: 'POST', persona: 'founder', body: listing() })
@@ -184,7 +184,7 @@ test('applications and sister guilds need the right people on both sides', async
 })
 
 test('a member leaves their guild to found another; owners must hand over first', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const blocked = await request('/api/guilds', { method: 'POST', persona: 'member', body: listing() })
     assert.equal(blocked.json.error, 'already_in_guild')
     assert.equal((await request('/api/guilds/mine/leave', { method: 'POST', persona: 'member' })).status, 200)
@@ -203,15 +203,15 @@ test('a member leaves their guild to found another; owners must hand over first'
 })
 
 test('the vocabulary offers a Discord server template only when one is configured', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const plain = await request('/api/guilds/vocabulary')
     assert.equal(plain.json.discordTemplateUrl, '')
     assert.ok(plain.json.realmTypes.includes('hardcore'))
   })
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     assert.equal((await request('/api/guilds/vocabulary')).json.discordTemplateUrl, 'https://discord.new/GuildweaverRaid1')
   }, { env: { GUILDWEAVER_DISCORD_TEMPLATE_URL: 'https://discord.new/GuildweaverRaid1' } })
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     assert.equal((await request('/api/guilds/vocabulary')).json.discordTemplateUrl, '')
   }, { env: { GUILDWEAVER_DISCORD_TEMPLATE_URL: 'https://evil.example/discord' } })
 })

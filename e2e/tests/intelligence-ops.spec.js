@@ -19,7 +19,7 @@ test('member GuildOS keeps the Holdfast guild navbar and hides privileged operat
 
   await page.locator('.navbar__account-button').click()
   const accountLinks = page.locator('.navbar__account-links')
-  await expect(accountLinks.getByRole('link', { name: 'My Profile', exact: true })).toHaveAttribute('href', '/holdfast/members/me')
+  await expect(accountLinks.getByRole('menuitem', { name: 'My Profile', exact: true })).toHaveAttribute('href', '/holdfast/members/me')
 
   await page.goto('/holdfast/intelligence#audit')
   await expect(page.locator('.intelligence-app__topbar').getByRole('heading', { name: 'Overview' })).toBeVisible()

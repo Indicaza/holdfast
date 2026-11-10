@@ -17,6 +17,7 @@ function parsedEvent(event) {
 
 export function LiveUpdatesProvider({ children }) {
   const session = useSession()
+  const userId = session.authenticated ? session.user?.id || '' : ''
   const [status, setStatus] = useState('offline')
   const listeners = useRef(new Set())
   const connectedOnce = useRef(false)
@@ -92,7 +93,9 @@ export function LiveUpdatesProvider({ children }) {
       window.removeEventListener('online', handleOnline)
       connectedOnce.current = false
     }
-  }, [publish, session.authenticated])
+    // One stream per account: switching accounts closes the old stream, so no
+    // event meant for the previous account reaches this page.
+  }, [publish, session.authenticated, userId])
 
   const value = useMemo(() => ({ status, subscribe }), [status, subscribe])
 

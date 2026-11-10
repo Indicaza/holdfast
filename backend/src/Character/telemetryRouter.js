@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { publishCharacterChanged } from "../Live/characterChangeEvents.js";
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
+import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
 import { authenticateGuildweaverDevice } from "./guildweaverDeviceRepository.js";
 import { ingestTelemetry } from "./Telemetry/ingestTelemetry.js";
 
@@ -49,6 +50,8 @@ export function createTelemetryRouter() {
       const canonicalCharacterId = result.canonicalCharacterId;
 
       if (result.status === "created") {
+        // The uploader's dashboard (sync freshness, farming, characters).
+        publishPlayerChanged(req.guildweaverDevice.memberId);
         publishLiveUpdate({
           topics: ["guildweaver"],
           source: "guildweaver.telemetry.persisted",
@@ -67,10 +70,10 @@ export function createTelemetryRouter() {
         });
       }
       if (result.recordedEvent?.sessionChanged) {
-        publishLiveUpdate({ topics: ["farming"], source: "farming.session" });
+        publishLiveUpdate({ topics: ["farming", "player"], source: "farming.session", memberId: req.guildweaverDevice.memberId });
       }
       if (kind === "state") {
-        publishCharacterChanged({ characterId: canonicalCharacterId, sections: result.changedSections });
+        publishCharacterChanged({ characterId: canonicalCharacterId, memberId: req.guildweaverDevice.memberId, sections: result.changedSections });
       }
 
       res.set("Cache-Control", "no-store");

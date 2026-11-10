@@ -3,25 +3,25 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { recordTelemetry } from "../src/Character/telemetryRecordRepository.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function v3Snapshot() {
   return {
     schemaVersion: 3,
     capturedAt: 1791262800,
     characterId: "character-v3-rook",
-    characterKey: "classic beta pve 2:rook ravenstar",
+    characterKey: "live realm:rook ravenstar",
     firstName: "Rook",
     lastName: "Ravenstar",
     fullName: "Rook Ravenstar",
     name: "Rook Ravenstar",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     gameBuild: { version: "1.60.1", build: "70245", interface: 16001 },
     level: 22,
     race: { id: 4, name: "Night Elf", token: "NightElf" },
     class: { id: 1, name: "Warrior", token: "WARRIOR" },
-    guild: { name: "Holdfast", realm: "Classic Beta PvE 2" },
+    guild: { name: "Holdfast", realm: "Live Realm" },
     equipment: [
       {
         slot: "head",
@@ -151,7 +151,7 @@ function talentDefinition(snapshot) {
 }
 
 test("schema v3 character snapshots retain Armory data and rejoin talent definitions", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = v3Snapshot();
     const synced = await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -242,10 +242,10 @@ test("schema v3 character snapshots retain Armory data and rejoin talent definit
 });
 
 test("schema v3 Armory keeps compact talent state while its definition is still pending", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = v3Snapshot();
     snapshot.characterId = "character-v3-pending-definition";
-    snapshot.characterKey = "classic beta pve 2:quill riftward";
+    snapshot.characterKey = "live realm:quill riftward";
     snapshot.firstName = "Quill";
     snapshot.lastName = "Riftward";
     snapshot.fullName = "Quill Riftward";

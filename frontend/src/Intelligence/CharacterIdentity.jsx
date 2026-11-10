@@ -63,7 +63,7 @@ export function UnitFrame({ character, health = {}, power = {}, nameAs: Name = '
   return (
     <div className={`unit-frame${className ? ` ${className}` : ''}`}>
       <span className="unit-frame__portrait">
-        {identity.iconFileId ? <WowIcon iconFileId={identity.iconFileId} label={character?.className} size={64} /> : <span aria-hidden="true">♜</span>}
+        {identity.iconFileId ? <WowIcon iconFileId={identity.iconFileId} label={character?.className} size={64} /> : <span aria-hidden="true">✦</span>}
       </span>
       {character?.level ? <b className="unit-frame__level" aria-label={`Level ${character.level}`}>{character.level}</b> : null}
       {character?.isMain ? <span className="unit-frame__main" title="Main character" role="img" aria-label="Main character">★</span> : null}

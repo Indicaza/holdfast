@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { withGuildDatabase } from "../src/Data/database.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 test("Armory reads the newest durable snapshot even when the projection points at an older sparse snapshot", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const first = await syncGuildweaverCharacter({
       memberId: memberIds.member,
       deviceId: "durable-armory-device",
@@ -14,9 +14,9 @@ test("Armory reads the newest durable snapshot even when the projection points a
         schemaVersion: 3,
         capturedAt: 1791262800,
         characterId: "durable-armory-character",
-        characterKey: "classic beta pve 2:rook ravenstar",
+        characterKey: "live realm:rook ravenstar",
         name: "Rook Ravenstar",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
       },
     });
 
@@ -27,12 +27,12 @@ test("Armory reads the newest durable snapshot even when the projection points a
         schemaVersion: 3,
         capturedAt: 1791266400,
         characterId: "durable-armory-character",
-        characterKey: "classic beta pve 2:rook ravenstar",
+        characterKey: "live realm:rook ravenstar",
         firstName: "Rook",
         lastName: "Ravenstar",
         fullName: "Rook Ravenstar",
         name: "Rook Ravenstar",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
         region: "US",
         level: 22,
         race: { id: 4, name: "Night Elf" },

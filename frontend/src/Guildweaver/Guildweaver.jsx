@@ -17,14 +17,14 @@ const fallbackRelease = {
 
 const syncFacts = [
   'Character identity, level, class, spec, gear, and supported professions',
-  'Supported quest, inventory, and guild activity used by Holdfast features',
+  'Bags, gold, recipes, and gathering, fishing and loot observations',
   'Local addon data read from WoW SavedVariables',
 ]
 
 const authorityFacts = [
   'Your Battle.net or WoW password',
-  'Authority to change rank, permissions, Rep, or Marks',
-  'Automated protected in-game guild actions',
+  'Your Discord messages or servers',
+  'Protected in-game actions: it only reads what the addon saves',
 ]
 
 const detailItems = [
@@ -41,7 +41,7 @@ const detailItems = [
   {
     id: 'architecture',
     title: 'How it works',
-    body: 'See the path from WoW to the bridge, Holdfast, and Discord.',
+    body: 'See the path from WoW to the bridge and your dashboard.',
   },
   {
     id: 'verification',
@@ -59,22 +59,28 @@ export default function Guildweaver() {
 
   return (
     <PageShell
-      eyebrow="Holdfast companion"
+      eyebrow="For every WoW Forever player"
       title="Guildweaver"
-      intro="Install it once. Guildweaver finds WoW, installs the addon, connects this computer to Holdfast, and keeps itself updated."
+      intro="Install it once. Guildweaver finds WoW, installs the addon, syncs your telemetry to Guildweaver, and keeps itself updated."
       centered
       className="guildweaver-page"
     >
       <section className="guildweaver-download-panel">
-        <p className="guildweaver-release-status">{release.channelLabel} release · Windows · macOS · Linux</p>
+        <p className="guildweaver-release-status"><span aria-hidden="true" />{release.channelLabel} release · Windows · macOS · Linux</p>
         <GuildweaverDownload />
-        <button
-          className="guildweaver-text-button"
-          type="button"
-          onClick={() => setActiveModal('verification')}
-        >
-          Guildweaver is currently unsigned alpha software
-        </button>
+        <div className="guildweaver-download-panel__footer">
+          <p>No guild required. Download freely, then sign in with Discord to connect your computer.</p>
+          <div className="guildweaver-download-panel__links">
+            <a className="guildweaver-text-button" href="/dashboard">Open your dashboard →</a>
+            <button
+              className="guildweaver-text-button"
+              type="button"
+              onClick={() => setActiveModal('verification')}
+            >
+              Guildweaver is currently unsigned alpha software
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="guildweaver-section">
@@ -95,14 +101,14 @@ export default function Guildweaver() {
             <span className="guildweaver-step-number">2</span>
             <div>
               <strong>Approve this computer</strong>
-              <span>Holdfast opens in your browser once so you can connect the device.</span>
+              <span>Sign in with Discord to connect this device. No guild registration or membership required.</span>
             </div>
           </li>
           <li>
             <span className="guildweaver-step-number">3</span>
             <div>
               <strong>Play</strong>
-              <span>WoW discovery, the addon, background sync, and future updates are handled for you.</span>
+              <span>Play, then reload or log out of WoW to save your data for upload. View it in the dashboard.</span>
             </div>
           </li>
         </ol>
@@ -131,14 +137,14 @@ export default function Guildweaver() {
       <nav className="guildweaver-footer-links" aria-label="Guildweaver resources">
         <a href={release.releasePage} target="_blank" rel="noreferrer">Current release ↗</a>
         <a href={release.reportIssue} target="_blank" rel="noreferrer">Report a bug ↗</a>
-        <a href="/privacy">Holdfast privacy</a>
+        <a href="/privacy">Guildweaver privacy</a>
       </nav>
 
       {activeModal === 'source' ? (
         <Modal
           eyebrow="Open source"
           title="Inspect the whole stack."
-          intro="Every Holdfast-owned piece of Guildweaver is public."
+          intro="The website, addon, and bridge are open source."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -158,7 +164,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Data boundary"
           title="Game facts, not credentials."
-          intro="WoW owns observed character data. Holdfast owns guild authority."
+          intro="The addon observes game data. Your dashboard is private to you."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -176,7 +182,7 @@ export default function Guildweaver() {
               </ul>
             </section>
           </div>
-          <a className="guildweaver-modal-link" href="/privacy">Read Holdfast privacy policy →</a>
+          <a className="guildweaver-modal-link" href="/privacy">Read Guildweaver privacy policy →</a>
         </Modal>
       ) : null}
 
@@ -184,7 +190,7 @@ export default function Guildweaver() {
         <Modal
           eyebrow="Architecture"
           title="No black box."
-          intro="The addon observes WoW. The bridge moves supported data over HTTPS. Holdfast remains authoritative for guild-owned state."
+          intro="The addon observes WoW. The bridge moves supported data over HTTPS. The website displays your synced telemetry."
           size="wide"
           onClose={() => setActiveModal(null)}
         >
@@ -195,7 +201,7 @@ export default function Guildweaver() {
             <b>↓ Local files</b>
             <span>Guildweaver Bridge</span>
             <b>↓ HTTPS</b>
-            <span>Holdfast</span>
+            <span>Your private dashboard</span>
             <b>↕</b>
             <span>Discord</span>
           </div>

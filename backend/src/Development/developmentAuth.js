@@ -5,6 +5,20 @@ import { resolveMemberAuthority } from "../Guild/authorityRepository.js";
 import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 
 const DEVELOPMENT_PERSONAS = Object.freeze({
+  // A Discord user with no guild: the solo Guildweaver player. Not in
+  // Holdfast's server, so no rank and no guild permissions.
+  player: {
+    rank: null,
+    homeServer: false,
+    user: {
+      id: "dev-player",
+      username: "dev-player",
+      globalName: "Pip Player",
+      guildNickname: null,
+      avatarUrl: null,
+      guildJoinedAt: null,
+    },
+  },
   member: {
     rank: "Private",
     user: {
@@ -51,7 +65,7 @@ export function developmentAuthEnabled(env = process.env) {
 export function developmentPersonas() {
   return Object.entries(DEVELOPMENT_PERSONAS).map(([key, persona]) => ({
     key,
-    name: persona.user.guildNickname,
+    name: persona.user.guildNickname || persona.user.globalName,
     rank: persona.rank,
     loginPath: `/api/dev/login/${key}`,
   }));
@@ -110,9 +124,9 @@ export function createDevelopmentAuthRouter({
       return;
     }
 
-    const authority = resolveAuthority(persona.user.id, env);
+    const authority = persona.rank ? resolveAuthority(persona.user.id, env) : { permissions: [] };
 
-    if (authority.memberRank !== persona.rank) {
+    if (persona.rank && authority.memberRank !== persona.rank) {
       res.status(409).json({
         error: "development_seed_required",
         hint: "Run npm run dev:seed in backend before using development login.",
@@ -123,6 +137,7 @@ export function createDevelopmentAuthRouter({
     writeSession(res, {
       user: persona.user,
       permissions: authority.permissions,
+      ...(persona.homeServer === false ? { homeServer: false } : {}),
       verifiedAt: Date.now(),
     });
 

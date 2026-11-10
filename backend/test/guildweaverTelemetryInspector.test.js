@@ -10,7 +10,7 @@ test('generic telemetry is durable, idempotent, sanitized, and inspectable', () 
     eventType: 'character_snapshot',
     capturedAt: 1791248400,
     gameBuild: { version: '1.60.1', build: '60001' },
-    realm: 'Classic Beta PvE 2',
+    realm: 'Live Realm',
     region: 'US',
     installationId: 'install-test',
     characterId: 'character-test',

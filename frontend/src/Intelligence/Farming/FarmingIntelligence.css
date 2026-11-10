@@ -925,8 +925,8 @@
 
 .farm-line__grid text,
 .farm-line__label {
-  fill: var(--farm-faint);
-  font-size: 9px;
+  fill: rgba(231, 233, 238, .55);
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
 

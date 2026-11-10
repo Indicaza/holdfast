@@ -129,7 +129,9 @@ function SourceCard({ source, onOpen }) {
 
 // One searchable browser of everything the guild has gathered from. Search a
 // source to find it, or an item to find every source that produced it.
-export default function FarmingIntelligence({ input, onInputChange }) {
+// sessions: also show the signed-in player's own farming runs (the player
+// dashboard shows them in its own section instead).
+export default function FarmingIntelligence({ input, onInputChange, sessions = true }) {
   const [initialBrowser] = useState(readBrowserStateFromLocation)
   const [query, setQuery] = useState(() => input.trim() || initialBrowser.query.trim())
   const [discipline, setDiscipline] = useState(initialBrowser.discipline)
@@ -261,7 +263,7 @@ export default function FarmingIntelligence({ input, onInputChange }) {
         ))
       ) : null}
 
-      <FarmingSessions />
+      {sessions ? <FarmingSessions /> : null}
 
       {sourceKey ? (
         <FarmingSourceModal key={sourceKey} sourceKey={sourceKey} initialItemKey={initialItemKey} initialZone={zone} onClose={() => open('')} />

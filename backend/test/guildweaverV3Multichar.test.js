@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 async function pairBridge(request) {
   const started = await request("/api/bridge/pairing/start", {
@@ -32,21 +32,21 @@ function snapshot({ characterId, name, className, level, capturedAt }) {
     schemaVersion: 3,
     capturedAt,
     characterId,
-    characterKey: `classic beta pve 2:${name.toLowerCase()}`,
+    characterKey: `live realm:${name.toLowerCase()}`,
     name,
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     level,
     race: { id: 1, name: "Human", token: "Human" },
     class: { id: classId, name: className, token: className.toUpperCase() },
-    guild: { name: "Holdfast", realm: "Classic Beta PvE 2" },
+    guild: { name: "Holdfast", realm: "Live Realm" },
     professions: [],
     equipment: [],
   };
 }
 
 test("schema v3 keeps multiple characters; a character's own telemetry and its legacy snapshot converge on one character", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const deviceToken = await pairBridge(request);
     const headers = { Authorization: `Bearer ${deviceToken}` };
 

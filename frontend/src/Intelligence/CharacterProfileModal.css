@@ -320,3 +320,150 @@
     display: none;
   }
 }
+
+/* The player dashboard's look: the app's own type, colours and tabs. The tab
+   contents (paper doll, talents, bags) keep their game styling. */
+
+.modal__panel--armory:has(.armory-shell--app) {
+  --armory-gold: #e9c46a;
+  --armory-line: rgba(255, 255, 255, .09);
+  --armory-ink: #e7e9ee;
+  --armory-muted: #a1a9b6;
+  --armory-page: #0c0e12;
+  border-color: rgba(255, 255, 255, .1);
+  background: #101318;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.armory-shell--app {
+  background: none;
+}
+
+.armory-shell--app h2,
+.armory-shell--app h3,
+.armory-shell--app .armory-empty h3 {
+  font-family: inherit;
+}
+
+.armory-app-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .85rem;
+  min-height: 4.5rem;
+  padding: 1rem 3.5rem .9rem var(--armory-pad);
+}
+
+.armory-app-head__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--armory-class-color, #e9c46a) 50%, transparent);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .03);
+}
+
+.armory-app-head__text {
+  display: grid;
+  min-width: 0;
+  gap: .15rem;
+}
+
+.armory-app-head h2 {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin: 0;
+  color: var(--armory-class-color, var(--armory-ink));
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.armory-app-head__main {
+  color: var(--armory-gold);
+  font-size: .8rem;
+}
+
+.armory-app-head__text p,
+.armory-app-head__sync {
+  margin: 0;
+  color: var(--armory-muted);
+  font-size: .82rem;
+}
+
+.armory-app-head__sync {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Underlined tabs, like the rest of the app. */
+.armory-shell--app .armory-tabs {
+  gap: .1rem;
+  margin-bottom: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--armory-line);
+}
+
+.armory-shell--app .armory-tabs__tab,
+.armory-shell--app .armory-tabs__tab:hover,
+.armory-shell--app .armory-tabs__tab[aria-selected='true'] {
+  padding: .55rem .75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  box-shadow: none;
+  --interactive-radius: 0;
+}
+
+.armory-shell--app .armory-tabs__tab:hover {
+  color: var(--armory-ink);
+}
+
+.armory-shell--app .armory-tabs__tab[aria-selected='true'] {
+  border-bottom-color: var(--armory-gold);
+  color: var(--armory-ink);
+}
+
+.armory-shell--app .armory-content {
+  margin-top: .75rem;
+  border-color: var(--armory-line);
+  border-radius: .6rem;
+}
+
+@media (max-width: 620px) {
+  .armory-app-head {
+    flex-wrap: wrap;
+    padding-right: 3rem;
+  }
+
+  .armory-app-head__sync {
+    width: 100%;
+    margin-left: calc(44px + .85rem);
+  }
+
+  .armory-shell--app .armory-tabs__tab {
+    padding: .5rem .55rem;
+    font-size: .82rem;
+  }
+}
+
+/* The page is already a box: its empty states sit on it plainly. */
+.armory-shell--app .armory-empty,
+.armory-shell--app .talent-empty {
+  border: 0;
+  background: none;
+}
+
+@media (max-width: 620px) {
+  .armory-shell--app .armory-tabs__tab {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+    padding: .5rem .2rem;
+  }
+}

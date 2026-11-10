@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { FARMING_MIN_GATHERS, FARMING_MIN_SECONDS, farmingSessionQuality } from "./farmingSessionModel.js";
+import { serverKeySql } from "../Player/playerServers.js";
 
 function text(value, max = 160) {
   return String(value ?? "").trim().slice(0, max);
@@ -34,10 +35,17 @@ export function recordFarmingSessionInDatabase(db, { envelope, memberId, receive
   return { status: result.changes ? "updated" : "duplicate", sessionChanged: Boolean(result.changes) };
 }
 
-export function readFarmingSessions({ realm = "", build = "", mode = "", limit = 30 } = {}) {
+// A player's own farming sessions. Sessions are personal activity (when and
+// where someone played), so every read names the account whose sessions it
+// returns; there is no "everyone's sessions" read.
+export function readFarmingSessions({ memberId, server = "", realm = "", build = "", mode = "", limit = 30 } = {}) {
   return withGuildDatabase((db) => {
-    const clauses = [];
-    const params = [];
+    const clauses = ["member_id = ?"];
+    const params = [text(memberId)];
+    if (server) {
+      clauses.push(`${serverKeySql("farming_sessions")} = ?`);
+      params.push(server);
+    }
     for (const [column, value] of [["realm", realm], ["game_build", build], ["mode", mode]]) {
       if (text(value)) { clauses.push(`${column} = ?`); params.push(text(value)); }
     }
@@ -105,10 +113,102 @@ export function readFarmingLocations(sourceKey, { mapId = "", realm = "", region
       GROUP BY map_id, realm, region, game_build, position_kind, px, py
       ORDER BY observations DESC, map_id, px, py LIMIT ?
     `).all(...params, cappedLimit + 1);
+    // Each map's name for the hotspot view: the zone most often recorded on
+    // it, and how many observations it holds overall (points are capped).
+    const maps = new Map();
+    for (const row of db.prepare(`
+      SELECT map_id, zone, COUNT(*) AS observations
+      FROM economic_observations WHERE ${clauses.join(" AND ")}
+      GROUP BY map_id, zone ORDER BY observations DESC, map_id
+    `).all(...params)) {
+      const entry = maps.get(row.map_id) || { mapId: row.map_id, zone: row.zone || null, observations: 0 };
+      entry.zone = entry.zone || row.zone || null;
+      entry.observations += row.observations;
+      maps.set(row.map_id, entry);
+    }
     return {
       sourceKey: text(sourceKey, 240), coordinateSystem: "ui_map_normalized", truncated: points.length > cappedLimit,
+      maps: [...maps.values()].sort((a, b) => b.observations - a.observations || a.mapId - b.mapId),
       points: points.slice(0, cappedLimit).map((p) => ({ mapId: p.map_id, x: p.px, y: p.py,
         realm: p.realm, region: p.region, build: p.game_build, positionKind: p.position_kind, observations: p.observations })),
+    };
+  });
+}
+
+const MAP_GRID = 200;
+
+// The resource map: where every source was gathered, across all zones.
+// Points are binned to a 0.5% grid per zone and source so the whole world
+// fits in one response; zones and sources summarise the same filter for the
+// map's legend.
+export function readFarmingMap({ discipline = "", source = "", item = "", realm = "", region = "", build = "", limit = 8000 } = {}) {
+  return withGuildDatabase((db) => {
+    const clauses = ["map_id > 0", "x IS NOT NULL", "y IS NOT NULL", "x BETWEEN 0 AND 1", "y BETWEEN 0 AND 1"];
+    const params = [];
+    for (const [column, value] of [["discipline", discipline], ["realm", realm], ["region", region], ["game_build", build]]) {
+      if (text(value)) { clauses.push(`${column} = ?`); params.push(text(value)); }
+    }
+    const sourceKeys = String(source || "").split(",").map((value) => text(value, 240)).filter(Boolean).slice(0, 50);
+    if (sourceKeys.length) {
+      clauses.push(`source_key IN (${sourceKeys.map(() => "?").join(", ")})`);
+      params.push(...sourceKeys);
+    }
+    if (text(item, 200)) {
+      clauses.push("id IN (SELECT observation_id FROM economic_observation_outputs WHERE item_key = ?)");
+      params.push(text(item, 200));
+    }
+    const where = clauses.join(" AND ");
+    const cappedLimit = Math.min(20000, Math.max(1, Math.trunc(Number(limit)) || 8000));
+
+    const points = db.prepare(`
+      SELECT map_id, source_key, ROUND(x * ${MAP_GRID}) / ${MAP_GRID}.0 AS px, ROUND(y * ${MAP_GRID}) / ${MAP_GRID}.0 AS py, COUNT(*) AS observations
+      FROM economic_observations WHERE ${where}
+      GROUP BY map_id, source_key, px, py
+      ORDER BY observations DESC, map_id, source_key, px, py LIMIT ?
+    `).all(...params, cappedLimit + 1);
+
+    const zones = new Map();
+    for (const row of db.prepare(`
+      SELECT map_id, zone, COUNT(*) AS observations, COUNT(DISTINCT source_key) AS sources
+      FROM economic_observations WHERE ${where}
+      GROUP BY map_id, zone ORDER BY observations DESC, map_id
+    `).all(...params)) {
+      const entry = zones.get(row.map_id) || { mapId: row.map_id, zone: row.zone || null, observations: 0, sources: 0 };
+      entry.zone = entry.zone || row.zone || null;
+      entry.observations += row.observations;
+      entry.sources = Math.max(entry.sources, row.sources);
+      zones.set(row.map_id, entry);
+    }
+
+    const icons = new Map();
+    for (const row of db.prepare(`
+      SELECT o.source_key, i.item_key, i.item_id, i.item_name, i.quality_id, i.icon_file_data_id, COUNT(*) AS drops
+      FROM economic_observations o JOIN economic_observation_outputs i ON i.observation_id = o.id
+      WHERE ${clauses.map((clause) => clause.replace(/^(id|map_id|x|y|discipline|realm|region|game_build|source_key) /, "o.$1 ")).join(" AND ")}
+      GROUP BY o.source_key, i.item_key ORDER BY drops DESC
+    `).all(...params)) {
+      if (icons.has(row.source_key)) continue;
+      icons.set(row.source_key, {
+        itemKey: row.item_key, itemId: row.item_id, name: row.item_name || null,
+        qualityId: row.quality_id, iconFileDataId: row.icon_file_data_id,
+      });
+    }
+    const sources = db.prepare(`
+      SELECT source_key, MAX(source_name) AS name, MAX(discipline) AS discipline, COUNT(*) AS observations, COUNT(DISTINCT map_id) AS zones
+      FROM economic_observations WHERE ${where}
+      GROUP BY source_key ORDER BY observations DESC, source_key
+    `).all(...params).map((row) => ({
+      sourceKey: row.source_key, name: row.name || "Unknown source", discipline: row.discipline,
+      observations: row.observations, zones: row.zones, icon: icons.get(row.source_key) || null,
+    }));
+
+    return {
+      coordinateSystem: "ui_map_normalized",
+      grid: 1 / MAP_GRID,
+      truncated: points.length > cappedLimit,
+      zones: [...zones.values()].sort((a, b) => b.observations - a.observations || a.mapId - b.mapId),
+      sources,
+      points: points.slice(0, cappedLimit).map((p) => ({ mapId: p.map_id, sourceKey: p.source_key, x: p.px, y: p.py, observations: p.observations })),
     };
   });
 }

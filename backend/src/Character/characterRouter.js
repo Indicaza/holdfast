@@ -122,11 +122,15 @@ export function createCharacterRouter() {
         return;
       }
 
+      // The device's owner sees it appear on their dashboard; admins see it
+      // in the sync console. Nobody else learns the device id.
       publishLiveUpdate({
         topics: ["guildweaver"],
         source: "guildweaver.connected",
         entityId: result.deviceId,
+        permission: "site.admin",
       });
+      publishLiveUpdate({ topics: ["player"], source: "player.device.connected", memberId: result.memberId });
 
       res.json({
         status: "connected",

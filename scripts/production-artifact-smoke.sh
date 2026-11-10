@@ -123,11 +123,17 @@ smoke_http() {
   curl --fail --silent "$BASE_URL/api/health/live" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/health/ready" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/quests" | grep -q 'E2E Supply Run'
-  # The guild directory is the front page; a guild's pages carry its title.
-  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/" | grep -q '<title>Guildweaver | Find a World of Warcraft Guild</title>'
-  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/holdfast" | grep -q '<title>Holdfast | Alliance WoW Forever Guild</title>'
-  # Old single-guild paths move permanently, keeping the query string.
-  curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' "$BASE_URL/quests?q=supply" | grep -q '^301 .*/holdfast/quests?q=supply$'
+  # Guild features are off by default: the front page is Guildweaver's own,
+  # with no guild switch in the page, and guild pages redirect temporarily.
+  curl --fail --silent "$BASE_URL/api/site" | grep -q '"guildFeatures":false'
+  curl --fail --silent -H 'Accept: text/html' "$BASE_URL/" | grep -q '<title>Guildweaver | Your WoW Forever characters, synced</title>'
+  if curl --fail --silent -H 'Accept: text/html' "$BASE_URL/" | grep -q 'guildweaver-guild-features'; then
+    echo "The solo site must not switch guild features on" >&2
+    return 1
+  fi
+  curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' "$BASE_URL/holdfast" | grep -q '^302 .*/$'
+  curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' "$BASE_URL/quests?q=supply" | grep -q '^302 .*/$'
+  curl --silent --output /dev/null --write-out '%{http_code}' "$BASE_URL/api/player/overview" | grep -q '^401$'
 }
 
 echo "Booting exact production artifact for the first time..."
@@ -135,7 +141,7 @@ start_container
 smoke_http
 probe_state | tee "$FIRST_STATE_FILE"
 
-grep -q '"schemaVersion":13' "$FIRST_STATE_FILE"
+grep -q '"schemaVersion":14' "$FIRST_STATE_FILE"
 grep -q '"members":3' "$FIRST_STATE_FILE"
 grep -q '"quests":1' "$FIRST_STATE_FILE"
 grep -q '"objectives":2' "$FIRST_STATE_FILE"
@@ -166,7 +172,7 @@ fi
 BACKUP_STATE="$(probe_startup_backup)"
 echo "$BACKUP_STATE"
 echo "$BACKUP_STATE" | grep -q '"files":1'
-echo "$BACKUP_STATE" | grep -q '"schemaVersion":13'
+echo "$BACKUP_STATE" | grep -q '"schemaVersion":14'
 echo "$BACKUP_STATE" | grep -q '"questTitle":"E2E Supply Run"'
 echo "$BACKUP_STATE" | grep -q '"integrity":"ok"'
 

@@ -4,7 +4,7 @@ import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { ingestTelemetry } from '../src/Character/Telemetry/ingestTelemetry.js';
 import { validFarmingSession, farmingSessionQuality } from '../src/Economy/farmingSessionModel.js';
-import { readFarmingSessions, readFarmingLocations } from '../src/Economy/farmingSessionRepository.js';
+import { readFarmingLocations, readFarmingMap, readFarmingSessions } from '../src/Economy/farmingSessionRepository.js';
 import { economicObservationFromTelemetry } from '../src/Economy/economicObservationModel.js';
 import { withGuildDatabase, migrateGuildDatabase } from '../src/Data/database.js';
 import { withHttpApp, memberIds } from '../testSupport/httpHarness.js';
@@ -19,7 +19,7 @@ test('migration 10 preserves existing v9 gathering locations and facts', () => {
     db.prepare(`INSERT INTO economic_observations
       (observation_key,event_type,discipline,source_key,captured_at,received_at,map_id,x,y)
       VALUES ('old','gathering_loot','mining','mining:ore-vein:copper','2026-10-13','2026-10-13',1431,0.42,0.58)`).run();
-    migrateGuildDatabase(db);
+    migrateGuildDatabase(db, { throughVersion: 10 });
     const row = db.prepare('SELECT * FROM economic_observations').get();
     assert.equal(row.observation_key, 'old');
     assert.equal(row.x, 0.42);
@@ -69,14 +69,14 @@ test('rejects malformed farming timing and keeps unknown AFK separate', () => {
 
 test('rates wait for harvest sync, retain travel time, and dedupe retries', () => withHttpApp(async () => {
   assert.equal(record(session()).handlerName, 'farming_session');
-  assert.equal(readFarmingSessions().sessions[0].quality, 'awaiting_observations');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].quality, 'awaiting_observations');
   for (let index = 1; index <= 9; index += 1) record(gather(index));
-  let run = readFarmingSessions().sessions[0];
+  let run = readFarmingSessions({ memberId: memberIds.member }).sessions[0];
   assert.equal(run.outputs[0].perHour, null);
   record(gather(10));
   record(gather(10));
   record(session());
-  run = readFarmingSessions().sessions[0];
+  run = readFarmingSessions({ memberId: memberIds.member }).sessions[0];
   assert.equal(run.quality, 'sustained');
   assert.equal(run.observedGathers, 10);
   assert.equal(run.durationSeconds, 1800);
@@ -95,8 +95,8 @@ test('out-of-order checkpoints cannot reopen or change completed runs', () => wi
   record(session());
   record(session({ sequence: 2, status: 'open', endedAt: undefined, durationSeconds: 600 }));
   record(session({ sequence: 100, status: 'open', endedAt: undefined, durationSeconds: 2400 }));
-  assert.equal(readFarmingSessions().sessions[0].status, 'complete');
-  assert.equal(readFarmingSessions().sessions[0].durationSeconds, 1800);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].status, 'complete');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions[0].durationSeconds, 1800);
   const invalid = record(session({ durationSeconds: -1 }));
   assert.equal(invalid.status, 'invalid');
 }));
@@ -104,22 +104,26 @@ test('out-of-order checkpoints cannot reopen or change completed runs', () => wi
 test('automatic short samples and open/manual partial samples never get hourly rates', () => withHttpApp(async () => {
   record(gather(1, 'short'));
   record(session({ sessionId: 'short', mode: 'automatic', durationSeconds: 60, endedAt: start + 60, gatheringCount: 1, afkAvailable: false }));
-  let run = readFarmingSessions({ mode: 'automatic' }).sessions[0];
+  let run = readFarmingSessions({ memberId: memberIds.member, mode: 'automatic' }).sessions[0];
   assert.equal(run.quality, 'short_sample');
   assert.equal(run.timing, 'estimated');
   assert.equal(run.outputs[0].perHour, null);
   assert.equal(run.afkSeconds, null);
   record(session({ sessionId: 'open', status: 'open', endedAt: undefined }));
-  assert.equal(readFarmingSessions({ mode: 'manual' }).sessions[0].quality, 'in_progress');
-  assert.equal(readFarmingSessions({ realm: 'other' }).sessions.length, 0);
-  assert.equal(readFarmingSessions({ build: 'other' }).sessions.length, 0);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, mode: 'manual' }).sessions[0].quality, 'in_progress');
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, realm: 'other' }).sessions.length, 0);
+  assert.equal(readFarmingSessions({ memberId: memberIds.member, build: 'other' }).sessions.length, 0);
 }));
 
 test('session identity remains separate across members and installations', () => withHttpApp(async () => {
   record(session());
   record(session(), { memberId: memberIds.officer });
   record(session({}, { installationId: 'other-install' }));
-  assert.equal(readFarmingSessions().sessions.length, 3);
+  assert.equal(withGuildDatabase((db) => db.prepare('SELECT COUNT(*) AS n FROM farming_sessions').get().n), 3);
+  // Sessions are personal: each player reads only their own.
+  assert.equal(readFarmingSessions({ memberId: memberIds.member }).sessions.length, 2);
+  assert.equal(readFarmingSessions({ memberId: memberIds.officer }).sessions.length, 1);
+  assert.equal(readFarmingSessions({ memberId: 'someone-else' }).sessions.length, 0);
 }));
 
 test('coordinates preserve real zero/one edges and drop missing/partial/invalid positions', () => {
@@ -147,6 +151,9 @@ test('authenticated map endpoint groups points by map, realm and build without p
   assert.equal(scoped.points[0].observations, 2);
   assert.equal(scoped.points[0].positionKind, 'player_at_cast');
   assert.equal(readFarmingLocations(key, { limit: 1 }).truncated, true);
+  assert.deepEqual(scoped.maps, [{ mapId: 1431, zone: 'Duskwood', observations: 2 }], 'each map carries its most recorded zone');
+  const capped = readFarmingLocations(key, { limit: 1 });
+  assert.equal(capped.maps.reduce((sum, map) => sum + map.observations, 0), 3, 'map totals count every observation, not only the capped points');
   const route = `/api/intelligence/farming/sources/${encodeURIComponent(key)}/locations`;
   assert.equal((await request(route)).status, 401);
   assert.equal((await request('/api/intelligence/farming/sessions')).status, 401);
@@ -158,4 +165,35 @@ test('authenticated map endpoint groups points by map, realm and build without p
   const sessions = await request('/api/intelligence/farming/sessions?mode=manual', { persona: 'member' });
   assert.equal(sessions.status, 200);
   assert.equal(sessions.json.sessions.length, 1);
+  const others = await request('/api/intelligence/farming/sessions?mode=manual', { persona: 'officer' });
+  assert.equal(others.json.sessions.length, 0, 'another player never sees these sessions');
+}));
+
+test('resource map bins every source across zones and filters by discipline, source and item', () => withHttpApp(async ({ request }) => {
+  record(gather(1, 'map', { location: { x: 0.501, y: 0.249 } }));
+  record(gather(2, 'map', { location: { x: 0.499, y: 0.251 } }));
+  record(gather(3, 'map', { location: { mapId: 1429, zone: 'Elwynn Forest', x: 0.2, y: 0.8 } }));
+  record(gather(4, 'map', { location: { x: null, y: null } }));
+  const key = 'herbalism:herb-node:peacebloom';
+  const map = readFarmingMap();
+  assert.equal(map.coordinateSystem, 'ui_map_normalized');
+  assert.deepEqual(map.points[0], { mapId: 1431, sourceKey: key, x: 0.5, y: 0.25, observations: 2 }, 'nearby gathers share a grid cell');
+  assert.equal(map.points.length, 2);
+  assert.deepEqual(map.zones.map((zone) => [zone.mapId, zone.zone, zone.observations]), [[1431, 'Duskwood', 2], [1429, 'Elwynn Forest', 1]]);
+  assert.equal(map.sources.length, 1);
+  assert.equal(map.sources[0].sourceKey, key);
+  assert.equal(map.sources[0].observations, 3, 'positionless gathers are left off the map');
+  assert.equal(map.sources[0].zones, 2);
+  assert.ok(map.sources[0].icon?.itemKey, 'each source carries its most common drop as an icon');
+  assert.equal(readFarmingMap({ discipline: 'mining' }).points.length, 0);
+  assert.equal(readFarmingMap({ source: 'nope,other' }).points.length, 0);
+  assert.equal(readFarmingMap({ source: key }).points.length, 2);
+  assert.equal(readFarmingMap({ item: map.sources[0].icon.itemKey }).sources[0].observations, 3);
+  assert.equal(readFarmingMap({ item: 'item:0' }).points.length, 0);
+  assert.equal(readFarmingMap({ limit: 1 }).truncated, true);
+  assert.equal((await request('/api/intelligence/farming/map')).status, 401);
+  const response = await request('/api/intelligence/farming/map?discipline=herbalism', { persona: 'member' });
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.json.points, map.points);
+  assert.equal(JSON.stringify(response.json).includes(memberIds.member), false, 'no player identity on the map');
 }));

@@ -1,16 +1,30 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { validSlug } from "../Guild/Directory/guildDirectoryModel.js";
 
-// The built index.html is the Guildweaver directory's. A guild's pages
-// (/:slug/...) are served with that guild's title and description instead,
-// so link previews, crawlers and the first paint name the guild before the
-// app sets each page's own title.
+// The built index.html is the solo Guildweaver site's. With guild features on,
+// a guild's pages (/:slug/...) are served with that guild's title and description
+// instead, so link previews, crawlers and the first paint name the guild
+// before the app sets each page's own title.
 
 const HOLDFAST_HEAD = Object.freeze({
   title: "Holdfast | Alliance WoW Forever Guild",
   description:
     "Holdfast is an Alliance guild for WoW Forever focused on organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.",
 });
+
+// The front page while guild features are on: the guild directory.
+export const GUILD_DIRECTORY_HEAD = Object.freeze({
+  title: "Guildweaver | Find a World of Warcraft Guild",
+  description:
+    "Browse World of Warcraft guilds by faction, realm type, play style and schedule. Verified guilds show real activity synced by the Guildweaver addon.",
+});
+
+// Tells the app that guild features are on (frontend/src/Features).
+export function withGuildFeaturesMeta(html) {
+  const meta = '<meta name="guildweaver-guild-features" content="on" />';
+  if (html.includes("</head>")) return html.replace("</head>", `  ${meta}\n  </head>`);
+  return html.replace(/<title>/i, `${meta}<title>`);
+}
 
 function readGuildHead(slug) {
   const row = withGuildDatabase((db) =>

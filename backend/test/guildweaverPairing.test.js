@@ -11,7 +11,7 @@ function snapshot(name = "Rook") {
     characterKey: `classic-beta:${name.toLowerCase()}`,
     guid: `Player-1-${name}`,
     name,
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     level: 20,
     race: { name: "Night Elf" },
     class: { name: "Warrior" },

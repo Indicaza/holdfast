@@ -77,17 +77,65 @@ export function readCharacterCards() {
   });
 }
 
-// One character's armory, or null when the website has no telemetry for it.
-export function readCharacterArmoryFromReadModel(characterId) {
+// One player's own characters, newest first: every character their devices
+// have synced, whatever their guild. Nothing about other accounts.
+export function readPlayerCharacterCards(memberId) {
   ensureCharacterReadModelCurrent();
   return withGuildDatabase((db) => {
-    const character = db.prepare(`
-      SELECT c.id, c.member_id, c.name, c.race, c.class_name, c.spec, c.is_main,
-        m.display_name AS member_name, m.rank AS member_rank
-      FROM characters c
-      JOIN members m ON m.id = c.member_id AND m.status = 'active'
-      WHERE c.id = ?
-    `).get(String(characterId || ""));
+    ensureCharacterReadModelSchema(db);
+    return db.prepare(`
+      SELECT k.*, c.is_main,
+        -- Cards written before same-data captures moved last_seen_at lag
+        -- behind their sections; the newest section is the truth.
+        COALESCE((SELECT MAX(s.captured_at) FROM character_sections s WHERE s.character_id = k.character_id), '') AS section_seen_at
+      FROM character_cards k
+      JOIN characters c ON c.id = k.character_id
+      WHERE c.member_id = ?
+      ORDER BY MAX(k.last_seen_at, section_seen_at) DESC, k.name COLLATE NOCASE, k.character_id
+    `).all(String(memberId || "")).map((row) => ({
+      id: row.character_id,
+      name: row.name,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      race: row.race,
+      className: row.class_name,
+      spec: row.spec,
+      level: Number(row.level) || 0,
+      realm: row.realm,
+      region: row.region,
+      guildName: row.guild_name,
+      organizationName: row.organization_name || row.guild_name,
+      professions: parseTelemetryJson(row.professions_json, []),
+      knownRecipeCount: Number(row.known_recipe_count) || 0,
+      lastSeenAt: [row.last_seen_at, row.section_seen_at].filter(Boolean).sort().at(-1) || null,
+      isMain: Boolean(row.is_main),
+      vitals: parseTelemetryJson(row.vitals_json, null),
+    }));
+  });
+}
+
+// One character's armory, or null when the website has no telemetry for it.
+// With ownerId, only that account's character: anyone else's is null, the
+// same answer as a character that does not exist. Without it (guild views),
+// only characters of active Holdfast members.
+export function readCharacterArmoryFromReadModel(characterId, { ownerId = null } = {}) {
+  ensureCharacterReadModelCurrent();
+  return withGuildDatabase((db) => {
+    const character = ownerId === null
+      ? db.prepare(`
+        SELECT c.id, c.member_id, c.name, c.race, c.class_name, c.spec, c.is_main,
+          m.display_name AS member_name, m.rank AS member_rank
+        FROM characters c
+        JOIN members m ON m.id = c.member_id AND m.status = 'active'
+        WHERE c.id = ?
+      `).get(String(characterId || ""))
+      : db.prepare(`
+        SELECT c.id, c.member_id, c.name, c.race, c.class_name, c.spec, c.is_main,
+          m.display_name AS member_name, '' AS member_rank
+        FROM characters c
+        JOIN members m ON m.id = c.member_id
+        WHERE c.id = ? AND c.member_id = ?
+      `).get(String(characterId || ""), String(ownerId || ""));
     if (!character) return null;
 
     const sections = readCharacterSectionsInDatabase(db, character.id);

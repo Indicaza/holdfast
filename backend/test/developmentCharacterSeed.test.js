@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { createDevelopmentIconMediaResolver } from "../src/Development/developmentIconMedia.js";
 import { seedDevelopmentCharacters } from "../scripts/seedDevelopmentCharacters.js";
-import { withHttpApp } from "../testSupport/httpHarness.js";
+import { withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 const quiet = { log() {} };
 
@@ -30,7 +30,7 @@ test("development icon media prefers Blizzard and falls back to recorded icon na
 });
 
 test("development character seed produces armory-ready characters idempotently", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const first = await seedDevelopmentCharacters({ logger: quiet });
     assert.ok(first.created >= 20);
     assert.ok(first.trees >= 1);

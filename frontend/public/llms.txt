@@ -1,30 +1,24 @@
-# Holdfast
+# Guildweaver
 
-> Holdfast is a player-run Alliance guild for WoW Forever, built around organized PvE, PvP, mentorship, shared prosperity, and a durable long-term community.
+> Guildweaver syncs a WoW Forever player's characters, gear, professions and farming to a private dashboard. It is a free desktop companion plus an in-game addon. Sign-in uses Discord; no guild is required.
 
-Holdfast is designed as a lasting home for people who want to play seriously without turning the guild into a second job. The guild welcomes experienced players and new players, values service-based leadership, teaches people who want to improve, and supports raiding, PvP, crafting, gathering, and social play.
-
-The core principle is simple: leave the guild stronger than you found it.
+Players install Guildweaver, connect their computer by signing in with Discord, and play. When they /reload or log out, WoW saves the addon's data and Guildweaver uploads it. The dashboard groups their characters by server and shows equipment, stats, talents, bags, professions and recipes, gathering activity, and sync status.
 
 ## Primary pages
 
-- [Find a guild](/): The Guildweaver guild directory, by faction, realm, play style and schedule.
-- [Holdfast](/holdfast): Overview of Holdfast, its identity, activities, community, and recruitment.
-- [Charter](/holdfast/charter): Holdfast's principles, leadership model, standards, shared prosperity model, conduct expectations, and long-term philosophy.
-- [Join Holdfast](/join): Information for players interested in joining the Alliance guild.
+- [Guildweaver](/): What Guildweaver does, with download and sign-in.
+- [Download](/download): Installers for Windows, macOS and Linux, release verification and data boundaries.
+- [Dashboard](/dashboard): A signed-in player's own characters, professions, farming and devices.
+- [Privacy](/privacy): What Guildweaver collects, who can see it, and how to disconnect.
 
 ## Additional pages
 
-- [Register a guild](/register): List a guild in the Guildweaver directory.
-- [Guildweaver addon](/guildweaver): Downloads, source and data boundaries for the Guildweaver bridge and addon.
-- [Privacy](/privacy): Privacy information.
-- [Holdfast source repository](https://github.com/Indicaza/holdfast): Public source code for the Holdfast website.
+- [Item catalog](/items): Community-observed item sources and crafting uses.
+- [Website source](https://github.com/Indicaza/holdfast): Public source code for this website.
 
 ## Key facts
 
-- Faction: Alliance.
 - Game: WoW Forever.
-- Guild name: Holdfast.
-- Focus: durable community, organized PvE, PvP, mentorship, crafting, gathering, and long-term progression.
-- New players: welcome.
-- Leadership philosophy: leadership is service; rank represents trust and responsibility.
+- Cost: free and open source.
+- Sign-in: Discord, used only for identity; it never joins a Discord server or guild.
+- Privacy: a player's characters, bags and gold are visible only to that player. Community drop rates are pooled and anonymous.

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { withGuildDatabase } from '../src/Data/database.js'
 import { HOLDFAST_GUILD_ID } from '../src/Guild/Directory/guildDirectoryMigration.js'
 import { guildRolePermissions } from '../src/Guild/Directory/guildRoles.js'
-import { withHttpApp, memberIds } from '../testSupport/httpHarness.js'
+import { withGuildHttpApp, memberIds } from '../testSupport/httpHarness.js'
 
 const HOLDFAST_SERVER_ID = '223456789012345678'
 const OUTSIDER_ID = '323456789012345678'
@@ -62,7 +62,7 @@ const memberships = (memberId) => withGuildDatabase((db) => db.prepare(
 const holdfastPages = ['/api/guild/members', '/api/guild/members/me', `/api/guild/members/${memberIds.member}`, '/api/quests/member', '/api/guild/authority', '/api/guild/billets']
 
 test('a Discord user outside Holdfast signs in, has no guild, and is kept off Holdfast pages', async () => {
-  await withHttpApp(async ({ request, base }) => {
+  await withGuildHttpApp(async ({ request, base }) => {
     const { location, cookie } = await signIn(base, OUTSIDER_ID, '/guilds/register')
     assert.equal(location, 'https://holdfast.example/guilds/register?auth=connected')
 
@@ -96,7 +96,7 @@ test('a Discord user outside Holdfast signs in, has no guild, and is kept off Ho
 })
 
 test('signing in from Holdfast\'s server still places the player in Holdfast', async () => {
-  await withHttpApp(async ({ request, base }) => {
+  await withGuildHttpApp(async ({ request, base }) => {
     const { location, cookie } = await signIn(base, NEWCOMER_ID)
     assert.equal(location, 'https://holdfast.example/guilds?auth=connected')
     assert.deepEqual(memberships(NEWCOMER_ID), [{ guildId: HOLDFAST_GUILD_ID, role: 'member', status: 'active' }])
@@ -111,7 +111,7 @@ test('signing in from Holdfast\'s server still places the player in Holdfast', a
 })
 
 test('a Holdfast member who leaves for another guild loses Holdfast pages and authority', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     assert.equal((await request('/api/guild/members', { persona: 'officer' })).status, 200)
     const before = (await request('/api/me', { persona: 'officer' })).json.permissions
     assert.ok(before.length > 0)
@@ -128,7 +128,7 @@ test('a Holdfast member who leaves for another guild loses Holdfast pages and au
 })
 
 test('guild owners and officers get permissions from their role, only in their own guild', async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const addAccount = (id) => withGuildDatabase((db) => db.prepare(`
       INSERT INTO members (id, username, display_name, initials, rank, status, first_seen_at, updated_at)
       VALUES (?, ?, ?, 'XX', 'Recruit', 'departed', ?, ?)

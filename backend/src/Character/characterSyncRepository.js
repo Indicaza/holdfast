@@ -2,11 +2,14 @@ import { withGuildTransaction } from "../Data/database.js";
 import { learnGameDataFromSnapshotInDatabase } from "../GameData/gameDataCatalog.js";
 import { publishCharacterChanged } from "../Live/characterChangeEvents.js";
 import { publishLiveUpdate } from "../Live/liveUpdateBus.js";
+import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
+import { HOLDFAST_GUILD_ID } from "../Guild/guildScope.js";
 import {
   ensureCharacterSnapshotObservabilitySchema,
   recordCharacterSnapshotInDatabase,
 } from "./characterSnapshotRepository.js";
 import {
+  ownedCharacterIdInDatabase,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
 } from "./characterIdentityRepository.js";
@@ -182,7 +185,7 @@ export async function syncGuildweaverCharacter({
   ensureCharacterReadModelCurrent();
   const result = withGuildTransaction((db) => {
     const member = db
-      .prepare("SELECT id FROM members WHERE id = ? AND status = 'active'")
+      .prepare("SELECT id FROM members WHERE id = ?")
       .get(normalizedMemberId);
     if (!member) {
       return { status: "member-not-found", character: null, snapshot: null };
@@ -218,7 +221,7 @@ export async function syncGuildweaverCharacter({
         )
         .get(normalizedMemberId)?.sort_order || 0,
     );
-    const characterId = existing?.id || preferredId;
+    const characterId = existing?.id || ownedCharacterIdInDatabase(db, normalizedMemberId, preferredId);
     if (!characterId) {
       return { status: "invalid", character: null, snapshot: null };
     }
@@ -291,6 +294,7 @@ export async function syncGuildweaverCharacter({
         professions_json = excluded.professions_json,
         is_main = excluded.is_main,
         sort_order = excluded.sort_order
+      WHERE characters.member_id = excluded.member_id
     `).run(
       characterId,
       normalizedMemberId,
@@ -379,13 +383,16 @@ export async function syncGuildweaverCharacter({
   });
 
   if (result.character?.id) {
-    publishCharacterChanged({ characterId: result.character.id, sections: result.changedSections || [] });
+    publishCharacterChanged({ characterId: result.character.id, memberId: normalizedMemberId, sections: result.changedSections || [] });
   }
   if (result.status === "created" || result.status === "updated") {
+    publishPlayerChanged(normalizedMemberId);
+    // Holdfast's roster shows members' characters; only its members hear.
     publishLiveUpdate({
       topics: ["members"],
       source: "guildweaver.character",
       entityId: result.character.id,
+      guildId: HOLDFAST_GUILD_ID,
     });
     publishLiveUpdate({
       topics: ["guildweaver"],

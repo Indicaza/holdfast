@@ -55,10 +55,11 @@ test("development auth requires the explicit flag and never enables in productio
   );
 });
 
-test("development personas expose the three contributor roles", () => {
+test("development personas expose a guildless player and the three guild roles", () => {
   assert.deepEqual(
     developmentPersonas().map(({ key, rank }) => ({ key, rank })),
     [
+      { key: "player", rank: null },
       { key: "member", rank: "Private" },
       { key: "officer", rank: "Lieutenant" },
       { key: "commander", rank: "Commander" },
@@ -100,7 +101,7 @@ test("development login writes a real session payload and redirects internally",
   await withServer(router, async (baseUrl) => {
     const index = await fetch(`${baseUrl}/api/dev`);
     assert.equal(index.status, 200);
-    assert.equal((await index.json()).personas.length, 3);
+    assert.equal((await index.json()).personas.length, 4);
 
     const response = await fetch(
       `${baseUrl}/api/dev/login/commander?returnTo=%2Fquests%3Ffilter%3Dmine`,
@@ -146,4 +147,27 @@ test("development login fails safely for unknown personas or missing seed data",
     );
     assert.equal(external.status, 409);
   });
+});
+
+test("the development player signs in with no guild and no guild authority", async () => {
+  let sessionPayload = null;
+  const router = createDevelopmentAuthRouter({
+    env: { NODE_ENV: "development", HOLDFAST_DEV_AUTH: "true" },
+    resolveAuthority() {
+      throw new Error("a guildless player has no guild authority to resolve");
+    },
+    writeSession(res, payload) {
+      sessionPayload = payload;
+    },
+  });
+
+  await withServer(router, async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/api/dev/login/player?returnTo=%2Fdashboard`, { redirect: "manual" });
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/dashboard");
+  });
+
+  assert.equal(sessionPayload.user.id, "dev-player");
+  assert.equal(sessionPayload.homeServer, false);
+  assert.deepEqual(sessionPayload.permissions, []);
 });

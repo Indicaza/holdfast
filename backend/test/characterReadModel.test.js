@@ -184,7 +184,11 @@ test("a sync burst announces each changed character once, and unchanged telemetr
     const { flushCharacterChanges } = await import("../src/Live/characterChangeEvents.js");
     const { subscribeLiveUpdates } = await import("../src/Live/liveUpdateBus.js");
     const events = [];
-    const unsubscribe = subscribeLiveUpdates({ memberId: memberIds.member, send: (event) => events.push(event) });
+    const strangers = [];
+    // The owner is an active Holdfast member, so Holdfast's members hear about
+    // the character; a signed-in player outside the guild does not.
+    const unsubscribe = subscribeLiveUpdates({ memberId: memberIds.member, guildIds: ["guild-holdfast"], send: (event) => events.push(event) });
+    const unsubscribeStranger = subscribeLiveUpdates({ memberId: "outside-player", guildIds: [], send: (event) => strangers.push(event) });
     try {
       const { publishCharacterChanged } = await import("../src/Live/characterChangeEvents.js");
       await legacySnapshot(1791320000);
@@ -203,8 +207,10 @@ test("a sync burst announces each changed character once, and unchanged telemetr
       publishCharacterChanged({ characterId: repeat.canonicalCharacterId, sections: repeat.changedSections });
       flushCharacterChanges();
       assert.equal(events.length, 0);
+      assert.deepEqual(strangers.filter((event) => event.source === "character.changed"), []);
     } finally {
       unsubscribe();
+      unsubscribeStranger();
     }
   }));
 
@@ -227,4 +233,17 @@ test("a device whose revision counter reset still updates the character", () =>
     });
     assert.equal(reset.status, "created");
     assert.equal(readCharacterArmoryFromReadModel(CHARACTER_ID).equipment[0].name, "After Reset");
+  }));
+
+test("a newer capture with the same data still moves the card's last synced time", () =>
+  withHttpApp(async () => {
+    ingestCharacterIdentity({ deviceId: DEVICE, memberId: memberIds.member, characterId: RAW_ID });
+    stats(900, 1791320000);
+    // The same stats again, an hour later: nothing changed but the time.
+    stats(900, 1791323600, { revision: 2 });
+
+    const later = new Date(1791323600 * 1000).toISOString();
+    assert.equal(readCharacterArmoryFromReadModel(CHARACTER_ID).character.lastSeenAt, later);
+    const stored = withGuildDatabase((db) => db.prepare("SELECT last_seen_at FROM character_cards WHERE character_id = ?").get(CHARACTER_ID));
+    assert.equal(stored.last_seen_at, later, "the card agrees with the armory");
   }));

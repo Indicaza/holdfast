@@ -174,7 +174,7 @@ test("legacy runtime JSON imports once into a fresh SQLite database", async () =
     assert.equal(members[0].rankManaged, false);
     assert.equal(members[0].billetsManaged, false);
     assert.deepEqual(members[0].billets, []);
-    assert.equal(members[0].profile.characters[0].name, "Rook");
+    assert.deepEqual(members[0].profile.characters, []);
 
     const quests = await readQuests(HOLDFAST_GUILD_ID);
     assert.equal(quests.focusedQuestId, "quest-one");

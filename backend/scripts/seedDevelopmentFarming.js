@@ -66,7 +66,7 @@ const VEINS = [
   },
 ];
 
-const FARMING_SEED_VERSION = 2;
+const FARMING_SEED_VERSION = 3;
 const SEED_DEVICE = "dev-farming-seed";
 
 // Bountiful Harvest is one Legacy Professions talent shared by Herbalism,
@@ -112,6 +112,41 @@ function bountifulHarvest(rank) {
 
 function buildFor(random) {
   return random() < BUILDS[0].weight ? BUILDS[0] : BUILDS[1];
+}
+
+// Nodes spawn at fixed spots, so each source gets a handful of spawn points
+// per zone and every gather lands near one of them, the busiest first.
+const spawnCache = new Map();
+function spawnPoints(sourceName, zone) {
+  const key = `${sourceName}:${zone}`;
+  if (!spawnCache.has(key)) {
+    let hash = 2166136261;
+    for (const char of key) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    const random = seededRandom(hash);
+    const count = 9 + Math.floor(random() * 8);
+    spawnCache.set(key, Array.from({ length: count }, (_, index) => ({
+      x: 0.14 + random() * 0.72,
+      y: 0.14 + random() * 0.72,
+      weight: 1 / (1 + index * 0.35),
+    })));
+  }
+  return spawnCache.get(key);
+}
+
+// Draws exactly two numbers from the shared stream, as the earlier uniform
+// positions did, so every drop outcome stays the same.
+function locationFor(shared, sourceName, zone) {
+  const random = seededRandom(Math.floor(shared() * 4294967296) ^ Math.floor(shared() * 2147483648));
+  const spawns = spawnPoints(sourceName, zone);
+  let roll = random() * spawns.reduce((sum, spawn) => sum + spawn.weight, 0);
+  let spawn = spawns[0];
+  for (const entry of spawns) {
+    roll -= entry.weight;
+    if (roll <= 0) { spawn = entry; break; }
+  }
+  const jitter = () => (random() + random() - 1) * 0.008;
+  const clamp = (value) => Number(Math.min(0.999, Math.max(0.001, value)).toFixed(4));
+  return { mapId: MAP_IDS[zone], zone, x: clamp(spawn.x + jitter()), y: clamp(spawn.y + jitter()) };
 }
 
 function characterFor(random) {
@@ -170,7 +205,7 @@ function herbObservation(source, index, random, startAt) {
           characterLevel: level,
           profession: { ...HERBALISM, skillLevel: skill, maxSkillLevel: Math.min(300, Math.ceil((skill + 1) / 75) * 75), skillModifier: 0 },
           modifiers: bountifulHarvest(rank),
-          location: { mapId: MAP_IDS[zone], zone, x: Number(random().toFixed(4)), y: Number(random().toFixed(4)) },
+          location: locationFor(random, source.name, zone),
           trigger: { spellId: 2366, spellName: "Herbalism" },
         },
         capture: { lootSlotCount: outputs.length, sourceCount: 1 },
@@ -210,7 +245,7 @@ function veinObservation(vein, index, random, startAt) {
           characterLevel: Math.max(5, Math.min(60, Math.round(skill / 3 + 6 + random() * 10))),
           profession: { ...MINING, skillLevel: skill, maxSkillLevel: Math.min(300, Math.ceil((skill + 1) / 75) * 75), skillModifier: 0 },
           modifiers: bountifulHarvest(rank),
-          location: { mapId: MAP_IDS[zone], zone, x: Number(random().toFixed(4)), y: Number(random().toFixed(4)) },
+          location: locationFor(random, vein.name, zone),
           trigger: { spellId: 2575, spellName: "Mining" },
         },
         capture: { lootSlotCount: outputs.length, sourceCount: 1 },

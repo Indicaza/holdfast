@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { withGuildDatabase } from "../src/Data/database.js";
 import { ensureTelemetryProjectionSchema } from "../src/Character/telemetryProjection.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function persistedSnapshot() {
   return {
@@ -14,7 +14,7 @@ function persistedSnapshot() {
     firstName: "Rook",
     lastName: "Ravenstar",
     fullName: "Rook Ravenstar",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     level: 31,
     race: { id: 4, name: "Night Elf", token: "NightElf" },
@@ -100,7 +100,7 @@ function seedPersistedCharacter() {
 }
 
 test("GuildOS hydrates synced characters from durable DB snapshots without fresh telemetry", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const { characterId } = seedPersistedCharacter();
 
     const response = await request("/api/intelligence", { persona: "member" });
@@ -112,7 +112,7 @@ test("GuildOS hydrates synced characters from durable DB snapshots without fresh
     assert.equal(character.className, "Warrior");
     assert.equal(character.spec, "Protection");
     assert.equal(character.level, 31);
-    assert.equal(character.realm, "Classic Beta PvE 2");
+    assert.equal(character.realm, "Live Realm");
     assert.equal(character.guildName, "Holdfast");
     assert.equal(character.organizationName, "Holdfast");
 
@@ -133,7 +133,7 @@ test("GuildOS hydrates synced characters from durable DB snapshots without fresh
 });
 
 test("a persisted DB-only character still opens in Armory", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const { characterId } = seedPersistedCharacter();
 
     const response = await request(

@@ -71,6 +71,7 @@ The routes set the normal signed Holdfast session cookie and return you to the w
 
 The personas are:
 
+- **Player** — a Discord user with no guild (`/api/dev/login/player`); useful for the solo Guildweaver dashboard, first-run setup and device pairing. It starts with no characters.
 - **Member** — Private; useful for ordinary member UX and permission-denied states.
 - **Officer** — Lieutenant; useful for quest/reward/member-management flows.
 - **Commander** — Commander; useful for full administrative UI.
@@ -113,6 +114,13 @@ To add a real capture, save its `talent_tree_definition` envelope into `seed/dev
 Discord login, guild membership checks, rank/billet synchronization, and provisioning commands require valid Discord credentials. Contributors working on those boundaries should use their own disposable development application/server rather than production Holdfast credentials.
 
 Never commit `.env`, tokens, session secrets, SQLite files, backups, or exported live Discord state.
+
+## Guild features
+
+Guildweaver currently runs as a solo, personal product: the guild directory, registration, guild pages (including Holdfast's) and notifications are hidden, and old guild URLs redirect to the front page or the dashboard. Their code and data are kept.
+
+- `GUILDWEAVER_GUILD_FEATURES=true` in `backend/.env` turns the guild surfaces back on. The server tells the app through a meta tag it adds to `index.html`, so production needs no rebuild.
+- The Vite dev server serves its own `index.html`, so set `VITE_GUILD_FEATURES=true` for the frontend as well when working on guild pages locally.
 
 ## Runtime data
 

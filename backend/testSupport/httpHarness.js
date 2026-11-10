@@ -13,6 +13,12 @@ export function persistentState() {
   return withGuildDatabase((db) => Object.fromEntries(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(({ name }) => [name, db.prepare(`SELECT * FROM "${name}" ORDER BY rowid`).all()])))
 }
 
+// The app with guild features switched on (guild directory, registration,
+// guild pages), as before Guildweaver went solo-first.
+export function withGuildHttpApp(run, options = {}) {
+  return withHttpApp(run, { ...options, env: { GUILDWEAVER_GUILD_FEATURES: 'true', ...options.env } })
+}
+
 export async function withHttpApp(run, options = {}) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'holdfast-http-'))
   const overrides = {
@@ -23,6 +29,7 @@ export async function withHttpApp(run, options = {}) {
     SERVE_FRONTEND: '',
     SESSION_SECRET: 'http-test-session-secret-at-least-32-bytes',
     GUILD_OWNER_DISCORD_IDS: memberIds.owner,
+    GUILDWEAVER_GUILD_FEATURES: '',
     DISCORD_GUILD_ID: '',
     DISCORD_BOT_TOKEN: '',
     TRUSTED_ORIGINS: '',
@@ -60,6 +67,7 @@ export async function withHttpApp(run, options = {}) {
         method,
         redirect: 'manual',
         headers: {
+          ...(route.startsWith('/api/bridge/') ? { "X-Guildweaver-Release": "forever-live" } : {}),
           Origin: overrides.FRONTEND_URL,
           ...(persona ? { Cookie: cookie(persona) } : {}),
           ...(rawCookie ? { Cookie: rawCookie } : {}),

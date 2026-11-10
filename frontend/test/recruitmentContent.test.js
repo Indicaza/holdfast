@@ -22,13 +22,12 @@ test('recruitment facts stay concise, complete, and unique', () => {
   }
 })
 
-test('founding copy clearly distinguishes beta from launch', () => {
+test('founding copy identifies the live faction and ruleset', () => {
   const founding = recruitmentFacts.find((fact) => fact.id === 'founding')
 
-  assert.match(founding.detail, /Normal realm for beta/)
-  assert.match(founding.detail, /PvP realm at launch/)
+  assert.match(founding.detail, /Alliance/)
+  assert.match(founding.detail, /RP-PvP realm/)
   assert.match(foundingMission.description, /in-game guild charter/)
-  assert.match(foundingMission.description, /PvP realm/)
 })
 
 test('founding mission sends visitors to recruitment and members to quests', () => {

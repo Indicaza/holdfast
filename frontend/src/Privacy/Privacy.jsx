@@ -1,112 +1,94 @@
+import { guildFeaturesEnabled } from '../Features/guildFeatures.js'
 import PageShell from '../PageShell/PageShell.jsx'
+
+// The guild-era sections (Holdfast membership, quests, Rep) apply only while
+// guild features are on.
+function GuildSections() {
+  return (
+    <>
+      <h2>Guilds</h2>
+      <p>
+        If you join a guild on Guildweaver, its members and leaders can see
+        your guild profile (BattleTag if provided, timezone, availability,
+        bio), your rank, Rep, Service Marks, quest assignments and service
+        history. Holdfast membership is verified through Holdfast&apos;s Discord
+        server; if Discord reports that you left, your guild access ends and
+        you are hidden from the active roster. Guild leaders and authorized
+        editors can manage quests, assignments, rewards and member records.
+      </p>
+      <p>
+        The public Holdfast home page may show its featured quest, including
+        the display name, avatar and assignment of members assigned to it.
+      </p>
+    </>
+  )
+}
 
 function Privacy() {
   return (
     <PageShell
       eyebrow="Privacy"
-      title="What Holdfast records"
-      intro="Holdfast collects the information it needs to run the guild website and member tools. This page describes what is stored today and who can see it."
+      title="What Guildweaver records"
+      intro="What Guildweaver collects when you sign in and sync, who can see it, and how to stop it."
     >
-      <h2>What we store today</h2>
+      <h2>When you sign in</h2>
       <p>
-        When you connect Discord, the site stores enough Discord identity and
-        guild information to recognize you as a Holdfast member and give you
-        the right access.
-      </p>
-      <ul>
-        <li>
-          <strong>Discord identity:</strong> Discord user ID, username/display
-          name, avatar, guild nickname, guild join date, and role-derived
-          website permissions.
-        </li>
-        <li>
-          <strong>Member profile:</strong> BattleTag if you provide one,
-          timezone, availability, bio, and any character information currently
-          entered on the site.
-        </li>
-        <li>
-          <strong>Guild activity:</strong> rank, Rep, Service Marks, quest
-          assignments, completed objectives, rewards, and service history.
-        </li>
-        <li>
-          <strong>Session data:</strong> a signed login cookie is used to keep
-          you signed in. Discord membership and permissions are periodically
-          rechecked while the session is active.
-        </li>
-      </ul>
-
-      <h2>Guildweaver and public game facts</h2>
-      <p>
-        If you pair Guildweaver, the bridge uploads character, equipment,
-        inventory, profession, gathering, and loot observations. Loot records
-        include source identifiers, game build, dungeon context, timestamps,
-        and your position when the client provides it. These detailed records
-        remain within the authenticated guild tools and administrative systems.
-      </p>
-      <p>
-        The public item catalog and game-data API share item definitions,
-        recipe ingredients and outputs, and aggregate observed loot sources.
-        Item descriptions come from base item IDs. Public data excludes player,
-        guild, member, device, and installation identities, inventory contents,
-        individual farming sessions, and raw corpse identifiers. Public map
-        points cover 2% of a map and require at least three contributors;
-        precise player coordinates are not public.
+        Signing in with Discord stores your Discord user ID, username, display
+        name and avatar so the site can recognize you. Discord sign-in never
+        adds you to a Discord server or a guild. A signed sign-in cookie keeps
+        you signed in. Your browser&apos;s timezone may be saved to show times
+        correctly.
       </p>
 
-      <h2>Where it comes from</h2>
+      <h2>When you sync</h2>
       <p>
-        Discord identity and guild membership come from Discord OAuth and the
-        Holdfast Discord bot. Profile fields come from you or, for timezone,
-        may be detected from your browser. Rep, Marks, assignments, and service
-        records are created by activity on the site.
+        Guildweaver on your computer uploads what the addon saves: your
+        characters&apos; names, realms, levels, classes, equipment, stats,
+        talents, professions and recipes, bags and gold, and gathering, fishing
+        and loot observations with zone, map position, skill level and game
+        build. Each computer you connect has its own key and records when it
+        last uploaded.
       </p>
 
       <h2>Who can see it</h2>
+      <ul>
+        <li>
+          <strong>You.</strong> Your dashboard shows your characters, bags,
+          gold, professions, farming and devices. They are private: the site
+          shows them only to your account, and other players cannot open them
+          even with a direct link.
+        </li>
+        <li>
+          <strong>Everyone, anonymously.</strong> The item catalog, game-data
+          API and community drop rates use item definitions, recipe ingredients
+          and pooled gathering and loot observations. They never include player,
+          character, guild, account, device or installation identities, bags or
+          gold. Community maps show where gathers happened without saying who
+          gathered or when; the public game-data API only shows coarse map areas
+          seen by at least three contributors.
+        </li>
+        <li>
+          <strong>Site administrators</strong> can inspect raw uploads to keep
+          syncing working.
+        </li>
+      </ul>
+
+      {guildFeaturesEnabled ? <GuildSections /> : null}
+
+      <h2>Stopping and removal</h2>
       <p>
-        The public website does not expose the full member directory or member
-        profiles. Signed-in Holdfast members can see member profiles and the
-        guild directory, including profile and service information shared with
-        other members.
-      </p>
-      <p>
-        The public website may show the single quest currently featured on the
-        Holdfast home page. If you are assigned to that featured quest, the
-        public quest card may show your display name, avatar, responsibility,
-        and assignment detail. The full published quest board is available only
-        to signed-in Holdfast members. Internal Discord/member IDs are not
-        included in the public featured-quest payload.
-      </p>
-      <p>
-        Guild leadership and authorized editors can access the information
-        needed to manage quests, assignments, rewards, and member records.
+        Disconnect a computer from <a href="/dashboard/sync">My Devices &amp; Sync</a> to
+        stop it uploading; its key stops working at once. Uninstalling
+        Guildweaver stops all uploads from that computer. There is no
+        self-service account deletion yet; to have your data removed, contact
+        the maintainer through <a href="https://github.com/Indicaza" target="_blank" rel="noreferrer">GitHub</a>.
       </p>
 
-      <h2>If you leave Holdfast</h2>
+      <h2>Where it lives</h2>
       <p>
-        The site periodically verifies Discord membership. If Discord reports
-        that you have left the Holdfast server, your website access is removed
-        and you are hidden from the active member directory.
-      </p>
-      <p>
-        Your existing profile and service history may be retained so guild
-        history is not destroyed and a returning member can reconnect to the
-        same record. Holdfast does not currently have a self-service deletion
-        tool; corrections or removal requests can be handled through guild
-        leadership.
-      </p>
-
-      <h2>Where the data lives</h2>
-      <p>
-        Member, quest, and contribution records are stored in Holdfast's
-        private application database. Live member data is not committed to the
-        public Holdfast source repository.
-      </p>
-
-      <h2>Principle</h2>
-      <p>
-        Collect only useful guild data, make its source and visibility clear,
-        and give members a straightforward way to request corrections or
-        removal through guild leadership.
+        Account and game data are stored in Guildweaver&apos;s private
+        application database. It is never committed to the public source
+        repositories.
       </p>
     </PageShell>
   )

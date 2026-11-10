@@ -1,0 +1,675 @@
+/* The player dashboard. Panels, scorecards and character grids come from the
+   shared intelligence styles; these are the dashboard's own pieces. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.player-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.player-server-select {
+  min-width: 12rem;
+}
+
+.player-topbar__sync {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.player-topbar__sync:hover,
+.player-topbar__sync:focus-visible {
+  border-color: var(--color-border-strong);
+  color: var(--color-accent-bright);
+}
+
+.player-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.player-dot--synced {
+  background: #74c493;
+}
+
+.player-dot--stale,
+.player-dot--no_device {
+  background: #d9a45b;
+}
+
+.player-dot--waiting_for_data,
+.player-dot--processing {
+  background: var(--color-accent-bright);
+}
+
+.player-callout {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.player-callout p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.player-callout strong {
+  color: var(--color-text-strong);
+}
+
+.player-callout--warning {
+  border-left-color: #d9a45b;
+}
+
+.player-callout--ok {
+  border-left-color: #74c493;
+}
+
+.player-callout__action {
+  justify-self: start;
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.player-callout > button,
+.player-callout > a.ds-button {
+  justify-self: start;
+}
+
+.player-setup__steps {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-setup__step {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.player-setup__step p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text);
+}
+
+.player-setup__marker {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-accent-bright);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.player-setup__step--done .player-setup__marker {
+  border-color: #74c493;
+  background: rgba(116, 196, 147, 0.12);
+  color: #a8e0be;
+}
+
+.player-setup__step--done strong {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.player-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.player-scorecard__time {
+  font-size: var(--font-size-lg) !important;
+}
+
+.player-servers__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-servers__list a {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.player-servers__list a:hover,
+.player-servers__list a:focus-visible,
+.player-servers__list a[aria-current="true"] {
+  border-color: var(--color-border-strong);
+}
+
+.player-servers__list strong {
+  color: var(--color-text-strong);
+}
+
+.player-servers__list span,
+.player-help-link {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-server-group + .player-server-group {
+  margin-top: var(--space-6);
+}
+
+.player-server-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 var(--space-3);
+  color: var(--color-text-strong);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+}
+
+.player-server-group__title small {
+  color: var(--color-text-muted);
+  font-family: var(--font-body, inherit);
+  font-size: var(--font-size-xs);
+}
+
+.player-professions {
+  margin-bottom: var(--space-5);
+}
+
+.player-professions__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-professions__list > li {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.player-professions__character {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-strong);
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-professions__character span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-professions__list ul,
+.player-farming__items,
+.player-farming__sources,
+.player-farming__recent,
+.player-help {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-professions__list ul li,
+.player-farming__items li,
+.player-farming__sources li,
+.player-farming__recent li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.player-professions__list ul li small {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+}
+
+.player-farming__items li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.player-farming__sources span,
+.player-farming__recent span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.player-farming__sources small,
+.player-farming__recent small,
+.player-farming__recent em,
+.player-farming__sources em {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-style: normal;
+}
+
+.player-farming__recent li {
+  grid-template-columns: minmax(10rem, 1fr) minmax(0, 1.4fr) auto;
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.player-community {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.player-devices {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player-device {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.player-device--disconnected {
+  opacity: 0.72;
+}
+
+.player-device__name {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.player-device dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.player-device dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-device dd {
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.player-device__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-help li {
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+@media (max-width: 64rem) {
+  .player-overview-grid,
+  .player-device {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .player-device dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .player-topbar {
+    width: 100%;
+  }
+
+  .player-server-select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .player-farming__recent li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* On narrow screens the server picker and sync status get their own row
+   under the page heading. */
+@media (max-width: 54rem) {
+  .intelligence-app__topbar:has(.player-topbar) {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
+  .intelligence-app__topbar:has(.player-topbar) .intelligence-app__heading {
+    flex: 1 1 100%;
+  }
+
+  .intelligence-app__topbar:has(.player-topbar) .intelligence-app__actions {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .player-topbar {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .player-server-select {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+}
+
+/* Character cards */
+
+.player-character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-3);
+}
+
+.player-card {
+  flex-wrap: nowrap;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  text-decoration: none;
+}
+
+.player-card__portrait {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.player-card__portrait .wow-icon,
+.player-card__glyph {
+  border-radius: 0.6rem;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--armory-class-color, #c4a667) 60%, transparent),
+    0 0.4rem 1rem rgba(0, 0, 0, 0.4);
+}
+
+.player-card__glyph {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-accent-bright);
+}
+
+.player-card__level {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -0.45rem;
+  display: grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  padding: 0 0.3rem;
+  border: 1px solid rgba(231, 201, 127, 0.6);
+  border-radius: var(--radius-pill);
+  background: #0b121c;
+  color: var(--color-accent-bright);
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 1;
+}
+
+.player-card__body {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.player-card__name,
+.player-card__kind,
+.player-card__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-card__name {
+  color: var(--armory-class-color, var(--color-text-strong));
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.player-card__kind {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.player-card__meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.player-card > .sync-badge {
+  flex: 0 0 auto;
+}
+
+/* Dashboard frame: compact stat tiles and a tidy header. */
+
+.intelligence-app--player .intel-scorecards article {
+  min-height: 0;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.intelligence-app--player .intel-scorecards strong {
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+}
+
+.intelligence-app--player .player-scorecard__time {
+  font-size: clamp(1.4rem, 2vw, 1.75rem) !important;
+  line-height: 1.1;
+}
+
+.player-topbar__sync {
+  min-height: 2.5rem;
+}
+
+.player-topbar__paused {
+  color: #d9a45b;
+  font-size: inherit;
+}
+
+.player-overview-grid {
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.player-overview-grid > .intel-panel {
+  min-width: 0;
+}
+
+.player-servers__list {
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 54rem) {
+  .intelligence-app--player .intelligence-app__topbar {
+    min-height: 0;
+    padding-block: var(--space-3);
+  }
+
+  .intelligence-app--player .intelligence-app__heading > div > span {
+    display: none;
+  }
+
+  .intelligence-app--player .player-topbar {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 40rem) {
+  .intelligence-app--player .intel-scorecards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .intelligence-app--player .intel-scorecards article {
+    padding: var(--space-4);
+  }
+
+  .intelligence-app--player .intel-scorecards article::after {
+    display: none;
+  }
+
+  .player-topbar__sync {
+    padding-inline: var(--space-3);
+  }
+
+  .player-card > .sync-badge .sync-badge__age {
+    display: none;
+  }
+}
+
+/* The server picker matches the sync pill beside it. */
+.player-topbar .ds-field__label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.player-topbar .ds-control {
+  min-height: 2.5rem;
+}
+
+.player-topbar .ds-control__input {
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 40rem) {
+  .player-topbar .ds-field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+.intelligence-app--player .intel-scorecards article {
+  align-content: start;
+}
+
+.intelligence-app--player .player-server-group + .player-server-group {
+  margin-top: var(--space-2);
+}
+
+.intelligence-app--player .player-server-group__title {
+  margin: 0 0 var(--space-3);
+}
+
+/* Signed out: one card with the way in. */
+.player-signed-out {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+  border: 1px solid rgba(196, 166, 103, 0.26);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(196, 166, 103, 0.1), transparent 55%),
+    rgba(7, 17, 31, 0.78);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.player-signed-out p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.player-signed-out__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.player-signed-out .player-signed-out__note {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 34rem) {
+  .player-signed-out__actions > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* Farming has three tiles: one row of three on wide screens. */
+@media (min-width: 72rem) {
+  .intelligence-app--player .intel-scorecards:has(> article:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.intelligence-app--player .intel-panel__heading + .armory-empty,
+.intelligence-app--player .intel-panel__heading + .player-professions__list {
+  margin-top: var(--space-5);
+}

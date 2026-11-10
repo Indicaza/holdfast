@@ -17,6 +17,10 @@ import { createCharacterRouter } from "./Character/characterRouter.js";
 import { createGuildweaverAdminRouter } from "./Character/guildweaverAdminRouter.js";
 import { createIntelligenceRouter } from "./Character/intelligenceRouter.js";
 import { createFarmingRouter } from "./Economy/farmingRouter.js";
+import { guildFeaturesEnabled, requireGuildFeatures } from "./Features/guildFeatures.js";
+import { createBlizzardGameDataProvider } from "./GameData/blizzardGameDataProvider.js";
+import { createBlizzardIconMediaResolver } from "./GameData/blizzardIconMedia.js";
+import { createPlayerRouter } from "./Player/playerRouter.js";
 import {
   createDevelopmentAuthRouter,
   developmentAuthEnabled,
@@ -69,8 +73,24 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   // Guildweaver uploads carry whole recipe books: one crafting profession is
   // several hundred KB of JSON. Only the device-authenticated ingest routes
   // accept large bodies; everything else keeps the small default.
+  app.post(["/api/bridge/telemetry", "/api/bridge/characters/snapshot", "/api/bridge/quests/actions"], (req, res, next) => {
+    if (req.get("X-Guildweaver-Release") === "forever-live") return next();
+    return res.status(409).json({ error: "forever_live_bridge_required" });
+  });
   app.use(["/api/bridge/telemetry", "/api/bridge/characters/snapshot"], express.json({ limit: "4mb" }));
   app.use(express.json({ limit: "256kb" }));
+  app.get("/api/bridge/release", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const ready = withGuildDatabase((db) => db.prepare("SELECT 1 FROM schema_migrations WHERE version = 14 AND name = 'forever_live_cutover'").get());
+    res.status(ready ? 200 : 503).json({ gameRelease: ready ? "forever-live" : null });
+  });
+  app.post(["/api/bridge/telemetry", "/api/bridge/characters/snapshot"], (req, res, next) => {
+    const envelope = req.body?.envelope || req.body?.snapshot;
+    if ([envelope, envelope?.payload].some((value) => /\b(beta|ptr)\b/i.test(value?.realm || ""))) {
+      return res.status(400).json({ error: "beta_game_data_rejected" });
+    }
+    return next();
+  });
   app.use(attachSession);
   app.use("/api/bridge", createCharacterRouter());
   app.use("/api/bridge", createGuildweaverQuestRouter());
@@ -180,7 +200,14 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   );
   app.use("/api/game-data/v1", createRateLimiter({ name: "public-game-data", windowMs: 60000, max: 120 }), createPublicGameDataRouter({ ...(developmentAuthEnabled(developmentEnv) ? { iconMediaResolver: createDevelopmentIconMediaResolver() } : {}), ...publicGameDataOptions }));
   app.use("/api/notifications", createNotificationRouter());
-  app.use("/api/guilds", createGuildDirectoryRouter());
+  // What the site offers right now. Public, for the production monitor and
+  // tooling; the browser reads the same switch from index.html.
+  app.get("/api/site", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({ guildFeatures: guildFeaturesEnabled() });
+  });
+  // Guild discovery and registration, hidden while guild features are off.
+  app.use("/api/guilds", requireGuildFeatures, createGuildDirectoryRouter());
 
   // Each guild's quests, roster, billets, authority and audit. The same
   // router instances serve /api/g/:slug/... for any guild and the original
@@ -216,17 +243,17 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   guildApi.use("/billets", billetRouter);
   guildApi.use("/authority", authorityRouter);
   guildApi.use("/audit", auditRouter);
-  app.use("/api/g/:slug", guildContextFromSlug, guildApi);
+  app.use("/api/g/:slug", requireGuildFeatures, guildContextFromSlug, guildApi);
 
   app.use("/api/intelligence/farming", createFarmingRouter());
-  app.use(
-    "/api/intelligence",
-    createIntelligenceRouter(
-      developmentAuthEnabled(developmentEnv)
-        ? { iconMediaResolver: createDevelopmentIconMediaResolver() }
-        : {},
-    ),
-  );
+  // One game-data provider and icon resolver (and their caches) for the guild
+  // workspace and the player dashboard.
+  const gameDataProvider = createBlizzardGameDataProvider();
+  const iconMediaResolver = developmentAuthEnabled(developmentEnv)
+    ? createDevelopmentIconMediaResolver()
+    : createBlizzardIconMediaResolver();
+  app.use("/api/intelligence", createIntelligenceRouter({ gameDataProvider, iconMediaResolver }));
+  app.use("/api/player", createPlayerRouter({ provider: gameDataProvider, icons: iconMediaResolver }));
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
 
   app.get("/api/guildweaver/release", (req, res) => {

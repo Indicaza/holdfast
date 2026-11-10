@@ -38,7 +38,7 @@ async function seedGathering(page, context) {
         eventType: 'gathering_loot',
         capturedAt: Math.floor(Date.now() / 1000) - index,
         gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
-        realm: 'Classic Beta PvE 2',
+        realm: 'Live Realm',
         region: 'US',
         characterId: 'character-e2e-farmer',
         payloadSchemaVersion: 1,
@@ -59,7 +59,7 @@ async function seedGathering(page, context) {
       }
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
         body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-farmer:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }
@@ -83,7 +83,7 @@ async function seedGathering(page, context) {
         eventType: 'gathering_loot',
         capturedAt: Math.floor(Date.now() / 1000) - 100 - index,
         gameBuild: { version: '1.60.1', build: '70338', interface: 16001 },
-        realm: 'Classic Beta PvE 2',
+        realm: 'Live Realm',
         region: 'US',
         characterId: 'character-e2e-miner',
         payloadSchemaVersion: 1,
@@ -103,7 +103,7 @@ async function seedGathering(page, context) {
       }
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
+        headers: { "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${token.deviceToken}`, 'Idempotency-Key': observationId },
         body: JSON.stringify({ streamKey: `gathering_loot:character-e2e-miner:${observationId}`, kind: 'event', revision: 1, envelope }),
       })
     }
@@ -118,7 +118,7 @@ async function syncGather(page, deviceToken, { name, objectId, item }) {
     const observationId = `e2e-live-${Date.now()}`
     const response = await fetch('/api/bridge/telemetry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${deviceToken}`, 'Idempotency-Key': observationId },
+      headers: { 'Content-Type': 'application/json', "X-Guildweaver-Release": "forever-live", Authorization: `Bearer ${deviceToken}`, 'Idempotency-Key': observationId },
       body: JSON.stringify({
         streamKey: `gathering_loot:character-e2e-farmer:${observationId}`,
         kind: 'event',

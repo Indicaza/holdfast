@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 test("GuildOS character cards read vitals from modular stats telemetry", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const rawCharacterId = "character-card-vitals";
     const synced = await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -16,17 +16,17 @@ test("GuildOS character cards read vitals from modular stats telemetry", async (
         schemaVersion: 3,
         capturedAt: 1791500000,
         characterId: rawCharacterId,
-        characterKey: "classic beta pve 2:rook ravenstar",
+        characterKey: "live realm:rook ravenstar",
         firstName: "Rook",
         lastName: "Ravenstar",
         fullName: "Rook Ravenstar",
         name: "Rook Ravenstar",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
         region: "US",
         level: 22,
         race: { id: 4, name: "Night Elf", token: "NightElf" },
         class: { id: 1, name: "Warrior", token: "WARRIOR" },
-        guild: { name: "Holdfast", realm: "Classic Beta PvE 2" },
+        guild: { name: "Holdfast", realm: "Live Realm" },
         equipment: [],
         professions: [],
       },
@@ -79,7 +79,7 @@ test("GuildOS character cards read vitals from modular stats telemetry", async (
 });
 
 test("GuildOS character cards find stats telemetry that arrived before the character synced", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const rawCharacterId = "character-stats-first";
     const telemetry = ingestTelemetry({
       deviceId: "device-stats-first",
@@ -113,9 +113,9 @@ test("GuildOS character cards find stats telemetry that arrived before the chara
         schemaVersion: 3,
         capturedAt: 1791500002,
         characterId: rawCharacterId,
-        characterKey: "classic beta pve 2:rook darkwing",
+        characterKey: "live realm:rook darkwing",
         name: "Rook Darkwing",
-        realm: "Classic Beta PvE 2",
+        realm: "Live Realm",
         level: 11,
         race: { id: 4, name: "Night Elf", token: "NightElf" },
         class: { id: 4, name: "Rogue", token: "ROGUE" },

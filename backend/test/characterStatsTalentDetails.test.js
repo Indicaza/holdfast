@@ -4,19 +4,19 @@ import assert from "node:assert/strict";
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { recordTelemetry } from "../src/Character/telemetryRecordRepository.js";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
-import { memberIds, withHttpApp } from "../testSupport/httpHarness.js";
+import { memberIds, withGuildHttpApp } from "../testSupport/httpHarness.js";
 
 function richSnapshot() {
   return {
     schemaVersion: 3,
     capturedAt: 1791392500,
     characterId: "character-rich-stats-talents",
-    characterKey: "classic beta pve 2:rook ravenstar",
+    characterKey: "live realm:rook ravenstar",
     firstName: "Rook",
     lastName: "Ravenstar",
     fullName: "Rook Ravenstar",
     name: "Rook Ravenstar",
-    realm: "Classic Beta PvE 2",
+    realm: "Live Realm",
     region: "US",
     gameBuild: { version: "1.60.1", build: "70245", interface: 16001 },
     level: 22,
@@ -158,7 +158,7 @@ function assertRichArmory(json) {
 }
 
 test("Armory preserves character-sheet stats and client-authored talent details", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = richSnapshot();
     const synced = await syncGuildweaverCharacter({
       memberId: memberIds.member,
@@ -180,7 +180,7 @@ test("Armory preserves character-sheet stats and client-authored talent details"
 // its per-type streams, whose payload schemaVersion (1) numbers the stream,
 // not the v3 snapshot shape the fields use.
 test("Armory reads stats and talents from per-type streams without a whole snapshot", async () => {
-  await withHttpApp(async ({ request }) => {
+  await withGuildHttpApp(async ({ request }) => {
     const snapshot = richSnapshot();
     const deviceId = "device-stream-stats-talents";
     const send = (eventType, payload) => ingestTelemetry({

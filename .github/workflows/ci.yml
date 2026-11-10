@@ -113,10 +113,11 @@ jobs:
     needs:
       - frontend
       - backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       E2E_BASE_URL: http://127.0.0.1:4173
+      E2E_GUILD_BASE_URL: http://127.0.0.1:4174
       FRONTEND_URL: http://127.0.0.1:4173
       GUILD_OWNER_DISCORD_IDS: e2e-commander
       NODE_ENV: test
@@ -155,29 +156,44 @@ jobs:
         shell: bash
         run: |
           DATA_DIR="$RUNNER_TEMP/holdfast-e2e-data"
+          GUILD_DATA_DIR_GUILDS="$RUNNER_TEMP/holdfast-e2e-guild-data"
           echo "GUILD_DATA_DIR=$DATA_DIR" >> "$GITHUB_ENV"
-          rm -rf "$DATA_DIR"
-          mkdir -p "$DATA_DIR"
-          cp e2e/fixtures/members.json "$DATA_DIR/members.json"
-          cp e2e/fixtures/quests.json "$DATA_DIR/quests.json"
+          echo "GUILD_DATA_DIR_GUILDS=$GUILD_DATA_DIR_GUILDS" >> "$GITHUB_ENV"
+          for dir in "$DATA_DIR" "$GUILD_DATA_DIR_GUILDS"; do
+            rm -rf "$dir"
+            mkdir -p "$dir"
+            cp e2e/fixtures/members.json "$dir/members.json"
+            cp e2e/fixtures/quests.json "$dir/quests.json"
+          done
 
+      # Two copies: the site as it runs today (guild features off), and one
+      # with guild features on so the guild journeys keep running until the
+      # guild site returns. Each has its own disposable database.
       - name: Start Holdfast
         shell: bash
         run: |
           set -euo pipefail
           npm --prefix backend start > "$RUNNER_TEMP/holdfast-e2e-server.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/holdfast-e2e-server.pid"
+          PORT=4174 FRONTEND_URL="$E2E_GUILD_BASE_URL" GUILD_DATA_DIR="$GUILD_DATA_DIR_GUILDS" GUILDWEAVER_GUILD_FEATURES=true \
+            npm --prefix backend start > "$RUNNER_TEMP/holdfast-e2e-guild-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/holdfast-e2e-guild-server.pid"
 
-          for attempt in {1..40}; do
-            if curl --fail --silent "$E2E_BASE_URL/api/health/ready" > /dev/null; then
-              exit 0
+          for base in "$E2E_BASE_URL" "$E2E_GUILD_BASE_URL"; do
+            ready=false
+            for attempt in {1..40}; do
+              if curl --fail --silent "$base/api/health/ready" > /dev/null; then
+                ready=true
+                break
+              fi
+              sleep 1
+            done
+            if [[ "$ready" != true ]]; then
+              echo "Holdfast at $base did not become ready."
+              cat "$RUNNER_TEMP"/holdfast-e2e-*server.log
+              exit 1
             fi
-            sleep 1
           done
-
-          echo "Holdfast did not become ready."
-          cat "$RUNNER_TEMP/holdfast-e2e-server.log"
-          exit 1
 
       - name: Run browser journeys
         working-directory: e2e
@@ -200,14 +216,17 @@ jobs:
             e2e/playwright-report/
             e2e/test-results/
             ${{ runner.temp }}/holdfast-e2e-server.log
+            ${{ runner.temp }}/holdfast-e2e-guild-server.log
 
       - name: Stop Holdfast
         if: always()
         shell: bash
         run: |
-          if [[ -f "$RUNNER_TEMP/holdfast-e2e-server.pid" ]]; then
-            kill "$(cat "$RUNNER_TEMP/holdfast-e2e-server.pid")" 2>/dev/null || true
-          fi
+          for pid in "$RUNNER_TEMP"/holdfast-e2e-server.pid "$RUNNER_TEMP"/holdfast-e2e-guild-server.pid; do
+            if [[ -f "$pid" ]]; then
+              kill "$(cat "$pid")" 2>/dev/null || true
+            fi
+          done
 
   production-image:
     name: Production image

@@ -2,16 +2,19 @@ import { Router } from "express";
 
 import { requireAuthenticated, requirePermission } from "../Auth/permissions.js";
 import { readFarmingIngestStatus, readFarmingSource, searchFarmingSources } from "./farmingRepository.js";
-import { readFarmingSessions, readFarmingLocations } from "./farmingSessionRepository.js";
+import { readFarmingLocations, readFarmingMap, readFarmingSessions } from "./farmingSessionRepository.js";
 
 // Mounted at /api/intelligence/farming.
 export function createFarmingRouter() {
   const router = Router();
 
+  // The signed-in player's own sessions only. Sources and drop tables below
+  // are community aggregates without contributor identity.
   router.get("/sessions", requireAuthenticated, (req, res) => {
     try {
+      const { realm, build, mode, limit } = req.query || {};
       res.set("Cache-Control", "no-store");
-      res.json(readFarmingSessions(req.query || {}));
+      res.json(readFarmingSessions({ memberId: req.auth.user.id, realm, build, mode, limit }));
     } catch (error) {
       console.error("Unable to read farming sessions", error);
       res.status(500).json({ error: "farming_sessions_unavailable" });
@@ -25,6 +28,19 @@ export function createFarmingRouter() {
     } catch (error) {
       console.error("Unable to read farming locations", error);
       res.status(500).json({ error: "farming_locations_unavailable" });
+    }
+  });
+
+  // Every source's gather spots for the resource map. Community aggregate:
+  // no contributor identity.
+  router.get("/map", requireAuthenticated, (req, res) => {
+    try {
+      const { discipline, source, item, realm, region, build, limit } = req.query || {};
+      res.set("Cache-Control", "no-store");
+      res.json(readFarmingMap({ discipline, source, item, realm, region, build, limit }));
+    } catch (error) {
+      console.error("Unable to read the farming map", error);
+      res.status(500).json({ error: "farming_map_unavailable" });
     }
   });
 

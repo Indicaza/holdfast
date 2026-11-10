@@ -134,5 +134,5 @@ test('guild intelligence behaves like a fixed app with switchable workspaces', a
 test('guild intelligence remains member-gated', async ({ page }) => {
   await page.goto('/holdfast/intelligence')
   await expect(page.getByRole('dialog')).toContainText('Member sign in')
-  await expect(page.getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Sign in with Discord' })).toBeVisible()
 })
