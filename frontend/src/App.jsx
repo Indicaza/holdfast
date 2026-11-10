@@ -51,6 +51,7 @@ const dashboardTitles = {
   characters: 'My Characters',
   professions: 'My Professions',
   gathering: 'My Gathering',
+  dungeons: 'My Dungeon Runs',
   sync: 'Download & Sync',
   account: 'Account',
 }

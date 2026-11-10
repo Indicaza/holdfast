@@ -62,8 +62,8 @@ test('guild features are off unless the server says otherwise', () => {
 })
 
 test('every dashboard view has a real route and keeps the chosen server', () => {
-  assert.deepEqual(DASHBOARD_VIEWS.map((view) => view.label), ['Home', 'Characters', 'Professions', 'Gathering', 'Drop rates', 'Download & sync', 'Account'])
-  assert.deepEqual(DASHBOARD_VIEWS.map((view) => view.group), ['you', 'you', 'you', 'you', 'community', 'setup', 'setup'])
+  assert.deepEqual(DASHBOARD_VIEWS.map((view) => view.label), ['Home', 'Characters', 'Professions', 'Gathering', 'Dungeon runs', 'Drop rates', 'Download & sync', 'Account'])
+  assert.deepEqual(DASHBOARD_VIEWS.map((view) => view.group), ['you', 'you', 'you', 'you', 'you', 'community', 'setup', 'setup'])
   for (const view of DASHBOARD_VIEWS) {
     assert.deepEqual(matchRoute(dashboardHref(view.id)), { name: 'dashboard', section: view.id })
   }

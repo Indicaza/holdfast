@@ -6,7 +6,7 @@ import { disciplineLabel, formatCount } from '../../Intelligence/Farming/farming
 import { useLiveRefresh } from '../../Live/liveUpdatesContext.js'
 import WowIcon from '../../WowAssets/WowIcon.jsx'
 import { DisciplineTag, Icon, Tip } from '../ui.jsx'
-import { AZEROTH_MAP_ID, AZEROTH_RECT, atlasZone, getAtlas, locateWorldPoint, mapArtUrl } from './atlas.js'
+import { AZEROTH_MAP_ID, AZEROTH_RECT, WORLD as WORLD_ART, atlasZone, getAtlas, locateWorldPoint, mapArtUrl } from './atlas.js'
 import {
   HOME_VIEW, MAX_ZOOM, MIN_ZOOM, ZONE_ZOOM, busiestSpots, clampView, fitBounds, fitScale, flightPath, formatCoords, portraitHome,
   layerWeights, legendGroups, mapUrl, panBy, placeLabels, placePoints, smoothstep, sourceColors, toScreen, toWorld, viewAnchored,
@@ -117,6 +117,38 @@ function usePreloadArt(enabled) {
   }, [enabled])
 }
 
+// The game's maps as plain images on their own GPU layers. Each image is laid
+// out at its pixel size and placed by a transform, so panning and zooming
+// only move textures the browser already has: nothing is repainted. (Drawn
+// as SVG <image>s under one transform, every zone in view was re-rasterized
+// on every frame of a pan or zoom.)
+function ArtLayer({ view, size, layers, dim }) {
+  const scale = fitScale(size) * view.k
+  const originX = size.width / 2 - view.x * scale
+  const originY = size.height / 2 - view.y * scale
+  return (
+    <div className="gw-rmap__art" aria-hidden="true">
+      {layers.map(({ mapId, rect, opacity, className }) => (opacity > 0.005 ? (
+        <img
+          key={mapId}
+          className={className}
+          src={mapArtUrl(mapId)}
+          alt=""
+          width={WORLD_ART.width}
+          height={WORLD_ART.height}
+          decoding="async"
+          draggable={false}
+          style={{
+            opacity,
+            transform: `translate3d(${originX + rect.x * scale}px, ${originY + rect.y * scale}px, 0) scale(${(rect.width * scale) / WORLD_ART.width}, ${(rect.height * scale) / WORLD_ART.height})`,
+          }}
+        />
+      ) : null))}
+      <div className="gw-rmap__art-dim" style={{ opacity: dim }} />
+    </div>
+  )
+}
+
 function useSize(ref) {
   const [size, setSize] = useState({ width: 0, height: 0 })
   useLayoutEffect(() => {
@@ -153,7 +185,11 @@ function glowSprite(color) {
 }
 
 function drawPoints(canvas, { size, view, placed, colors, display, highlight, maxObservations }) {
-  const ratio = globalThis.devicePixelRatio || 1
+  // Soft heat glows look the same at one pixel per CSS pixel; on a
+  // high-density screen they would cost up to 4x the fill. Crisp dots get the
+  // screen's density, capped at 2.
+  const crisp = layerWeights(view.k, display).dots > 0.01 || highlight
+  const ratio = crisp ? Math.min(2, globalThis.devicePixelRatio || 1) : 1
   const width = Math.round(size.width * ratio)
   const height = Math.round(size.height * ratio)
   if (canvas.width !== width || canvas.height !== height) {
@@ -420,6 +456,18 @@ export default function ResourceMap({
     viewRef.current = next
     setView(next)
   }, [])
+  // Drags and pinches fire many times a frame; the camera follows each one
+  // at once, and the map renders once per frame with the latest.
+  const viewFrame = useRef(0)
+  const setViewSoon = useCallback((next) => {
+    viewRef.current = next
+    if (viewFrame.current) return
+    viewFrame.current = requestAnimationFrame(() => {
+      viewFrame.current = 0
+      setView(viewRef.current)
+    })
+  }, [])
+  useEffect(() => () => cancelAnimationFrame(viewFrame.current), [])
 
   // On a phone the legend would cover the map, so it starts tucked away.
   const [legend, setLegend] = useState(() => {
@@ -616,6 +664,9 @@ export default function ResourceMap({
   // ------------------------------------------------------------ Input
   const pointers = useRef(new Map())
   const gesture = useRef(null)
+  const hoverPoint = useRef(null)
+  const hoverFrame = useRef(0)
+  useEffect(() => () => cancelAnimationFrame(hoverFrame.current), [])
 
   function stagePoint(event) {
     const rect = stageRef.current.getBoundingClientRect()
@@ -659,7 +710,7 @@ export default function ResourceMap({
       if (g.kind === 'pinch' && pointers.current.size >= 2) {
         const [a, b] = [...pointers.current.values()]
         const distance = Math.hypot(a.x - b.x, a.y - b.y)
-        if (g.distance > 0) setViewNow(zoomAt(viewRef.current, sizeRef.current, distance / g.distance, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }))
+        if (g.distance > 0) setViewSoon(zoomAt(viewRef.current, sizeRef.current, distance / g.distance, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }))
         g.distance = distance
         return
       }
@@ -675,15 +726,23 @@ export default function ResourceMap({
           g.trail.push({ ...at, t: performance.now() })
           if (g.trail.length > 6) g.trail.shift()
           setHover(null)
-          setViewNow(panBy(viewRef.current, sizeRef.current, dx, dy))
+          setViewSoon(panBy(viewRef.current, sizeRef.current, dx, dy))
           return
         }
       }
     }
-    const world = toWorld(viewRef.current, sizeRef.current, at)
-    setCursor(locateWorldPoint(world))
-    const point = nearestPoint(at)
-    setHover((current) => (point ? (current?.sourceKey === point.sourceKey && current?.world === point.world ? current : point) : null))
+    // Which zone and spot are under the pointer: once a frame, for its
+    // latest position.
+    hoverPoint.current = at
+    if (hoverFrame.current) return
+    hoverFrame.current = requestAnimationFrame(() => {
+      hoverFrame.current = 0
+      const latest = hoverPoint.current
+      if (!latest || gesture.current?.moved) return
+      setCursor(locateWorldPoint(toWorld(viewRef.current, sizeRef.current, latest)))
+      const point = nearestPoint(latest)
+      setHover((current) => (point ? (current?.sourceKey === point.sourceKey && current?.world === point.world ? current : point) : null))
+    })
   }
 
   function onPointerUp(event) {
@@ -727,6 +786,7 @@ export default function ResourceMap({
 
   function onPointerLeave() {
     if (gesture.current) return
+    hoverPoint.current = null
     setHover(null)
     setCursor(null)
   }
@@ -944,6 +1004,23 @@ export default function ResourceMap({
           onDoubleClick={onDoubleClick}
           onKeyDown={onKeyDown}
         >
+          {ready && art ? (
+            // The world map is always there; each zone's own map, fully
+            // explored and cut to its land, fades in over it as the zone
+            // grows on screen. Zooming is one continuous picture, never a
+            // swap.
+            <ArtLayer
+              view={view}
+              size={size}
+              dim={dim}
+              layers={[
+                { mapId: AZEROTH_MAP_ID, rect: AZEROTH_RECT, opacity: worldOpacity, className: 'gw-rmap__world-art' },
+                // Only zones on screen hold a GPU texture; the ones just
+                // outside are loaded (zoneArt) but not drawn.
+                ...onScreenZones.map((zone) => ({ mapId: zone.mapId, rect: zone.rect, opacity: isArtReady(zone.mapId) ? zoneOpacity : 0, className: 'gw-rmap__zone-art' })),
+              ]}
+            />
+          ) : null}
           {ready ? (
             <svg className="gw-rmap__svg" width={size.width} height={size.height} aria-hidden="true">
               <defs>
@@ -957,38 +1034,16 @@ export default function ResourceMap({
                 </linearGradient>
               </defs>
               {art ? null : <rect width={size.width} height={size.height} fill="url(#gw-rmap-ocean)" />}
-              <g transform={transform}>
-                {art ? (
-                  // The world map is always there; each zone's own map,
-                  // fully explored and cut to its land, fades in over it as
-                  // the zone grows on screen. Zooming is one continuous
-                  // picture, never a swap.
-                  <g className="gw-rmap__art">
-                    {worldOpacity > 0.005 ? (
-                      <image className="gw-rmap__world-art" href={mapArtUrl(AZEROTH_MAP_ID)} x={AZEROTH_RECT.x} y={AZEROTH_RECT.y} width={AZEROTH_RECT.width} height={AZEROTH_RECT.height} preserveAspectRatio="none" style={{ opacity: worldOpacity }} />
-                    ) : null}
-                    {zoneArt.map((zone) => (
-                      <image
-                        key={zone.mapId}
-                        className="gw-rmap__zone-art"
-                        href={mapArtUrl(zone.mapId)}
-                        x={zone.rect.x}
-                        y={zone.rect.y}
-                        width={zone.rect.width}
-                        height={zone.rect.height}
-                        preserveAspectRatio="none"
-                        style={{ opacity: isArtReady(zone.mapId) ? zoneOpacity : 0 }}
-                      />
-                    ))}
-                  </g>
-                ) : atlas.continents.map((continent) => (
-                  <g key={continent.mapId} className="gw-rmap__continent">
-                    <path d={continent.path} className="gw-rmap__shore" />
-                    <path d={continent.path} className="gw-rmap__land" />
-                  </g>
-                ))}
-              </g>
-              {art ? <rect width={size.width} height={size.height} fill="#05070a" opacity={dim} /> : null}
+              {art ? null : (
+                <g transform={transform}>
+                  {atlas.continents.map((continent) => (
+                    <g key={continent.mapId} className="gw-rmap__continent">
+                      <path d={continent.path} className="gw-rmap__shore" />
+                      <path d={continent.path} className="gw-rmap__land" />
+                    </g>
+                  ))}
+                </g>
+              )}
               {level === 'world' && !art ? atlas.continents.map((continent) => {
                 const at = toScreen(view, size, continent.label)
                 return (
@@ -1022,8 +1077,8 @@ export default function ResourceMap({
                     key={entry.zone.mapId}
                     className="gw-rmap__bubble"
                     style={{
-                      left: entry.at.x,
-                      top: entry.at.y,
+                      '--x': `${entry.at.x}px`,
+                      '--y': `${entry.at.y}px`,
                       width: radius * 2,
                       height: radius * 2,
                       '--bubble': colors.get(entry.topSource) || 'var(--gw-accent)',
@@ -1039,7 +1094,7 @@ export default function ResourceMap({
           {spotMarkers.length ? (
             <div className="gw-rmap__overlay" style={{ opacity: weights.markers }} aria-hidden="true">
               {spotMarkers.map(({ spot, index, at }) => (
-                <span key={`${spot.sourceKey}-${index}`} className="gw-rmap__marker" style={{ left: at.x, top: at.y, '--marker': colors.get(spot.sourceKey) }}>
+                <span key={`${spot.sourceKey}-${index}`} className="gw-rmap__marker" style={{ '--x': `${at.x}px`, '--y': `${at.y}px`, '--marker': colors.get(spot.sourceKey) }}>
                   {index + 1}
                 </span>
               ))}

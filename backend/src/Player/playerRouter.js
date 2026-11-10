@@ -15,6 +15,7 @@ import {
   searchPlayerCrafts,
 } from "./playerRepository.js";
 import { requestedServer } from "./playerServers.js";
+import { readDungeonRun, readDungeonRuns } from "../Dungeon/dungeonRunRepository.js";
 
 // Mounted at /api/player: the signed-in player's own workspace. Every route
 // takes the account from the session (req.auth.user.id) and never from the
@@ -56,6 +57,24 @@ export function createPlayerRouter({ provider, icons } = {}) {
     results: searchPlayerCrafts(owner(req), req.query?.q || "", { server: server(req) }),
   })));
   router.get("/farming", respond("farming", (req) => readPlayerFarming(owner(req), { server: server(req) })));
+  router.get("/dungeon-runs", respond("dungeon_runs", (req) => readDungeonRuns({
+    memberId: owner(req), server: server(req), character: req.query?.character, realm: req.query?.realm,
+    dungeon: req.query?.dungeon, from: req.query?.from, to: req.query?.to, limit: req.query?.limit,
+  })));
+  // Another player's run answers 404, like one that does not exist.
+  router.get("/dungeon-runs/:runId", (req, res) => {
+    try {
+      const run = readDungeonRun({ memberId: owner(req), id: req.params.runId });
+      if (!run) {
+        res.status(404).json({ error: "dungeon_run_not_found" });
+        return;
+      }
+      res.json({ run });
+    } catch (error) {
+      console.error("Unable to read player dungeon run", error);
+      res.status(500).json({ error: "player_dungeon_run_unavailable" });
+    }
+  });
   router.get("/devices", respond("devices", (req) => ({ devices: readPlayerDevices(owner(req)) })));
 
   // Disconnecting a device revokes its key: the bridge on that computer has

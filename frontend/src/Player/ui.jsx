@@ -34,6 +34,7 @@ const ICON_PATHS = {
   sparkle: <path d="M12 3c.6 4.5 1.5 5.4 6 6-4.5.6-5.4 1.5-6 6-.6-4.5-1.5-5.4-6-6 4.5-.6 5.4-1.5 6-6Z" />,
   bolt: <path d="M13 3 5 13h6l-1 8 8-10h-6l1-8Z" />,
   external: <><path d="M14 4h6v6" /><path d="M20 4 11 13" /><path d="M18 14v5H5V6h5" /></>,
+  dungeon: <><path d="M4 20V10l8-6 8 6v10" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" /><path d="M4 20h16" /></>,
   map: <><path d="m3 6.5 6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5Z" /><path d="M9 4v13.5" /><path d="M15 6.5V20" /></>,
   plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
   minus: <path d="M5 12h14" />,
