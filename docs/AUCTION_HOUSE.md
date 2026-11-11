@@ -115,7 +115,8 @@ Blizzard's auction data lists item ids only. Every minute, up to 240 listed item
 ## Deploying
 
 1. Run `npm run backup` first, as for any migration. Deploy as usual; migrations run on start.
-   - Migration 18 (search) adds three columns (search name, subclass id, last lookup) and two indexes to `market_item_meta`, one column to `market_variant_names`, and fills the search names of rows already there. It changes no other data. The item index then fills from game data in the background within a few minutes (`[market] indexed … catalog items for search` in the log).
+   - Migration 19 adds `market_item_meta.lookup_at` (when Blizzard's item API was last asked about a listed item).
+   - Migration 18 (search) adds two columns and two indexes to `market_item_meta`, one column to `market_variant_names`, and fills the search names of rows already there. It changes no other data. The item index then fills from game data in the background within a few minutes (`[market] indexed … catalog items for search` in the log).
    - Migration 17 rebuilt `market_snapshots` and `market_observations` (keeping their rows), moved `market_history` into `market_series_daily`, and added the series tables.
 2. Optional: set `BLIZZARD_CLIENT_ID` / `BLIZZARD_CLIENT_SECRET` (server only) and the `MARKET_*` variables in `.env.example`.
 3. Open Auction House → Diagnostics as an administrator. It should show each house checked within the hour, with both endpoints `recorded` or `not_modified`.
