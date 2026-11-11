@@ -177,7 +177,7 @@ const InspectorContent = memo(function InspectorContent({ itemId, itemKey, marke
               ))}</ul>
             </div>
           ) : null}
-          <div className="gw-insp__tooltip item-tooltip game-tooltip" aria-label="Item tooltip">
+          <div className="gw-insp__tooltip game-tooltip" aria-label="Item tooltip">
             {item.tooltipLines?.length ? <GameTooltipBody item={{ ...item, tooltipLines: item.tooltipLines }} />
               : <><GameTooltipBody item={{ itemId: item.itemId, name: item.name, qualityId: item.qualityId }} /><p className="gw-small gw-muted">No player's game has described this item yet.</p></>}
           </div>

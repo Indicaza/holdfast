@@ -182,7 +182,10 @@ export function ensureItemMetaInDatabase(db, items, now = nowSeconds(), { refres
       const shown = name || scanName;
       const className = text(definition.itemClass?.name || meta.itemClassName, 60) || null;
       const subclassName = text(definition.itemSubclass?.name || meta.itemSubclassName, 60) || null;
-      const classes = itemClassIds({ classId: definition.itemClass?.id ?? meta.itemClassId, subclassId: definition.itemSubclass?.id ?? meta.itemSubclassId,
+      // A scan's class ids (the client's GetItemInfoInstant) only when no
+      // game data has any.
+      const known = definition.itemClass?.id ?? meta.itemClassId ?? (className ? undefined : scan.classId);
+      const classes = itemClassIds({ classId: known, subclassId: definition.itemSubclass?.id ?? meta.itemSubclassId ?? (known === scan.classId ? scan.subclassId : undefined),
         className: className || "", subclassName: subclassName || "" });
       upsert.run(id, shown, name ? "game" : scanName ? "addon" : "",
         integer(row?.quality_id ?? full?.quality_id ?? cat?.quality_id ?? scan.qualityId), integer(row?.icon_file_id ?? full?.icon_file_id ?? cat?.icon_file_id ?? scan.iconFileDataId),

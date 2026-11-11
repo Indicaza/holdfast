@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
 import { upsertGameDataEntityInDatabase } from "../src/GameData/gameDataCatalog.js";
+import { scanItems, validAuctionScan } from "../src/Market/auctionScanTelemetry.js";
 import {
   CATEGORY_TREE,
   categoryOf,
@@ -276,6 +277,13 @@ test("the item index follows the catalog: Blizzard item data becomes searchable 
   // A scan-only name (no game data yet) is searchable too, until game data names it.
   withGuildTransaction((db) => scan(db, GAME, [listing("i:99001", { name: "Mystery Box" })]));
   assert.deepEqual(names(searchMarket({ marketKey: GAME.marketKey, q: "mystery", now: NOW })), ["Mystery Box"]);
+  // A scan's class ids place an item no game data describes; game data wins.
+  withGuildTransaction((db) => scan(db, GAME, [listing("i:99002", { name: "Mystery Ore", classId: 7, subclassId: 7 }), listing("i:2447", { classId: 15, subclassId: 0 })]));
+  assert.deepEqual(names(searchMarket({ marketKey: GAME.marketKey, category: "trade-goods", subcategory: "metal-stone", now: NOW })), ["Copper Ore", "Mystery Ore"]);
+  assert.deepEqual(names(searchMarket({ marketKey: GAME.marketKey, category: "trade-goods", subcategory: "herbs", now: NOW })), ["Peacebloom"], "a scan never re-files a described item");
+  assert.equal(validAuctionScan({ kind: "event", envelope: { region: "US", realm: "Normal", installationId: "i", payload: { schemaVersion: 1, scanId: "s1", observedAt: NOW,
+    market: { faction: "alliance" }, query: { kind: "page" }, coverage: "items", items: [{ itemId: 1, quantity: 1, classId: 999 }] } } }), false, "class ids are bounded");
+  assert.deepEqual(scanItems({ items: [{ itemId: 2770, quantity: 2, classId: 7, subclassId: 7, prices: [[10, 2, 1]] }] }).map((entry) => [entry.classId, entry.subclassId]), [[7, 7]]);
 }));
 
 test("an item opened from search: its tooltip, its listing state, and the market it is from", () => withHttpApp(async () => {
