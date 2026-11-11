@@ -1,3 +1,5 @@
+import { itemClassIds, searchKey } from "./marketCategories.js";
+
 // Auction House market data.
 //
 // Raw evidence (snapshots and their per-item aggregates) is kept apart from
@@ -176,6 +178,40 @@ export const marketMigration = {
         PRIMARY KEY(item_id, day)
       );
     `);
+  },
+};
+
+// Version 18: the Auction House searches every item the website knows, not
+// only items a market has listed. Additive only.
+//
+// - market_item_meta becomes the Auction House's item index: every known
+//   item, filled from the game data the website has (in bounded batches
+//   after startup, see syncMarketCatalogInDatabase), not only items a
+//   market has seen.
+// - search_name: the name with case, accents and punctuation folded, so
+//   "raiders chestpiece" finds "Raider's Chestpiece".
+// - item_subclass_id: with item_class_id, the game's ids the category tree
+//   (marketCategories.js) is built from.
+export const marketCatalogMigration = {
+  version: 18,
+  name: "auction_house_catalog_search",
+  up(db) {
+    db.exec(`
+      ALTER TABLE market_item_meta ADD COLUMN item_subclass_id INTEGER;
+      ALTER TABLE market_item_meta ADD COLUMN search_name TEXT NOT NULL DEFAULT '';
+      ALTER TABLE market_variant_names ADD COLUMN search_name TEXT NOT NULL DEFAULT '';
+      CREATE INDEX market_item_meta_search_idx ON market_item_meta(search_name);
+      CREATE INDEX market_item_meta_class_id_idx ON market_item_meta(item_class_id, item_subclass_id);
+    `);
+    // Rows the Auction House already has. Names and classes come from what
+    // was stored; nothing is looked up or invented here.
+    const meta = db.prepare("UPDATE market_item_meta SET search_name = ?, item_class_id = ?, item_subclass_id = ? WHERE item_id = ?");
+    for (const row of db.prepare("SELECT item_id, name, item_class, item_class_id, item_subclass FROM market_item_meta").all()) {
+      const ids = itemClassIds({ classId: row.item_class_id, className: row.item_class || "", subclassName: row.item_subclass || "" });
+      meta.run(searchKey(row.name), ids.classId, ids.subclassId, row.item_id);
+    }
+    const variant = db.prepare("UPDATE market_variant_names SET search_name = ? WHERE item_key = ?");
+    for (const row of db.prepare("SELECT item_key, name FROM market_variant_names").all()) variant.run(searchKey(row.name), row.item_key);
   },
 };
 
