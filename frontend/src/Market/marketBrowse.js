@@ -65,6 +65,42 @@ export function storeOpenCategories(keys, storage = globalThis.sessionStorage) {
   try { storage?.setItem(TREE_KEY, JSON.stringify([...keys].slice(0, 40))) } catch { /* a convenience */ }
 }
 
+// Auction houses per server ---------------------------------------------------------
+
+const FACTION_LABELS = { alliance: 'Alliance', horde: 'Horde', neutral: 'Blackwater' }
+
+// The dashboard's server key ("us:normal") of an in-game auction house.
+export function marketServer(market) {
+  return market?.kind === 'client_house' && market.realm ? `${String(market.region || '').toLowerCase()}:${market.realm.toLowerCase()}` : ''
+}
+
+function count(market) {
+  return `${(market.items || 0).toLocaleString('en-US')} listed`
+}
+
+// The houses to offer: with a server chosen, that server's Alliance, Horde
+// and Blackwater houses, then Blizzard's houses linked to it or not yet
+// matched to any server. Without one (or with no data from it), every house.
+export function marketChoices(markets = [], server = '') {
+  const game = markets.filter((market) => market.kind === 'client_house')
+  const api = markets.filter((market) => market.kind === 'api_house')
+  const serversOf = new Map(api.map((house) => [house.marketKey, new Set(game.filter((market) => market.linkedMarketKey === house.marketKey).map(marketServer))]))
+  const byServer = new Map()
+  for (const market of game) {
+    const key = marketServer(market)
+    if (!byServer.has(key)) byServer.set(key, { label: market.realm, markets: [] })
+    byServer.get(key).markets.push({ ...market, label: `${market.realm} · ${FACTION_LABELS[market.faction] || market.faction} · ${count(market)}` })
+  }
+  const order = (list) => list.sort((a, b) => Object.keys(FACTION_LABELS).indexOf(a.faction) - Object.keys(FACTION_LABELS).indexOf(b.faction))
+  const otherServers = Boolean(server) && !byServer.has(server) && markets.length > 0
+  const servers = server && byServer.has(server) ? [byServer.get(server)] : [...byServer.values()].sort((a, b) => a.label.localeCompare(b.label))
+  const houses = api.filter((house) => !server || otherServers || !serversOf.get(house.marketKey).size || serversOf.get(house.marketKey).has(server))
+    .map((house) => ({ ...house, label: `${house.name} · ${count(house)}` }))
+  const groups = [...servers.map((entry) => ({ label: entry.label, markets: order(entry.markets) })),
+    ...(houses.length ? [{ label: 'Blizzard auction houses', markets: houses }] : [])]
+  return { groups, keys: groups.flatMap((group) => group.markets.map((market) => market.marketKey)), otherServers }
+}
+
 // Inspectors ------------------------------------------------------------------------
 
 export const INSPECTOR_SIZE = Object.freeze({ width: 400, height: 540, minWidth: 300, minHeight: 200, margin: 8, title: 34, cascade: 30 })
@@ -109,7 +145,10 @@ function topZ(windows) {
 export function openInspector(windows, item, viewport) {
   const id = inspectorId(item)
   const existing = windows.find((win) => win.id === id)
-  if (existing) return { windows: raiseInspector(windows.map((win) => (win.id === id ? { ...win, collapsed: false } : win)), id), id, existed: true }
+  if (existing) {
+    const opened = windows.map((win) => (win.id === id ? { ...win, collapsed: false, ...(item.tab ? { tab: item.tab } : {}) } : win))
+    return { windows: raiseInspector(opened, id), id, existed: true }
+  }
   let next = windows
   if (next.length >= MAX_INSPECTORS) {
     const oldest = [...next].filter((win) => !win.pinned).sort((a, b) => (a.z || 0) - (b.z || 0))[0]
@@ -117,7 +156,7 @@ export function openInspector(windows, item, viewport) {
   }
   const placed = cascadePosition(next.length, viewport)
   const win = { id, itemId: Number(item.itemId), itemKey: item.itemKey || '', name: item.name || '', qualityId: item.qualityId ?? null,
-    ...placed, z: topZ(next) + 1, collapsed: false, pinned: false }
+    ...placed, z: topZ(next) + 1, collapsed: false, pinned: false, tab: item.tab || 'overview' }
   return { windows: [...next, win], id, existed: false }
 }
 

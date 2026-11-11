@@ -128,3 +128,34 @@ test('open windows and category branches are remembered for the browser session,
   storeOpenCategories(new Set(['trade-goods', 'armor']), storage)
   assert.deepEqual(readOpenCategories(storage), ['trade-goods', 'armor'])
 })
+
+test('the auction houses offered follow the chosen server', async () => {
+  const { marketChoices, marketServer } = await import('../src/Market/marketBrowse.js')
+  const { resolveMarket } = await import('../src/Market/marketFormat.js')
+  const markets = [
+    { marketKey: 'game:us:normal:horde', kind: 'client_house', region: 'us', realm: 'Normal', faction: 'horde', items: 5, lastCheckedAt: 10 },
+    { marketKey: 'game:us:normal:alliance', kind: 'client_house', region: 'us', realm: 'Normal', faction: 'alliance', items: 40, lastCheckedAt: 20, linkedMarketKey: 'api:us:house-113' },
+    { marketKey: 'game:us:hardcore:alliance', kind: 'client_house', region: 'us', realm: 'Hardcore', faction: 'alliance', items: 9, lastCheckedAt: 30 },
+    { marketKey: 'api:us:house-113', kind: 'api_house', region: 'us', name: 'US Alliance (113)', faction: 'alliance', items: 900, lastCheckedAt: 40 },
+    { marketKey: 'api:us:house-116', kind: 'api_house', region: 'us', name: 'US Horde (116)', faction: 'horde', items: 800, lastCheckedAt: 40 },
+  ]
+  assert.equal(marketServer(markets[0]), 'us:normal')
+  const normal = marketChoices(markets, 'us:normal')
+  assert.deepEqual(normal.groups.map((group) => group.label), ['Normal', 'Blizzard auction houses'])
+  assert.deepEqual(normal.groups[0].markets.map((market) => market.label), ['Normal · Alliance · 40 listed', 'Normal · Horde · 5 listed'], 'Alliance, Horde, Blackwater order')
+  assert.deepEqual(normal.keys, ['game:us:normal:alliance', 'game:us:normal:horde', 'api:us:house-113', 'api:us:house-116'], 'houses linked elsewhere stay out')
+  assert.equal(normal.otherServers, false)
+  assert.ok(!marketChoices(markets, 'us:hardcore').keys.includes('api:us:house-113'), 'a house linked to another server is not offered')
+  assert.equal(marketChoices(markets, 'us:nowhere').otherServers, true, 'no data from the server: everything, said so')
+  assert.equal(marketChoices(markets, '').keys.length, 5)
+  // The house shown: the link's, else the remembered one on this server, else this server's freshest.
+  assert.equal(resolveMarket(markets, 'game:us:hardcore:alliance', '', normal.keys), 'game:us:hardcore:alliance')
+  assert.equal(resolveMarket(markets, '', 'game:us:hardcore:alliance', normal.keys), 'game:us:normal:alliance', 'a house remembered from another server is not used: this server houses come first')
+  assert.equal(resolveMarket(markets, '', 'game:us:normal:horde', normal.keys), 'game:us:normal:horde')
+})
+
+test('a link to an item\'s history opens its window on History', () => {
+  const { windows } = openInspector([], { itemId: 2589, tab: 'history' }, screen)
+  assert.equal(windows[0].tab, 'history')
+  assert.equal(openInspector(windows, { itemId: 2589, tab: 'overview' }, screen).windows[0].tab, 'overview')
+})

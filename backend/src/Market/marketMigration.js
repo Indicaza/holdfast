@@ -192,6 +192,8 @@ export const marketMigration = {
 //   "raiders chestpiece" finds "Raider's Chestpiece".
 // - item_subclass_id: with item_class_id, the game's ids the category tree
 //   (marketCategories.js) is built from.
+// - lookup_at: when an auctioned item without a name or class was last
+//   looked up in Blizzard's item API.
 export const marketCatalogMigration = {
   version: 18,
   name: "auction_house_catalog_search",
@@ -200,6 +202,9 @@ export const marketCatalogMigration = {
       ALTER TABLE market_item_meta ADD COLUMN item_subclass_id INTEGER;
       ALTER TABLE market_item_meta ADD COLUMN search_name TEXT NOT NULL DEFAULT '';
       ALTER TABLE market_variant_names ADD COLUMN search_name TEXT NOT NULL DEFAULT '';
+      -- When Blizzard's item API was last asked about an item the
+      -- Auction House lists but cannot name (see resolveMarketItemNames).
+      ALTER TABLE market_item_meta ADD COLUMN lookup_at INTEGER;
       CREATE INDEX market_item_meta_search_idx ON market_item_meta(search_name);
       CREATE INDEX market_item_meta_class_id_idx ON market_item_meta(item_class_id, item_subclass_id);
     `);
