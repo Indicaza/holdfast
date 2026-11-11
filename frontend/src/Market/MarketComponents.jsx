@@ -14,7 +14,7 @@ import {
   formatDateTime,
   postingSuggestion,
 } from './marketFormat.js'
-import { marketWrite, useMarketResource } from './useMarket.js'
+import { marketWrite, useItemHistory, useItemMarket, useMarketResource } from './useMarket.js'
 import './Market.css'
 
 export function Coins({ value, muted = false, compact = false }) {
@@ -232,8 +232,38 @@ export function Evidence({ evidence = [], basis }) {
   )
 }
 
-function variantQuery(itemKey) {
-  return itemKey ? `&key=${encodeURIComponent(itemKey)}` : ''
+// Medians, ranges, volatility and supply, each with its window and basis.
+export function MetricsTable({ metrics }) {
+  if (!metrics) return null
+  const row = (label, value, note) => <tr><th scope="row">{label}</th><td className="gw-col-num">{value}</td><td className="gw-small gw-muted">{note}</td></tr>
+  return (
+    <table className="gw-table gw-table--dense gw-ahf__metrics">
+      <tbody>
+        {row('Change, 24 h', <Change pct={metrics.change24h.pct} />, metrics.change24h.reason || `vs ${formatDateTime(metrics.change24h.at)}`)}
+        {row('Median, 7 days', metrics.median7d.value ? <Coins value={metrics.median7d.value} /> : '—', metrics.median7d.reason || `${metrics.median7d.basis}, ${metrics.median7d.samples} hours`)}
+        {row('Median, 30 days', metrics.median30d.value ? <Coins value={metrics.median30d.value} /> : '—', metrics.median30d.reason || `${metrics.median30d.basis}, ${metrics.median30d.samples} days`)}
+        {row('Range, 7 days', metrics.range7d ? <><Coins value={metrics.range7d.low} compact /> – <Coins value={metrics.range7d.high} compact /></> : '—', metrics.range7d ? 'lowest ask seen to highest typical ask' : 'no observations')}
+        {row('Range, 30 days', metrics.range30d ? <><Coins value={metrics.range30d.low} compact /> – <Coins value={metrics.range30d.high} compact /></> : '—', metrics.range30d ? `${metrics.range30d.samples} days` : 'no observations')}
+        {row('Now vs typical', <Change pct={metrics.vsTypical.pct} />, metrics.vsTypical.basis ? `typical ask vs ${metrics.vsTypical.basis}` : 'not enough history')}
+        {row('Volatility', metrics.volatility30d.value === null ? '—' : `${Math.round(metrics.volatility30d.value * 100)}% / day`, metrics.volatility30d.reason || `${metrics.volatility30d.level}; ${metrics.volatility30d.basis}`)}
+        {row('Supply vs 7 days', <Change pct={metrics.supply.changePct} />, metrics.supply.median7d !== null ? `${metrics.supply.quantity?.toLocaleString('en-US')} now, median ${metrics.supply.median7d.toLocaleString('en-US')}` : 'not enough history')}
+        {row('Auctions vs 7 days', <Change pct={metrics.supply.listingsChangePct} />, metrics.supply.listingsMedian7d !== null ? `${metrics.supply.listings} now, median ${metrics.supply.listingsMedian7d}` : '—')}
+        {row('Coverage', `${metrics.coverage.hours7d}/168 h · ${metrics.coverage.days30d}/30 d`, 'hours and days with at least one complete observation')}
+      </tbody>
+    </table>
+  )
+}
+
+// What a row or an item without listings here says: "None listed" when a
+// complete view of the house had none, "Not seen" when the market has not
+// been seen completely enough to know.
+export function ListingState({ listing, observedAt, note, ageSeconds }) {
+  if (listing === 'listed') return null
+  if (listing === 'none_listed') {
+    return <span className="gw-listing gw-listing--none" title={`${note || 'No listings in a complete view of this auction house.'}${observedAt ? ` Checked ${formatDateTime(observedAt)}.` : ''}`}>
+      No listings{ageSeconds !== null && ageSeconds !== undefined ? <small> · {formatAgeShort(ageSeconds)}</small> : null}</span>
+  }
+  return <span className="gw-listing gw-listing--unknown" title={note || 'This market has not been seen completely: it may be listed.'}>Not seen here</span>
 }
 
 // One item in one market: price and why, the cheapest listings,
@@ -241,14 +271,10 @@ function variantQuery(itemKey) {
 // and the item catalog.
 export function ItemMarketPanel({ itemId, itemKey = '', marketKey: requestedMarket, showHistory = true, onFavoriteChange, range = '7d', onRange,
   onVariant, historyHref = null, stackPrices = false }) {
-  const detail = useMarketResource(itemId ? `/api/market/items/${itemId}?market=${encodeURIComponent(requestedMarket || '')}${variantQuery(itemKey)}` : '')
-  // Without a chosen market, the server picks one that has the item.
-  const marketKey = requestedMarket || detail.data?.marketKey || ''
-  const focusKey = detail.data?.itemKey || itemKey
-  const analysis = useMarketResource(itemId && marketKey ? `/api/market/items/${itemId}/analysis?market=${encodeURIComponent(marketKey)}${variantQuery(focusKey)}` : '')
+  const { detail, analysis, marketKey, focusKey } = useItemMarket({ itemId, itemKey, marketKey: requestedMarket })
   const [localRange, setLocalRange] = useState(range)
   const chartRange = onRange ? range : localRange
-  const history = useMarketResource(itemId && marketKey && showHistory ? `/api/market/items/${itemId}/history?market=${encodeURIComponent(marketKey)}&range=${chartRange}${variantQuery(focusKey)}` : '')
+  const history = useItemHistory({ itemId, itemKey: focusKey, marketKey, range: chartRange, enabled: showHistory })
   const [favorite, setFavorite] = useState(null)
   if (detail.status === 'loading') return <div className="gw-mpanel" aria-busy="true"><div className="gw-skeleton"><div className="gw-skeleton__row" /><div className="gw-skeleton__row" /></div></div>
   if (detail.status === 'error') return <div className="gw-mpanel"><p className="gw-muted">Market data could not be loaded. <button type="button" className="gw-btn gw-btn--xs" onClick={detail.reload}>Retry</button></p></div>
@@ -268,6 +294,7 @@ export function ItemMarketPanel({ itemId, itemKey = '', marketKey: requestedMark
         {[data.item.itemClass, data.item.itemSubclass, data.item.requiredLevel ? `Requires level ${data.item.requiredLevel}` : null,
           data.item.itemLevel ? `Item level ${data.item.itemLevel}` : null, data.item.stackCount > 1 ? `Stacks to ${data.item.stackCount}` : null].filter(Boolean).join(' · ')}
       </p>
+      {data.market?.chosen === 'server' ? <p className="gw-small gw-muted">Prices from {data.market.name}, a market where this item was seen.</p> : null}
       {data.variants.length > 1 ? (
         <label className="gw-mpanel__variant">
           <span>Version</span>

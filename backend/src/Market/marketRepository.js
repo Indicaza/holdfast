@@ -843,6 +843,7 @@ export function readItemMarket({ itemId, itemKey = "", marketKey = "", now = now
       market: marketRow ? { marketKey: marketRow.market_key, name: marketRow.name, kind: marketRow.kind, region: marketRow.region, chosen: text(marketKey, 160) ? "requested" : "server" } : null,
       listing: listedHere ? "listed" : noneAt ? "none_listed" : "unknown",
       listingObservedAt: listedHere ? null : noneAt,
+      listingAgeSeconds: !listedHere && noneAt ? Math.max(0, now - noneAt) : null,
       coverage,
       itemKey: focus?.item_key || `i:${id}`,
       variants: here.map((row) => ({ ...summaryFromRow(row, now), label: row.item_key === `i:${id}` ? "Base item" : variantLabel(row.item_key, row.variant_name) })),

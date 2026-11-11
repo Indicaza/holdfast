@@ -186,7 +186,7 @@ export function removeShoppingListItem({ memberId, listId, itemId }) {
 
 // Saved searches ----------------------------------------------------------------
 
-const SEARCH_KEYS = ["q", "category", "sort", "direction", "market"];
+const SEARCH_KEYS = ["q", "category", "sub", "sort", "direction", "market"];
 
 export function readSavedSearches({ memberId }) {
   return withGuildDatabase((db) => ({

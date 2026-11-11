@@ -5,7 +5,7 @@
 export const AUCTION_TABS = Object.freeze([
   { id: 'browse', label: 'Browse', hint: 'Search the market', key: '1' },
   { id: 'appraiser', label: 'Appraiser', hint: 'What is it worth?', key: '2' },
-  { id: 'shopping', label: 'Shopping', hint: 'Shopping lists', key: '3' },
+  { id: 'shopping', label: 'Shopping Lists', hint: 'Shopping lists', key: '3' },
   { id: 'favorites', label: 'Favorites', hint: 'Items you watch', key: '4' },
   { id: 'history', label: 'History', hint: 'Price and supply over time', key: '5' },
 ])
@@ -13,7 +13,9 @@ export const ADMIN_TAB = Object.freeze({ id: 'diagnostics', label: 'Diagnostics'
 // Links from before the redesign keep working.
 const TAB_ALIASES = { buy: 'browse', sell: 'appraiser', lists: 'shopping' }
 
-export const SORTS = Object.freeze(['name', 'price', 'typical', 'quantity', 'listings', 'age', 'change', 'ilvl', 'level', 'pct'])
+// An empty sort lets the server choose: relevance for a search, name for
+// browsing.
+export const SORTS = Object.freeze(['relevance', 'name', 'price', 'typical', 'quantity', 'listings', 'age', 'change', 'ilvl', 'level', 'pct', 'confidence'])
 export const RANGES = Object.freeze([
   { id: '24h', label: '24h' }, { id: '7d', label: '7d' }, { id: '30d', label: '30d' },
   { id: '90d', label: '90d' }, { id: '1y', label: '1y' }, { id: 'all', label: 'All' },
@@ -23,8 +25,8 @@ export const QUALITIES = Object.freeze([
   { id: '3', label: 'Rare' }, { id: '4', label: 'Epic' }, { id: '5', label: 'Legendary' },
 ])
 
-const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'quality', 'minLevel', 'maxLevel', 'below', 'sort', 'dir', 'page', 'item', 'key', 'list', 'range', 'stack']
-const DEFAULTS = { tab: 'browse', sort: 'name', dir: 'asc', page: 1, range: '7d', below: false, stack: false }
+const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'quality', 'minLevel', 'maxLevel', 'listed', 'below', 'sort', 'dir', 'page', 'item', 'key', 'list', 'range', 'stack']
+const DEFAULTS = { tab: 'browse', sort: '', dir: 'asc', page: 1, range: '7d', below: false, listed: false, stack: false }
 
 function level(value) {
   return /^\d{1,3}$/.test(String(value || '')) ? String(Math.min(100, Number(value))) : ''
@@ -35,7 +37,7 @@ export function readAuctionState(queryString = '') {
   const state = Object.fromEntries(STATE_KEYS.map((key) => [key, params.get(key) || '']))
   state.tab = TAB_ALIASES[state.tab] || state.tab
   state.tab = [...AUCTION_TABS, ADMIN_TAB].some((tab) => tab.id === state.tab) ? state.tab : 'browse'
-  state.sort = SORTS.includes(state.sort) ? state.sort : 'name'
+  state.sort = SORTS.includes(state.sort) ? state.sort : ''
   state.dir = state.dir === 'desc' ? 'desc' : 'asc'
   state.page = Math.max(1, Math.trunc(Number(state.page)) || 1)
   state.item = /^\d+$/.test(state.item) ? Number(state.item) : null
@@ -46,6 +48,12 @@ export function readAuctionState(queryString = '') {
   state.minLevel = level(state.minLevel)
   state.maxLevel = level(state.maxLevel)
   state.below = state.below === '1'
+  state.listed = state.listed === '1'
+  state.q = state.q.slice(0, 100)
+  // Keys of the server's category tree (older links used class names,
+  // which the server still resolves).
+  state.category = state.category.slice(0, 80)
+  state.sub = state.sub.slice(0, 80)
   state.stack = state.stack === '1'
   return state
 }
