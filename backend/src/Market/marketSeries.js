@@ -66,6 +66,14 @@ export function seriesWriter(db) {
 
 // Weekly rows from daily rows, for the weeks that changed recently. Safe to
 // run again: each week is recomputed from its days.
+// How far back the weekly roll-up reads days: two weeks, or back to the
+// last roll-up after a pause (a server that was down), never past the days
+// still kept.
+export function rollUpWindowDays(lastRanAt, now) {
+  if (!Number.isFinite(lastRanAt) || lastRanAt <= 0 || lastRanAt > now) return 15;
+  return Math.min(DAILY_DAYS, Math.max(15, Math.ceil((now - lastRanAt) / 86400) + 8));
+}
+
 export function rollUpWeeksInDatabase(db, now, { sinceDays = 15 } = {}) {
   const since = weekOf(dayOf(now - sinceDays * 86400));
   const rows = db.prepare(`SELECT * FROM market_series_daily WHERE day >= ? ORDER BY market_key, item_key, source_type, day`).all(since);

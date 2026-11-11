@@ -21,6 +21,7 @@ From atlas 3046538 (`auctionhouse-*` UI pieces):
 - `input-left`, `input-middle`, `input-right`: auctionhouse-ui-inputfield-*
 - `filter-clear`: auctionhouse-ui-filter-redx
 - `clock`: auctionhouse-icon-clock
+- `spinner`: auctionhouse-ui-loadingspinner
 
 From atlas 3054898 (`auctionhouse-background-*`):
 
@@ -42,3 +43,9 @@ Whole files:
 - `scrollbar-knob`, `scroll-up`, `scroll-down`: Interface/Buttons/UI-ScrollBar-* (130849, 130857, 130853)
 - `portrait-coin`: Interface/Icons/INV_Misc_Coin_01 (133784). The game shows the
   auctioneer's portrait here; a website has no NPC to show, so the coin stands in.
+
+`button-up`, `button-down`, `column-tabs`, `filter-bg` and the tabs are cropped
+to the texture coordinates their templates use (UIPanelButtonTemplate
+0–0.625 × 0–0.6875; WhoFrame-ColumnTabs 0–0.96875 × 0–0.59375;
+AuctionCategoryButtonTemplate 0–0.53125 × 0–0.625; the tabs to their painted
+area), so the stylesheet can nine-slice them with `border-image`.

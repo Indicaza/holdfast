@@ -65,7 +65,7 @@ export function scanItems(payload) {
   const items = [];
   for (const raw of luaList(payload.items) || []) {
     const variant = { itemId: raw.itemId, suffix: raw.suffix || 0 };
-    const points = (luaList(raw.prices ?? []) || []).map((point) => ({ ...variant, unitPrice: point[0], quantity: point[1], count: point[2] || 1 }));
+    const points = (luaList(raw.prices ?? []) || []).map((point) => ({ ...variant, unitPrice: point[0], quantity: point[1], count: point[2] || 1, total: true }));
     let aggregate = points.length ? aggregateListings(points)[0] : aggregateSummaryRow({ ...variant, quantity: raw.quantity, minUnitBuyout: raw.minUnitBuyout, listings: raw.listings });
     if (!aggregate) continue;
     aggregate = { ...aggregate, quantity: raw.quantity, listings: positiveInteger(raw.listings) ?? aggregate.listings,

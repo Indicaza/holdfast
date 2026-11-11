@@ -1,25 +1,16 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { GameTooltipBody } from '../Intelligence/GameTooltip.jsx'
-import { ItemLabel } from '../Player/ui.jsx'
+import { ItemHeader, ItemPrices } from './AuctionItemDetail.jsx'
+import { AuctionItem } from './AuctionParts.jsx'
 import { MarketCharts } from './MarketCharts.jsx'
-import {
-  FavoriteButton,
-  Freshness,
-  ListingState,
-  MarketSummary,
-  MetricsTable,
-  PriceLadder,
-  SignalChips,
-} from './MarketComponents.jsx'
-import { clampWindow, stackOrder } from './marketBrowse.js'
+import { Freshness, MetricsTable, SignalChips } from './MarketComponents.jsx'
+import { clampWindow, itemFacts, stackOrder } from './marketBrowse.js'
 import { viewport } from './useInspectors.js'
-import { bindLabel, formatDateTime } from './marketFormat.js'
 import { useItemHistory, useItemMarket } from './useMarket.js'
 
-const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
-const TABS = [['overview', 'Overview'], ['history', 'History']]
+// "overview" is the Prices tab (the stored name older windows keep).
+const TABS = [['overview', 'Prices'], ['history', 'History']]
 
 // Moves or resizes a window by pointer. The window follows the pointer
 // through its style; the position is stored once, when the pointer lets go,
@@ -96,7 +87,7 @@ const InspectorWindow = memo(function InspectorWindow({ win, order, focusAt, mar
       <header className="gw-insp__bar" onPointerDown={(event) => { if (!event.target.closest('button')) gesture(event, 'move') }}
         onDoubleClick={(event) => { if (!event.target.closest('button')) update(win.id, { collapsed: !win.collapsed }) }}
         tabIndex={0} onKeyDown={onTitleKey} title="Drag to move · arrows move · Shift+arrows resize · double-click to collapse">
-        <ItemLabel item={{ itemId: win.itemId, name: title, qualityId: win.qualityId }} size={18} tooltip={false} />
+        <AuctionItem item={{ itemId: win.itemId, name: title, qualityId: win.qualityId }} size={18} />
         <span className="gw-insp__spacer" />
         <button type="button" className={`gw-insp__icon${win.pinned ? ' is-on' : ''}`} aria-pressed={win.pinned} aria-label={win.pinned ? 'Unpin' : 'Pin on top'}
           title={win.pinned ? 'Pinned: stays on top and through "Close all"' : 'Pin: keep on top and through "Close all"'} onClick={() => update(win.id, { pinned: !win.pinned })}>⌖</button>
@@ -117,74 +108,42 @@ const InspectorWindow = memo(function InspectorWindow({ win, order, focusAt, mar
   )
 })
 
-// What one item inspector shows: the tooltip, the facts, this market's
-// price and supply, and (on their tabs) history, crafting and sources.
-// The same item endpoints and components as the item panel.
+// What one item window shows: the item's header (icon, name, tooltip,
+// favorite, add to a list), then Prices (the figures and every price level
+// on this house) or History. The same item endpoints as the Sell tab.
 const InspectorContent = memo(function InspectorContent({ itemId, itemKey, marketKey, marketName, tab, onTab, favorite, onFavoritesChange, onIdentity, onOpenVariant }) {
-  const { detail, analysis, focusKey, here } = useItemMarket({ itemId, itemKey, marketKey })
+  const market = useItemMarket({ itemId, itemKey, marketKey })
+  const { detail, analysis, focusKey, here } = market
   const [range, setRange] = useState('7d')
   const history = useItemHistory({ itemId, itemKey: focusKey, marketKey, range, enabled: tab === 'history' })
   const data = detail.data
   useEffect(() => {
     if (data?.item?.name) onIdentity({ name: here?.variantName || data.item.name, qualityId: data.item.qualityId })
   }, [data, here, onIdentity])
-  if (detail.status === 'loading') return <div className="gw-skeleton" aria-busy="true"><div className="gw-skeleton__row" /><div className="gw-skeleton__row" /><div className="gw-skeleton__row" /></div>
-  if (detail.status === 'error' || detail.status === 'missing') return <p className="gw-muted">This item could not be loaded. <button type="button" className="gw-btn gw-btn--xs" onClick={detail.reload}>Retry</button></p>
+  if (detail.status === 'loading') return <div className="ah-loading" aria-label="Loading">Loading</div>
+  if (detail.status === 'error' || detail.status === 'missing') return <div className="ah-empty">This item could not be loaded. <button type="button" className="ah-button" onClick={detail.reload}>Retry</button></div>
   if (!data) return null
   const item = data.item
-  const metrics = analysis.data?.metrics
-  const facts = [QUALITY_NAMES[item.qualityId], item.itemLevel ? `Item level ${item.itemLevel}` : null, item.requiredLevel ? `Requires level ${item.requiredLevel}` : null,
-    item.bindType !== null && item.bindType !== undefined ? bindLabel(item.bindType) : null, [item.itemClass, item.itemSubclass].filter(Boolean).join(' · ') || null].filter(Boolean)
   return (
-    <div className="gw-insp__content">
-      <div className="gw-insp__head">
-        <ItemLabel item={here?.variantName ? { ...item, name: here.variantName } : item} size={36} tooltip={false} />
-        <span className="gw-insp__actions">
-          <FavoriteButton itemId={item.itemId} favorite={favorite} size="md" onChange={onFavoritesChange} />
-        </span>
-      </div>
-      <p className="gw-insp__facts">{facts.join(' · ')}</p>
-      <div className="gw-insp__price">
-        <span className="gw-insp__market" title={marketKey}>{marketName}</span>
-        {here && here.quantity > 0 ? <Freshness price={here} /> : <ListingState listing={data.listing} observedAt={data.listingObservedAt} note={data.coverage?.note}
-          ageSeconds={data.listingAgeSeconds} />}
-      </div>
-      <nav className="gw-insp__tabs" role="tablist" aria-label="Inspector sections">
+    <div className="ah-insp">
+      <ItemHeader item={item} variantName={here?.variantName || ''} favorite={favorite} onFavoritesChange={onFavoritesChange} />
+      <p className="ah-facts">{itemFacts(item)}</p>
+      <p className="ah-insp__house"><span title={marketKey}>{marketName}</span>{here && here.quantity > 0 ? <> · <Freshness price={here} /></> : null}</p>
+      <nav className="ah-insp__tabs" role="tablist" aria-label="Item window sections">
         {TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'is-active' : ''} onClick={() => onTab(id)}>{label}</button>)}
       </nav>
       {tab === 'overview' ? (
-        <div className="gw-insp__panel" role="tabpanel" aria-label="Overview">
-          {here ? <MarketSummary summary={here} metrics={metrics} /> : (
-            <p className="gw-muted gw-small">{data.listing === 'none_listed' ? `No listings in ${marketName} at the last complete check${data.listingObservedAt ? ` (${formatDateTime(data.listingObservedAt)})` : ''}.`
-              : `Not seen in ${marketName} yet. ${data.coverage?.note || ''} Nothing is estimated.`}</p>
-          )}
+        <div className="ah-insp__panel" role="tabpanel" aria-label="Prices">
+          <ItemPrices market={market} marketName={marketName} onOpenVariant={onOpenVariant} />
           <SignalChips signals={analysis.data?.signals} />
-          {data.variants.length > 1 ? (
-            <div className="gw-insp__variants">
-              <span className="gw-small gw-muted">Versions here</span>
-              <ul>{data.variants.map((entry) => (
-                <li key={entry.itemKey}>
-                  <button type="button" className={entry.itemKey === focusKey ? 'is-active' : ''} onClick={() => onOpenVariant({ itemId: item.itemId, itemKey: entry.itemKey === `i:${item.itemId}` ? '' : entry.itemKey, name: entry.variantName || item.name, qualityId: item.qualityId })}>
-                    {entry.label}<small>{entry.quantity} listed</small>
-                  </button>
-                </li>
-              ))}</ul>
-            </div>
-          ) : null}
-          <div className="gw-insp__tooltip game-tooltip" aria-label="Item tooltip">
-            {item.tooltipLines?.length ? <GameTooltipBody item={{ ...item, tooltipLines: item.tooltipLines }} />
-              : <><GameTooltipBody item={{ itemId: item.itemId, name: item.name, qualityId: item.qualityId }} /><p className="gw-small gw-muted">No player's game has described this item yet.</p></>}
-          </div>
-          {here?.pricePoints?.length ? <section className="gw-msec"><h3>Cheapest listings</h3><PriceLadder points={here.pricePoints} /></section> : null}
         </div>
-      ) : null}
-      {tab === 'history' ? (
-        <div className="gw-insp__panel" role="tabpanel" aria-label="History">
+      ) : (
+        <div className="ah-insp__panel" role="tabpanel" aria-label="History">
           <MarketCharts history={history.data} range={range} onRange={setRange} compact status={history.status} />
-          <MetricsTable metrics={metrics} />
-          <p className="gw-small gw-muted">{analysis.data?.disclaimer || 'Observed asking prices and listed supply, not sales.'}</p>
+          <MetricsTable metrics={analysis.data?.metrics} />
+          <p className="ah-prices__note">{analysis.data?.disclaimer || 'Observed asking prices and listed supply, not sales.'}</p>
         </div>
-      ) : null}
+      )}
     </div>
   )
 })

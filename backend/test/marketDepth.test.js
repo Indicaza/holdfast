@@ -135,3 +135,24 @@ test("Blizzard's item preview becomes tooltip lines, from its own display string
     ["30 Armor", ""], ["+5 Intellect", ""], ["Durability 25 / 25", ""], ["Requires Level 24", ""], ["Equip: Increases your skill in Fishing by 5.", ""]]);
   assert.deepEqual(previewTooltipLines({ name: "Linen Cloth" }), [], "no preview, no lines: nothing made up");
 });
+
+test("an in-game scan's price level is its total quantity across its auctions, not per auction", () => {
+  const [linen] = scanItems({ items: [{ itemId: 2589, quantity: 220, listings: 6, complete: true, prices: [[12, 200, 5], [15, 20, 1]] }] });
+  assert.deepEqual(linen.ladder, [[12, 200, 5], [15, 20, 1]]);
+  assert.equal(linen.minQuantity, 200);
+  assert.equal(linen.quantity, 220);
+  assert.equal(linen.ladderTruncated, false, "every listed item is in a level");
+  // Listings (Blizzard's API, the classic browse rows) still count each auction.
+  const [api] = aggregateListings([{ itemId: 2589, unitPrice: 12, quantity: 20, count: 3 }]);
+  assert.deepEqual(api.ladder, [[12, 60, 3]]);
+});
+
+test("weekly history catches up after maintenance was paused, within the days still kept", async () => {
+  const { rollUpWindowDays, DAILY_DAYS } = await import("../src/Market/marketSeries.js");
+  const now = 1_800_000_000;
+  assert.equal(rollUpWindowDays(undefined, now), 15, "first run: the last two weeks");
+  assert.equal(rollUpWindowDays(now - 86400, now), 15, "daily: the last two weeks");
+  assert.equal(rollUpWindowDays(now - 40 * 86400, now), 48, "after 40 days down: back to the last roll-up and its week");
+  assert.equal(rollUpWindowDays(now - 4000 * 86400, now), DAILY_DAYS, "never past the days kept");
+  assert.equal(rollUpWindowDays(now + 3600, now), 15, "a clock that went backwards");
+});

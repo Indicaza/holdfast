@@ -32,6 +32,7 @@ import {
   readSeriesInDatabase,
   refreshReferencePricesInDatabase,
   rollUpWeeksInDatabase,
+  rollUpWindowDays,
   seriesWriter,
 } from "./marketSeries.js";
 
@@ -492,8 +493,9 @@ export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
 
 // Daily work: weekly roll-ups, reference prices, names learned since.
 export function runMarketMaintenanceInDatabase(db, now = nowSeconds()) {
+  const lastRollUp = db.prepare("SELECT ran_at FROM market_maintenance WHERE name = 'rollup'").get()?.ran_at;
   const pruned = pruneMarketDataInDatabase(db, now);
-  const weeks = rollUpWeeksInDatabase(db, now);
+  const weeks = rollUpWeeksInDatabase(db, now, { sinceDays: rollUpWindowDays(lastRollUp, now) });
   const references = refreshReferencePricesInDatabase(db, now);
   const stale = db.prepare("SELECT item_id AS itemId FROM market_item_meta WHERE name_source IN ('', 'addon') LIMIT 5000").all();
   const names = ensureItemMetaInDatabase(db, stale, now);

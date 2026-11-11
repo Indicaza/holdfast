@@ -21,11 +21,13 @@ export function subscribeLocation(listener) {
   }
 }
 
-export function navigate(to, { replace = false, preserveScroll = false } = {}) {
+// `state` is kept with the history entry (a page can tag its own steps,
+// as the Auction House does for its Back and Forward buttons).
+export function navigate(to, { replace = false, preserveScroll = false, state = null } = {}) {
   const url = new URL(to, window.location.href)
   if (url.href === window.location.href) return
   const samePage = url.pathname === window.location.pathname && url.search === window.location.search
-  window.history[replace ? 'replaceState' : 'pushState'](null, '', url)
+  window.history[replace ? 'replaceState' : 'pushState'](state, '', url)
   // Existing listeners (hash views, modals) follow popstate.
   window.dispatchEvent(new PopStateEvent('popstate'))
   if (!samePage && !url.hash && !preserveScroll) window.scrollTo(0, 0)

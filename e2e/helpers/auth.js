@@ -26,6 +26,15 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  shopper: {
+    id: 'e2e-shopper',
+    username: 'e2e-shopper',
+    globalName: 'Sam Shopper',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   rival: {
     id: 'e2e-rival',
     username: 'e2e-rival',

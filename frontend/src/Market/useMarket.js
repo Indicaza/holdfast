@@ -39,11 +39,11 @@ export async function marketWrite(url, { method = 'PUT', body } = {}) {
 
 // The markets and the one the player is looking at: the URL's, else the
 // remembered one if it belongs to the chosen server, else that server's
-// freshest house.
-export function useMarkets(requested = '', server = '') {
+// house of the player's faction that has listings.
+export function useMarkets(requested = '', server = '', faction = '') {
   const markets = useMarketResource('/api/market/markets')
   const list = useMemo(() => markets.data?.markets || [], [markets.data])
-  const candidates = useMemo(() => marketChoices(list, server).keys, [list, server])
+  const candidates = useMemo(() => marketChoices(list, server, faction).keys, [list, server, faction])
   const marketKey = resolveMarket(list, requested, storedMarket(), candidates)
   useEffect(() => { if (marketKey) storeMarket(marketKey) }, [marketKey])
   return { status: markets.status, markets: list, marketKey, market: list.find((entry) => entry.marketKey === marketKey) || null, reload: markets.reload }

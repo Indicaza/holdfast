@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
-  BROWSE_COLUMNS,
   INSPECTOR_SIZE,
   MAX_INSPECTORS,
   cascadePosition,
@@ -12,17 +11,14 @@ import {
   nextSort,
   openInspector,
   raiseInspector,
-  readColumns,
   readInspectors,
   readOpenCategories,
   resetInspectors,
   rowId,
   stackOrder,
-  storeColumns,
   storeInspectors,
   storeOpenCategories,
   updateInspector,
-  visibleColumns,
 } from '../src/Market/marketBrowse.js'
 
 const screen = { width: 1440, height: 900 }
@@ -32,19 +28,9 @@ function memoryStorage() {
   return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)) }
 }
 
-test('the table shows the game\'s three columns; the rest are optional and remembered', () => {
-  assert.deepEqual(visibleColumns().map((column) => column.label), ['Price', 'Name', 'Available'])
-  assert.deepEqual(BROWSE_COLUMNS.filter((column) => column.optional).map((column) => column.id), ['level', 'ilvl', 'listings', 'age', 'pct', 'confidence'])
-  const storage = memoryStorage()
-  storeColumns(['pct', 'nonsense', 'level'], storage)
-  assert.deepEqual(readColumns(storage), ['pct', 'level'])
-  assert.deepEqual(visibleColumns(readColumns(storage)).map((column) => column.id), ['price', 'name', 'quantity', 'level', 'pct'])
-  assert.deepEqual(readColumns({ getItem: () => '{bad' }), [])
-})
-
 test('sorting: a new column starts the natural way, the same column flips', () => {
-  const price = BROWSE_COLUMNS.find((column) => column.id === 'price')
-  const available = BROWSE_COLUMNS.find((column) => column.id === 'quantity')
+  const price = { id: 'price', firstDir: 'asc' }
+  const available = { id: 'quantity', firstDir: 'desc' }
   assert.deepEqual(nextSort({ sort: '', dir: 'asc' }, price), { sort: 'price', dir: 'asc' }, 'cheapest first')
   assert.deepEqual(nextSort({ sort: 'price', dir: 'asc' }, price), { sort: 'price', dir: 'desc' })
   assert.deepEqual(nextSort({ sort: 'price', dir: 'desc' }, available), { sort: 'quantity', dir: 'desc' }, 'most available first')
@@ -143,6 +129,10 @@ test('the auction houses offered follow the chosen server', async () => {
   const normal = marketChoices(markets, 'us:normal')
   assert.deepEqual(normal.groups.map((group) => group.label), ['Normal', 'Blizzard auction houses'])
   assert.deepEqual(normal.groups[0].markets.map((market) => market.label), ['Normal · Alliance · 40 listed', 'Normal · Horde · 5 listed'], 'Alliance, Horde, Blackwater order')
+  assert.deepEqual(marketChoices(markets, 'us:normal', 'horde').groups[0].markets.map((market) => market.faction), ['horde', 'alliance'], "the player's faction first")
+  assert.equal(resolveMarket(markets, '', '', marketChoices(markets, 'us:normal', 'horde').keys), 'game:us:normal:horde', 'a Horde player opens the Horde house')
+  const empty = markets.map((market) => (market.marketKey === 'game:us:normal:horde' ? { ...market, items: 0 } : market))
+  assert.equal(resolveMarket(empty, '', '', marketChoices(empty, 'us:normal', 'horde').keys), 'game:us:normal:alliance', 'an empty house is passed over for one with listings')
   assert.deepEqual(normal.keys, ['game:us:normal:alliance', 'game:us:normal:horde', 'api:us:house-113', 'api:us:house-116'], 'houses linked elsewhere stay out')
   assert.equal(normal.otherServers, false)
   assert.ok(!marketChoices(markets, 'us:hardcore').keys.includes('api:us:house-113'), 'a house linked to another server is not offered')
@@ -158,4 +148,31 @@ test('a link to an item\'s history opens its window on History', () => {
   const { windows } = openInspector([], { itemId: 2589, tab: 'history' }, screen)
   assert.equal(windows[0].tab, 'history')
   assert.equal(openInspector(windows, { itemId: 2589, tab: 'overview' }, screen).windows[0].tab, 'overview')
+})
+
+test("the player's faction on a server comes from their most recent character's race", async () => {
+  const { factionForServer } = await import('../src/Market/marketBrowse.js')
+  const characters = [
+    { region: 'US', realm: 'Hardcore', race: 'Orc' },
+    { region: 'us', realm: 'Normal', race: 'Night Elf' },
+    { region: 'us', realm: 'Normal', race: 'Scourge' },
+  ]
+  assert.equal(factionForServer(characters, 'us:normal'), 'alliance', 'the most recent character on that server')
+  assert.equal(factionForServer(characters, 'us:hardcore'), 'horde')
+  assert.equal(factionForServer([{ region: 'us', realm: 'Normal', race: 'Undead' }], 'us:normal'), 'horde')
+  assert.equal(factionForServer([{ region: 'us', realm: 'Normal', race: '' }], 'us:normal'), '', 'unknown: no guess')
+  assert.equal(factionForServer([], 'us:normal'), '')
+})
+
+test('tooltips show what the game showed, else the known facts said to be incomplete', async () => {
+  const { tooltipItem, itemFacts } = await import('../src/Market/marketBrowse.js')
+  const lines = [{ left: 'Linen Cloth' }, { left: 'Max Stack: 20' }]
+  assert.deepEqual(tooltipItem({ itemId: 2589, name: 'Linen Cloth', tooltipLines: lines }).tooltipLines, lines)
+  const fallback = tooltipItem({ itemId: 2589, name: 'Linen Cloth', qualityId: 1, itemClass: 'Trade Goods', itemSubclass: 'Cloth', requiredLevel: 0 }).tooltipLines
+  assert.equal(fallback[0].left, 'Linen Cloth')
+  assert.deepEqual(fallback[1], { left: 'Trade Goods', right: 'Cloth' })
+  assert.match(fallback.at(-1).left, /full tooltip/, 'says the tooltip is incomplete')
+  assert.ok(!fallback.some((line) => /Requires Level 0/.test(line.left)), 'nothing invented')
+  assert.equal(itemFacts({ qualityId: 2, itemLevel: 20, requiredLevel: 15, bindType: 2, itemClass: 'Armor', itemSubclass: 'Mail' }),
+    'Uncommon · Item Level 20 · Requires Level 15 · Binds when equipped · Armor · Mail')
 })

@@ -123,7 +123,9 @@ function weightedPercentile(sorted, total, fraction) {
 
 // Listings → per-variant aggregates. A listing gives a unit price (copper per
 // item) or a stack buyout, which is divided by its quantity; never both
-// mixed. `count` lets a client send one row for several identical listings.
+// mixed. `count` lets a client send one row for several identical listings;
+// with `total`, the row is a price level instead: `quantity` items in all,
+// across `count` auctions (an in-game scan's price points).
 export function aggregateListings(listings = []) {
   const byKey = new Map();
   for (const listing of listings) {
@@ -134,9 +136,10 @@ export function aggregateListings(listings = []) {
     const entry = byKey.get(itemKey) || { itemKey, itemId: itemIdFromKey(itemKey), prices: [], quantity: 0, listings: 0, bidOnly: 0, minBid: null };
     const unit = copper(listing.unitPrice) ?? (copper(listing.buyout) !== null ? Math.round(copper(listing.buyout) / quantity) : null);
     const bid = copper(listing.bid);
-    entry.quantity += quantity * count;
+    const amount = listing.total === true ? quantity : quantity * count;
+    entry.quantity += amount;
     entry.listings += count;
-    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: quantity * count, count });
+    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: amount, count });
     else entry.bidOnly += count;
     if (bid !== null && bid > 0) {
       const unitBid = Math.round(bid / quantity);
