@@ -285,8 +285,16 @@ test('public icons resolve only observed static file IDs without opening private
     assert.equal((await request('/api/game-data/v1/icons/nope')).status, 400);
     assert.equal((await request('/api/game-data/v1/icons/999')).status, 404);
     assert.equal(calls, 1);
-    mode = 'missing'; assert.equal((await request('/api/game-data/v1/icons/132889')).status, 404);
-    mode = 'error'; assert.equal((await request('/api/game-data/v1/icons/132889')).status, 404);
+    // A found icon is remembered (icon registry): Blizzard is not asked again.
+    mode = 'missing'; assert.equal((await request('/api/game-data/v1/icons/132889')).status, 302);
+    assert.equal(calls, 1);
+    const other = structuredClone(definition);
+    other.payload.item = { ...other.payload.item, itemId: 2592, name: 'Wool Cloth', iconFileDataId: 132911 };
+    other.payload.reference = 'item:2592';
+    ingest(other);
+    assert.equal((await request('/api/game-data/v1/icons/132911')).status, 404);
+    mode = 'error'; assert.equal((await request('/api/game-data/v1/icons/132911')).status, 404, 'still missing, and not asked again before its back-off');
+    assert.equal(calls, 2);
     assert.equal((await request('/api/intelligence/media/icon/132889')).status, 401);
   }, { publicGameDataOptions: { iconMediaResolver: { resolve() { calls += 1; if (mode === 'error') throw new Error('offline'); return mode === 'ready' ? 'https://render.worldofwarcraft.com/icon.png' : null; } } } });
 });

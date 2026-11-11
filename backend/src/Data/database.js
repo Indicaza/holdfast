@@ -11,7 +11,7 @@ import { notificationMigration } from "../Notification/notificationMigration.js"
 import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
 import { farmingSessionMigration } from "../Economy/farmingSessionMigration.js";
 import { dungeonRunMigration } from "../Dungeon/dungeonRunMigration.js";
-import { marketCatalogMigration, marketItemLookupMigration, marketMigration, marketReliabilityMigration } from "../Market/marketMigration.js";
+import { marketCatalogMigration, marketDepthMigration, marketItemLookupMigration, marketMigration, marketReliabilityMigration } from "../Market/marketMigration.js";
 import { publicGameDataMigration } from "../GameData/publicGameDataMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 import { guildDirectoryMigration } from "../Guild/Directory/guildDirectoryMigration.js";
@@ -829,6 +829,7 @@ const migrations = [
   marketReliabilityMigration,
   marketCatalogMigration,
   marketItemLookupMigration,
+  marketDepthMigration,
 ];
 
 function configureDatabase(db) {

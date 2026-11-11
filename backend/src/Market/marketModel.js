@@ -24,6 +24,8 @@ const TYPICAL_SHARE = 0.3;
 // hour behind; a third-party provider is a copy of either.
 const SOURCE_RANK = Object.freeze({ addon_scan: 3, official_api: 2, provider: 1 });
 export const PRICE_POINTS = 10;
+// The price levels kept for an item's current price list (market depth).
+export const LADDER_LEVELS = 200;
 
 const REGIONS = new Set(["us", "eu", "kr", "tw"]);
 const FACTIONS = new Set(["alliance", "horde", "neutral"]);
@@ -134,7 +136,7 @@ export function aggregateListings(listings = []) {
     const bid = copper(listing.bid);
     entry.quantity += quantity * count;
     entry.listings += count;
-    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: quantity * count });
+    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: quantity * count, count });
     else entry.bidOnly += count;
     if (bid !== null && bid > 0) {
       const unitBid = Math.round(bid / quantity);
@@ -155,19 +157,23 @@ function summarizePrices(entry) {
     cheapest.push(value);
     taken += value.quantity;
   }
-  const points = [];
+  // Every price level seen, cheapest first: [unit price, quantity, auctions].
+  const ladder = [];
   for (const value of sorted) {
-    const last = points.at(-1);
-    if (last && last[0] === value.unit) last[1] += value.quantity;
-    else if (points.length < PRICE_POINTS) points.push([value.unit, value.quantity]);
+    const last = ladder.at(-1);
+    if (last && last[0] === value.unit) { last[1] += value.quantity; last[2] += value.count || 1; }
+    else if (ladder.length < LADDER_LEVELS) ladder.push([value.unit, value.quantity, value.count || 1]);
     else break;
   }
+  const points = ladder.slice(0, PRICE_POINTS).map((level) => [...level]);
   return {
     itemKey: entry.itemKey,
     itemId: entry.itemId,
     minUnitBuyout: sorted[0]?.unit ?? null,
     minQuantity: points[0]?.[1] ?? null,
     pricePoints: points,
+    ladder,
+    ladderTruncated: ladder.length === LADDER_LEVELS && sorted.at(-1)?.unit !== ladder.at(-1)?.[0],
     typicalUnitBuyout: cheapest.length ? weightedPercentile(cheapest, taken, 0.5) : null,
     maxUnitBuyout: sorted.length ? weightedPercentile(sorted, priced, 0.9) : null,
     minUnitBid: entry.minBid,

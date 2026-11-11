@@ -87,7 +87,7 @@ export function createMarketRouter({ refresher = null, providerConfig = null } =
   // leaves out items with none). Categories are keys of marketCategories.js.
   const param = (req, name, max = 100) => String(req.query?.[name] ?? "").slice(0, max);
   router.get("/search", read("search", (req) => searchMarket({
-    marketKey: market(req), q: param(req, "q"), category: param(req, "category", 80), subcategory: param(req, "sub", 80), quality: param(req, "quality", 2),
+    marketKey: market(req), q: param(req, "q"), category: param(req, "category", 80), subcategory: param(req, "sub", 80), slot: param(req, "slot", 80), quality: param(req, "quality", 2),
     minLevel: param(req, "minLevel", 4), maxLevel: param(req, "maxLevel", 4), minItemLevel: param(req, "minIlvl", 4), maxItemLevel: param(req, "maxIlvl", 4),
     belowMarket: req.query?.below === "1", includeEmpty: req.query?.empty === "1", listedOnly: req.query?.listed === "1", sort: param(req, "sort", 20),
     direction: param(req, "dir", 4), page: param(req, "page", 6), pageSize: param(req, "pageSize", 4),

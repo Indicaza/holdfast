@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import { sendIcon } from "../GameData/iconRegistry.js";
+
 import { requireAuthenticated, requireHoldfastMember } from "../Auth/permissions.js";
 import { requireGuildFeatures } from "../Features/guildFeatures.js";
 import { sendCompressedJson } from "../Http/compressedJson.js";
@@ -203,14 +205,10 @@ export function createIntelligenceRouter({ gameDataProvider, iconMediaResolver }
         return;
       }
 
-      const mediaUrl = await icons.resolve(fileDataId);
-      if (!mediaUrl) {
-        res.status(404).json({ error: "icon_media_not_found" });
-        return;
-      }
-
-      res.set("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
-      res.redirect(302, mediaUrl);
+      // A stored copy, the image Blizzard's item API gave, or Blizzard's
+      // media search; the icon registry remembers which worked and backs
+      // off on misses instead of asking Blizzard on every page view.
+      await sendIcon(res, fileDataId, { resolver: icons, cacheControl: "private, max-age=86400, stale-while-revalidate=604800" });
     } catch (error) {
       console.warn("Unable to resolve Blizzard icon media", error?.message || error);
       res.status(404).json({ error: "icon_media_not_found" });

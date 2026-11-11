@@ -9,8 +9,10 @@ import { scanItems, validAuctionScan } from "../src/Market/auctionScanTelemetry.
 import {
   CATEGORY_TREE,
   categoryOf,
+  categoryPath,
   categorySql,
   categoryTree,
+  inventoryTypeIndex,
   itemClassIds,
   resolveCategory,
   searchKey,
@@ -110,42 +112,56 @@ test("search names are folded: case, accents, apostrophes and punctuation", () =
   assert.deepEqual(searchTokens("%_\\"), [], "wildcards are not searches");
 });
 
-test("the category tree comes from the game's item classes, one rule set for filters and counts", () => {
-  assert.deepEqual(CATEGORY_TREE.map((entry) => entry.label), ["Weapons", "Armor", "Containers", "Gems", "Item Enhancements", "Consumables", "Glyphs",
-    "Trade Goods", "Recipes", "Miscellaneous"]);
-  const tradeGoods = CATEGORY_TREE.find((entry) => entry.key === "trade-goods").subcategories.map((entry) => entry.label);
-  for (const label of ["Cloth", "Leather", "Metal & Stone", "Herbs", "Enchanting", "Jewelcrafting", "Parts", "Elemental"]) assert.ok(tradeGoods.includes(label), label);
-  assert.deepEqual(categoryOf(7, 5), { category: "trade-goods", subcategory: "cloth" });
-  assert.deepEqual(categoryOf(4, 1), { category: "armor", subcategory: "cloth" }, "cloth armor is not cloth");
-  assert.deepEqual(categoryOf(0, 6), { category: "item-enhancements", subcategory: null });
-  assert.deepEqual(categoryOf(7, null), { category: "trade-goods", subcategory: null }, "a class without a known subclass still has its category");
-  assert.deepEqual(categoryOf(null, null), { category: null, subcategory: null });
+test("the category tree is WoW Forever's, one rule set for filters and counts", () => {
+  assert.deepEqual(CATEGORY_TREE.map((entry) => entry.label), ["Weapons", "Armor", "Containers", "Consumables", "Trade Goods", "Projectile",
+    "Recipes", "Quest Items", "Miscellaneous"], "Camelot/Blizzard_AuctionData.lua; no Gems or Glyphs in Forever");
+  const tradeGoods = CATEGORY_TREE.find((entry) => entry.key === "trade-goods").children.map((entry) => entry.label);
+  for (const label of ["Cloth", "Leather", "Metal & Stone", "Herb", "Enchanting", "Parts", "Elemental"]) assert.ok(tradeGoods.includes(label), label);
+  assert.deepEqual(CATEGORY_TREE.find((entry) => entry.key === "weapons").children.map((entry) => entry.label), ["One-Handed", "Two-Handed", "Ranged", "Miscellaneous"]);
+  assert.deepEqual(categoryPath(7, 5), ["trade-goods", "cloth"]);
+  assert.deepEqual(categoryPath(4, 3, inventoryTypeIndex("INVTYPE_CHEST")), ["armor", "mail", "chest"]);
+  assert.deepEqual(categoryPath(4, 3, inventoryTypeIndex("ROBE")), ["armor", "mail", "chest"], "robes are chest pieces");
+  assert.deepEqual(categoryPath(4, 3, null), ["armor", "mail"], "no slot known: the armor type, not a slot");
+  assert.deepEqual(categoryPath(4, 1, inventoryTypeIndex("CLOAK")), ["armor", "cloth"], "the first match in the game's order");
+  assert.deepEqual(categoryPath(2, 7), ["weapons", "one-handed", "one-handed-swords"]);
+  assert.deepEqual(categoryPath(16, 1), [], "no Glyphs in Forever");
+  assert.deepEqual(categoryOf(7, null), { category: "trade-goods", subcategory: null });
+  assert.equal(inventoryTypeIndex("INVTYPE_2HWEAPON"), 17);
+  assert.equal(inventoryTypeIndex("nonsense"), null);
   assert.deepEqual(itemClassIds({ className: "Trade Goods", subclassName: "Metal & Stone" }), { classId: 7, subclassId: 7 }, "names when ids are missing");
-  assert.equal(resolveCategory("Trade Goods", "Cloth").subcategory.key, "cloth", "searches saved with names still resolve");
+  assert.deepEqual(resolveCategory("Trade Goods", "Cloth").keys, ["trade-goods", "cloth"], "searches saved with names still resolve");
+  assert.deepEqual(resolveCategory("armor", "mail", "chest").keys, ["armor", "mail", "chest"]);
+  assert.equal(resolveCategory("armor", "mail", "nonsense").unknown, true);
   assert.equal(resolveCategory("nonsense"), null);
-  // Every class/subclass the tree places is selected by exactly that
-  // category's SQL, and by no other top-level category's.
+  // Every node's SQL selects exactly the items whose path passes through it.
+  const nodes = [];
+  const walk = (list, path) => { for (const entry of list) { nodes.push([...path, entry.key]); walk(entry.children, [...path, entry.key]); } };
+  walk(CATEGORY_TREE, []);
   withGuildDatabase((db) => {
     for (let classId = 0; classId <= 19; classId += 1) {
       for (const subclassId of [null, ...Array.from({ length: 21 }, (_, index) => index)]) {
-        const { category, subcategory } = categoryOf(classId, subclassId);
-        for (const entry of CATEGORY_TREE) {
-          const { sql, params } = categorySql({ category: entry, subcategory: null }, "m");
-          const hit = db.prepare(`SELECT ${sql} AS hit FROM (SELECT ? AS item_class_id, ? AS item_subclass_id) m`).get(...params, classId, subclassId);
-          assert.equal(Boolean(hit.hit), entry.key === category, `class ${classId}/${subclassId} in ${entry.key}`);
-        }
-        if (subcategory) {
-          const entry = CATEGORY_TREE.find((candidate) => candidate.key === category);
-          const { sql, params } = categorySql({ category: entry, subcategory: entry.subcategories.find((sub) => sub.key === subcategory) }, "m");
-          assert.equal(Boolean(db.prepare(`SELECT ${sql} AS hit FROM (SELECT ? AS item_class_id, ? AS item_subclass_id) m`).get(...params, classId, subclassId).hit), true);
+        for (const inventoryType of [null, 2, 4, 5, 11, 16, 20, 23]) {
+          const path = categoryPath(classId, subclassId, inventoryType);
+          for (const keys of nodes) {
+            const resolved = resolveCategory(...keys);
+            const { sql, params } = categorySql(resolved, "m");
+            const hit = db.prepare(`SELECT ${sql} AS hit FROM (SELECT ? AS item_class_id, ? AS item_subclass_id, ? AS inventory_type) m`).get(...params, classId, subclassId, inventoryType).hit;
+            const inPath = keys.every((key, index) => path[index] === key);
+            // A node may take more than the path through it (union of its
+            // children), never less.
+            if (inPath) assert.equal(Boolean(hit), true, `${classId}/${subclassId}/${inventoryType} in ${keys.join("/")}`);
+            if (keys.length === 1) assert.equal(Boolean(hit), inPath, `${classId}/${subclassId}/${inventoryType} top level ${keys[0]}`);
+          }
         }
       }
     }
   });
-  const tree = categoryTree([{ classId: 7, subclassId: 5, items: 3 }, { classId: 7, subclassId: 7, items: 2 }]);
-  assert.equal(tree.length, 10, "every category, listed or not");
+  const tree = categoryTree([{ classId: 7, subclassId: 5, items: 3 }, { classId: 7, subclassId: 7, items: 2 }, { classId: 4, subclassId: 3, inventoryType: 5, items: 4 }]);
+  assert.equal(tree.length, 9, "every category, listed or not");
   assert.equal(tree.find((entry) => entry.key === "trade-goods").items, 5);
-  assert.equal(tree.find((entry) => entry.key === "gems").items, 0);
+  const mail = tree.find((entry) => entry.key === "armor").subcategories.find((entry) => entry.key === "mail");
+  assert.deepEqual([mail.items, mail.subcategories.find((entry) => entry.key === "chest").items], [4, 4]);
+  assert.equal(tree.find((entry) => entry.key === "recipes").items, 0);
 });
 
 test("Azure Silk Gloves: found by name, part of a name, any case, any word order, and by id", () => withHttpApp(async () => {
@@ -238,7 +254,7 @@ test("browse shows this market's listings only, by category; never catalog entri
   const armor = searchMarket({ marketKey: GAME.marketKey, category: "Armor", now: NOW });
   assert.deepEqual(names(armor).sort(), ["Azure Silk Gloves", "Raider's Chestpiece of the Bear", "Raider's Chestpiece of the Eagle"]);
   const tree = browse.categories;
-  assert.equal(tree.length, 10);
+  assert.equal(tree.length, 9);
   assert.equal(tree.find((entry) => entry.key === "trade-goods").subcategories.find((entry) => entry.key === "cloth").items, 2);
   assert.equal(tree.find((entry) => entry.key === "weapons").items, 0, "listed nowhere, still shown");
   assert.deepEqual(names(searchMarket({ marketKey: GAME.marketKey, category: "trade-goods", subcategory: "nonsense", now: NOW })), []);

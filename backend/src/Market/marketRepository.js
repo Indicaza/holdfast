@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
+import { iconStatusInDatabase } from "../GameData/iconRegistry.js";
 import { publicItemDefinition } from "../GameData/publicGameDataModel.js";
 import { marketMetrics, marketSignals } from "./marketAnalysis.js";
 import {
   categorySql,
   categoryTree,
+  inventoryTypeIndex,
   itemClassIds,
   likePattern,
   resolveCategory,
@@ -134,7 +136,7 @@ export function ensureItemMetaInDatabase(db, items, now = nowSeconds(), { refres
   }
   if (!missing.length) return 0;
   const upsert = db.prepare(`INSERT INTO market_item_meta (item_id, name, name_source, quality_id, icon_file_id, item_class, item_class_id, item_subclass,
-      item_subclass_id, item_level, required_level, stack_count, sell_price, bind_type, search_name, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      item_subclass_id, item_level, required_level, stack_count, sell_price, bind_type, search_name, inventory_type, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(item_id) DO UPDATE SET
       -- A name is only ever replaced by a name (never blanked by a lookup
       -- that found nothing new), and a scan's name never replaces game data.
@@ -147,7 +149,7 @@ export function ensureItemMetaInDatabase(db, items, now = nowSeconds(), { refres
       item_subclass_id = COALESCE(excluded.item_subclass_id, item_subclass_id),
       item_level = COALESCE(excluded.item_level, item_level), required_level = COALESCE(excluded.required_level, required_level),
       stack_count = COALESCE(excluded.stack_count, stack_count), sell_price = COALESCE(excluded.sell_price, sell_price),
-      bind_type = COALESCE(excluded.bind_type, bind_type), updated_at = excluded.updated_at`);
+      bind_type = COALESCE(excluded.bind_type, bind_type), inventory_type = COALESCE(excluded.inventory_type, inventory_type), updated_at = excluded.updated_at`);
   const integer = (value) => (Number.isSafeInteger(Number(value)) && value !== null && value !== "" ? Number(value) : null);
   let written = 0;
   for (let start = 0; start < missing.length; start += 500) {
@@ -192,7 +194,7 @@ export function ensureItemMetaInDatabase(db, items, now = nowSeconds(), { refres
         className, classes.classId, subclassName, classes.subclassId,
         integer(definition.itemLevel ?? meta.itemLevel ?? scan.itemLevel),
         integer(definition.requiredLevel ?? meta.requiredLevel ?? scan.requiredLevel), integer(definition.stackCount), integer(definition.sellPrice ?? meta.sellPrice),
-        integer(definition.bindType), searchKey(shown), now);
+        integer(definition.bindType), searchKey(shown), inventoryTypeIndex(definition.equipLocation || meta.inventoryType || scan.inventoryType), now);
       written += 1;
     }
   }
@@ -328,14 +330,18 @@ function summaryRefresher(db, marketKey, now) {
 //               seen at a later time: that snapshot is confirmed, history
 //               gets a point at the new time, nothing else is stored
 //   recorded    new contents: stored in full
+// `allowEmpty`: a complete view that listed nothing (a provider answered
+// that the house is empty). Recorded like any snapshot, so the items the
+// previous complete view listed become none listed. A failed or partial
+// answer never gets here empty.
 export function beginMarketSnapshotInDatabase(db, { market, sourceType, sourceId, coverage, scope = "", observedAt, contributor = "", items,
-  group = "", part = 1, parts = 1, now = nowSeconds() }) {
+  group = "", part = 1, parts = 1, allowEmpty = false, now = nowSeconds() }) {
   if (!SOURCE_TYPES.includes(sourceType) || !COVERAGES.includes(coverage)) return { status: "invalid" };
   let at = positiveInteger(observedAt);
   if (!at || at > now + 300) return { status: "invalid" };
   at = Math.min(at, now);
   const rows = (items || []).filter((item) => item && item.itemKey && Number.isSafeInteger(item.quantity)).slice(0, MAX_ITEMS_PER_SNAPSHOT);
-  if (!rows.length) return { status: "empty" };
+  if (!rows.length && !(allowEmpty === true && coverage === "full" && parts === 1)) return { status: "empty" };
   const source = text(sourceId, 120);
   const scopeKey = snapshotScope({ coverage, scope, items: rows });
   if (db.prepare("SELECT 1 FROM market_snapshot_checks WHERE market_key = ? AND source_type = ? AND source_id = ?").get(market.marketKey, sourceType, source)) {
@@ -382,6 +388,12 @@ export function addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourc
       complete, observed_at, min_unit_buyout, min_quantity, typical_unit_buyout, max_unit_buyout, min_unit_bid, quantity, listings, bid_only_listings, price_points)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const writeSeries = seriesWriter(db);
+  // The latest full price list per market, variant and source. Rows that
+  // carry no listing detail (browse rows) never replace one that does.
+  const writeLadder = db.prepare(`INSERT INTO market_price_ladders (market_key, item_key, source_type, snapshot_id, observed_at, complete, levels, truncated)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(market_key, item_key, source_type) DO UPDATE SET snapshot_id = excluded.snapshot_id,
+      observed_at = excluded.observed_at, complete = excluded.complete, levels = excluded.levels, truncated = excluded.truncated
+    WHERE excluded.observed_at >= market_price_ladders.observed_at`);
   const refreshers = marketGroupInDatabase(db, market.marketKey).map((key) => summaryRefresher(db, key, now));
   ensureItemMetaInDatabase(db, items, now);
   rememberVariantNames(db, items, now);
@@ -391,6 +403,9 @@ export function addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourc
       insertObservation.run(snapshotId, market.marketKey, item.itemKey, item.itemId, sourceType, complete, observedAt,
         item.minUnitBuyout ?? null, item.minQuantity ?? null, item.typicalUnitBuyout ?? null, item.maxUnitBuyout ?? null, item.minUnitBid ?? null,
         item.quantity, item.listings ?? null, item.bidOnlyListings || 0, item.pricePoints?.length ? JSON.stringify(item.pricePoints) : null);
+    }
+    if (Array.isArray(item.ladder) || item.quantity === 0) {
+      writeLadder.run(market.marketKey, item.itemKey, sourceType, snapshotId ?? null, observedAt, complete, JSON.stringify(item.ladder || []), item.ladderTruncated ? 1 : 0);
     }
     // History is listing evidence only from complete views.
     if (complete) writeSeries(market.marketKey, sourceType, observedAt, item);
@@ -467,8 +482,10 @@ export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
   const checks = db.prepare("DELETE FROM market_snapshot_checks WHERE checked_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
   const series = pruneSeriesInDatabase(db, now);
   const runs = db.prepare("DELETE FROM market_provider_runs WHERE started_at < ?").run(now - RUN_RETENTION_SECONDS).changes;
+  // A price list no newer than the observation retention is history, not depth.
+  const ladders = db.prepare("DELETE FROM market_price_ladders WHERE observed_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
   db.prepare("DELETE FROM market_item_interest WHERE day < ?").run(dayOf(now - 30 * 86400));
-  const result = { snapshots, observations, checks, ...series, runs };
+  const result = { snapshots, observations, checks, ...series, runs, ladders };
   noteMaintenance(db, "prune", now, result);
   return result;
 }
@@ -503,7 +520,13 @@ function itemFromRow(row) {
 // or a player's scan when nothing better is known).
 export function itemsInDatabase(db, ids, now = nowSeconds()) {
   ensureItemMetaInDatabase(db, ids.map((itemId) => ({ itemId })), now);
-  return metaFor(db, ids);
+  const item = metaFor(db, ids);
+  // Favorites and lists are short: their tooltips come along.
+  const tooltips = tooltipsInDatabase(db, ids);
+  return (id) => {
+    const tip = tooltips.get(id);
+    return tip ? { ...item(id), tooltipLines: tip.lines, tooltipSource: tip.source } : item(id);
+  };
 }
 
 function metaFor(db, ids) {
@@ -593,9 +616,9 @@ function marketCategories(db, market) {
   const version = `${market.last_changed_at}:${market.last_checked_at}:${market.linked_market_key}`;
   const cached = categoryCache.get(market.market_key);
   if (cached && cached.version === version && Date.now() - cached.at < 600_000) return cached.value;
-  const counts = db.prepare(`SELECT m.item_class_id AS classId, m.item_subclass_id AS subclassId, COUNT(*) AS items FROM market_summaries s
-    JOIN market_item_meta m ON m.item_id = s.item_id WHERE s.market_key = ? AND s.quantity > 0 AND m.item_class_id IS NOT NULL
-    GROUP BY m.item_class_id, m.item_subclass_id`).all(market.market_key);
+  const counts = db.prepare(`SELECT m.item_class_id AS classId, m.item_subclass_id AS subclassId, m.inventory_type AS inventoryType, COUNT(*) AS items
+    FROM market_summaries s JOIN market_item_meta m ON m.item_id = s.item_id WHERE s.market_key = ? AND s.quantity > 0 AND m.item_class_id IS NOT NULL
+    GROUP BY m.item_class_id, m.item_subclass_id, m.inventory_type`).all(market.market_key);
   const value = categoryTree(counts);
   categoryCache.set(market.market_key, { version, at: Date.now(), value });
   if (categoryCache.size > 200) categoryCache.delete(categoryCache.keys().next().value);
@@ -618,10 +641,10 @@ function marketCoverageInDatabase(db, marketKey, now) {
 }
 
 // Filters on item facts, as SQL over market_item_meta `m`.
-function metaFilters({ category, subcategory, quality, minLevel, maxLevel, minItemLevel, maxItemLevel }) {
+function metaFilters({ category, subcategory, slot, quality, minLevel, maxLevel, minItemLevel, maxItemLevel }) {
   const clauses = [];
   const params = [];
-  const resolved = resolveCategory(text(category, 80), text(subcategory, 80));
+  const resolved = resolveCategory(text(category, 80), text(subcategory, 80), text(slot, 80));
   if (text(category, 80) && !resolved) clauses.push("0");
   const byCategory = categorySql(resolved, "m");
   if (byCategory) { clauses.push(byCategory.sql); params.push(...byCategory.params); }
@@ -631,7 +654,8 @@ function metaFilters({ category, subcategory, quality, minLevel, maxLevel, minIt
     [integerOrNull(minItemLevel), "COALESCE(m.item_level, 0) >= ?"], [integerOrNull(maxItemLevel), "COALESCE(m.item_level, 0) <= ?"]]) {
     if (value !== null) { clauses.push(sql); params.push(value); }
   }
-  return { clauses, params, category: resolved ? { key: resolved.category.key, subcategory: resolved.subcategory?.key || null } : null };
+  return { clauses, params, category: resolved && !resolved.unknown ? { key: resolved.path[0].key, subcategory: resolved.path[1]?.key || null, slot: resolved.path[2]?.key || null,
+    keys: resolved.keys, labels: resolved.path.map((step) => step.label) } : null };
 }
 
 // Lowest ask at least 15% under the 14-day median, with at least five
@@ -649,7 +673,7 @@ const BELOW_MARKET = `s.reference_days >= ${MIN_REFERENCE_DAYS_FILTER} AND s.ref
 // row without a price, marked either "none listed" (a recent complete view
 // of the house did not have it) or "unknown" (the market has not been seen
 // completely, so it may be listed). `listed` hides those rows.
-export function searchMarket({ marketKey, q = "", category = "", subcategory = "", quality = "", minLevel = "", maxLevel = "", minItemLevel = "", maxItemLevel = "",
+export function searchMarket({ marketKey, q = "", category = "", subcategory = "", slot = "", quality = "", minLevel = "", maxLevel = "", minItemLevel = "", maxItemLevel = "",
   belowMarket = false, includeEmpty = false, listedOnly = false, sort = "", direction = "", page = 1, pageSize = 50, now = nowSeconds() }) {
   // Game data that arrived since the last batch is indexed first (bounded).
   if (text(q, 100)) catchUpCatalog(now);
@@ -666,7 +690,7 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
     const dir = direction === "desc" ? "DESC" : "ASC";
     const below = belowMarket === true || belowMarket === "1" || belowMarket === "true";
     const listed = listedOnly === true || listedOnly === "1" || listedOnly === "true";
-    const filters = metaFilters({ category, subcategory, quality, minLevel, maxLevel, minItemLevel, maxItemLevel });
+    const filters = metaFilters({ category, subcategory, slot, quality, minLevel, maxLevel, minItemLevel, maxItemLevel });
     const fresh = now - STALE_SECONDS;
     const orderBy = (sortKey === "relevance" ? SORTS.name : SORTS[sortKey]).replace(":fresh", String(fresh));
 
@@ -748,12 +772,18 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
     const noneListed = new Map(unlistedIds.length ? db.prepare(`SELECT item_id, MAX(COALESCE(confirmed_at, observed_at)) AS at FROM market_summaries
       WHERE market_key = ? AND item_id IN (${unlistedIds.map(() => "?").join(",")}) AND quantity = 0 GROUP BY item_id`)
       .all(market.market_key, ...unlistedIds).map((row) => [row.item_id, row.at]) : []);
+    const tooltips = tooltipsInDatabase(db, shown.map((row) => row.item_id));
+    const withTooltip = (id) => {
+      const base = item(id);
+      const tip = tooltips.get(id);
+      return tip ? { ...base, tooltipLines: tip.lines, tooltipSource: tip.source } : base;
+    };
     const describe = (row) => {
       const summary = summaries.get(row.sid);
-      if (summary) return { item: item(row.item_id), ...summaryFromRow(summary, now), listing: summary.quantity > 0 ? "listed" : "none_listed" };
+      if (summary) return { item: withTooltip(row.item_id), ...summaryFromRow(summary, now), listing: summary.quantity > 0 ? "listed" : "none_listed" };
       const seenNone = noneListed.get(row.item_id) ?? null;
       const at = Math.max(seenNone || 0, coverage.complete ? coverage.fullAt : 0) || null;
-      return { item: item(row.item_id), itemKey: null, variant: null, variantName: null,
+      return { item: withTooltip(row.item_id), itemKey: null, variant: null, variantName: null,
         listing: at ? "none_listed" : "unknown", observedAt: at, ageSeconds: at ? Math.max(0, now - at) : null, stale: at ? now - at > STALE_SECONDS : null,
         minUnitBuyout: null, typicalUnitBuyout: null, quantity: null, listings: null, source: null, confidence: null, pct: null,
         listingNote: at ? (seenNone && seenNone >= (coverage.complete ? coverage.fullAt : 0) ? "None listed when this item was last checked." : "Not in the latest complete view of this auction house.")
@@ -762,6 +792,9 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
     return {
       market: marketFromRow(market, now), mode, query, total: Number(total), page: current, pageSize: size, sort: sortKey, direction: dir.toLowerCase(),
       filters: { category: filters.category, listedOnly: listed }, coverage,
+      // The game's extra column for the category: required level for
+      // Weapons, Armor and Consumables.
+      detailColumn: ["weapons", "armor", "consumables"].includes(filters.category?.key) ? "level" : null,
       categories: marketCategories(db, market), results: page_.map(describe),
       unlisted: { total: Number(unlistedTotal), items: unlistedPage.map(describe) },
     };
@@ -825,11 +858,52 @@ export function suggestItems({ q = "", marketKey = "", limit = 8, now = nowSecon
   });
 }
 
+// The price list behind a shown price: the levels the same source saw in
+// the same market (of the house) that observation came from, else the
+// newest any market of the house has for the variant.
+function ladderInDatabase(db, summary, markets, now) {
+  const origin = db.prepare("SELECT market_key FROM market_snapshots WHERE id = ?").get(summary.snapshot_id)?.market_key || summary.market_key;
+  const row = db.prepare("SELECT * FROM market_price_ladders WHERE market_key = ? AND item_key = ? AND source_type = ?").get(origin, summary.item_key, summary.source_type)
+    || db.prepare(`SELECT * FROM market_price_ladders WHERE item_key = ? AND market_key IN (${markets.map(() => "?").join(",")}) ORDER BY observed_at DESC LIMIT 1`)
+      .get(summary.item_key, ...markets);
+  if (!row) return null;
+  const levels = json(row.levels, []).map(([unitPrice, quantity, auctions]) => ({ unitPrice, quantity, auctions: auctions ?? null }));
+  return { levels, source: row.source_type, observedAt: row.observed_at, ageSeconds: Math.max(0, now - row.observed_at), complete: row.complete === 1,
+    truncated: row.truncated === 1, totalQuantity: levels.reduce((sum, level) => sum + level.quantity, 0),
+    // Neither Blizzard nor the add-on reports sellers.
+    sellers: null };
+}
+
 function evidenceFromRow(row) {
   return { marketKey: row.market_key, itemKey: row.item_key, source: row.source_type, coverage: row.coverage, complete: row.complete === 1,
     observedAt: row.observed_at, confirmedAt: row.confirmed_at ?? row.observed_at, minUnitBuyout: row.min_unit_buyout, minQuantity: row.min_quantity ?? null,
     typicalUnitBuyout: row.typical_unit_buyout, maxUnitBuyout: row.max_unit_buyout, minUnitBid: row.min_unit_bid, quantity: row.quantity,
     listings: row.listings, bidOnlyListings: row.bid_only_listings, pricePoints: row.price_points ? json(row.price_points, []) : [] };
+}
+
+// Tooltip lines for many items at once (a page of results): what a
+// player's game rendered (public_game_items) first, else the display strings
+// of Blizzard's item API (game_data_catalog). Two queries for the page, so
+// hovering an item never asks the server anything.
+export function tooltipsInDatabase(db, ids) {
+  const unique = [...new Set(ids.filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 200);
+  const lines = new Map();
+  if (!unique.length) return lines;
+  const marks = unique.map(() => "?").join(",");
+  for (const row of db.prepare(`SELECT item_id, definition_json FROM public_game_items WHERE item_id IN (${marks}) AND definition_json <> '{}'
+    ORDER BY (locale = 'en_US') ASC, captured_at ASC`).all(...unique)) {
+    const definition = publicItemDefinition(json(row.definition_json, {}), { base: true });
+    if (definition?.tooltipLines?.length) lines.set(row.item_id, { lines: definition.tooltipLines, source: "game" });
+  }
+  const rest = unique.filter((id) => !lines.has(id));
+  if (rest.length) {
+    for (const row of db.prepare(`SELECT entity_id, metadata_json FROM game_data_catalog WHERE entity_type = 'item' AND entity_id IN (${rest.map(() => "?").join(",")})
+      ORDER BY source_priority ASC, updated_at ASC`).all(...rest.map(String))) {
+      const metadata = json(row.metadata_json || "{}", {});
+      if (Array.isArray(metadata.tooltipLines) && metadata.tooltipLines.length) lines.set(Number(row.entity_id), { lines: metadata.tooltipLines.slice(0, 40), source: "blizzard" });
+    }
+  }
+  return lines;
 }
 
 // The item's base description as the item catalog shows it (the same
@@ -838,9 +912,12 @@ function evidenceFromRow(row) {
 function itemDefinitionInDatabase(db, id) {
   const row = db.prepare(`SELECT definition_json, game_build FROM public_game_items WHERE item_id = ? AND definition_json <> '{}'
     ORDER BY (locale = 'en_US') DESC, captured_at DESC LIMIT 1`).get(id);
-  if (!row) return { tooltipLines: [], described: false };
+  if (!row) {
+    const catalog = tooltipsInDatabase(db, [id]).get(id);
+    return { tooltipLines: catalog?.lines || [], tooltipSource: catalog?.source || null, described: Boolean(catalog) };
+  }
   const definition = publicItemDefinition(json(row.definition_json, {}), { base: true }) || {};
-  return { tooltipLines: definition.tooltipLines || [], equipLocation: definition.equipLocation || "", described: true, gameBuild: row.game_build };
+  return { tooltipLines: definition.tooltipLines || [], tooltipSource: "game", equipLocation: definition.equipLocation || "", described: true, gameBuild: row.game_build };
 }
 
 // One item in one market: every variant's summary, the evidence behind the
@@ -861,6 +938,7 @@ export function readItemMarket({ itemId, itemKey = "", marketKey = "", now = now
     const markets = selected ? marketGroupInDatabase(db, selected) : [];
     const evidence = focus ? db.prepare(`SELECT o.*, sn.coverage, sn.confirmed_at FROM market_observations o JOIN market_snapshots sn ON sn.id = o.snapshot_id
       WHERE o.item_key = ? AND o.market_key IN (${markets.map(() => "?").join(",")}) ORDER BY sn.confirmed_at DESC LIMIT 20`).all(focus.item_key, ...markets) : [];
+    const ladder = focus ? ladderInDatabase(db, focus, markets, now) : null;
     const marketRow = selected ? db.prepare("SELECT * FROM market_markets WHERE market_key = ?").get(selected) : null;
     // Listed here, confirmed none listed, or not known: the same rule as Search.
     const coverage = marketRow ? marketCoverageInDatabase(db, selected, now) : null;
@@ -880,6 +958,7 @@ export function readItemMarket({ itemId, itemKey = "", marketKey = "", now = now
       itemKey: focus?.item_key || `i:${id}`,
       variants: here.map((row) => ({ ...summaryFromRow(row, now), label: row.item_key === `i:${id}` ? "Base item" : variantLabel(row.item_key, row.variant_name) })),
       markets: summaries.map((row) => ({ marketKey: row.market_key, marketName: row.market_name, region: row.region, kind: row.kind, ...summaryFromRow(row, now) })),
+      ladder,
       evidence: evidence.map(evidenceFromRow),
       basis: "Listing prices people asked for, not completed sales.",
     };
@@ -1123,6 +1202,12 @@ export function readMarketDiagnostics({ refresherStats = null, providerConfig = 
       storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
       maintenance,
       identity: conflicts,
+      // Listed items still without a name or class, and icons by status.
+      itemData: { unnamedListed: db.prepare(`SELECT COUNT(*) AS n FROM market_item_meta m WHERE m.name_source <> 'game'
+        AND EXISTS (SELECT 1 FROM market_summaries s WHERE s.item_id = m.item_id AND +s.quantity > 0)`).get().n,
+        unclassedListed: db.prepare(`SELECT COUNT(*) AS n FROM market_item_meta m WHERE m.item_class_id IS NULL
+        AND EXISTS (SELECT 1 FROM market_summaries s WHERE s.item_id = m.item_id AND +s.quantity > 0)`).get().n,
+        icons: iconStatusInDatabase(db) },
     };
   });
 }

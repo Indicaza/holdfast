@@ -468,3 +468,59 @@ export const marketItemLookupMigration = {
     db.exec("ALTER TABLE market_item_meta ADD COLUMN lookup_at INTEGER;");
   },
 };
+
+// Version 20: market depth, the third category level, and an icon registry.
+// Additive only.
+//
+// - market_price_ladders: the latest full list of price levels per market,
+//   item variant and source ([unit price, quantity, auctions], cheapest
+//   first), so an item's window shows all the supply, not only the cheapest
+//   ten levels kept with each observation.
+// - market_item_meta.inventory_type: the game's Enum.InventoryType index,
+//   for the slot level of the category tree (Armor › Mail › Chest).
+// - game_icon_assets: what is known about each icon FileDataID: where its
+//   image was last found, whether a copy is stored, failures and retries.
+//   Images themselves live in object storage when configured, never here.
+export const marketDepthMigration = {
+  version: 20,
+  name: "auction_house_depth_slots_icons",
+  up(db) {
+    db.exec(`
+      CREATE TABLE market_price_ladders (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        snapshot_id INTEGER,
+        observed_at INTEGER NOT NULL,
+        complete INTEGER NOT NULL,
+        levels TEXT NOT NULL,
+        truncated INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(market_key, item_key, source_type)
+      );
+      CREATE INDEX market_price_ladders_age_idx ON market_price_ladders(observed_at);
+
+      ALTER TABLE market_item_meta ADD COLUMN inventory_type INTEGER;
+      CREATE INDEX market_item_meta_slot_idx ON market_item_meta(item_class_id, item_subclass_id, inventory_type);
+      CREATE INDEX market_item_meta_icon_idx ON market_item_meta(icon_file_id);
+      CREATE INDEX game_data_catalog_icon_idx ON game_data_catalog(icon_file_id);
+
+      CREATE TABLE game_icon_assets (
+        file_data_id INTEGER PRIMARY KEY,
+        source_url TEXT NOT NULL DEFAULT '',
+        source TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'linked', 'stored', 'missing')),
+        content_type TEXT NOT NULL DEFAULT '',
+        sha256 TEXT NOT NULL DEFAULT '',
+        bytes INTEGER,
+        storage_key TEXT NOT NULL DEFAULT '',
+        first_seen_at INTEGER NOT NULL,
+        last_success_at INTEGER,
+        last_attempt_at INTEGER,
+        failures INTEGER NOT NULL DEFAULT 0,
+        next_attempt_at INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT NOT NULL DEFAULT ''
+      );
+      CREATE INDEX game_icon_assets_due_idx ON game_icon_assets(status, next_attempt_at);
+    `);
+  },
+};

@@ -22,7 +22,7 @@ export const RESERVED_TOP_LEVEL_SEGMENTS = [
   'register', 'items', 'guildweaver', 'download', 'dashboard', 'map', 'account', 'privacy', 'admin', 'join',
   'api', 'auth', 'assets',
   'guilds', 'guildos', ...GUILD_SECTIONS,
-  'armory-art', 'inventory-art', 'profession-art', 'talent-art', 'wow-art',
+  'armory-art', 'auction-art', 'inventory-art', 'profession-art', 'talent-art', 'wow-art',
 ]
 
 // Same shape the backend accepts (guildDirectoryModel.js validSlug).

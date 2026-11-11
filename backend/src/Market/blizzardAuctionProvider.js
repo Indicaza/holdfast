@@ -174,11 +174,21 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
     try {
       const response = await get(market.region, endpoint === "commodities" ? `${base}/commodities` : base, { ifModifiedSince: lastModified });
       if (response.status === 304) return { endpoint, status: "not_modified", httpStatus: 304, lastModified: response.lastModified || lastModified };
-      // A house with nothing listed has no `auctions` field at all.
-      const auctions = list(response.payload?.auctions);
+      // A house with nothing listed has no `auctions` field at all. Only a
+      // recognisable Blizzard answer (it always carries `_links`) counts as
+      // "nothing listed"; anything else without auctions is a failure, so an
+      // odd response never clears a house.
+      const payload = response.payload;
+      const auctions = list(payload?.auctions);
+      if (!auctions.length && !(payload && typeof payload === "object" && !Array.isArray(payload) && payload._links)) {
+        return { endpoint, status: "failed", httpStatus: response.status, error: "unexpected_payload", transient: true };
+      }
       const items = aggregateListings(listingsFromBlizzard(auctions, { commodity: endpoint === "commodities" }));
       return {
         endpoint, status: "ok", httpStatus: response.status, lastModified: response.lastModified, auctions: auctions.length, items,
+        // Everything listed is in the answer, so an empty one is a house
+        // with nothing listed, not a missing answer.
+        empty: auctions.length === 0,
         // When Blizzard generated the data, never later than now (clocks drift).
         observedAt: Math.floor(Math.min(Date.parse(response.lastModified) || now(), now()) / 1000),
       };

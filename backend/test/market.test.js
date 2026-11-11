@@ -99,7 +99,8 @@ test("aggregates keep the quantity at the lowest price and the cheapest price po
   ]);
   assert.equal(cloth.minUnitBuyout, 10);
   assert.equal(cloth.minQuantity, 5, "both listings at the lowest price");
-  assert.deepEqual(cloth.pricePoints, [[10, 5], [30, 50], [31, 20]]);
+  assert.deepEqual(cloth.pricePoints, [[10, 5, 2], [30, 50, 1], [31, 20, 1]], "[unit price, quantity, auctions]");
+  assert.deepEqual(cloth.ladder, cloth.pricePoints, "every level, cheapest first");
 });
 
 test("source rules: recency first, sources only outrank within 45 minutes, conflicts explained", () => {
