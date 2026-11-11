@@ -203,12 +203,20 @@ export function storeAuctionQuery(queryString, storage = globalThis.localStorage
 
 // The market to show: the URL's, else the remembered one, else the freshest
 // market with data.
-export function resolveMarket(markets = [], requested = '', remembered = '') {
+export function resolveMarket(markets = [], requested = '', remembered = '', candidates = null) {
   const keys = new Set(markets.map((market) => market.marketKey))
   if (requested && keys.has(requested)) return requested
-  if (remembered && keys.has(remembered)) return remembered
-  const withData = [...markets].filter((market) => market.items > 0).sort((a, b) => (b.lastCheckedAt || b.lastSnapshotAt || 0) - (a.lastCheckedAt || a.lastSnapshotAt || 0))
-  return withData[0]?.marketKey || markets[0]?.marketKey || ''
+  // The houses offered for the chosen server, when there is one.
+  const allowed = candidates?.length ? new Set(candidates) : keys
+  if (remembered && allowed.has(remembered)) return remembered
+  const offered = markets.filter((market) => allowed.has(market.marketKey))
+  // With a server chosen: its own houses first, in the order offered.
+  if (candidates?.length) {
+    const byKey = new Map(markets.map((market) => [market.marketKey, market]))
+    return candidates.find((key) => byKey.get(key)?.items > 0) || candidates[0]
+  }
+  const withData = [...offered].filter((market) => market.items > 0).sort((a, b) => (b.lastCheckedAt || b.lastSnapshotAt || 0) - (a.lastCheckedAt || a.lastSnapshotAt || 0))
+  return withData[0]?.marketKey || offered[0]?.marketKey || markets[0]?.marketKey || ''
 }
 
 // Chart math ---------------------------------------------------------------------------

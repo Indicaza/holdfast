@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
+import { createBlizzardGameDataProvider } from "../src/GameData/blizzardGameDataProvider.js";
 import { upsertGameDataEntityInDatabase } from "../src/GameData/gameDataCatalog.js";
+import { marketItemDataEnv, resolveMarketItemNames } from "../src/Market/marketRefresh.js";
 import { scanItems, validAuctionScan } from "../src/Market/auctionScanTelemetry.js";
 import {
   CATEGORY_TREE,
@@ -284,6 +286,47 @@ test("the item index follows the catalog: Blizzard item data becomes searchable 
   assert.equal(validAuctionScan({ kind: "event", envelope: { region: "US", realm: "Normal", installationId: "i", payload: { schemaVersion: 1, scanId: "s1", observedAt: NOW,
     market: { faction: "alliance" }, query: { kind: "page" }, coverage: "items", items: [{ itemId: 1, quantity: 1, classId: 999 }] } } }), false, "class ids are bounded");
   assert.deepEqual(scanItems({ items: [{ itemId: 2770, quantity: 2, classId: 7, subclassId: 7, prices: [[10, 2, 1]] }] }).map((entry) => [entry.classId, entry.subclassId]), [[7, 7]]);
+}));
+
+test("items Blizzard's auction data lists by id get their names from Blizzard's item API", () => withHttpApp(async () => {
+  const calls = [];
+  const fetchImpl = async (input) => {
+    const url = new URL(String(input));
+    calls.push(url);
+    const json = (payload, status = 200) => new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json" } });
+    if (url.href === "https://oauth.battle.net/token") return json({ access_token: "t", expires_in: 3600 });
+    if (url.pathname === "/data/wow/item/7078" && url.searchParams.get("namespace") === "static-forever-us") {
+      return json({ id: 7078, name: "Essence of Fire", quality: { type: "UNCOMMON" }, item_class: { id: 7, name: "Trade Goods" }, item_subclass: { id: 10, name: "Elemental" } });
+    }
+    return json({ error: "not_found" }, 404);
+  };
+  const env = marketItemDataEnv({ BLIZZARD_CLIENT_ID: "id", BLIZZARD_CLIENT_SECRET: "secret", BLIZZARD_REGION: "us", BLIZZARD_STATIC_NAMESPACES: "static-classic1x-us,static-classic-us" });
+  assert.equal(env.BLIZZARD_STATIC_NAMESPACES, "static-forever-us,static-classic1x-us,static-classic-us", "Forever's item data first");
+  const itemProvider = createBlizzardGameDataProvider({ env, fetchImpl });
+  // The house lists two items nobody has described: ids only.
+  withGuildTransaction((db) => download(db, API, [listing("i:7078", { minUnitBuyout: 41000 }), listing("i:424242", { minUnitBuyout: 5 })]));
+  assert.equal(searchMarket({ marketKey: API.marketKey, q: "essence of fire", now: NOW }).total, 0, "not searchable by name yet");
+  const first = await resolveMarketItemNames({ itemProvider, now: () => NOW });
+  assert.equal(first.named, 1);
+  const found = searchMarket({ marketKey: API.marketKey, q: "essence of fire", listedOnly: true, now: NOW });
+  assert.deepEqual(found.results.map((row) => [row.item.name, row.minUnitBuyout, row.listing]), [["Essence of Fire", 41000, "listed"]]);
+  assert.deepEqual(names(searchMarket({ marketKey: API.marketKey, category: "trade-goods", subcategory: "elemental", now: NOW })), ["Essence of Fire"], "and filed by its class");
+  // Unknown ids are not asked about again for a week.
+  const asked = calls.length;
+  assert.deepEqual(await resolveMarketItemNames({ itemProvider, now: () => NOW + 3600 }), { looked: 0, named: 0 });
+  assert.equal(calls.length, asked);
+  assert.equal((await resolveMarketItemNames({ itemProvider, now: () => NOW + 8 * 86400 })).looked, first.looked - first.named, "the unnamed ones are retried after a week");
+  assert.deepEqual(await resolveMarketItemNames({ itemProvider: createBlizzardGameDataProvider({ env: {} }) }), { looked: 0, named: 0 }, "nothing without credentials");
+}));
+
+test("with listings only, matches that have nothing on this AH are reported apart", () => withHttpApp(async () => {
+  seed();
+  const result = searchMarket({ marketKey: GAME.marketKey, q: "thorium bar", listedOnly: true, now: NOW });
+  assert.equal(result.total, 0);
+  assert.deepEqual(result.unlisted.items.map((row) => [row.item.name, row.listing]), [["Thorium Bar", "unknown"]]);
+  assert.equal(result.unlisted.total, 1);
+  const api = searchMarket({ marketKey: API.marketKey, q: "peacebloom", listedOnly: true, now: NOW });
+  assert.equal(api.unlisted.items[0].listing, "none_listed");
 }));
 
 test("an item opened from search: its tooltip, its listing state, and the market it is from", () => withHttpApp(async () => {

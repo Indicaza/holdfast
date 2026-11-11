@@ -195,7 +195,6 @@ button.gw-ahf__twisty:hover { color: #ffe39a; background: rgba(255, 255, 255, 0.
 .gw-ahf__cat:hover { border-color: rgba(233, 196, 106, 0.35); color: #ffe39a; }
 .gw-ahf__cat.is-within { border-color: rgba(233, 196, 106, 0.3); }
 .gw-ahf__cat.is-active { border-color: rgba(233, 196, 106, 0.6); background: linear-gradient(180deg, #2b2616, #1d1a10); color: #fff1c0; }
-.gw-ahf__cats > .gw-ahf__tree > li:first-child .gw-ahf__cat { margin-left: calc(1.15rem + 2px); width: calc(100% - 1.15rem - 2px); }
 .gw-ahf__saved { margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--gw-line); display: grid; gap: 0.3rem; }
 .gw-ahf__saved-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--gw-faint); text-transform: uppercase; letter-spacing: 0.06em; }
 .gw-ahf__savedrow { display: flex; align-items: center; gap: 0.2rem; }
@@ -423,3 +422,6 @@ button.gw-ahf__twisty:hover { color: #ffe39a; background: rgba(255, 255, 255, 0.
   .gw-ahf__name { max-width: none; }
 }
 .gw-insp .gw-msum .gw-fresh { white-space: normal; }
+.gw-ahf__known { margin: 0.6rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.35rem; }
+.gw-ahf__known li { display: flex; align-items: center; gap: 0.8rem; }
+.gw-ahf__known .gw-ahf__linkbtn { text-decoration: none; padding: 0.1rem 0.2rem; }

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
+import { marketChoices } from './marketBrowse.js'
 import { resolveMarket, storeMarket, storedMarket } from './marketFormat.js'
 
 // A GET resource with reload(). Keeps the last data on screen while a new
@@ -36,12 +37,14 @@ export async function marketWrite(url, { method = 'PUT', body } = {}) {
   })
 }
 
-// The markets and the one the player is looking at (URL, else remembered,
-// else the freshest with data).
-export function useMarkets(requested = '') {
+// The markets and the one the player is looking at: the URL's, else the
+// remembered one if it belongs to the chosen server, else that server's
+// freshest house.
+export function useMarkets(requested = '', server = '') {
   const markets = useMarketResource('/api/market/markets')
-  const list = markets.data?.markets || []
-  const marketKey = resolveMarket(list, requested, storedMarket())
+  const list = useMemo(() => markets.data?.markets || [], [markets.data])
+  const candidates = useMemo(() => marketChoices(list, server).keys, [list, server])
+  const marketKey = resolveMarket(list, requested, storedMarket(), candidates)
   useEffect(() => { if (marketKey) storeMarket(marketKey) }, [marketKey])
   return { status: markets.status, markets: list, marketKey, market: list.find((entry) => entry.marketKey === marketKey) || null, reload: markets.reload }
 }

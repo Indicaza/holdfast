@@ -75,7 +75,7 @@ An item with nothing listed in the selected market is one row without a price, i
 | `none_listed` (No listings) | A complete view of the house in the last 24 hours did not have it, or the item was seen and then gone in a complete view. Shown with the time of that view. |
 | `unknown` (Not seen here) | The market has not been seen completely recently (in-game markets usually are only seen through individual searches), so the item may well be listed. |
 
-A complete view is a Blizzard download with both its endpoints, or an in-game full scan. `listed=1` hides the rows without listings.
+A complete view is a Blizzard download with both its endpoints, or an in-game full scan. `listed=1` (what the page always asks for) leaves out the rows without listings and reports them apart, under `unlisted`.
 
 Browse (no search text) shows only the market's listings, by category and filters. Catalog entries never appear there.
 
@@ -91,23 +91,31 @@ An item no game data describes has no class, so it shows under "All categories" 
 
 ## The Auction House page
 
-- **Top bar:** item name or id, Search (or Enter), level range, rarity, "Listed only", "Below median", Reset. The market picker and how recently it was checked sit in the title bar; Diagnostics is a small link there for administrators.
-- **Categories** on the left. Open branches are kept for the browser session.
-- **Table:** Price, Name, Available, sortable; optional columns (required level, item level, auctions, last seen, against the 14-day median, confidence) under "Columns", remembered per browser.
-- **One click** selects a row and fills the bar under the table; **a double click** (or Enter) opens an inspector. Nothing navigates; the search, selection and scroll stay.
-- **Tabs:** Browse, Appraiser, Shopping Lists, Favorites, History. Browse stays mounted while another tab is shown.
-- **Inspectors:** small windows over the page, one per item variant. Drag by the title bar (or arrow keys on it; Shift+arrows resize), resize from the corner, click to bring forward, collapse, pin (stays above the others and through "Close all"), close (or Esc). Opening an item already open brings its window forward. Windows stay inside the browser window, are full width on phones, and are remembered for the browser session; "Reset positions" stacks them neatly. Each shows the item's tooltip as the game rendered it, its facts, this market's price, typical price, supply, freshness and source, favorite and shopping list buttons, and tabs for history (price and supply charts, medians, volatility), crafting and sources. History loads only on its tab.
-- Links with `?item=` (Dungeon Companion loot, shopping lists, favorites) open that item's inspector.
+One screen, like the game's:
 
-![Browse: categories, the Price, Name and Available table, the selected item](images/auction-house/after-1-browse.png)
+- **Title bar:** the auction house, chosen per server. With a server picked in the dashboard, the list offers that server's Alliance, Horde and Blackwater houses, then Blizzard's houses linked to it or not yet matched to any server. With no data from that server yet, every house is offered and the page says so. How recently the house was updated sits next to it. Diagnostics is a small link there for administrators.
+- **Search bar:** item name or id, Search (or Enter), level range, rarity, Reset.
+- **Home** (nothing searched, no category): your favorites, priced on the chosen house.
+- **Search and categories show what is on the house**, as in the game (`listed=1`). When a search finds nothing listed, the page names the known items that matched and whether a complete view had none ("No listings") or the house has not been seen completely ("Not seen here").
+- **Table:** Price, Name, Available, sortable.
+- **One click** selects a row and fills the bar under the table; **a double click** (or Enter) opens the item in a window.
+- **Item windows:** one per item variant. Drag by the title bar (arrow keys on it; Shift+arrows resize), resize from the corner, click to bring forward, collapse, pin (stays above the others and through "Close all"), close (or Esc). Opening an item already open brings its window forward. Windows stay inside the browser window, are full width on phones, and are remembered for the browser session; "Reset positions" stacks them neatly. Each shows the item's tooltip as the game rendered it, its facts, this house's price, typical price, supply, freshness and source, and a favorite star. Its History tab has the price and supply charts, medians and volatility, loaded only there.
+- Links with `?item=` (Dungeon Companion loot) open that item's window; `?tab=history&item=` (the item catalog) opens it on History.
 
-![Two inspectors side by side, one on its History tab](images/auction-house/after-7-two-inspectors-side-by-side.png)
+![Home: favorites priced on the chosen house](images/auction-house/after-1-home-favorites.png)
+
+![Two item windows side by side, one on its History tab](images/auction-house/after-7-two-inspectors-side-by-side.png)
 
 The screenshots use test data on a local server, not live prices.
+
+## Names for items Blizzard's auction data lists
+
+Blizzard's auction data lists item ids only. Every minute, up to 240 listed items the website cannot name or place in a category are looked up in Blizzard's item API (`resolveMarketItemNames`, through the same game data provider the rest of the website uses): Forever's static namespace first (`static-forever-{region}`, override with `MARKET_ITEM_NAMESPACE`), then `BLIZZARD_STATIC_NAMESPACES`. Answers go into the item catalog, then the Auction House's item index, so the item is searchable by name and sits in its category. Ids Blizzard does not know are asked again after a week. Needs `BLIZZARD_CLIENT_ID` / `BLIZZARD_CLIENT_SECRET`; the log says `[market] looked up … listed items`.
 
 ## Deploying
 
 1. Run `npm run backup` first, as for any migration. Deploy as usual; migrations run on start.
+   - Migration 19 adds `market_item_meta.lookup_at` (when Blizzard's item API was last asked about a listed item).
    - Migration 18 (search) adds two columns and two indexes to `market_item_meta`, one column to `market_variant_names`, and fills the search names of rows already there. It changes no other data. The item index then fills from game data in the background within a few minutes (`[market] indexed … catalog items for search` in the log).
    - Migration 17 rebuilt `market_snapshots` and `market_observations` (keeping their rows), moved `market_history` into `market_series_daily`, and added the series tables.
 2. Optional: set `BLIZZARD_CLIENT_ID` / `BLIZZARD_CLIENT_SECRET` (server only) and the `MARKET_*` variables in `.env.example`.
@@ -124,7 +132,7 @@ The screenshots use test data on a local server, not live prices.
 
 1. Sign in, open Auction House, pick your in-game market ("<realm> · Alliance (in-game)").
 2. In the game, at an auctioneer, search an item that is listed (e.g. Linen Cloth) and one that is not. Close the auction house, `/gw sync`.
-3. On the website, search both by name and by item id. The listed one shows the price you saw, "In-game scan · just now". The other shows "Not seen here" (in-game markets are rarely seen completely). With "Listed only" it disappears.
+3. On the website, search both by name and by item id. The listed one shows the price you saw, "In-game scan · just now". The other gets no row; the page says "No auctions for … on this auction house" and names it as "Not seen here" (in-game houses are rarely seen completely).
 4. Switch to the matching Blizzard API house (if configured): the same item shows that house's price or "No listings · <time>" after a complete download, never the in-game price.
 5. Double-click a row: the inspector's tooltip matches the game's, and History shows a point at the time of your search. Open a second item, drag it beside the first, close both: the search and scroll are where you left them.
 6. As an administrator, Diagnostics shows the in-game market's last check at the time of your sync.

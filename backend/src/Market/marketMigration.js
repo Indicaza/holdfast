@@ -457,3 +457,14 @@ export const marketReliabilityMigration = {
     `);
   },
 };
+
+// Version 19: when Blizzard's item API was last asked about an item the
+// Auction House lists but cannot name or place (resolveMarketItemNames).
+// Additive only.
+export const marketItemLookupMigration = {
+  version: 19,
+  name: "auction_house_item_lookup",
+  up(db) {
+    db.exec("ALTER TABLE market_item_meta ADD COLUMN lookup_at INTEGER;");
+  },
+};

@@ -5,10 +5,6 @@ import { GameTooltipBody } from '../Intelligence/GameTooltip.jsx'
 import { ItemLabel } from '../Player/ui.jsx'
 import { MarketCharts } from './MarketCharts.jsx'
 import {
-  AddToList,
-  ConfidenceBadge,
-  CraftingCosts,
-  Evidence,
   FavoriteButton,
   Freshness,
   ListingState,
@@ -16,7 +12,6 @@ import {
   MetricsTable,
   PriceLadder,
   SignalChips,
-  WhyThisPrice,
 } from './MarketComponents.jsx'
 import { clampWindow, stackOrder } from './marketBrowse.js'
 import { viewport } from './useInspectors.js'
@@ -24,7 +19,7 @@ import { bindLabel, formatDateTime } from './marketFormat.js'
 import { useItemHistory, useItemMarket } from './useMarket.js'
 
 const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
-const TABS = [['overview', 'Overview'], ['history', 'History'], ['crafting', 'Crafting'], ['sources', 'Sources']]
+const TABS = [['overview', 'Overview'], ['history', 'History']]
 
 // Moves or resizes a window by pointer. The window follows the pointer
 // through its style; the position is stored once, when the pointer lets go,
@@ -112,7 +107,7 @@ const InspectorWindow = memo(function InspectorWindow({ win, order, focusAt, mar
       {win.collapsed ? null : (
         <>
           <div className="gw-insp__body">
-            <InspectorContent itemId={win.itemId} itemKey={win.itemKey} marketKey={marketKey} marketName={marketName} tab={win.tab || 'overview'}
+            <InspectorContent itemId={win.itemId} itemKey={win.itemKey} marketKey={marketKey} marketName={marketName} tab={win.tab === 'history' ? 'history' : 'overview'}
               onTab={onTab} favorite={favorite} onFavoritesChange={onFavoritesChange} onIdentity={onIdentity} onOpenVariant={open} />
           </div>
           <span className="gw-insp__resize" role="presentation" onPointerDown={(event) => gesture(event, 'resize')} />
@@ -146,7 +141,6 @@ const InspectorContent = memo(function InspectorContent({ itemId, itemKey, marke
         <ItemLabel item={here?.variantName ? { ...item, name: here.variantName } : item} size={36} tooltip={false} />
         <span className="gw-insp__actions">
           <FavoriteButton itemId={item.itemId} favorite={favorite} size="md" onChange={onFavoritesChange} />
-          <AddToList itemId={item.itemId} className="gw-btn gw-btn--xs" />
         </span>
       </div>
       <p className="gw-insp__facts">{facts.join(' · ')}</p>
@@ -189,20 +183,6 @@ const InspectorContent = memo(function InspectorContent({ itemId, itemKey, marke
           <MarketCharts history={history.data} range={range} onRange={setRange} compact status={history.status} />
           <MetricsTable metrics={metrics} />
           <p className="gw-small gw-muted">{analysis.data?.disclaimer || 'Observed asking prices and listed supply, not sales.'}</p>
-        </div>
-      ) : null}
-      {tab === 'crafting' ? (
-        <div className="gw-insp__panel" role="tabpanel" aria-label="Crafting">
-          <CraftingCosts itemId={item.itemId} marketKey={marketKey} />
-          <p className="gw-small gw-muted">Recipes that make this item, priced in {marketName}, when the website knows them.</p>
-        </div>
-      ) : null}
-      {tab === 'sources' ? (
-        <div className="gw-insp__panel" role="tabpanel" aria-label="Sources">
-          {here ? <p className="gw-small"><ConfidenceBadge confidence={here.confidence} /> <Freshness price={here} /></p> : null}
-          <WhyThisPrice summary={here} />
-          <Evidence evidence={data.evidence} basis={data.basis} />
-          {!data.evidence.length ? <p className="gw-small gw-muted">No observations of this version in this market.</p> : null}
         </div>
       ) : null}
     </div>

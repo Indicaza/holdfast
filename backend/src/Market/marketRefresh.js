@@ -5,6 +5,9 @@ import {
   ensureMarketInDatabase,
   finishMarketSnapshotInDatabase,
   recordMarketCheckInDatabase,
+  ensureItemMetaInDatabase,
+  itemsToLookUpInDatabase,
+  markItemsLookedUpInDatabase,
   runMarketMaintenanceInDatabase,
   syncMarketCatalogInDatabase,
 } from "./marketRepository.js";
@@ -36,6 +39,8 @@ const MAINTENANCE_CHECK_MS = 3600_000;
 // bounded batch per transaction (see syncMarketCatalogInDatabase).
 const CATALOG_SYNC_MS = 5 * 60_000;
 const CATALOG_BATCHES_PER_RUN = 100;
+// Listed items without names are looked up every minute, up to 240 a run.
+const NAMES_MS = 60_000;
 
 function nowSeconds(now) {
   return Math.floor(now() / 1000);
@@ -242,7 +247,43 @@ export async function syncMarketCatalog({ batches = CATALOG_BATCHES_PER_RUN, now
   return items;
 }
 
-export function startMarketRefresher({ provider, intervalMs = TICK_MS, log = console } = {}) {
+// Names and classes for listed items nobody has described: Blizzard's
+// auction API sends only item ids, so each unknown id is looked up once in
+// Blizzard's item API (through the website's game data provider, which
+// stores the answer in the item catalog), then the Auction House's item
+// index is refreshed for it. A batch at a time; ids that are not found are
+// asked again after a week.
+export function marketItemDataEnv(env = process.env) {
+  const region = String(env.BLIZZARD_REGION || "us").trim().toLowerCase() || "us";
+  const configured = String(env.BLIZZARD_STATIC_NAMESPACES || `static-classic1x-${region},static-classic-${region}`).split(",").map((value) => value.trim()).filter(Boolean);
+  const forever = String(env.MARKET_ITEM_NAMESPACE || `static-forever-${region}`).trim();
+  return { ...env, BLIZZARD_STATIC_NAMESPACES: [...new Set([forever, ...configured])].join(",") };
+}
+
+export async function resolveMarketItemNames({ itemProvider, batches = 10, batchSize = 0, now = () => Math.floor(Date.now() / 1000) } = {}) {
+  const status = itemProvider?.status?.();
+  if (!status?.configured) return { looked: 0, named: 0 };
+  // One batch is what the provider asks Blizzard for at once.
+  batchSize = batchSize || status.maxEntities || 24;
+  let looked = 0;
+  let named = 0;
+  for (let batch = 0; batch < batches; batch += 1) {
+    const ids = withGuildTransaction((db) => {
+      const due = itemsToLookUpInDatabase(db, { limit: batchSize, now: now() });
+      markItemsLookedUpInDatabase(db, due, now());
+      return due;
+    });
+    if (!ids.length) break;
+    const result = await itemProvider.hydrateReferences({ items: ids });
+    looked += ids.length;
+    named += result?.hydrated || 0;
+    withGuildTransaction((db) => ensureItemMetaInDatabase(db, ids.map((itemId) => ({ itemId })), now(), { refresh: true }));
+    await yieldToRequests();
+  }
+  return { looked, named };
+}
+
+export function startMarketRefresher({ provider, itemProvider = null, intervalMs = TICK_MS, log = console } = {}) {
   const maintain = () => {
     try { maintainMarketsIfDue(); } catch (error) { log.error?.("[market] maintenance failed", error); }
   };
@@ -255,12 +296,22 @@ export function startMarketRefresher({ provider, intervalMs = TICK_MS, log = con
       .catch((error) => log.error?.("[market] catalog sync failed", error))
       .finally(() => { syncing = false; });
   };
+  let naming = false;
+  const names = () => {
+    if (naming) return;
+    naming = true;
+    resolveMarketItemNames({ itemProvider })
+      .then(({ looked, named }) => { if (looked) log.info?.(`[market] looked up ${looked} listed items, ${named} found in Blizzard's item data`); })
+      .catch((error) => log.error?.("[market] item lookup failed", error))
+      .finally(() => { naming = false; });
+  };
   const first = setTimeout(maintain, 60_000);
   const maintenance = setInterval(maintain, MAINTENANCE_CHECK_MS);
   const firstCatalog = setTimeout(catalog, 15_000);
   const catalogTimer = setInterval(catalog, CATALOG_SYNC_MS);
-  for (const timer of [first, maintenance, firstCatalog, catalogTimer]) timer.unref?.();
-  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); clearTimeout(firstCatalog); clearInterval(catalogTimer); };
+  const namesTimer = setInterval(names, NAMES_MS);
+  for (const timer of [first, maintenance, firstCatalog, catalogTimer, namesTimer]) timer.unref?.();
+  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); clearTimeout(firstCatalog); clearInterval(catalogTimer); clearInterval(namesTimer); };
   if (!provider?.configured()) {
     log.info?.("[market] No auction data provider configured; markets fill from in-game scans only.");
     return { stop: stopMaintenance, refresher: null };

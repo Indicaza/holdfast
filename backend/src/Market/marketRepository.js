@@ -240,6 +240,24 @@ export function syncMarketCatalogInDatabase(db, { limit = 2000, now = nowSeconds
   return { items, caughtUp };
 }
 
+// Items listed in some market that the website cannot name or place in a
+// category: Blizzard's auction API sends only item ids. Most listed first,
+// each asked about at most once a week (unknown ids stay unknown).
+export const ITEM_LOOKUP_RETRY_SECONDS = 7 * 86400;
+
+export function itemsToLookUpInDatabase(db, { limit = 24, now = nowSeconds() } = {}) {
+  return db.prepare(`SELECT m.item_id AS itemId FROM market_item_meta m
+    WHERE (m.name_source <> 'game' OR m.item_class_id IS NULL) AND COALESCE(m.lookup_at, 0) < ?
+      AND EXISTS (SELECT 1 FROM market_summaries s WHERE s.item_id = m.item_id AND +s.quantity > 0)
+    ORDER BY (SELECT MAX(s.quantity) FROM market_summaries s WHERE s.item_id = m.item_id) DESC, m.item_id
+    LIMIT ?`).all(now - ITEM_LOOKUP_RETRY_SECONDS, limit).map((row) => row.itemId);
+}
+
+export function markItemsLookedUpInDatabase(db, itemIds, now = nowSeconds()) {
+  const mark = db.prepare("UPDATE market_item_meta SET lookup_at = ? WHERE item_id = ?");
+  for (const id of itemIds) mark.run(now, id);
+}
+
 function rememberVariantNames(db, items, now) {
   const upsert = db.prepare(`INSERT INTO market_variant_names (item_key, name, search_name, updated_at) VALUES (?, ?, ?, ?)
     ON CONFLICT(item_key) DO UPDATE SET name = excluded.name, search_name = excluded.search_name, updated_at = excluded.updated_at`);
@@ -654,6 +672,8 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
 
     let total;
     let page_;
+    let unlistedTotal = 0;
+    let unlistedPage = [];
     if (mode === "browse") {
       const clauses = ["s.market_key = ?"];
       const params = [market.market_key];
@@ -707,20 +727,28 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
       page_ = db.prepare(`${rowsSql} SELECT f.sid, f.item_id FROM found f LEFT JOIN market_summaries s ON s.rowid = f.sid
         LEFT JOIN market_item_meta m ON m.item_id = f.item_id ${outer}
         ORDER BY ${order}, f.item_id ASC, s.item_key ASC LIMIT ? OFFSET ?`).all(...rowsParams, size, (current - 1) * size);
+      // With listings only: the best few known items that matched but have
+      // nothing listed here, so the page can say "none on this AH".
+      if (outer) {
+        unlistedTotal = db.prepare(`${rowsSql} SELECT COUNT(*) AS n FROM found f WHERE f.sid IS NULL`).get(...rowsParams)?.n ?? 0;
+        unlistedPage = db.prepare(`${rowsSql} SELECT f.sid, f.item_id FROM found f LEFT JOIN market_item_meta m ON m.item_id = f.item_id
+          WHERE f.sid IS NULL ORDER BY f.rank ASC, ${SORTS.name} ASC, f.item_id ASC LIMIT 3`).all(...rowsParams);
+      }
     }
 
-    // Details for this page only.
-    const sids = page_.map((row) => row.sid).filter((sid) => sid !== null && sid !== undefined);
+    // Details for these rows only.
+    const shown = [...page_, ...unlistedPage];
+    const sids = shown.map((row) => row.sid).filter((sid) => sid !== null && sid !== undefined);
     const summaries = new Map(sids.length ? db.prepare(`SELECT s.rowid AS sid, s.*, v.name AS variant_name FROM market_summaries s
       LEFT JOIN market_variant_names v ON v.item_key = s.item_key WHERE s.rowid IN (${sids.map(() => "?").join(",")})`).all(...sids).map((row) => [row.sid, row]) : []);
-    const item = metaFor(db, page_.map((row) => row.item_id));
+    const item = metaFor(db, shown.map((row) => row.item_id));
     const coverage = marketCoverageInDatabase(db, market.market_key, now);
-    const unlistedIds = [...new Set(page_.filter((row) => row.sid === null || row.sid === undefined).map((row) => row.item_id))];
+    const unlistedIds = [...new Set(shown.filter((row) => row.sid === null || row.sid === undefined).map((row) => row.item_id))];
     // Items a complete view saw with nothing listed.
     const noneListed = new Map(unlistedIds.length ? db.prepare(`SELECT item_id, MAX(COALESCE(confirmed_at, observed_at)) AS at FROM market_summaries
       WHERE market_key = ? AND item_id IN (${unlistedIds.map(() => "?").join(",")}) AND quantity = 0 GROUP BY item_id`)
       .all(market.market_key, ...unlistedIds).map((row) => [row.item_id, row.at]) : []);
-    const results = page_.map((row) => {
+    const describe = (row) => {
       const summary = summaries.get(row.sid);
       if (summary) return { item: item(row.item_id), ...summaryFromRow(summary, now), listing: summary.quantity > 0 ? "listed" : "none_listed" };
       const seenNone = noneListed.get(row.item_id) ?? null;
@@ -730,11 +758,12 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
         minUnitBuyout: null, typicalUnitBuyout: null, quantity: null, listings: null, source: null, confidence: null, pct: null,
         listingNote: at ? (seenNone && seenNone >= (coverage.complete ? coverage.fullAt : 0) ? "None listed when this item was last checked." : "Not in the latest complete view of this auction house.")
           : coverage.note };
-    });
+    };
     return {
       market: marketFromRow(market, now), mode, query, total: Number(total), page: current, pageSize: size, sort: sortKey, direction: dir.toLowerCase(),
       filters: { category: filters.category, listedOnly: listed }, coverage,
-      categories: marketCategories(db, market), results,
+      categories: marketCategories(db, market), results: page_.map(describe),
+      unlisted: { total: Number(unlistedTotal), items: unlistedPage.map(describe) },
     };
   });
 }

@@ -13,7 +13,8 @@ import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
 import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildReadModel.js";
 import { backfillEconomicObservationsInDatabase } from "./Economy/economicObservationRepository.js";
 import { createBlizzardAuctionProvider } from "./Market/blizzardAuctionProvider.js";
-import { startMarketRefresher } from "./Market/marketRefresh.js";
+import { marketItemDataEnv, startMarketRefresher } from "./Market/marketRefresh.js";
+import { createBlizzardGameDataProvider } from "./GameData/blizzardGameDataProvider.js";
 
 dotenv.config();
 assertProductionEnvironment();
@@ -64,7 +65,10 @@ if (publicGameBackfill.observations || publicGameBackfill.states) {
 // Auction data from Blizzard's API, one house per minute at most; without
 // credentials markets fill from in-game scans only.
 const auctionProvider = createBlizzardAuctionProvider();
-const marketRefresh = startMarketRefresher({ provider: auctionProvider });
+// Names for the item ids Blizzard's auction data lists: Forever's static
+// item data first, then the classic namespaces the website already reads.
+const marketItemProvider = createBlizzardGameDataProvider({ env: marketItemDataEnv() });
+const marketRefresh = startMarketRefresher({ provider: auctionProvider, itemProvider: marketItemProvider });
 
 const app = createApp({ marketRefresher: marketRefresh.refresher, marketProviderConfig: { name: auctionProvider.name, ...auctionProvider.config } });
 const PORT = process.env.PORT || 3000;
