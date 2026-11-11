@@ -70,6 +70,7 @@ export function syncItemDefinitions(page, { deviceName = 'Catalog PC', items = [
             payload: { schemaVersion: 1, basis: 'base_item_id', reference: `item:${item.itemId}`, item: {
               itemId: item.itemId, name: item.name, qualityId: item.qualityId, itemClass: item.itemClass, itemSubclass: item.itemSubclass,
               requiredLevel: item.requiredLevel ?? 0, itemLevel: item.itemLevel, bindType: item.bindType ?? 0, stackCount: item.stackCount ?? 1,
+              ...(item.equipLocation ? { equipLocation: item.equipLocation } : {}),
               tooltip: { source: 'GameTooltip', method: 'SetHyperlink', complete: true, rendered: true, lines: item.lines || [{ left: item.name }] },
             } },
           },
@@ -87,7 +88,7 @@ function definition(itemId, name, qualityId, { id, name: className, sub }, extra
 
 // The catalog: items the game described. Some are listed, some never were.
 export const CATALOG = [
-  definition(4319, 'Azure Silk Gloves', 2, { id: 4, name: 'Armor', sub: [1, 'Cloth'] }, { requiredLevel: 24, itemLevel: 29, bindType: 2,
+  definition(4319, 'Azure Silk Gloves', 2, { id: 4, name: 'Armor', sub: [1, 'Cloth'] }, { requiredLevel: 24, itemLevel: 29, bindType: 2, equipLocation: 'INVTYPE_HAND',
     lines: [{ left: 'Azure Silk Gloves' }, { left: 'Binds when equipped' }, { left: 'Hands', right: 'Cloth' }, { left: '30 Armor' }, { left: 'Requires Level 24' }] }),
   definition(2589, 'Linen Cloth', 1, tradeGoods(5, 'Cloth'), { stackCount: 20, lines: [{ left: 'Linen Cloth' }, { left: 'Crafting Reagent' }] }),
   definition(2592, 'Wool Cloth', 1, tradeGoods(5, 'Cloth'), { stackCount: 20 }),
@@ -95,7 +96,7 @@ export const CATALOG = [
   definition(2770, 'Copper Ore', 1, tradeGoods(7, 'Metal & Stone'), { stackCount: 20 }),
   definition(12359, 'Thorium Bar', 1, tradeGoods(7, 'Metal & Stone'), { stackCount: 20 }),
   definition(3575, 'Iron Bar', 1, tradeGoods(7, 'Metal & Stone'), { stackCount: 20 }),
-  definition(15210, "Raider's Chestpiece", 2, { id: 4, name: 'Armor', sub: [2, 'Leather'] }, { requiredLevel: 15, itemLevel: 20 }),
+  definition(15210, "Raider's Chestpiece", 2, { id: 4, name: 'Armor', sub: [2, 'Leather'] }, { requiredLevel: 15, itemLevel: 20, equipLocation: 'INVTYPE_CHEST' }),
   definition(18803, "Finkle's Lava Dredger", 4, { id: 2, name: 'Weapon', sub: [6, 'Polearms'] }, { requiredLevel: 60, itemLevel: 70 }),
 ]
 

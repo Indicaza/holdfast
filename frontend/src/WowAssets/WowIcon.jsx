@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { wowAssetDescriptor } from './assetResolver.js'
@@ -26,6 +26,11 @@ function safeImageSource(value) {
   }
 }
 
+// The distinct usable sources for an icon, in the order they are tried.
+function iconSources(...candidates) {
+  return [...new Set(candidates.map(safeImageSource).filter(Boolean))]
+}
+
 export function WowIcon({
   src = '',
   iconFileId,
@@ -38,15 +43,20 @@ export function WowIcon({
   className = '',
 }) {
   const descriptor = wowAssetDescriptor({ iconFileId, itemId, spellId, recipeId, size })
-  const imageSource = safeImageSource(src) || descriptor.src
-  const [failed, setFailed] = useState(false)
+  // Every source for this icon, tried in order: the image URL the data gave,
+  // then the website's own icon route (stored copy, Blizzard's item image or
+  // media search). Each is tried once; then the game's question mark.
+  const sources = iconSources(src, descriptor.src)
+  const sourceKey = sources.join('|')
+  const [attempt, setAttempt] = useState({ key: sourceKey, index: 0 })
+  const index = attempt.key === sourceKey ? attempt.index : 0
   const [questionMarkFailed, setQuestionMarkFailed] = useState(false)
   const qualityClass = Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
-  const shown = imageSource && !failed ? imageSource : questionMarkFailed ? '' : QUESTION_MARK_ICON
-
-  useEffect(() => {
-    setFailed(false)
-  }, [imageSource])
+  const shown = index < sources.length ? sources[index] : questionMarkFailed ? '' : QUESTION_MARK_ICON
+  const failed = () => {
+    if (shown === QUESTION_MARK_ICON) setQuestionMarkFailed(true)
+    else setAttempt({ key: sourceKey, index: index + 1 })
+  }
 
   return (
     <span
@@ -63,7 +73,7 @@ export function WowIcon({
           height={size}
           loading="lazy"
           data-missing-icon={shown === QUESTION_MARK_ICON ? '' : undefined}
-          onError={() => (shown === QUESTION_MARK_ICON ? setQuestionMarkFailed(true) : setFailed(true))}
+          onError={failed}
         />
       ) : (
         <span className="wow-icon__fallback">{fallbackText(label, descriptor)}</span>

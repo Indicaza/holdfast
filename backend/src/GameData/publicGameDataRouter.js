@@ -1,5 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { createBlizzardIconMediaResolver } from "./blizzardIconMedia.js";
+import { iconKnownInDatabase, sendIcon } from "./iconRegistry.js";
 import express from "express";
 import { gameInteger } from "./publicGameDataModel.js";
 import { publicGameScopes, readPublicItem, searchPublicItems } from "./publicGameDataRepository.js";
@@ -20,13 +21,11 @@ export function createPublicGameDataRouter({ iconMediaResolver } = {}) {
   router.get("/icons/:fileDataId", async (req, res) => {
     const id = /^\d+$/.test(req.params.fileDataId) ? gameInteger(req.params.fileDataId, 1) : null;
     if (!id) { res.status(400).json({ error: "invalid_icon_file_data_id" }); return; }
-    const observed = withGuildDatabase((db) => db.prepare("SELECT 1 FROM public_game_items WHERE icon_file_id = ? LIMIT 1").get(id));
-    if (!observed) { res.status(404).json({ error: "icon_not_observed" }); return; }
+    // Icons of items the website knows (any source), never a proxy for anything.
+    const known = withGuildDatabase((db) => iconKnownInDatabase(db, id));
+    if (!known) { res.status(404).json({ error: "icon_not_observed" }); return; }
     try {
-      const url = await icons.resolve(id);
-      if (!url) { res.status(404).json({ error: "icon_media_not_found" }); return; }
-      res.set("Cache-Control", "public, max-age=3600");
-      res.redirect(302, url);
+      await sendIcon(res, id, { resolver: icons });
     } catch {
       res.status(404).json({ error: "icon_media_not_found" });
     }

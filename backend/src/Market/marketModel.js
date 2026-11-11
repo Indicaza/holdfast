@@ -24,6 +24,8 @@ const TYPICAL_SHARE = 0.3;
 // hour behind; a third-party provider is a copy of either.
 const SOURCE_RANK = Object.freeze({ addon_scan: 3, official_api: 2, provider: 1 });
 export const PRICE_POINTS = 10;
+// The price levels kept for an item's current price list (market depth).
+export const LADDER_LEVELS = 200;
 
 const REGIONS = new Set(["us", "eu", "kr", "tw"]);
 const FACTIONS = new Set(["alliance", "horde", "neutral"]);
@@ -121,7 +123,9 @@ function weightedPercentile(sorted, total, fraction) {
 
 // Listings → per-variant aggregates. A listing gives a unit price (copper per
 // item) or a stack buyout, which is divided by its quantity; never both
-// mixed. `count` lets a client send one row for several identical listings.
+// mixed. `count` lets a client send one row for several identical listings;
+// with `total`, the row is a price level instead: `quantity` items in all,
+// across `count` auctions (an in-game scan's price points).
 export function aggregateListings(listings = []) {
   const byKey = new Map();
   for (const listing of listings) {
@@ -132,9 +136,10 @@ export function aggregateListings(listings = []) {
     const entry = byKey.get(itemKey) || { itemKey, itemId: itemIdFromKey(itemKey), prices: [], quantity: 0, listings: 0, bidOnly: 0, minBid: null };
     const unit = copper(listing.unitPrice) ?? (copper(listing.buyout) !== null ? Math.round(copper(listing.buyout) / quantity) : null);
     const bid = copper(listing.bid);
-    entry.quantity += quantity * count;
+    const amount = listing.total === true ? quantity : quantity * count;
+    entry.quantity += amount;
     entry.listings += count;
-    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: quantity * count });
+    if (unit !== null && unit > 0) entry.prices.push({ unit, quantity: amount, count });
     else entry.bidOnly += count;
     if (bid !== null && bid > 0) {
       const unitBid = Math.round(bid / quantity);
@@ -155,19 +160,23 @@ function summarizePrices(entry) {
     cheapest.push(value);
     taken += value.quantity;
   }
-  const points = [];
+  // Every price level seen, cheapest first: [unit price, quantity, auctions].
+  const ladder = [];
   for (const value of sorted) {
-    const last = points.at(-1);
-    if (last && last[0] === value.unit) last[1] += value.quantity;
-    else if (points.length < PRICE_POINTS) points.push([value.unit, value.quantity]);
+    const last = ladder.at(-1);
+    if (last && last[0] === value.unit) { last[1] += value.quantity; last[2] += value.count || 1; }
+    else if (ladder.length < LADDER_LEVELS) ladder.push([value.unit, value.quantity, value.count || 1]);
     else break;
   }
+  const points = ladder.slice(0, PRICE_POINTS).map((level) => [...level]);
   return {
     itemKey: entry.itemKey,
     itemId: entry.itemId,
     minUnitBuyout: sorted[0]?.unit ?? null,
     minQuantity: points[0]?.[1] ?? null,
     pricePoints: points,
+    ladder,
+    ladderTruncated: ladder.length === LADDER_LEVELS && sorted.at(-1)?.unit !== ladder.at(-1)?.[0],
     typicalUnitBuyout: cheapest.length ? weightedPercentile(cheapest, taken, 0.5) : null,
     maxUnitBuyout: sorted.length ? weightedPercentile(sorted, priced, 0.9) : null,
     minUnitBid: entry.minBid,

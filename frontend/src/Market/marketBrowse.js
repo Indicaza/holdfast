@@ -1,39 +1,6 @@
-// Browse table columns, sorting and the floating item inspectors' window
-// geometry. Pure: tested without a browser.
-
-// The game's three columns are always shown; the rest can be switched on.
-export const BROWSE_COLUMNS = Object.freeze([
-  { id: 'price', label: 'Price', title: 'Lowest buyout per unit (per stack with "stack prices")', numeric: true, firstDir: 'asc' },
-  { id: 'name', label: 'Name', firstDir: 'asc' },
-  { id: 'quantity', label: 'Available', title: 'Quantity listed', numeric: true, firstDir: 'desc' },
-  { id: 'level', label: 'Req', title: 'Required level', numeric: true, optional: true, firstDir: 'desc' },
-  { id: 'ilvl', label: 'iLvl', title: 'Item level', numeric: true, optional: true, firstDir: 'desc' },
-  { id: 'listings', label: 'Auctions', title: 'Number of auctions', numeric: true, optional: true, firstDir: 'desc' },
-  { id: 'age', label: 'Seen', title: 'When these listings were last observed', optional: true, firstDir: 'desc' },
-  { id: 'pct', label: 'vs median', title: 'Lowest ask as a share of its 14-day median asking price', numeric: true, optional: true, firstDir: 'asc' },
-  { id: 'confidence', label: 'Confidence', title: 'How complete and recent the observation is', optional: true, firstDir: 'desc' },
-])
-
-const COLUMNS_KEY = 'guildweaver:auctions:columns'
-const OPTIONAL = new Set(BROWSE_COLUMNS.filter((column) => column.optional).map((column) => column.id))
-
-export function readColumns(storage = globalThis.localStorage) {
-  try {
-    const value = JSON.parse(storage?.getItem(COLUMNS_KEY) || '[]')
-    return Array.isArray(value) ? value.filter((id) => OPTIONAL.has(id)) : []
-  } catch {
-    return []
-  }
-}
-
-export function storeColumns(ids, storage = globalThis.localStorage) {
-  try { storage?.setItem(COLUMNS_KEY, JSON.stringify(ids.filter((id) => OPTIONAL.has(id)))) } catch { /* a convenience */ }
-}
-
-export function visibleColumns(optional = []) {
-  const on = new Set(optional)
-  return BROWSE_COLUMNS.filter((column) => !column.optional || on.has(column.id))
-}
+// Sorting, auction houses per server, item tooltips and the floating item
+// windows' geometry. Pure: tested without a browser.
+import { bindLabel } from './marketFormat.js'
 
 // Clicking a header: a new column starts in its natural direction (cheapest
 // first, most available first), the active one flips.
@@ -69,6 +36,22 @@ export function storeOpenCategories(keys, storage = globalThis.sessionStorage) {
 
 const FACTION_LABELS = { alliance: 'Alliance', horde: 'Horde', neutral: 'Blackwater' }
 
+// A race's faction, as fixed by the game.
+const RACE_FACTION = { human: 'alliance', dwarf: 'alliance', nightelf: 'alliance', gnome: 'alliance', draenei: 'alliance',
+  orc: 'horde', undead: 'horde', scourge: 'horde', tauren: 'horde', troll: 'horde', bloodelf: 'horde' }
+
+// The faction of the player's most recently seen character on a server
+// (characters come most recent first), for the house to open on.
+export function factionForServer(characters = [], server = '') {
+  for (const character of characters) {
+    const key = `${String(character.region || '').toLowerCase()}:${String(character.realm || '').toLowerCase()}`
+    if (server && key !== server) continue
+    const faction = RACE_FACTION[String(character.race || '').toLowerCase().replace(/[\s_-]+/g, '')]
+    if (faction) return faction
+  }
+  return ''
+}
+
 // The dashboard's server key ("us:normal") of an in-game auction house.
 export function marketServer(market) {
   return market?.kind === 'client_house' && market.realm ? `${String(market.region || '').toLowerCase()}:${market.realm.toLowerCase()}` : ''
@@ -81,7 +64,7 @@ function count(market) {
 // The houses to offer: with a server chosen, that server's Alliance, Horde
 // and Blackwater houses, then Blizzard's houses linked to it or not yet
 // matched to any server. Without one (or with no data from it), every house.
-export function marketChoices(markets = [], server = '') {
+export function marketChoices(markets = [], server = '', faction = '') {
   const game = markets.filter((market) => market.kind === 'client_house')
   const api = markets.filter((market) => market.kind === 'api_house')
   const serversOf = new Map(api.map((house) => [house.marketKey, new Set(game.filter((market) => market.linkedMarketKey === house.marketKey).map(marketServer))]))
@@ -91,7 +74,9 @@ export function marketChoices(markets = [], server = '') {
     if (!byServer.has(key)) byServer.set(key, { label: market.realm, markets: [] })
     byServer.get(key).markets.push({ ...market, label: `${market.realm} · ${FACTION_LABELS[market.faction] || market.faction} · ${count(market)}` })
   }
-  const order = (list) => list.sort((a, b) => Object.keys(FACTION_LABELS).indexOf(a.faction) - Object.keys(FACTION_LABELS).indexOf(b.faction))
+  // The player's faction first, then Alliance, Horde, Blackwater.
+  const rank = (market) => (market.faction === faction ? -1 : Object.keys(FACTION_LABELS).indexOf(market.faction))
+  const order = (list) => list.sort((a, b) => rank(a) - rank(b))
   const otherServers = Boolean(server) && !byServer.has(server) && markets.length > 0
   const servers = server && byServer.has(server) ? [byServer.get(server)] : [...byServer.values()].sort((a, b) => a.label.localeCompare(b.label))
   const houses = api.filter((house) => !server || otherServers || !serversOf.get(house.marketKey).size || serversOf.get(house.marketKey).has(server))
@@ -202,4 +187,36 @@ export function readInspectors(viewport, storage = globalThis.sessionStorage) {
 
 export function storeInspectors(windows, storage = globalThis.sessionStorage) {
   try { storage?.setItem(INSPECTORS_KEY, JSON.stringify(windows)) } catch { /* a convenience */ }
+}
+
+// Item tooltips -------------------------------------------------------------------
+
+export const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
+
+// The tooltip lines for an item: what the game showed (or Blizzard's item
+// API described), else the few facts the website knows, said to be
+// incomplete. Never made up.
+export function tooltipItem(item) {
+  if (!item) return null
+  if (Array.isArray(item.tooltipLines) && item.tooltipLines.length) return { ...item, tooltipLines: item.tooltipLines }
+  const quality = Number.isFinite(Number(item.qualityId)) ? Number(item.qualityId) : null
+  const lines = [{ left: item.name || `Item ${item.itemId}` }]
+  if (item.bindType !== null && item.bindType !== undefined && item.bindType !== 0) lines.push({ left: bindLabel(item.bindType) })
+  if (item.itemClass || item.itemSubclass) lines.push({ left: item.itemClass || '', right: item.itemSubclass || '' })
+  if (item.itemLevel) lines.push({ left: `Item Level ${item.itemLevel}` })
+  if (item.requiredLevel) lines.push({ left: `Requires Level ${item.requiredLevel}` })
+  if (quality === null && lines.length === 1) lines.push({ left: `Item ${item.itemId}`, leftColor: { r: 0.6, g: 0.6, b: 0.6 } })
+  lines.push({ left: 'No player\'s game has shown this item\'s full tooltip yet.', leftColor: { r: 0.5, g: 0.5, b: 0.5 } })
+  return { ...item, qualityId: quality ?? item.qualityId, tooltipLines: lines }
+}
+
+export function qualityName(qualityId) {
+  return QUALITY_NAMES[Number(qualityId)] || ''
+}
+
+// The item's facts in one line: rarity, levels, binding, kind.
+export function itemFacts(item) {
+  return [qualityName(item.qualityId), item.itemLevel ? `Item Level ${item.itemLevel}` : null, item.requiredLevel ? `Requires Level ${item.requiredLevel}` : null,
+    item.bindType !== null && item.bindType !== undefined && item.bindType !== 0 ? bindLabel(item.bindType) : null,
+    [item.itemClass, item.itemSubclass].filter(Boolean).join(' · ') || null].filter(Boolean).join(' · ')
 }

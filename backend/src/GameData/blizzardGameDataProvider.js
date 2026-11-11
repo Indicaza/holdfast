@@ -124,8 +124,35 @@ function qualityId(payload) {
   return QUALITY_IDS[text(payload?.quality?.type, 32).toUpperCase()] ?? null;
 }
 
+// The item's tooltip as Blizzard's item API describes it (`preview_item`):
+// its own display strings, in the game's order. Nothing is composed or
+// guessed; a line Blizzard does not send is left out.
+export function previewTooltipLines(payload) {
+  const preview = payload?.preview_item;
+  if (!preview || typeof preview !== "object") return [];
+  const line = (left, right = "") => ({ left: text(left, 300), ...(text(right, 120) ? { right: text(right, 120) } : {}) });
+  const lines = [];
+  const add = (left, right) => { if (text(left, 300) || text(right, 120)) lines.push(line(left, right)); };
+  add(preview.name ?? payload?.name);
+  add(preview.level?.display_string);
+  add(preview.binding?.name);
+  add(preview.unique_equipped);
+  add(preview.inventory_type?.name, preview.item_subclass?.name);
+  add(preview.weapon?.damage?.display_string, preview.weapon?.attack_speed?.display_string);
+  add(preview.weapon?.dps?.display_string);
+  add(preview.armor?.display?.display_string ?? preview.armor?.display_string);
+  for (const stat of array(preview.stats)) add(stat?.display?.display_string ?? stat?.display_string);
+  add(preview.durability?.display_string);
+  add(preview.requirements?.level?.display_string);
+  add(preview.requirements?.skill?.display_string);
+  for (const spell of array(preview.spells)) add(spell?.description);
+  if (text(preview.description, 300)) add(`"${text(preview.description, 296)}"`);
+  return lines.slice(0, 40);
+}
+
 function itemMetadata(payload, media, namespace) {
   return {
+    tooltipLines: previewTooltipLines(payload),
     mediaUrl: media.mediaUrl,
     mediaKey: media.mediaKey,
     namespace,

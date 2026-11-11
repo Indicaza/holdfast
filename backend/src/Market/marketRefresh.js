@@ -1,4 +1,5 @@
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
+import { iconStorageConfig, storeIcons } from "../GameData/iconRegistry.js";
 import {
   addMarketSnapshotItemsInDatabase,
   beginMarketSnapshotInDatabase,
@@ -117,7 +118,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
     let outcome = { endpoint: result.endpoint, status: result.status, httpStatus: result.httpStatus ?? null };
     if (result.status === "ok") {
       const input = { market, sourceType: provider.sourceType, sourceId: `${provider.name}:${scope}:${result.lastModified || result.observedAt}`,
-        coverage: "full", scope, observedAt: result.observedAt, items: result.items, now: at };
+        coverage: "full", scope, observedAt: result.observedAt, items: result.items, allowEmpty: result.empty === true, now: at };
       const begun = withGuildTransaction((db) => beginMarketSnapshotInDatabase(db, input));
       for (let start = 0; (begun.status === "recorded" || begun.status === "unchanged") && start < begun.items.length; start += CHUNK_ITEMS) {
         await yieldToRequests();
@@ -310,8 +311,16 @@ export function startMarketRefresher({ provider, itemProvider = null, intervalMs
   const firstCatalog = setTimeout(catalog, 15_000);
   const catalogTimer = setInterval(catalog, CATALOG_SYNC_MS);
   const namesTimer = setInterval(names, NAMES_MS);
-  for (const timer of [first, maintenance, firstCatalog, catalogTimer, namesTimer]) timer.unref?.();
-  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); clearTimeout(firstCatalog); clearInterval(catalogTimer); clearInterval(namesTimer); };
+  // Copies of icons in object storage, a few at a time, only when configured.
+  let copying = false;
+  const icons = () => {
+    if (copying || !iconStorageConfig()) return;
+    copying = true;
+    storeIcons().catch((error) => log.error?.("[icons] copying icons failed", error)).finally(() => { copying = false; });
+  };
+  const iconsTimer = setInterval(icons, CATALOG_SYNC_MS);
+  for (const timer of [first, maintenance, firstCatalog, catalogTimer, namesTimer, iconsTimer]) timer.unref?.();
+  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); clearTimeout(firstCatalog); clearInterval(catalogTimer); clearInterval(namesTimer); clearInterval(iconsTimer); };
   if (!provider?.configured()) {
     log.info?.("[market] No auction data provider configured; markets fill from in-game scans only.");
     return { stop: stopMaintenance, refresher: null };

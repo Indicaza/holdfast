@@ -39,137 +39,102 @@ const SUBCLASS_NAMES = {
   16: { warrior: 1, paladin: 2, hunter: 3, rogue: 4, priest: 5, "death knight": 6, shaman: 7, mage: 8, warlock: 9, monk: 10, druid: 11 },
 };
 
+// Equipment slots (the game's Enum.InventoryType), from the add-on's
+// GetItemInfo equip location ("INVTYPE_CHEST") or Blizzard's item API
+// ("CHEST").
+const INVENTORY_TYPES = {
+  HEAD: 1, NECK: 2, SHOULDER: 3, BODY: 4, SHIRT: 4, CHEST: 5, WAIST: 6, LEGS: 7, FEET: 8, WRIST: 9, HAND: 10, HANDS: 10,
+  FINGER: 11, TRINKET: 12, WEAPON: 13, SHIELD: 14, RANGED: 15, CLOAK: 16, BACK: 16, "2HWEAPON": 17, TWOHWEAPON: 17, BAG: 18,
+  TABARD: 19, ROBE: 20, WEAPONMAINHAND: 21, WEAPONOFFHAND: 22, HOLDABLE: 23, AMMO: 24, THROWN: 25, RANGEDRIGHT: 26, QUIVER: 27, RELIC: 28,
+};
+
+export function inventoryTypeIndex(value) {
+  if (Number.isSafeInteger(value) && value > 0 && value < 64) return value;
+  const name = String(value ?? "").trim().toUpperCase().replace(/^INVTYPE_/, "").replace(/[\s_-]+/g, "");
+  return INVENTORY_TYPES[name] ?? null;
+}
+
 // A rule matches items of one class: every subclass, only `sub`, or every
-// subclass but `not`. An item with a class but no known subclass matches
-// class-wide and "not" rules, never a "sub" rule.
+// subclass but `not`; with `inv`, only those equipment slots. An item with
+// a class but no known subclass (or slot) matches only rules that do not
+// ask for one.
 const all = (classId) => ({ classId });
 const only = (classId, ...sub) => ({ classId, sub });
-const except = (classId, ...not) => ({ classId, not });
+const slot = (classId, sub, ...inv) => ({ classId, sub: [sub], inv });
 
-// The tree, in the game's order. Keys are stable (URLs and saved searches
-// use them); labels are what the player reads.
+// A node selects its own rules, or (a named group in the game) the union of
+// its children's.
+function node(key, label, rules, children = []) {
+  return { key, label, rules: rules?.length ? rules : children.flatMap((child) => child.rules), children };
+}
+const leaf = (key, label, ...rules) => node(key, label, rules);
+
+const ARMOR_SLOTS = [["head", "Head", 1], ["shoulder", "Shoulder", 3], ["chest", "Chest", 5, 20], ["waist", "Waist", 6], ["legs", "Legs", 7],
+  ["feet", "Feet", 8], ["wrist", "Wrist", 9], ["hands", "Hands", 10], ["relic", "Relic", 28]];
+const armorType = (key, label, subclass) => node(key, label, [only(4, subclass)],
+  ARMOR_SLOTS.map(([slotKey, slotLabel, ...inv]) => leaf(slotKey, slotLabel, slot(4, subclass, ...inv))));
+
+// WoW Forever's own auction house categories (Blizzard_AuctionHouseUI,
+// Camelot/Blizzard_AuctionData.lua, client 1.60.1), in the game's order.
+// Keys are stable (URLs and saved searches use them); labels are the game's.
 export const CATEGORY_TREE = Object.freeze([
-  { key: "weapons", label: "Weapons", rules: [all(2), all(6)], subcategories: [
-    { key: "one-handed-axes", label: "One-Handed Axes", rules: [only(2, 0)] },
-    { key: "two-handed-axes", label: "Two-Handed Axes", rules: [only(2, 1)] },
-    { key: "bows", label: "Bows", rules: [only(2, 2)] },
-    { key: "guns", label: "Guns", rules: [only(2, 3)] },
-    { key: "one-handed-maces", label: "One-Handed Maces", rules: [only(2, 4)] },
-    { key: "two-handed-maces", label: "Two-Handed Maces", rules: [only(2, 5)] },
-    { key: "polearms", label: "Polearms", rules: [only(2, 6)] },
-    { key: "one-handed-swords", label: "One-Handed Swords", rules: [only(2, 7)] },
-    { key: "two-handed-swords", label: "Two-Handed Swords", rules: [only(2, 8)] },
-    { key: "staves", label: "Staves", rules: [only(2, 10)] },
-    { key: "fist-weapons", label: "Fist Weapons", rules: [only(2, 13)] },
-    { key: "daggers", label: "Daggers", rules: [only(2, 15)] },
-    { key: "thrown", label: "Thrown", rules: [only(2, 16)] },
-    { key: "crossbows", label: "Crossbows", rules: [only(2, 18)] },
-    { key: "wands", label: "Wands", rules: [only(2, 19)] },
-    { key: "fishing-poles", label: "Fishing Poles", rules: [only(2, 20)] },
-    { key: "ammunition", label: "Ammunition", rules: [all(6)] },
-    { key: "other", label: "Miscellaneous", rules: [only(2, 9, 11, 12, 14, 17)] },
-  ] },
-  { key: "armor", label: "Armor", rules: [all(4)], subcategories: [
-    { key: "cloth", label: "Cloth", rules: [only(4, 1)] },
-    { key: "leather", label: "Leather", rules: [only(4, 2)] },
-    { key: "mail", label: "Mail", rules: [only(4, 3)] },
-    { key: "plate", label: "Plate", rules: [only(4, 4)] },
-    { key: "shields", label: "Shields", rules: [only(4, 6)] },
-    { key: "relics", label: "Relics", rules: [only(4, 7, 8, 9, 10, 11)] },
-    { key: "cosmetic", label: "Cosmetic", rules: [only(4, 5)] },
-    { key: "miscellaneous", label: "Miscellaneous", rules: [only(4, 0)] },
-  ] },
-  { key: "containers", label: "Containers", rules: [all(1), all(11)], subcategories: [
-    { key: "bags", label: "Bags", rules: [only(1, 0)] },
-    { key: "soul-bags", label: "Soul Bags", rules: [only(1, 1)] },
-    { key: "herb-bags", label: "Herb Bags", rules: [only(1, 2)] },
-    { key: "enchanting-bags", label: "Enchanting Bags", rules: [only(1, 3)] },
-    { key: "engineering-bags", label: "Engineering Bags", rules: [only(1, 4)] },
-    { key: "gem-bags", label: "Gem Bags", rules: [only(1, 5)] },
-    { key: "mining-bags", label: "Mining Bags", rules: [only(1, 6)] },
-    { key: "leatherworking-bags", label: "Leatherworking Bags", rules: [only(1, 7)] },
-    { key: "inscription-bags", label: "Inscription Bags", rules: [only(1, 8)] },
-    { key: "tackle-boxes", label: "Tackle Boxes", rules: [only(1, 9)] },
-    { key: "cooking-bags", label: "Cooking Bags", rules: [only(1, 10)] },
-    { key: "quivers", label: "Quivers & Ammo Pouches", rules: [all(11)] },
-  ] },
-  { key: "gems", label: "Gems", rules: [all(3)], subcategories: [
-    { key: "red", label: "Red", rules: [only(3, 0)] },
-    { key: "blue", label: "Blue", rules: [only(3, 1)] },
-    { key: "yellow", label: "Yellow", rules: [only(3, 2)] },
-    { key: "purple", label: "Purple", rules: [only(3, 3)] },
-    { key: "green", label: "Green", rules: [only(3, 4)] },
-    { key: "orange", label: "Orange", rules: [only(3, 5)] },
-    { key: "meta", label: "Meta", rules: [only(3, 6)] },
-    { key: "simple", label: "Simple", rules: [only(3, 7)] },
-    { key: "prismatic", label: "Prismatic", rules: [only(3, 8)] },
-    { key: "hydraulic", label: "Hydraulic", rules: [only(3, 9)] },
-    { key: "cogwheel", label: "Cogwheel", rules: [only(3, 10)] },
-  ] },
-  // Enhancements live in three places in the game's data: their own class,
-  // consumables (subclass 6) and trade goods (subclasses 14 and 15).
-  { key: "item-enhancements", label: "Item Enhancements", rules: [all(8), only(0, 6), only(7, 14, 15)], subcategories: [] },
-  { key: "consumables", label: "Consumables", rules: [except(0, 6)], subcategories: [
-    { key: "potions", label: "Potions", rules: [only(0, 1)] },
-    { key: "elixirs", label: "Elixirs", rules: [only(0, 2)] },
-    { key: "flasks", label: "Flasks", rules: [only(0, 3)] },
-    { key: "scrolls", label: "Scrolls", rules: [only(0, 4)] },
-    { key: "food-drink", label: "Food & Drink", rules: [only(0, 5)] },
-    { key: "bandages", label: "Bandages", rules: [only(0, 7)] },
-    { key: "other", label: "Other", rules: [only(0, 0, 8)] },
-  ] },
-  { key: "glyphs", label: "Glyphs", rules: [all(16)], subcategories: [
-    { key: "warrior", label: "Warrior", rules: [only(16, 1)] },
-    { key: "paladin", label: "Paladin", rules: [only(16, 2)] },
-    { key: "hunter", label: "Hunter", rules: [only(16, 3)] },
-    { key: "rogue", label: "Rogue", rules: [only(16, 4)] },
-    { key: "priest", label: "Priest", rules: [only(16, 5)] },
-    { key: "death-knight", label: "Death Knight", rules: [only(16, 6)] },
-    { key: "shaman", label: "Shaman", rules: [only(16, 7)] },
-    { key: "mage", label: "Mage", rules: [only(16, 8)] },
-    { key: "warlock", label: "Warlock", rules: [only(16, 9)] },
-    { key: "monk", label: "Monk", rules: [only(16, 10)] },
-    { key: "druid", label: "Druid", rules: [only(16, 11)] },
-  ] },
-  { key: "trade-goods", label: "Trade Goods", rules: [except(7, 14, 15)], subcategories: [
-    { key: "cloth", label: "Cloth", rules: [only(7, 5)] },
-    { key: "leather", label: "Leather", rules: [only(7, 6)] },
-    { key: "metal-stone", label: "Metal & Stone", rules: [only(7, 7)] },
-    { key: "herbs", label: "Herbs", rules: [only(7, 9)] },
-    { key: "enchanting", label: "Enchanting", rules: [only(7, 12)] },
-    { key: "jewelcrafting", label: "Jewelcrafting", rules: [only(7, 4)] },
-    { key: "parts", label: "Parts", rules: [only(7, 1)] },
-    { key: "elemental", label: "Elemental", rules: [only(7, 10)] },
-    { key: "cooking", label: "Cooking", rules: [only(7, 8)] },
-    { key: "explosives-devices", label: "Explosives & Devices", rules: [only(7, 2, 3)] },
-    { key: "inscription", label: "Inscription", rules: [only(7, 16)] },
-    { key: "materials", label: "Materials", rules: [only(7, 13)] },
-    { key: "other", label: "Other", rules: [only(7, 0, 11)] },
-  ] },
-  { key: "recipes", label: "Recipes", rules: [all(9)], subcategories: [
-    { key: "books", label: "Books", rules: [only(9, 0)] },
-    { key: "leatherworking", label: "Leatherworking", rules: [only(9, 1)] },
-    { key: "tailoring", label: "Tailoring", rules: [only(9, 2)] },
-    { key: "engineering", label: "Engineering", rules: [only(9, 3)] },
-    { key: "blacksmithing", label: "Blacksmithing", rules: [only(9, 4)] },
-    { key: "cooking", label: "Cooking", rules: [only(9, 5)] },
-    { key: "alchemy", label: "Alchemy", rules: [only(9, 6)] },
-    { key: "first-aid", label: "First Aid", rules: [only(9, 7)] },
-    { key: "enchanting", label: "Enchanting", rules: [only(9, 8)] },
-    { key: "fishing", label: "Fishing", rules: [only(9, 9)] },
-    { key: "jewelcrafting", label: "Jewelcrafting", rules: [only(9, 10)] },
-    { key: "inscription", label: "Inscription", rules: [only(9, 11)] },
-  ] },
-  { key: "miscellaneous", label: "Miscellaneous", rules: [all(15), all(5), all(12), all(13), all(17), all(18), all(19)], subcategories: [
-    { key: "junk", label: "Junk", rules: [only(15, 0)] },
-    { key: "reagents", label: "Reagents", rules: [only(15, 1), all(5)] },
-    { key: "pets", label: "Companion Pets", rules: [only(15, 2), all(17)] },
-    { key: "holiday", label: "Holiday", rules: [only(15, 3)] },
-    { key: "mounts", label: "Mounts", rules: [only(15, 5, 6)] },
-    { key: "quest", label: "Quest Items", rules: [all(12)] },
-    { key: "keys", label: "Keys", rules: [all(13)] },
-    { key: "other", label: "Other", rules: [only(15, 4), all(18), all(19)] },
-  ] },
+  node("weapons", "Weapons", null, [
+    node("one-handed", "One-Handed", null, [
+      leaf("one-handed-axes", "One-Handed Axes", only(2, 0)), leaf("one-handed-maces", "One-Handed Maces", only(2, 4)),
+      leaf("one-handed-swords", "One-Handed Swords", only(2, 7)), leaf("daggers", "Daggers", only(2, 15)),
+      leaf("fist-weapons", "Fist Weapons", only(2, 13)), leaf("wands", "Wands", only(2, 19)),
+    ]),
+    node("two-handed", "Two-Handed", null, [
+      leaf("two-handed-axes", "Two-Handed Axes", only(2, 1)), leaf("two-handed-maces", "Two-Handed Maces", only(2, 5)),
+      leaf("two-handed-swords", "Two-Handed Swords", only(2, 8)), leaf("polearms", "Polearms", only(2, 6)), leaf("staves", "Staves", only(2, 10)),
+    ]),
+    node("ranged", "Ranged", null, [
+      leaf("bows", "Bows", only(2, 2)), leaf("crossbows", "Crossbows", only(2, 18)), leaf("guns", "Guns", only(2, 3)), leaf("thrown", "Thrown", only(2, 16)),
+    ]),
+    node("miscellaneous", "Miscellaneous", null, [leaf("fishing-poles", "Fishing Poles", only(2, 20)), leaf("other", "Other", only(2, 14))]),
+  ]),
+  node("armor", "Armor", null, [
+    armorType("plate", "Plate", 4), armorType("mail", "Mail", 3), armorType("leather", "Leather", 2), armorType("cloth", "Cloth", 1),
+    node("relic", "Relic", null, [leaf("idols", "Idols", only(4, 8)), leaf("librams", "Librams", only(4, 7)), leaf("totems", "Totems", only(4, 9))]),
+    node("miscellaneous", "Miscellaneous", null, [
+      leaf("neck", "Neck", slot(4, 0, 2)), leaf("cloak", "Cloak", slot(4, 1, 16)), leaf("finger", "Finger", slot(4, 0, 11)),
+      leaf("trinket", "Trinket", slot(4, 0, 12)), leaf("off-hand", "Held In Off-hand", slot(4, 0, 23)), leaf("shields", "Shields", only(4, 6)),
+      leaf("shirt", "Shirt", slot(4, 0, 4)),
+    ]),
+  ]),
+  node("containers", "Containers", null, [
+    node("standard", "Bags", null, [leaf("bags", "Bag", only(1, 0)), leaf("soul-bags", "Soul Bag", only(1, 1))]),
+    node("ammo", "Ammo Pouches", null, [leaf("quivers", "Quiver", only(11, 2)), leaf("ammo-pouches", "Ammo Pouch", only(11, 3))]),
+    node("reagent", "Profession Bags", null, [
+      leaf("herb-bags", "Herb Bag", only(1, 2)), leaf("enchanting-bags", "Enchanting Bag", only(1, 3)), leaf("engineering-bags", "Engineering Bag", only(1, 4)),
+      leaf("mining-bags", "Mining Bag", only(1, 6)), leaf("leatherworking-bags", "Leatherworking Bag", only(1, 7)), leaf("tackle-boxes", "Tackle Box", only(1, 9)),
+      leaf("cooking-bags", "Cooking Bag", only(1, 10)),
+    ]),
+  ]),
+  node("consumables", "Consumables", [all(0)], [
+    leaf("consumable", "Consumable", only(0, 0)), leaf("potions", "Potion", only(0, 1)), leaf("elixirs", "Elixir", only(0, 2)),
+    leaf("flasks", "Flask", only(0, 3)), leaf("scrolls", "Scroll", only(0, 4)), leaf("food-drink", "Food & Drink", only(0, 5)),
+    leaf("bandages", "Bandage", only(0, 7)), leaf("item-enhancement", "Item Enhancement", only(0, 6)), leaf("other", "Other", only(0, 8)),
+  ]),
+  node("trade-goods", "Trade Goods", [all(7)], [
+    leaf("trade-goods", "Trade Goods", only(7, 0)), leaf("parts", "Parts", only(7, 1)), leaf("explosives", "Explosives", only(7, 2)),
+    leaf("devices", "Devices", only(7, 3)), leaf("cloth", "Cloth", only(7, 5)), leaf("leather", "Leather", only(7, 6)),
+    leaf("metal-stone", "Metal & Stone", only(7, 7)), leaf("cooking", "Cooking", only(7, 8)), leaf("herbs", "Herb", only(7, 9)),
+    leaf("elemental", "Elemental", only(7, 10)), leaf("enchanting", "Enchanting", only(7, 12)), leaf("jewelcrafting", "Jewelcrafting", only(7, 4)),
+    leaf("materials", "Materials", only(7, 13)), leaf("other", "Other", only(7, 11)),
+  ]),
+  node("projectile", "Projectile", [all(6)], [leaf("arrows", "Arrow", only(6, 2)), leaf("bullets", "Bullet", only(6, 3))]),
+  node("recipes", "Recipes", [all(9)], [
+    leaf("alchemy", "Alchemy", only(9, 6)), leaf("blacksmithing", "Blacksmithing", only(9, 4)), leaf("cooking", "Cooking", only(9, 5)),
+    leaf("enchanting", "Enchanting", only(9, 8)), leaf("engineering", "Engineering", only(9, 3)), leaf("first-aid", "First Aid", only(9, 7)),
+    leaf("fishing", "Fishing", only(9, 9)), leaf("leatherworking", "Leatherworking", only(9, 1)), leaf("tailoring", "Tailoring", only(9, 2)),
+    leaf("books", "Book", only(9, 0)),
+  ]),
+  leaf("quest-items", "Quest Items", all(12)),
+  node("miscellaneous", "Miscellaneous", [all(15)], [
+    leaf("junk", "Junk", only(15, 0)), leaf("reagents", "Reagent", only(15, 1)), leaf("pets", "Companion Pets", only(15, 2)),
+    leaf("holiday", "Holiday", only(15, 3)), leaf("other", "Other", only(15, 4)), leaf("mounts", "Mount", only(15, 5)),
+  ]),
 ]);
 
 function integerOrNull(value) {
@@ -189,78 +154,95 @@ export function itemClassIds({ classId = null, subclassId = null, className = ""
   return { classId: cls, subclassId: sub };
 }
 
-function ruleMatches(rule, classId, subclassId) {
+function ruleMatches(rule, classId, subclassId, inventoryType) {
   if (classId !== rule.classId) return false;
-  if (rule.sub) return subclassId !== null && rule.sub.includes(subclassId);
-  if (rule.not) return subclassId === null || !rule.not.includes(subclassId);
+  if (rule.sub && (subclassId === null || !rule.sub.includes(subclassId))) return false;
+  if (rule.inv && (inventoryType === null || !rule.inv.includes(inventoryType))) return false;
   return true;
 }
 
-// Where an item sits in the tree: { category, subcategory } keys, or nulls.
-export function categoryOf(classId, subclassId) {
+function matches(entry, classId, subclassId, inventoryType) {
+  return entry.rules.some((rule) => ruleMatches(rule, classId, subclassId, inventoryType));
+}
+
+// Where an item sits in the tree: the path of keys down to the deepest
+// node that takes it (["armor", "mail", "chest"]), or [].
+export function categoryPath(classId, subclassId, inventoryType = null) {
   const cls = integerOrNull(classId);
+  if (cls === null) return [];
   const sub = integerOrNull(subclassId);
-  if (cls === null) return { category: null, subcategory: null };
-  for (const category of CATEGORY_TREE) {
-    if (!category.rules.some((rule) => ruleMatches(rule, cls, sub))) continue;
-    const subcategory = category.subcategories.find((entry) => entry.rules.some((rule) => ruleMatches(rule, cls, sub)));
-    return { category: category.key, subcategory: subcategory?.key ?? null };
+  const inv = integerOrNull(inventoryType);
+  const path = [];
+  let level = CATEGORY_TREE;
+  while (level.length) {
+    const found = level.find((entry) => matches(entry, cls, sub, inv));
+    if (!found) break;
+    path.push(found.key);
+    level = found.children;
   }
-  return { category: null, subcategory: null };
+  return path;
 }
 
-// A category from a URL or a saved search: its key, or (searches saved
-// before the tree existed) its label or the game's class name.
-export function resolveCategory(category = "", subcategory = "") {
-  const wanted = lower(category);
-  if (!wanted) return null;
-  const byName = CLASS_NAMES[wanted];
-  const found = CATEGORY_TREE.find((entry) => entry.key === wanted || lower(entry.label) === wanted)
-    || (byName !== undefined ? CATEGORY_TREE.find((entry) => entry.rules.some((rule) => rule.classId === byName)) : null);
-  if (!found) return null;
-  const subWanted = lower(subcategory);
-  const sub = subWanted ? found.subcategories.find((entry) => entry.key === subWanted || lower(entry.label) === subWanted) || null : null;
-  if (subWanted && !sub) return { category: found, subcategory: null, unknownSubcategory: true };
-  return { category: found, subcategory: sub };
+// Kept for callers that only need the top two levels.
+export function categoryOf(classId, subclassId, inventoryType = null) {
+  const path = categoryPath(classId, subclassId, inventoryType);
+  return { category: path[0] ?? null, subcategory: path[1] ?? null };
 }
 
-// SQL over market_item_meta columns (alias `m`) selecting the items of a
-// category or subcategory. Uses the (item_class_id, item_subclass_id) index.
+// A category from a URL or a saved search: keys down the tree (searches
+// saved before the tree existed used labels or the game's class name).
+export function resolveCategory(category = "", subcategory = "", slotKey = "") {
+  const wanted = [lower(category), lower(subcategory), lower(slotKey)].filter(Boolean);
+  if (!wanted.length) return null;
+  const byName = CLASS_NAMES[wanted[0]];
+  let entry = CATEGORY_TREE.find((candidate) => candidate.key === wanted[0] || lower(candidate.label) === wanted[0])
+    || (byName !== undefined ? CATEGORY_TREE.find((candidate) => candidate.rules.some((rule) => rule.classId === byName)) : null);
+  if (!entry) return null;
+  const path = [entry];
+  for (const key of wanted.slice(1)) {
+    const next = entry.children.find((candidate) => candidate.key === key || lower(candidate.label) === key);
+    if (!next) return { path, node: entry, unknown: true };
+    path.push(next);
+    entry = next;
+  }
+  return { path, node: entry, unknown: false, keys: path.map((step) => step.key) };
+}
+
+// SQL over market_item_meta columns (alias `m`) selecting a node's items.
+// Uses the (item_class_id, item_subclass_id, inventory_type) index.
 export function categorySql(resolved, alias = "m") {
   if (!resolved) return null;
-  if (resolved.unknownSubcategory) return { sql: "0", params: [] };
-  const rules = (resolved.subcategory || resolved.category).rules;
+  if (resolved.unknown) return { sql: "0", params: [] };
   const parts = [];
   const params = [];
-  for (const rule of rules) {
-    if (rule.sub) {
-      parts.push(`(${alias}.item_class_id = ? AND ${alias}.item_subclass_id IN (${rule.sub.map(() => "?").join(",")}))`);
-      params.push(rule.classId, ...rule.sub);
-    } else if (rule.not) {
-      parts.push(`(${alias}.item_class_id = ? AND (${alias}.item_subclass_id IS NULL OR ${alias}.item_subclass_id NOT IN (${rule.not.map(() => "?").join(",")})))`);
-      params.push(rule.classId, ...rule.not);
-    } else {
-      parts.push(`${alias}.item_class_id = ?`);
-      params.push(rule.classId);
-    }
+  for (const rule of resolved.node.rules) {
+    const clauses = [`${alias}.item_class_id = ?`];
+    params.push(rule.classId);
+    if (rule.sub) { clauses.push(`${alias}.item_subclass_id IN (${rule.sub.map(() => "?").join(",")})`); params.push(...rule.sub); }
+    if (rule.inv) { clauses.push(`${alias}.inventory_type IN (${rule.inv.map(() => "?").join(",")})`); params.push(...rule.inv); }
+    parts.push(`(${clauses.join(" AND ")})`);
   }
   return { sql: `(${parts.join(" OR ")})`, params };
 }
 
-// The tree with listing counts: every category, listed or not, so the
-// list never jumps around. `counts` are rows of { classId, subclassId, items }.
+// The tree with listing counts at every level: every category, listed or
+// not, so the list never jumps around. `counts` are rows of
+// { classId, subclassId, inventoryType, items }.
 export function categoryTree(counts = []) {
   const totals = new Map();
   for (const row of counts) {
-    const { category, subcategory } = categoryOf(row.classId, row.subclassId);
-    if (!category) continue;
-    totals.set(category, (totals.get(category) || 0) + Number(row.items || 0));
-    if (subcategory) totals.set(`${category}/${subcategory}`, (totals.get(`${category}/${subcategory}`) || 0) + Number(row.items || 0));
+    const path = categoryPath(row.classId, row.subclassId, row.inventoryType ?? null);
+    for (let depth = 1; depth <= path.length; depth += 1) {
+      const key = path.slice(0, depth).join("/");
+      totals.set(key, (totals.get(key) || 0) + Number(row.items || 0));
+    }
   }
-  return CATEGORY_TREE.map((category) => ({
-    key: category.key, label: category.label, name: category.label, items: totals.get(category.key) || 0,
-    subcategories: category.subcategories.map((sub) => ({ key: sub.key, label: sub.label, name: sub.label, items: totals.get(`${category.key}/${sub.key}`) || 0 })),
-  }));
+  const shape = (entry, prefix) => {
+    const key = prefix ? `${prefix}/${entry.key}` : entry.key;
+    return { key: entry.key, label: entry.label, name: entry.label, items: totals.get(key) || 0,
+      subcategories: entry.children.map((child) => shape(child, key)) };
+  };
+  return CATEGORY_TREE.map((entry) => shape(entry, ""));
 }
 
 // Search text: case, accents, apostrophes and other punctuation ignored, so

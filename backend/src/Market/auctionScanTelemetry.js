@@ -32,6 +32,7 @@ function validItem(item) {
   if (item.name !== undefined && (typeof item.name !== "string" || item.name.length > 120)) return false;
   // Optional item class and subclass ids (GetItemInfoInstant), for the
   // category tree when no game data describes the item yet.
+  if (item.iconFileDataId !== undefined && !(Number.isSafeInteger(item.iconFileDataId) && item.iconFileDataId > 0 && item.iconFileDataId < 2 ** 31)) return false;
   for (const key of ["classId", "subclassId"]) {
     if (item[key] !== undefined && !(Number.isSafeInteger(item[key]) && item[key] >= 0 && item[key] <= 255)) return false;
   }
@@ -64,7 +65,7 @@ export function scanItems(payload) {
   const items = [];
   for (const raw of luaList(payload.items) || []) {
     const variant = { itemId: raw.itemId, suffix: raw.suffix || 0 };
-    const points = (luaList(raw.prices ?? []) || []).map((point) => ({ ...variant, unitPrice: point[0], quantity: point[1], count: point[2] || 1 }));
+    const points = (luaList(raw.prices ?? []) || []).map((point) => ({ ...variant, unitPrice: point[0], quantity: point[1], count: point[2] || 1, total: true }));
     let aggregate = points.length ? aggregateListings(points)[0] : aggregateSummaryRow({ ...variant, quantity: raw.quantity, minUnitBuyout: raw.minUnitBuyout, listings: raw.listings });
     if (!aggregate) continue;
     aggregate = { ...aggregate, quantity: raw.quantity, listings: positiveInteger(raw.listings) ?? aggregate.listings,
@@ -73,7 +74,14 @@ export function scanItems(payload) {
       // has no game data for yet, never trusted over game data.
       name: typeof raw.name === "string" ? raw.name : undefined, qualityId: Number.isSafeInteger(raw.qualityId) ? raw.qualityId : undefined,
       requiredLevel: Number.isSafeInteger(raw.requiredLevel) ? raw.requiredLevel : undefined,
-      classId: Number.isSafeInteger(raw.classId) ? raw.classId : undefined, subclassId: Number.isSafeInteger(raw.subclassId) ? raw.subclassId : undefined };
+      classId: Number.isSafeInteger(raw.classId) ? raw.classId : undefined, subclassId: Number.isSafeInteger(raw.subclassId) ? raw.subclassId : undefined,
+      iconFileDataId: Number.isSafeInteger(raw.iconFileDataId) && raw.iconFileDataId > 0 ? raw.iconFileDataId : undefined };
+    // The client sends at most a few price levels: the rest of the supply is
+    // listed but not itemised.
+    if (Array.isArray(aggregate.ladder)) {
+      const itemised = aggregate.ladder.reduce((sum, level) => sum + level[1], 0);
+      aggregate.ladderTruncated = Number.isSafeInteger(raw.quantity) && raw.quantity > itemised;
+    }
     if (!itemVariantKey(variant)) continue;
     items.push(aggregate);
   }

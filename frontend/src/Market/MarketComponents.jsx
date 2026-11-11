@@ -53,14 +53,6 @@ export function Change({ pct }) {
   return <span className={`gw-change gw-change--${change.direction}`}>{change.text}</span>
 }
 
-// The lowest ask as a share of the item's 14-day median, like the "Pct"
-// column of the game's auction addons.
-export function Pct({ value, days }) {
-  if (value === null || value === undefined) return <span className="gw-muted" title="Needs three days of history">—</span>
-  const tone = value <= 85 ? 'good' : value >= 130 ? 'bad' : 'flat'
-  return <span className={`gw-pct gw-pct--${tone}`} title={`Lowest ask is ${value}% of the median of the last ${days} observed days`}>{value}%</span>
-}
-
 export function ConfidenceBadge({ confidence }) {
   const label = { high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence' }[confidence] || 'Unknown confidence'
   return <span className={`gw-confb gw-confb--${confidence || 'low'}`}>{label}</span>

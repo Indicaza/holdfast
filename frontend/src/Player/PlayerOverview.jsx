@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import FavoriteAuctions from '../Market/FavoriteAuctions.jsx'
 import PlayerCharacterCard from './PlayerCharacterCard.jsx'
 import { dashboardHref, onServerKey, relativeTime, setupSteps, syncStatusCopy } from './playerModel.js'
 import { EmptyState, Icon, Panel, Stat } from './ui.jsx'
@@ -85,6 +86,8 @@ export default function PlayerOverview({ data, server, onOpenCharacter }) {
           <EmptyState title="No characters yet." icon="characters">Log in with Guildweaver running, then <kbd>/reload</kbd>.</EmptyState>
         )}
       </Panel>
+
+      <FavoriteAuctions server={server} characters={data.characters || []} />
 
       <Panel id="gw-community" title="Community data" description="What every player's Guildweaver has recorded, pooled and anonymous.">
         <div className="gw-shortcuts">
