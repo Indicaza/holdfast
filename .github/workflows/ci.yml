@@ -104,6 +104,10 @@ jobs:
         working-directory: backend
         run: npm run test:auth
 
+      - name: Enforce notification coverage
+        working-directory: backend
+        run: npm run test:notifications
+
       - name: Enforce Discord provisioning coverage
         working-directory: backend
         run: npm run test:discord
