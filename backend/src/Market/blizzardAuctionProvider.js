@@ -14,6 +14,7 @@ const MIN_REFRESH_MINUTES = 30;
 const DEFAULT_MAX_BYTES = 40 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_PER_HOUR = 300;
+export const ENDPOINTS = Object.freeze(["auctions", "commodities"]);
 
 function text(value, max = 256) {
   return String(value ?? "").trim().slice(0, max);
@@ -165,27 +166,36 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
     }).filter(Boolean);
   }
 
-  // One house: its auctions and commodities as per-item aggregates. Unchanged
-  // data (304) is reported as such and stores nothing.
-  async function fetchMarket(market, { lastModified = "" } = {}) {
+  // One endpoint of one house. Each endpoint has its own Last-Modified:
+  // a 304 from one never stops the other, and one failing leaves the
+  // other's data intact.
+  async function fetchEndpoint(market, endpoint, lastModified) {
     const base = `/data/wow/ruleset/${market.rulesetId}/auctions/${market.houseId}`;
-    const house = await get(market.region, base, { ifModifiedSince: lastModified });
-    if (house.status === 304) return { status: "unchanged", lastModified: house.lastModified };
-    let commodities = [];
     try {
-      commodities = list((await get(market.region, `${base}/commodities`)).payload?.auctions);
+      const response = await get(market.region, endpoint === "commodities" ? `${base}/commodities` : base, { ifModifiedSince: lastModified });
+      if (response.status === 304) return { endpoint, status: "not_modified", httpStatus: 304, lastModified: response.lastModified || lastModified };
+      // A house with nothing listed has no `auctions` field at all.
+      const auctions = list(response.payload?.auctions);
+      const items = aggregateListings(listingsFromBlizzard(auctions, { commodity: endpoint === "commodities" }));
+      return {
+        endpoint, status: "ok", httpStatus: response.status, lastModified: response.lastModified, auctions: auctions.length, items,
+        // When Blizzard generated the data, never later than now (clocks drift).
+        observedAt: Math.floor(Math.min(Date.parse(response.lastModified) || now(), now()) / 1000),
+      };
     } catch (error) {
-      if (error.code !== "not_found") throw error;
+      if (error.code === "rate_limited") throw error;
+      // A house without a commodities endpoint is "missing", not empty: no
+      // absence is inferred from it.
+      if (error.code === "not_found") return { endpoint, status: "missing", httpStatus: 404 };
+      return { endpoint, status: "failed", httpStatus: error.status ?? null, error: error.code || error.message, transient: error.transient !== false };
     }
-    // Houses with nothing listed have no `auctions` field at all.
-    const auctions = list(house.payload?.auctions);
-    const listings = [...listingsFromBlizzard(auctions), ...listingsFromBlizzard(commodities, { commodity: true })];
-    return {
-      status: "ok", lastModified: house.lastModified, auctions: auctions.length + commodities.length,
-      items: aggregateListings(listings),
-      // When Blizzard generated the data, but never later than now (clocks drift).
-      observedAt: Math.floor(Math.min(Date.parse(house.lastModified) || now(), now()) / 1000),
-    };
+  }
+
+  // Both endpoints of one house, each judged on its own.
+  async function fetchMarket(market, { lastModified = {} } = {}) {
+    const endpoints = {};
+    for (const endpoint of ENDPOINTS) endpoints[endpoint] = await fetchEndpoint(market, endpoint, lastModified[endpoint] || "");
+    return { endpoints };
   }
 
   return {
@@ -194,7 +204,9 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
     config: { configured: config.configured, regions: config.regions, refreshSeconds: config.refreshSeconds, maxRequestsPerHour: config.maxRequestsPerHour },
     configured: () => config.configured,
     requestsUsed: () => limiter.used(),
+    endpoints: ENDPOINTS,
     discoverMarkets,
+    fetchEndpoint,
     fetchMarket,
   };
 }

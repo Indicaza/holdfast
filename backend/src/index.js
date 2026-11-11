@@ -63,9 +63,10 @@ if (publicGameBackfill.observations || publicGameBackfill.states) {
 
 // Auction data from Blizzard's API, one house per minute at most; without
 // credentials markets fill from in-game scans only.
-const marketRefresh = startMarketRefresher({ provider: createBlizzardAuctionProvider() });
+const auctionProvider = createBlizzardAuctionProvider();
+const marketRefresh = startMarketRefresher({ provider: auctionProvider });
 
-const app = createApp({ marketRefresher: marketRefresh.refresher });
+const app = createApp({ marketRefresher: marketRefresh.refresher, marketProviderConfig: { name: auctionProvider.name, ...auctionProvider.config } });
 const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {

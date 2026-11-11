@@ -1,6 +1,6 @@
 import { withGuildDatabase } from "../Data/database.js";
 import { positiveInteger } from "./marketModel.js";
-import { readPricesInDatabase } from "./marketRepository.js";
+import { itemsInDatabase, readPricesInDatabase } from "./marketRepository.js";
 
 // Auction house cut on a sale: 5% on faction houses, 15% on the neutral
 // (Blackwater) houses, as in Classic. The deposit depends on the item's
@@ -65,11 +65,13 @@ export function readCraftCosts({ marketKey, itemId = null, recipeIds = [] }) {
     const recipes = rows.map(recipeFromRow);
     const ids = recipes.flatMap((recipe) => [recipe.craftedItemId, ...recipe.reagents.map((entry) => entry.itemId)]);
     const prices = market ? readPricesInDatabase(db, { marketKey: market.market_key, itemIds: ids }) : new Map();
-    const names = new Map(ids.length ? db.prepare(`SELECT item_id, name, quality_id, icon_file_id FROM public_game_items WHERE item_id IN (${[...new Set(ids)].map(() => "?").join(",")})`)
-      .all(...new Set(ids)).map((row) => [row.item_id, { itemId: row.item_id, name: row.name, qualityId: row.quality_id, iconFileDataId: row.icon_file_id }]) : []);
+    const lookup = itemsInDatabase(db, [...new Set(ids)]);
     return {
       marketKey: market?.market_key || null,
-      items: Object.fromEntries([...new Set(ids)].map((id) => [id, names.get(id) || { itemId: id, name: `Item ${id}` }])),
+      items: Object.fromEntries([...new Set(ids)].map((id) => {
+        const known = lookup(id);
+        return [id, { itemId: id, name: known.name, qualityId: known.qualityId, iconFileDataId: known.iconFileDataId }];
+      })),
       recipes: recipes.map((recipe) => craftCost(recipe, prices, { neutral: market?.faction === "neutral" })),
     };
   });

@@ -252,7 +252,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
         sidebar={section === 'map' ? <div ref={setLegendHost} className="gw-side__slot" /> : null}
         onToggleMobile={setMobileOpen}
         onOpenSearch={openSearch}
-        fill={current.id === 'map'}
+        fill={current.id === 'map' || current.id === 'auctions'}
       >
         {overview.status === 'loading' ? <SkeletonRows rows={8} label="Loading your dashboard" /> : null}
         {overview.status === 'error' || overview.status === 'missing' ? (

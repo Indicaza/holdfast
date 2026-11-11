@@ -141,7 +141,7 @@ start_container
 smoke_http
 probe_state | tee "$FIRST_STATE_FILE"
 
-grep -q '"schemaVersion":16' "$FIRST_STATE_FILE"
+grep -q '"schemaVersion":17' "$FIRST_STATE_FILE"
 grep -q '"members":3' "$FIRST_STATE_FILE"
 grep -q '"quests":1' "$FIRST_STATE_FILE"
 grep -q '"objectives":2' "$FIRST_STATE_FILE"
@@ -172,7 +172,7 @@ fi
 BACKUP_STATE="$(probe_startup_backup)"
 echo "$BACKUP_STATE"
 echo "$BACKUP_STATE" | grep -q '"files":1'
-echo "$BACKUP_STATE" | grep -q '"schemaVersion":16'
+echo "$BACKUP_STATE" | grep -q '"schemaVersion":17'
 echo "$BACKUP_STATE" | grep -q '"questTitle":"E2E Supply Run"'
 echo "$BACKUP_STATE" | grep -q '"integrity":"ok"'
 

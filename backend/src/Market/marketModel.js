@@ -3,9 +3,13 @@
 
 export const SOURCE_TYPES = Object.freeze(["addon_scan", "official_api", "provider"]);
 export const COVERAGES = Object.freeze(["full", "items", "partial"]);
-// Observations within this window of the newest one count as the same
-// period when sources disagree.
-export const SAME_PERIOD_SECONDS = 2 * 60 * 60;
+// Sources only outrank one another when their observations are this close
+// in time: an in-game scan beats a Blizzard snapshot taken within 45
+// minutes of it, never one taken hours later.
+export const SAME_PERIOD_SECONDS = 45 * 60;
+// A complete observation is preferred over a newer partial one only while it
+// is at most this much older.
+export const COMPLETE_GRACE_SECONDS = 6 * 60 * 60;
 // A summary older than this is shown as stale.
 export const STALE_SECONDS = 24 * 60 * 60;
 export const MAX_ITEMS_PER_SNAPSHOT = 50000;
@@ -15,7 +19,11 @@ export const CONFLICT_RATIO = 0.15;
 // The typical price is the quantity-weighted median of the cheapest share of
 // the market, so a few absurd listings do not move it.
 const TYPICAL_SHARE = 0.3;
+// Reliability when observations are equally fresh and complete: what a
+// player's client showed is the live house; Blizzard's snapshot is up to an
+// hour behind; a third-party provider is a copy of either.
 const SOURCE_RANK = Object.freeze({ addon_scan: 3, official_api: 2, provider: 1 });
+export const PRICE_POINTS = 10;
 
 const REGIONS = new Set(["us", "eu", "kr", "tw"]);
 const FACTIONS = new Set(["alliance", "horde", "neutral"]);
@@ -147,10 +155,19 @@ function summarizePrices(entry) {
     cheapest.push(value);
     taken += value.quantity;
   }
+  const points = [];
+  for (const value of sorted) {
+    const last = points.at(-1);
+    if (last && last[0] === value.unit) last[1] += value.quantity;
+    else if (points.length < PRICE_POINTS) points.push([value.unit, value.quantity]);
+    else break;
+  }
   return {
     itemKey: entry.itemKey,
     itemId: entry.itemId,
     minUnitBuyout: sorted[0]?.unit ?? null,
+    minQuantity: points[0]?.[1] ?? null,
+    pricePoints: points,
     typicalUnitBuyout: cheapest.length ? weightedPercentile(cheapest, taken, 0.5) : null,
     maxUnitBuyout: sorted.length ? weightedPercentile(sorted, priced, 0.9) : null,
     minUnitBid: entry.minBid,
@@ -167,7 +184,7 @@ export function aggregateSummaryRow(row = {}) {
   const quantity = Number(row.quantity);
   if (!itemKey || !Number.isSafeInteger(quantity) || quantity < 0) return null;
   const min = copper(row.minUnitBuyout);
-  return { itemKey, itemId: itemIdFromKey(itemKey), minUnitBuyout: min && min > 0 ? min : null,
+  return { itemKey, itemId: itemIdFromKey(itemKey), minUnitBuyout: min && min > 0 ? min : null, minQuantity: null, pricePoints: [],
     typicalUnitBuyout: null, maxUnitBuyout: null, minUnitBid: null, quantity,
     listings: positiveInteger(row.listings) ?? null, bidOnlyListings: 0 };
 }
@@ -176,49 +193,66 @@ function price(candidate) {
   return candidate.typicalUnitBuyout ?? candidate.minUnitBuyout ?? null;
 }
 
-function ageLabel(seconds) {
+export function ageLabel(seconds) {
   if (seconds < 3600) return `${Math.max(1, Math.round(seconds / 60))} min`;
   if (seconds < 172800) return `${Math.round(seconds / 3600)} h`;
   return `${Math.round(seconds / 86400)} days`;
 }
 
-const SOURCE_LABELS = { addon_scan: "in-game scan", official_api: "Blizzard API snapshot", provider: "data provider" };
+export const SOURCE_LABELS = Object.freeze({ addon_scan: "in-game scan", official_api: "Blizzard API snapshot", provider: "data provider" });
 
-// Chooses which observation an item's summary shows, from the latest
-// observation of each source in one market:
-// 1. Complete observations beat partial ones; a partial view (a browse page,
-//    a truncated search) is used only when nothing complete exists, so a
-//    narrow search never replaces what a broader scan saw.
-// 2. Among complete observations, the newest wins, except that observations
-//    from the same period (within SAME_PERIOD_SECONDS of the newest) are
-//    ranked by source: an in-game scan, then the official API, then a
-//    provider. An old in-game scan never beats a newer API snapshot.
-// Every candidate is kept with the result so the choice can be explained.
-export function selectObservation(candidates = [], { now = Math.floor(Date.now() / 1000) } = {}) {
+function describe(entry, now) {
+  return `${SOURCE_LABELS[entry.sourceType]} from ${ageLabel(Math.max(0, now - entry.observedAt))} ago`;
+}
+
+// Chooses which observation an item's summary shows from the latest
+// complete and latest partial observation of each source (in one market, or
+// a market and the markets linked to it). In order:
+// 1. Recency first. A complete observation (every listing of the item was
+//    visible) is preferred over a newer partial one only while it is at most
+//    COMPLETE_GRACE_SECONDS older; past that the newer partial view wins and
+//    says so, because a narrow fresh look beats a stale complete one.
+// 2. Within that pool, observations within SAME_PERIOD_SECONDS of the newest
+//    are ranked by source (in-game scan, Blizzard API, provider). An older
+//    in-game scan never beats a newer API snapshot taken after it.
+// 3. Every other recent candidate that disagrees by more than CONFLICT_RATIO
+//    is reported with its own numbers.
+// Returns notes ({ code, text }) so the website can explain the choice.
+export function selectObservation(candidates = [], { now = Math.floor(Date.now() / 1000), marketKey = null } = {}) {
   const valid = candidates.filter((entry) => entry && SOURCE_TYPES.includes(entry.sourceType) && Number.isFinite(entry.observedAt));
   if (!valid.length) return null;
-  const complete = valid.filter((entry) => entry.complete);
+  const newestAny = Math.max(...valid.map((entry) => entry.observedAt));
+  const complete = valid.filter((entry) => entry.complete && newestAny - entry.observedAt <= COMPLETE_GRACE_SECONDS);
   const pool = complete.length ? complete : valid;
   const newest = Math.max(...pool.map((entry) => entry.observedAt));
   const samePeriod = pool.filter((entry) => newest - entry.observedAt <= SAME_PERIOD_SECONDS);
   samePeriod.sort((a, b) => (SOURCE_RANK[b.sourceType] - SOURCE_RANK[a.sourceType]) || (b.observedAt - a.observedAt));
   const chosen = samePeriod[0];
   const chosenPrice = price(chosen);
-  const others = valid.filter((entry) => entry !== chosen);
-  const conflicting = others.filter((entry) => {
-    const other = price(entry);
-    return chosenPrice && other && Math.abs(other - chosenPrice) / chosenPrice > CONFLICT_RATIO;
-  });
-  const reasons = [`${SOURCE_LABELS[chosen.sourceType]} from ${ageLabel(Math.max(0, now - chosen.observedAt))} ago`];
-  if (!chosen.complete) reasons.push("partial view: not every listing was visible");
+  const notes = [{ code: "chosen", text: describe(chosen, now) }];
+  if (marketKey && chosen.marketKey && chosen.marketKey !== marketKey) notes.push({ code: "linked", text: "seen in a linked market (an administrator confirmed it is the same auction house)" });
+  if (!chosen.complete) {
+    const olderComplete = valid.filter((entry) => entry.complete);
+    notes.push({ code: "partial", text: `partial view: not every listing was visible, the lowest ask may be lower${olderComplete.length ? `; the last complete view is ${ageLabel(Math.max(0, now - Math.max(...olderComplete.map((entry) => entry.observedAt))))} old` : ""}` });
+  }
   const outranked = samePeriod.slice(1);
-  if (outranked.length) reasons.push(`preferred over ${outranked.map((entry) => SOURCE_LABELS[entry.sourceType]).join(", ")} from the same period`);
-  const newer = others.filter((entry) => entry.observedAt > chosen.observedAt);
-  if (newer.length) reasons.push(`newer ${newer.map((entry) => SOURCE_LABELS[entry.sourceType]).join(", ")} ${newer.length === 1 ? "is" : "are"} partial`);
-  const older = others.filter((entry) => entry.complete && newest - entry.observedAt > SAME_PERIOD_SECONDS);
-  if (older.length) reasons.push(`older ${older.map((entry) => SOURCE_LABELS[entry.sourceType]).join(", ")} not used`);
-  if (conflicting.length) reasons.push(`${conflicting.length} other source${conflicting.length === 1 ? "" : "s"} disagree by more than ${Math.round(CONFLICT_RATIO * 100)}%`);
-  return { chosen, reason: reasons.join("; "), conflict: conflicting.length > 0, candidates: valid };
+  if (outranked.length) notes.push({ code: "outranked", text: `preferred over ${outranked.map((entry) => describe(entry, now)).join(", ")} from the same period` });
+  const newerPartial = valid.filter((entry) => entry !== chosen && !entry.complete && entry.observedAt > chosen.observedAt);
+  if (newerPartial.length) notes.push({ code: "newer_partial", text: `newer partial ${newerPartial.map((entry) => SOURCE_LABELS[entry.sourceType]).join(", ")} not used` });
+  const recent = valid.filter((entry) => entry !== chosen && newestAny - entry.observedAt <= COMPLETE_GRACE_SECONDS);
+  const conflicts = recent.map((entry) => {
+    const other = price(entry);
+    if (!chosenPrice || !other) return null;
+    const ratio = (other - chosenPrice) / chosenPrice;
+    return Math.abs(ratio) > CONFLICT_RATIO ? { source: entry.sourceType, marketKey: entry.marketKey ?? null, observedAt: entry.observedAt, complete: Boolean(entry.complete),
+      price: other, differencePct: Math.round(ratio * 1000) / 10 } : null;
+  }).filter(Boolean);
+  for (const conflict of conflicts) {
+    notes.push({ code: "conflict", text: `${SOURCE_LABELS[conflict.source]} from ${ageLabel(Math.max(0, now - conflict.observedAt))} ago${conflict.complete ? "" : " (partial)"} asks ${conflict.differencePct > 0 ? "+" : ""}${conflict.differencePct}%` });
+  }
+  const superseded = valid.filter((entry) => entry !== chosen && newestAny - entry.observedAt > COMPLETE_GRACE_SECONDS);
+  if (superseded.length) notes.push({ code: "superseded", text: `older ${[...new Set(superseded.map((entry) => SOURCE_LABELS[entry.sourceType]))].join(", ")} not used` });
+  return { chosen, reason: notes.map((note) => note.text).join("; "), notes, conflict: conflicts.length > 0, conflicts, candidates: valid };
 }
 
 export function freshness(observedAt, now = Math.floor(Date.now() / 1000)) {
