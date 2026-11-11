@@ -279,7 +279,7 @@ test("variants are priced on their own and never borrow another's price", () => 
   withGuildTransaction((db) => {
     names(db, [[15210, "Raider's Chestpiece", 2, { itemClass: { id: 4, name: "Armor" } }]]);
     snapshot(db, { items: [item("i:15210:s-1081", { minUnitBuyout: 50000, quantity: 3 }), item("i:15210:s-1082", { minUnitBuyout: 9000, quantity: 1 })] });
-    db.prepare("INSERT INTO market_variant_names (item_key, name, updated_at) VALUES ('i:15210:s-1081', 'Raider''s Chestpiece of the Bear', 0)").run();
+    db.prepare("INSERT INTO market_variant_names (item_key, name, search_name, updated_at) VALUES ('i:15210:s-1081', 'Raider''s Chestpiece of the Bear', 'raiders chestpiece of the bear', 0)").run();
   });
   const byId = readPrices({ marketKey: API_MARKET.marketKey, itemIds: [15210], now: NOW }).prices[0];
   assert.equal(byId.variantsOnly, true);
@@ -346,7 +346,7 @@ test("search: names, categories, quality, levels, below market and the Pct colum
   result = searchMarket({ marketKey: API_MARKET.marketKey, category: "Trade Goods", sort: "price", direction: "desc", now: NOW });
   assert.deepEqual(result.results.map((row) => row.item.itemId), [2592, 2770, 2589]);
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, category: "Trade Goods", subcategory: "Cloth", now: NOW }).results.map((row) => row.item.itemId), [2589, 2592]);
-  assert.deepEqual(result.categories.find((entry) => entry.name === "Trade Goods").subcategories.map((entry) => entry.name), ["Cloth", "Metal & Stone"]);
+  assert.deepEqual(result.categories.find((entry) => entry.name === "Trade Goods").subcategories.filter((entry) => entry.items).map((entry) => entry.name), ["Cloth", "Metal & Stone"]);
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, quality: 2, now: NOW }).results.map((row) => row.item.itemId), [25]);
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, minLevel: 5, maxLevel: 10, now: NOW }).results.map((row) => row.item.itemId), [25]);
   const below = searchMarket({ marketKey: API_MARKET.marketKey, belowMarket: true, now: NOW });

@@ -30,6 +30,11 @@ function validItem(item) {
   if (item.minUnitBuyout !== undefined && copper(item.minUnitBuyout) === null) return false;
   if (item.listings !== undefined && !(Number.isSafeInteger(item.listings) && item.listings >= 0)) return false;
   if (item.name !== undefined && (typeof item.name !== "string" || item.name.length > 120)) return false;
+  // Optional item class and subclass ids (GetItemInfoInstant), for the
+  // category tree when no game data describes the item yet.
+  for (const key of ["classId", "subclassId"]) {
+    if (item[key] !== undefined && !(Number.isSafeInteger(item[key]) && item[key] >= 0 && item[key] <= 255)) return false;
+  }
   const prices = luaList(item.prices ?? []);
   if (!prices || prices.length > MAX_PRICE_POINTS) return false;
   return prices.every((point) => {
@@ -67,7 +72,8 @@ export function scanItems(payload) {
       // What the client showed: names for variants and items the website
       // has no game data for yet, never trusted over game data.
       name: typeof raw.name === "string" ? raw.name : undefined, qualityId: Number.isSafeInteger(raw.qualityId) ? raw.qualityId : undefined,
-      requiredLevel: Number.isSafeInteger(raw.requiredLevel) ? raw.requiredLevel : undefined };
+      requiredLevel: Number.isSafeInteger(raw.requiredLevel) ? raw.requiredLevel : undefined,
+      classId: Number.isSafeInteger(raw.classId) ? raw.classId : undefined, subclassId: Number.isSafeInteger(raw.subclassId) ? raw.subclassId : undefined };
     if (!itemVariantKey(variant)) continue;
     items.push(aggregate);
   }

@@ -17,7 +17,8 @@ export function useMarketResource(url, { enabled = true } = {}) {
     const controller = new AbortController()
     setState((current) => ({ ...current, status: current.data ? 'refreshing' : 'loading' }))
     apiJson(url, { signal: controller.signal })
-      .then((data) => setState({ status: 'ready', data, error: null }))
+      // A response that lost the race to a newer request is dropped.
+      .then((data) => { if (!controller.signal.aborted) setState({ status: 'ready', data, error: null }) })
       .catch((error) => {
         if (controller.signal.aborted) return
         setState({ status: error?.status === 404 ? 'missing' : 'error', data: null, error })
@@ -56,24 +57,47 @@ export function useItemPrices(itemIds = [], marketKey = '') {
   return { status: result.status, marketKey: market, prices: byItem }
 }
 
-// Debounced suggestions while typing.
+// Debounced suggestions while typing: their own small request, separate
+// from the search, cancelled when the text changes. A number suggests the
+// item with that id.
 export function useSuggestions(query, marketKey) {
   const [suggestions, setSuggestions] = useState([])
   const timer = useRef(null)
   useEffect(() => {
     clearTimeout(timer.current)
     const q = String(query || '').trim()
-    if (q.length < 2 || /^\d+$/.test(q)) {
+    if (q.length < 2 && !/^\d+$/.test(q)) {
       setSuggestions([])
       return undefined
     }
     const controller = new AbortController()
     timer.current = setTimeout(() => {
-      apiJson(`/api/market/suggest?q=${encodeURIComponent(q)}&market=${encodeURIComponent(marketKey || '')}`, { signal: controller.signal })
-        .then((data) => setSuggestions(data.suggestions || []))
+      apiJson(`/api/market/suggest?q=${encodeURIComponent(q)}&market=${encodeURIComponent(marketKey || '')}`, { signal: controller.signal, retry: false })
+        .then((data) => { if (!controller.signal.aborted) setSuggestions(data.suggestions || []) })
         .catch(() => {})
-    }, 150)
+    }, 200)
     return () => { clearTimeout(timer.current); controller.abort() }
   }, [query, marketKey])
   return suggestions
+}
+
+// Price and supply history of one item variant in one market. Fetched only
+// where it is shown (an inspector's History tab, the History tab), never in
+// the default Browse view.
+export function useItemHistory({ itemId, itemKey = '', marketKey = '', range = '7d', enabled = true }) {
+  const variant = itemKey ? `&key=${encodeURIComponent(itemKey)}` : ''
+  return useMarketResource(enabled && itemId && marketKey ? `/api/market/items/${itemId}/history?market=${encodeURIComponent(marketKey)}&range=${range}${variant}` : '')
+}
+
+// One item in one market, as the item panel, the inspectors and the
+// Appraiser read it: the same endpoints for every view of an item.
+export function useItemMarket({ itemId, itemKey = '', marketKey = '', analysis = true }) {
+  const variant = itemKey ? `&key=${encodeURIComponent(itemKey)}` : ''
+  const detail = useMarketResource(itemId ? `/api/market/items/${itemId}?market=${encodeURIComponent(marketKey || '')}${variant}` : '')
+  // Without a chosen market, the server picks one that has the item (and says so).
+  const market = marketKey || detail.data?.marketKey || ''
+  const focusKey = detail.data?.itemKey || itemKey
+  const metrics = useMarketResource(analysis && itemId && market ? `/api/market/items/${itemId}/analysis?market=${encodeURIComponent(market)}${focusKey ? `&key=${encodeURIComponent(focusKey)}` : ''}` : '')
+  const here = detail.data?.variants?.find((entry) => entry.itemKey === focusKey) || null
+  return { detail, analysis: metrics, marketKey: market, focusKey, here }
 }

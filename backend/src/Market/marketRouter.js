@@ -82,13 +82,17 @@ export function createMarketRouter({ refresher = null, providerConfig = null } =
   }
 
   router.get("/markets", read("markets", () => readMarkets()));
+  // Browse (no q: this market's listings) or search (q: every known item
+  // that matches, with this market's listings where there are any; listed=1
+  // leaves out items with none). Categories are keys of marketCategories.js.
+  const param = (req, name, max = 100) => String(req.query?.[name] ?? "").slice(0, max);
   router.get("/search", read("search", (req) => searchMarket({
-    marketKey: market(req), q: req.query?.q, category: req.query?.category, subcategory: req.query?.sub, quality: req.query?.quality,
-    minLevel: req.query?.minLevel, maxLevel: req.query?.maxLevel, minItemLevel: req.query?.minIlvl, maxItemLevel: req.query?.maxIlvl,
-    belowMarket: req.query?.below === "1", includeEmpty: req.query?.empty === "1", sort: req.query?.sort,
-    direction: req.query?.dir, page: req.query?.page, pageSize: req.query?.pageSize,
+    marketKey: market(req), q: param(req, "q"), category: param(req, "category", 80), subcategory: param(req, "sub", 80), quality: param(req, "quality", 2),
+    minLevel: param(req, "minLevel", 4), maxLevel: param(req, "maxLevel", 4), minItemLevel: param(req, "minIlvl", 4), maxItemLevel: param(req, "maxIlvl", 4),
+    belowMarket: req.query?.below === "1", includeEmpty: req.query?.empty === "1", listedOnly: req.query?.listed === "1", sort: param(req, "sort", 20),
+    direction: param(req, "dir", 4), page: param(req, "page", 6), pageSize: param(req, "pageSize", 4),
   })));
-  router.get("/suggest", read("suggest", (req) => suggestItems({ q: req.query?.q, marketKey: market(req) })));
+  router.get("/suggest", read("suggest", (req) => suggestItems({ q: String(req.query?.q ?? "").slice(0, 60), marketKey: market(req) })));
   router.get("/items/:itemId", read("item", (req) => {
     const result = readItemMarket({ itemId: req.params.itemId, itemKey: String(req.query?.key || ""), marketKey: market(req) });
     if (result) {

@@ -6,6 +6,7 @@ import {
   finishMarketSnapshotInDatabase,
   recordMarketCheckInDatabase,
   runMarketMaintenanceInDatabase,
+  syncMarketCatalogInDatabase,
 } from "./marketRepository.js";
 
 // Large houses are stored a chunk at a time, letting requests in between,
@@ -31,6 +32,10 @@ const IDLE_MULTIPLIER = 4;
 // a provider (in-game scans need them too).
 const MAINTENANCE_SECONDS = 20 * 3600;
 const MAINTENANCE_CHECK_MS = 3600_000;
+// The Auction House item index follows the game data every few minutes, a
+// bounded batch per transaction (see syncMarketCatalogInDatabase).
+const CATALOG_SYNC_MS = 5 * 60_000;
+const CATALOG_BATCHES_PER_RUN = 100;
 
 function nowSeconds(now) {
   return Math.floor(now() / 1000);
@@ -224,15 +229,38 @@ export function maintainMarketsIfDue(now = Math.floor(Date.now() / 1000)) {
   return withGuildTransaction((db) => runMarketMaintenanceInDatabase(db, now));
 }
 
+// Indexes new game data for Auction House search, yielding to requests
+// between batches. Returns how many items were (re)indexed.
+export async function syncMarketCatalog({ batches = CATALOG_BATCHES_PER_RUN, now = () => Math.floor(Date.now() / 1000) } = {}) {
+  let items = 0;
+  for (let batch = 0; batch < batches; batch += 1) {
+    const result = withGuildTransaction((db) => syncMarketCatalogInDatabase(db, { now: now() }));
+    items += result.items;
+    if (result.caughtUp) break;
+    await yieldToRequests();
+  }
+  return items;
+}
+
 export function startMarketRefresher({ provider, intervalMs = TICK_MS, log = console } = {}) {
   const maintain = () => {
     try { maintainMarketsIfDue(); } catch (error) { log.error?.("[market] maintenance failed", error); }
   };
+  let syncing = false;
+  const catalog = () => {
+    if (syncing) return;
+    syncing = true;
+    syncMarketCatalog()
+      .then((items) => { if (items) log.info?.(`[market] indexed ${items} catalog items for search`); })
+      .catch((error) => log.error?.("[market] catalog sync failed", error))
+      .finally(() => { syncing = false; });
+  };
   const first = setTimeout(maintain, 60_000);
   const maintenance = setInterval(maintain, MAINTENANCE_CHECK_MS);
-  first.unref?.();
-  maintenance.unref?.();
-  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); };
+  const firstCatalog = setTimeout(catalog, 15_000);
+  const catalogTimer = setInterval(catalog, CATALOG_SYNC_MS);
+  for (const timer of [first, maintenance, firstCatalog, catalogTimer]) timer.unref?.();
+  const stopMaintenance = () => { clearTimeout(first); clearInterval(maintenance); clearTimeout(firstCatalog); clearInterval(catalogTimer); };
   if (!provider?.configured()) {
     log.info?.("[market] No auction data provider configured; markets fill from in-game scans only.");
     return { stop: stopMaintenance, refresher: null };
