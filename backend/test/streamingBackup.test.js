@@ -211,3 +211,17 @@ test('large backups keep memory bounded (set HOLDFAST_BACKUP_TEST_GB to run)', {
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('a snapshot exported to stdout restores to the same database', () => withHttpApp(async ({ directory }) => {
+  const exported = spawnSync(process.execPath, ['scripts/exportSnapshot.js'], {
+    cwd: new URL('../', import.meta.url), env: { ...process.env, GUILD_DATA_DIR: directory, BACKUP_WORK_DIR: directory, BACKUP_ENCRYPTION_KEY: encryptionKey }, maxBuffer: 1024 ** 3,
+  })
+  assert.equal(exported.status, 0, String(exported.stderr))
+  const summary = JSON.parse(String(exported.stderr).trim().split('\n').at(-1))
+  const restored = await restoreArchiveStream({ input: Readable.from([exported.stdout]), encryptionKey, destination: path.join(directory, 'exported') })
+  assert.equal(restored.databaseSha256, summary.databaseSha256)
+  assert.deepEqual(restored.counts, summary.counts)
+  const missingKey = spawnSync(process.execPath, ['scripts/exportSnapshot.js'], { cwd: new URL('../', import.meta.url), env: { ...process.env, GUILD_DATA_DIR: directory, BACKUP_ENCRYPTION_KEY: '', SNAPSHOT_EXPORT_KEY: '' } })
+  assert.equal(missingKey.status, 1)
+  assert.equal(missingKey.stdout.length, 0)
+}))
