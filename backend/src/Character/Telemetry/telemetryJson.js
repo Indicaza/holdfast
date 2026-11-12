@@ -82,3 +82,25 @@ function slimLatestStateEnvelopes(db, tables) {
   db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES (?, '1', ?)").run(done, new Date().toISOString());
   return slimmed;
 }
+
+// Read-model payloads written before they were compressed (character
+// sections, talent tree definitions), re-encoded a few rows at a time so a
+// large database is never blocked: each call handles at most `limit` rows
+// and returns how many it changed. Readers decode both forms, so a partly
+// compacted table is fine. Freed pages stay in the file and are reused.
+export function compactReadModelPayloadsInDatabase(db, { limit = 20 } = {}) {
+  let changed = 0;
+  for (const [table, key] of [["character_sections", "character_id, section"], ["talent_tree_definitions", "tree_id, class_token, game_build"]]) {
+    if (!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(table)) continue;
+    const columns = key.split(", ");
+    const rows = db.prepare(`SELECT ${key}, payload_json FROM ${table}
+      WHERE typeof(payload_json) = 'text' AND length(CAST(payload_json AS BLOB)) > ? LIMIT ?`).all(COMPRESS_OVER_BYTES, limit - changed);
+    const update = db.prepare(`UPDATE ${table} SET payload_json = ? WHERE ${columns.map((column) => `${column} = ?`).join(" AND ")}`);
+    for (const row of rows) {
+      update.run(encodeTelemetryJson(row.payload_json), ...columns.map((column) => row[column]));
+      changed += 1;
+    }
+    if (changed >= limit) break;
+  }
+  return changed;
+}
