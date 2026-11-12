@@ -42,7 +42,7 @@ Prices, history, favorites, lists and crafting are keyed by variant (`i:<id>`, `
 | Table | Resolution | Kept | Used for |
 | --- | --- | --- | --- |
 | `market_observations` | each snapshot | 3 days, longer if a summary still shows it | evidence, choosing sources |
-| `market_price_ladders` | latest per item, house and source | 14 days | the price levels in item windows and on Sell |
+| `market_price_ladders` | latest per item, house and source | 14 days | the price levels and cost to buy in item windows, and `readItemOnMarket` |
 | `market_series_hourly` | hour | 10 days (`MARKET_HOURLY_RETENTION_DAYS`) | 24 h and 7 d charts, 24 h change, 7-day median |
 | `market_series_daily` | day | 400 days (`MARKET_DAILY_RETENTION_DAYS`) | 30 d – 1 y charts, 30-day median, volatility |
 | `market_series_weekly` | week (from days) | 10 years | "All" |
@@ -104,37 +104,58 @@ An item no game data describes has no class, so it shows in searches only. In-ga
 
 ## The Auction House page
 
-WoW Forever's auction house window (`docs/AUCTION_HOUSE_UI.md` has the measurements and sources), in the client's own art (`frontend/public/auction-art`, see its README):
+WoW Forever's Browse Auctions window (`docs/AUCTION_HOUSE_UI.md` has the measurements and sources), in the client's own art (`frontend/public/auction-art`, see its README), filling the dashboard's content area at any desktop size:
 
-- **Title bar:** Back and Forward (they walk the Auction House's own steps: searches, categories, sorts, pages, tabs, houses; not row selection or opening a category), the auction house, how recently it was updated, and Diagnostics for administrators. The houses offered are the chosen server's Alliance, Horde and Blackwater houses, the player's faction first (from the race of their most recently seen character on that server), then Blizzard's houses. The house opened is the one you used last on that server, else your faction's, else the next one with listings.
-- **Tabs:** Buy, Sell, Shopping. The website cannot buy or post; that happens in the game.
-- **Buy:** the game's search bar (favorites, name or id with suggestions, Filter for level range and rarity, Search) over the category list and the results.
-  - **Home** (nothing searched, no category): your favorites, priced on this house.
-  - **Categories:** clicking a category with subcategories only opens or closes it; the results change only when a category without subcategories, or "All …", is chosen. Several branches can stay open; which ones are kept for the browser session.
-  - **Results:** Price, Name, Available (and Req. Lvl for Weapons, Armor and Consumables), sortable; 36 px rows, 28 px icons in their quality border. Search and categories show what is on the house; a search with nothing listed names the known items that matched and why ("No listings" after a complete view, "Not seen here" otherwise).
-  - **Tooltips:** hovering an item's icon or name shows its tooltip: as a player's game rendered it, else Blizzard's item API's own text, else the few known facts with a note that the tooltip is incomplete. Nothing is made up.
-  - **One click** selects a row (kept in the link, so a refresh keeps it); **a double click**, Enter or Open opens the item's window.
-- **Item windows:** one per item variant, over the page. Drag, resize, raise, collapse, pin, close (or Esc; Esc closes the window on top). The header has the item's icon, name and tooltip, Add to list and the favorite star. **Prices** shows lowest and typical buyout, available and auctions, the 7-day median and 24-hour change, freshness and source, then every price level the house showed: Unit Price, Available, Auctions, cheapest first. Clicking a level adds up everything up to it. There is no seller column: neither Blizzard's API nor the add-on reports sellers. **History** has the price and supply charts, loaded only there.
-- **Sell:** pick an item to see the same figures and price levels, a starting price (one copper under the lowest buyout, never under the vendor price) and the vendor price.
-- **Shopping:** your lists, priced on this house (lowest buyout × quantity still needed; items without a price here are named and left out of the total).
+- **Title bar:** Back and Forward (they walk the Auction House's own steps: searches, categories, sorts, pages, houses; not row selection or opening a category), the auction house, how recently it was updated, and Diagnostics for administrators. The houses offered are the chosen server's Alliance, Horde and Blackwater houses, the player's faction first (from the race of their most recently seen character on that server), then Blizzard's houses. The house opened is the one you used last on that server, else your faction's if it has listings, else the next one with listings.
+- **One screen, no tabs.** The website cannot buy or post; that happens in the game. Old Sell and Shopping links open Browse; shopping lists keep their data and API.
+- **Search bar:** favorites, name or id with suggestions, Filter (level range, rarity), Search.
+- **Home** (nothing searched, no category): your favorites, priced on this house.
+- **Categories:** clicking a category with subcategories only opens or closes it; the results change only when a category without subcategories, or "All …", is chosen. Several branches can stay open; which ones are kept for the browser session.
+- **Results:** Price, Name, Available (and Req. Lvl for Weapons, Armor and Consumables), sortable. A random-suffix version is listed under its own name ("Raider's Chestpiece of the Bear"). Search and categories show what is on the house; a search with nothing listed names the known items that matched and why ("No listings" after a complete view, "Not seen here" otherwise).
+- **Tooltips** (icon or name, by mouse or keyboard focus): see "Item tooltips". They come with the page of results; hovering asks the server nothing.
+- **One click** selects a row (kept in the link); **a double click**, Enter or Open opens the item's window.
+- **Item windows:** one per item version, over the page. Drag, resize, raise, collapse, pin, close (Esc closes the one on top). Header: icon, name, tooltip, favorite. **Prices**: lowest and typical buyout, available and auctions, 7-day median, 24-hour change, freshness and source, then every price level the house showed (Unit Price, Available, Auctions, cheapest first) and **Cost to buy**: a quantity, walked level by level, with the average and highest price paid and how many are missing if fewer are listed. There is no seller column: neither Blizzard's API nor the add-on reports sellers. **History**: price and supply charts and metrics, loaded only there.
 - **Dashboard home:** an "Auction House favorites" card with your favorites only: price on your house, 24-hour change, age, and a link to each.
 - Links with `?item=` (Dungeon Companion loot) open that item's window; `?tab=history&item=` (the item catalog) opens it on History.
 
 The screenshots use test data on a local server, not live prices. Icons show the game's question mark because a local server has no Blizzard credentials to fetch them.
 
-![Buy: favorites when nothing is searched](images/auction-house/v4-1-buy-home-favorites.png)
+![Weapons at 1920 × 1080](images/auction-house/v5-after-1920x1080-weapons.png)
 
-![Trade Goods opened: the results are still the favorites](images/auction-house/v4-2-category-opened-results-unchanged.png)
+![An item Blizzard's item API describes: its tooltip](images/auction-house/v5-after-1650-tooltip-blizzard-item.png)
 
-![Armor › Cloth › Hands chosen, with the item's tooltip](images/auction-house/v4-4-armor-cloth-hands-tooltip.png)
+![A random-suffix version's tooltip](images/auction-house/v5-after-1650-tooltip-version.png)
 
-![An item window with every price level](images/auction-house/v4-5-item-window-price-levels.png)
+![Item windows: price levels with the cost to buy 15, and History](images/auction-house/v5-after-1650-item-windows.png)
 
-![Sell](images/auction-house/v4-7-sell.png)
+## Item tooltips
 
-![Shopping](images/auction-house/v4-8-shopping.png)
+Where an item's tooltip comes from, richest first (`tooltipsInDatabase` in `marketRepository.js`, the same for search results, favorites, item windows and the shared item service):
 
-![The dashboard's favorites card](images/auction-house/v4-9-dashboard-home-favorites.png)
+1. **A player's game rendered it**: the item descriptions players' add-ons send (`game_item_definition`, base item, sanitised into `public_game_items`), with the game build it came from.
+2. **Blizzard's item API**: the display strings of `preview_item` (item level, binding, slot and type, damage and speed, armor, stats, durability, requirements, spell effects, description), kept with the item in `game_data_catalog`.
+3. **Only the facts** (name, binding, the slot as the game names it, item and required level), ending "Full tooltip not available yet."
+
+A random-suffix version shows its base item's lines under its own name and says "This version's own bonuses are not shown.": another version's bonuses are never borrowed. Private per-character item records (`item_definition`, used by the armory) are not used: they can carry instance details such as a crafter's name.
+
+**Why production tooltips were nearly empty (fixed):** most listed items are known only through Blizzard's item API (the players' public catalog had about 1,650 items for build 70888). Items looked up before #276 were saved without tooltip text. The catalog treated them as fresh for 30 days, and the listed-item lookup skipped items that already had a name and class, so nothing asked Blizzard again. Now an item saved without tooltip text is refetched (`candidateList`), and the listed-item lookup includes such items once (`itemsMissingTooltipsInDatabase`, after the unnamed ones; a failed answer waits a day). At 240 items a minute the whole house is refetched within about an hour of deploying. **Not verified live:** whether Forever's item API returns `preview_item` (the Classic API does). If it does not, those items keep the facts-only tooltip until a player's add-on describes them; having the add-on describe items it sees at the auction house would close that gap (a follow-up in the add-on).
+
+## Shared item service
+
+`backend/src/Items/itemService.js` is how the rest of Guildweaver (professions, loot, farming, and later rules and MCP tools) asks about items, with the same data the Auction House shows and no React, request or page state:
+
+| Function | Answers |
+| --- | --- |
+| `parseItemKey(value)` | an item id or key → `{ itemKey, itemId, suffix, bonusLists, variant }` |
+| `readItem(key)`, `readItems(keys)` | name, quality, icon FileDataID, class, slot, levels, and the tooltip with its source and build |
+| `readMarketPrices({ marketKey, keys })` | current lowest and typical buyout, quantity, auctions, freshness and source per item key, on one market |
+| `readItemOnMarket({ key, marketKey })` | listing state, figures and every price level on one market |
+| `readCostToBuy({ key, marketKey, quantity })` | the cost of a quantity, level by level |
+| `readItemHistory({ key, marketKey, range })` | price and supply series with medians, ranges, volatility and supply change |
+| `readItemSources(key)` | recipes that make or use it, and where players saw it drop |
+| `readItemIntelligence({ key, marketKey, include })` | any of the above in one answer |
+
+Item identity and market identity stay apart: a function that returns prices needs a market and never picks one; a version's key (`i:15210:s-1081`) is priced on its own and never merged with its base item. Prices are asking prices, not sales. It reads the existing repositories and adds no tables.
 
 ## Item icons
 
@@ -144,7 +165,7 @@ An icon is a FileDataID. `game_icon_assets` remembers, per icon, where its image
 2. the image URL Blizzard's item API gave for an item with that icon,
 3. Blizzard's media search for that FileDataID.
 
-An icon none of them has is shown as the game's question mark and asked about again after an hour, doubling up to a week. In the page, an item tries its own image, then its icon by FileDataID, then the question mark. In-game scans may carry `iconFileDataId` (from `GetAuctionItemInfo`) so items no other source describes still get their icon.
+The registry is in the database on the server's persistent disk, so it survives restarts; nothing is written to the server's own (temporary) file system. Every item image on the website goes through these routes. An icon none of them has is shown as the game's question mark and asked about again after an hour, doubling up to a week. In the page, an item tries its own image, then its icon by FileDataID, then the question mark. In-game scans may carry `iconFileDataId` (from `GetAuctionItemInfo`) so items no other source describes still get their icon.
 
 ## Names for items Blizzard's auction data lists
 
@@ -153,6 +174,7 @@ Blizzard's auction data lists item ids only. Every minute, up to 240 listed item
 ## Deploying
 
 1. Run `npm run backup` first, as for any migration. Deploy as usual; migrations run on start.
+   - The page that fills the screen and the tooltip refetch need no migration: after deploying, items saved without tooltip text are asked for again in the background (`[market] looked up … listed items` in the log).
    - Migration 20 adds `market_price_ladders` (each item's latest price levels), `market_item_meta.inventory_type` (the equipment slot, for armor categories) with two indexes, an index on the item catalog's icons, and `game_icon_assets` (the icon registry). It adds; it changes and deletes nothing.
    - Migration 19 adds `market_item_meta.lookup_at` (when Blizzard's item API was last asked about a listed item).
    - Migration 18 (search) adds two columns and two indexes to `market_item_meta`, one column to `market_variant_names`, and fills the search names of rows already there. It changes no other data. The item index then fills from game data in the background within a few minutes (`[market] indexed … catalog items for search` in the log).
@@ -172,13 +194,13 @@ Blizzard's auction data lists item ids only. Every minute, up to 240 listed item
 
 ### Checking search and listings in a live client
 
-1. Sign in, open Auction House. With a character on the chosen server, the house shown is its faction's.
+1. Sign in, open Auction House. The window fills the page. With a character on the chosen server, the house shown is its faction's.
 2. In the game, at an auctioneer, search an item that is listed (e.g. Linen Cloth) and one that is not. Close the auction house, `/gw sync`.
 3. On the website, search both by name and by item id. The listed one shows the price you saw, "In-game scan · just now". The other gets no row; the page says "No auctions for … on this auction house" and names it as "Not seen here".
 4. Open Trade Goods: the results do not change. Choose Cloth: they do. Press Back: the previous results return.
-5. Hover an item's name and icon: its tooltip matches the game's.
-6. Double-click a row: the window's Prices tab lists the price levels you saw in the game (quantity and auctions per price). Click a level: the total up to it adds up.
+5. Hover an item's name and icon: its tooltip matches the game's. For an item only Blizzard's data describes (most weapons and armor), the tooltip shows Blizzard's lines within about an hour of deploying, if Forever's item API provides them; otherwise the facts and "Full tooltip not available yet."
+6. Double-click a row: the window's Prices tab lists the price levels you saw in the game (quantity and auctions per price). Type a quantity in Cost to buy and check it against buying that many in the game.
 7. Switch to the matching Blizzard API house (if configured): the same item shows that house's price and levels or "No listings · <time>", never the in-game price.
 8. Favorite an item, then open the dashboard's Home: the card shows it with this house's price.
-9. As an administrator, Diagnostics shows the in-game market's last check at the time of your sync.
+9. As an administrator, Diagnostics shows the in-game market's last check at the time of your sync, and the server log shows `[market] looked up … listed items` while tooltips are being fetched.
 

@@ -164,6 +164,9 @@ function itemMetadata(payload, media, namespace) {
     itemSubclassId: integer(payload?.item_subclass?.id ?? payload?.itemSubclass?.id),
     itemSubclassName: text(payload?.item_subclass?.name ?? payload?.itemSubclass?.name, 96),
     inventoryType: text(payload?.inventory_type?.type ?? payload?.inventory_type?.name ?? payload?.inventoryType, 96),
+    // The slot as the game names it ("Two-Hand", "Hands"), for tooltips.
+    inventoryTypeName: text(payload?.inventory_type?.name, 96),
+    bindingName: text(payload?.preview_item?.binding?.name, 96),
     purchasePrice: integer(payload?.purchase_price ?? payload?.purchasePrice),
     sellPrice: integer(payload?.sell_price ?? payload?.sellPrice),
   };
@@ -291,7 +294,11 @@ function candidateList(references, bundle, nowMs, config) {
       const entry = bundle?.[`${type}s`]?.[String(id)] || null;
       const updatedAt = new Date(entry?.updatedAt || 0).getTime();
       const authoritative = entry?.source === "blizzard";
-      const fresh = authoritative && Number.isFinite(updatedAt) && nowMs - updatedAt < config.refreshMs;
+      // An item saved before its tooltip text was kept has no tooltipLines
+      // at all (an item Blizzard has no text for has an empty list): it is
+      // asked again, whatever its age.
+      const outdated = type === "item" && !Array.isArray(entry?.metadata?.tooltipLines);
+      const fresh = authoritative && !outdated && Number.isFinite(updatedAt) && nowMs - updatedAt < config.refreshMs;
       if (!fresh) result.push({ type, id });
       if (result.length >= config.maxEntities) return result;
     }

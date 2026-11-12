@@ -78,40 +78,6 @@ export function FavoriteButton({ itemId, favorite, onChange, size = 'sm' }) {
   )
 }
 
-// Adds an item to one of the player's shopping lists, inline.
-export function AddToList({ itemId, defaultQuantity = 1, onAdded, label = '+ List', className = 'gw-btn gw-btn--sm' }) {
-  const [open, setOpen] = useState(false)
-  const lists = useMarketResource(open ? '/api/market/lists' : '')
-  const [listId, setListId] = useState('')
-  const [quantity, setQuantity] = useState(defaultQuantity)
-  const [message, setMessage] = useState('')
-  async function add(event) {
-    event.preventDefault()
-    let target = listId || lists.data?.lists?.[0]?.id
-    if (!target) target = (await marketWrite('/api/market/lists', { method: 'POST', body: { name: 'Shopping list' } })).list.id
-    await marketWrite(`/api/market/lists/${target}/items/${itemId}`, { body: { quantity: Number(quantity) || 1 } })
-    setMessage('Added ✓')
-    setOpen(false)
-    onAdded?.()
-  }
-  if (!open) {
-    return <button type="button" className={className} onClick={(event) => { event.stopPropagation(); setOpen(true); setMessage('') }} title="Add to a shopping list (A)">
-      {message || label}
-    </button>
-  }
-  return (
-    <form className="gw-addlist" onSubmit={add} onClick={(event) => event.stopPropagation()}>
-      <select aria-label="Shopping list" value={listId} onChange={(event) => setListId(event.target.value)}>
-        {(lists.data?.lists || []).map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}
-        {!lists.data?.lists?.length ? <option value="">New list</option> : null}
-      </select>
-      <input aria-label="Quantity" type="number" min="1" max="100000" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-      <button type="submit" className="gw-btn gw-btn--sm gw-btn--primary">Add</button>
-      <button type="button" className="gw-btn gw-btn--sm" onClick={() => setOpen(false)} aria-label="Cancel">×</button>
-    </form>
-  )
-}
-
 export function SignalChips({ signals = [], limit = 4 }) {
   if (!signals.length) return null
   return (

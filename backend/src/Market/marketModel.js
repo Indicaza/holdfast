@@ -278,3 +278,25 @@ export function confidence({ complete, observedAt, quantity, listings }, now = M
   if ((listings ?? 0) >= 5 || quantity >= 20) return ageSeconds <= 6 * 3600 ? "high" : "medium";
   return "medium";
 }
+
+// What buying `quantity` items on one market would cost, walking its price
+// levels ({ unitPrice, quantity }) cheapest first: the total, the average
+// and highest unit price paid, and how many are missing if fewer are listed.
+// Never the lowest price times the quantity. Auctions of non-stackable
+// goods are bought whole in the game, so the real cost can be higher.
+export function costToBuy(levels = [], quantity = 0) {
+  const want = Math.max(0, Math.floor(Number(quantity)) || 0);
+  let left = want;
+  let cost = 0;
+  let upTo = -1;
+  for (const [index, level] of levels.entries()) {
+    if (left <= 0) break;
+    const take = Math.min(left, Math.max(0, Number(level?.quantity) || 0));
+    if (!take) continue;
+    cost += take * level.unitPrice;
+    left -= take;
+    upTo = index;
+  }
+  const bought = want - left;
+  return { quantity: bought, cost, average: bought ? Math.round(cost / bought) : null, highest: upTo >= 0 ? levels[upTo].unitPrice : null, short: left };
+}

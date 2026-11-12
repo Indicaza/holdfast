@@ -4,7 +4,8 @@
    source of each size. Sizes the request enlarged (rows 36px, icons 28px,
    category buttons 28px) are marked. */
 
-.ah, .gw-insp-layer {
+.ah, .gw-insp-layer, .ah-home {
+  --ah-u: clamp(1px, calc(0.035vw + 0.43px), 1.3px);
   --ah-gold: #ffd100;
   --ah-text: #ffffff;
   --ah-dim: #c8c2b2;
@@ -15,16 +16,17 @@
 .ah {
   display: flex;
   flex-direction: column;
+  --ah-cats-w: calc(210 * var(--ah-u));
   width: 100%;
-  max-width: 1180px;
+  max-width: 2600px;
   min-width: 0;
   min-height: 0;
   height: 100%;
   margin: 0 auto;
-  padding: 18px 10px 0 16px;
+  padding: 22px clamp(10px, 1.2vw, 26px) clamp(10px, 1.2vw, 22px) clamp(16px, 1.6vw, 34px);
   box-sizing: border-box;
   color: var(--ah-text);
-  font-size: 13px;
+  font-size: calc(13 * var(--ah-u));
 }
 
 .gw-content--fill > .ah {
@@ -37,7 +39,7 @@
   position: relative;
   display: flex;
   flex: 1;
-  min-height: 538px;
+  min-height: 520px;
   flex-direction: column;
   padding: 28px 8px 8px;
   isolation: isolate;
@@ -88,7 +90,7 @@
   overflow: hidden;
   color: var(--ah-gold);
   font-family: inherit;
-  font-size: 13px;
+  font-size: calc(13 * var(--ah-u));
   font-weight: 600;
   line-height: 19px;
   text-overflow: ellipsis;
@@ -112,7 +114,7 @@
   height: 20px;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: calc(11 * var(--ah-u));
   pointer-events: none;
 }
 
@@ -134,7 +136,7 @@
   background: linear-gradient(#2a2418, #120f09);
   color: var(--ah-gold);
   font: inherit;
-  font-size: 11px;
+  font-size: calc(11 * var(--ah-u));
   line-height: 1;
   cursor: pointer;
 }
@@ -158,67 +160,30 @@
   background: #0b0a08;
   color: var(--ah-gold);
   font: inherit;
-  font-size: 11px;
+  font-size: calc(11 * var(--ah-u));
 }
 
 .ah-fresh { color: var(--ah-faint); white-space: nowrap; }
 .ah-fresh--warn { color: #ff9a3c; }
 .ah-band-link { color: var(--ah-faint); text-decoration: none; }
 .ah-band-link:hover { color: var(--ah-gold); }
-.ah-band-button { padding: 0 2px; border: 0; background: none; color: var(--ah-faint); font: inherit; font-size: 11px; cursor: pointer; }
+.ah-band-button { padding: 0 2px; border: 0; background: none; color: var(--ah-faint); font: inherit; font-size: calc(11 * var(--ah-u)); cursor: pointer; }
 .ah-band-button:hover { color: var(--ah-gold); }
-
-/* ------------------------------------------------------------ Tabs (CharacterFrameTabButtonTemplate) */
-
-.ah__tabs {
-  display: flex;
-  min-height: 34px;
-  padding-left: 14px;
-  gap: 0;
-}
-
-.ah__tab {
-  display: inline-flex;
-  min-width: 96px;
-  height: 32px;
-  margin-top: -6px;
-  margin-right: -14px;
-  padding: 0 22px 4px;
-  align-items: center;
-  justify-content: center;
-  border-style: solid;
-  border-width: 0 20px;
-  border-image: url("/auction-art/tab-inactive.webp") 0 20 fill / 0 20px stretch;
-  color: var(--ah-gold);
-  font-size: 12px;
-  text-decoration: none;
-  text-shadow: 0 1px 1px #000;
-  box-sizing: border-box;
-}
-
-.ah__tab:hover { color: #fff; }
-
-.ah__tab.is-active {
-  height: 38px;
-  margin-top: -9px;
-  border-image: url("/auction-art/tab-active.webp") 0 20 fill / 0 20px stretch;
-  color: #fff;
-}
 
 /* ------------------------------------------------------------ Buttons */
 
 /* UIPanelButtonTemplate: the red panel button */
 .ah-button {
-  height: 22px;
-  min-width: 80px;
-  padding: 0 14px;
+  height: calc(24 * var(--ah-u));
+  min-width: calc(88 * var(--ah-u));
+  padding: 0 calc(14 * var(--ah-u));
   border-style: solid;
   border-width: 0 12px;
   border-image: url("/auction-art/button-up.webp") 0 12 fill / 0 12px stretch;
   background: none;
   color: var(--ah-gold);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
   font-weight: 600;
   text-shadow: 0 1px 1px #000;
   white-space: nowrap;
@@ -229,12 +194,12 @@
 .ah-button:hover { color: #fff; }
 .ah-button:active { border-image-source: url("/auction-art/button-down.webp"); }
 .ah-button:disabled { filter: grayscale(1) brightness(.7); color: #999; cursor: default; }
-.ah-button:focus-visible, .ah__tab:focus-visible, .ah-cat:focus-visible, .ah-nav button:focus-visible { outline: 1px solid #fff; outline-offset: 1px; }
+.ah-button:focus-visible, .ah-cat:focus-visible, .ah-nav button:focus-visible { outline: 1px solid #fff; outline-offset: 1px; }
 
 .ah-icon-button {
   display: inline-grid;
-  width: 30px;
-  height: 30px;
+  width: calc(32 * var(--ah-u));
+  height: calc(32 * var(--ah-u));
   padding: 0;
   place-items: center;
   border: 1px solid rgba(255, 209, 0, .35);
@@ -243,15 +208,15 @@
   cursor: pointer;
 }
 
-.ah-icon-button img { width: 22px; height: 20px; }
+.ah-icon-button img { width: calc(22 * var(--ah-u)); height: calc(20 * var(--ah-u)); }
 .ah-icon-button.is-on { border-color: rgba(255, 209, 0, .8); box-shadow: inset 0 0 6px rgba(255, 209, 0, .35); }
 
 /* ------------------------------------------------------------ Search bar (AuctionHouseSearchBarTemplate) */
 
 .ah-search {
   display: flex;
-  height: 40px;
-  margin: 2px 4px 4px 176px;
+  height: calc(44 * var(--ah-u));
+  margin: 2px 4px 4px calc(var(--ah-cats-w) + 8px);
   align-items: center;
   gap: 9px;
 }
@@ -261,7 +226,7 @@
   display: flex;
   flex: 1;
   min-width: 160px;
-  height: 28px;
+  height: calc(30 * var(--ah-u));
   align-items: center;
   background:
     url("/auction-art/input-left.webp") left center / 8px 100% no-repeat,
@@ -278,7 +243,7 @@
   background: transparent;
   color: #fff;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13 * var(--ah-u));
   outline: none;
 }
 
@@ -289,7 +254,7 @@
 
 .ah-filter__button {
   display: inline-flex;
-  height: 26px;
+  height: calc(28 * var(--ah-u));
   padding: 0 10px 0 12px;
   align-items: center;
   gap: 8px;
@@ -298,12 +263,12 @@
   background: linear-gradient(#2b2a28, #121110);
   color: var(--ah-gold);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
   cursor: pointer;
 }
 
 .ah-filter__button.is-active { border-color: rgba(255, 209, 0, .6); }
-.ah-filter__button::after { content: "▾"; color: #fff; font-size: 10px; }
+.ah-filter__button::after { content: "▾"; color: #fff; font-size: calc(10 * var(--ah-u)); }
 
 .ah-filter__menu {
   position: absolute;
@@ -320,7 +285,7 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, .6);
 }
 
-.ah-filter__menu label { display: grid; gap: 4px; color: var(--ah-gold); font-size: 11px; }
+.ah-filter__menu label { display: grid; gap: 4px; color: var(--ah-gold); font-size: calc(11 * var(--ah-u)); }
 .ah-filter__row { display: flex; align-items: center; gap: 6px; }
 .ah-filter__menu input, .ah-filter__menu select {
   height: 22px;
@@ -330,7 +295,7 @@
   background: #000;
   color: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
 }
 
 .ah-filter__menu input { width: 48px; text-align: center; }
@@ -352,8 +317,8 @@
 
 .ah-suggest li { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 2px; cursor: pointer; }
 .ah-suggest li.is-active, .ah-suggest li:hover { background: rgba(255, 209, 0, .12); }
-.ah-suggest__meta { margin-left: auto; color: var(--ah-faint); font-size: 11px; white-space: nowrap; }
-.ah-suggest__head { color: var(--ah-faint); font-size: 10px; text-transform: uppercase; cursor: default !important; }
+.ah-suggest__meta { margin-left: auto; color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); white-space: nowrap; }
+.ah-suggest__head { color: var(--ah-faint); font-size: calc(10 * var(--ah-u)); text-transform: uppercase; cursor: default !important; }
 
 /* ------------------------------------------------------------ Buy view */
 
@@ -361,20 +326,21 @@
   display: grid;
   flex: 1;
   min-height: 0;
-  grid-template-columns: 168px minmax(0, 1fr);
+  grid-template-columns: var(--ah-cats-w) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas: "search search" "cats list";
   column-gap: 8px;
 }
 
 .ah-buy[hidden] { display: none; }
-.ah-buy > .ah-search { grid-area: search; margin-left: 176px; }
+.ah-buy > .ah-search { grid-area: search; margin-left: calc(var(--ah-cats-w) + 8px); }
 
 /* AuctionHouseCategoriesListTemplate: 168 wide, its own background */
 .ah-cats {
   grid-area: cats;
   min-height: 0;
   padding: 6px 4px 6px 6px;
+  overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid #000;
   background: #100e0b url("/auction-art/background-categories.webp") top / 100% 100% no-repeat;
@@ -390,7 +356,7 @@
   position: relative;
   display: flex;
   width: 100%;
-  height: 28px;
+  height: calc(30 * var(--ah-u));
   padding: 0 8px;
   align-items: center;
   border-style: solid;
@@ -399,7 +365,7 @@
   background: none;
   color: var(--ah-gold);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
   text-align: left;
   text-shadow: 0 1px 1px #000;
   white-space: nowrap;
@@ -408,7 +374,7 @@
 }
 
 .ah-cat__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.ah-cat__count { margin-left: 6px; color: var(--ah-faint); font-size: 10px; }
+.ah-cat__count { margin-left: 6px; color: var(--ah-faint); font-size: calc(10 * var(--ah-u)); }
 .ah-cat--depth-1 { padding-left: 16px; color: #fff; }
 .ah-cat--depth-2 { padding-left: 26px; color: #fff; }
 .ah-cat--all { color: #fff; font-style: italic; }
@@ -450,15 +416,15 @@
 
 .ah-list__context {
   display: flex;
-  min-height: 22px;
+  min-height: calc(24 * var(--ah-u));
   padding: 3px 8px 0;
   align-items: center;
   gap: 8px;
   color: var(--ah-gold);
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
 }
 
-.ah-list__context small { color: var(--ah-faint); font-size: 11px; }
+.ah-list__context small { color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); }
 
 .ah-table-wrap {
   flex: 1;
@@ -479,7 +445,7 @@
   position: sticky;
   z-index: 1;
   top: 0;
-  height: 22px;
+  height: calc(24 * var(--ah-u));
   padding: 0;
   font-weight: 400;
   text-align: left;
@@ -489,7 +455,7 @@
 .ah-head {
   display: flex;
   width: 100%;
-  height: 22px;
+  height: calc(24 * var(--ah-u));
   padding: 0 8px;
   align-items: center;
   gap: 4px;
@@ -499,7 +465,7 @@
   background: none;
   color: #fff;
   font: inherit;
-  font-size: 11px;
+  font-size: calc(11 * var(--ah-u));
   text-align: inherit;
   white-space: nowrap;
   cursor: pointer;
@@ -515,12 +481,14 @@ span.ah-head { cursor: default; }
 /* Rows: auctionhouse-rowstripe-1/2, hover row-highlight, selected
    row-select (additive). 36px tall with 28px icons (request). */
 .ah-table tbody tr {
-  height: 36px;
+  height: calc(38 * var(--ah-u));
   background: url("/auction-art/row-stripe-1.webp") 0 0 / 100% 100%;
   cursor: pointer;
 }
 
 .ah-table tbody tr:nth-child(even) { background-image: url("/auction-art/row-stripe-2.webp"); }
+/* A double click opens the item; it never selects the row's text. */
+.ah-table tbody tr, .ah-prices tbody tr { user-select: none; }
 .ah-table tbody td { position: relative; padding: 0 8px; border-bottom: 1px solid rgba(0, 0, 0, .35); white-space: nowrap; }
 /* Highlight and selection are drawn additively over the stripe, across the
    whole row, as the game does. */
@@ -530,13 +498,13 @@ span.ah-head { cursor: default; }
 .ah-table tbody tr.is-selected:nth-child(even) { background-image: url("/auction-art/row-select.webp"), url("/auction-art/row-stripe-2.webp"); }
 .ah-table tbody tr.is-unlisted .ah-item__name { opacity: .8; }
 
-.ah-col-price { width: 132px; text-align: right; }
-.ah-col-detail { width: 64px; text-align: right; color: #fff; }
-.ah-col-quantity { width: 96px; text-align: right; color: #fff; }
-.ah-col-fav { width: 34px; text-align: center; }
+.ah-col-price { width: calc(150 * var(--ah-u)); text-align: right; }
+.ah-col-detail { width: calc(80 * var(--ah-u)); text-align: right; color: #fff; }
+.ah-col-quantity { width: calc(110 * var(--ah-u)); text-align: right; color: #fff; }
+.ah-col-fav { width: calc(38 * var(--ah-u)); text-align: center; }
 .ah-col-name { overflow: hidden; max-width: 0; text-overflow: ellipsis; }
 
-.ah-variant { margin-left: 6px; color: var(--ah-faint); font-size: 11px; }
+.ah-variant { margin-left: 6px; color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); }
 
 .ah-star {
   width: 22px;
@@ -553,13 +521,13 @@ span.ah-head { cursor: default; }
 
 .ah-list__foot {
   display: flex;
-  min-height: 28px;
+  min-height: calc(30 * var(--ah-u));
   padding: 0 8px;
   align-items: center;
   gap: 10px;
   border-top: 1px solid rgba(0, 0, 0, .6);
   color: var(--ah-dim);
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
 }
 
 .ah-list__foot .ah-spacer { flex: 1; }
@@ -569,13 +537,13 @@ span.ah-head { cursor: default; }
 .ah-selection {
   display: flex;
   margin-top: auto;
-  min-height: 34px;
+  min-height: calc(34 * var(--ah-u));
   padding: 2px 8px;
   align-items: center;
   gap: 14px;
   border-top: 1px solid rgba(255, 209, 0, .18);
   background: rgba(0, 0, 0, .35);
-  font-size: 12px;
+  font-size: calc(12 * var(--ah-u));
   color: var(--ah-dim);
 }
 
@@ -586,7 +554,7 @@ span.ah-head { cursor: default; }
   margin: 30px auto;
   max-width: 460px;
   color: var(--ah-gold);
-  font-size: 13px;
+  font-size: calc(13 * var(--ah-u));
   text-align: center;
 }
 
@@ -600,7 +568,7 @@ span.ah-head { cursor: default; }
   min-height: 160px;
   place-items: center;
   color: var(--ah-gold);
-  font-size: 16px;
+  font-size: calc(16 * var(--ah-u));
 }
 
 .ah-loading::before {
@@ -654,6 +622,12 @@ span.ah-head { cursor: default; }
   white-space: nowrap;
 }
 
+.ah-table .ah-item__icon, .ah-home .ah-item__icon {
+  flex-basis: calc(28 * var(--ah-u));
+  width: calc(28 * var(--ah-u));
+  height: calc(28 * var(--ah-u));
+}
+
 /* ITEM_QUALITY_COLORS */
 .ah-item--q0 { --ah-q: #9d9d9d; }
 .ah-item--q1 { --ah-q: #ffffff; }
@@ -665,7 +639,7 @@ span.ah-head { cursor: default; }
 .ah-item--q7 { --ah-q: #00ccff; }
 .ah-item--q1 .ah-item__icon::after { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
 
-.ah-listing { font-size: 12px; white-space: nowrap; cursor: help; }
+.ah-listing { font-size: calc(12 * var(--ah-u)); white-space: nowrap; cursor: help; }
 .ah-listing--none { color: var(--ah-dim); }
 .ah-listing--unknown { color: var(--ah-faint); font-style: italic; }
 
@@ -702,10 +676,10 @@ span.ah-head { cursor: default; }
   background: url("/auction-art/item-header.webp") center / 100% 100% no-repeat;
 }
 
-.ah-item-header .ah-item__name { font-size: 16px; }
+.ah-item-header .ah-item__name { font-size: calc(16 * var(--ah-u)); }
 .ah-item-header .ah-spacer { flex: 1; }
 
-.ah-facts { margin: 6px 0 0; color: var(--ah-dim); font-size: 12px; }
+.ah-facts { margin: 6px 0 0; color: var(--ah-dim); font-size: calc(12 * var(--ah-u)); }
 
 .ah-summary {
   display: grid;
@@ -715,14 +689,14 @@ span.ah-head { cursor: default; }
 }
 
 .ah-summary div { display: grid; gap: 1px; }
-.ah-summary dt { color: var(--ah-gold); font-size: 11px; }
-.ah-summary dd { margin: 0; color: #fff; font-size: 13px; }
-.ah-summary small { color: var(--ah-faint); font-size: 11px; }
+.ah-summary dt { color: var(--ah-gold); font-size: calc(11 * var(--ah-u)); }
+.ah-summary dd { margin: 0; color: #fff; font-size: calc(13 * var(--ah-u)); }
+.ah-summary small { color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); }
 
 /* The price levels: Unit Price · Available · Auctions (the commodity lists) */
 .ah-prices { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
 .ah-prices thead th { padding: 0; font-weight: 400; }
-.ah-prices tbody tr { height: 26px; background: url("/auction-art/row-stripe-1.webp") 0 0 / 100% 100%; cursor: pointer; }
+.ah-prices tbody tr { height: calc(26 * var(--ah-u)); background: url("/auction-art/row-stripe-1.webp") 0 0 / 100% 100%; cursor: pointer; }
 .ah-prices tbody tr:nth-child(even) { background-image: url("/auction-art/row-stripe-2.webp"); }
 .ah-prices tbody td { padding: 0 8px; text-align: right; color: #fff; white-space: nowrap; }
 .ah-prices tbody td:first-child { text-align: left; }
@@ -730,56 +704,42 @@ span.ah-head { cursor: default; }
 .ah-prices tbody tr.is-within { background-image: url("/auction-art/row-select.webp"), url("/auction-art/row-stripe-1.webp"); background-blend-mode: screen; }
 .ah-prices__bar { width: 30%; }
 .ah-prices__bar span { display: block; height: 6px; border-radius: 3px; background: #c79c2a; opacity: .75; }
-.ah-prices__note { margin: 6px 0 0; color: var(--ah-faint); font-size: 11px; }
-.ah-prices__pick { margin: 6px 0 0; color: var(--ah-gold); font-size: 12px; }
+.ah-prices__note { margin: 6px 0 0; color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); }
+.ah-prices__pick { margin: 6px 0 0; color: var(--ah-gold); font-size: calc(12 * var(--ah-u)); }
 
 .ah-faint { color: var(--ah-faint); }
 .ah-spacer { flex: 1; }
-.ah-error { margin: 6px 0; color: #ff6b5a; font-size: 12px; }
-.ah-button--small { height: 20px; min-width: 0; padding: 0 8px; font-size: 11px; }
+.ah-error { margin: 6px 0; color: #ff6b5a; font-size: calc(12 * var(--ah-u)); }
+.ah-button--small { height: 20px; min-width: 0; padding: 0 8px; font-size: calc(11 * var(--ah-u)); }
 .ah-empty--wide { max-width: 620px; }
 .ah-known { justify-items: start !important; }
 
 /* Listing states and coins inside the frame and the item windows */
-.ah .gw-listing, .gw-insp .gw-listing { color: var(--ah-dim); font-size: 12px; white-space: nowrap; cursor: help; }
+.ah .gw-listing, .gw-insp .gw-listing { color: var(--ah-dim); font-size: calc(12 * var(--ah-u)); white-space: nowrap; cursor: help; }
 .ah .gw-listing--unknown, .gw-insp .gw-listing--unknown { color: var(--ah-faint); font-style: italic; }
 .ah .gw-listing small, .gw-insp .gw-listing small { color: var(--ah-faint); }
 .ah .gw-coins, .gw-insp .gw-coins { color: #fff; }
-.ah .gw-fresh, .gw-insp .gw-fresh { color: var(--ah-faint); font-size: 11px; }
+.ah .gw-fresh, .gw-insp .gw-fresh { color: var(--ah-faint); font-size: calc(11 * var(--ah-u)); }
 .ah .gw-fresh--stale, .gw-insp .gw-fresh--stale { color: #ff9a3c; }
 
-/* Sell and Shopping */
-.ah-pane--single { grid-template-columns: minmax(0, 1fr); }
-.ah-pane__note { margin: 10px 0 0; color: var(--ah-dim); font-size: 12px; line-height: 1.45; }
-.ah-pane__title { margin: 0 0 8px; color: var(--ah-gold); font-size: 14px; font-weight: 600; }
-.ah-pane__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
-.ah-pane__head .ah-pane__title { margin: 0; }
-.ah-picker { display: grid; gap: 4px; }
-.ah-picker label { color: var(--ah-gold); font-size: 12px; }
-.ah-picker .ah-search__box { flex: none; }
-.ah-sell__hint { padding: 8px 10px; border: 1px solid rgba(255, 209, 0, .18); background: rgba(0, 0, 0, .3); }
-.ah-sell__more { margin: 8px 0 0; }
-.ah-unlisted { margin: 10px 0; color: var(--ah-dim); font-size: 12px; line-height: 1.45; }
-.ah-versions { margin: 6px 0 10px; color: var(--ah-gold); font-size: 11px; }
+/* Cost to buy a quantity, under the price levels */
+.ah-buycost { display: flex; flex-wrap: wrap; margin: 8px 0 0; align-items: center; gap: 6px 10px; color: var(--ah-dim); font-size: calc(12 * var(--ah-u)); }
+.ah-buycost label { display: inline-flex; align-items: center; gap: 6px; color: var(--ah-gold); }
+.ah-buycost input { width: calc(80 * var(--ah-u)); height: calc(22 * var(--ah-u)); padding: 0 6px; border: 1px solid #555; border-radius: 2px; background: #000; color: #fff; font: inherit; text-align: right; }
+.ah-buycost output { flex-basis: 100%; color: #fff; }
+.ah-buycost output small { color: var(--ah-faint); }
+
+/* An item's versions and listing state, in item windows */
+.ah-unlisted { margin: 10px 0; color: var(--ah-dim); font-size: calc(12 * var(--ah-u)); line-height: 1.45; }
+.ah-versions { margin: 6px 0 10px; color: var(--ah-gold); font-size: calc(11 * var(--ah-u)); }
 .ah-versions ul { display: grid; margin: 4px 0 0; padding: 0; list-style: none; gap: 2px; }
 .ah-versions button { display: flex; width: 100%; justify-content: space-between; gap: 8px; padding: 3px 8px; border: 1px solid rgba(255, 255, 255, .1); border-radius: 2px;
-  background: rgba(0, 0, 0, .35); color: #fff; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+  background: rgba(0, 0, 0, .35); color: #fff; font: inherit; font-size: calc(12 * var(--ah-u)); text-align: left; cursor: pointer; }
 .ah-versions button small { color: var(--ah-faint); }
 .ah-versions button.is-active { border-color: rgba(255, 209, 0, .55); }
-.ah-lists { display: grid; margin: 0 0 10px; padding: 0; list-style: none; gap: 1px; }
-.ah-newlist { display: flex; gap: 6px; }
-.ah-newlist input, .ah-qty { height: 22px; padding: 0 6px; border: 1px solid #555; border-radius: 2px; background: #000; color: #fff; font: inherit; font-size: 12px; }
-.ah-newlist input { flex: 1; min-width: 0; }
-.ah-qty { width: 64px; text-align: right; }
-.ah-table--list { margin-top: 10px; table-layout: fixed; }
-.ah-table--list th:nth-child(2), .ah-table--list th:nth-child(3) { width: 84px; }
-.ah-table--list th:nth-child(4), .ah-table--list th:nth-child(5) { width: 120px; }
-.ah-table--list th:last-child { width: 34px; }
-.ah-table--list tbody tr { cursor: default; }
-.ah-table--list tbody tr.is-done .ah-item__name { text-decoration: line-through; opacity: .6; }
-.ah-col-num { text-align: right; }
-.ah-list-total { margin: 8px 0 0; color: var(--ah-gold); font-size: 13px; }
-.ah-list-total small { color: var(--ah-faint); font-size: 11px; }
+
+/* Diagnostics, for administrators */
+.ah-pane--single { grid-template-columns: minmax(0, 1fr); }
 
 /* ------------------------------------------------------------ Item windows */
 
@@ -794,16 +754,16 @@ span.ah-head { cursor: default; }
 .gw-insp.is-pinned { box-shadow: 0 0 0 1px rgba(124, 179, 255, .6), 0 18px 40px rgba(0, 0, 0, .7); }
 .gw-insp__bar { border-bottom: 1px solid #000; background: linear-gradient(#3a2f1a, #1a150c); }
 .gw-insp__bar .ah-item { min-width: 0; }
-.gw-insp__bar .ah-item__name { font-size: 12.5px; font-weight: 600; }
+.gw-insp__bar .ah-item__name { font-size: calc(12.5 * var(--ah-u)); font-weight: 600; }
 .gw-insp__icon { color: var(--ah-gold); }
 .gw-insp__body { padding: 8px; background: rgba(0, 0, 0, .35); }
 .ah-insp { display: grid; gap: 6px; align-content: start; }
 .ah-insp .ah-item-header { min-height: 64px; }
 .ah-insp .ah-facts { margin: 0; }
-.ah-insp__house { margin: 0; color: var(--ah-gold); font-size: 11px; }
+.ah-insp__house { margin: 0; color: var(--ah-gold); font-size: calc(11 * var(--ah-u)); }
 .ah-insp__tabs { display: flex; gap: 2px; border-bottom: 1px solid rgba(255, 209, 0, .25); }
 .ah-insp__tabs button { height: 24px; padding: 0 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 3px 3px 0 0; background: transparent;
-  color: var(--ah-dim); font: inherit; font-size: 12px; cursor: pointer; }
+  color: var(--ah-dim); font: inherit; font-size: calc(12 * var(--ah-u)); cursor: pointer; }
 .ah-insp__tabs button:hover { color: #fff; }
 .ah-insp__tabs button.is-active { border-color: rgba(255, 209, 0, .35); background: rgba(255, 209, 0, .08); color: var(--ah-gold); }
 .ah-insp__panel { display: grid; gap: 8px; align-content: start; }
@@ -825,10 +785,10 @@ span.ah-head { cursor: default; }
 
 .ah-home__list li:nth-child(even) { background-image: url("/auction-art/row-stripe-2.webp"); }
 .ah-home__price, .ah-home__change { text-align: right; }
-.ah-home__seen { color: #8f8a7e; font-size: 11px; text-align: right; }
-.ah-home__open { color: #ffd100; font-size: 12px; text-decoration: none; }
+.ah-home__seen { color: #8f8a7e; font-size: calc(11 * var(--ah-u)); text-align: right; }
+.ah-home__open { color: #ffd100; font-size: calc(12 * var(--ah-u)); text-decoration: none; }
 .ah-home__open:hover { color: #fff; }
-.ah-home__note { margin: 4px 0; font-size: 13px; opacity: .85; }
+.ah-home__note { margin: 4px 0; font-size: calc(13 * var(--ah-u)); opacity: .85; }
 .ah-home .gw-coins { color: #fff; }
 
 @media (max-width: 640px) {

@@ -193,21 +193,28 @@ export function storeInspectors(windows, storage = globalThis.sessionStorage) {
 
 export const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
 
-// The tooltip lines for an item: what the game showed (or Blizzard's item
-// API described), else the few facts the website knows, said to be
-// incomplete. Never made up.
-export function tooltipItem(item) {
+// The tooltip lines for an item: what a player's game rendered, else
+// Blizzard's item text, else the few facts the website knows, said to be
+// incomplete. Never made up. A random-suffix version ("of the Bear") shows
+// its base item's lines under its own name and says its own bonuses are not
+// included: another version's bonuses are never borrowed.
+const NOTE = { r: 0.5, g: 0.5, b: 0.5 }
+export function tooltipItem(item, { variantName = '' } = {}) {
   if (!item) return null
-  if (Array.isArray(item.tooltipLines) && item.tooltipLines.length) return { ...item, tooltipLines: item.tooltipLines }
+  const name = variantName || item.name || `Item ${item.itemId}`
+  const variant = Boolean(variantName && variantName !== item.name)
+  const withVariant = (lines) => (variant ? [{ ...lines[0], left: name }, ...lines.slice(1), { left: "This version's own bonuses are not shown.", leftColor: NOTE }] : lines)
+  if (Array.isArray(item.tooltipLines) && item.tooltipLines.length > 1) return { ...item, name, tooltipLines: withVariant(item.tooltipLines) }
   const quality = Number.isFinite(Number(item.qualityId)) ? Number(item.qualityId) : null
-  const lines = [{ left: item.name || `Item ${item.itemId}` }]
+  const lines = [{ left: name }]
   if (item.bindType !== null && item.bindType !== undefined && item.bindType !== 0) lines.push({ left: bindLabel(item.bindType) })
-  if (item.itemClass || item.itemSubclass) lines.push({ left: item.itemClass || '', right: item.itemSubclass || '' })
+  if (item.slotName || item.itemSubclass) lines.push({ left: item.slotName || item.itemClass || '', right: item.itemSubclass || '' })
+  else if (item.itemClass) lines.push({ left: item.itemClass })
   if (item.itemLevel) lines.push({ left: `Item Level ${item.itemLevel}` })
   if (item.requiredLevel) lines.push({ left: `Requires Level ${item.requiredLevel}` })
   if (quality === null && lines.length === 1) lines.push({ left: `Item ${item.itemId}`, leftColor: { r: 0.6, g: 0.6, b: 0.6 } })
-  lines.push({ left: 'No player\'s game has shown this item\'s full tooltip yet.', leftColor: { r: 0.5, g: 0.5, b: 0.5 } })
-  return { ...item, qualityId: quality ?? item.qualityId, tooltipLines: lines }
+  lines.push({ left: 'Full tooltip not available yet.', leftColor: NOTE })
+  return { ...item, name, qualityId: quality ?? item.qualityId, tooltipLines: variant ? [...lines.slice(0, -1), { left: "This version's own bonuses are not shown.", leftColor: NOTE }, lines.at(-1)] : lines }
 }
 
 export function qualityName(qualityId) {
@@ -219,4 +226,25 @@ export function itemFacts(item) {
   return [qualityName(item.qualityId), item.itemLevel ? `Item Level ${item.itemLevel}` : null, item.requiredLevel ? `Requires Level ${item.requiredLevel}` : null,
     item.bindType !== null && item.bindType !== undefined && item.bindType !== 0 ? bindLabel(item.bindType) : null,
     [item.itemClass, item.itemSubclass].filter(Boolean).join(' · ') || null].filter(Boolean).join(' · ')
+}
+
+// What buying `quantity` items would cost, cheapest price levels first:
+// how many there are, the total, the average and the highest unit price
+// paid, and how many are missing when fewer are listed. Never the lowest
+// price times the quantity.
+export function costToBuy(levels = [], quantity = 0) {
+  const want = Math.max(0, Math.floor(Number(quantity)) || 0)
+  let left = want
+  let cost = 0
+  let upTo = -1
+  for (const [index, level] of levels.entries()) {
+    if (left <= 0) break
+    const take = Math.min(left, Math.max(0, level.quantity))
+    if (!take) continue
+    cost += take * level.unitPrice
+    left -= take
+    upTo = index
+  }
+  const bought = want - left
+  return { quantity: bought, cost, average: bought ? Math.round(cost / bought) : null, highest: upTo >= 0 ? levels[upTo].unitPrice : null, short: left, upTo }
 }

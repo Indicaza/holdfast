@@ -256,6 +256,19 @@ export function itemsToLookUpInDatabase(db, { limit = 24, now = nowSeconds() } =
     LIMIT ?`).all(now - ITEM_LOOKUP_RETRY_SECONDS, limit).map((row) => row.itemId);
 }
 
+// Listed items whose only description is Blizzard's item data saved before
+// its tooltip text was kept, so their tooltips would show only the bare
+// facts. Asked again once (a failed answer waits a day); items a player's
+// game described already have the game's own tooltip.
+export function itemsMissingTooltipsInDatabase(db, { limit = 24, now = nowSeconds() } = {}) {
+  return db.prepare(`SELECT m.item_id AS itemId FROM market_item_meta m
+    JOIN game_data_catalog c ON c.entity_type = 'item' AND c.entity_id = CAST(m.item_id AS TEXT) AND c.source = 'blizzard'
+    WHERE json_type(c.metadata_json, '$.tooltipLines') IS NULL AND COALESCE(m.lookup_at, 0) < ?
+      AND NOT EXISTS (SELECT 1 FROM public_game_items p WHERE p.item_id = m.item_id AND p.definition_json <> '{}')
+      AND EXISTS (SELECT 1 FROM market_summaries s WHERE s.item_id = m.item_id AND +s.quantity > 0)
+    GROUP BY m.item_id ORDER BY m.item_id LIMIT ?`).all(now - 86400, limit).map((row) => row.itemId);
+}
+
 export function markItemsLookedUpInDatabase(db, itemIds, now = nowSeconds()) {
   const mark = db.prepare("UPDATE market_item_meta SET lookup_at = ? WHERE item_id = ?");
   for (const id of itemIds) mark.run(now, id);
@@ -527,7 +540,7 @@ export function itemsInDatabase(db, ids, now = nowSeconds()) {
   const tooltips = tooltipsInDatabase(db, ids);
   return (id) => {
     const tip = tooltips.get(id);
-    return tip ? { ...item(id), tooltipLines: tip.lines, tooltipSource: tip.source } : item(id);
+    return tip ? { ...item(id), ...tooltipFields(tip) } : item(id);
   };
 }
 
@@ -778,7 +791,7 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
     const withTooltip = (id) => {
       const base = item(id);
       const tip = tooltips.get(id);
-      return tip ? { ...base, tooltipLines: tip.lines, tooltipSource: tip.source } : base;
+      return tip ? { ...base, ...tooltipFields(tip) } : base;
     };
     const describe = (row) => {
       const summary = summaries.get(row.sid);
@@ -887,23 +900,32 @@ function evidenceFromRow(row) {
 // player's game rendered (public_game_items) first, else the display strings
 // of Blizzard's item API (game_data_catalog). Two queries for the page, so
 // hovering an item never asks the server anything.
+function tooltipFields(tip) {
+  return { tooltipLines: tip.lines, tooltipSource: tip.source, ...(tip.gameBuild ? { tooltipBuild: tip.gameBuild } : {}), ...(tip.slotName ? { slotName: tip.slotName } : {}) };
+}
+
 export function tooltipsInDatabase(db, ids) {
   const unique = [...new Set(ids.filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 200);
   const lines = new Map();
   if (!unique.length) return lines;
   const marks = unique.map(() => "?").join(",");
-  for (const row of db.prepare(`SELECT item_id, definition_json FROM public_game_items WHERE item_id IN (${marks}) AND definition_json <> '{}'
+  for (const row of db.prepare(`SELECT item_id, game_build, definition_json FROM public_game_items WHERE item_id IN (${marks}) AND definition_json <> '{}'
     ORDER BY (locale = 'en_US') ASC, captured_at ASC`).all(...unique)) {
     const definition = publicItemDefinition(json(row.definition_json, {}), { base: true });
-    if (definition?.tooltipLines?.length) lines.set(row.item_id, { lines: definition.tooltipLines, source: "game" });
+    // A "tooltip" that is only the name says nothing: the facts do better.
+    if (definition?.tooltipLines?.length > 1) lines.set(row.item_id, { lines: definition.tooltipLines, source: "game", gameBuild: row.game_build });
   }
-  const rest = unique.filter((id) => !lines.has(id));
-  if (rest.length) {
-    for (const row of db.prepare(`SELECT entity_id, metadata_json FROM game_data_catalog WHERE entity_type = 'item' AND entity_id IN (${rest.map(() => "?").join(",")})
-      ORDER BY source_priority ASC, updated_at ASC`).all(...rest.map(String))) {
-      const metadata = json(row.metadata_json || "{}", {});
-      if (Array.isArray(metadata.tooltipLines) && metadata.tooltipLines.length) lines.set(Number(row.entity_id), { lines: metadata.tooltipLines.slice(0, 40), source: "blizzard" });
-    }
+  // Blizzard's item data: its tooltip text where no game rendered one, and
+  // the slot as the game names it ("Two-Hand") for tooltips with bare facts.
+  for (const row of db.prepare(`SELECT entity_id, metadata_json FROM game_data_catalog WHERE entity_type = 'item' AND entity_id IN (${marks})
+    ORDER BY source_priority ASC, updated_at ASC`).all(...unique.map(String))) {
+    const id = Number(row.entity_id);
+    const metadata = json(row.metadata_json || "{}", {});
+    const known = lines.get(id);
+    const slotName = typeof metadata.inventoryTypeName === "string" ? metadata.inventoryTypeName : "";
+    if (known?.source === "game") { if (slotName) known.slotName = slotName; continue; }
+    if (Array.isArray(metadata.tooltipLines) && metadata.tooltipLines.length > 1) lines.set(id, { lines: metadata.tooltipLines.slice(0, 40), source: "blizzard", slotName });
+    else if (slotName) lines.set(id, { lines: [], source: null, slotName });
   }
   return lines;
 }
@@ -916,7 +938,7 @@ function itemDefinitionInDatabase(db, id) {
     ORDER BY (locale = 'en_US') DESC, captured_at DESC LIMIT 1`).get(id);
   if (!row) {
     const catalog = tooltipsInDatabase(db, [id]).get(id);
-    return { tooltipLines: catalog?.lines || [], tooltipSource: catalog?.source || null, described: Boolean(catalog) };
+    return { tooltipLines: catalog?.lines || [], tooltipSource: catalog?.source || null, slotName: catalog?.slotName || "", described: Boolean(catalog?.lines?.length) };
   }
   const definition = publicItemDefinition(json(row.definition_json, {}), { base: true }) || {};
   return { tooltipLines: definition.tooltipLines || [], tooltipSource: "game", equipLocation: definition.equipLocation || "", described: true, gameBuild: row.game_build };

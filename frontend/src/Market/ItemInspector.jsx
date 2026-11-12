@@ -87,7 +87,7 @@ const InspectorWindow = memo(function InspectorWindow({ win, order, focusAt, mar
       <header className="gw-insp__bar" onPointerDown={(event) => { if (!event.target.closest('button')) gesture(event, 'move') }}
         onDoubleClick={(event) => { if (!event.target.closest('button')) update(win.id, { collapsed: !win.collapsed }) }}
         tabIndex={0} onKeyDown={onTitleKey} title="Drag to move · arrows move · Shift+arrows resize · double-click to collapse">
-        <AuctionItem item={{ itemId: win.itemId, name: title, qualityId: win.qualityId }} size={18} />
+        <AuctionItem item={{ itemId: win.itemId, name: title, qualityId: win.qualityId }} size={18} tooltip={false} />
         <span className="gw-insp__spacer" />
         <button type="button" className={`gw-insp__icon${win.pinned ? ' is-on' : ''}`} aria-pressed={win.pinned} aria-label={win.pinned ? 'Unpin' : 'Pin on top'}
           title={win.pinned ? 'Pinned: stays on top and through "Close all"' : 'Pin: keep on top and through "Close all"'} onClick={() => update(win.id, { pinned: !win.pinned })}>⌖</button>

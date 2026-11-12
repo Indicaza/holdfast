@@ -7,6 +7,7 @@ import {
   finishMarketSnapshotInDatabase,
   recordMarketCheckInDatabase,
   ensureItemMetaInDatabase,
+  itemsMissingTooltipsInDatabase,
   itemsToLookUpInDatabase,
   markItemsLookedUpInDatabase,
   runMarketMaintenanceInDatabase,
@@ -271,6 +272,8 @@ export async function resolveMarketItemNames({ itemProvider, batches = 10, batch
   for (let batch = 0; batch < batches; batch += 1) {
     const ids = withGuildTransaction((db) => {
       const due = itemsToLookUpInDatabase(db, { limit: batchSize, now: now() });
+      // Then items named but without Blizzard's tooltip text yet.
+      if (due.length < batchSize) due.push(...itemsMissingTooltipsInDatabase(db, { limit: batchSize - due.length, now: now() }).filter((id) => !due.includes(id)));
       markItemsLookedUpInDatabase(db, due, now());
       return due;
     });

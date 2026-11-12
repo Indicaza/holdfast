@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test'
 import { authenticate } from '../helpers/auth.js'
 import { ALLIANCE_SCANS, CATALOG, HORDE_SCANS, SAMPLE_SCANS, syncAuctionScans, syncItemDefinitions } from '../helpers/market.js'
 
-// The Auction House, end to end, as WoW Forever's window: Buy (favorites
-// when nothing is searched, search and categories showing what is on the
-// chosen house), Sell and Shopping; a click selects, a double click opens an
-// item window with every price level.
+// The Auction House, end to end, as WoW Forever's Browse Auctions window
+// filling the page: favorites when nothing is searched, search and
+// categories showing what is on the chosen house; a click selects, a double
+// click opens an item window with every price level and its history.
 
 const ALLIANCE = 'game:us:normal:alliance'
 const HORDE = 'game:us:normal:horde'
@@ -18,7 +18,6 @@ const house = (page) => page.getByRole('combobox', { name: 'Auction house' })
 const inspector = (page, name) => page.getByRole('dialog', { name: `${name} inspector` })
 const tree = (page) => page.getByRole('navigation', { name: 'Categories' })
 const categoryButton = (page, label) => tree(page).getByRole('button', { name: new RegExp(`^${label}\\s*\\d*$`) })
-const tabs = (page) => page.getByRole('navigation', { name: 'Auction House' })
 
 async function search(page, text) {
   await nameBox(page).fill(text)
@@ -39,10 +38,10 @@ test('search shows what is on the chosen auction house, found by name or id', as
   await expect(frame(page).getByText('No auction data yet.')).toBeVisible()
   await seed(page)
   await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
-  await expect(frame(page).getByRole('heading', { name: 'Auction House' })).toBeVisible()
-  // The game's tabs, and nothing else.
-  await expect(tabs(page).getByRole('link')).toHaveText(['Buy', 'Sell', 'Shopping'])
-  await expect(tabs(page).getByRole('link', { name: 'Buy' })).toHaveAttribute('aria-current', 'page')
+  await expect(frame(page).getByRole('heading', { name: 'Browse Auctions' })).toBeVisible()
+  // One screen: no tabs.
+  await expect(page.getByRole('navigation', { name: 'Auction House' })).toHaveCount(0)
+  await expect(frame(page).getByRole('link', { name: /^(Buy|Sell|Shopping)$/ })).toHaveCount(0)
   await expect(page.getByText(/Updated .* ago/)).toBeVisible()
   // Home: favorites (none yet).
   await expect(page.getByText('No favorites yet.')).toBeVisible()
@@ -199,7 +198,7 @@ test('a click selects, a double click opens a window with every price level', as
   await expect(gloves.getByText('Uncommon · Item Level 29 · Requires Level 24', { exact: false })).toBeVisible()
   await expect(gloves.getByRole('term').filter({ hasText: /^Lowest buyout$/ })).toBeVisible()
   await expect(gloves.getByRole('button', { name: 'Add to favorites' })).toBeVisible()
-  await expect(gloves.getByRole('button', { name: 'Add to list' })).toBeVisible()
+  await expect(gloves.getByRole('button', { name: 'Add to list' })).toHaveCount(0)
   await expect(gloves.getByRole('tab')).toHaveText(['Prices', 'History'])
   // The price levels: unit price, available, auctions. No sellers.
   const levels = gloves.getByRole('table', { name: 'Price levels' })
@@ -290,7 +289,13 @@ test('favorites are the home screen and the dashboard card, with this house\'s p
   const levels = linen.getByRole('table', { name: 'Price levels' })
   await expect(levels.locator('tbody tr')).toHaveCount(2)
   await levels.locator('tbody tr').nth(1).click()
-  await expect(linen.getByRole('status')).toContainText('500')
+  await expect(linen.getByRole('spinbutton', { name: 'Quantity to buy' })).toHaveValue('500')
+  await expect(linen.getByRole('status')).toContainText('500 for')
+  // A quantity: the cost level by level, never the lowest price times it.
+  await linen.getByRole('spinbutton', { name: 'Quantity to buy' }).fill('300')
+  await expect(linen.getByRole('status').getByLabel('2g 45s 0c')).toBeVisible()
+  await linen.getByRole('spinbutton', { name: 'Quantity to buy' }).fill('900')
+  await expect(linen.getByRole('status')).toContainText('only 500 listed')
   // History in the item's window.
   await linen.getByRole('tab', { name: 'History' }).click()
   await expect(linen.getByRole('img', { name: /Asking price per unit over time/ })).toBeVisible()
@@ -317,37 +322,91 @@ test('favorites are the home screen and the dashboard card, with this house\'s p
   await expect(page.getByText('No favorites yet.')).toBeVisible()
 })
 
-test('sell shows an item\'s price levels and a price to start from; shopping lists add up', async ({ page, context }) => {
+test('old Sell and Shopping links land on Browse; shopping lists are kept', async ({ page, context }) => {
   await authenticate(context, 'shopper')
   await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
   await seed(page)
-  await page.reload()
-  await tabs(page).getByRole('link', { name: 'Sell' }).click()
-  await expect(page).toHaveURL(/tab=sell/)
-  await page.getByRole('combobox', { name: 'Item to sell' }).fill('copper')
-  await page.getByRole('listbox', { name: 'Items' }).getByRole('option', { name: /Copper Ore/ }).click()
-  await expect(page).toHaveURL(/tab=sell&.*item=2770/)
-  const pane = page.getByRole('region', { name: 'Item prices' })
-  await expect(pane.locator('.ah-item-header')).toContainText('Copper Ore')
-  await expect(pane.getByRole('term').filter({ hasText: /^Undercut price$/ })).toBeVisible()
-  await expect(pane.getByLabel('69c').first()).toBeVisible()
-  await expect(pane.getByRole('table', { name: 'Price levels' }).locator('tbody tr')).toHaveCount(1)
-  // Back to Buy: the search tab as it was.
-  await tabs(page).getByRole('link', { name: 'Buy' }).click()
+  // A list made before the tab went away.
+  const made = await page.evaluate(async () => {
+    const headers = { 'Content-Type': 'application/json' }
+    const list = await (await fetch('/api/market/lists', { method: 'POST', headers, body: JSON.stringify({ name: 'Tailoring' }) })).json()
+    await fetch(`/api/market/lists/${list.list.id}/items/2770`, { method: 'PUT', headers, body: JSON.stringify({ quantity: 20 }) })
+    return list.list.id
+  })
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&tab=shopping&list=${made}`)
+  await expect(frame(page).getByRole('heading', { name: 'Browse Auctions' })).toBeVisible()
   await expect(page.getByText('No favorites yet.')).toBeVisible()
+  // A Sell link with an item opens that item's window.
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&tab=sell&item=2770`)
+  await expect(inspector(page, 'Copper Ore')).toBeVisible()
+  await expect(page).not.toHaveURL(/tab=sell/)
+  // The list and its item are still there, priced on the house.
+  const lists = await page.evaluate(async (market) => (await fetch(`/api/market/lists?market=${encodeURIComponent(market)}`)).json(), ALLIANCE)
+  const kept = lists.lists.find((list) => list.id === made)
+  expect(kept.items.map((entry) => [entry.item.itemId, entry.quantity])).toEqual([[2770, 20]])
+  expect(kept.estimate.copper).toBe(70 * 20)
+})
 
-  await tabs(page).getByRole('link', { name: 'Shopping' }).click()
-  await expect(page.getByRole('region', { name: 'Shopping lists' })).toBeVisible()
-  await page.getByRole('textbox', { name: 'New list name' }).fill('Tailoring')
-  await page.getByRole('button', { name: 'Create' }).click()
-  await expect(page.getByRole('heading', { name: 'Tailoring' })).toBeVisible()
-  await page.getByRole('combobox', { name: 'Add an item' }).fill('copper')
-  await page.getByRole('listbox', { name: 'Items' }).getByRole('option', { name: /Copper Ore/ }).click()
-  const list = page.getByRole('table', { name: 'Tailoring items' })
-  await expect(list.locator('tbody tr')).toHaveCount(1)
-  await list.getByRole('spinbutton', { name: 'Copper Ore quantity' }).fill('20')
-  await list.getByRole('spinbutton', { name: 'Copper Ore quantity' }).blur()
-  await expect(page.locator('.ah-list-total').getByLabel('14s 0c')).toBeVisible()
+test('the Auction House fills the page at common desktop sizes', async ({ page, context }) => {
+  await authenticate(context, 'shopper')
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
+  await seed(page)
+  for (const [width, height] of [[1366, 768], [1650, 930], [1920, 1080], [2560, 1440]]) {
+    await page.setViewportSize({ width, height })
+    await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&category=trade-goods`)
+    await expect(rows(page).first()).toBeVisible()
+    const main = await page.locator('#main-content').boundingBox()
+    const window = await frame(page).locator('.ah__window').boundingBox()
+    const list = await page.getByRole('region', { name: 'Results' }).boundingBox()
+    const cats = await tree(page).boundingBox()
+    expect(window.width / main.width, `${width}×${height} width`).toBeGreaterThan(0.9)
+    expect(window.height / main.height, `${width}×${height} height`).toBeGreaterThan(0.85)
+    expect(window.y + window.height, `${width}×${height} bottom`).toBeLessThanOrEqual(height)
+    expect(list.width / window.width, `${width}×${height} results`).toBeGreaterThan(0.7)
+    expect(cats.height, `${width}×${height} categories`).toBeGreaterThan(height * 0.5)
+    // Nothing sideways: the page and the category list never scroll horizontally.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    expect(await tree(page).evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+    // The pager is on screen.
+    const pager = await page.getByRole('navigation', { name: 'Pages' }).boundingBox()
+    expect(pager.y + pager.height).toBeLessThanOrEqual(height)
+  }
+})
+
+test('tooltips: the game\'s lines, a version under its own name, inside item windows, on screen', async ({ page, context }) => {
+  await authenticate(context, 'shopper')
+  await page.setViewportSize({ width: 1366, height: 768 })
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
+  await seed(page)
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&q=raiders+chestpiece`)
+  // A random-suffix version: its own name, its base item's lines, and a note that its bonuses are not included.
+  await row(page, 'of the Bear').locator('.ah-item__icon').hover()
+  const tip = page.getByRole('tooltip')
+  await expect(tip).toContainText("Raider's Chestpiece of the Bear")
+  await expect(tip).toContainText("This version's own bonuses are not shown.")
+  // Keyboard focus shows it too.
+  await page.mouse.move(5, 5)
+  await expect(tip).toHaveCount(0)
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&q=azure`)
+  await page.keyboard.press('Shift')
+  await row(page, 'Azure Silk Gloves').locator('.ah-item').focus()
+  await expect(tip).toContainText('Binds when equipped')
+  // In an item window placed against the right edge, the tooltip stays on screen and above the window.
+  await row(page, 'Azure Silk Gloves').dblclick()
+  const gloves = inspector(page, 'Azure Silk Gloves')
+  await expect(gloves).toBeVisible()
+  const bar = await gloves.locator('.gw-insp__bar').boundingBox()
+  await page.mouse.move(bar.x + 200, bar.y + 15)
+  await page.mouse.down()
+  await page.mouse.move(1366, bar.y + 15, { steps: 6 })
+  await page.mouse.up()
+  await gloves.locator('.ah-item-header .ah-item__name').hover()
+  await expect(tip).toContainText('Requires Level 24')
+  const box = await tip.boundingBox()
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(1366)
+  const above = await tip.evaluate((element) => Number(getComputedStyle(element).zIndex))
+  expect(above).toBeGreaterThan(await gloves.evaluate((element) => Number(getComputedStyle(element).zIndex)))
 })
 
 test('diagnostics are for administrators only, out of the way', async ({ page, context }) => {

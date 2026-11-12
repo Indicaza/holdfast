@@ -22,7 +22,12 @@ function typing(event) {
 }
 
 function rowItem(row) {
-  return row.item.nameKnown || !row.variantName ? row.item : { ...row.item, name: row.variantName }
+  return row.item.nameKnown || !row.variantName || row.variant ? row.item : { ...row.item, name: row.variantName }
+}
+
+// A random-suffix version is shown by its own name, as in the game.
+function rowVariant(row) {
+  return row.variant && row.variantName ? row.variantName : ''
 }
 
 // What a search depends on: nothing else in the URL refetches it. Searches
@@ -242,8 +247,7 @@ function Cell({ column, row }) {
     case 'name':
       return (
         <>
-          <AuctionItem item={rowItem(row)} size={28} />
-          {row.variantName && row.item.nameKnown ? <span className="ah-variant">{row.variantName.replace(row.item.name, '').trim() || row.variantName}</span> : null}
+          <AuctionItem item={rowItem(row)} variantName={rowVariant(row)} size={28} />
         </>
       )
     case 'level': return row.item.requiredLevel || ''
@@ -295,7 +299,7 @@ export default function AuctionBrowse({ state, server, active, inputRef, favorit
     setSel(rowId(row))
     goAuction({ ...state, sel: rowId(row) }, server, { replace: true })
   }
-  const inspect = (row) => onInspect({ itemId: row.item.itemId, itemKey: row.variant ? row.itemKey : '', name: row.variantName || rowItem(row).name, qualityId: row.item.qualityId })
+  const inspect = (row) => onInspect({ itemId: row.item.itemId, itemKey: row.variant ? row.itemKey : '', name: rowVariant(row) || rowItem(row).name, qualityId: row.item.qualityId })
 
   // A new list starts at the top; selecting, item windows and tabs never
   // move it.
@@ -402,7 +406,7 @@ export default function AuctionBrowse({ state, server, active, inputRef, favorit
         <div className="ah-selection" aria-label="Selected item">
           {selected ? (
             <>
-              <AuctionItem item={rowItem(selected)} size={22} />
+              <AuctionItem item={rowItem(selected)} variantName={rowVariant(selected)} size={22} />
               {selected.listing === 'listed' ? (
                 <>
                   <span>Buyout <Coins value={selected.minUnitBuyout} /> each</span>

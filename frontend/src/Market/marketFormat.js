@@ -1,18 +1,12 @@
 // Formatting, URL state and chart math for the Auction House. Pure: tested
 // without a browser.
 
-// The tabs along the bottom of the frame, as in WoW Forever's auction house
-// (Buy, Sell; the player's own auctions are not known to the website).
-export const AUCTION_TABS = Object.freeze([
-  { id: 'browse', label: 'Buy', hint: 'Search and browse the auction house', key: '1' },
-  { id: 'sell', label: 'Sell', hint: 'Price levels and history before posting in game', key: '2' },
-  { id: 'shopping', label: 'Shopping', hint: 'Shopping lists', key: '3' },
-])
-export const ADMIN_TAB = Object.freeze({ id: 'diagnostics', label: 'Diagnostics', hint: 'Market data health (administrators)', key: '6' })
-// Links from before the redesign keep working: a history link opens the
-// item's window on History, the rest land on the nearest tab.
-const TAB_ALIASES = { buy: 'browse', appraiser: 'sell', lists: 'shopping', favorites: 'browse' }
-export const LINK_TABS = Object.freeze(['history'])
+// The Auction House is one screen, Browse; Diagnostics is for administrators.
+// Links to tabs that no longer exist (Sell, Shopping, older names) land on
+// Browse; a history link opens the item's window on History.
+const TABS = Object.freeze(['browse', 'diagnostics'])
+const TAB_ALIASES = { buy: 'browse', sell: 'browse', appraiser: 'browse', shopping: 'browse', lists: 'browse', favorites: 'browse' }
+const LINK_TABS = Object.freeze(['history'])
 
 // An empty sort lets the server choose: relevance for a search, name for
 // browsing.
@@ -26,7 +20,7 @@ export const QUALITIES = Object.freeze([
   { id: '3', label: 'Rare' }, { id: '4', label: 'Epic' }, { id: '5', label: 'Legendary' },
 ])
 
-const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'slot', 'quality', 'minLevel', 'maxLevel', 'listed', 'below', 'sort', 'dir', 'page', 'sel', 'item', 'key', 'list', 'range', 'stack']
+const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'slot', 'quality', 'minLevel', 'maxLevel', 'listed', 'below', 'sort', 'dir', 'page', 'sel', 'item', 'key', 'range', 'stack']
 const DEFAULTS = { tab: 'browse', sort: '', dir: 'asc', page: 1, range: '7d', below: false, listed: false, stack: false }
 
 function level(value) {
@@ -37,13 +31,12 @@ export function readAuctionState(queryString = '') {
   const params = new URLSearchParams(queryString)
   const state = Object.fromEntries(STATE_KEYS.map((key) => [key, params.get(key) || '']))
   state.tab = TAB_ALIASES[state.tab] || state.tab
-  state.tab = [...AUCTION_TABS, ADMIN_TAB].some((tab) => tab.id === state.tab) || LINK_TABS.includes(state.tab) ? state.tab : 'browse'
+  state.tab = TABS.includes(state.tab) || LINK_TABS.includes(state.tab) ? state.tab : 'browse'
   state.sort = SORTS.includes(state.sort) ? state.sort : ''
   state.dir = state.dir === 'desc' ? 'desc' : 'asc'
   state.page = Math.max(1, Math.trunc(Number(state.page)) || 1)
   state.item = /^\d+$/.test(state.item) ? Number(state.item) : null
   state.key = /^i:\d+(:[sb][\d.-]+)*$/.test(state.key) ? state.key : ''
-  state.list = /^\d+$/.test(state.list) ? Number(state.list) : null
   state.range = RANGES.some((range) => range.id === state.range) ? state.range : '7d'
   state.quality = QUALITIES.some((quality) => quality.id === state.quality) ? state.quality : ''
   state.minLevel = level(state.minLevel)

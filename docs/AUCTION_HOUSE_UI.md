@@ -29,16 +29,16 @@ client art, not against screenshots.
 
 | Part | Forever | Guildweaver |
 | --- | --- | --- |
-| Window | 800 × 538, metal portrait frame, rock background | Same frame pieces (`inventory-art`, `auction-art/frame-portrait-corner`); width 800–1180 px, grows with the page, never stretched further |
+| Window | 800 × 538, metal portrait frame, rock background | Same frame pieces (`inventory-art`, `auction-art/frame-portrait-corner`); fills the dashboard's content area (up to 2600 px wide), see Sizing |
 | Portrait | the auctioneer NPC (`SetPortraitToUnit("npc")`) | INV_Misc_Coin_01 (no NPC on a website) |
-| Title | "Auction House", GameFontNormal (gold), on the title band | same |
+| Title | "Browse Auctions" on the Buy tab, GameFontNormal (gold), on the title band | "Browse Auctions" |
 | Search bar | top right (−12, −29), 618 × 40: favorites button, search box 241 × 22, Filter dropdown, Search 132 × 22 (UIPanelButton, red) | same order; box fills the space; the Filter dropdown holds level range and rarity |
-| Categories | left, 168 × 438, `auctionhouse-background-categories`, classic scrollbar | same |
+| Categories | left, 168 × 438, `auctionhouse-background-categories`, classic scrollbar | same art; 210 px wide at 1x, scaled (see Sizing) |
 | Category button | 132 × 21, `UI-AuctionFrame-FilterBg`; hover `UI-Character-Tab-Highlight`; selected `auctionhouse-nav-button-select` (additive); third level drawn with `…-tertiary-filterline` | same art; 28px tall (request: larger targets) |
 | Results | `auctionhouse-background-index`, headers 19px on `WhoFrame-ColumnTabs`, rows 20px on `auctionhouse-rowstripe-1/2`, hover `…-row-highlight`, selected `…-row-select` (both additive) | same art; rows 36px, icons 28px (request) |
 | Browse columns | Price 120 (sortable, default) · Name (fill, sortable) · detail 55 (Req. Level for Weapons, Armor, Consumables) · Available · favorite 29 | same |
 | Coins | `auctionhouse-icon-coin-*` | same |
-| Tabs | bottom left: Buy, Sell, Auctions (CharacterFrameTab art) | Buy, Sell, Shopping (see below) |
+| Tabs | bottom left: Buy, Sell, Auctions (CharacterFrameTab art) | none: Browse is the only screen (see below) |
 | Money | the player's gold, bottom left | not shown (the website has no wallet) |
 
 ## Category tree (Forever, `Camelot/Blizzard_AuctionData.lua`)
@@ -72,16 +72,38 @@ tree; the website draws whatever it sends.
 
 Forever's commodity buy view (a header with a large icon, then
 Unit Price · Available) is the model: a 52px icon and name (tooltip on hover),
-the house and how fresh its data is, then the price levels (unit price,
-quantity, auctions at that price; cheapest first), a summary (total listed,
-lowest, typical, 7-day median, coverage), and History (charts) on its own tab.
-Sellers are never shown: neither Blizzard's API nor the add-on reports them.
+the favorite star, the house and how fresh its data is, then Prices: a summary
+(lowest and typical buyout, available and auctions, 7-day median, 24-hour
+change, when seen) and the price levels (unit price, quantity, auctions at
+that price; cheapest first) with "Cost to buy": a quantity, walked level by
+level (never the lowest price times the quantity; clicking a level fills in
+everything up to it). History (price and supply charts, metrics) is on its
+own tab. Sellers are never shown: neither Blizzard's API nor the add-on
+reports them. No buy, sell or shopping-list controls.
 
 ## Tabs
 
-- **Buy**: browse, search, favorites.
-- **Sell**: an item's price levels and recent history, to decide a price
-  before posting in game (the Sell view's right-hand list).
-- **Shopping**: shopping lists.
-- Auctions (the player's own) is left out: the website has no data on them.
-- Diagnostics is a link for administrators, outside the tabs.
+None. The website cannot buy, post or cancel auctions, so the game's Sell and
+Auctions tabs (and the Sell and Shopping tabs earlier versions had) would only
+mislead; the window is the game's Buy screen, titled "Browse Auctions" as in
+the game. Old links with `tab=sell`, `tab=appraiser`, `tab=shopping` or
+`tab=lists` open Browse (`tab=sell&item=…` opens that item's window).
+Shopping lists keep their data and their API (`/api/market/lists`) for a
+later planning page. Diagnostics is a link for administrators.
+
+## Sizing
+
+The window fills the dashboard's content area (the shell's `gw-content--fill`
+gives it the full width and height under the top bar), keeping the game's
+proportions: categories on the left, the search bar over a wide results list.
+Sizes inside it scale with one unit, `--ah-u`: 1px up to about 1650 px of
+browser width, about 1.1px at 1920, 1.3px from about 2500 (`clamp(1px,
+0.035vw + 0.43px, 1.3px)`). Text, rows (38 at 1x), icons (28), category
+buttons (30) and columns use it; the frame art keeps its own pixel sizes. No
+CSS transform, so text and icons stay sharp. Below 860 px wide the categories
+go above the results.
+
+Before: `.ah` had `max-width: 1180px` and every size was fixed, so on a
+1650 px browser the window took about 60 % of the content width and on 2560
+px less than half.
+
