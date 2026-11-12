@@ -4,7 +4,7 @@ import {
   addMarketSnapshotItemsInDatabase,
   beginMarketSnapshotInDatabase,
   ensureMarketInDatabase,
-  finishMarketSnapshotInDatabase,
+  absentMarketItemsInDatabase,
   recordMarketCheckInDatabase,
   ensureItemMetaInDatabase,
   itemsMissingTooltipsInDatabase,
@@ -21,9 +21,10 @@ import { marketItemRangesInDatabase, refreshReferencePricesInDatabase, rollUpWee
 
 // Large houses are stored a chunk at a time, letting requests in between,
 // so the website never pauses for a whole house.
-// 500 items is about a tenth of a second of writes on a large database,
-// well inside the platform's five-second health check.
-const CHUNK_ITEMS = 500;
+// 200 items is about 70 ms of writes on a fast disk and well under a second
+// on production's (measured 0.5-CPU instance, network disk), far inside the
+// platform's five-second health check.
+const CHUNK_ITEMS = 200;
 const yieldToRequests = () => new Promise((resolve) => setImmediate(resolve));
 
 // Refreshes external market data a little at a time: each tick reads at
@@ -136,10 +137,19 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
         withGuildTransaction((db) => addMarketSnapshotItemsInDatabase(db, { ...input, snapshotId: begun.snapshotId, observedAt: begun.observedAt,
           items: begun.items.slice(start, start + CHUNK_ITEMS), mode: begun.status, now: at }));
       }
+      // Items gone since the last full snapshot become "none listed", in
+      // chunks like the rest: thousands can sell out in an hour. A run cut
+      // short is caught up by the next one (absentMarketItemsInDatabase).
       let absent = 0;
       if (begun.status === "recorded") {
         await yieldToRequests();
-        absent = withGuildTransaction((db) => finishMarketSnapshotInDatabase(db, { snapshotId: begun.snapshotId, market, sourceType: provider.sourceType, now: at })).absent;
+        const gone = withGuildDatabase((db) => absentMarketItemsInDatabase(db, { snapshotId: begun.snapshotId }));
+        for (let start = 0; start < gone.items.length; start += CHUNK_ITEMS) {
+          withGuildTransaction((db) => addMarketSnapshotItemsInDatabase(db, { snapshotId: begun.snapshotId, market, sourceType: provider.sourceType,
+            coverage: "full", observedAt: gone.observedAt, items: gone.items.slice(start, start + CHUNK_ITEMS), now: at }));
+          absent += Math.min(CHUNK_ITEMS, gone.items.length - start);
+          await yieldToRequests();
+        }
       }
       outcome = { ...outcome, status: begun.status === "empty" ? "empty" : begun.status, snapshotId: begun.snapshotId ?? null, auctions: result.auctions,
         items: begun.items?.length || 0, absent, observedAt: result.observedAt };
