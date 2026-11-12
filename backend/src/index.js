@@ -17,6 +17,7 @@ import { createBlizzardAuctionProvider } from "./Market/blizzardAuctionProvider.
 import { marketItemDataEnv, startMarketRefresher } from "./Market/marketRefresh.js";
 import { createBlizzardGameDataProvider } from "./GameData/blizzardGameDataProvider.js";
 import { createStartupLifecycle, notReadyHandler, startEventLoopStallMonitor } from "./Production/startupLifecycle.js";
+import { createStorageObservatory } from "./Production/storageObservatory.js";
 
 dotenv.config();
 // Configuration errors stop the process before it binds a port.
@@ -138,7 +139,9 @@ try {
   // market refresher's first tick and maintenance wait a minute.
   const marketRefresh = startMarketRefresher({ provider: auctionProvider, itemProvider: marketItemProvider });
   stops.push(() => marketRefresh.stop());
+  const storageObservatory = createStorageObservatory({ dataDir: runtimeDataDirectory(), databaseFile: guildDatabaseFile() });
   const app = await lifecycle.phase("application", () => createApp({
+    storageObservatory,
     marketRefresher: marketRefresh.refresher,
     marketProviderConfig: { name: auctionProvider.name, ...auctionProvider.config },
     startupStatus: () => lifecycle.snapshot(),
@@ -160,6 +163,7 @@ try {
   stops.push(startDiscordRankReconciler());
   stops.push(startDiscordBilletReconciler());
   stops.push(startOffsiteBackupScheduler());
+  stops.push(storageObservatory.start());
 } catch (error) {
   lifecycle.fail(error);
   console.error("Startup failed", error);
