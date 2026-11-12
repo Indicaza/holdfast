@@ -9,14 +9,21 @@ import {
   ensureItemMetaInDatabase,
   itemsMissingTooltipsInDatabase,
   itemsToLookUpInDatabase,
+  lastMarketMaintenanceInDatabase,
+  marketKeysWithSummariesInDatabase,
+  marketPruneSteps,
   markItemsLookedUpInDatabase,
-  runMarketMaintenanceInDatabase,
+  recordMarketMaintenanceInDatabase,
+  runMarketPruneStepInDatabase,
   syncMarketCatalogInDatabase,
 } from "./marketRepository.js";
+import { marketItemRangesInDatabase, refreshReferencePricesInDatabase, rollUpWeeksInDatabase, rollUpWindowDays } from "./marketSeries.js";
 
 // Large houses are stored a chunk at a time, letting requests in between,
 // so the website never pauses for a whole house.
-const CHUNK_ITEMS = 2000;
+// 500 items is about a tenth of a second of writes on a large database,
+// well inside the platform's five-second health check.
+const CHUNK_ITEMS = 500;
 const yieldToRequests = () => new Promise((resolve) => setImmediate(resolve));
 
 // Refreshes external market data a little at a time: each tick reads at
@@ -37,6 +44,9 @@ const IDLE_MULTIPLIER = 4;
 // a provider (in-game scans need them too).
 const MAINTENANCE_SECONDS = 20 * 3600;
 const MAINTENANCE_CHECK_MS = 3600_000;
+const MAINTENANCE_BATCH_ROWS = 2000;
+const NAME_BATCH = 250;
+const ITEM_PAGE = 2000;
 // The Auction House item index follows the game data every few minutes, a
 // bounded batch per transaction (see syncMarketCatalogInDatabase).
 const CATALOG_SYNC_MS = 5 * 60_000;
@@ -229,11 +239,63 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   return { tick, discover, refreshOne, stats: () => ({ ...stats, requestsLastHour: provider.requestsUsed?.() ?? null }) };
 }
 
-// Runs maintenance when the last run is older than MAINTENANCE_SECONDS.
-export function maintainMarketsIfDue(now = Math.floor(Date.now() / 1000)) {
-  const last = withGuildDatabase((db) => db.prepare("SELECT ran_at FROM market_maintenance WHERE name = 'rollup'").get()?.ran_at || 0);
+// Runs maintenance when the last run is older than MAINTENANCE_SECONDS, as
+// many short transactions with requests served in between: bounded deletes
+// for retention, then roll-ups and reference prices one market at a time,
+// then item names in batches. One transaction for all of it held the event
+// loop for many seconds on a production-sized database, longer than the
+// platform's health check waits, so the service was restarted mid-run and
+// the work, rolled back, started again after every restart.
+//
+// Every step is idempotent: an interrupted run leaves rows that are either
+// already pruned or pruned next time, and roll-ups are recomputed. The run
+// is recorded as done only when every step has finished.
+export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000), batchRows = MAINTENANCE_BATCH_ROWS,
+  yieldFn = yieldToRequests, clock = () => Date.now() } = {}) {
+  const last = withGuildDatabase((db) => lastMarketMaintenanceInDatabase(db, "rollup")) || 0;
   if (now - last < MAINTENANCE_SECONDS) return null;
-  return withGuildTransaction((db) => runMarketMaintenanceInDatabase(db, now));
+  const began = clock();
+  let transactions = 0;
+  let longest = { step: null, ms: 0 };
+  const step = async (name, fn) => {
+    const started = clock();
+    const result = withGuildTransaction(fn);
+    const ms = clock() - started;
+    if (ms > longest.ms) longest = { step: name, ms: Math.round(ms) };
+    transactions += 1;
+    await yieldFn();
+    return result;
+  };
+
+  const pruned = {};
+  for (const prune of marketPruneSteps(now)) {
+    pruned[prune.name] = 0;
+    for (;;) {
+      const removed = await step(`prune_${prune.name}`, (db) => runMarketPruneStepInDatabase(db, prune, batchRows));
+      pruned[prune.name] += removed;
+      if (removed < batchRows) break;
+    }
+  }
+  await step("record", (db) => recordMarketMaintenanceInDatabase(db, "prune", now, pruned));
+
+  const sinceDays = rollUpWindowDays(last || null, now);
+  let weeks = 0;
+  let references = 0;
+  for (const marketKey of withGuildDatabase(marketKeysWithSummariesInDatabase)) {
+    for (const range of withGuildDatabase((db) => marketItemRangesInDatabase(db, marketKey, ITEM_PAGE))) {
+      weeks += await step("weekly_rollup", (db) => rollUpWeeksInDatabase(db, now, { sinceDays, marketKey, range }));
+      references += await step("reference_prices", (db) => refreshReferencePricesInDatabase(db, now, { marketKey, range }));
+    }
+  }
+
+  let names = 0;
+  const stale = withGuildDatabase((db) => db.prepare("SELECT item_id AS itemId FROM market_item_meta WHERE name_source IN ('', 'addon') LIMIT 5000").all());
+  for (let start = 0; start < stale.length; start += NAME_BATCH) {
+    names += await step("item_names", (db) => ensureItemMetaInDatabase(db, stale.slice(start, start + NAME_BATCH), now));
+  }
+  const summary = { weeks, references, names };
+  await step("record", (db) => recordMarketMaintenanceInDatabase(db, "rollup", now, summary));
+  return { pruned, ...summary, transactions, longestTransaction: longest, ms: Math.round(clock() - began) };
 }
 
 // Indexes new game data for Auction House search, yielding to requests
@@ -288,8 +350,14 @@ export async function resolveMarketItemNames({ itemProvider, batches = 10, batch
 }
 
 export function startMarketRefresher({ provider, itemProvider = null, intervalMs = TICK_MS, log = console } = {}) {
+  let maintaining = false;
   const maintain = () => {
-    try { maintainMarketsIfDue(); } catch (error) { log.error?.("[market] maintenance failed", error); }
+    if (maintaining) return;
+    maintaining = true;
+    maintainMarketsIfDue()
+      .then((result) => { if (result) log.info?.(JSON.stringify({ event: "market_maintenance", ...result })); })
+      .catch((error) => log.error?.("[market] maintenance failed", error))
+      .finally(() => { maintaining = false; });
   };
   let syncing = false;
   const catalog = () => {
