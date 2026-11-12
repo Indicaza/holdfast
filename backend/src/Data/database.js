@@ -882,6 +882,22 @@ function runMigrations(db, { throughVersion = Infinity } = {}) {
   }
 }
 
+// Migrations this release would apply to `db`, read without running any.
+// A database without schema_migrations needs all of them.
+export function pendingGuildMigrations(db) {
+  const hasTable = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'")
+    .get();
+  const applied = new Set(
+    hasTable
+      ? db.prepare("SELECT version FROM schema_migrations").all().map((row) => Number(row.version))
+      : [],
+  );
+  return migrations
+    .filter((migration) => !applied.has(migration.version))
+    .map(({ version, name }) => ({ version, name }));
+}
+
 export function guildDatabaseFile() {
   return runtimeDataFile(DATABASE_FILE);
 }

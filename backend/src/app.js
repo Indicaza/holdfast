@@ -56,7 +56,7 @@ import {
 import { mountProductionFrontend } from "./Production/frontend.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -110,7 +110,12 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
         db.prepare("SELECT COUNT(*) FROM contribution_transactions").get();
         db.prepare("SELECT COUNT(*) FROM notifications").get();
       });
-      res.json({ status: "ok", offsiteBackup: await offsiteBackupHealth() });
+      const startup = startupStatus?.();
+      res.json({
+        status: "ok",
+        offsiteBackup: await offsiteBackupHealth(),
+        ...(startup ? { startup: { state: startup.state, startedAt: startup.startedAt, readyAfterMs: startup.readyAfterMs, phases: startup.phases } } : {}),
+      });
     } catch (error) {
       console.error("Readiness check failed", error);
       res.status(503).json({ status: "unavailable" });

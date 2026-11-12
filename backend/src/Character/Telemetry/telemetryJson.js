@@ -32,10 +32,11 @@ export function parseTelemetryJson(stored, fallback = {}) {
   }
 }
 
-// Compresses large telemetry rows written before values were encoded, then
-// rebuilds the database file so the freed pages are actually released (a
-// deleted or shrunk row only frees pages inside the file). Returns the number
-// of values compressed; safe to run on every start.
+// Compresses large telemetry rows written before values were encoded.
+// Returns the number of values compressed; safe to run on every start.
+// Freed pages stay inside the file and are reused by later writes. It does
+// not VACUUM: a rebuild needs free disk equal to the database and blocks all
+// access while it runs, so returning space to the disk is an operator task.
 export function compactStoredTelemetry(db) {
   const columns = [
     ["guildweaver_telemetry_records", "envelope_json"],
@@ -59,7 +60,6 @@ export function compactStoredTelemetry(db) {
       compressed += 1;
     }
   }
-  if (compressed) db.exec("VACUUM");
   return compressed;
 }
 
