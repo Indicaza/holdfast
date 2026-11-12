@@ -1,4 +1,5 @@
-import { aggregateListings, apiMarketKey, factionFromHouseName, normalizeRegion, positiveInteger } from "./marketModel.js";
+import { parseAuctionBodyInWorker } from "./auctionParsing.js";
+import { apiMarketKey, factionFromHouseName, normalizeRegion, positiveInteger } from "./marketModel.js";
 
 // Blizzard's WoW Forever auction data (undocumented, verified by the
 // community in November 2026):
@@ -75,21 +76,9 @@ function list(value) {
   return Array.isArray(value) ? value : [];
 }
 
-// Blizzard auction rows → listings for aggregation.
-export function listingsFromBlizzard(auctions = [], { commodity = false } = {}) {
-  const listings = [];
-  for (const auction of list(auctions)) {
-    const itemId = positiveInteger(auction?.item?.id);
-    const quantity = positiveInteger(auction?.quantity);
-    if (!itemId || !quantity) continue;
-    listings.push(commodity
-      ? { itemId, quantity, unitPrice: auction.unit_price }
-      : { itemId, bonusLists: auction.item.bonus_lists, quantity, buyout: auction.buyout, bid: auction.bid });
-  }
-  return listings;
-}
+export { listingsFromBlizzard } from "./auctionParsing.js";
 
-export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = globalThis.fetch, now = () => Date.now() } = {}) {
+export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = globalThis.fetch, now = () => Date.now(), parseBody = parseAuctionBodyInWorker } = {}) {
   const config = blizzardAuctionConfig(env);
   const limiter = createRateLimiter({ maxPerHour: config.maxRequestsPerHour, now });
   const tokens = new Map();
@@ -113,7 +102,8 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
   }
 
   // GET with a size cap, a timeout, If-Modified-Since and one re-auth.
-  async function get(region, path, { ifModifiedSince = "", retryAuth = true } = {}) {
+  // `raw`: return the body text unparsed (auction data is parsed in a worker).
+  async function get(region, path, { ifModifiedSince = "", retryAuth = true, raw = false } = {}) {
     const bearer = await token(region);
     if (!limiter.tryTake()) throw new ProviderError("rate_limited");
     const url = new URL(`${config.apiBaseUrl(region)}${path}`);
@@ -128,7 +118,7 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
       });
       if (response.status === 401 && retryAuth) {
         tokens.delete(region);
-        return get(region, path, { ifModifiedSince, retryAuth: false });
+        return get(region, path, { ifModifiedSince, retryAuth: false, raw });
       }
       if (response.status === 304) return { status: 304, payload: null, lastModified: ifModifiedSince };
       if (response.status === 404) throw new ProviderError("not_found", { status: 404, transient: false });
@@ -138,7 +128,7 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
       if (Number.isFinite(length) && length > config.maxBytes) throw new ProviderError("response_too_large", { transient: false });
       const body = await response.text();
       if (body.length > config.maxBytes) throw new ProviderError("response_too_large", { transient: false });
-      return { status: response.status, payload: JSON.parse(body), lastModified: text(response.headers?.get?.("last-modified"), 64) };
+      return { status: response.status, ...(raw ? { body } : { payload: JSON.parse(body) }), lastModified: text(response.headers?.get?.("last-modified"), 64) };
     } catch (error) {
       if (error instanceof ProviderError) throw error;
       throw new ProviderError(error?.name === "AbortError" ? "timeout" : "network_error");
@@ -172,23 +162,26 @@ export function createBlizzardAuctionProvider({ env = process.env, fetchImpl = g
   async function fetchEndpoint(market, endpoint, lastModified) {
     const base = `/data/wow/ruleset/${market.rulesetId}/auctions/${market.houseId}`;
     try {
-      const response = await get(market.region, endpoint === "commodities" ? `${base}/commodities` : base, { ifModifiedSince: lastModified });
+      const response = await get(market.region, endpoint === "commodities" ? `${base}/commodities` : base, { ifModifiedSince: lastModified, raw: true });
       if (response.status === 304) return { endpoint, status: "not_modified", httpStatus: 304, lastModified: response.lastModified || lastModified };
       // A house with nothing listed has no `auctions` field at all. Only a
       // recognisable Blizzard answer (it always carries `_links`) counts as
       // "nothing listed"; anything else without auctions is a failure, so an
       // odd response never clears a house.
-      const payload = response.payload;
-      const auctions = list(payload?.auctions);
-      if (!auctions.length && !(payload && typeof payload === "object" && !Array.isArray(payload) && payload._links)) {
+      let parsed;
+      try {
+        parsed = await parseBody(response.body, { commodity: endpoint === "commodities" });
+      } catch {
         return { endpoint, status: "failed", httpStatus: response.status, error: "unexpected_payload", transient: true };
       }
-      const items = aggregateListings(listingsFromBlizzard(auctions, { commodity: endpoint === "commodities" }));
+      if (!parsed.auctions && !parsed.recognised) {
+        return { endpoint, status: "failed", httpStatus: response.status, error: "unexpected_payload", transient: true };
+      }
       return {
-        endpoint, status: "ok", httpStatus: response.status, lastModified: response.lastModified, auctions: auctions.length, items,
+        endpoint, status: "ok", httpStatus: response.status, lastModified: response.lastModified, auctions: parsed.auctions, items: parsed.items,
         // Everything listed is in the answer, so an empty one is a house
         // with nothing listed, not a missing answer.
-        empty: auctions.length === 0,
+        empty: parsed.auctions === 0,
         // When Blizzard generated the data, never later than now (clocks drift).
         observedAt: Math.floor(Math.min(Date.parse(response.lastModified) || now(), now()) / 1000),
       };

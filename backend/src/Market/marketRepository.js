@@ -438,28 +438,50 @@ function observationSet(db, snapshot) {
   return ids.length >= snapshot.parts ? ids : null;
 }
 
-// Finishes a full snapshot: items the previous full observation of the same
-// scope listed that this one does not are recorded as "none listed", so
-// supply drops to zero instead of the last price lingering. Partial and
-// item-search snapshots never imply anything about items they did not see.
-export function finishMarketSnapshotInDatabase(db, { snapshotId, market, sourceType, now = nowSeconds() }) {
+// Items a full snapshot implies are no longer listed: those the previous
+// full observation of the same scope listed that this one does not, plus
+// any whose summary still shows a quantity from an older full snapshot of
+// that scope (an earlier run that stopped before marking them all). They
+// are recorded as "none listed", so supply drops to zero instead of the
+// last price lingering. Partial and item-search snapshots never imply
+// anything about items they did not see. Reads only.
+export function absentMarketItemsInDatabase(db, { snapshotId }) {
   const snapshot = db.prepare("SELECT * FROM market_snapshots WHERE id = ?").get(snapshotId);
-  if (!snapshot || snapshot.coverage !== "full") return { absent: 0 };
+  if (!snapshot || snapshot.coverage !== "full") return { items: [] };
   const current = observationSet(db, snapshot);
-  if (!current) return { absent: 0, waiting: true };
-  if (current.length > 1) db.prepare("UPDATE market_markets SET last_full_at = MAX(COALESCE(last_full_at, 0), ?) WHERE market_key = ?").run(snapshot.observed_at, snapshot.market_key);
+  if (!current) return { items: [], waiting: true };
+  const marks = current.map(() => "?").join(",");
+  const gone = new Map();
   const previousRow = db.prepare(`SELECT * FROM market_snapshots WHERE market_key = ? AND source_type = ? AND scope_key = ? AND coverage = 'full'
-      AND id NOT IN (${current.map(() => "?").join(",")}) AND observed_at < ? ORDER BY observed_at DESC, id DESC LIMIT 1`)
+      AND id NOT IN (${marks}) AND observed_at < ? ORDER BY observed_at DESC, id DESC LIMIT 1`)
     .get(snapshot.market_key, snapshot.source_type, snapshot.scope_key, ...current, snapshot.observed_at);
-  if (!previousRow) return { absent: 0 };
-  const previous = observationSet(db, previousRow);
-  if (!previous) return { absent: 0 };
-  const gone = db.prepare(`SELECT DISTINCT o.item_key, o.item_id FROM market_observations o WHERE o.snapshot_id IN (${previous.map(() => "?").join(",")})
-      AND o.quantity > 0 AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${current.map(() => "?").join(",")}) AND c.item_key = o.item_key)`)
-    .all(...previous, ...current);
-  if (!gone.length) return { absent: 0 };
-  const items = gone.map((row) => ({ itemKey: row.item_key, itemId: row.item_id, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true }));
-  addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt: snapshot.observed_at, items, now });
+  const previous = previousRow ? observationSet(db, previousRow) : null;
+  if (previous) {
+    for (const row of db.prepare(`SELECT DISTINCT o.item_key, o.item_id FROM market_observations o WHERE o.snapshot_id IN (${previous.map(() => "?").join(",")})
+        AND o.quantity > 0 AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = o.item_key)`)
+      .all(...previous, ...current)) gone.set(row.item_key, row.item_id);
+  }
+  for (const row of db.prepare(`SELECT s.item_key, s.item_id FROM market_summaries s JOIN market_snapshots sn ON sn.id = s.snapshot_id
+      WHERE s.market_key = ? AND s.source_type = ? AND s.quantity > 0 AND sn.market_key = ? AND sn.scope_key = ? AND sn.coverage = 'full'
+        AND sn.observed_at < ? AND sn.id NOT IN (${marks})
+        AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = s.item_key)`)
+    .all(snapshot.market_key, snapshot.source_type, snapshot.market_key, snapshot.scope_key, snapshot.observed_at, ...current, ...current)) {
+    gone.set(row.item_key, row.item_id);
+  }
+  if (current.length > 1) db.prepare("UPDATE market_markets SET last_full_at = MAX(COALESCE(last_full_at, 0), ?) WHERE market_key = ?").run(snapshot.observed_at, snapshot.market_key);
+  return {
+    observedAt: snapshot.observed_at,
+    items: [...gone].map(([itemKey, itemId]) => ({ itemKey, itemId, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true })),
+  };
+}
+
+// Finishes a full snapshot in one transaction (in-game scans, tests). The
+// API refresher writes the same items in chunks instead.
+export function finishMarketSnapshotInDatabase(db, { snapshotId, market, sourceType, now = nowSeconds() }) {
+  const { items, waiting, observedAt } = absentMarketItemsInDatabase(db, { snapshotId });
+  if (waiting) return { absent: 0, waiting: true };
+  if (!items.length) return { absent: 0 };
+  addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt, items, now });
   return { absent: items.length };
 }
 
