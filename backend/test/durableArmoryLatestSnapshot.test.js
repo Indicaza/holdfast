@@ -75,7 +75,7 @@ test("Armory reads the newest durable snapshot even when the projection points a
         WHERE character_id = ?
       `).run(first.snapshot.id, second.character.id);
       db.prepare("DELETE FROM telemetry_professions WHERE character_id = ?").run(second.character.id);
-      db.prepare("DELETE FROM telemetry_recipes WHERE character_id = ?").run(second.character.id);
+      db.prepare("DELETE FROM telemetry_character_recipes WHERE character_id = ?").run(second.character.id);
     });
 
     const armory = await request(
