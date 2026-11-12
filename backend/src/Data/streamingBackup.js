@@ -30,6 +30,8 @@ const MAX_HEADER_BYTES = 64 * 1024
 // gzip never expands a 1 MiB frame by more than a few hundred bytes.
 const MAX_FRAME_BYTES = FRAME_BYTES + 64 * 1024
 const TRAILER_MAX_BYTES = 2 * 1024 * 1024
+// Pages per backup step: all of them, so the copy never restarts.
+const ALL_PAGES = 2147483647
 const DATA = 0
 const TRAILER = 1
 
@@ -270,12 +272,13 @@ export async function createVerifiedSnapshot({ dataDir, workDir, statfsImpl = st
   try {
     const file = path.join(directory, 'holdfast.sqlite')
     const db = new DatabaseSync(source, { readOnly: true })
-    // One step (rate -1): the copy runs on Node's thread pool under a single
+    // One step (every page at once; Node 24 accepts only a positive page
+    // count, so the int32 maximum): the copy runs on Node's thread pool under a single
     // read transaction, so the application keeps writing (WAL) and the event
     // loop stays free. With the default 100 pages per step, SQLite restarts
     // the copy whenever another connection writes between steps, and under
     // steady telemetry ingestion a large copy never finishes.
-    try { await backup(db, file, { rate: -1 }) } finally { db.close() }
+    try { await backup(db, file, { rate: ALL_PAGES }) } finally { db.close() }
     const counts = verifyBackupDatabase(file)
     return { file, bytes: await sizeOf(file), counts, cleanup: () => rm(directory, { recursive: true, force: true }) }
   } catch (error) {
