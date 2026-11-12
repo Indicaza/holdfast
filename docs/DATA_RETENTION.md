@@ -17,15 +17,15 @@ Sizes below come from the local development copy (64.5 MiB, schema v17, 25 chara
 
 | Domain / table | Class | Current retention | Measured evidence | Recommendation |
 |---|---|---|---|---|
-| `character_sections` (profession_books etc.) | Canonical state | Latest per character and section | 25.3 MiB of 64.5 (39%); **stored as plain JSON**, up to 1.57 MiB per row; about 2.5 KB per recipe, mostly tooltip lines, colours, icons and item data repeated for every character | 1) gzip like telemetry (14× there); 2) store recipe definitions once, keep per-character `recipe_id, known, difficulty, skill_ups` |
-| `telemetry_recipes` | Projection of the above | Latest per character | 7,616 rows for 1,959 distinct recipes; `reagents_json` 1,890 of 2,748 large values duplicate | Reference shared definitions (`public_game_recipes` exists) |
+| `character_sections` (profession_books etc.) | Canonical state (rebuildable) | Latest per character and section | Was 25.3 MiB of 64.5 as plain JSON | **Done (#284):** payloads over 32 KiB stored gzip; existing rows compacted in the background. 25.8 → 2.6 MiB |
+| `telemetry_recipes` | Projection of the above | Latest per character | Was 7,616 rows for 1,959 recipes | **Done (#284):** `telemetry_recipe_definitions` + `telemetry_character_recipes`, `telemetry_recipes` is a view. 11.57 → 4.27 MiB |
 | `guildweaver_telemetry_latest_state` | Canonical (raw) | Latest per stream | gzip in place: 24.6 MiB logical → 1.7 MiB stored | Keep |
 | `guildweaver_telemetry_records` | Transport | Bounded raw retention | gzip: 17.1 → 1.4 MiB | Keep a short window; confirm the bound on production |
-| `economic_observations` (+outputs) | Immutable observations | Kept | 21,222 rows; indexes 9.9 MiB > data 8.0 MiB (6 indexes) | Keep every event; review index usage with query plans; archive old years compressed |
+| `economic_observations` (+outputs) | Immutable observations | Kept | 21,222 rows; indexes 9.9 MiB > data 8.0 MiB | Keep every event. Query plans (41 test files) use every index, so none removed. Archive old years compressed later |
 | `game_loot_*`, `dungeon_*`, `farming_*` | Immutable observations | Kept | small locally | Keep; aggregate drop rates; archive, never delete |
 | `public_game_*`, `game_data_catalog` | Shared definitions | Kept, versioned by build | 1.8 MiB | Keep; the target for de-duplicating character data |
-| `market_observations` | Immutable observations (raw evidence) | 3 days (unless a summary uses it) | **204 B/row** incl. indexes; one row per item per refresh | At hourly refresh this repeats `market_series_hourly`: keep the latest snapshot per scope plus those summaries use, and rely on hourly series for history (≈ −1.8 GB at production volume) |
-| `market_series_hourly` | Historical aggregate | 10 days | **146 B/row**; one row per item per hour even when nothing changed | Measure the unchanged-hour rate on production; consider integer market/item ids (keys are text in every row and index) |
+| `market_observations` | Immutable observations (raw evidence) | **API 26 h, in-game scans 3 days** (unless a summary uses it) | 204 B/row incl. indexes | **Done (#284):** link evidence reads the hourly series. Benchmark 120.1 → 49.7 MiB |
+| `market_series_hourly` | Historical aggregate | **8 days** (longest hourly range: 7 days) | 146 B/row; one row per item per hour | **Done (#284).** Next candidate: integer market/item ids (text keys in every row and index) |
 | `market_series_daily` | Historical aggregate | 400 days | 187 B/row; ~23 MB/day at production volume | Keep (trend evidence); integer ids |
 | `market_series_weekly` | Historical aggregate | 10 years | 152 B/row | Keep |
 | `market_summaries`, `market_price_ladders`, `market_item_meta` | Rebuildable projection | Current | 418 B per summary | Keep; exclude from cold archives |
