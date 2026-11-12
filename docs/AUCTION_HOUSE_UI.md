@@ -31,10 +31,10 @@ client art, not against screenshots.
 | --- | --- | --- |
 | Window | 800 × 538, metal portrait frame, rock background | Same frame pieces (`inventory-art`, `auction-art/frame-portrait-corner`); fills the dashboard's content area (up to 2600 px wide), see Sizing |
 | Portrait | the auctioneer NPC (`SetPortraitToUnit("npc")`) | INV_Misc_Coin_01 (no NPC on a website) |
-| Title | "Browse Auctions" on the Buy tab, GameFontNormal (gold), on the title band | "Browse Auctions" |
-| Search bar | top right (−12, −29), 618 × 40: favorites button, search box 241 × 22, Filter dropdown, Search 132 × 22 (UIPanelButton, red) | same order; box fills the space; the Filter dropdown holds level range and rarity |
-| Categories | left, 168 × 438, `auctionhouse-background-categories`, classic scrollbar | same art; 210 px wide at 1x, scaled (see Sizing) |
-| Category button | 132 × 21, `UI-AuctionFrame-FilterBg`; hover `UI-Character-Tab-Highlight`; selected `auctionhouse-nav-button-select` (additive); third level drawn with `…-tertiary-filterline` | same art; 28px tall (request: larger targets) |
+| Title | "Browse Auctions" on the Buy tab, GameFontNormal (gold), centred on the title band | same, centred; Back/Forward on its left, the house and its freshness on its right |
+| Search bar | top right (−12, −29), 618 × 40: favorites button (SquareIconButton, greyed with no favorites), search box 241 × 22 (SearchBoxTemplate: magnifier, "Search", clear button), Filter dropdown 93 wide, Search 132 × 22 (UIPanelButton, red) | same order and look; the box takes 40 % of the bar, Filter and Search sit at its right |
+| Categories | left, 168 × 438, `auctionhouse-background-categories`, classic scrollbar (always shown, arrows at both ends) | same art and an always-shown bar with arrows (Chrome, Edge, Safari; Firefox draws its own thin bar in the same colours); 210 px wide at 1x, scaled (see Sizing) |
+| Category button | `AuctionHouseFilterButton_SetUp`: a category is a dark rounded button, gold text (GameFontNormalSmall); a subcategory the same button indented 8, white text (GameFontHighlightSmall); a third-level entry no button, white text after `…-tertiary-filterline`. Hover `UI-Character-Tab-Highlight`; selected category and subcategory `auctionhouse-nav-button-select` / `-secondary-select` (yellow rim), selected third level `auctionhouse-ui-row-select` (gold bar). No counts. | the same, drawn from the in-game look (the FilterBg texture is too coarse to stretch); 28px tall (request: larger targets). The game's font (Friz Quadrata) where the player has it installed, else Georgia |
 | Results | `auctionhouse-background-index`, headers 19px on `WhoFrame-ColumnTabs`, rows 20px on `auctionhouse-rowstripe-1/2`, hover `…-row-highlight`, selected `…-row-select` (both additive) | same art; rows 36px, icons 28px (request) |
 | Browse columns | Price 120 (sortable, default) · Name (fill, sortable) · detail 55 (Req. Level for Weapons, Armor, Consumables) · Available · favorite 29 | same |
 | Coins | `auctionhouse-icon-coin-*` | same |
@@ -58,8 +58,9 @@ tree; the website draws whatever it sends.
 
 | Action | Forever | Guildweaver |
 | --- | --- | --- |
-| Click a category | selects it, opens only its branch, searches | **opens or closes it only**: results, search and selection stay (requested). Several branches can stay open. |
-| Choose what to show | the selected category | a leaf, or "All ‹category›" at the top of an open branch |
+| Click a category | selects it and opens only its branch (other branches close); clicking the selected category, or one above it on the path, selects its parent. The whole selected path keeps its rim. Nothing is searched until Search. | the same selection. A category with subcategories only opens (results stay, as requested before); one without subcategories shows its items at once. |
+| Choose what to show | Search searches the selected category (with the text and filters) | the same: select Armor, press Search, all armor. There are no "All …" entries. |
+| Filter | Level Range (two boxes), Uncollected Only, Usable Only, then Rarity: a checkbox per quality (Poor … Legendary) in its colour; a red X on the button clears them | Level Range (applies on Enter or Search) and the six rarity checkboxes (apply when ticked); the red X clears them. Uncollected Only and Usable Only are left out: the website cannot tell what a character has collected or can use |
 | Search | Search button or Enter, within the category | same; typing never searches, suggestions only |
 | Click a row | selects; commodities and items open their buy view | selects only, fills the bar under the list |
 | Double-click | — | opens the item's window (price levels, history) |

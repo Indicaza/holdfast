@@ -15,12 +15,27 @@ export const RANGES = Object.freeze([
   { id: '24h', label: '24h' }, { id: '7d', label: '7d' }, { id: '30d', label: '30d' },
   { id: '90d', label: '90d' }, { id: '1y', label: '1y' }, { id: 'all', label: 'All' },
 ])
-export const QUALITIES = Object.freeze([
-  { id: '', label: 'All' }, { id: '0', label: 'Poor' }, { id: '1', label: 'Common' }, { id: '2', label: 'Uncommon' },
+// The Filter menu's rarity checkboxes, as in the game. The link keeps the
+// checked ones ("rarity=3,4,5"), nothing when all are checked, "none" when
+// none are.
+export const RARITIES = Object.freeze([
+  { id: '0', label: 'Poor' }, { id: '1', label: 'Common' }, { id: '2', label: 'Uncommon' },
   { id: '3', label: 'Rare' }, { id: '4', label: 'Epic' }, { id: '5', label: 'Legendary' },
 ])
+const ALL_RARITIES = RARITIES.map((rarity) => rarity.id)
 
-const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'slot', 'quality', 'minLevel', 'maxLevel', 'listed', 'below', 'sort', 'dir', 'page', 'sel', 'item', 'key', 'range', 'stack']
+export function rarityValue(ids) {
+  const list = ALL_RARITIES.filter((id) => ids.includes(id))
+  if (!list.length) return 'none'
+  return list.length === ALL_RARITIES.length ? '' : list.join(',')
+}
+
+export function rarityList(value) {
+  if (value === 'none') return []
+  return value ? value.split(',') : [...ALL_RARITIES]
+}
+
+const STATE_KEYS = ['tab', 'market', 'q', 'category', 'sub', 'slot', 'rarity', 'minLevel', 'maxLevel', 'listed', 'below', 'sort', 'dir', 'page', 'sel', 'item', 'key', 'range', 'stack']
 const DEFAULTS = { tab: 'browse', sort: '', dir: 'asc', page: 1, range: '7d', below: false, listed: false, stack: false }
 
 function level(value) {
@@ -38,7 +53,13 @@ export function readAuctionState(queryString = '') {
   state.item = /^\d+$/.test(state.item) ? Number(state.item) : null
   state.key = /^i:\d+(:[sb][\d.-]+)*$/.test(state.key) ? state.key : ''
   state.range = RANGES.some((range) => range.id === state.range) ? state.range : '7d'
-  state.quality = QUALITIES.some((quality) => quality.id === state.quality) ? state.quality : ''
+  // Older links had one minimum quality ("Rare and better").
+  const oldQuality = params.get('quality')
+  if (!params.has('rarity') && /^[0-5]$/.test(oldQuality || '')) state.rarity = rarityValue(ALL_RARITIES.filter((id) => id >= oldQuality))
+  else if (state.rarity !== 'none') {
+    const ids = state.rarity.split(',').filter((id) => ALL_RARITIES.includes(id))
+    state.rarity = ids.length ? rarityValue(ids) : ''
+  }
   state.minLevel = level(state.minLevel)
   state.maxLevel = level(state.maxLevel)
   state.below = state.below === '1'

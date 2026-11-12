@@ -12,6 +12,8 @@ import {
   isBlankState,
   niceMax,
   postingSuggestion,
+  rarityList,
+  rarityValue,
   readAuctionState,
   readRecentSearches,
   rememberSearch,
@@ -29,15 +31,15 @@ function memoryStorage() {
 }
 
 test('auction state round-trips through the URL and drops defaults', () => {
-  const href = auctionHref({ tab: 'browse', market: 'api:us:house-113', q: 'linen', quality: '2', minLevel: '10', below: true, sort: 'price', dir: 'desc', page: 2, item: 2589,
+  const href = auctionHref({ tab: 'browse', market: 'api:us:house-113', q: 'linen', rarity: '2,3', minLevel: '10', below: true, sort: 'price', dir: 'desc', page: 2, item: 2589,
     key: 'i:2589', range: '7d', stack: false }, 'us:normal')
-  assert.equal(href, '/dashboard/auctions?server=us%3Anormal&market=api%3Aus%3Ahouse-113&q=linen&quality=2&minLevel=10&below=1&sort=price&dir=desc&page=2&item=2589&key=i%3A2589')
+  assert.equal(href, '/dashboard/auctions?server=us%3Anormal&market=api%3Aus%3Ahouse-113&q=linen&rarity=2%2C3&minLevel=10&below=1&sort=price&dir=desc&page=2&item=2589&key=i%3A2589')
   const state = readAuctionState(href.split('?')[1])
   assert.equal(state.tab, 'browse')
   assert.equal(state.item, 2589)
   assert.equal(state.page, 2)
   assert.equal(state.below, true)
-  assert.equal(state.quality, '2')
+  assert.equal(state.rarity, '2,3')
   assert.equal(state.key, 'i:2589')
   assert.equal(readAuctionState('tab=evil&sort=drop&page=-3').tab, 'browse')
   assert.equal(readAuctionState('sort=drop').sort, '', 'an unknown sort lets the server choose (relevance or name)')
@@ -48,7 +50,15 @@ test('auction state round-trips through the URL and drops defaults', () => {
   assert.equal(readAuctionState('page=-3').page, 1)
   assert.equal(readAuctionState('key=DROP TABLE').key, '', 'variant keys are validated')
   assert.equal(readAuctionState('minLevel=abc').minLevel, '')
-  assert.equal(readAuctionState('quality=9').quality, '')
+  assert.equal(readAuctionState('rarity=9').rarity, '', 'unknown rarities are ignored')
+  assert.equal(readAuctionState('rarity=4,1').rarity, '1,4')
+  assert.equal(readAuctionState('rarity=0,1,2,3,4,5').rarity, '', 'all checked is the default')
+  assert.equal(readAuctionState('rarity=none').rarity, 'none')
+  assert.equal(readAuctionState('quality=3').rarity, '3,4,5', 'an old "Rare and better" link')
+  assert.equal(readAuctionState('quality=9').rarity, '')
+  assert.deepEqual(rarityList(''), ['0', '1', '2', '3', '4', '5'])
+  assert.deepEqual(rarityList('none'), [])
+  assert.equal(rarityValue(['5', '3']), '3,5')
   for (const old of ['sell', 'appraiser', 'shopping', 'lists', 'buy']) assert.equal(readAuctionState(`tab=${old}`).tab, 'browse', `tab=${old}: Browse is the only screen`)
   assert.equal(readAuctionState('tab=diagnostics').tab, 'diagnostics')
   assert.equal(readAuctionState('tab=history&item=2589').tab, 'history')

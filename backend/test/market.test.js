@@ -349,6 +349,12 @@ test("search: names, categories, quality, levels, below market and the Pct colum
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, category: "Trade Goods", subcategory: "Cloth", now: NOW }).results.map((row) => row.item.itemId), [2589, 2592]);
   assert.deepEqual(result.categories.find((entry) => entry.name === "Trade Goods").subcategories.filter((entry) => entry.items).map((entry) => entry.name), ["Cloth", "Metal & Stone"]);
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, quality: 2, now: NOW }).results.map((row) => row.item.itemId), [25]);
+  // The game's rarity checkboxes: exactly the checked qualities.
+  assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, rarity: "2", now: NOW }).results.map((row) => row.item.itemId), [25]);
+  const commonOrPoor = searchMarket({ marketKey: API_MARKET.marketKey, rarity: "1,0", pageSize: 100, now: NOW }).results.map((row) => row.item.itemId);
+  assert.ok(commonOrPoor.length > 0 && !commonOrPoor.includes(25));
+  assert.equal(searchMarket({ marketKey: API_MARKET.marketKey, rarity: "none", now: NOW }).total, 0, "every box cleared: nothing");
+  assert.equal(searchMarket({ marketKey: API_MARKET.marketKey, rarity: "rare", now: NOW }).total, searchMarket({ marketKey: API_MARKET.marketKey, now: NOW }).total, "nonsense is ignored");
   assert.deepEqual(searchMarket({ marketKey: API_MARKET.marketKey, minLevel: 5, maxLevel: 10, now: NOW }).results.map((row) => row.item.itemId), [25]);
   const below = searchMarket({ marketKey: API_MARKET.marketKey, belowMarket: true, now: NOW });
   assert.deepEqual(below.results.map((row) => row.item.itemId), [2592]);

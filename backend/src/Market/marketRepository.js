@@ -656,7 +656,16 @@ function marketCoverageInDatabase(db, marketKey, now) {
 }
 
 // Filters on item facts, as SQL over market_item_meta `m`.
-function metaFilters({ category, subcategory, slot, quality, minLevel, maxLevel, minItemLevel, maxItemLevel }) {
+// The rarities checked in the game's Filter menu: "0,3,4" (any order), or
+// "none" when every box is cleared. Anything else means all of them.
+export function parseRarities(value) {
+  const raw = String(value ?? "").trim();
+  if (raw === "none") return [];
+  if (!/^[0-7](,[0-7])*$/.test(raw)) return null;
+  return [...new Set(raw.split(",").map(Number))].sort((a, b) => a - b);
+}
+
+function metaFilters({ category, subcategory, slot, quality, rarity, minLevel, maxLevel, minItemLevel, maxItemLevel }) {
   const clauses = [];
   const params = [];
   const resolved = resolveCategory(text(category, 80), text(subcategory, 80), text(slot, 80));
@@ -665,6 +674,9 @@ function metaFilters({ category, subcategory, slot, quality, minLevel, maxLevel,
   if (byCategory) { clauses.push(byCategory.sql); params.push(...byCategory.params); }
   const qualityId = integerOrNull(quality, 8);
   if (qualityId !== null) { clauses.push("COALESCE(m.quality_id, 1) >= ?"); params.push(qualityId); }
+  const rarities = parseRarities(rarity);
+  if (rarities && !rarities.length) clauses.push("0");
+  else if (rarities) { clauses.push(`COALESCE(m.quality_id, 1) IN (${rarities.map(() => "?").join(", ")})`); params.push(...rarities); }
   for (const [value, sql] of [[integerOrNull(minLevel), "COALESCE(m.required_level, 0) >= ?"], [integerOrNull(maxLevel), "COALESCE(m.required_level, 0) <= ?"],
     [integerOrNull(minItemLevel), "COALESCE(m.item_level, 0) >= ?"], [integerOrNull(maxItemLevel), "COALESCE(m.item_level, 0) <= ?"]]) {
     if (value !== null) { clauses.push(sql); params.push(value); }
@@ -688,7 +700,7 @@ const BELOW_MARKET = `s.reference_days >= ${MIN_REFERENCE_DAYS_FILTER} AND s.ref
 // row without a price, marked either "none listed" (a recent complete view
 // of the house did not have it) or "unknown" (the market has not been seen
 // completely, so it may be listed). `listed` hides those rows.
-export function searchMarket({ marketKey, q = "", category = "", subcategory = "", slot = "", quality = "", minLevel = "", maxLevel = "", minItemLevel = "", maxItemLevel = "",
+export function searchMarket({ marketKey, q = "", category = "", subcategory = "", slot = "", quality = "", rarity = "", minLevel = "", maxLevel = "", minItemLevel = "", maxItemLevel = "",
   belowMarket = false, includeEmpty = false, listedOnly = false, sort = "", direction = "", page = 1, pageSize = 50, now = nowSeconds() }) {
   // Game data that arrived since the last batch is indexed first (bounded).
   if (text(q, 100)) catchUpCatalog(now);
@@ -705,7 +717,7 @@ export function searchMarket({ marketKey, q = "", category = "", subcategory = "
     const dir = direction === "desc" ? "DESC" : "ASC";
     const below = belowMarket === true || belowMarket === "1" || belowMarket === "true";
     const listed = listedOnly === true || listedOnly === "1" || listedOnly === "true";
-    const filters = metaFilters({ category, subcategory, slot, quality, minLevel, maxLevel, minItemLevel, maxItemLevel });
+    const filters = metaFilters({ category, subcategory, slot, quality, rarity, minLevel, maxLevel, minItemLevel, maxItemLevel });
     const fresh = now - STALE_SECONDS;
     const orderBy = (sortKey === "relevance" ? SORTS.name : SORTS[sortKey]).replace(":fresh", String(fresh));
 
