@@ -26,7 +26,9 @@ import {
   selectObservation,
 } from "./marketModel.js";
 import {
+  DAILY_DAYS,
   dayOf,
+  HOURLY_DAYS,
   pruneSeriesInDatabase,
   readMetricInputsInDatabase,
   readSeriesInDatabase,
@@ -34,6 +36,7 @@ import {
   rollUpWeeksInDatabase,
   rollUpWindowDays,
   seriesWriter,
+  WEEKLY_YEARS,
 } from "./marketSeries.js";
 
 // Raw per-snapshot observations are evidence for "why this price" and for
@@ -478,6 +481,46 @@ export function recordMarketCheckInDatabase(db, { marketKey, sourceType, sourceI
 }
 
 // Maintenance -------------------------------------------------------------------------
+
+// The same retention rules as pruneMarketDataInDatabase, as bounded
+// deletes: each call of a step removes at most `limit` rows, so maintenance
+// runs as many short transactions and requests are served in between.
+export function marketPruneSteps(now = nowSeconds()) {
+  const cutoff = now - OBSERVATION_RETENTION_SECONDS;
+  const step = (name, table, where, ...params) => ({
+    name,
+    sql: `DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ${where} LIMIT ?)`,
+    params,
+  });
+  return [
+    // A snapshot still shown by a summary keeps its observations.
+    step("observations", "market_observations", "observed_at < ? AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)", cutoff),
+    step("snapshots", "market_snapshots", "confirmed_at < ? AND id NOT IN (SELECT snapshot_id FROM market_summaries)", cutoff),
+    step("checks", "market_snapshot_checks", "checked_at < ?", now - CHECK_RETENTION_SECONDS),
+    step("hourly", "market_series_hourly", "hour < ?", Math.floor((now - HOURLY_DAYS * 86400) / 3600)),
+    step("daily", "market_series_daily", "day < ?", dayOf(now - DAILY_DAYS * 86400)),
+    step("weekly", "market_series_weekly", "week < ?", dayOf(now - WEEKLY_YEARS * 365 * 86400)),
+    step("runs", "market_provider_runs", "started_at < ?", now - RUN_RETENTION_SECONDS),
+    step("ladders", "market_price_ladders", "observed_at < ?", now - CHECK_RETENTION_SECONDS),
+    step("interest", "market_item_interest", "day < ?", dayOf(now - 30 * 86400)),
+  ];
+}
+
+export function runMarketPruneStepInDatabase(db, step, limit) {
+  return Number(db.prepare(step.sql).run(...step.params, limit).changes);
+}
+
+export function marketKeysWithSummariesInDatabase(db) {
+  return db.prepare("SELECT DISTINCT market_key AS marketKey FROM market_summaries").all().map((row) => row.marketKey);
+}
+
+export function lastMarketMaintenanceInDatabase(db, name) {
+  return db.prepare("SELECT ran_at FROM market_maintenance WHERE name = ?").get(name)?.ran_at ?? null;
+}
+
+export function recordMarketMaintenanceInDatabase(db, name, now, detail) {
+  noteMaintenance(db, name, now, detail);
+}
 
 function noteMaintenance(db, name, now, detail) {
   db.prepare(`INSERT INTO market_maintenance (name, ran_at, detail) VALUES (?, ?, ?)

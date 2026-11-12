@@ -74,9 +74,17 @@ export function rollUpWindowDays(lastRanAt, now) {
   return Math.min(DAILY_DAYS, Math.max(15, Math.ceil((now - lastRanAt) / 86400) + 8));
 }
 
-export function rollUpWeeksInDatabase(db, now, { sinceDays = 15 } = {}) {
+// `marketKey` limits the roll-up to one market, so maintenance can run one
+// short transaction per market.
+// `range` ({ from, to }: item keys from inclusive to exclusive, either may
+// be null) limits it further to a page of that market's items.
+export function rollUpWeeksInDatabase(db, now, { sinceDays = 15, marketKey = null, range = null } = {}) {
   const since = weekOf(dayOf(now - sinceDays * 86400));
-  const rows = db.prepare(`SELECT * FROM market_series_daily WHERE day >= ? ORDER BY market_key, item_key, source_type, day`).all(since);
+  const rows = marketKey
+    ? db.prepare(`SELECT * FROM market_series_daily WHERE market_key = ? AND day >= ?
+        AND (? IS NULL OR item_key >= ?) AND (? IS NULL OR item_key < ?) ORDER BY market_key, item_key, source_type, day`)
+      .all(marketKey, since, range?.from ?? null, range?.from ?? null, range?.to ?? null, range?.to ?? null)
+    : db.prepare(`SELECT * FROM market_series_daily WHERE day >= ? ORDER BY market_key, item_key, source_type, day`).all(since);
   const upsert = db.prepare(`INSERT OR REPLACE INTO market_series_weekly (market_key, item_key, source_type, week, days, samples,
       min_low, min_high, min_close, typical_low, typical_high, typical_close, typical_median, quantity_low, quantity_high, quantity_close, listings_close)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
@@ -108,14 +116,18 @@ export function rollUpWeeksInDatabase(db, now, { sinceDays = 15 } = {}) {
 
 // Each summary's reference price: the median of the last REFERENCE_DAYS
 // observed daily typical asks from the summary's own source.
-export function refreshReferencePricesInDatabase(db, now) {
+export function refreshReferencePricesInDatabase(db, now, { marketKey: only = null, range = null } = {}) {
   const since = dayOf(now - REFERENCE_DAYS * 86400);
   const update = db.prepare("UPDATE market_summaries SET reference_price = ?, reference_days = ? WHERE market_key = ? AND item_key = ?");
+  const from = range?.from ?? null;
+  const to = range?.to ?? null;
   let updated = 0;
-  for (const { market_key: marketKey } of db.prepare("SELECT DISTINCT market_key FROM market_summaries").all()) {
+  const markets = only ? [{ market_key: only }] : db.prepare("SELECT DISTINCT market_key FROM market_summaries").all();
+  for (const { market_key: marketKey } of markets) {
     const rows = db.prepare(`SELECT d.item_key, d.typical_close, d.min_close FROM market_series_daily d
       JOIN market_summaries s ON s.market_key = d.market_key AND s.item_key = d.item_key AND s.source_type = d.source_type
-      WHERE d.market_key = ? AND d.day >= ? ORDER BY d.item_key`).all(marketKey, since);
+      WHERE d.market_key = ? AND d.day >= ? AND (? IS NULL OR d.item_key >= ?) AND (? IS NULL OR d.item_key < ?)
+      ORDER BY d.item_key`).all(marketKey, since, from, from, to, to);
     const byItem = new Map();
     for (const row of rows) {
       const value = row.typical_close ?? row.min_close;
@@ -123,13 +135,25 @@ export function refreshReferencePricesInDatabase(db, now) {
       if (!byItem.has(row.item_key)) byItem.set(row.item_key, []);
       byItem.get(row.item_key).push(value);
     }
-    db.prepare("UPDATE market_summaries SET reference_price = NULL, reference_days = 0 WHERE market_key = ?").run(marketKey);
+    db.prepare(`UPDATE market_summaries SET reference_price = NULL, reference_days = 0 WHERE market_key = ?
+      AND (? IS NULL OR item_key >= ?) AND (? IS NULL OR item_key < ?)`).run(marketKey, from, from, to, to);
     for (const [itemKey, values] of byItem) {
       update.run(median(values), values.length, marketKey, itemKey);
       updated += 1;
     }
   }
   return updated;
+}
+
+// Item-key ranges covering every item a market has history for, each about
+// `size` items: maintenance works through a large market page by page.
+export function marketItemRangesInDatabase(db, marketKey, size = 2000) {
+  const keys = db.prepare("SELECT DISTINCT item_key FROM market_series_daily WHERE market_key = ? ORDER BY item_key").all(marketKey).map((row) => row.item_key);
+  const ranges = [];
+  for (let start = 0; start < keys.length; start += size) {
+    ranges.push({ from: start === 0 ? null : keys[start], to: start + size < keys.length ? keys[start + size] : null });
+  }
+  return ranges.length ? ranges : [{ from: null, to: null }];
 }
 
 export function pruneSeriesInDatabase(db, now) {
