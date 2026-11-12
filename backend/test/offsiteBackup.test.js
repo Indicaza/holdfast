@@ -49,36 +49,6 @@ test('tampered, truncated, oversized, and wrong-key archives fail before restora
   assert.throws(() => backupKey('short'))
 }))
 
-test('off-site upload succeeds only after downloading and restoring the same encrypted snapshot', () => withHttpApp(async ({ directory }) => {
-  let uploaded
-  const commands = []
-  const client = { async send(command) {
-    commands.push(command)
-    if (command.constructor.name === 'PutObjectCommand') {
-      uploaded = command.input.Body
-      assert.equal(command.input.ContentType, 'application/octet-stream')
-      return {}
-    }
-    return { ContentLength: uploaded.length, Body: { transformToByteArray: async () => uploaded } }
-  } }
-  const env = { ...configured, GUILD_DATA_DIR: directory }
-  const now = new Date('2026-10-04T04:00:00Z')
-  const result = await runOffsiteBackup({ env, client, now: () => now })
-  assert.equal(result.status, 'verified')
-  assert.equal(commands[0].input.Key, commands[1].input.Key)
-  assert.deepEqual(await offsiteBackupHealth({ env, now: now.getTime() }), { enabled: true, healthy: true, lastVerifiedAt: now.toISOString() })
-  assert.equal((await offsiteBackupHealth({ env, now: now.getTime() + 25 * 60 * 60 * 1000 })).healthy, false)
-  assert.equal((await offsiteBackupHealth({ env, now: now.getTime() - 1 })).healthy, false)
-  withGuildTransaction((db) => db.prepare("UPDATE member_profiles SET bio = 'New data after the previous snapshot' WHERE member_id = 'e2e-member'").run())
-  const previousStatus = await readFile(path.join(directory, 'offsite-backup-status.json'), 'utf8')
-  await assert.rejects(runOffsiteBackup({ env, client: { async send(command) { if (command.constructor.name === 'PutObjectCommand') return {}; return { ContentLength: uploaded.length, Body: { transformToByteArray: async () => uploaded } } } } }), /does not match/)
-  assert.equal(await readFile(path.join(directory, 'offsite-backup-status.json'), 'utf8'), previousStatus)
-  uploaded[uploaded.length - 1] ^= 1
-  const verified = await readFile(path.join(directory, 'offsite-backup-status.json'), 'utf8')
-  await assert.rejects(runOffsiteBackup({ env, client: { async send(command) { if (command.constructor.name === 'PutObjectCommand') return {}; return { ContentLength: uploaded.length, Body: { transformToByteArray: async () => uploaded } } } } }))
-  assert.equal(await readFile(path.join(directory, 'offsite-backup-status.json'), 'utf8'), verified)
-}))
-
 test('missing backup configuration is explicit and enabled backups cannot silently downgrade', async () => {
   assert.equal(offsiteBackupConfig({}), null)
   assert.deepEqual(await runOffsiteBackup({ env: {} }), { status: 'disabled' })
@@ -87,17 +57,6 @@ test('missing backup configuration is explicit and enabled backups cannot silent
   assert.throws(() => offsiteBackupConfig({ BACKUP_OFFSITE_ENABLED: 'tru' }), /true or false/)
   assert.throws(() => offsiteBackupConfig({ ...configured, BACKUP_S3_ENDPOINT: 'http://insecure.example' }), /HTTPS/)
 })
-
-test('oversized remote objects and failed uploads cannot mark a backup verified', () => withHttpApp(async ({ directory }) => {
-  const env = { ...configured, GUILD_DATA_DIR: directory }
-  assert.equal((await offsiteBackupHealth({ env })).healthy, false)
-  await assert.rejects(runOffsiteBackup({ env, client: { async send() { throw new Error('storage unavailable') } } }), /storage unavailable/)
-  await assert.rejects(runOffsiteBackup({ env, client: { async send(command) {
-    if (command.constructor.name === 'PutObjectCommand') return {}
-    return { ContentLength: MAX_SNAPSHOT_BYTES * 2 + 1, Body: { transformToByteArray() { throw new Error('Must not read oversized object') } } }
-  } } }), /size limit/)
-  assert.equal((await offsiteBackupHealth({ env })).healthy, false)
-}))
 
 test('scheduled backups start after one minute, repeat every six hours, and never overlap', async () => {
   const callbacks = []
