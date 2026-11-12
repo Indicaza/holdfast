@@ -114,48 +114,61 @@ test('search shows what is on the chosen auction house, found by name or id', as
   await expect(page.getByText('No favorites yet.')).toBeVisible()
 })
 
-test('a category opens without changing the results; only a leaf chooses what is shown', async ({ page, context }) => {
+test('categories work as in the game: one open branch, a leaf shows its items, Search shows a whole category', async ({ page, context }) => {
   await authenticate(context, 'trader')
   await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
   await seed(page)
   await page.reload()
-  // WoW Forever's categories, in its order.
+  // WoW Forever's categories, in its order, with no counts.
   await expect(tree(page).locator(':scope > ul > li > button .ah-cat__label')).toHaveText(['Weapons', 'Armor', 'Containers', 'Consumables', 'Trade Goods', 'Projectile',
     'Recipes', 'Quest Items', 'Miscellaneous'])
-  // Opening Trade Goods only opens it: still the favorites.
+  await expect(tree(page).locator('.ah-cat__count')).toHaveCount(0)
+  // Selecting Trade Goods opens it; the results stay (the favorites).
   await categoryButton(page, 'Trade Goods').first().click()
   await expect(categoryButton(page, 'Trade Goods').first()).toHaveAttribute('aria-expanded', 'true')
+  await expect(categoryButton(page, 'Trade Goods').first()).toHaveClass(/is-selected/)
+  await expect(tree(page).getByRole('button', { name: /^All / })).toHaveCount(0)
   await expect(page).not.toHaveURL(/category=/)
   await expect(page.getByText('No favorites yet.')).toBeVisible()
-  // "All Trade Goods" chooses the whole branch.
-  await tree(page).getByRole('button', { name: 'All Trade Goods' }).click()
+  // Search shows all of the selected category.
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
   await expect(page).toHaveURL(/category=trade-goods/)
   await expect(rows(page)).toHaveCount(3)
+  // A category with no subcategories shows its items at once.
   await categoryButton(page, 'Cloth').click()
   await expect(page).toHaveURL(/category=trade-goods&sub=cloth/)
   await expect(rows(page)).toHaveText([/Linen Cloth/, /Wool Cloth/])
   await categoryButton(page, 'Metal & Stone').click()
   await expect(rows(page)).toHaveText([/Copper Ore/])
-  // Opening Armor keeps Metal & Stone's results.
+  // Selecting Armor opens only Armor (Trade Goods closes); the results stay.
   const url = page.url()
   await categoryButton(page, 'Armor').click()
   await expect(categoryButton(page, 'Armor')).toHaveAttribute('aria-expanded', 'true')
+  await expect(categoryButton(page, 'Metal & Stone')).toHaveCount(0)
   expect(page.url()).toBe(url)
   await expect(rows(page)).toHaveText([/Copper Ore/])
   // Armor › Cloth opens; Hands chooses the gloves, with the level column.
-  await categoryButton(page, 'Cloth').first().click()
+  await categoryButton(page, 'Cloth').click()
   expect(page.url()).toBe(url)
   await categoryButton(page, 'Hands').click()
   await expect(page).toHaveURL(/category=armor&sub=cloth&slot=hands/)
   await expect(rows(page)).toHaveText([/Azure Silk Gloves/])
   await expect(results(page).getByRole('columnheader')).toHaveText([/Price/, /Name/, /Req\. Lvl/, /Available/, /Favorite/])
   await expect(row(page, 'Azure Silk Gloves').locator('.ah-col-detail')).toHaveText('24')
-  // Back returns to Metal & Stone; the branches stay open.
+  // The whole selected path keeps its rim.
+  for (const label of ['Armor', 'Cloth', 'Hands']) await expect(categoryButton(page, label)).toHaveClass(/is-selected/)
+  // Back returns to Metal & Stone, with Trade Goods open again.
   await frame(page).getByRole('button', { name: 'Back', exact: true }).click()
   await expect(rows(page)).toHaveText([/Copper Ore/])
-  await expect(categoryButton(page, 'Hands')).toBeVisible()
+  await expect(categoryButton(page, 'Metal & Stone')).toHaveClass(/is-selected/)
+  await expect(categoryButton(page, 'Hands')).toHaveCount(0)
+  // Clicking the selected Metal & Stone again selects Trade Goods; Search shows it all.
+  await categoryButton(page, 'Metal & Stone').click()
+  await expect(categoryButton(page, 'Metal & Stone')).not.toHaveClass(/is-selected/)
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(page).toHaveURL(/category=trade-goods(&|$)(?!.*sub=)/)
+  await expect(rows(page)).toHaveCount(3)
   // Sorting.
-  await tree(page).getByRole('button', { name: 'All Trade Goods' }).click()
   await results(page).getByRole('button', { name: /^Price/ }).click()
   await expect(results(page).getByRole('columnheader', { name: /Price/ })).toHaveAttribute('aria-sort', 'ascending')
   await expect(rows(page).first()).toContainText('Copper Ore')
@@ -163,10 +176,46 @@ test('a category opens without changing the results; only a leaf chooses what is
   await expect(rows(page).first()).toContainText('Linen Cloth')
   await results(page).getByRole('button', { name: /^Name/ }).click()
   await expect(rows(page)).toHaveText([/Copper Ore/, /Linen Cloth/, /Wool Cloth/])
-  // Closing a branch closes only that branch.
+  // Clicking the selected category again closes it; the results stay.
   await categoryButton(page, 'Trade Goods').first().click()
-  await expect(tree(page).getByRole('button', { name: 'All Trade Goods' })).toHaveCount(0)
+  await expect(categoryButton(page, 'Metal & Stone')).toHaveCount(0)
   await expect(rows(page)).toHaveCount(3)
+})
+
+test('the Filter menu: a level range and a checkbox per rarity, cleared by the red X', async ({ page, context }) => {
+  await authenticate(context, 'trader')
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}`)
+  await seed(page)
+  await page.reload()
+  const clear = page.getByRole('button', { name: 'Clear filters' })
+  await expect(clear).toHaveCount(0)
+  await page.getByRole('button', { name: 'Filter', exact: true }).click()
+  const menu = page.getByRole('group', { name: 'Filters' })
+  await expect(menu.getByText('Level Range')).toBeVisible()
+  await expect(menu.getByRole('checkbox')).toHaveCount(6)
+  for (const rarity of ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary']) await expect(menu.getByRole('checkbox', { name: rarity, exact: true })).toBeChecked()
+  // Clearing Common shows the rest of the house without it.
+  await menu.getByRole('checkbox', { name: 'Common', exact: true }).uncheck()
+  await expect(page).toHaveURL(/rarity=0%2C2%2C3%2C4%2C5/)
+  await expect(row(page, 'Azure Silk Gloves')).toHaveCount(1)
+  await expect(row(page, 'Linen Cloth')).toHaveCount(0)
+  await expect(clear).toBeVisible()
+  // A level range applies on Enter.
+  await menu.getByRole('textbox', { name: 'Minimum level' }).fill('30')
+  await menu.getByRole('textbox', { name: 'Minimum level' }).press('Enter')
+  await expect(page).toHaveURL(/minLevel=30/)
+  await expect(row(page, 'Azure Silk Gloves')).toHaveCount(0)
+  // The red X clears every filter.
+  await clear.click()
+  await expect(page).not.toHaveURL(/rarity=|minLevel=/)
+  await expect(page.getByText('No favorites yet.')).toBeVisible()
+  await expect(clear).toHaveCount(0)
+  // An older "Uncommon and better" link ticks Uncommon and up.
+  await page.goto(`/dashboard/auctions?market=${encodeURIComponent(ALLIANCE)}&quality=2`)
+  await page.getByRole('button', { name: 'Filter', exact: true }).click()
+  await expect(menu.getByRole('checkbox', { name: 'Common', exact: true })).not.toBeChecked()
+  await expect(menu.getByRole('checkbox', { name: 'Uncommon' })).toBeChecked()
+  await expect(row(page, 'Azure Silk Gloves')).toHaveCount(1)
 })
 
 test('a click selects, a double click opens a window with every price level', async ({ page, context }) => {

@@ -108,9 +108,9 @@ WoW Forever's Browse Auctions window (`docs/AUCTION_HOUSE_UI.md` has the measure
 
 - **Title bar:** Back and Forward (they walk the Auction House's own steps: searches, categories, sorts, pages, houses; not row selection or opening a category), the auction house, how recently it was updated, and Diagnostics for administrators. The houses offered are the chosen server's Alliance, Horde and Blackwater houses, the player's faction first (from the race of their most recently seen character on that server), then Blizzard's houses. The house opened is the one you used last on that server, else your faction's if it has listings, else the next one with listings.
 - **One screen, no tabs.** The website cannot buy or post; that happens in the game. Old Sell and Shopping links open Browse; shopping lists keep their data and API.
-- **Search bar:** favorites, name or id with suggestions, Filter (level range, rarity), Search.
+- **Search bar:** favorites, name or id with suggestions, Filter (level range; a checkbox per rarity, as in the game; the red X clears them), Search. Search searches the selected category.
 - **Home** (nothing searched, no category): your favorites, priced on this house.
-- **Categories:** clicking a category with subcategories only opens or closes it; the results change only when a category without subcategories, or "All …", is chosen. Several branches can stay open; which ones are kept for the browser session.
+- **Categories:** as in the game: one selected path, shown open, with the yellow rim on each category of it and a gold bar on a third-level entry; clicking the selected category again selects its parent. A category with subcategories only opens (the results stay); Search then shows all of it. A category without subcategories shows its items at once. No counts and no "All …" entries.
 - **Results:** Price, Name, Available (and Req. Lvl for Weapons, Armor and Consumables), sortable. A random-suffix version is listed under its own name ("Raider's Chestpiece of the Bear"). Search and categories show what is on the house; a search with nothing listed names the known items that matched and why ("No listings" after a complete view, "Not seen here" otherwise).
 - **Tooltips** (icon or name, by mouse or keyboard focus): see "Item tooltips". They come with the page of results; hovering asks the server nothing.
 - **One click** selects a row (kept in the link); **a double click**, Enter or Open opens the item's window.
@@ -197,7 +197,7 @@ Blizzard's auction data lists item ids only. Every minute, up to 240 listed item
 1. Sign in, open Auction House. The window fills the page. With a character on the chosen server, the house shown is its faction's.
 2. In the game, at an auctioneer, search an item that is listed (e.g. Linen Cloth) and one that is not. Close the auction house, `/gw sync`.
 3. On the website, search both by name and by item id. The listed one shows the price you saw, "In-game scan · just now". The other gets no row; the page says "No auctions for … on this auction house" and names it as "Not seen here".
-4. Open Trade Goods: the results do not change. Choose Cloth: they do. Press Back: the previous results return.
+4. Click Trade Goods: it opens and the results do not change; press Search: all trade goods. Choose Cloth: only cloth. Click Armor: Trade Goods closes, the results stay. Press Back: the previous results return. Open Filter, clear Common: common items go; the red X brings them back.
 5. Hover an item's name and icon: its tooltip matches the game's. For an item only Blizzard's data describes (most weapons and armor), the tooltip shows Blizzard's lines within about an hour of deploying, if Forever's item API provides them; otherwise the facts and "Full tooltip not available yet."
 6. Double-click a row: the window's Prices tab lists the price levels you saw in the game (quantity and auctions per price). Type a quantity in Cost to buy and check it against buying that many in the game.
 7. Switch to the matching Blizzard API house (if configured): the same item shows that house's price and levels or "No listings · <time>", never the in-game price.

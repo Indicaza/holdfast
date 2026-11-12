@@ -17,19 +17,12 @@ export function rowId(row) {
 
 // Category tree state kept for the browser session: which categories are
 // open survives searches, tab switches and leaving the Auction House.
-const TREE_KEY = 'guildweaver:auctions:tree'
-
-export function readOpenCategories(storage = globalThis.sessionStorage) {
-  try {
-    const value = JSON.parse(storage?.getItem(TREE_KEY) || '[]')
-    return Array.isArray(value) ? value.filter((key) => typeof key === 'string').slice(0, 40) : []
-  } catch {
-    return []
-  }
-}
-
-export function storeOpenCategories(keys, storage = globalThis.sessionStorage) {
-  try { storage?.setItem(TREE_KEY, JSON.stringify([...keys].slice(0, 40))) } catch { /* a convenience */ }
+// The game's category list: clicking a category selects it and shows its
+// subcategories; clicking the selected category, or one above it on the
+// selected path, selects that category's parent instead.
+export function pickCategory(selected, keys) {
+  const onPath = keys.length <= selected.length && keys.every((key, index) => selected[index] === key)
+  return onPath ? keys.slice(0, -1) : keys
 }
 
 // Auction houses per server ---------------------------------------------------------

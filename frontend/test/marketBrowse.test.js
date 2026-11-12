@@ -10,14 +10,13 @@ import {
   inspectorId,
   nextSort,
   openInspector,
+  pickCategory,
   raiseInspector,
   readInspectors,
-  readOpenCategories,
   resetInspectors,
   rowId,
   stackOrder,
   storeInspectors,
-  storeOpenCategories,
   updateInspector,
 } from '../src/Market/marketBrowse.js'
 
@@ -102,7 +101,7 @@ test('reset puts every window back in a neat stack; too many windows drop the ol
   assert.ok(!windows.some((win) => win.id === 'i:2'), 'the oldest unpinned one gave way')
 })
 
-test('open windows and category branches are remembered for the browser session, safely', () => {
+test('open windows are remembered for the browser session, safely', () => {
   const storage = memoryStorage()
   const { windows } = openInspector([], { itemId: 4319, name: 'Azure Silk Gloves', qualityId: 2 }, screen)
   storeInspectors(updateInspector(windows, 'i:4319', { x: 200, y: 150, pinned: true, tab: 'history' }, screen), storage)
@@ -111,8 +110,17 @@ test('open windows and category branches are remembered for the browser session,
   assert.equal(readInspectors({ width: 600, height: 500 }, storage)[0].x <= 600 - INSPECTOR_SIZE.minWidth, true, 'clamped into a smaller window')
   storage.setItem('guildweaver:auctions:inspectors', JSON.stringify([{ id: 'x', itemId: -1 }, { itemId: 5 }, 'junk']))
   assert.deepEqual(readInspectors(screen, storage), [], 'malformed entries are dropped')
-  storeOpenCategories(new Set(['trade-goods', 'armor']), storage)
-  assert.deepEqual(readOpenCategories(storage), ['trade-goods', 'armor'])
+})
+
+test('categories select as in the game: one path, a second click goes up a level', () => {
+  assert.deepEqual(pickCategory([], ['armor']), ['armor'])
+  assert.deepEqual(pickCategory(['armor'], ['armor', 'misc']), ['armor', 'misc'])
+  assert.deepEqual(pickCategory(['armor', 'misc'], ['armor', 'misc', 'cloak']), ['armor', 'misc', 'cloak'])
+  assert.deepEqual(pickCategory(['armor', 'misc', 'cloak'], ['armor', 'misc', 'neck']), ['armor', 'misc', 'neck'])
+  assert.deepEqual(pickCategory(['armor', 'misc', 'cloak'], ['armor', 'misc', 'cloak']), ['armor', 'misc'], 'the selected one again: its parent')
+  assert.deepEqual(pickCategory(['armor', 'misc', 'cloak'], ['armor', 'misc']), ['armor'], 'a category above it: its parent')
+  assert.deepEqual(pickCategory(['armor', 'misc'], ['armor']), [])
+  assert.deepEqual(pickCategory(['armor', 'misc'], ['weapons']), ['weapons'], 'another branch: only that one is open')
 })
 
 test('the auction houses offered follow the chosen server', async () => {
