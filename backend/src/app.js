@@ -54,9 +54,10 @@ import {
   securityHeaders,
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
+import { createStorageRouter } from "./Production/storageRouter.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null, storageObservatory = null } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -305,6 +306,10 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       holdfastMember,
     });
   });
+
+  if (storageObservatory) {
+    app.use("/api/admin/storage", createStorageRouter({ observatory: storageObservatory }));
+  }
 
   app.get("/api/admin/ping", requirePermission("site.admin"), (req, res) => {
     res.json({
