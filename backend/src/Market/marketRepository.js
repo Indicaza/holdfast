@@ -40,8 +40,12 @@ import {
 } from "./marketSeries.js";
 
 // Raw per-snapshot observations are evidence for "why this price" and for
-// choosing between sources; history lives in the series tables.
+// choosing between sources; history lives in the series tables. In-game
+// scans are rare and are compared against API houses for three days. API
+// houses refresh hourly, so each observation repeats what the hourly series
+// keeps; a day (and two hours of margin) of them is evidence enough.
 export const OBSERVATION_RETENTION_SECONDS = 3 * 86400;
+export const API_OBSERVATION_RETENTION_SECONDS = 26 * 3600;
 // Observations older than this are refused: history would be rewritten.
 export const MAX_OBSERVATION_AGE_SECONDS = 7 * 86400;
 const CHECK_RETENTION_SECONDS = 14 * 86400;
@@ -509,6 +513,7 @@ export function recordMarketCheckInDatabase(db, { marketKey, sourceType, sourceI
 // runs as many short transactions and requests are served in between.
 export function marketPruneSteps(now = nowSeconds()) {
   const cutoff = now - OBSERVATION_RETENTION_SECONDS;
+  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
   const step = (name, table, where, ...params) => ({
     name,
     sql: `DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ${where} LIMIT ?)`,
@@ -516,8 +521,10 @@ export function marketPruneSteps(now = nowSeconds()) {
   });
   return [
     // A snapshot still shown by a summary keeps its observations.
-    step("observations", "market_observations", "observed_at < ? AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)", cutoff),
-    step("snapshots", "market_snapshots", "confirmed_at < ? AND id NOT IN (SELECT snapshot_id FROM market_summaries)", cutoff),
+    step("observations", "market_observations", `observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
+      AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
+    step("snapshots", "market_snapshots", `confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
+      AND id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
     step("checks", "market_snapshot_checks", "checked_at < ?", now - CHECK_RETENTION_SECONDS),
     step("hourly", "market_series_hourly", "hour < ?", Math.floor((now - HOURLY_DAYS * 86400) / 3600)),
     step("daily", "market_series_daily", "day < ?", dayOf(now - DAILY_DAYS * 86400)),
@@ -553,11 +560,12 @@ function noteMaintenance(db, name, now, detail) {
 // daily 400, weekly 10 years, provider runs 30 days.
 export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
   const cutoff = now - OBSERVATION_RETENTION_SECONDS;
+  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
   // A snapshot still shown by a summary keeps its observations.
-  const observations = db.prepare(`DELETE FROM market_observations WHERE observed_at < ?
-    AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(cutoff).changes;
-  const snapshots = db.prepare(`DELETE FROM market_snapshots WHERE confirmed_at < ?
-    AND id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(cutoff).changes;
+  const observations = db.prepare(`DELETE FROM market_observations WHERE observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
+    AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
+  const snapshots = db.prepare(`DELETE FROM market_snapshots WHERE confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
+    AND id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
   const checks = db.prepare("DELETE FROM market_snapshot_checks WHERE checked_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
   const series = pruneSeriesInDatabase(db, now);
   const runs = db.prepare("DELETE FROM market_provider_runs WHERE started_at < ?").run(now - RUN_RETENTION_SECONDS).changes;
@@ -1235,9 +1243,12 @@ export function linkEvidenceInDatabase(db, clientKey, now = nowSeconds()) {
   if (!client) return [];
   const houses = db.prepare("SELECT * FROM market_markets WHERE kind = 'api_house' AND region = ? AND faction = ?").all(client.region, client.faction);
   return houses.map((house) => {
-    const pairs = db.prepare(`SELECT a.min_unit_buyout AS a, b.min_unit_buyout AS b FROM market_observations a
-      JOIN market_observations b ON b.item_key = a.item_key AND b.market_key = ? AND ABS(a.observed_at - b.observed_at) <= 10800
-      WHERE a.market_key = ? AND a.complete = 1 AND b.complete = 1 AND a.min_unit_buyout > 0 AND b.min_unit_buyout > 0 AND a.observed_at >= ?
+    // The house side comes from its hourly series (complete views only),
+    // which reach back further than its raw observations.
+    const pairs = db.prepare(`SELECT a.min_unit_buyout AS a, b.min_close AS b FROM market_observations a
+      JOIN market_series_hourly b ON b.market_key = ? AND b.item_key = a.item_key AND b.source_type <> 'addon_scan'
+        AND b.hour BETWEEN a.observed_at / 3600 - 3 AND a.observed_at / 3600 + 3
+      WHERE a.market_key = ? AND a.complete = 1 AND a.min_unit_buyout > 0 AND b.min_close > 0 AND a.observed_at >= ?
       LIMIT 5000`).all(house.market_key, clientKey, now - 3 * 86400);
     const ratios = pairs.map((pair) => Math.abs(pair.a - pair.b) / pair.b);
     const sorted = [...ratios].sort((x, y) => x - y);
@@ -1300,7 +1311,7 @@ export function readMarketDiagnostics({ refresherStats = null, providerConfig = 
       }),
       runs: runs.map((row) => ({ marketKey: row.market_key, provider: row.provider, startedAt: row.started_at, finishedAt: row.finished_at, status: row.status,
         httpStatus: row.http_status, auctions: row.auctions, error: row.error, detail: json(row.detail || "{}", {}) })),
-      storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
+      storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, apiObservationsHours: API_OBSERVATION_RETENTION_SECONDS / 3600, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
       maintenance,
       identity: conflicts,
       // Listed items still without a name or class, and icons by status.

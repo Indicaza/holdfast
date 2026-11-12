@@ -11,7 +11,8 @@
 // price, which is an observation too ("none listed").
 import { gapSeconds, median } from "./marketAnalysis.js";
 
-export const HOURLY_DAYS = Math.max(2, Number(process.env.MARKET_HOURLY_RETENTION_DAYS) || 10);
+// The longest hourly range shown is 7 days; one more day of margin.
+export const HOURLY_DAYS = Math.max(2, Number(process.env.MARKET_HOURLY_RETENTION_DAYS) || 8);
 export const DAILY_DAYS = Math.max(30, Number(process.env.MARKET_DAILY_RETENTION_DAYS) || 400);
 export const WEEKLY_YEARS = 10;
 const REFERENCE_DAYS = 14;
