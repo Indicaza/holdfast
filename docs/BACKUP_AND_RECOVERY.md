@@ -1,6 +1,18 @@
 # Backups and recovery
 
-Startup snapshots protect migrations on the Render disk. Off-site backups protect against losing that disk. The latter are disabled until storage is configured; merging this PR does not create a storage account or configure production credentials.
+Pre-migration snapshots protect schema changes on the Render disk. Off-site backups protect against losing that disk. The latter are disabled until storage is configured; merging this PR does not create a storage account or configure production credentials.
+
+## Startup lifecycle and pre-migration snapshots
+
+The server binds its port immediately and answers `GET /api/health/live` with `200` while it starts. Every other request, including `/api/health/ready`, returns `503` with `Retry-After: 5` until all required startup steps have finished, so no request can reach a database whose migrations have not run. Each step is logged as one JSON line (`{"event":"startup","phase":"migrations","ms":412,"ok":true}`), and once ready, `/api/health/ready` includes the same phase timings under `startup`. Background services (market refresh and maintenance, Discord sync, off-site backups) start only after the migrations.
+
+A pre-migration snapshot is written to `/data/deploy-backups/` **only when the release has migrations to apply**. An ordinary restart copies nothing. Before copying, the server checks free disk space: it needs the database size plus 10% (at least 256 MiB) of headroom. If there isn't enough room, startup stops with an explicit error and changes nothing. Each snapshot is written as `*.partial`, checked with `PRAGMA quick_check`, and renamed only after it passes. A JSON sidecar records the schema versions, size and source-file identity. If the database is unchanged since the newest snapshot (for example, a restart after a failed migration), that snapshot is reused instead of copied again.
+
+Retention keeps the newest `STARTUP_BACKUP_KEEP` (default 2) snapshots that have sidecars. Snapshots from before this policy have no sidecar; they are listed in the startup log (`startup_backups`) but are **never deleted automatically**. Remove them by hand only after a newer verified recovery point exists. A failed cleanup is logged and retried on the next migration; it does not stop startup.
+
+`MIGRATION_BACKUP=skip` lets migrations run without a local snapshot. Use it only when the disk cannot hold a copy **and** a verified off-site backup newer than the last write exists. Unset it right after the deploy.
+
+Telemetry compaction at startup never runs `VACUUM`. Rebuilding the file needs free disk equal to the database and blocks all access while it runs, so returning freed pages to the filesystem is a planned operator task.
 
 ## Activate off-site backups
 
