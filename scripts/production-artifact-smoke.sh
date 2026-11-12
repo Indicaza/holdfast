@@ -96,26 +96,10 @@ probe_state() {
 
 probe_startup_backup() {
   docker exec "$CONTAINER_NAME" node --input-type=module -e '
-    import { readdirSync } from "node:fs";
-    import { DatabaseSync } from "node:sqlite";
+    import { existsSync, readdirSync } from "node:fs";
     const directory = "/data/deploy-backups";
-    const files = readdirSync(directory).filter((name) => name.endsWith(".sqlite")).sort();
-    if (files.length !== 1) throw new Error(`Expected one startup snapshot, found ${files.length}`);
-    const file = `${directory}/${files[0]}`;
-    const db = new DatabaseSync(file);
-    try {
-      const migration = db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get();
-      const quest = db.prepare("SELECT title FROM quests WHERE id = ?").get("e2e-supply-run");
-      const result = {
-        files: files.length,
-        schemaVersion: Number(migration.version),
-        questTitle: quest?.title || "",
-        integrity: db.prepare("PRAGMA quick_check").get().quick_check,
-      };
-      console.log(JSON.stringify(result));
-    } finally {
-      db.close();
-    }
+    const files = existsSync(directory) ? readdirSync(directory).filter((name) => name.endsWith(".sqlite")) : [];
+    console.log(JSON.stringify({ files: files.length }));
   '
 }
 
@@ -169,11 +153,13 @@ if ! cmp --silent "$FIRST_STATE_FILE" "$SECOND_STATE_FILE"; then
   exit 1
 fi
 
+# A pre-migration snapshot is taken only when a release has migrations to
+# apply (covered by backend/test/startupBackup.test.js). A first boot has no
+# database and an ordinary restart has nothing to migrate: neither copies.
 BACKUP_STATE="$(probe_startup_backup)"
 echo "$BACKUP_STATE"
-echo "$BACKUP_STATE" | grep -q '"files":1'
-echo "$BACKUP_STATE" | grep -q '"schemaVersion":20'
-echo "$BACKUP_STATE" | grep -q '"questTitle":"E2E Supply Run"'
-echo "$BACKUP_STATE" | grep -q '"integrity":"ok"'
+echo "$BACKUP_STATE" | grep -q '"files":0'
+# Readiness reports the measured startup phases.
+curl --fail --silent "$BASE_URL/api/health/ready" | grep -qF '"phases":[{"name":"runtime_directory"'
 
-echo "Production artifact boot, HTTP smoke, startup snapshot, migration, and restart persistence all passed."
+echo "Production artifact boot, HTTP smoke, no snapshot on ordinary restart, migration, and restart persistence all passed."
