@@ -26,11 +26,21 @@ Set these **server-only** environment variables on the Render service:
 | `BACKUP_ENCRYPTION_KEY` | The 64-character hexadecimal encryption key |
 | `BACKUP_S3_ENDPOINT` | Optional HTTPS endpoint for compatible storage |
 
-After deployment, the worker runs after one minute and every six hours. Each run takes a consistent SQLite snapshot without running migrations, verifies integrity and foreign keys, includes optional Discord provisioning state, compresses it, and encrypts it with AES-256-GCM and a fresh nonce. Only ciphertext is uploaded. The worker then downloads that exact object, decrypts it, restores it into a temporary directory, and compares the database checksum and business row counts. The success timestamp is written only after that restore drill passes. Failures leave the previous success timestamp intact.
+After deployment, the worker runs after one minute and then every six hours. Each run:
 
-Verify `/api/health/ready` reports `offsiteBackup.enabled: true`, `healthy: true`, and a recent `lastVerifiedAt`. Then set the GitHub repository Actions variable **HOLDFAST_REQUIRE_OFFSITE_BACKUP** to `true` and run **Production monitor** manually. This prevents accidentally disabling backups later from being reported as healthy. The monitor also fails when an enabled backup has not been verified within 24 hours.
+1. Takes a consistent snapshot with SQLite's online backup API in **one step**. The copy runs on Node's thread pool under one read transaction, so the application keeps writing and the event loop stays free. (The default 100-pages-per-step mode restarts whenever another connection writes, and under steady telemetry it never finishes.) The snapshot goes to `BACKUP_WORK_DIR` (default: the OS temp directory), only after a free-space check for the database size plus 10% (at least 256 MiB).
+2. Checks the snapshot: `quick_check`, foreign keys, business row counts.
+3. Streams it through gzip and AES-256-GCM in 1 MiB frames (format `HOLDFB02`, below) into an S3 **multipart upload** with 16 MiB parts. At most one part is in memory, whatever the database size. Any failure aborts the multipart upload, so no partial object remains.
+4. Downloads the object, authenticates every frame, decompresses it and checks that its SHA-256 and size equal the snapshot's. **Weekly** (or every run with `BACKUP_RESTORE_DRILL=full`) the download is restored into a real SQLite file in the work directory, which is then checked for integrity, foreign keys and row counts. This needs a second copy's worth of free space.
+5. Writes `offsite-backup-status.json` only after verification. A failure is recorded in `offsite-backup-failure.json` and never replaces the last success.
 
-The normal recovery-point target is six hours. Alerting has a 24-hour freshness budget plus the hourly monitor interval. Snapshots are bounded to a 32 MiB SQLite database and 1 MiB provisioning state so memory usage stays bounded on the current service. An oversized database fails the backup and eventually alerts; extend the implementation to streaming before exceeding that size. Nothing automatically deletes remote backups; storage lifecycle policy owns retention.
+The status records the archive and database sizes, part count, verification kind, duration and **peak RSS** of the run. Measured memory is in the PR that introduced streaming backups. `/api/health/ready` still exposes only `enabled`, `healthy` and `lastVerifiedAt`.
+
+### Archive format 2 (`HOLDFB02`)
+
+`"HOLDFB02" | u32 header length | header JSON` (version, creation time, cipher, compression, frame size, 8-byte nonce prefix), then frames `u8 type | u32 length | ciphertext | 16-byte GCM tag`. Frame *n* uses nonce `prefix ‖ n` and authenticates the format, the header's SHA-256, *n* and the frame type. The last frame is the trailer: the database SHA-256 and size, row counts and the Discord provisioning state. Altered, reordered, dropped or appended frames fail, and so does a stream without its trailer. Format 1 archives (`HOLDFB01`, 32 MiB, before November 2026) are still restorable. `backup:restore` detects the format from the file.
+
+Runtime storage credentials need `s3:PutObject` (multipart included), `s3:GetObject` and `s3:AbortMultipartUpload` on `holdfast/*` (`config/backup-storage-policy.json`). The lifecycle rule also removes incomplete multipart uploads after a day.
 
 An immediate manual backup is available from the service shell:
 
@@ -50,7 +60,7 @@ npm --prefix backend run backup:restore -- /path/to/downloaded.hfb /path/to/new-
 unset BACKUP_ENCRYPTION_KEY
 ```
 
-The destination must not exist, even if empty. Authentication, format, checksum, SQLite integrity, foreign keys, and row counts are verified before the restore is accepted. A failed restore removes only the newly created destination. Existing files are never overwritten. The restored database remains at its backed-up schema version; starting the selected application release runs the normal migrations after its pre-migration safety snapshot.
+The destination must not exist, even if empty. Both archive formats are accepted. Authentication, format, checksum, SQLite integrity, foreign keys and row counts are verified before the restore is accepted. Format 2 restores stream from disk, so memory does not grow with the archive. A failed restore removes only the newly created destination. Existing files are never overwritten. The restored database remains at its backed-up schema version; starting the selected application release runs the normal migrations after its pre-migration safety snapshot.
 
 Point a separate test instance at the restored directory. Check member profiles, quest assignments, authority, and contribution history before switching production. Stop the production process before any disk replacement; retain the old disk contents, and copy the recovered files only after checking the selected release against the restored data. Do not run two writers against the same database. This destructive cutover is intentionally an operator step.
 
