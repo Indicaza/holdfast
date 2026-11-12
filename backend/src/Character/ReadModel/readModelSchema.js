@@ -18,7 +18,9 @@
 // to their shape ships as a READ_MODEL_VERSION bump and rebuilds on the next
 // start.
 
-export const READ_MODEL_VERSION = 3;
+// 4: character_sections and talent_tree_definitions store payloads over
+//    32 KiB as gzip (telemetryJson.js); readers already decode both forms.
+export const READ_MODEL_VERSION = 4;
 
 const READ_MODEL_TABLES = ["character_sections", "character_cards", "talent_tree_definitions"];
 

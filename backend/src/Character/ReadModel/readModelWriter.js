@@ -16,7 +16,7 @@ import {
 } from "../characterIdentityRepository.js";
 import { preserveProfessionRecipes } from "../characterSnapshotIntegrity.js";
 import { ensureTelemetryProjectionSchema, entityName, normalizeOrganization } from "../telemetryProjection.js";
-import { parseTelemetryJson } from "../Telemetry/telemetryJson.js";
+import { decodeTelemetryJson, encodeTelemetryJson, parseTelemetryJson } from "../Telemetry/telemetryJson.js";
 import { composeProfessions, composedSnapshot } from "./composeArmory.js";
 import { identityFromTelemetry, sectionsFromTelemetry } from "./projectors.js";
 import { ensureCharacterReadModelSchema } from "./readModelSchema.js";
@@ -87,9 +87,11 @@ export function applySectionsInDatabase(db, { characterId, sections, capturedAt,
       payload = { ...entry.payload, professions: preserveProfessionRecipes(previous.professions, entry.payload.professions) };
     }
     const json = JSON.stringify(payload ?? {});
-    write.run(characterId, entry.section, capturedAt, receivedAt, text(source, 120), sourceRecordId, sourceRevision, json);
+    // Large sections (recipe books are about a megabyte each) are stored as
+    // gzip like raw telemetry: 25 MB -> 1.4 MB for 25 characters' books.
+    write.run(characterId, entry.section, capturedAt, receivedAt, text(source, 120), sourceRecordId, sourceRevision, encodeTelemetryJson(json));
     touched = true;
-    if (!existing || existing.payload_json !== json) changed.push(entry.section);
+    if (!existing || decodeTelemetryJson(existing.payload_json) !== json) changed.push(entry.section);
   }
 
   if (changed.length) refreshCharacterDerivedInDatabase(db, characterId, changed);
