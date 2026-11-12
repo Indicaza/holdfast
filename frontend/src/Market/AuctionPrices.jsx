@@ -1,22 +1,23 @@
 import { useState } from 'react'
 
 import { Change, Coins, Freshness } from './MarketComponents.jsx'
+import { costToBuy } from './marketBrowse.js'
 import { formatAge, SOURCE_LABELS } from './marketFormat.js'
 
 // The price levels of one item on one house, as the game's commodity list
-// shows them: Unit Price, Available, Auctions, cheapest first. Clicking a
-// level adds up everything up to it. Only what was observed: neither
-// Blizzard's API nor the add-on reports sellers, so there is no seller column.
+// shows them: Unit Price, Available, Auctions, cheapest first, and what
+// buying a number of them would cost, level by level. Clicking a level
+// fills in everything up to it. Only what was observed: neither Blizzard's
+// API nor the add-on reports sellers, so there is no seller column.
 export function PriceList({ ladder, points = [], limit = 0 }) {
-  const [upTo, setUpTo] = useState(-1)
+  const [want, setWant] = useState('')
   const levels = ladder?.levels?.length ? ladder.levels
     : points.map(([unitPrice, quantity, auctions]) => ({ unitPrice, quantity, auctions: auctions ?? null }))
   if (!levels.length) return <p className="ah-prices__note">No price levels were recorded for this item here (only a summary row was seen).</p>
   const shown = limit ? levels.slice(0, limit) : levels
   const max = Math.max(...shown.map((level) => level.quantity))
-  const picked = upTo >= 0 ? shown.slice(0, upTo + 1) : []
-  const quantity = picked.reduce((sum, level) => sum + level.quantity, 0)
-  const cost = picked.reduce((sum, level) => sum + level.quantity * level.unitPrice, 0)
+  const total = levels.reduce((sum, level) => sum + level.quantity, 0)
+  const buy = want ? costToBuy(levels, want) : null
   const hasAuctions = shown.some((level) => level.auctions !== null)
   return (
     <div className="ah-prices-wrap">
@@ -31,8 +32,8 @@ export function PriceList({ ladder, points = [], limit = 0 }) {
         </thead>
         <tbody>
           {shown.map((level, index) => (
-            <tr key={`${level.unitPrice}:${index}`} className={index <= upTo ? 'is-within' : ''} aria-selected={index === upTo}
-              onClick={() => setUpTo(index === upTo ? -1 : index)} title="Click to add up every auction up to this price">
+            <tr key={`${level.unitPrice}:${index}`} className={buy && index <= buy.upTo ? 'is-within' : ''} aria-selected={buy?.upTo === index}
+              onClick={() => setWant(String(shown.slice(0, index + 1).reduce((sum, entry) => sum + entry.quantity, 0)))} title="Click to buy everything up to this price">
               <td><Coins value={level.unitPrice} compact /></td>
               <td>{level.quantity.toLocaleString('en-US')}</td>
               {hasAuctions ? <td>{level.auctions === null ? '—' : level.auctions.toLocaleString('en-US')}</td> : null}
@@ -41,16 +42,24 @@ export function PriceList({ ladder, points = [], limit = 0 }) {
           ))}
         </tbody>
       </table>
-      {picked.length ? (
-        <p className="ah-prices__pick" role="status">
-          Up to <Coins value={picked.at(-1).unitPrice} compact />: {quantity.toLocaleString('en-US')} for <Coins value={cost} compact /> (<Coins value={Math.round(cost / quantity)} compact /> each)
-        </p>
-      ) : null}
+      <form className="ah-buycost" onSubmit={(event) => event.preventDefault()}>
+        <label>Cost to buy
+          <input type="number" min="1" max={total} inputMode="numeric" value={want} placeholder="quantity" aria-label="Quantity to buy"
+            onChange={(event) => setWant(event.target.value.replace(/\D/g, '').slice(0, 9))} />
+        </label>
+        <span>of {total.toLocaleString('en-US')} listed</span>
+        {buy?.quantity ? (
+          <output role="status">
+            {buy.quantity.toLocaleString('en-US')} for <Coins value={buy.cost} compact /> · <Coins value={buy.average} compact /> each on average, up to <Coins value={buy.highest} compact />
+            {buy.short ? <small> · only {buy.quantity.toLocaleString('en-US')} listed</small> : null}
+          </output>
+        ) : null}
+      </form>
       <p className="ah-prices__note">
         {limit && levels.length > limit ? `Cheapest ${limit} of ${levels.length} price levels. ` : ''}
-        {ladder?.truncated ? 'Only the cheapest levels were kept. ' : ''}
+        {ladder?.truncated ? 'Only the cheapest levels were kept; more is listed. ' : ''}
         {ladder ? `${SOURCE_LABELS[ladder.source] || 'Observed'} ${formatAge(ladder.ageSeconds)}${ladder.complete ? '' : ', partial scan'}. ` : ''}
-        Sellers are not reported by Blizzard or the add-on.
+        Auctions of items that are not stackable goods are bought whole, so the real cost can be higher. Sellers are not reported by Blizzard or the add-on.
       </p>
     </div>
   )

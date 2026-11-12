@@ -171,8 +171,23 @@ test('tooltips show what the game showed, else the known facts said to be incomp
   const fallback = tooltipItem({ itemId: 2589, name: 'Linen Cloth', qualityId: 1, itemClass: 'Trade Goods', itemSubclass: 'Cloth', requiredLevel: 0 }).tooltipLines
   assert.equal(fallback[0].left, 'Linen Cloth')
   assert.deepEqual(fallback[1], { left: 'Trade Goods', right: 'Cloth' })
-  assert.match(fallback.at(-1).left, /full tooltip/, 'says the tooltip is incomplete')
+  assert.match(fallback.at(-1).left, /Full tooltip not available/, 'says the tooltip is incomplete')
+  const staff = tooltipItem({ itemId: 2000, name: 'Black Duskwood Staff', qualityId: 3, itemClass: 'Weapon', itemSubclass: 'Staff', slotName: 'Two-Hand' }).tooltipLines
+  assert.deepEqual(staff[1], { left: 'Two-Hand', right: 'Staff' }, 'the slot as the game names it')
+  const bear = tooltipItem({ itemId: 15210, name: "Raider's Chestpiece", tooltipLines: [{ left: "Raider's Chestpiece" }, { left: 'Chest', right: 'Leather' }] },
+    { variantName: "Raider's Chestpiece of the Bear" }).tooltipLines
+  assert.equal(bear[0].left, "Raider's Chestpiece of the Bear")
+  assert.match(bear.at(-1).left, /own bonuses are not shown/, "never another version's bonuses")
   assert.ok(!fallback.some((line) => /Requires Level 0/.test(line.left)), 'nothing invented')
   assert.equal(itemFacts({ qualityId: 2, itemLevel: 20, requiredLevel: 15, bindType: 2, itemClass: 'Armor', itemSubclass: 'Mail' }),
     'Uncommon · Item Level 20 · Requires Level 15 · Binds when equipped · Armor · Mail')
+})
+
+test('the cost of buying a quantity walks the price levels, cheapest first', async () => {
+  const { costToBuy } = await import('../src/Market/marketBrowse.js')
+  const levels = [{ unitPrice: 90, quantity: 100 }, { unitPrice: 95, quantity: 50 }, { unitPrice: 120, quantity: 10 }]
+  assert.deepEqual(costToBuy(levels, 120), { quantity: 120, cost: 100 * 90 + 20 * 95, average: 91, highest: 95, short: 0, upTo: 1 })
+  assert.deepEqual(costToBuy(levels, 200), { quantity: 160, cost: 9000 + 4750 + 1200, average: 93, highest: 120, short: 40, upTo: 2 }, 'only what is listed')
+  assert.equal(costToBuy(levels, 0).quantity, 0)
+  assert.equal(costToBuy([], 5).short, 5)
 })

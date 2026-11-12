@@ -5,13 +5,11 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useSession } from '../Auth/sessionContext.js'
 import { navigate } from '../Navigation/navigation.js'
 import AuctionBrowse from './AuctionBrowse.jsx'
-import AuctionSell from './AuctionSell.jsx'
-import AuctionShopping from './AuctionShopping.jsx'
 import { auctionBack, auctionForward, auctionHistory, goAuction, startAuctionHistory } from './auctionNavigation.js'
 import { InspectorLayer } from './ItemInspector.jsx'
 import MarketDiagnostics from './MarketDiagnostics.jsx'
 import { factionForServer, marketChoices } from './marketBrowse.js'
-import { AUCTION_TABS, auctionHref, formatAge, isBlankState, readAuctionState, storeAuctionQuery, storedAuctionQuery } from './marketFormat.js'
+import { auctionHref, formatAge, isBlankState, readAuctionState, storeAuctionQuery, storedAuctionQuery } from './marketFormat.js'
 import { useInspectors } from './useInspectors.js'
 import { useMarketResource, useMarkets } from './useMarket.js'
 
@@ -45,9 +43,9 @@ function HouseFreshness({ market }) {
   )
 }
 
-// The Auction House: WoW Forever's window. Buy (search and categories),
-// Sell (an item's price levels before posting in the game) and Shopping
-// (lists). Items open in floating windows over the page.
+// The Auction House: WoW Forever's Browse Auctions window, filling the
+// page. One screen: search and categories over the results; items open in
+// floating windows with their price levels and history.
 export default function PlayerAuctions({ server = '', queryString = '', characters = [] }) {
   const session = useSession()
   const isAdmin = session.hasPermission?.('site.admin') === true
@@ -81,14 +79,13 @@ export default function PlayerAuctions({ server = '', queryString = '', characte
   const inspectors = useInspectors()
   const { open: openInspector, close: closeInspector } = inspectors.actions
   const diagnostics = state.tab === 'diagnostics' && isAdmin
-  const tab = diagnostics ? 'diagnostics' : ['sell', 'shopping'].includes(state.tab) ? state.tab : 'browse'
 
   // A link to an item (dungeon loot, the item catalog) opens its window, on
-  // History for a history link. Sell keeps its item in the URL.
+  // History for a history link.
   useEffect(() => {
-    if (!state.item || !marketKey || diagnostics || state.tab === 'sell') return
+    if (!state.item || !marketKey || diagnostics) return
     openInspector({ itemId: state.item, itemKey: state.key || '', tab: state.tab === 'history' ? 'history' : 'overview' })
-    goAuction({ ...state, tab: state.tab === 'shopping' ? 'shopping' : 'browse', item: null, key: '' }, server, { replace: true })
+    goAuction({ ...state, tab: 'browse', item: null, key: '' }, server, { replace: true })
   }, [state, marketKey, server, openInspector, diagnostics])
 
   // Escape closes the item window on top, as in the game, unless something
@@ -112,7 +109,7 @@ export default function PlayerAuctions({ server = '', queryString = '', characte
   if (status === 'error') return <div className="ah"><p className="ah-empty">The Auction House could not be loaded. Try again in a moment.</p></div>
   const swapped = requested.market && marketKey && requested.market !== marketKey
   return (
-    <div className="ah" data-tab={tab}>
+    <div className="ah" data-tab={diagnostics ? 'diagnostics' : 'browse'}>
       <div className="ah__window">
         <div className="ah__background" aria-hidden="true" />
         <div className="ah__portrait" aria-hidden="true" />
@@ -125,7 +122,7 @@ export default function PlayerAuctions({ server = '', queryString = '', characte
             <button type="button" onClick={auctionForward} disabled={!steps.canForward} aria-label="Forward" title="Forward">▶</button>
           </span>
           <span className="ah__band-spacer" />
-          <h2 className="ah__title">Auction House</h2>
+          <h2 className="ah__title">{diagnostics ? 'Auction House Diagnostics' : 'Browse Auctions'}</h2>
           <span className="ah__band-spacer" />
           {markets.length ? <HousePicker choices={choices.groups} market={market} onChange={(next) => goAuction({ ...state, market: next, page: 1, sel: '' }, server)} /> : null}
           <HouseFreshness market={market} />
@@ -147,32 +144,12 @@ export default function PlayerAuctions({ server = '', queryString = '', characte
         ) : null}
         {markets.length && !diagnostics ? (
           <>
-            <AuctionBrowse state={state} server={server} active={tab === 'browse'} inputRef={inputRef} favorites={favoriteSet} favoriteRows={favoriteRows}
+            <AuctionBrowse state={state} server={server} active inputRef={inputRef} favorites={favoriteSet} favoriteRows={favoriteRows}
               favoritesStatus={favoriteData.status} onFavoritesChange={reloadFavorites} onInspect={onInspect} />
-            {tab === 'sell' ? <AuctionSell state={state} server={server} active marketKey={marketKey} marketName={market?.name || ''} favorites={favoriteSet}
-              onFavoritesChange={reloadFavorites} onInspect={onInspect} /> : null}
-            {tab === 'shopping' ? <AuctionShopping state={state} server={server} active marketKey={marketKey} marketName={market?.name || ''} onInspect={onInspect} /> : null}
           </>
         ) : null}
         {diagnostics ? <div className="ah-pane ah-pane--single"><section className="ah-pane__right"><MarketDiagnostics /></section></div> : null}
       </div>
-      {markets.length && !diagnostics ? (
-        <nav className="ah__tabs" aria-label="Auction House">
-          {AUCTION_TABS.map((entry) => (
-            <a key={entry.id} href={auctionHref({ ...state, tab: entry.id, item: null, key: '' }, server)}
-              className={`ah__tab${tab === entry.id ? ' is-active' : ''}`} aria-current={tab === entry.id ? 'page' : undefined} title={entry.hint}
-              onClick={(event) => {
-                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-                event.preventDefault()
-                if (tab === entry.id) return
-                // The search stays in the address, so Buy comes back as it was.
-                goAuction({ ...state, tab: entry.id, item: null, key: '' }, server)
-              }}>
-              {entry.label}
-            </a>
-          ))}
-        </nav>
-      ) : null}
       <InspectorLayer inspectors={inspectors} marketKey={marketKey} marketName={market?.name || ''} favorites={favoriteSet} onFavoritesChange={reloadFavorites} />
     </div>
   )

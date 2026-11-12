@@ -1,16 +1,15 @@
 import { AuctionItem, FavoriteStar } from './AuctionParts.jsx'
 import { ItemSummary, PriceList } from './AuctionPrices.jsx'
-import { AddToList, ListingState } from './MarketComponents.jsx'
+import { ListingState } from './MarketComponents.jsx'
 import { formatDateTime } from './marketFormat.js'
 
 // auctionhouse-itemheaderframe: the big icon and name (its tooltip on
-// hover), the favorite star and "add to a shopping list".
+// hover) and the favorite star.
 export function ItemHeader({ item, variantName = '', favorite, onFavoritesChange, size = 52 }) {
   return (
     <div className="ah-item-header">
-      <AuctionItem item={variantName ? { ...item, name: variantName } : item} size={size} />
+      <AuctionItem item={item} variantName={variantName && variantName !== item.name ? variantName : ''} size={size} />
       <span className="ah-spacer" />
-      <AddToList itemId={item.itemId} className="ah-button ah-button--small" label="Add to list" />
       <FavoriteStar itemId={item.itemId} favorite={favorite} onChange={onFavoritesChange} />
     </div>
   )
