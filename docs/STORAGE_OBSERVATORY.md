@@ -27,3 +27,9 @@ For deeper questions (largest values, duplicates), analyse a local snapshot inst
 ```sh
 curl -s --cookie "holdfast_session=…" https://holdfast-tddi.onrender.com/api/admin/storage/overview | jq '.database, .domains'
 ```
+
+## MCP adapter (planned, not built)
+
+Deferred until these endpoints have run on production. The adapter will be a thin, read-only MCP server whose tools map one-to-one onto the sections: `storage_overview` → `overview`, `database_table_sizes` → `tables`, `ingestion_rates` → `ingestion`, `backup_health` → `backups`, `maintenance_status` → `maintenance`, `growth_report` → `growth`, `retention_report` → a future `retention` section. It calls these HTTP endpoints and never opens the database itself, so there's one implementation of the analysis.
+
+Authentication will be a dedicated, revocable read-only token scoped to `/api/admin/storage/*`. That needs a small server change, since today only admin session cookies are accepted. The adapter runs locally (stdio) for Claude Code, or behind authentication for remote clients, and is never exposed without it. It has no SQL, write or file tools.
