@@ -138,7 +138,7 @@ export default function CommandPalette({ open, onClose, characters = [], views =
               <>
                 <EntryIcon entry={entry} />
                 <span className="gw-palette__copy">
-                  <strong className={entry.item && entry.kind === 'drop' ? `gw-q${entry.item.qualityId ?? 1}` : undefined}>{entry.label}</strong>
+                  <strong className={entry.item && entry.kind === 'drop' && entry.item.qualityId != null ? `gw-q${entry.item.qualityId}` : undefined}>{entry.label}</strong>
                   <small>{entry.detail}</small>
                 </span>
               </>
