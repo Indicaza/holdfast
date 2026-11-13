@@ -10,7 +10,8 @@ import { closeGuildDatabase, guildDatabaseFile, withGuildDatabase, withGuildTran
 import { initializeGuildData } from "./Data/initializeData.js";
 import { backupGuildDatabaseBeforeMigrations, listStartupBackups } from "./Data/startupBackup.js";
 import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
-import { compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
+import { compactReadModelPayloadsInDatabase, compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
+import { ensureTelemetryProjectionSchema } from "./Character/telemetryProjection.js";
 import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildReadModel.js";
 import { backfillEconomicObservationsInDatabase } from "./Economy/economicObservationRepository.js";
 import { createBlizzardAuctionProvider } from "./Market/blizzardAuctionProvider.js";
@@ -45,6 +46,31 @@ lifecycle.bound();
 console.log(`Guild backend listening on port ${PORT} (starting)`);
 
 const stops = [];
+
+// Re-encodes read-model payloads stored before compression, five rows per
+// transaction with requests served in between. Starts two minutes after
+// the application is ready; logs once when done.
+function startReadModelCompaction({ delayMs = 120_000 } = {}) {
+  let stopped = false;
+  const timer = setTimeout(async () => {
+    let total = 0;
+    const started = Date.now();
+    try {
+      for (;;) {
+        if (stopped) return;
+        const changed = withGuildTransaction((db) => compactReadModelPayloadsInDatabase(db, { limit: 5 }));
+        total += changed;
+        if (!changed) break;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (total) console.log(JSON.stringify({ event: "read_model_compaction", rows: total, ms: Date.now() - started }));
+    } catch (error) {
+      console.error("Read-model compaction failed", error);
+    }
+  }, delayMs);
+  timer.unref?.();
+  return () => { stopped = true; clearTimeout(timer); };
+}
 let shuttingDown = false;
 
 function shutdown(signal, code = 0) {
@@ -116,6 +142,10 @@ try {
     console.log("Rebuilt the character read model", readModelRebuild);
   }
 
+  // Recipes stored once per recipe (recipeStore.js): converts a database
+  // from before the split once, here rather than inside a request.
+  await lifecycle.phase("recipe_store", () => withGuildTransaction((db) => ensureTelemetryProjectionSchema(db)));
+
   // Economic events whose raw records arrived before they could be analysed
   // become farming observations. Idempotent; bounded by raw retention.
   const economicBackfill = await lifecycle.phase("economic_backfill", () => withGuildTransaction(backfillEconomicObservationsInDatabase));
@@ -163,6 +193,7 @@ try {
   stops.push(startDiscordRankReconciler());
   stops.push(startDiscordBilletReconciler());
   stops.push(startOffsiteBackupScheduler());
+  stops.push(startReadModelCompaction());
   stops.push(storageObservatory.start());
 } catch (error) {
   lifecycle.fail(error);

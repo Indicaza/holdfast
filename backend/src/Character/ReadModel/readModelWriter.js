@@ -15,8 +15,9 @@ import {
   resolveGuildweaverCharacterIdentityInDatabase,
 } from "../characterIdentityRepository.js";
 import { preserveProfessionRecipes } from "../characterSnapshotIntegrity.js";
+import { replaceCharacterRecipesInDatabase } from "../recipeStore.js";
 import { ensureTelemetryProjectionSchema, entityName, normalizeOrganization } from "../telemetryProjection.js";
-import { parseTelemetryJson } from "../Telemetry/telemetryJson.js";
+import { decodeTelemetryJson, encodeTelemetryJson, parseTelemetryJson } from "../Telemetry/telemetryJson.js";
 import { composeProfessions, composedSnapshot } from "./composeArmory.js";
 import { identityFromTelemetry, sectionsFromTelemetry } from "./projectors.js";
 import { ensureCharacterReadModelSchema } from "./readModelSchema.js";
@@ -87,9 +88,11 @@ export function applySectionsInDatabase(db, { characterId, sections, capturedAt,
       payload = { ...entry.payload, professions: preserveProfessionRecipes(previous.professions, entry.payload.professions) };
     }
     const json = JSON.stringify(payload ?? {});
-    write.run(characterId, entry.section, capturedAt, receivedAt, text(source, 120), sourceRecordId, sourceRevision, json);
+    // Large sections (recipe books are about a megabyte each) are stored as
+    // gzip like raw telemetry: 25 MB -> 1.4 MB for 25 characters' books.
+    write.run(characterId, entry.section, capturedAt, receivedAt, text(source, 120), sourceRecordId, sourceRevision, encodeTelemetryJson(json));
     touched = true;
-    if (!existing || existing.payload_json !== json) changed.push(entry.section);
+    if (!existing || decodeTelemetryJson(existing.payload_json) !== json) changed.push(entry.section);
   }
 
   if (changed.length) refreshCharacterDerivedInDatabase(db, characterId, changed);
@@ -124,7 +127,6 @@ function vitals(statsPayload) {
 function replaceProfessionRowsInDatabase(db, characterId, { professions, recipes }) {
   ensureTelemetryProjectionSchema(db);
   db.prepare("DELETE FROM telemetry_professions WHERE character_id = ?").run(characterId);
-  db.prepare("DELETE FROM telemetry_recipes WHERE character_id = ?").run(characterId);
   const insertProfession = db.prepare(`
     INSERT OR REPLACE INTO telemetry_professions (
       character_id, profession_key, profession_id, name, icon_file_id,
@@ -145,33 +147,22 @@ function replaceProfessionRowsInDatabase(db, characterId, { professions, recipes
       JSON.stringify(profession.specialization ?? null),
     );
   }
-  const insertRecipe = db.prepare(`
-    INSERT OR REPLACE INTO telemetry_recipes (
-      character_id, recipe_key, recipe_id, name, profession_key, profession_id,
-      profession_name, icon_file_id, known, required_skill, requirements_json,
-      crafted_item_id, crafted_item_name, reagents_json, snapshot_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
-  `);
-  for (const recipe of recipes) {
-    if (!recipe?.key || !recipe?.name) continue;
-    const number = (value) => (Number.isFinite(Number(value)) && value !== null && value !== "" ? Number(value) : null);
-    insertRecipe.run(
-      characterId,
-      String(recipe.key),
-      number(recipe.id),
-      String(recipe.name),
-      String(recipe.professionKey || ""),
-      number(recipe.professionId),
-      String(recipe.professionName || ""),
-      number(recipe.iconFileId),
-      recipe.known === false ? 0 : 1,
-      number(recipe.requiredSkill),
-      JSON.stringify(recipe.requirements ?? null),
-      number(recipe.craftedItemId),
-      String(recipe.craftedItemName || ""),
-      JSON.stringify(Array.isArray(recipe.reagents) ? recipe.reagents : []),
-    );
-  }
+  const number = (value) => (Number.isFinite(Number(value)) && value !== null && value !== "" ? Number(value) : null);
+  replaceCharacterRecipesInDatabase(db, characterId, recipes.filter((recipe) => recipe?.key && recipe?.name).map((recipe) => ({
+    key: String(recipe.key),
+    id: number(recipe.id),
+    name: String(recipe.name),
+    professionKey: String(recipe.professionKey || ""),
+    professionId: number(recipe.professionId),
+    professionName: String(recipe.professionName || ""),
+    iconFileId: number(recipe.iconFileId),
+    known: recipe.known !== false,
+    requiredSkill: number(recipe.requiredSkill),
+    requirementsJson: JSON.stringify(recipe.requirements ?? null),
+    craftedItemId: number(recipe.craftedItemId),
+    craftedItemName: String(recipe.craftedItemName || ""),
+    reagentsJson: JSON.stringify(Array.isArray(recipe.reagents) ? recipe.reagents : []),
+  })));
 }
 
 // Rebuilds everything derived from a character's sections.

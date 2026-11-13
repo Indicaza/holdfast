@@ -280,7 +280,9 @@ test("character intelligence tolerates incomplete old telemetry and schema boots
       );
       assert.equal(tables.has("telemetry_characters"), true);
       assert.equal(tables.has("telemetry_professions"), true);
-      assert.equal(tables.has("telemetry_recipes"), true);
+      assert.equal(tables.has("telemetry_recipe_definitions"), true);
+      assert.equal(tables.has("telemetry_character_recipes"), true);
+      assert.equal(db.prepare("SELECT type FROM sqlite_master WHERE name = 'telemetry_recipes'").get()?.type, "view");
       assert.equal(tables.has("game_data_catalog"), true);
     });
 

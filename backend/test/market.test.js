@@ -232,7 +232,7 @@ test("history keeps every hour of a day, rolls up to days and weeks, leaves gaps
   assert.ok(weekly.series[0].points.some((entry) => entry.typicalMedian === 200 || entry.days >= 2), "a week summarises its days");
   withGuildTransaction((db) => {
     const removed = pruneMarketDataInDatabase(db, now + 12 * 86400);
-    assert.ok(removed.hourly > 0, "hourly kept 10 days");
+    assert.ok(removed.hourly > 0, "hourly kept 8 days");
     assert.equal(removed.daily, 0, "daily kept 400 days");
     assert.ok(db.prepare("SELECT COUNT(*) AS n FROM market_summaries").get().n > 0, "summaries kept");
     assert.ok(db.prepare("SELECT COUNT(*) AS n FROM market_observations").get().n > 0, "the observation a summary shows is kept");
