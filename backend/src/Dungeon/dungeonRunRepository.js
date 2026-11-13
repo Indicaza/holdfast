@@ -1,4 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
+import { describeItems } from "../Items/describeItems.js";
 import { serverKeySql } from "../Player/playerServers.js";
 import { FINAL_DUNGEON_STATUSES, MAX_TIMELINE, dungeonRunKey, luaList, xpPerHour } from "./dungeonRunModel.js";
 
@@ -198,7 +199,10 @@ export function readDungeonRun({ memberId, id }) {
       WHERE l.run_key = ? AND l.member_id = ? AND l.source = 'gathering' AND o.item_id IS NOT NULL GROUP BY o.item_id
     `).all(row.run_key, member)) add(item.item_id, item.name, item.quantity);
     const linked = db.prepare("SELECT COUNT(*) AS n FROM dungeon_run_loot WHERE run_key = ? AND member_id = ?").get(row.run_key, member).n;
-    run.loot = { observations: Number(linked), items: [...items.values()].sort((a, b) => b.quantity - a.quantity || a.itemId - b.itemId).slice(0, 100) };
+    // Each item with its quality, icon and the game's tooltip, so the run's
+    // loot reads like a loot window.
+    run.loot = { observations: Number(linked),
+      items: describeItems(db, [...items.values()].sort((a, b) => b.quantity - a.quantity || a.itemId - b.itemId).slice(0, 100)) };
     return run;
   });
 }

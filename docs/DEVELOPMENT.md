@@ -165,6 +165,10 @@ npm run dev
 
 Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
 
+## Item tooltips
+
+Every item the website shows hovers with the game's own tooltip: `GameTooltipHover` (`frontend/src/Intelligence/GameTooltip.jsx`) renders the lines a player's game captured for the item (or Blizzard's item text), never a tooltip made up from metadata; `ItemLabel` (`frontend/src/Player/ui.jsx`) and `AuctionItem` (`frontend/src/Market/AuctionParts.jsx`) wrap icon and name in it, and `GameTooltipCard` shows the same frame in the page (the item catalog). An item the website knows only by name still hovers, with a note that its full tooltip is yet to arrive. Hovering never asks the server anything: endpoints that list items describe them first with `describeItems` (`backend/src/Items/describeItems.js`), which fills in the name, quality, icon and tooltip lines from the item index in two queries per list. A new list of items in the UI should go through `ItemLabel` (or `GameTooltipHover`) and its endpoint through `describeItems`.
+
 ## Tests
 
 Frontend:

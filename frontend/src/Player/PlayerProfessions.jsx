@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
 import { classIdentity } from '../Intelligence/classIdentity.js'
+import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import { PLAYER_TOPICS, playerApiUrl, relativeTime } from './playerModel.js'
@@ -73,11 +74,13 @@ function CraftSearch({ server, onOpenCharacter }) {
           {state.results.map((result) => (
             <li className="gw-craft-result" key={result.recipe?.id || `${result.recipe?.professionName}-${result.recipe?.name}`}>
               <div className="gw-craft-result__recipe">
-                <WowIcon iconFileId={result.recipe?.iconFileId} recipeId={result.recipe?.id} label={result.recipe?.name} size={40} />
-                <div>
-                  <strong>{result.recipe?.name || 'Unknown recipe'}</strong>
-                  <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill required` : ''}</span>
-                </div>
+                <GameTooltipHover item={result.recipe?.crafted} anchor="parent">
+                  <WowIcon iconFileId={result.recipe?.iconFileId} recipeId={result.recipe?.id} label={result.recipe?.name} size={40} />
+                  <div>
+                    <strong>{result.recipe?.name || 'Unknown recipe'}</strong>
+                    <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill required` : ''}</span>
+                  </div>
+                </GameTooltipHover>
               </div>
               <div className="gw-craft-result__crafters">
                 {result.crafters?.map((crafter) => (

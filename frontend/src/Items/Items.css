@@ -13,7 +13,8 @@
 .catalog-item { display: flex; align-items: start; flex-wrap: wrap; gap: 1rem; }
 .catalog-item h2 { margin-bottom: .25rem; }
 .catalog-description { width: 100%; max-width: 45rem; }
-.catalog-description p { display: flex; justify-content: space-between; gap: 1rem; margin: .35rem 0; }
+.catalog-description > p { margin: .35rem 0; }
+.catalog-description .game-tooltip { margin-top: .5rem; }
 .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: .75rem; }
 .catalog-result { display: flex; align-items: center; gap: .8rem; padding: 1rem; border: 1px solid rgba(255,255,255,.15); border-radius: .5rem; text-decoration: none; }
 .catalog-result:hover { background: rgba(255,255,255,.05); }

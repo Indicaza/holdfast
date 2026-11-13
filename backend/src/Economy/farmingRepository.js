@@ -1,5 +1,6 @@
 import { parseTelemetryJson } from "../Character/Telemetry/telemetryJson.js";
 import { withGuildDatabase } from "../Data/database.js";
+import { describeItems, tooltipLineCount } from "../Items/describeItems.js";
 import { ECONOMIC_EVENT_TYPES } from "./economicObservationModel.js";
 import { SKILL_BUCKET_SIZE, observedRate, skillBucket } from "./farmingStatistics.js";
 
@@ -66,6 +67,21 @@ function itemView(row, catalog = new Map()) {
     iconFileDataId: described.iconFileDataId ?? base.iconFileDataId,
   } : { ...base };
   return { ...base, item };
+}
+
+// Outputs no add-on described (no canonical item_definition) still get the
+// game's tooltip from the website's item index (public items, Blizzard's
+// catalog), so every drop hovers the same. Fills the views in place.
+function describeViews(db, views) {
+  const pending = views.filter((view) => view.item && tooltipLineCount(view.item) <= 1);
+  if (!pending.length) return views;
+  const described = describeItems(db, pending.map((view) => view.item));
+  pending.forEach((view, index) => {
+    view.item = described[index];
+    view.qualityId = view.qualityId ?? view.item.qualityId ?? null;
+    view.iconFileDataId = view.iconFileDataId ?? view.item.iconFileDataId ?? null;
+  });
+  return views;
 }
 
 function browserScope({ discipline = "", zone = "" } = {}) {
@@ -264,11 +280,15 @@ function sourceOutputs(db, sourceKeys, { zone = "", catalog = new Map() } = {}) 
     ORDER BY source_key, position
   `).all(...sourceKeys, ...(zone ? [zone] : []), PREVIEW_OUTPUTS);
   const bySource = new Map();
+  const views = [];
   for (const row of rows) {
     const list = bySource.get(row.source_key) || [];
-    list.push({ ...itemView(row, catalog), drops: Number(row.drops) });
+    const view = { ...itemView(row, catalog), drops: Number(row.drops) };
+    list.push(view);
+    views.push(view);
     bySource.set(row.source_key, list);
   }
+  describeViews(db, views);
   return bySource;
 }
 
@@ -288,11 +308,15 @@ function sourceItemMatches(db, sourceKeys, itemKeys, { zone = "", catalog = new 
     ORDER BY drops DESC
   `).all(...sourceKeys, ...itemKeys, ...(zone ? [zone] : []));
   const bySource = new Map();
+  const views = [];
   for (const row of rows) {
     const list = bySource.get(row.source_key) || [];
-    list.push({ ...itemView(row, catalog), drops: Number(row.drops) });
+    const view = { ...itemView(row, catalog), drops: Number(row.drops) };
+    list.push(view);
+    views.push(view);
     bySource.set(row.source_key, list);
   }
+  describeViews(db, views);
   return bySource;
 }
 
@@ -466,6 +490,7 @@ export function readFarmingSource(sourceKey, { filters: rawFilters = {}, item = 
         avgQuantity: drops ? quantity / drops : 0,
       };
     });
+    describeViews(db, outputs);
 
     const selected = selectedOutput(outputs, text(item, 200));
     let bySkill = [];

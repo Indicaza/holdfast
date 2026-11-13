@@ -26,6 +26,9 @@ export function Money({ money, className = '' }) {
 }
 
 const QUALITY_NAMES = ['Poor', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Artifact', 'Heirloom']
+// Shown under an item the website knows only by name: never a tooltip made
+// up from metadata, but a word on why the real one is missing.
+export const PENDING_NOTE = 'Full tooltip arrives once a Guildweaver player sees this item in game.'
 
 function color(value) {
   if (!value || typeof value !== 'object') return undefined
@@ -70,9 +73,10 @@ export function GameTooltipBody({ item: value }) {
     return (
       <>
         <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
-          <span>{item.name || 'Item'}</span>
+          <span>{item.name || `Item ${item.itemId || ''}`.trim()}</span>
         </div>
         {QUALITY_NAMES[quality] ? <div className="game-tooltip__line game-tooltip__quality"><span>{QUALITY_NAMES[quality]}</span></div> : null}
+        <div className="game-tooltip__line game-tooltip__pending"><span>{PENDING_NOTE}</span></div>
       </>
     )
   }
@@ -114,25 +118,39 @@ function focusVisible(event) {
   }
 }
 
-export function GameTooltipHover({ item, children, side = 'right', className = '' }) {
+// Hover (or keyboard focus) on the children shows the game's tooltip for
+// `item`, beside the first child, or beside the children's parent with
+// anchor="parent" (a whole row or card). The wrapper has no box of its own.
+export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child' }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
   const shown = Boolean(anchor)
   // A tooltip is placed once, against where its item was; scrolling would
-  // leave it floating over something else.
+  // leave it floating over something else. A press means the reader is
+  // acting on the item, and Escape asks it to go, as in the app's other
+  // tooltips.
   useEffect(() => {
     if (!shown) return undefined
     const hide = () => setAnchor(null)
+    const onKey = (event) => { if (event.key === 'Escape') hide() }
     window.addEventListener('scroll', hide, true)
     window.addEventListener('resize', hide)
+    document.addEventListener('pointerdown', hide, true)
+    document.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('scroll', hide, true)
       window.removeEventListener('resize', hide)
+      document.removeEventListener('pointerdown', hide, true)
+      document.removeEventListener('keydown', onKey)
     }
   }, [shown])
   const normalized = gameTooltipItem(item)
   if (!normalized) return children
-  const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()
+  const measure = (event) => {
+    const wrapper = event.currentTarget
+    const target = anchorTo === 'parent' ? wrapper.parentElement : wrapper.firstElementChild
+    return (target || wrapper).getBoundingClientRect()
+  }
   const show = (event) => setAnchor(measure(event))
   const showOnFocus = (event) => {
     if (focusVisible(event)) setAnchor(measure(event))
@@ -154,5 +172,17 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
         </FloatingTooltip>
       ) : null}
     </span>
+  )
+}
+
+// The game's tooltip as a card in the page (the item catalog's description),
+// the same frame and lines as on hover, nothing floating.
+export function GameTooltipCard({ item, className = '' }) {
+  const normalized = gameTooltipItem(item)
+  if (!normalized) return null
+  return (
+    <div className={`game-tooltip game-tooltip--card${className ? ` ${className}` : ''}`}>
+      <GameTooltipBody item={normalized} />
+    </div>
   )
 }

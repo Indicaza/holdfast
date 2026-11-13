@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { apiJson } from '../Api/apiClient.js'
 import { classIdentity } from '../Intelligence/classIdentity.js'
 import { sourcesUrl } from '../Intelligence/Farming/farmingModel.js'
+import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import { paletteEntries } from './exploreModel.js'
@@ -133,6 +134,15 @@ export default function CommandPalette({ open, onClose, characters = [], views =
           {entries.map((entry, index) => {
             const heading = index === 0 || entries[index - 1].group !== entry.group ? entry.group : ''
             const selected = index === shownActive
+            const content = (
+              <>
+                <EntryIcon entry={entry} />
+                <span className="gw-palette__copy">
+                  <strong className={entry.item && entry.kind === 'drop' ? `gw-q${entry.item.qualityId ?? 1}` : undefined}>{entry.label}</strong>
+                  <small>{entry.detail}</small>
+                </span>
+              </>
+            )
             return (
               <li key={entry.id} role="presentation">
                 {heading ? <span className="gw-palette__group" role="presentation">{heading}</span> : null}
@@ -145,11 +155,7 @@ export default function CommandPalette({ open, onClose, characters = [], views =
                   onMouseMove={() => setActive(index)}
                   onClick={() => choose(entry)}
                 >
-                  <EntryIcon entry={entry} />
-                  <span className="gw-palette__copy">
-                    <strong className={entry.item && entry.kind === 'drop' ? `gw-q${entry.item.qualityId ?? 1}` : undefined}>{entry.label}</strong>
-                    <small>{entry.detail}</small>
-                  </span>
+                  {entry.kind === 'drop' && entry.item ? <GameTooltipHover item={entry.item} anchor="parent">{content}</GameTooltipHover> : content}
                   <Icon name="chevron" size={14} className="gw-palette__go" />
                 </div>
               </li>

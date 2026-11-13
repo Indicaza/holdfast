@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import PageShell from '../PageShell/PageShell.jsx'
+import { GameTooltipCard, GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
 import { ItemIcon } from '../WowAssets/WowIcon.jsx'
 import { navigate } from '../Navigation/navigation.js'
 import { catalogLink } from './catalogLinks.js'
@@ -57,7 +58,7 @@ function ItemFacts({ data, scope }) {
       </div>
       <div className="catalog-description">{item.tooltipLines?.length ? <>
         <p className="catalog-caption">Base item description</p>
-        {item.tooltipLines.map((line, index) => <p key={index}><span>{line.left}</span><span>{line.right}</span></p>)}
+        <GameTooltipCard item={item} />
       </> : <p>A full base item description has not been observed yet.</p>}</div>
     </section>
     <ItemMarket itemId={item.itemId} />
@@ -150,7 +151,9 @@ export default function Items({ itemId = null, queryString = '' }) {
       : result.data?.item ? <ItemFacts data={result.data} scope={scope} />
       : result.data ? <>
         <div className="catalog-grid">{result.data.items.map((item) => <a className="catalog-result" href={catalogLink(item.itemId, scope)} key={item.itemId}>
-          <CatalogIcon item={item} size={40} /><span><strong className={`item-quality-${item.qualityId || 0}`}>{item.name}</strong><small>Item {item.itemId}</small></span>
+          <GameTooltipHover item={item} anchor="parent">
+            <CatalogIcon item={item} size={40} /><span><strong className={`item-quality-${item.qualityId || 0}`}>{item.name}</strong><small>Item {item.itemId}</small></span>
+          </GameTooltipHover>
         </a>)}</div>
         {!result.data.items.length ? <p>No items match your search.</p> : null}
         {result.data.nextAfter ? <a className="catalog-next" href={catalogLink(null, scope, { q, after: result.data.nextAfter })}>Next items →</a> : null}

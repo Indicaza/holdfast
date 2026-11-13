@@ -145,15 +145,16 @@ function RunList({ runs, filters, server }) {
   )
 }
 
-// Loot from a run with its Auction House price (lowest ask, last market
-// the player looked at) and a link to the item's market.
+// Loot from a run as the game shows it (icon, quality, its tooltip), with
+// its Auction House price (lowest ask, last market the player looked at)
+// and a link to the item's market.
 function LootList({ items }) {
   const { prices } = useItemPrices(items.map((item) => item.itemId))
   return (
     <ul className="gw-bars">
       {items.map((item) => (
         <li key={item.itemId}>
-          <a href={auctionHref({ item: item.itemId, q: item.name || '' })}><ItemLabel item={{ itemId: item.itemId, name: item.name || `Item ${item.itemId}` }} size={22} /></a>
+          <a href={auctionHref({ item: item.itemId, q: item.name || '' })}><ItemLabel item={{ ...item, name: item.name || `Item ${item.itemId}` }} size={22} /></a>
           <MarketPriceCell price={prices.get(item.itemId) || null} />
           <strong>{item.quantity}×</strong>
         </li>
