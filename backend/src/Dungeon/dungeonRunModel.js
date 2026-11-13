@@ -2,7 +2,7 @@
 // missing (the client could not read them) but never wrong: a run that
 // fails here is kept as a raw record only.
 //
-// Payload schema 1 (add-on 0.5) and 2 (add-on 0.6) are both accepted.
+// Payload schema 1 (add-ons before Dungeon V2) and 2 (Dungeon V2) are both accepted.
 // Schema 2 only adds: `checkpoints` (boss kills and manual splits with a
 // stable id, kept apart from the bounded timeline so a long run never loses
 // them), `completion.basis` (what proved the clear), a `complete` timeline

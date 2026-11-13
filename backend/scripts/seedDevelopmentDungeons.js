@@ -156,7 +156,7 @@ function runFor(plan, index, character, now) {
   return {
     schemaVersion: 1, eventType: "dungeon_run", capturedAt: endedAt, gameBuild: { version: "1.60.1", build: "70338", interface: 16001 },
     realm: character.realm, region: character.region, locale: "enUS", installationId: character.installation_id, characterId: character.raw_character_id,
-    addon: { name: "Guildweaver", version: schema === 2 ? "0.6.0" : "0.5.0" }, payloadSchemaVersion: schema, payload,
+    addon: { name: "Guildweaver", version: "0.5.0" }, payloadSchemaVersion: schema, payload,
   };
 }
 

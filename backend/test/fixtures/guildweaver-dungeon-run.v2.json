@@ -14,7 +14,7 @@
   "characterId": "character-rook",
   "addon": {
     "name": "Guildweaver",
-    "version": "0.6.0"
+    "version": "0.5.0"
   },
   "payloadSchemaVersion": 2,
   "payload": {

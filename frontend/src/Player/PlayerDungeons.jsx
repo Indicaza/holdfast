@@ -410,7 +410,7 @@ function Checkpoints({ run, filters, server }) {
           </table>
         </div>
       ) : <p className="gw-muted gw-run-empty">No boss kills or splits recorded. {run.bosses.encounterEvents ? '' : 'The client sent no boss events; use Split in the in-game tracker to mark checkpoints.'}</p>}
-      {run.checkpointBasis === 'timeline' ? <p className="gw-muted gw-run-empty">From the run's timeline (add-on before 0.6).</p> : null}
+      {run.checkpointBasis === 'timeline' ? <p className="gw-muted gw-run-empty">From the run's timeline: sent by an add-on from before Dungeon V2.</p> : null}
     </Panel>
   )
 }
