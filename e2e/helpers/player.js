@@ -2,8 +2,8 @@
 // way Guildweaver Bridge does: pair, approve as the player, exchange the
 // code for a device key, then post telemetry with that key. Runs in the page
 // so it uses the page's own session cookie and origin.
-export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], gathers = [] } = {}) {
-  return page.evaluate(async ({ deviceName, characters, gathers }) => {
+export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], gathers = [], telemetry = [] } = {}) {
+  return page.evaluate(async ({ deviceName, characters, gathers, telemetry }) => {
     const headers = { 'Content-Type': 'application/json', 'X-Guildweaver-Release': 'forever-live' }
     async function json(url, options = {}) {
       const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
@@ -88,6 +88,12 @@ export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], g
       })
     }
 
+    for (const record of telemetry) {
+      await json('/api/bridge/telemetry', {
+        method: 'POST', headers: { ...auth, 'Idempotency-Key': `e2e-${record.streamKey}-${record.revision}` },
+        body: JSON.stringify(record),
+      })
+    }
     return { deviceId: device.deviceId }
-  }, { deviceName, characters, gathers })
+  }, { deviceName, characters, gathers, telemetry })
 }

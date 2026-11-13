@@ -1,0 +1,122 @@
+{
+  "streamKey": "dungeon_run:character-6ac5698e-ffffffffc620da86-ffffffffed91ff74:dungeon-6ac5698e-fffffffffdc3fb65-ffffffffa425ca2b",
+  "kind": "event",
+  "revision": 1,
+  "envelope": {
+    "region": "US",
+    "addon": {
+      "name": "Guildweaver",
+      "version": "0.5.0"
+    },
+    "characterId": "character-6ac5698e-ffffffffc620da86-ffffffffed91ff74",
+    "schemaVersion": 1,
+    "locale": "enUS",
+    "payloadSchemaVersion": 2,
+    "installationId": "install-6ac5698e-ffffffffcb2043ff-ffffffffe0613cdd",
+    "payload": {
+      "sequence": 1,
+      "group": {
+        "sizeAtEntry": 5,
+        "maxSize": 5
+      },
+      "completion": {
+        "basis": "none"
+      },
+      "schemaVersion": 2,
+      "lastActiveAt": 1791322690,
+      "durationSeconds": 181,
+      "character": {
+        "levelAtExit": 30,
+        "classToken": "WARRIOR",
+        "levelAtEntry": 30
+      },
+      "startedAt": 1791322510,
+      "status": "open",
+      "runId": "dungeon-6ac5698e-fffffffffdc3fb65-ffffffffa425ca2b",
+      "wallet": {
+        "basis": "wallet_delta",
+        "netCopper": 0,
+        "available": true
+      },
+      "deaths": 0,
+      "instance": {
+        "type": "party",
+        "name": "Scarlet Monastery",
+        "instanceId": 189,
+        "difficultyId": 1,
+        "maxPlayers": 5,
+        "difficultyName": "Normal"
+      },
+      "xp": {
+        "gained": 0,
+        "available": true,
+        "levelUps": 0,
+        "atLevelCap": false
+      },
+      "timeline": [
+        {
+          "at": 0,
+          "kind": "enter",
+          "name": "Scarlet Monastery"
+        },
+        {
+          "at": 1,
+          "kind": "timer_start",
+          "source": "combat"
+        },
+        {
+          "at": 181,
+          "kind": "manual_split",
+          "name": "Audit"
+        },
+        {
+          "at": 181,
+          "kind": "timer_stop",
+          "source": "manual",
+          "seconds": 180
+        }
+      ],
+      "timer": {
+        "state": "stopped",
+        "seconds": 180,
+        "starts": 1,
+        "stoppedBy": "manual",
+        "startedBy": "combat",
+        "startedAtOffset": 1
+      },
+      "checkpoints": [
+        {
+          "at": 181,
+          "name": "Audit",
+          "id": "split:audit",
+          "kind": "split",
+          "timerAt": 180,
+          "source": "manual"
+        }
+      ],
+      "bosses": {
+        "total": 3,
+        "duplicatesIgnored": 0,
+        "atEntry": 0,
+        "list": {},
+        "manualSplits": 1,
+        "defeated": 0,
+        "encounterEvents": false
+      },
+      "loot": {
+        "observations": 0
+      },
+      "insideSeconds": 181
+    },
+    "gameBuild": {
+      "interface": 16001,
+      "buildDate": "Nov 2026",
+      "version": "1.60.1",
+      "build": "70338"
+    },
+    "eventType": "dungeon_run",
+    "capturedAt": 1791322690,
+    "realm": "Live Realm",
+    "guildId": null
+  }
+}

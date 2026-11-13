@@ -35,7 +35,7 @@ test("validates dungeon runs and never reports XP at the level cap", () => {
   // Lua's empty table for a run with no events yet.
   assert.equal(validDungeonRun({ kind: "event", envelope: run({ timeline: {} }) }), true);
   for (const change of [
-    { schemaVersion: 2 }, { runId: "" }, { runId: "bad id!" }, { sequence: 0 }, { status: "wiped" },
+    { schemaVersion: 3 }, { runId: "" }, { runId: "bad id!" }, { sequence: 0 }, { status: "wiped" },
     { startedAt: 0 }, { durationSeconds: -1 }, { durationSeconds: 604801 }, { endedAt: fixture.payload.startedAt - 1 },
     { endedAt: fixture.payload.startedAt + 10 }, { endReason: "" }, { deaths: -1 }, { deaths: 1.5 },
     { instance: { ...fixture.payload.instance, type: "pvp" } },

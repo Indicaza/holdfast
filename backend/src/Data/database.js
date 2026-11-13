@@ -10,7 +10,7 @@ import {
 import { notificationMigration } from "../Notification/notificationMigration.js";
 import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
 import { farmingSessionMigration } from "../Economy/farmingSessionMigration.js";
-import { dungeonRunMigration } from "../Dungeon/dungeonRunMigration.js";
+import { dungeonRunMigration, dungeonRunV2Migration, dungeonTimerMigration } from "../Dungeon/dungeonRunMigration.js";
 import { marketCatalogMigration, marketDepthMigration, marketItemLookupMigration, marketMigration, marketReliabilityMigration } from "../Market/marketMigration.js";
 import { publicGameDataMigration } from "../GameData/publicGameDataMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
@@ -830,6 +830,8 @@ const migrations = [
   marketCatalogMigration,
   marketItemLookupMigration,
   marketDepthMigration,
+  dungeonRunV2Migration,
+  dungeonTimerMigration,
 ];
 
 function configureDatabase(db) {

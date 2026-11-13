@@ -35,6 +35,12 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  dungeonRunner: {
+    id: 'e2e-dungeon-runner',
+    username: 'e2e-dungeon-runner',
+    globalName: 'Dungeon Runner',
+    homeServer: false,
+  },
   rival: {
     id: 'e2e-rival',
     username: 'e2e-rival',
