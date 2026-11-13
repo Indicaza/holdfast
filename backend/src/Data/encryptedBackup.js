@@ -5,6 +5,9 @@ import path from 'node:path'
 import { backup, DatabaseSync } from 'node:sqlite'
 import { gzipSync, gunzipSync } from 'node:zlib'
 
+// Format 1 ("HOLDFB01"): the whole database in memory, base64 in gzipped
+// JSON, at most 32 MiB. New backups use format 2 (streamingBackup.js); this
+// is kept so archives made before November 2026 still restore.
 export const MAX_SNAPSHOT_BYTES = 32 * 1024 * 1024
 const MAX_ARCHIVE_BYTES = MAX_SNAPSHOT_BYTES * 2
 const MAGIC = Buffer.from('HOLDFB01')

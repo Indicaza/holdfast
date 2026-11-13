@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -12,6 +12,8 @@ import {
 } from "../src/Data/database.js";
 import {
   backupGuildDatabaseBeforeMigrations,
+  listStartupBackups,
+  requiredBackupBytes,
   startupBackupDirectory,
 } from "../src/Data/startupBackup.js";
 
@@ -114,7 +116,7 @@ test("production startup snapshot captures the old database before migrations ru
     live.close();
 
     assert.deepEqual(inspectDatabase(guildDatabaseFile()), {
-      migration: 20,
+      migration: 22,
       members: 1,
       sentinel: "pre-migration-copy",
       integrity: "ok",
@@ -125,31 +127,127 @@ test("production startup snapshot captures the old database before migrations ru
   });
 });
 
-test("startup snapshots retain only the newest five recoverable copies", async () => {
+function touchDatabase(label) {
+  const db = new DatabaseSync(guildDatabaseFile());
+  try {
+    db.prepare("INSERT OR REPLACE INTO app_meta (key, value, updated_at) VALUES ('backup_touch', ?, ?)").run(label, new Date().toISOString());
+  } finally {
+    db.close();
+  }
+}
+
+async function backupFiles() {
+  return (await readdir(startupBackupDirectory())).sort();
+}
+
+test("startup snapshots keep the newest managed copies and never delete legacy files", async () => {
+  await withTemporaryData(async () => {
+    process.env.NODE_ENV = "production";
+    seedVersionFiveDatabase();
+    await mkdir(startupBackupDirectory(), { recursive: true });
+    const legacy = path.join(startupBackupDirectory(), "holdfast-before-startup-2026-01-01T00-00-00-000Z.sqlite");
+    await copyFile(guildDatabaseFile(), legacy);
+
+    for (let index = 0; index < 4; index += 1) {
+      touchDatabase(`run-${index}`);
+      // Different modification times, so each run sees a changed database.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      const result = await backupGuildDatabaseBeforeMigrations({ now: () => new Date(Date.UTC(2026, 9, 3, 23, 0, index)) });
+      assert.equal(result.status, "created");
+    }
+
+    const backups = await listStartupBackups();
+    const managed = backups.filter((entry) => entry.kind === "managed");
+    assert.equal(managed.length, 2);
+    assert.ok(managed[0].name.includes("23-00-03"));
+    assert.ok(managed[1].name.includes("23-00-02"));
+    assert.equal(backups.filter((entry) => entry.kind === "legacy").length, 1, "legacy snapshot kept");
+    for (const entry of managed) {
+      assert.equal(inspectDatabase(path.join(startupBackupDirectory(), entry.name)).integrity, "ok");
+      assert.equal(entry.meta.fromVersion, 5);
+      assert.equal(entry.meta.bytes, entry.bytes);
+    }
+  });
+});
+
+test("an ordinary restart with no pending migration copies nothing", async () => {
+  await withTemporaryData(async () => {
+    process.env.NODE_ENV = "production";
+    openGuildDatabase().close();
+
+    const result = await backupGuildDatabaseBeforeMigrations();
+    assert.deepEqual(result, { status: "not-needed", pending: [] });
+    assert.deepEqual(await listStartupBackups(), []);
+  });
+});
+
+test("a restart after a failed migration reuses the unchanged snapshot", async () => {
   await withTemporaryData(async () => {
     process.env.NODE_ENV = "production";
     seedVersionFiveDatabase();
 
-    for (let index = 0; index < 7; index += 1) {
-      await backupGuildDatabaseBeforeMigrations({
-        now: () => new Date(Date.UTC(2026, 9, 3, 23, 0, index)),
-      });
-    }
+    const first = await backupGuildDatabaseBeforeMigrations({ now: () => new Date("2026-10-03T22:01:00.000Z") });
+    assert.equal(first.status, "created");
+    const second = await backupGuildDatabaseBeforeMigrations({ now: () => new Date("2026-10-03T22:02:00.000Z") });
+    assert.equal(second.status, "reused");
+    assert.equal(second.file, first.file);
+    assert.equal((await backupFiles()).filter((name) => name.endsWith(".sqlite")).length, 1);
 
-    const files = (await readdir(startupBackupDirectory()))
-      .filter((name) => name.endsWith(".sqlite"))
-      .sort();
+    touchDatabase("changed");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const third = await backupGuildDatabaseBeforeMigrations({ now: () => new Date("2026-10-03T22:03:00.000Z") });
+    assert.equal(third.status, "created", "a changed database is copied again");
+  });
+});
 
-    assert.equal(files.length, 5);
-    assert.ok(files[0].includes("23-00-02"));
-    assert.ok(files[4].includes("23-00-06"));
+test("a pre-migration snapshot is refused, not attempted, when the disk lacks room", async () => {
+  await withTemporaryData(async () => {
+    process.env.NODE_ENV = "production";
+    seedVersionFiveDatabase();
+    const tinyDisk = async () => ({ bavail: 10, bsize: 4096 });
 
-    for (const file of files) {
-      assert.equal(
-        inspectDatabase(path.join(startupBackupDirectory(), file)).integrity,
-        "ok",
-      );
-    }
+    await assert.rejects(
+      () => backupGuildDatabaseBeforeMigrations({ statfsImpl: tinyDisk }),
+      /needs \d+ bytes free .* only 40960 are available/,
+    );
+    assert.deepEqual(await listStartupBackups(), [], "nothing written");
+    assert.equal(inspectDatabase(guildDatabaseFile()).migration, 5, "database untouched");
+    assert.ok(requiredBackupBytes(1000, 0) > 1000);
+  });
+});
+
+test("interrupted copies are removed and an operator can skip the local snapshot", async () => {
+  await withTemporaryData(async () => {
+    process.env.NODE_ENV = "production";
+    seedVersionFiveDatabase();
+    await mkdir(startupBackupDirectory(), { recursive: true });
+    const partial = path.join(startupBackupDirectory(), "holdfast-before-startup-2026-10-03T21-00-00-000Z.sqlite.partial");
+    await writeFile(partial, "half a copy");
+    assert.equal((await listStartupBackups())[0].kind, "partial");
+
+    const skipped = await backupGuildDatabaseBeforeMigrations({ env: { ...process.env, MIGRATION_BACKUP: "skip" } });
+    assert.equal(skipped.status, "skipped-by-operator");
+    assert.ok(skipped.pending.length > 0);
+
+    const created = await backupGuildDatabaseBeforeMigrations();
+    assert.equal(created.status, "created");
+    assert.ok(!(await backupFiles()).some((name) => name.endsWith(".partial")), "partial removed");
+  });
+});
+
+test("a failed cleanup of old snapshots does not fail startup", async () => {
+  await withTemporaryData(async () => {
+    process.env.NODE_ENV = "production";
+    seedVersionFiveDatabase();
+    const first = await backupGuildDatabaseBeforeMigrations({ keep: 1, now: () => new Date("2026-10-03T22:01:00.000Z") });
+    touchDatabase("changed");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const refuse = async () => { throw Object.assign(new Error("busy"), { code: "EBUSY" }); };
+    const second = await backupGuildDatabaseBeforeMigrations({ keep: 1, removeImpl: refuse, now: () => new Date("2026-10-03T22:02:00.000Z") });
+    assert.equal(second.status, "created");
+    assert.deepEqual(second.pruned.failed, [{ name: path.basename(first.file), error: "EBUSY" }]);
+    assert.equal((await listStartupBackups()).filter((entry) => entry.kind === "managed").length, 2, "old copy kept for the next cleanup");
   });
 });
 

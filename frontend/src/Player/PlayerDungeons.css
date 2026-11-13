@@ -90,3 +90,451 @@
   padding: 0.9rem 1.1rem;
   font-size: 13px;
 }
+
+/* ------------------------------------------------- Dungeon command center */
+
+.gw-stats.gw-stats--6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+@media (max-width: 1180px) {
+  .gw-stats.gw-stats--6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .gw-stats.gw-stats--6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gw-dcc__head h2 {
+  margin: 0;
+  color: var(--gw-text);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.gw-dcc__sync {
+  margin: 0.15rem 0 0;
+  color: var(--gw-dim);
+  font-size: 12.5px;
+}
+
+.gw-dcc__sync strong {
+  color: var(--gw-text);
+  font-weight: 600;
+}
+
+.gw-dcc__footnote {
+  margin: 0;
+  font-size: 12px;
+}
+
+.gw-runs td {
+  white-space: nowrap;
+}
+
+.gw-runs__name {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+/* Runs beside objectives and comparisons on wide screens; below them,
+   side by side, on laptops; one column on phones. */
+.gw-dcc__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.gw-dcc__side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1560px) {
+  .gw-dcc__main {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+
+  .gw-dcc__side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .gw-dcc__side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gw-run-marks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  vertical-align: top;
+}
+
+.gw-run-mark {
+  display: inline-flex;
+  align-items: center;
+  height: 1.15rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--gw-line-2);
+  border-radius: 5px;
+  color: var(--gw-dim);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.gw-run-mark:focus-visible {
+  outline: 2px solid var(--gw-accent);
+  outline-offset: 1px;
+}
+
+.gw-run-mark--pb {
+  border-color: var(--gw-accent-line);
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent);
+}
+
+.gw-run-mark--xp,
+.gw-run-mark--hot {
+  border-color: color-mix(in srgb, var(--gw-info) 40%, transparent);
+  color: var(--gw-info);
+}
+
+.gw-run-mark--unverified {
+  border-style: dashed;
+  color: var(--gw-warn);
+}
+
+.gw-pace {
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-pace--ahead { color: var(--gw-ok); }
+.gw-pace--behind { color: var(--gw-bad); }
+.gw-pace--even { color: var(--gw-dim); }
+
+.gw-dcc__total th,
+.gw-dcc__total td {
+  border-top: 1px solid var(--gw-line-2);
+  font-weight: 600;
+}
+
+/* Comparisons: one block per character, dungeon and difficulty. */
+.gw-dcc-compare {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gw-dcc-compare li {
+  padding: 0.65rem 1.1rem;
+  border-bottom: 1px solid var(--gw-line);
+}
+
+.gw-dcc-compare li:last-child {
+  border-bottom: 0;
+}
+
+.gw-dcc-compare__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.5rem;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.gw-dcc-compare__head .gw-muted {
+  font-size: 12px;
+}
+
+.gw-dcc-compare__facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+}
+
+.gw-dcc-compare__facts dt,
+.gw-dcc-value dt {
+  color: var(--gw-faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gw-dcc-compare__facts dd {
+  margin: 0;
+  color: var(--gw-text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-dcc-compare__few {
+  margin: 0.3rem 0 0;
+  font-size: 12.5px;
+}
+
+/* Objectives */
+.gw-objectives {
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
+.gw-objectives li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.35rem 1.1rem;
+  font-size: 13px;
+}
+
+.gw-objectives li input[type="checkbox"] {
+  accent-color: var(--gw-accent);
+}
+
+.gw-objectives li.is-done .gw-objectives__text {
+  color: var(--gw-faint);
+  text-decoration: line-through;
+}
+
+.gw-objectives__current {
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--gw-accent-line);
+  border-radius: 5px;
+  color: var(--gw-accent);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.gw-objectives__proof {
+  color: var(--gw-ok);
+}
+
+.gw-objectives__tools {
+  display: inline-flex;
+  gap: 0.1rem;
+}
+
+.gw-objectives__tools .gw-icon-btn {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.gw-objectives__add,
+.gw-objectives__edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.gw-objectives__add {
+  padding: 0.5rem 1.1rem;
+  border-top: 1px solid var(--gw-line);
+}
+
+.gw-objectives__input {
+  flex: 1 1 9rem;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--gw-line-2);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-2);
+  color: var(--gw-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.gw-objectives__input--boss {
+  flex: 0 1 8rem;
+}
+
+.gw-objectives__input:focus-visible {
+  outline: 2px solid var(--gw-accent);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.gw-objectives__note,
+.gw-objectives__error {
+  margin: 0;
+  padding: 0 1.1rem 0.7rem;
+  font-size: 12px;
+}
+
+.gw-objectives__error {
+  color: var(--gw-bad);
+}
+
+/* Timeline track: the run from entry to exit, events as ticks. */
+.gw-track {
+  padding: 0.9rem 0 0;
+}
+
+.gw-track__rail {
+  position: relative;
+  height: 1.6rem;
+  margin: 0 1.1rem;
+  border: 1px solid var(--gw-line);
+  border-radius: 6px;
+  background: var(--gw-bg-2);
+}
+
+.gw-track__outside {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, var(--gw-line) 0 4px, transparent 4px 8px);
+}
+
+.gw-track__mark {
+  --c: var(--gw-faint);
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--c);
+}
+
+.gw-track__mark--boss_kill,
+.gw-track__mark--complete { --c: var(--gw-ok); width: 4px; }
+.gw-track__mark--encounter_start { --c: color-mix(in srgb, var(--gw-ok) 45%, transparent); }
+.gw-track__mark--encounter_failed,
+.gw-track__mark--death { --c: var(--gw-bad); }
+.gw-track__mark--manual_split { --c: var(--gw-accent); }
+.gw-track__mark--level_up { --c: var(--gw-info); }
+.gw-track__mark--leave,
+.gw-track__mark--reenter,
+.gw-track__mark--resume { --c: var(--gw-dim); }
+
+.gw-track__scale {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 1.1rem 0.4rem;
+  color: var(--gw-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-track__dot {
+  position: static;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 0.45rem 0 0;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.gw-track .gw-run-timeline {
+  columns: 2 18rem;
+  column-gap: 0;
+  border-top: 1px solid var(--gw-line);
+}
+
+.gw-track .gw-run-timeline__item {
+  break-inside: avoid;
+  padding: 0.25rem 1.1rem;
+  font-size: 13px;
+}
+
+/* Loot value: five separate figures, never summed. */
+.gw-dcc-value {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--gw-line);
+}
+
+.gw-dcc-value > div {
+  padding: 0.55rem 0.8rem;
+  box-shadow: 1px 0 0 var(--gw-line), 0 1px 0 var(--gw-line);
+}
+
+.gw-dcc-loot__item {
+  display: inline-flex;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gw-dcc-loot__item:hover .gw-item__name {
+  text-decoration: underline;
+}
+
+.gw-dcc-loot__item:focus-visible {
+  outline: 2px solid var(--gw-accent);
+  outline-offset: 2px;
+}
+
+.gw-dcc-value dd {
+  margin: 0.1rem 0 0;
+  color: var(--gw-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-dcc-value small {
+  display: block;
+  color: var(--gw-faint);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.gw-dcc-loot td {
+  white-space: nowrap;
+}
+
+.gw-dcc-loot td:first-child {
+  white-space: normal;
+}
+
+.gw-dcc__detail-grid {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .gw-dcc__detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .gw-dcc-compare__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gw-run-head h2 {
+    font-size: 17px;
+  }
+}
+
+/* Compact tables sit flush in panels here: keep the panel's inset. */
+.gw-dcc .gw-panel--flush .gw-table--compact th:first-child,
+.gw-dcc .gw-panel--flush .gw-table--compact td:first-child {
+  padding-left: 1.1rem;
+}
+
+.gw-dcc .gw-panel--flush .gw-table--compact th:last-child,
+.gw-dcc .gw-panel--flush .gw-table--compact td:last-child {
+  padding-right: 1.1rem;
+}

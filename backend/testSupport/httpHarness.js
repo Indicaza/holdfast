@@ -47,7 +47,7 @@ export async function withHttpApp(run, options = {}) {
     await mkdir(overrides.FRONTEND_DIST_DIR)
     await writeFile(path.join(overrides.FRONTEND_DIST_DIR, 'index.html'), '<!doctype html><title>HTTP test frontend</title>')
     initializeGuildData()
-    const app = createApp({ discordAuthOptions: options.discordAuthOptions, publicGameDataOptions: options.publicGameDataOptions })
+    const app = createApp({ discordAuthOptions: options.discordAuthOptions, publicGameDataOptions: options.publicGameDataOptions, ...(typeof options.appOptions === 'function' ? options.appOptions(directory) : options.appOptions) })
     server = await new Promise((resolve, reject) => {
       const listening = app.listen(0, '127.0.0.1', () => resolve(listening))
       listening.once('error', reject)

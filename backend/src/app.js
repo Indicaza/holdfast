@@ -54,9 +54,10 @@ import {
   securityHeaders,
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
+import { createStorageRouter } from "./Production/storageRouter.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null, storageObservatory = null } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -110,7 +111,14 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
         db.prepare("SELECT COUNT(*) FROM contribution_transactions").get();
         db.prepare("SELECT COUNT(*) FROM notifications").get();
       });
-      res.json({ status: "ok", offsiteBackup: await offsiteBackupHealth() });
+      const startup = startupStatus?.();
+      res.json({
+        status: "ok",
+        offsiteBackup: await offsiteBackupHealth(),
+        ...(startup ? { startup: { state: startup.state, startedAt: startup.startedAt, readyAfterMs: startup.readyAfterMs, phases: startup.phases } } : {}),
+        // Only a status and alert codes are public; sizes stay in /api/admin/storage/health.
+        ...(storageObservatory ? { storage: await storageObservatory.health().then(({ status, alerts }) => ({ status, alerts })).catch(() => ({ status: "unknown", alerts: [] })) } : {}),
+      });
     } catch (error) {
       console.error("Readiness check failed", error);
       res.status(503).json({ status: "unavailable" });
@@ -300,6 +308,10 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       holdfastMember,
     });
   });
+
+  if (storageObservatory) {
+    app.use("/api/admin/storage", createStorageRouter({ observatory: storageObservatory }));
+  }
 
   app.get("/api/admin/ping", requirePermission("site.admin"), (req, res) => {
     res.json({

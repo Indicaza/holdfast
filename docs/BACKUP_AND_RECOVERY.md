@@ -1,6 +1,40 @@
 # Backups and recovery
 
-Startup snapshots protect migrations on the Render disk. Off-site backups protect against losing that disk. The latter are disabled until storage is configured; merging this PR does not create a storage account or configure production credentials.
+Pre-migration snapshots protect schema changes on the Render disk. Off-site backups protect against losing that disk. The latter are disabled until storage is configured; merging this PR does not create a storage account or configure production credentials.
+
+## Startup lifecycle and pre-migration snapshots
+
+The server binds its port immediately and answers `GET /api/health/live` with `200` while it starts. Every other request, including `/api/health/ready`, returns `503` with `Retry-After: 5` until all required startup steps have finished, so no request can reach a database whose migrations have not run. Each step is logged as one JSON line (`{"event":"startup","phase":"migrations","ms":412,"ok":true}`), and once ready, `/api/health/ready` includes the same phase timings under `startup`. Background services (market refresh and maintenance, Discord sync, off-site backups) start only after the migrations.
+
+A pre-migration snapshot is written to `/data/deploy-backups/` **only when the release has migrations to apply**. An ordinary restart copies nothing. Before copying, the server checks free disk space: it needs the database size plus 10% (at least 256 MiB) of headroom. If there isn't enough room, startup stops with an explicit error and changes nothing. Each snapshot is written as `*.partial`, checked with `PRAGMA quick_check`, and renamed only after it passes. A JSON sidecar records the schema versions, size and source-file identity. If the database is unchanged since the newest snapshot (for example, a restart after a failed migration), that snapshot is reused instead of copied again.
+
+Retention keeps the newest `STARTUP_BACKUP_KEEP` (default 2) snapshots that have sidecars. Snapshots from before this policy have no sidecar; they are listed in the startup log (`startup_backups`) but are **never deleted automatically**. Remove them by hand only after a newer verified recovery point exists. A failed cleanup is logged and retried on the next migration; it does not stop startup.
+
+`MIGRATION_BACKUP=skip` lets migrations run without a local snapshot. Use it only when the disk cannot hold a copy **and** a verified off-site backup newer than the last write exists. Unset it right after the deploy.
+
+Telemetry compaction at startup never runs `VACUUM`. Rebuilding the file needs free disk equal to the database and blocks all access while it runs, so returning freed pages to the filesystem is a planned operator task.
+
+### Startup data conversions
+
+Some data conversions run at startup outside the numbered migrations: today, only the recipe split from PR #284 (`telemetry_recipes` becomes `telemetry_recipe_definitions` + `telemetry_character_recipes` plus a `telemetry_recipes` view). Each one says when it is pending (`STARTUP_CONVERSIONS` in `startupBackup.js`), and a pending conversion gets the **same verified pre-migration snapshot** as a pending migration, with the same free-space check and reuse rules. The sidecar lists it by name (`"pending": ["recipe_store_split"]`).
+
+The conversion runs in one transaction. It checks that every character/recipe row and every recipe key exists in the new tables before dropping the old table, and logs `{"event":"recipe_store_converted","pairs":…,"recipes":…}`. If the process is killed before it commits, the old table is untouched and the next start converts it, reusing the unchanged snapshot. An already-converted database is left alone and takes no snapshot.
+
+**Production was converted on 13 November 2026 at 02:59 UTC**, by the release that introduced the split and before this snapshot rule existed. Its pre-conversion recovery points are the startup snapshots in `/data/deploy-backups/` taken on 12 November (they predate the split). Keep at least the newest of them until an off-site backup has been verified.
+
+### Rolling the application back past the recipe split
+
+Releases from before PR #284 expect `telemetry_recipes` to be a table, and fail on the view (`views may not be indexed`, `cannot modify telemetry_recipes because it is a view`). Recipes are a projection of stored telemetry, so nothing is lost, but syncs fail until the table is back. To roll back:
+
+1. Deploy the older release.
+2. Immediately run the self-contained restore. It needs only `node:sqlite`, so it works in any release's image:
+
+   ```sh
+   ssh srv-davbjm7avr4c73bbguq0@ssh.ohio.render.com 'node --input-type=module - /data/holdfast.sqlite' < backend/scripts/restoreRecipeTable.js
+   ```
+
+   It prints `{"status":"restored","rows":N}`. It runs in one transaction and changes nothing if any step fails, and running it again prints `already_table`. The split tables stay in place, unused.
+3. Moving forward again later converts the table back. Ownership is rebuilt from the table, so rows the older release removed don't return.
 
 ## Activate off-site backups
 
@@ -26,11 +60,21 @@ Set these **server-only** environment variables on the Render service:
 | `BACKUP_ENCRYPTION_KEY` | The 64-character hexadecimal encryption key |
 | `BACKUP_S3_ENDPOINT` | Optional HTTPS endpoint for compatible storage |
 
-After deployment, the worker runs after one minute and every six hours. Each run takes a consistent SQLite snapshot without running migrations, verifies integrity and foreign keys, includes optional Discord provisioning state, compresses it, and encrypts it with AES-256-GCM and a fresh nonce. Only ciphertext is uploaded. The worker then downloads that exact object, decrypts it, restores it into a temporary directory, and compares the database checksum and business row counts. The success timestamp is written only after that restore drill passes. Failures leave the previous success timestamp intact.
+After deployment, the worker runs after one minute and then every six hours. Each run:
 
-Verify `/api/health/ready` reports `offsiteBackup.enabled: true`, `healthy: true`, and a recent `lastVerifiedAt`. Then set the GitHub repository Actions variable **HOLDFAST_REQUIRE_OFFSITE_BACKUP** to `true` and run **Production monitor** manually. This prevents accidentally disabling backups later from being reported as healthy. The monitor also fails when an enabled backup has not been verified within 24 hours.
+1. Takes a consistent snapshot with SQLite's online backup API in **one step**. The copy runs on Node's thread pool under one read transaction, so the application keeps writing and the event loop stays free. (The default 100-pages-per-step mode restarts whenever another connection writes, and under steady telemetry it never finishes.) The snapshot goes to `BACKUP_WORK_DIR` (default: the OS temp directory), only after a free-space check for the database size plus 10% (at least 256 MiB).
+2. Checks the snapshot: `quick_check`, foreign keys, business row counts.
+3. Streams it through gzip and AES-256-GCM in 1 MiB frames (format `HOLDFB02`, below) into an S3 **multipart upload** with 16 MiB parts. At most one part is in memory, whatever the database size. Any failure aborts the multipart upload, so no partial object remains.
+4. Downloads the object, authenticates every frame, decompresses it and checks that its SHA-256 and size equal the snapshot's. **Weekly** (or every run with `BACKUP_RESTORE_DRILL=full`) the download is restored into a real SQLite file in the work directory, which is then checked for integrity, foreign keys and row counts. This needs a second copy's worth of free space.
+5. Writes `offsite-backup-status.json` only after verification. A failure is recorded in `offsite-backup-failure.json` and never replaces the last success.
 
-The normal recovery-point target is six hours. Alerting has a 24-hour freshness budget plus the hourly monitor interval. Snapshots are bounded to a 32 MiB SQLite database and 1 MiB provisioning state so memory usage stays bounded on the current service. An oversized database fails the backup and eventually alerts; extend the implementation to streaming before exceeding that size. Nothing automatically deletes remote backups; storage lifecycle policy owns retention.
+The status records the archive and database sizes, part count, verification kind, duration and **peak RSS** of the run. Measured memory is in the PR that introduced streaming backups. `/api/health/ready` still exposes only `enabled`, `healthy` and `lastVerifiedAt`.
+
+### Archive format 2 (`HOLDFB02`)
+
+`"HOLDFB02" | u32 header length | header JSON` (version, creation time, cipher, compression, frame size, 8-byte nonce prefix), then frames `u8 type | u32 length | ciphertext | 16-byte GCM tag`. Frame *n* uses nonce `prefix ‖ n` and authenticates the format, the header's SHA-256, *n* and the frame type. The last frame is the trailer: the database SHA-256 and size, row counts and the Discord provisioning state. Altered, reordered, dropped or appended frames fail, and so does a stream without its trailer. Format 1 archives (`HOLDFB01`, 32 MiB, before November 2026) are still restorable. `backup:restore` detects the format from the file.
+
+Runtime storage credentials need `s3:PutObject` (multipart included), `s3:GetObject` and `s3:AbortMultipartUpload` on `holdfast/*` (`config/backup-storage-policy.json`). The lifecycle rule also removes incomplete multipart uploads after a day.
 
 An immediate manual backup is available from the service shell:
 
@@ -50,7 +94,7 @@ npm --prefix backend run backup:restore -- /path/to/downloaded.hfb /path/to/new-
 unset BACKUP_ENCRYPTION_KEY
 ```
 
-The destination must not exist, even if empty. Authentication, format, checksum, SQLite integrity, foreign keys, and row counts are verified before the restore is accepted. A failed restore removes only the newly created destination. Existing files are never overwritten. The restored database remains at its backed-up schema version; starting the selected application release runs the normal migrations after its pre-migration safety snapshot.
+The destination must not exist, even if empty. Both archive formats are accepted. Authentication, format, checksum, SQLite integrity, foreign keys and row counts are verified before the restore is accepted. Format 2 restores stream from disk, so memory does not grow with the archive. A failed restore removes only the newly created destination. Existing files are never overwritten. The restored database remains at its backed-up schema version; starting the selected application release runs the normal migrations after its pre-migration safety snapshot.
 
 Point a separate test instance at the restored directory. Check member profiles, quest assignments, authority, and contribution history before switching production. Stop the production process before any disk replacement; retain the old disk contents, and copy the recovered files only after checking the selected release against the restored data. Do not run two writers against the same database. This destructive cutover is intentionally an operator step.
 

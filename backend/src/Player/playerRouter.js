@@ -16,6 +16,7 @@ import {
 } from "./playerRepository.js";
 import { requestedServer } from "./playerServers.js";
 import { readDungeonRun, readDungeonRuns } from "../Dungeon/dungeonRunRepository.js";
+import { createDungeonObjective, deleteDungeonObjective, readDungeonObjectives, updateDungeonObjective } from "../Dungeon/dungeonObjectiveRepository.js";
 
 // Mounted at /api/player: the signed-in player's own workspace. Every route
 // takes the account from the session (req.auth.user.id) and never from the
@@ -59,7 +60,7 @@ export function createPlayerRouter({ provider, icons } = {}) {
   router.get("/farming", respond("farming", (req) => readPlayerFarming(owner(req), { server: server(req) })));
   router.get("/dungeon-runs", respond("dungeon_runs", (req) => readDungeonRuns({
     memberId: owner(req), server: server(req), character: req.query?.character, realm: req.query?.realm,
-    dungeon: req.query?.dungeon, from: req.query?.from, to: req.query?.to, limit: req.query?.limit,
+    dungeon: req.query?.dungeon, from: req.query?.from, to: req.query?.to, status: req.query?.status, limit: req.query?.limit,
   })));
   // Another player's run answers 404, like one that does not exist.
   router.get("/dungeon-runs/:runId", (req, res) => {
@@ -75,6 +76,32 @@ export function createPlayerRouter({ provider, icons } = {}) {
       res.status(500).json({ error: "player_dungeon_run_unavailable" });
     }
   });
+  // A character's dungeon objectives. Another account's character answers
+  // 404, like one that does not exist.
+  const OBJECTIVE_CODES = { invalid: 400, "not-found": 404, full: 409 };
+  function objectiveWrite(name, change) {
+    return (req, res) => {
+      try {
+        const result = change(req);
+        const code = OBJECTIVE_CODES[result.status];
+        if (code) {
+          res.status(code).json({ error: `dungeon_objective_${result.status.replace("-", "_")}` });
+          return;
+        }
+        publishPlayerChanged(owner(req), `player.dungeon_objective.${name}`);
+        res.json(result);
+      } catch (error) {
+        console.error(`Unable to ${name} dungeon objective`, error);
+        res.status(500).json({ error: "dungeon_objective_failed" });
+      }
+    };
+  }
+  router.get("/dungeon-objectives", respond("dungeon_objectives", (req) => readDungeonObjectives({ memberId: owner(req), character: req.query?.character })));
+  router.post("/dungeon-objectives", objectiveWrite("created", (req) => createDungeonObjective({ memberId: owner(req), character: req.body?.character,
+    text: req.body?.text, targetBoss: req.body?.targetBoss, targetDungeon: req.body?.targetDungeon })));
+  router.patch("/dungeon-objectives/:objectiveId", objectiveWrite("updated", (req) => updateDungeonObjective({ memberId: owner(req), id: req.params.objectiveId,
+    text: req.body?.text, targetBoss: req.body?.targetBoss, targetDungeon: req.body?.targetDungeon, completed: req.body?.completed, move: req.body?.move })));
+  router.delete("/dungeon-objectives/:objectiveId", objectiveWrite("deleted", (req) => deleteDungeonObjective({ memberId: owner(req), id: req.params.objectiveId })));
   router.get("/devices", respond("devices", (req) => ({ devices: readPlayerDevices(owner(req)) })));
 
   // Disconnecting a device revokes its key: the bridge on that computer has

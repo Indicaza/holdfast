@@ -1,4 +1,4 @@
-import { parseTelemetryJson } from "../Telemetry/telemetryJson.js";
+import { encodeTelemetryJson, parseTelemetryJson } from "../Telemetry/telemetryJson.js";
 import { ensureCharacterReadModelSchema } from "./readModelSchema.js";
 
 // A character's sections: { [section]: { capturedAt, receivedAt, source, sourceRecordId, sourceRevision, payload } }.
@@ -51,7 +51,7 @@ export function applyTalentDefinitionInDatabase(db, { payload, capturedAt, recei
     ON CONFLICT(tree_id, class_token, game_build) DO UPDATE SET
       captured_at = excluded.captured_at, received_at = excluded.received_at, payload_json = excluded.payload_json
     WHERE excluded.received_at >= talent_tree_definitions.received_at
-  `).run(treeId, classToken, build, capturedAt, receivedAt, JSON.stringify(payload));
+  `).run(treeId, classToken, build, capturedAt, receivedAt, encodeTelemetryJson(payload));
   return true;
 }
 

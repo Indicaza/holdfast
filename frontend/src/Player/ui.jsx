@@ -75,7 +75,7 @@ export function DisciplineTag({ discipline, compact = false }) {
 // hovers, saying its full tooltip is yet to arrive (GameTooltipBody).
 export function ItemLabel({ item, size = 22, tooltip = true, muted = false }) {
   if (!item) return null
-  const quality = Number.isFinite(Number(item.qualityId)) ? Number(item.qualityId) : 1
+  const quality = item.qualityId ?? null
   const body = (
     <span className="gw-item">
       <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />

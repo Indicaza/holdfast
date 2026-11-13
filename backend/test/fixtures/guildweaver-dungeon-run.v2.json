@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "eventType": "dungeon_run",
+  "capturedAt": 1791763200,
+  "gameBuild": {
+    "version": "1.60.1",
+    "build": "70338",
+    "interface": 16001
+  },
+  "realm": "Live Realm",
+  "region": "US",
+  "locale": "enUS",
+  "installationId": "install-fixture",
+  "characterId": "character-rook",
+  "addon": {
+    "name": "Guildweaver",
+    "version": "0.5.0"
+  },
+  "payloadSchemaVersion": 2,
+  "payload": {
+    "schemaVersion": 2,
+    "runId": "dungeon-6ac1f9a0-77aa11-88bb22",
+    "sequence": 4,
+    "status": "completed",
+    "endReason": "all_bosses_defeated",
+    "startedAt": 1791850000,
+    "endedAt": 1791851520,
+    "lastActiveAt": 1791851520,
+    "durationSeconds": 1500,
+    "insideSeconds": 1460,
+    "instance": {
+      "name": "The Deadmines",
+      "type": "party",
+      "instanceId": 36,
+      "difficultyId": 1,
+      "difficultyName": "Normal",
+      "maxPlayers": 5
+    },
+    "character": {
+      "levelAtEntry": 20,
+      "levelAtExit": 20,
+      "classToken": "DRUID"
+    },
+    "group": {
+      "sizeAtEntry": 5,
+      "maxSize": 5
+    },
+    "xp": {
+      "available": true,
+      "atLevelCap": false,
+      "gained": 13100,
+      "levelUps": 0
+    },
+    "wallet": {
+      "basis": "wallet_delta",
+      "available": true,
+      "netCopper": -2150
+    },
+    "deaths": 0,
+    "bosses": {
+      "defeated": 2,
+      "total": 2,
+      "manualSplits": 1,
+      "encounterEvents": true,
+      "duplicatesIgnored": 1,
+      "list": [
+        {
+          "encounterId": 1,
+          "name": "Rhahk'Zor",
+          "at": 360,
+          "source": "encounter_end"
+        },
+        {
+          "encounterId": 2,
+          "name": "Edwin VanCleef",
+          "at": 1440,
+          "source": "encounter_end"
+        }
+      ]
+    },
+    "loot": {
+      "observations": 18
+    },
+    "timeline": [
+      {
+        "at": 0,
+        "kind": "enter",
+        "name": "The Deadmines"
+      },
+      {
+        "at": 330,
+        "kind": "encounter_start",
+        "encounterId": 1,
+        "name": "Rhahk'Zor"
+      },
+      {
+        "at": 360,
+        "kind": "boss_kill",
+        "encounterId": 1,
+        "name": "Rhahk'Zor",
+        "source": "encounter_end"
+      },
+      {
+        "at": 1300,
+        "kind": "manual_split",
+        "name": "Ship"
+      },
+      {
+        "at": 1400,
+        "kind": "encounter_start",
+        "encounterId": 2,
+        "name": "Edwin VanCleef"
+      },
+      {
+        "at": 1440,
+        "kind": "boss_kill",
+        "encounterId": 2,
+        "name": "Edwin VanCleef",
+        "source": "encounter_end"
+      },
+      {
+        "at": 1441,
+        "kind": "complete"
+      },
+      {
+        "at": 1500,
+        "kind": "leave"
+      }
+    ],
+    "completion": {
+      "basis": "lockout"
+    },
+    "checkpoints": [
+      {
+        "id": "boss:1",
+        "kind": "boss",
+        "at": 360,
+        "name": "Rhahk'Zor",
+        "encounterId": 1,
+        "source": "encounter_end"
+      },
+      {
+        "id": "split:ship",
+        "kind": "split",
+        "at": 1300,
+        "name": "Ship",
+        "source": "manual"
+      },
+      {
+        "id": "boss:2",
+        "kind": "boss",
+        "at": 1440,
+        "name": "Edwin VanCleef",
+        "encounterId": 2,
+        "source": "encounter_end"
+      }
+    ]
+  }
+}

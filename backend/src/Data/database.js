@@ -10,7 +10,7 @@ import {
 import { notificationMigration } from "../Notification/notificationMigration.js";
 import { economicObservationMigration } from "../Economy/economicObservationMigration.js";
 import { farmingSessionMigration } from "../Economy/farmingSessionMigration.js";
-import { dungeonRunMigration } from "../Dungeon/dungeonRunMigration.js";
+import { dungeonRunMigration, dungeonRunV2Migration, dungeonTimerMigration } from "../Dungeon/dungeonRunMigration.js";
 import { marketCatalogMigration, marketDepthMigration, marketItemLookupMigration, marketMigration, marketReliabilityMigration } from "../Market/marketMigration.js";
 import { publicGameDataMigration } from "../GameData/publicGameDataMigration.js";
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
@@ -830,6 +830,8 @@ const migrations = [
   marketCatalogMigration,
   marketItemLookupMigration,
   marketDepthMigration,
+  dungeonRunV2Migration,
+  dungeonTimerMigration,
 ];
 
 function configureDatabase(db) {
@@ -880,6 +882,22 @@ function runMigrations(db, { throughVersion = Infinity } = {}) {
       throw error;
     }
   }
+}
+
+// Migrations this release would apply to `db`, read without running any.
+// A database without schema_migrations needs all of them.
+export function pendingGuildMigrations(db) {
+  const hasTable = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'")
+    .get();
+  const applied = new Set(
+    hasTable
+      ? db.prepare("SELECT version FROM schema_migrations").all().map((row) => Number(row.version))
+      : [],
+  );
+  return migrations
+    .filter((migration) => !applied.has(migration.version))
+    .map(({ version, name }) => ({ version, name }));
 }
 
 export function guildDatabaseFile() {

@@ -26,7 +26,9 @@ import {
   selectObservation,
 } from "./marketModel.js";
 import {
+  DAILY_DAYS,
   dayOf,
+  HOURLY_DAYS,
   pruneSeriesInDatabase,
   readMetricInputsInDatabase,
   readSeriesInDatabase,
@@ -34,11 +36,16 @@ import {
   rollUpWeeksInDatabase,
   rollUpWindowDays,
   seriesWriter,
+  WEEKLY_YEARS,
 } from "./marketSeries.js";
 
 // Raw per-snapshot observations are evidence for "why this price" and for
-// choosing between sources; history lives in the series tables.
+// choosing between sources; history lives in the series tables. In-game
+// scans are rare and are compared against API houses for three days. API
+// houses refresh hourly, so each observation repeats what the hourly series
+// keeps; a day (and two hours of margin) of them is evidence enough.
 export const OBSERVATION_RETENTION_SECONDS = 3 * 86400;
+export const API_OBSERVATION_RETENTION_SECONDS = 26 * 3600;
 // Observations older than this are refused: history would be rewritten.
 export const MAX_OBSERVATION_AGE_SECONDS = 7 * 86400;
 const CHECK_RETENTION_SECONDS = 14 * 86400;
@@ -435,28 +442,50 @@ function observationSet(db, snapshot) {
   return ids.length >= snapshot.parts ? ids : null;
 }
 
-// Finishes a full snapshot: items the previous full observation of the same
-// scope listed that this one does not are recorded as "none listed", so
-// supply drops to zero instead of the last price lingering. Partial and
-// item-search snapshots never imply anything about items they did not see.
-export function finishMarketSnapshotInDatabase(db, { snapshotId, market, sourceType, now = nowSeconds() }) {
+// Items a full snapshot implies are no longer listed: those the previous
+// full observation of the same scope listed that this one does not, plus
+// any whose summary still shows a quantity from an older full snapshot of
+// that scope (an earlier run that stopped before marking them all). They
+// are recorded as "none listed", so supply drops to zero instead of the
+// last price lingering. Partial and item-search snapshots never imply
+// anything about items they did not see. Reads only.
+export function absentMarketItemsInDatabase(db, { snapshotId }) {
   const snapshot = db.prepare("SELECT * FROM market_snapshots WHERE id = ?").get(snapshotId);
-  if (!snapshot || snapshot.coverage !== "full") return { absent: 0 };
+  if (!snapshot || snapshot.coverage !== "full") return { items: [] };
   const current = observationSet(db, snapshot);
-  if (!current) return { absent: 0, waiting: true };
-  if (current.length > 1) db.prepare("UPDATE market_markets SET last_full_at = MAX(COALESCE(last_full_at, 0), ?) WHERE market_key = ?").run(snapshot.observed_at, snapshot.market_key);
+  if (!current) return { items: [], waiting: true };
+  const marks = current.map(() => "?").join(",");
+  const gone = new Map();
   const previousRow = db.prepare(`SELECT * FROM market_snapshots WHERE market_key = ? AND source_type = ? AND scope_key = ? AND coverage = 'full'
-      AND id NOT IN (${current.map(() => "?").join(",")}) AND observed_at < ? ORDER BY observed_at DESC, id DESC LIMIT 1`)
+      AND id NOT IN (${marks}) AND observed_at < ? ORDER BY observed_at DESC, id DESC LIMIT 1`)
     .get(snapshot.market_key, snapshot.source_type, snapshot.scope_key, ...current, snapshot.observed_at);
-  if (!previousRow) return { absent: 0 };
-  const previous = observationSet(db, previousRow);
-  if (!previous) return { absent: 0 };
-  const gone = db.prepare(`SELECT DISTINCT o.item_key, o.item_id FROM market_observations o WHERE o.snapshot_id IN (${previous.map(() => "?").join(",")})
-      AND o.quantity > 0 AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${current.map(() => "?").join(",")}) AND c.item_key = o.item_key)`)
-    .all(...previous, ...current);
-  if (!gone.length) return { absent: 0 };
-  const items = gone.map((row) => ({ itemKey: row.item_key, itemId: row.item_id, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true }));
-  addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt: snapshot.observed_at, items, now });
+  const previous = previousRow ? observationSet(db, previousRow) : null;
+  if (previous) {
+    for (const row of db.prepare(`SELECT DISTINCT o.item_key, o.item_id FROM market_observations o WHERE o.snapshot_id IN (${previous.map(() => "?").join(",")})
+        AND o.quantity > 0 AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = o.item_key)`)
+      .all(...previous, ...current)) gone.set(row.item_key, row.item_id);
+  }
+  for (const row of db.prepare(`SELECT s.item_key, s.item_id FROM market_summaries s JOIN market_snapshots sn ON sn.id = s.snapshot_id
+      WHERE s.market_key = ? AND s.source_type = ? AND s.quantity > 0 AND sn.market_key = ? AND sn.scope_key = ? AND sn.coverage = 'full'
+        AND sn.observed_at < ? AND sn.id NOT IN (${marks})
+        AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = s.item_key)`)
+    .all(snapshot.market_key, snapshot.source_type, snapshot.market_key, snapshot.scope_key, snapshot.observed_at, ...current, ...current)) {
+    gone.set(row.item_key, row.item_id);
+  }
+  if (current.length > 1) db.prepare("UPDATE market_markets SET last_full_at = MAX(COALESCE(last_full_at, 0), ?) WHERE market_key = ?").run(snapshot.observed_at, snapshot.market_key);
+  return {
+    observedAt: snapshot.observed_at,
+    items: [...gone].map(([itemKey, itemId]) => ({ itemKey, itemId, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true })),
+  };
+}
+
+// Finishes a full snapshot in one transaction (in-game scans, tests). The
+// API refresher writes the same items in chunks instead.
+export function finishMarketSnapshotInDatabase(db, { snapshotId, market, sourceType, now = nowSeconds() }) {
+  const { items, waiting, observedAt } = absentMarketItemsInDatabase(db, { snapshotId });
+  if (waiting) return { absent: 0, waiting: true };
+  if (!items.length) return { absent: 0 };
+  addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt, items, now });
   return { absent: items.length };
 }
 
@@ -479,6 +508,49 @@ export function recordMarketCheckInDatabase(db, { marketKey, sourceType, sourceI
 
 // Maintenance -------------------------------------------------------------------------
 
+// The same retention rules as pruneMarketDataInDatabase, as bounded
+// deletes: each call of a step removes at most `limit` rows, so maintenance
+// runs as many short transactions and requests are served in between.
+export function marketPruneSteps(now = nowSeconds()) {
+  const cutoff = now - OBSERVATION_RETENTION_SECONDS;
+  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
+  const step = (name, table, where, ...params) => ({
+    name,
+    sql: `DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ${where} LIMIT ?)`,
+    params,
+  });
+  return [
+    // A snapshot still shown by a summary keeps its observations.
+    step("observations", "market_observations", `observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
+      AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
+    step("snapshots", "market_snapshots", `confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
+      AND id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
+    step("checks", "market_snapshot_checks", "checked_at < ?", now - CHECK_RETENTION_SECONDS),
+    step("hourly", "market_series_hourly", "hour < ?", Math.floor((now - HOURLY_DAYS * 86400) / 3600)),
+    step("daily", "market_series_daily", "day < ?", dayOf(now - DAILY_DAYS * 86400)),
+    step("weekly", "market_series_weekly", "week < ?", dayOf(now - WEEKLY_YEARS * 365 * 86400)),
+    step("runs", "market_provider_runs", "started_at < ?", now - RUN_RETENTION_SECONDS),
+    step("ladders", "market_price_ladders", "observed_at < ?", now - CHECK_RETENTION_SECONDS),
+    step("interest", "market_item_interest", "day < ?", dayOf(now - 30 * 86400)),
+  ];
+}
+
+export function runMarketPruneStepInDatabase(db, step, limit) {
+  return Number(db.prepare(step.sql).run(...step.params, limit).changes);
+}
+
+export function marketKeysWithSummariesInDatabase(db) {
+  return db.prepare("SELECT DISTINCT market_key AS marketKey FROM market_summaries").all().map((row) => row.marketKey);
+}
+
+export function lastMarketMaintenanceInDatabase(db, name) {
+  return db.prepare("SELECT ran_at FROM market_maintenance WHERE name = ?").get(name)?.ran_at ?? null;
+}
+
+export function recordMarketMaintenanceInDatabase(db, name, now, detail) {
+  noteMaintenance(db, name, now, detail);
+}
+
 function noteMaintenance(db, name, now, detail) {
   db.prepare(`INSERT INTO market_maintenance (name, ran_at, detail) VALUES (?, ?, ?)
     ON CONFLICT(name) DO UPDATE SET ran_at = excluded.ran_at, detail = excluded.detail`).run(name, now, JSON.stringify(detail));
@@ -488,11 +560,12 @@ function noteMaintenance(db, name, now, detail) {
 // daily 400, weekly 10 years, provider runs 30 days.
 export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
   const cutoff = now - OBSERVATION_RETENTION_SECONDS;
+  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
   // A snapshot still shown by a summary keeps its observations.
-  const observations = db.prepare(`DELETE FROM market_observations WHERE observed_at < ?
-    AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(cutoff).changes;
-  const snapshots = db.prepare(`DELETE FROM market_snapshots WHERE confirmed_at < ?
-    AND id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(cutoff).changes;
+  const observations = db.prepare(`DELETE FROM market_observations WHERE observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
+    AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
+  const snapshots = db.prepare(`DELETE FROM market_snapshots WHERE confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
+    AND id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
   const checks = db.prepare("DELETE FROM market_snapshot_checks WHERE checked_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
   const series = pruneSeriesInDatabase(db, now);
   const runs = db.prepare("DELETE FROM market_provider_runs WHERE started_at < ?").run(now - RUN_RETENTION_SECONDS).changes;
@@ -1170,9 +1243,12 @@ export function linkEvidenceInDatabase(db, clientKey, now = nowSeconds()) {
   if (!client) return [];
   const houses = db.prepare("SELECT * FROM market_markets WHERE kind = 'api_house' AND region = ? AND faction = ?").all(client.region, client.faction);
   return houses.map((house) => {
-    const pairs = db.prepare(`SELECT a.min_unit_buyout AS a, b.min_unit_buyout AS b FROM market_observations a
-      JOIN market_observations b ON b.item_key = a.item_key AND b.market_key = ? AND ABS(a.observed_at - b.observed_at) <= 10800
-      WHERE a.market_key = ? AND a.complete = 1 AND b.complete = 1 AND a.min_unit_buyout > 0 AND b.min_unit_buyout > 0 AND a.observed_at >= ?
+    // The house side comes from its hourly series (complete views only),
+    // which reach back further than its raw observations.
+    const pairs = db.prepare(`SELECT a.min_unit_buyout AS a, b.min_close AS b FROM market_observations a
+      JOIN market_series_hourly b ON b.market_key = ? AND b.item_key = a.item_key AND b.source_type <> 'addon_scan'
+        AND b.hour BETWEEN a.observed_at / 3600 - 3 AND a.observed_at / 3600 + 3
+      WHERE a.market_key = ? AND a.complete = 1 AND a.min_unit_buyout > 0 AND b.min_close > 0 AND a.observed_at >= ?
       LIMIT 5000`).all(house.market_key, clientKey, now - 3 * 86400);
     const ratios = pairs.map((pair) => Math.abs(pair.a - pair.b) / pair.b);
     const sorted = [...ratios].sort((x, y) => x - y);
@@ -1235,7 +1311,7 @@ export function readMarketDiagnostics({ refresherStats = null, providerConfig = 
       }),
       runs: runs.map((row) => ({ marketKey: row.market_key, provider: row.provider, startedAt: row.started_at, finishedAt: row.finished_at, status: row.status,
         httpStatus: row.http_status, auctions: row.auctions, error: row.error, detail: json(row.detail || "{}", {}) })),
-      storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
+      storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, apiObservationsHours: API_OBSERVATION_RETENTION_SECONDS / 3600, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
       maintenance,
       identity: conflicts,
       // Listed items still without a name or class, and icons by status.

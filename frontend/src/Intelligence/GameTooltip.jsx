@@ -63,7 +63,7 @@ function CapturedRows({ lines, quality }) {
 export function GameTooltipBody({ item: value }) {
   const item = gameTooltipItem(value) || {}
   const lines = capturedLines(item)
-  const quality = Number(item.qualityId ?? item.quality) || 0
+  const quality = item.qualityId ?? item.quality ?? null
   const actualItem = isItem(item)
 
   // For real items, never manufacture a tooltip from metadata. An item with

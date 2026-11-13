@@ -1,3 +1,4 @@
+import { ensureRecipeStoreSchema, replaceCharacterRecipesInDatabase } from "./recipeStore.js";
 import { withGuildDatabase } from "../Data/database.js";
 
 function text(value, maxLength = 160) {
@@ -209,7 +210,7 @@ export function normalizeOrganization(snapshot) {
   };
 }
 
-export function ensureTelemetryProjectionSchema(db) {
+export function ensureTelemetryProjectionSchema(db, { onRecipesConverted = null } = {}) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS telemetry_organizations (
       id TEXT PRIMARY KEY,
@@ -246,38 +247,15 @@ export function ensureTelemetryProjectionSchema(db) {
       PRIMARY KEY(character_id, profession_key)
     );
 
-    CREATE TABLE IF NOT EXISTS telemetry_recipes (
-      character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-      recipe_key TEXT NOT NULL,
-      recipe_id INTEGER,
-      name TEXT NOT NULL,
-      profession_key TEXT NOT NULL DEFAULT '',
-      profession_id INTEGER,
-      profession_name TEXT NOT NULL DEFAULT '',
-      icon_file_id INTEGER,
-      known INTEGER NOT NULL DEFAULT 1 CHECK (known IN (0, 1)),
-      required_skill INTEGER,
-      requirements_json TEXT NOT NULL DEFAULT 'null',
-      crafted_item_id INTEGER,
-      crafted_item_name TEXT NOT NULL DEFAULT '',
-      reagents_json TEXT NOT NULL DEFAULT '[]',
-      snapshot_id INTEGER REFERENCES character_snapshots(id) ON DELETE SET NULL,
-      PRIMARY KEY(character_id, recipe_key)
-    );
-
     CREATE INDEX IF NOT EXISTS telemetry_characters_org_seen_idx
       ON telemetry_characters(organization_id, last_seen_at DESC);
     CREATE INDEX IF NOT EXISTS telemetry_characters_realm_idx
       ON telemetry_characters(realm COLLATE NOCASE, last_seen_at DESC);
     CREATE INDEX IF NOT EXISTS telemetry_professions_name_idx
       ON telemetry_professions(name COLLATE NOCASE, skill_current DESC);
-    CREATE INDEX IF NOT EXISTS telemetry_recipes_name_idx
-      ON telemetry_recipes(name COLLATE NOCASE, known, profession_name COLLATE NOCASE);
-    CREATE INDEX IF NOT EXISTS telemetry_recipes_item_idx
-      ON telemetry_recipes(crafted_item_id, known);
-    CREATE INDEX IF NOT EXISTS telemetry_recipes_profession_idx
-      ON telemetry_recipes(profession_key, known, name COLLATE NOCASE);
   `);
+  // Recipes: shared definitions plus who knows them (recipeStore.js).
+  ensureRecipeStoreSchema(db, { onConverted: onRecipesConverted });
 }
 
 export function projectTelemetrySnapshotInDatabase({
@@ -336,10 +314,6 @@ export function projectTelemetrySnapshotInDatabase({
   db.prepare("DELETE FROM telemetry_professions WHERE character_id = ?").run(
     characterId,
   );
-  db.prepare("DELETE FROM telemetry_recipes WHERE character_id = ?").run(
-    characterId,
-  );
-
   const insertProfession = db.prepare(`
     INSERT INTO telemetry_professions (
       character_id, profession_key, profession_id, name, icon_file_id,
@@ -361,32 +335,11 @@ export function projectTelemetrySnapshotInDatabase({
     );
   }
 
-  const insertRecipe = db.prepare(`
-    INSERT INTO telemetry_recipes (
-      character_id, recipe_key, recipe_id, name, profession_key, profession_id,
-      profession_name, icon_file_id, known, required_skill, requirements_json,
-      crafted_item_id, crafted_item_name, reagents_json, snapshot_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  for (const recipe of recipes) {
-    insertRecipe.run(
-      characterId,
-      recipe.key,
-      recipe.id,
-      recipe.name,
-      recipe.professionKey,
-      recipe.professionId,
-      recipe.professionName,
-      recipe.iconFileId,
-      recipe.known ? 1 : 0,
-      recipe.requiredSkill,
-      JSON.stringify(recipe.requirements ?? null),
-      recipe.craftedItemId,
-      recipe.craftedItemName,
-      JSON.stringify(recipe.reagents),
-      snapshotId,
-    );
-  }
+  replaceCharacterRecipesInDatabase(db, characterId, recipes.map((recipe) => ({
+    ...recipe,
+    requirementsJson: JSON.stringify(recipe.requirements ?? null),
+    reagentsJson: JSON.stringify(recipe.reagents),
+  })), { snapshotId });
 
   return { organization, professions, recipes };
 }

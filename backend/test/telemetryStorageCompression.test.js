@@ -115,3 +115,22 @@ test("telemetry stored before compression is compacted once", () =>
     const [state] = readLatestTelemetryState({ memberId: memberIds.member, characterId: "character-rook", eventType: "profession_snapshot" });
     assert.equal(state.payload.professions[0].recipes.length, 300);
   }));
+
+test("read-model payloads written before compression are compacted in bounded batches", async () => {
+  const { DatabaseSync } = await import("node:sqlite");
+  const { compactReadModelPayloadsInDatabase, decodeTelemetryJson } = await import("../src/Character/Telemetry/telemetryJson.js");
+  const db = new DatabaseSync(":memory:");
+  db.exec(`CREATE TABLE character_sections (character_id TEXT, section TEXT, payload_json TEXT, PRIMARY KEY(character_id, section));
+    CREATE TABLE talent_tree_definitions (tree_id INTEGER, class_token TEXT, game_build TEXT, payload_json TEXT, PRIMARY KEY(tree_id, class_token, game_build));`);
+  const big = JSON.stringify({ professions: Array.from({ length: 2000 }, (_, index) => ({ name: `Recipe ${index}`, reagents: [{ itemId: index }] })) });
+  for (let index = 0; index < 25; index += 1) db.prepare("INSERT INTO character_sections VALUES (?, 'profession_books', ?)").run(`c${index}`, big);
+  db.prepare("INSERT INTO character_sections VALUES ('c0', 'identity', '{\"name\":\"small\"}')").run();
+  db.prepare("INSERT INTO talent_tree_definitions VALUES (1, 'MAGE', '1', ?)").run(big);
+  const batches = [];
+  for (let changed; (changed = compactReadModelPayloadsInDatabase(db, { limit: 10 })); ) batches.push(changed);
+  assert.deepEqual(batches, [10, 10, 6], "at most ten rows per call");
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM character_sections WHERE typeof(payload_json) = 'blob'").get().n, 25);
+  assert.equal(db.prepare("SELECT typeof(payload_json) AS t FROM character_sections WHERE section = 'identity'").get().t, "text", "small values stay text");
+  assert.equal(decodeTelemetryJson(db.prepare("SELECT payload_json FROM character_sections WHERE character_id = 'c7' AND section = 'profession_books'").get().payload_json), big);
+  assert.equal(db.prepare("SELECT typeof(payload_json) AS t FROM talent_tree_definitions").get().t, "blob");
+});
