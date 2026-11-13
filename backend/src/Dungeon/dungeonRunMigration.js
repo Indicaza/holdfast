@@ -65,3 +65,34 @@ export const dungeonRunMigration = {
     `);
   },
 };
+
+// Dungeon V2: what payload schema 2 adds (checkpoints, what proved the
+// clear, a multi-level XP jump), and a small per-character objective list.
+// Adding nullable columns is a schema change only: no row is rewritten, so
+// this is instant at startup however many runs exist.
+export const dungeonRunV2Migration = {
+  version: 21,
+  name: "dungeon_runs_v2",
+  up(db) {
+    db.exec(`
+      ALTER TABLE dungeon_runs ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE dungeon_runs ADD COLUMN checkpoints_json TEXT;
+      ALTER TABLE dungeon_runs ADD COLUMN completion_basis TEXT;
+      ALTER TABLE dungeon_runs ADD COLUMN xp_partial INTEGER NOT NULL DEFAULT 0;
+      CREATE TABLE dungeon_objectives (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        member_id TEXT NOT NULL,
+        character_id TEXT NOT NULL,
+        text TEXT NOT NULL CHECK(length(text) BETWEEN 1 AND 140),
+        position INTEGER NOT NULL,
+        target_kind TEXT NOT NULL DEFAULT 'none' CHECK(target_kind IN ('none', 'boss')),
+        target_name TEXT NOT NULL DEFAULT '',
+        target_dungeon TEXT NOT NULL DEFAULT '',
+        completed_at INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+      CREATE INDEX dungeon_objectives_member_idx ON dungeon_objectives(member_id, character_id, position);
+    `);
+  },
+};

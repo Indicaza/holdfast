@@ -1,6 +1,16 @@
-// Validation of the addon's dungeon_run event (payload schema 1). Optional
-// numbers may be missing (the client could not read them) but never wrong:
-// a run that fails here is kept as a raw record only.
+// Validation of the addon's dungeon_run event. Optional numbers may be
+// missing (the client could not read them) but never wrong: a run that
+// fails here is kept as a raw record only.
+//
+// Payload schema 1 (add-on 0.5) and 2 (add-on 0.6) are both accepted.
+// Schema 2 only adds: `checkpoints` (boss kills and manual splits with a
+// stable id, kept apart from the bounded timeline so a long run never loses
+// them), `completion.basis` (what proved the clear), a `complete` timeline
+// marker and `bosses.duplicatesIgnored`. A schema 1 run reads exactly as
+// before; its checkpoints are derived from its timeline.
+export const DUNGEON_SCHEMA_VERSIONS = Object.freeze([1, 2]);
+export const MAX_CHECKPOINTS = 40;
+export const COMPLETION_BASES = Object.freeze(["lockout", "encounters", "manual", "none"]);
 export const DUNGEON_STATUSES = ["open", "completed", "interrupted", "abandoned"];
 export const FINAL_DUNGEON_STATUSES = new Set(["completed", "interrupted", "abandoned"]);
 export const MAX_TIMELINE = 60;
@@ -8,7 +18,8 @@ export const MAX_TIMELINE = 60;
 export const XP_RATE_MIN_SECONDS = 300;
 
 const TIMELINE_KINDS = new Set(["enter", "leave", "reenter", "resume", "boss_kill", "encounter_start",
-  "encounter_failed", "death", "level_up", "manual_split"]);
+  "encounter_failed", "death", "level_up", "manual_split", "complete"]);
+const CHECKPOINT_KINDS = new Set(["boss", "split"]);
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -44,11 +55,16 @@ function validTimelineEntry(entry) {
     && optionalText(entry.source, 40) && optionalText(entry.reason, 60);
 }
 
+function validCheckpoint(entry) {
+  return isObject(entry) && typeof entry.id === "string" && /^[\w:.'-]{1,80}$/.test(entry.id) && CHECKPOINT_KINDS.has(entry.kind)
+    && integer(entry.at, 0, 604800) && optionalText(entry.name) && optionalInteger(entry.encounterId, 1) && optionalText(entry.source, 40);
+}
+
 export function validDungeonRun(record) {
   const envelope = record?.envelope;
   const p = envelope?.payload;
-  if (record?.kind !== "event" || !isObject(p) || p.schemaVersion !== 1) return false;
-  if (Number(record.payloadSchemaVersion ?? p.schemaVersion) !== 1) return false;
+  if (record?.kind !== "event" || !isObject(p) || !DUNGEON_SCHEMA_VERSIONS.includes(p.schemaVersion)) return false;
+  if (Number(record.payloadSchemaVersion ?? envelope.payloadSchemaVersion ?? p.schemaVersion) !== p.schemaVersion) return false;
   if (typeof p.runId !== "string" || !/^[\w:-]{1,160}$/.test(p.runId)) return false;
   if (!integer(p.sequence, 1)) return false;
   if (!DUNGEON_STATUSES.includes(p.status)) return false;
@@ -83,6 +99,16 @@ export function validDungeonRun(record) {
   const timeline = luaList(p.timeline ?? []);
   if (!timeline || timeline.length > MAX_TIMELINE || !timeline.every(validTimelineEntry)) return false;
   if (p.loot !== undefined && !(isObject(p.loot) && optionalInteger(p.loot.observations, 0, 1000000))) return false;
+  if (p.schemaVersion >= 2) {
+    const checkpoints = luaList(p.checkpoints ?? []);
+    if (!checkpoints || checkpoints.length > MAX_CHECKPOINTS || !checkpoints.every(validCheckpoint)) return false;
+    if (new Set(checkpoints.map((entry) => entry.id)).size !== checkpoints.length) return false;
+    if (p.completion !== undefined && !(isObject(p.completion) && COMPLETION_BASES.includes(p.completion.basis))) return false;
+    if (!optionalInteger(bosses.duplicatesIgnored, 0, 1000)) return false;
+  } else if (p.checkpoints !== undefined || p.completion !== undefined) {
+    // Schema 2 fields on a schema 1 payload: a mixed-up writer.
+    return false;
+  }
   return Boolean(String(envelope.characterId || "").trim() && String(envelope.installationId || "").trim());
 }
 

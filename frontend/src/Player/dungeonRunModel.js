@@ -1,7 +1,8 @@
 // Formatting and URL state for the Dungeon runs page. Kept apart from the
 // component so it can be tested without a browser.
 
-export const DUNGEON_FILTER_KEYS = Object.freeze(['character', 'realm', 'dungeon', 'from', 'to'])
+export const DUNGEON_FILTER_KEYS = Object.freeze(['character', 'realm', 'dungeon', 'status', 'from', 'to'])
+export const STATUS_FILTERS = Object.freeze([['', 'Any status'], ['completed', 'Completed'], ['incomplete', 'Incomplete']])
 
 export function readDungeonQuery(queryString = '') {
   const params = new URLSearchParams(queryString)
@@ -110,6 +111,7 @@ const TIMELINE_LABELS = {
   leave: () => 'Left the instance',
   reenter: () => 'Came back in',
   resume: () => 'Continued after reload or login',
+  complete: () => 'Run complete',
   boss_kill: (entry) => `Defeated ${entry.name || 'a boss'}`,
   encounter_start: (entry) => `Pulled ${entry.name || 'a boss'}`,
   encounter_failed: (entry) => `Encounter reset: ${entry.name || 'boss'}`,
@@ -124,7 +126,7 @@ export function timelineLabel(entry = {}) {
 }
 
 export function timelineTone(kind) {
-  if (kind === 'boss_kill') return 'ok'
+  if (kind === 'boss_kill' || kind === 'complete') return 'ok'
   if (kind === 'death' || kind === 'encounter_failed') return 'warn'
   if (kind === 'manual_split' || kind === 'level_up') return 'info'
   return 'quiet'
@@ -136,4 +138,161 @@ export function characterLabel(character = {}) {
   const to = character.levelAtExit
   if (!from) return name
   return `${name} · ${to && to !== from ? `${from}→${to}` : from}`
+}
+
+// Seconds as a signed pace: "18 s ahead", "1:05 behind", "even".
+export function formatDelta(seconds) {
+  if (seconds === null || seconds === undefined || !Number.isFinite(Number(seconds))) return ''
+  const value = Math.round(Number(seconds))
+  if (value === 0) return 'even'
+  const abs = Math.abs(value)
+  const text = abs < 60 ? `${abs} s` : formatOffset(abs)
+  return `${text} ${value < 0 ? 'ahead' : 'behind'}`
+}
+
+// A run-to-run change in time: "−4:10" faster, "+0:35" slower.
+export function formatSignedDuration(seconds) {
+  if (seconds === null || seconds === undefined || !Number.isFinite(Number(seconds))) return ''
+  const value = Math.round(Number(seconds))
+  if (value === 0) return '±0:00'
+  return `${value < 0 ? '−' : '+'}${formatOffset(Math.abs(value))}`
+}
+
+export function formatNumber(value) {
+  return Number.isFinite(Number(value)) && value !== null ? Number(value).toLocaleString('en-US') : '—'
+}
+
+const CHECKPOINT_TRUSTED_SOURCES = new Set(['encounter_end', 'boss_kill'])
+
+// Splits of a run against its personal-best reference. A checkpoint is
+// compared only when the reference has a checkpoint with the same identity
+// (a boss by encounter id or name, a manual split by name) and both runs
+// recorded it the same way; anything else shows its own time only. Never a
+// made-up boss or time.
+export function checkpointPace(run = {}) {
+  const checkpoints = Array.isArray(run.checkpoints) ? run.checkpoints : []
+  const reference = run.reference && Array.isArray(run.reference.checkpoints) ? run.reference : null
+  const byId = new Map((reference?.checkpoints || []).map((entry) => [entry.id, entry]))
+  let previousAt = 0
+  let compared = 0
+  const rows = checkpoints.map((entry) => {
+    const split = Math.max(0, (Number(entry.at) || 0) - previousAt)
+    previousAt = Number(entry.at) || 0
+    const match = byId.get(entry.id) || null
+    const trusted = entry.kind === 'boss'
+      ? CHECKPOINT_TRUSTED_SOURCES.has(entry.source) && CHECKPOINT_TRUSTED_SOURCES.has(match?.source)
+      : entry.kind === 'split' && match?.kind === 'split'
+    const delta = match && trusted ? (Number(entry.at) || 0) - (Number(match.at) || 0) : null
+    if (delta !== null) compared += 1
+    return {
+      id: entry.id,
+      kind: entry.kind,
+      name: entry.name || (entry.kind === 'boss' ? 'Unnamed boss' : 'Split'),
+      at: Number(entry.at) || 0,
+      split,
+      manual: entry.kind === 'split' || entry.source === 'manual',
+      referenceAt: match ? Number(match.at) || 0 : null,
+      delta,
+      reason: !reference ? 'no_reference' : !match ? 'not_in_reference' : !trusted ? 'not_comparable' : null,
+    }
+  })
+  const finalDelta = reference && run.marks?.clear && Number.isFinite(run.durationSeconds) ? run.durationSeconds - reference.durationSeconds : null
+  return { rows, compared, reference, finalDelta }
+}
+
+// The run's events placed on a track from entry (0%) to its end (100%),
+// in order. Events at the same second keep their recorded order.
+export function timelineTrack(run = {}) {
+  const timeline = Array.isArray(run.timeline) ? run.timeline : []
+  const end = Math.max(1, Number(run.durationSeconds) || 0, ...timeline.map((entry) => Number(entry.at) || 0))
+  const markers = timeline
+    .map((entry, index) => ({ ...entry, index, at: Number(entry.at) || 0 }))
+    .sort((a, b) => a.at - b.at || a.index - b.index)
+    .map((entry) => ({ ...entry, pct: Math.min(100, Math.max(0, (entry.at / end) * 100)), tone: timelineTone(entry.kind), label: timelineLabel(entry) }))
+  // Time outside the instance, between a leave and the next re-entry.
+  const outside = []
+  let leftAt = null
+  for (const marker of markers) {
+    if (marker.kind === 'leave') leftAt = marker.at
+    if ((marker.kind === 'reenter' || marker.kind === 'resume') && leftAt !== null) {
+      outside.push({ from: (leftAt / end) * 100, to: (marker.at / end) * 100 })
+      leftAt = null
+    }
+  }
+  return { end, markers, outside }
+}
+
+function sameFocus(run, focus) {
+  return run.dungeon?.name === focus.name && (run.dungeon?.difficultyId ?? null) === focus.difficultyId
+}
+
+// The headline numbers for the runs in view. Counts cover every run shown;
+// the personal best and XP/hour cover one dungeon at one difficulty only:
+// the selected dungeon, or the only one in view. Never across dungeons.
+export function performanceSummary(runs = [], filters = {}) {
+  const completed = runs.filter((run) => run.status === 'completed')
+  const base = {
+    runs: runs.length,
+    completed: completed.length,
+    verified: completed.filter((run) => run.marks?.completion === 'verified').length,
+    bosses: runs.reduce((sum, run) => sum + (Number(run.bosses?.defeated) || 0), 0),
+    deaths: runs.reduce((sum, run) => sum + (Number(run.deaths) || 0), 0),
+    focus: null,
+    focusReason: null,
+  }
+  const dungeons = new Set(runs.map((run) => `${run.dungeon?.name}|${run.dungeon?.difficultyId ?? ''}`))
+  // The selected dungeon, else the one of the newest run (said so).
+  const anchor = filters.dungeon ? runs.find((run) => run.dungeon?.name === filters.dungeon) || null : runs[0] || null
+  if (!anchor) return base
+  const focus = { name: anchor.dungeon.name, difficultyId: anchor.dungeon.difficultyId ?? null, difficultyName: anchor.dungeon.difficultyName || null,
+    chosen: filters.dungeon ? 'filter' : dungeons.size === 1 ? 'only' : 'latest' }
+  const inFocus = runs.filter((run) => sameFocus(run, focus))
+  const clears = inFocus.filter((run) => run.marks?.clear)
+  // Completed runs only: a run cut short reads as a record XP/hour.
+  const rated = inFocus.filter((run) => run.status === 'completed' && Number.isFinite(run.xp?.perHour) && run.xp.perHour > 0)
+  const fastest = clears.reduce((best, run) => (!best || run.durationSeconds < best.durationSeconds ? run : best), null)
+  const best = rated.reduce((top, run) => (!top || run.xp.perHour > top.xp.perHour ? run : top), null)
+  const sorted = rated.map((run) => run.xp.perHour).sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  const typical = sorted.length ? (sorted.length % 2 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2)) : null
+  base.focus = {
+    ...focus,
+    runs: inFocus.length,
+    clears: clears.length,
+    otherDifficulties: [...new Set(runs.filter((run) => run.dungeon?.name === focus.name && !sameFocus(run, focus)).map((run) => run.dungeon?.difficultyName || 'Other'))],
+    pb: fastest ? { id: fastest.id, durationSeconds: fastest.durationSeconds, character: fastest.character } : null,
+    bestXpPerHour: best ? { id: best.id, value: best.xp.perHour } : null,
+    typicalXpPerHour: rated.length >= 2 ? typical : null,
+    ratedRuns: rated.length,
+  }
+  return base
+}
+
+export const COMPLETION_LABELS = Object.freeze({
+  verified: 'Verified clear',
+  manual: 'Unverified clear',
+  incomplete: 'Incomplete',
+  open: 'In progress',
+})
+
+// Short markers for a row: PB, best XP/hour, exceptional, unverified.
+export function runMarkers(run = {}) {
+  const marks = run.marks || {}
+  const out = []
+  if (marks.pb) out.push({ key: 'pb', label: 'PB', title: 'Personal best: fastest verified clear for this character, dungeon and difficulty' })
+  if (marks.bestXp) out.push({ key: 'xp', label: 'Best XP/h', title: 'Highest XP/hour for this character, dungeon and difficulty' })
+  if (marks.exceptional && !marks.bestXp) out.push({ key: 'hot', label: '▲ XP/h', title: 'XP/hour at least 25% above this character\'s median here' })
+  if (run.status === 'completed' && marks.completion === 'manual') out.push({ key: 'unverified', label: 'Unverified', title: (marks.completionReasons || []).join(' ') || 'Boss evidence does not cover every boss' })
+  return out
+}
+
+// What the header says about whose runs these are.
+export function contextLine({ runs = [], filters = {}, options = {} } = {}) {
+  const character = filters.character ? options.characters?.find((entry) => entry.id === filters.character) : null
+  const latest = runs.find((run) => !filters.character || run.character?.id === filters.character) || null
+  const names = new Set(runs.map((run) => run.character?.id))
+  const who = character ? (character.name || 'Unknown character') : names.size === 1 && latest ? (latest.character.name || 'Unknown character') : `${options.characters?.length || names.size} characters`
+  const level = (character || names.size === 1) && latest ? latest.character.levelAtExit || latest.character.levelAtEntry : null
+  const realms = filters.realm ? [filters.realm] : [...new Set(runs.map((run) => run.realm).filter(Boolean))]
+  return [who, level ? `level ${level}` : null, realms.length === 1 ? realms[0] : realms.length ? `${realms.length} realms` : null].filter(Boolean).join(' · ')
 }
