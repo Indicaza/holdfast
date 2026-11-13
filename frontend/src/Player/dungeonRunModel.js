@@ -112,6 +112,8 @@ const TIMELINE_LABELS = {
   reenter: () => 'Came back in',
   resume: () => 'Continued after reload or login',
   complete: () => 'Run complete',
+  timer_start: () => 'Timer started',
+  timer_stop: (event) => event.source === 'complete' ? 'Timer stopped on clear' : 'Timer paused',
   boss_kill: (entry) => `Defeated ${entry.name || 'a boss'}`,
   encounter_start: (entry) => `Pulled ${entry.name || 'a boss'}`,
   encounter_failed: (entry) => `Encounter reset: ${entry.name || 'boss'}`,
@@ -176,27 +178,28 @@ export function checkpointPace(run = {}) {
   let previousAt = 0
   let compared = 0
   const rows = checkpoints.map((entry) => {
-    const split = Math.max(0, (Number(entry.at) || 0) - previousAt)
-    previousAt = Number(entry.at) || 0
+    const at = entry.timerAt ?? entry.at
+    const split = Math.max(0, at - previousAt)
+    previousAt = at
     const match = byId.get(entry.id) || null
     const trusted = entry.kind === 'boss'
       ? CHECKPOINT_TRUSTED_SOURCES.has(entry.source) && CHECKPOINT_TRUSTED_SOURCES.has(match?.source)
       : entry.kind === 'split' && match?.kind === 'split'
-    const delta = match && trusted ? (Number(entry.at) || 0) - (Number(match.at) || 0) : null
+    const delta = match && trusted ? at - (match.timerAt ?? match.at) : null
     if (delta !== null) compared += 1
     return {
       id: entry.id,
       kind: entry.kind,
       name: entry.name || (entry.kind === 'boss' ? 'Unnamed boss' : 'Split'),
-      at: Number(entry.at) || 0,
+      at,
       split,
       manual: entry.kind === 'split' || entry.source === 'manual',
-      referenceAt: match ? Number(match.at) || 0 : null,
+      referenceAt: match ? (match.timerAt ?? match.at) : null,
       delta,
       reason: !reference ? 'no_reference' : !match ? 'not_in_reference' : !trusted ? 'not_comparable' : null,
     }
   })
-  const finalDelta = reference && run.marks?.clear && Number.isFinite(run.durationSeconds) ? run.durationSeconds - reference.durationSeconds : null
+  const finalDelta = reference && run.marks?.clear && Number.isFinite(run.durationSeconds) ? (run.timer?.seconds ?? run.durationSeconds) - (reference.timer?.seconds ?? reference.durationSeconds) : null
   return { rows, compared, reference, finalDelta }
 }
 
@@ -247,10 +250,10 @@ export function performanceSummary(runs = [], filters = {}) {
   const focus = { name: anchor.dungeon.name, difficultyId: anchor.dungeon.difficultyId ?? null, difficultyName: anchor.dungeon.difficultyName || null,
     chosen: filters.dungeon ? 'filter' : dungeons.size === 1 ? 'only' : 'latest' }
   const inFocus = runs.filter((run) => sameFocus(run, focus))
-  const clears = inFocus.filter((run) => run.marks?.clear)
+  const clears = inFocus.filter((run) => run.marks?.clear && run.character?.id === anchor.character?.id && run.marks?.group === anchor.marks?.group)
   // Completed runs only: a run cut short reads as a record XP/hour.
   const rated = inFocus.filter((run) => run.status === 'completed' && Number.isFinite(run.xp?.perHour) && run.xp.perHour > 0)
-  const fastest = clears.reduce((best, run) => (!best || run.durationSeconds < best.durationSeconds ? run : best), null)
+  const fastest = clears.reduce((best, run) => (!best || (run.timer?.seconds ?? run.durationSeconds) < (best.timer?.seconds ?? best.durationSeconds) ? run : best), null)
   const best = rated.reduce((top, run) => (!top || run.xp.perHour > top.xp.perHour ? run : top), null)
   const sorted = rated.map((run) => run.xp.perHour).sort((a, b) => a - b)
   const middle = Math.floor(sorted.length / 2)
@@ -260,7 +263,7 @@ export function performanceSummary(runs = [], filters = {}) {
     runs: inFocus.length,
     clears: clears.length,
     otherDifficulties: [...new Set(runs.filter((run) => run.dungeon?.name === focus.name && !sameFocus(run, focus)).map((run) => run.dungeon?.difficultyName || 'Other'))],
-    pb: fastest ? { id: fastest.id, durationSeconds: fastest.durationSeconds, character: fastest.character } : null,
+    pb: fastest ? { id: fastest.id, durationSeconds: fastest.timer?.seconds ?? fastest.durationSeconds, character: fastest.character } : null,
     bestXpPerHour: best ? { id: best.id, value: best.xp.perHour } : null,
     typicalXpPerHour: rated.length >= 2 ? typical : null,
     ratedRuns: rated.length,

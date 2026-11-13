@@ -192,7 +192,7 @@ function RunList({ runs, filters, server }) {
                     <span className="gw-muted gw-runs__sub">{run.character.levelAtEntry ? `Level ${run.character.levelAtExit && run.character.levelAtExit !== run.character.levelAtEntry ? `${run.character.levelAtEntry}→${run.character.levelAtExit}` : run.character.levelAtEntry}` : 'Level unknown'}</span>
                   </td>
                   <td className="gw-col-num">
-                    {formatRunDuration(run.durationSeconds)}
+                    {formatRunDuration(run.timer?.seconds ?? run.durationSeconds)}
                     {change !== null && change !== undefined ? <small className={`gw-runs__sub gw-pace gw-pace--${change < 0 ? 'ahead' : change > 0 ? 'behind' : 'even'}`} title="Against this character's previous verified clear here">{formatSignedDuration(change)}</small> : null}
                   </td>
                   <td className="gw-col-num gw-hide-sm">{xp.value}</td>
@@ -235,7 +235,7 @@ function Comparisons({ groups, filters, server }) {
               </dl>
             ) : (
               <p className="gw-muted gw-dcc-compare__few">
-                {group.runs} run{group.runs === 1 ? '' : 's'}, {group.clears} verified clear{group.clears === 1 ? '' : 's'}. Comparisons start at 2.
+                {({ entry: "Since entry", manual: "Manual start", first_pull: "First pull" })[group.timingBasis]} · {group.runs} run{group.runs === 1 ? '' : 's'}, {group.verifiedClears} verified clear{group.verifiedClears === 1 ? '' : 's'}. Comparisons start at 2.
                 {group.fastest ? <> Fastest so far {formatRunDuration(group.fastest.durationSeconds)}.</> : null}
               </p>
             )}
@@ -384,7 +384,7 @@ function Checkpoints({ run, filters, server }) {
   const pace = checkpointPace(run)
   return (
     <Panel id="player-dungeon-checkpoints" title="Checkpoints"
-      description={pace.reference ? <>Against your best clear here, {formatRunDuration(pace.reference.durationSeconds)} on <a href={dungeonHref({ filters, runId: pace.reference.id, server })}>{shortDate(pace.reference.startedAt)}</a>.</> : 'No earlier verified clear of this dungeon by this character to compare with.'}
+      description={pace.reference ? <>Against your best clear here, {formatRunDuration(pace.reference.timer?.seconds ?? pace.reference.durationSeconds)} on <a href={dungeonHref({ filters, runId: pace.reference.id, server })}>{shortDate(pace.reference.startedAt)}</a>.</> : 'No earlier verified clear of this dungeon by this character to compare with.'}
       flush>
       {pace.rows.length ? (
         <div className="gw-table-wrap">
@@ -403,7 +403,7 @@ function Checkpoints({ run, filters, server }) {
                 </tr>
               ))}
               {pace.finalDelta !== null ? (
-                <tr className="gw-dcc__total"><th scope="row">Finish</th><td className="gw-col-num">{formatOffset(run.durationSeconds)}</td><td /><td className="gw-col-num">
+                <tr className="gw-dcc__total"><th scope="row">Finish</th><td className="gw-col-num">{formatOffset(run.timer?.seconds ?? run.durationSeconds)}</td><td /><td className="gw-col-num">
                   <span className={`gw-pace gw-pace--${pace.finalDelta < 0 ? 'ahead' : pace.finalDelta > 0 ? 'behind' : 'even'}`}>{formatDelta(pace.finalDelta)}</span></td></tr>
               ) : null}
             </tbody>
@@ -503,7 +503,7 @@ function RunDetail({ runId, filters, server }) {
       </p>
 
       <section className="gw-stats gw-stats--6" aria-label="Run summary">
-        <Stat label="Elapsed" icon="bolt" value={formatRunDuration(run.durationSeconds)} foot={run.insideSeconds !== null ? `${formatRunDuration(run.insideSeconds)} inside` : 'Inside time unknown'} />
+        <Stat label={run.timer ? "Run timer" : "Elapsed since entry"} icon="bolt" value={formatRunDuration(run.timer?.seconds ?? run.durationSeconds)} foot={run.timer ? `${run.timer.state} · ${formatRunDuration(run.durationSeconds)} elapsed` : `${formatRunDuration(run.insideSeconds)} inside`} />
         <Stat label="XP" icon="sparkle" value={xp.value} foot={run.xp.atLevelCap ? 'No XP at max level' : run.xp.levelUps ? `${run.xp.levelUps} level-up${run.xp.levelUps === 1 ? '' : 's'}${run.xp.partial ? ', partly measured' : ''}` : 'Quests and kills'} />
         <Stat label="XP/hour" icon="sparkle" value={run.xp.perHour ? formatNumber(run.xp.perHour) : '—'} foot={run.xp.perHour ? 'Per elapsed hour' : run.xp.partial ? 'Not rated: a multi-level jump' : 'Needs 5 min of XP data'} />
         <Stat label="Bosses" icon="target" value={bossLabel(run.bosses)} foot={run.bosses.encounterEvents ? 'From boss events' : 'No boss events; manual splits'} />

@@ -77,10 +77,10 @@ test("personal bests, medians and marks stay inside one dungeon, difficulty and 
   const { marks, groups } = buildComparisons(runs);
   const normal = groups.find((group) => group.dungeon.difficultyId === 1 && group.character.id === "char-rook");
   assert.equal(normal.runs, 7);
-  assert.equal(normal.clears, 4, "runs 1, 2, 3 and the matching manual finish");
+  assert.equal(normal.clears, 3, "only verified clears qualify");
   assert.equal(normal.verifiedClears, 3);
   assert.equal(normal.fastest.id, 2, "the 900 s partial clear is not a PB");
-  assert.equal(normal.medianDurationSeconds, median([2000, 1500, 1700, 1600]));
+  assert.equal(normal.medianDurationSeconds, median([2000, 1500, 1700]));
   assert.equal(normal.bestXpPerHour.id, 3, "the abandoned run's 90k/h is not a record");
   assert.equal(marks.get(2).pb, true);
   assert.equal(marks.get(4).clear, false);
@@ -96,7 +96,7 @@ test("personal bests, medians and marks stay inside one dungeon, difficulty and 
   assert.equal(marks.get(1).exceptional, false);
   assert.equal(groups.length, 3, "normal Rook, heroic Rook, normal Alt");
   assert.equal(referenceClear(runs[2], runs).id, 2, "pace against the PB");
-  assert.equal(referenceClear(runs[1], runs).id, 8, "the PB itself paces against the next best clear");
+  assert.equal(referenceClear(runs[1], runs).id, 3, "the PB itself paces against the next best clear");
   assert.equal(completionQuality(fakeRun(10, { status: "open" })).completion, "open");
 });
 
@@ -360,3 +360,32 @@ test("objectives: per character, private, ordered, and auto-completed only by a 
   assert.equal((await request(`/api/player/dungeon-objectives?character=${encodeURIComponent(character)}`, { rawCookie: bram.cookie })).json.objectives.length, 0);
   assert.equal((await request("/api/player/dungeon-objectives")).status, 401);
 }));
+
+test("addon timed run survives bridge upload, replay and player readback", () => withHttpApp(async ({ request }) => {
+  const body = JSON.parse(fs.readFileSync(new URL("./fixtures/dungeon-timer-transport.json", import.meta.url)));
+  const { token, cookie } = await connect(request, ASH);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await post(request, token, body);
+    assert.ok([200, 201].includes(response.status), response.text);
+  }
+  const rows = (await request("/api/player/dungeon-runs", { rawCookie: cookie })).json.runs;
+  assert.equal(rows.length, 1);
+  const run = (await request(`/api/player/dungeon-runs/${rows[0].id}`, { rawCookie: cookie })).json.run;
+  const sent = body.envelope.payload;
+  assert.equal(run.durationSeconds, sent.durationSeconds);
+  assert.equal(run.timer.seconds, sent.timer.seconds);
+  assert.equal(run.timer.state, "stopped");
+  assert.equal(run.checkpoints[0].timerAt, sent.checkpoints[0].timerAt);
+  assert.deepEqual(run.timeline.filter((event) => event.kind.startsWith("timer_")), sent.timeline.filter((event) => event.kind.startsWith("timer_")));
+}));
+
+test("records use one uninterrupted clock and accept a complete lockout", () => {
+  const timed = (id, elapsed, seconds, extra = {}) => fakeRun(id, { durationSeconds: elapsed,
+    completionBasis: "lockout", bosses: { defeated: 1, total: 3 }, timer: { starts: 1, startedBy: "combat", seconds, ...extra } });
+  const runs = [timed(1, 450, 150), timed(2, 180, 180), timed(3, 200, 125, { starts: 2 }),
+    timed(4, 150, 121, { startedBy: "manual" }), fakeRun(5, { durationSeconds: 120 })];
+  const { marks } = buildComparisons(runs);
+  assert.equal(marks.get(1).pb, true);
+  assert.equal(marks.get(3).clear, false);
+  assert.equal(referenceClear(runs[1], runs).id, 1);
+});

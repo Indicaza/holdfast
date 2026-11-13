@@ -96,3 +96,11 @@ export const dungeonRunV2Migration = {
     `);
   },
 };
+
+export const dungeonTimerMigration = {
+  version: 22,
+  name: "dungeon_run_timer",
+  up(db) {
+    db.exec("ALTER TABLE dungeon_runs ADD COLUMN timer_json TEXT");
+  },
+};

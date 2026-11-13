@@ -29,11 +29,21 @@ export function median(values) {
 }
 
 // The group a run is compared in.
+export function timingBasis(run) {
+  const source = run.timer?.startedBy;
+  if (!run.timer || source === "entry") return "entry";
+  return source === "manual" ? "manual" : "first_pull";
+}
+
+function recordSeconds(run) {
+  return run.timer?.seconds ?? run.durationSeconds;
+}
+
 export function comparisonKey(run) {
   const dungeon = run.dungeon?.instanceId ? `i${run.dungeon.instanceId}` : `n${String(run.dungeon?.name || "").toLowerCase()}`;
   const difficulty = run.dungeon?.difficultyId ?? String(run.dungeon?.difficultyName || "").toLowerCase();
   const character = run.character?.id || run.character?.rawId || "";
-  return `${dungeon}|${difficulty}|${character}`;
+  return `${dungeon}|${difficulty}|${character}|${timingBasis(run)}`;
 }
 
 // Checkpoints: what the add-on sent (schema 2), or the boss kills and manual
@@ -73,7 +83,7 @@ export function completionQuality(run) {
   const defeated = Number(bosses.defeated) || 0;
   if (run.status === "open") return { completion: "open", reasons: ["Still in progress when WoW last saved."] };
   if (run.status !== "completed") return { completion: "incomplete", reasons: [`Ended as ${run.status}.`] };
-  if (total && defeated >= total) {
+  if (total && (defeated >= total || run.completionBasis === "lockout")) {
     return { completion: "verified", reasons: [run.completionBasis === "lockout" ? "Every boss in the lockout is down." : `${defeated}/${total} bosses defeated.`] };
   }
   if (total && defeated < total) reasons.push(`Only ${defeated}/${total} bosses recorded.`);
@@ -83,11 +93,9 @@ export function completionQuality(run) {
   return { completion: "manual", reasons };
 }
 
-function clearEligible(run, quality, groupVerifiedBosses) {
-  if (run.durationSeconds < MIN_CLEAR_SECONDS) return false;
-  if (quality.completion === "verified") return true;
-  // A hand-finished run counts when its kills match the group's real clears.
-  return quality.completion === "manual" && groupVerifiedBosses > 0 && (Number(run.bosses?.defeated) || 0) >= groupVerifiedBosses;
+function clearEligible(run, quality) {
+  return quality.completion === "verified" && recordSeconds(run) >= MIN_CLEAR_SECONDS
+    && (!run.timer || (!run.timer.bossesAtEntry && run.timer.starts === 1 && run.timer.stoppedBy !== "manual"));
 }
 
 // XP/hour is compared between completed runs only: a run cut short after
@@ -110,23 +118,22 @@ export function buildComparisons(runs = []) {
   for (const [key, list] of groups) {
     const ordered = [...list].sort((a, b) => a.startedAt - b.startedAt || a.id - b.id);
     const qualities = new Map(ordered.map((run) => [run.id, completionQuality(run)]));
-    const verifiedBosses = Math.max(0, ...ordered.filter((run) => qualities.get(run.id).completion === "verified").map((run) => Number(run.bosses?.defeated) || 0));
-    const clears = ordered.filter((run) => clearEligible(run, qualities.get(run.id), verifiedBosses));
+    const clears = ordered.filter((run) => clearEligible(run, qualities.get(run.id)));
     const rated = ordered.filter(xpComparable);
-    const fastest = clears.reduce((best, run) => (!best || run.durationSeconds < best.durationSeconds ? run : best), null);
+    const fastest = clears.reduce((best, run) => (!best || recordSeconds(run) < recordSeconds(best) ? run : best), null);
     const bestXp = rated.reduce((best, run) => (!best || run.xp.perHour > best.xp.perHour ? run : best), null);
-    const medianDuration = median(clears.map((run) => run.durationSeconds));
+    const medianDuration = median(clears.map(recordSeconds));
     const medianXp = median(rated.map((run) => run.xp.perHour));
     const latest = ordered[ordered.length - 1];
     summaries.push({
-      key,
+      key, timingBasis: timingBasis(latest),
       dungeon: { name: latest.dungeon.name, instanceId: latest.dungeon.instanceId ?? null, difficultyId: latest.dungeon.difficultyId ?? null,
         difficultyName: latest.dungeon.difficultyName || null, type: latest.dungeon.type },
       character: { id: latest.character.id, name: latest.character.name, classToken: latest.character.classToken },
       runs: ordered.length,
       clears: clears.length,
-      verifiedClears: clears.filter((run) => qualities.get(run.id).completion === "verified").length,
-      fastest: fastest ? { id: fastest.id, durationSeconds: fastest.durationSeconds, startedAt: fastest.startedAt } : null,
+      verifiedClears: ordered.filter((run) => qualities.get(run.id).completion === "verified").length,
+      fastest: fastest ? { id: fastest.id, durationSeconds: recordSeconds(fastest), startedAt: fastest.startedAt } : null,
       bestXpPerHour: bestXp ? { id: bestXp.id, value: bestXp.xp.perHour, startedAt: bestXp.startedAt } : null,
       medianDurationSeconds: clears.length >= MIN_COMPARE_RUNS ? medianDuration : null,
       medianXpPerHour: rated.length >= MIN_COMPARE_RUNS ? medianXp : null,
@@ -150,7 +157,7 @@ export function buildComparisons(runs = []) {
         // Change against the previous comparable run of the same group:
         // seconds (negative is faster) and XP/hour.
         vsPrevious: {
-          durationSeconds: clear && previousClear ? run.durationSeconds - previousClear.durationSeconds : null,
+          durationSeconds: clear && previousClear ? recordSeconds(run) - recordSeconds(previousClear) : null,
           previousClearId: clear && previousClear ? previousClear.id : null,
           xpPerHour: ratedRun && previousRated ? run.xp.perHour - previousRated.xp.perHour : null,
         },
@@ -170,5 +177,5 @@ export function referenceClear(run, runs = []) {
   const group = runs.filter((entry) => comparisonKey(entry) === key);
   const { marks } = buildComparisons(group);
   return group.filter((entry) => entry.id !== run.id && marks.get(entry.id)?.clear)
-    .reduce((best, entry) => (!best || entry.durationSeconds < best.durationSeconds ? entry : best), null);
+    .reduce((best, entry) => (!best || recordSeconds(entry) < recordSeconds(best) ? entry : best), null);
 }

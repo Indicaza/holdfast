@@ -49,7 +49,22 @@ export function luaList(value) {
   return null;
 }
 
-function validTimelineEntry(entry) {
+function validTimer(timer, elapsed) {
+  return isObject(timer) && ["ready", "running", "stopped"].includes(timer.state)
+    && integer(timer.seconds, 0, elapsed) && integer(timer.starts)
+    && optionalInteger(timer.startedAtOffset, 0, elapsed)
+    && (timer.state === "ready"
+      ? timer.starts === 0 && timer.seconds === 0 && timer.startedBy == null
+      : timer.starts > 0 && ["manual", "combat", "encounter", "entry"].includes(timer.startedBy))
+    && (timer.state === "stopped" ? ["manual", "complete"].includes(timer.stoppedBy) : timer.stoppedBy == null);
+}
+
+function validTimelineEntry(entry, schema) {
+  if (schema === 2 && isObject(entry) && ["timer_start", "timer_stop"].includes(entry.kind)) {
+    if (!integer(entry.at, 0, 604800)) return false;
+    return entry.kind === "timer_start" ? ["manual", "combat", "encounter"].includes(entry.source)
+      : ["manual", "complete"].includes(entry.source) && integer(entry.seconds, 0, entry.at);
+  }
   return isObject(entry) && TIMELINE_KINDS.has(entry.kind) && integer(entry.at, 0, 604800)
     && optionalText(entry.name) && optionalInteger(entry.encounterId, 1) && optionalInteger(entry.level, 1, 1000)
     && optionalText(entry.source, 40) && optionalText(entry.reason, 60);
@@ -97,15 +112,18 @@ export function validDungeonRun(record) {
   if (!isObject(bosses) || !integer(bosses.defeated, 0, 1000) || !optionalInteger(bosses.total, 1, 1000)
     || !optionalInteger(bosses.manualSplits, 0, 1000) || typeof bosses.encounterEvents !== "boolean") return false;
   const timeline = luaList(p.timeline ?? []);
-  if (!timeline || timeline.length > MAX_TIMELINE || !timeline.every(validTimelineEntry)) return false;
+  if (!timeline || timeline.length > MAX_TIMELINE || !timeline.every((entry) => validTimelineEntry(entry, p.schemaVersion))) return false;
   if (p.loot !== undefined && !(isObject(p.loot) && optionalInteger(p.loot.observations, 0, 1000000))) return false;
   if (p.schemaVersion >= 2) {
+    if (p.timer !== undefined && !validTimer(p.timer, p.durationSeconds)) return false;
     const checkpoints = luaList(p.checkpoints ?? []);
     if (!checkpoints || checkpoints.length > MAX_CHECKPOINTS || !checkpoints.every(validCheckpoint)) return false;
+    if (checkpoints.some((entry) => p.timer ? !integer(entry.timerAt, 0, Math.min(entry.at, p.timer.seconds)) : entry.timerAt !== undefined)) return false;
     if (new Set(checkpoints.map((entry) => entry.id)).size !== checkpoints.length) return false;
     if (p.completion !== undefined && !(isObject(p.completion) && COMPLETION_BASES.includes(p.completion.basis))) return false;
+    if (!optionalInteger(bosses.atEntry, 0, bosses.total ?? 1000)) return false;
     if (!optionalInteger(bosses.duplicatesIgnored, 0, 1000)) return false;
-  } else if (p.checkpoints !== undefined || p.completion !== undefined) {
+  } else if (p.checkpoints !== undefined || p.completion !== undefined || p.timer !== undefined) {
     // Schema 2 fields on a schema 1 payload: a mixed-up writer.
     return false;
   }

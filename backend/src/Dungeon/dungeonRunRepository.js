@@ -29,6 +29,7 @@ export function recordDungeonRunInDatabase(db, { envelope, memberId, receivedAt 
   const group = p.group || {};
   const timeline = (luaList(p.timeline ?? []) || []).slice(0, MAX_TIMELINE).map((entry) => ({
     at: entry.at, kind: entry.kind,
+    ...(entry.kind === "timer_stop" ? { seconds: entry.seconds } : {}),
     ...(entry.name ? { name: text(entry.name, 120) } : {}),
     ...(int(entry.encounterId) ? { encounterId: entry.encounterId } : {}),
     ...(int(entry.level) ? { level: entry.level } : {}),
@@ -38,6 +39,7 @@ export function recordDungeonRunInDatabase(db, { envelope, memberId, receivedAt 
   const checkpoints = schemaVersion === 2
     ? (luaList(p.checkpoints ?? []) || []).slice(0, MAX_CHECKPOINTS).map((entry) => ({
       id: text(entry.id, 80), kind: entry.kind, at: entry.at,
+      ...(entry.timerAt != null ? { timerAt: entry.timerAt } : {}),
       ...(entry.name ? { name: text(entry.name, 120) } : {}),
       ...(int(entry.encounterId) ? { encounterId: entry.encounterId } : {}),
       ...(entry.source ? { source: text(entry.source, 40) } : {}),
@@ -61,6 +63,8 @@ export function recordDungeonRunInDatabase(db, { envelope, memberId, receivedAt 
     loot_observations: int(p.loot?.observations) || 0, timeline_json: JSON.stringify(timeline),
     timeline_truncated: flag(p.timelineTruncated), realm: text(envelope.realm), region: text(envelope.region, 40),
     game_build: text(envelope.gameBuild?.build, 40), captured_at: int(envelope.capturedAt) || 0, received_at: receivedAt,
+    timer_json: p.timer ? JSON.stringify({ state: p.timer.state, seconds: p.timer.seconds, starts: p.timer.starts,
+      bossesAtEntry: p.bosses.atEntry ?? 0, startedBy: p.timer.startedBy, stoppedBy: p.timer.stoppedBy, startedAtOffset: p.timer.startedAtOffset }) : null,
     schema_version: schemaVersion, checkpoints_json: checkpoints ? JSON.stringify(checkpoints) : null,
     completion_basis: schemaVersion === 2 && p.completion?.basis ? p.completion.basis : null, xp_partial: flag(p.xp.partial),
   };
@@ -128,6 +132,7 @@ function runFromRow(row, names) {
     id: Number(row.id), runId: row.run_id, status: row.status, endReason: row.end_reason || null,
     schemaVersion: Number(row.schema_version) || 1, sequence: Number(row.sequence),
     startedAt: Number(row.started_at), endedAt: row.ended_at === null ? null : Number(row.ended_at),
+    timer: parseJson(row.timer_json, null),
     durationSeconds, insideSeconds: row.inside_seconds === null ? null : Number(row.inside_seconds),
     dungeon: { name: row.instance_name, instanceId: row.instance_id, type: row.instance_type,
       difficultyId: row.difficulty_id, difficultyName: row.difficulty_name || null, maxPlayers: row.max_players },
@@ -155,7 +160,7 @@ const LIST_COLUMNS = `id, run_id, status, end_reason, sequence, started_at, ende
   loot_observations, realm, region, game_build, received_at, raw_character_id`;
 
 function v2Columns(db) {
-  return columnExists(db, "dungeon_runs", "schema_version") ? ", schema_version, completion_basis, xp_partial" : "";
+  return columnExists(db, "dungeon_runs", "schema_version") ? ", schema_version, completion_basis, xp_partial, timer_json" : "";
 }
 
 // A website character id covers every raw addon id linked to it.
@@ -385,7 +390,7 @@ export function readDungeonRun({ memberId, id }) {
 
     // The same character's runs of the same dungeon and difficulty.
     const raw = run.character.linked ? rawIdsFor(names, run.character.id) : [row.raw_character_id];
-    const siblings = db.prepare(`SELECT ${LIST_COLUMNS}${v2Columns(db)}, checkpoints_json, timeline_json FROM dungeon_runs
+    const siblings = db.prepare(`SELECT ${LIST_COLUMNS}${v2Columns(db)} FROM dungeon_runs
       WHERE member_id = ? AND instance_name = ? AND raw_character_id IN (${raw.map(() => "?").join(", ")}) ORDER BY started_at DESC LIMIT ?`)
       .all(member, row.instance_name, ...raw, COMPARISON_LIMIT);
     const group = siblings.map((entry) => runFromRow(entry, names));
@@ -394,9 +399,9 @@ export function readDungeonRun({ memberId, id }) {
     run.comparison = groups.find((entry) => entry.key === run.marks?.group) || null;
     const reference = referenceClear(run, group);
     if (reference) {
-      const referenceRow = siblings.find((entry) => Number(entry.id) === reference.id);
+      const referenceRow = db.prepare("SELECT checkpoints_json, timeline_json FROM dungeon_runs WHERE id = ? AND member_id = ?").get(reference.id, member);
       const referenceCheckpoints = checkpointsFor(referenceRow);
-      run.reference = { id: reference.id, startedAt: reference.startedAt, durationSeconds: reference.durationSeconds,
+      run.reference = { id: reference.id, startedAt: reference.startedAt, durationSeconds: reference.durationSeconds, timer: reference.timer,
         completion: marks.get(reference.id)?.completion || null, checkpoints: referenceCheckpoints.list, checkpointBasis: referenceCheckpoints.basis };
     } else {
       run.reference = null;
