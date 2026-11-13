@@ -10,6 +10,7 @@ GET /api/admin/storage/backups         pre-migration snapshots (name, kind, size
 GET /api/admin/storage/ingestion       telemetry, character, economy and market rows in the last 24 h / 7 d; telemetry by domain (records, stored bytes)
 GET /api/admin/storage/growth          bytes per day overall and by domain over 1, 7 and 30 days
 GET /api/admin/storage/maintenance     market maintenance runs (prune counts, roll-ups)
+GET /api/admin/storage/health          disk use, growth baseline and rates, days until full, alert codes
 ```
 
 **Access.** `site.admin` only (session cookie). 30 requests per minute. Only the section name is accepted: no SQL, paths, filters or write methods. Each request is logged as `{"event":"storage_report","section":…,"status":…,"actor":<12-char hash>}`.
@@ -33,3 +34,18 @@ curl -s --cookie "holdfast_session=…" https://holdfast-tddi.onrender.com/api/a
 Deferred until these endpoints have run on production. The adapter will be a thin, read-only MCP server whose tools map one-to-one onto the sections: `storage_overview` → `overview`, `database_table_sizes` → `tables`, `ingestion_rates` → `ingestion`, `backup_health` → `backups`, `maintenance_status` → `maintenance`, `growth_report` → `growth`, `retention_report` → a future `retention` section. It calls these HTTP endpoints and never opens the database itself, so there's one implementation of the analysis.
 
 Authentication will be a dedicated, revocable read-only token scoped to `/api/admin/storage/*`. That needs a small server change, since today only admin session cookies are accepted. The adapter runs locally (stdio) for Claude Code, or behind authentication for remote clients, and is never exposed without it. It has no SQL, write or file tools.
+
+## Alerts
+
+`evaluateStorageHealth` (in `storageObservatory.js`) turns the disk figures and growth samples into alert codes:
+
+| Code | When | Status |
+|---|---|---|
+| `disk_70`, `disk_85` | share of the disk in use | warning |
+| `disk_95` | 95% or more | critical |
+| `rapid_growth` | last 24 h grew more than 3× the baseline rate and more than 100 MiB/day | warning |
+| `full_within_14_days` | free space ÷ the worse of the baseline and recent rates < 14 days | critical |
+
+Growth alerts need a baseline of **at least 4 samples spanning 48 hours** within the last 7 days. Samples come from the 6-hourly statistics collection, so a new or restarted service reports `growth.baseline: "insufficient_data"` and raises no growth alerts until then. Disk-share alerts apply at once.
+
+`/api/health/ready` includes only `storage: { status, alerts }`, with no sizes. The hourly **Production monitor** (`CHECK_STORAGE=true`) fails on any alert, which opens or updates the existing incident issue, and the issue points to `/api/admin/storage/health` for the numbers. The evaluation reads cached disk figures and the samples file, so it's cheap enough for readiness.

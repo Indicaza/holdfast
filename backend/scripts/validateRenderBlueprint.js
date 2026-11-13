@@ -40,7 +40,7 @@ assert.equal("maxShutdownDelaySeconds" in service, false);
 assert.deepEqual(service.disk, {
   name: "holdfast-data",
   mountPath: "/data",
-  sizeGB: 5,
+  sizeGB: 15,
 });
 
 const environment = new Map();

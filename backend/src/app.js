@@ -116,6 +116,8 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
         status: "ok",
         offsiteBackup: await offsiteBackupHealth(),
         ...(startup ? { startup: { state: startup.state, startedAt: startup.startedAt, readyAfterMs: startup.readyAfterMs, phases: startup.phases } } : {}),
+        // Only a status and alert codes are public; sizes stay in /api/admin/storage/health.
+        ...(storageObservatory ? { storage: await storageObservatory.health().then(({ status, alerts }) => ({ status, alerts })).catch(() => ({ status: "unknown", alerts: [] })) } : {}),
       });
     } catch (error) {
       console.error("Readiness check failed", error);

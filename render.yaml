@@ -13,7 +13,7 @@ services:
     disk:
       name: holdfast-data
       mountPath: /data
-      sizeGB: 5
+      sizeGB: 15
     envVars:
       - key: NODE_ENV
         value: production

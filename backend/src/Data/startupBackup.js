@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, rename, rm, stat, statfs, writeFile } from "n
 import path from "node:path";
 import { backup, DatabaseSync } from "node:sqlite";
 
+import { recipeStoreConversion } from "../Character/recipeStore.js";
 import { guildDatabaseFile, pendingGuildMigrations } from "./database.js";
 import { runtimeDataDirectory } from "./runtimeData.js";
 
@@ -18,6 +19,10 @@ import { runtimeDataDirectory } from "./runtimeData.js";
 // Retention applies only to snapshots this code created (those with a
 // sidecar). Older snapshots, written before sidecars existed, are reported
 // but never deleted automatically: removing them is an operator decision.
+
+// Data conversions that run at startup outside the numbered migrations get
+// the same protection: a pending one takes the same verified snapshot.
+export const STARTUP_CONVERSIONS = Object.freeze([recipeStoreConversion]);
 
 const BACKUP_DIRECTORY = "deploy-backups";
 const BACKUP_PREFIX = "holdfast-before-startup-";
@@ -166,7 +171,10 @@ export async function backupGuildDatabaseBeforeMigrations({
   let pending;
   let fromVersion;
   try {
-    pending = pendingGuildMigrations(sourceDb);
+    pending = [
+      ...pendingGuildMigrations(sourceDb),
+      ...STARTUP_CONVERSIONS.filter((conversion) => conversion.pending(sourceDb)).map(({ name }) => ({ version: null, name })),
+    ];
     if (!pending.length) {
       return { status: "not-needed", pending: [] };
     }
@@ -193,7 +201,8 @@ export async function backupGuildDatabaseBeforeMigrations({
     // committed write and the copy needs no WAL replay.
     sourceDb.exec("PRAGMA wal_checkpoint(TRUNCATE)");
     const identity = await sourceIdentity(source);
-    const toVersion = Math.max(...pending.map((migration) => migration.version));
+    const versions = pending.map((migration) => migration.version).filter(Number.isInteger);
+    const toVersion = versions.length ? Math.max(...versions) : fromVersion;
 
     const newest = (await listStartupBackups(directory)).find((entry) => entry.kind === "managed");
     if (newest && newest.meta.source?.bytes === identity.bytes && newest.meta.source?.mtimeMs === identity.mtimeMs
@@ -235,7 +244,7 @@ export async function backupGuildDatabaseBeforeMigrations({
       createdAt: now().toISOString(),
       fromVersion,
       toVersion,
-      pending: pending.map((migration) => migration.version),
+      pending: pending.map((migration) => migration.version ?? migration.name),
       source: identity,
       bytes,
       copyMs: Date.now() - startedAt,

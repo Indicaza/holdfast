@@ -26,6 +26,10 @@ try {
   assert.equal(ready.status, 'ok')
   if (process.env.REQUIRE_OFFSITE_BACKUP === 'true') assert.equal(ready.offsiteBackup?.enabled, true, 'Off-site backups must be enabled')
   if (ready.offsiteBackup?.enabled) assert.equal(ready.offsiteBackup.healthy, true, 'No verified off-site backup within 24 hours')
+  // Disk at 70/85/95%, abnormal growth, or full within two weeks (details:
+  // /api/admin/storage/health). Growth alerts need two days of samples.
+  // Only against production: CI's disposable app shares the runner's disk.
+  if (process.env.CHECK_STORAGE === 'true' && ready.storage) assert.deepEqual(ready.storage.alerts, [], `Storage alerts (${ready.storage.status}): ${ready.storage.alerts.join(', ')}. Details: /api/admin/storage/health`)
   assert.equal((await api('/api/me', 200)).authenticated, false)
   await api('/api/admin/audit?details=true', 401)
   await api('/api/quests/manage', 401)
@@ -66,7 +70,7 @@ try {
     await page.locator('main').getByRole('button', { name: 'Sign in with Discord', exact: true }).waitFor()
   }
   assert.deepEqual(errors, [], 'Production browser errors')
-  console.log(`Production smoke passed; release ${live.release || 'unreported'}, backups ${ready.offsiteBackup?.enabled ? 'verified' : 'disabled'}.`)
+  console.log(`Production smoke passed; release ${live.release || 'unreported'}, backups ${ready.offsiteBackup?.enabled ? 'verified' : 'disabled'}, storage ${ready.storage?.status || 'unreported'}.`)
 } catch (error) {
   await page.screenshot({ path: 'production-smoke-failure.png', fullPage: true }).catch(() => {})
   throw error

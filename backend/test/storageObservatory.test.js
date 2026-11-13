@@ -19,7 +19,7 @@ test('storage reports are for site administrators only, read-only and rate limit
   assert.equal((await request('/api/admin/storage/overview', { persona: 'member' })).status, 403)
   const index = await request('/api/admin/storage', { persona: 'owner' })
   assert.equal(index.status, 200)
-  assert.deepEqual(index.json.sections, ['overview', 'tables', 'backups', 'ingestion', 'growth', 'maintenance'])
+  assert.deepEqual(index.json.sections, ['overview', 'tables', 'backups', 'ingestion', 'growth', 'health', 'maintenance'])
   assert.equal((await request('/api/admin/storage/../../etc/passwd', { persona: 'owner' })).status, 404)
   assert.equal((await request('/api/admin/storage/sql', { persona: 'owner' })).status, 404)
   for (const method of ['POST', 'PUT', 'DELETE']) {

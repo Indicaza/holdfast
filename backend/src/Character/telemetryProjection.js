@@ -210,7 +210,7 @@ export function normalizeOrganization(snapshot) {
   };
 }
 
-export function ensureTelemetryProjectionSchema(db) {
+export function ensureTelemetryProjectionSchema(db, { onRecipesConverted = null } = {}) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS telemetry_organizations (
       id TEXT PRIMARY KEY,
@@ -255,7 +255,7 @@ export function ensureTelemetryProjectionSchema(db) {
       ON telemetry_professions(name COLLATE NOCASE, skill_current DESC);
   `);
   // Recipes: shared definitions plus who knows them (recipeStore.js).
-  ensureRecipeStoreSchema(db);
+  ensureRecipeStoreSchema(db, { onConverted: onRecipesConverted });
 }
 
 export function projectTelemetrySnapshotInDatabase({
