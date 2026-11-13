@@ -15,7 +15,7 @@
 const DEFINITION_COLUMNS = `recipe_key, recipe_id, name, profession_key, profession_id, profession_name, icon_file_id, required_skill,
   requirements_json, crafted_item_id, crafted_item_name, reagents_json`;
 
-export function ensureRecipeStoreSchema(db) {
+export function ensureRecipeStoreSchema(db, { onConverted = null } = {}) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS telemetry_recipe_definitions (
       recipe_key TEXT PRIMARY KEY,
@@ -49,18 +49,29 @@ export function ensureRecipeStoreSchema(db) {
   `);
   const existing = db.prepare("SELECT type FROM sqlite_master WHERE name = 'telemetry_recipes'").get()?.type;
   if (existing === "table") {
-    // A database from before the split: move every row, then replace the
-    // table with the view. Lossless; definitions keep the newest row.
+    // A database from before the split: move every row, check nothing was
+    // lost, then replace the table with the view. All or nothing: any
+    // failure rolls back to the untouched table. Startup takes a verified
+    // pre-conversion snapshot first (recipeStoreConversion below).
     db.exec("SAVEPOINT recipe_store_split");
     try {
+      const before = db.prepare(`SELECT COUNT(*) AS pairs, COUNT(DISTINCT recipe_key) AS recipes FROM telemetry_recipes`).get();
       db.exec(`
         INSERT OR REPLACE INTO telemetry_recipe_definitions (${DEFINITION_COLUMNS}, updated_at)
           SELECT ${DEFINITION_COLUMNS}, strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM telemetry_recipes ORDER BY rowid;
-        INSERT OR REPLACE INTO telemetry_character_recipes (character_id, recipe_key, profession_key, known, snapshot_id)
+        -- The table is the authoritative copy: ownership is rebuilt from it,
+        -- so rows left from an earlier split (before a rollback) never return.
+        DELETE FROM telemetry_character_recipes;
+        INSERT INTO telemetry_character_recipes (character_id, recipe_key, profession_key, known, snapshot_id)
           SELECT character_id, recipe_key, profession_key, known, snapshot_id FROM telemetry_recipes;
-        DROP TABLE telemetry_recipes;
       `);
+      const missing = db.prepare(`SELECT COUNT(*) AS n FROM telemetry_recipes r WHERE NOT EXISTS
+          (SELECT 1 FROM telemetry_character_recipes c WHERE c.character_id = r.character_id AND c.recipe_key = r.recipe_key AND c.known = r.known)
+        OR NOT EXISTS (SELECT 1 FROM telemetry_recipe_definitions d WHERE d.recipe_key = r.recipe_key)`).get().n;
+      if (missing) throw new Error(`Recipe store conversion would lose ${missing} rows; left unconverted`);
+      db.exec("DROP TABLE telemetry_recipes");
       db.exec("RELEASE recipe_store_split");
+      onConverted?.({ ...before });
     } catch (error) {
       db.exec("ROLLBACK TO recipe_store_split; RELEASE recipe_store_split");
       throw error;
@@ -99,3 +110,13 @@ export function replaceCharacterRecipesInDatabase(db, characterId, recipes, { sn
     own.run(characterId, recipe.key, recipe.professionKey, recipe.known ? 1 : 0, snapshotId);
   }
 }
+
+// For startup safety: whether this database still has the table from
+// before the split. Startup takes its pre-migration snapshot when this is
+// pending, exactly as for a registered migration (startupBackup.js).
+export const recipeStoreConversion = Object.freeze({
+  name: "recipe_store_split",
+  pending(db) {
+    return db.prepare("SELECT type FROM sqlite_master WHERE name = 'telemetry_recipes'").get()?.type === "table";
+  },
+});

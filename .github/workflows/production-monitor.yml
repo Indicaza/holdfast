@@ -46,12 +46,13 @@ jobs:
             const run = runs.data.workflow_runs[0];
             if (run?.conclusion === 'success' && Date.now() - Date.parse(run.updated_at) > 30 * 60 * 1000) return commit.data.sha;
             return '';
-      - name: Check health, backup freshness, access boundaries, and public rendering
+      - name: Check health, backup freshness, storage alerts, access boundaries, and public rendering
         working-directory: e2e
         env:
           PRODUCTION_URL: ${{ vars.HOLDFAST_PRODUCTION_URL || 'https://holdfast-tddi.onrender.com' }}
           EXPECTED_RELEASE: ${{ inputs.expected_release || steps.release.outputs.result }}
           REQUIRE_OFFSITE_BACKUP: ${{ vars.HOLDFAST_REQUIRE_OFFSITE_BACKUP || 'false' }}
+          CHECK_STORAGE: 'true'
         run: node scripts/productionSmoke.mjs
       - name: Retain browser failure evidence
         if: failure()
@@ -84,6 +85,6 @@ jobs:
               if (incident) await github.rest.issues.update({ ...context.repo, issue_number: incident.number, state: 'closed', state_reason: 'completed' });
               return;
             }
-            const body = `The read-only production smoke failed. Inspect the failed step and browser evidence before changing production.\n\nLatest run: ${url}\n\nChecks cover business readiness, expected release after the deploy grace period, enabled backup freshness, private API access, and public page rendering.`;
+            const body = `The read-only production smoke failed. Inspect the failed step and browser evidence before changing production.\n\nLatest run: ${url}\n\nChecks cover business readiness, expected release after the deploy grace period, enabled backup freshness, storage alerts (disk 70/85/95%, rapid growth, full within 14 days; details at /api/admin/storage/health), private API access, and public page rendering.`;
             if (incident) await github.rest.issues.update({ ...context.repo, issue_number: incident.number, body });
             else await github.rest.issues.create({ ...context.repo, title, body });

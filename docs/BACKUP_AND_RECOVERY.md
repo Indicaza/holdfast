@@ -14,6 +14,28 @@ Retention keeps the newest `STARTUP_BACKUP_KEEP` (default 2) snapshots that have
 
 Telemetry compaction at startup never runs `VACUUM`. Rebuilding the file needs free disk equal to the database and blocks all access while it runs, so returning freed pages to the filesystem is a planned operator task.
 
+### Startup data conversions
+
+Some data conversions run at startup outside the numbered migrations: today, only the recipe split from PR #284 (`telemetry_recipes` becomes `telemetry_recipe_definitions` + `telemetry_character_recipes` plus a `telemetry_recipes` view). Each one says when it is pending (`STARTUP_CONVERSIONS` in `startupBackup.js`), and a pending conversion gets the **same verified pre-migration snapshot** as a pending migration, with the same free-space check and reuse rules. The sidecar lists it by name (`"pending": ["recipe_store_split"]`).
+
+The conversion runs in one transaction. It checks that every character/recipe row and every recipe key exists in the new tables before dropping the old table, and logs `{"event":"recipe_store_converted","pairs":…,"recipes":…}`. If the process is killed before it commits, the old table is untouched and the next start converts it, reusing the unchanged snapshot. An already-converted database is left alone and takes no snapshot.
+
+**Production was converted on 13 November 2026 at 02:59 UTC**, by the release that introduced the split and before this snapshot rule existed. Its pre-conversion recovery points are the startup snapshots in `/data/deploy-backups/` taken on 12 November (they predate the split). Keep at least the newest of them until an off-site backup has been verified.
+
+### Rolling the application back past the recipe split
+
+Releases from before PR #284 expect `telemetry_recipes` to be a table, and fail on the view (`views may not be indexed`, `cannot modify telemetry_recipes because it is a view`). Recipes are a projection of stored telemetry, so nothing is lost, but syncs fail until the table is back. To roll back:
+
+1. Deploy the older release.
+2. Immediately run the self-contained restore. It needs only `node:sqlite`, so it works in any release's image:
+
+   ```sh
+   ssh srv-davbjm7avr4c73bbguq0@ssh.ohio.render.com 'node --input-type=module - /data/holdfast.sqlite' < backend/scripts/restoreRecipeTable.js
+   ```
+
+   It prints `{"status":"restored","rows":N}`. It runs in one transaction and changes nothing if any step fails, and running it again prints `already_table`. The split tables stay in place, unused.
+3. Moving forward again later converts the table back. Ownership is rebuilt from the table, so rows the older release removed don't return.
+
 ## Activate off-site backups
 
 Create a private S3 bucket outside Render, block all public access, enable bucket versioning, and apply `config/backup-storage-lifecycle.json` for 90-day retention. Use a dedicated access key with `config/backup-storage-policy.json`, replacing the bucket placeholder. Runtime credentials need only PutObject and GetObject for the `holdfast/` prefix; they must not be able to delete backups, alter retention, or change bucket policy. Bucket administration and recovery credentials should be separate. For stronger protection, enable Object Lock with a retention policy when creating the bucket.

@@ -144,7 +144,10 @@ try {
 
   // Recipes stored once per recipe (recipeStore.js): converts a database
   // from before the split once, here rather than inside a request.
-  await lifecycle.phase("recipe_store", () => withGuildTransaction((db) => ensureTelemetryProjectionSchema(db)));
+  // A pending conversion was snapshotted with the migrations above.
+  await lifecycle.phase("recipe_store", () => withGuildTransaction((db) => ensureTelemetryProjectionSchema(db, {
+    onRecipesConverted: (counts) => console.log(JSON.stringify({ event: "recipe_store_converted", ...counts })),
+  })));
 
   // Economic events whose raw records arrived before they could be analysed
   // become farming observations. Idempotent; bounded by raw retention.

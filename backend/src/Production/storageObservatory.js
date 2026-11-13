@@ -25,6 +25,54 @@ export const HEAVY_INTERVAL_MS = 6 * 60 * 60 * 1000
 const MAX_SAMPLES = 1000
 const FIRST_HEAVY_DELAY_MS = 5 * 60 * 1000
 
+// Disk and growth alerts, from the cheap disk figures and the growth
+// samples. Pure, so it is tested without a disk.
+//   disk_70 / disk_85 / disk_95   share of the disk in use
+//   rapid_growth                  last day's growth over 3x the baseline
+//                                 (and over 100 MiB/day)
+//   full_within_14_days           at the baseline rate
+// Growth alerts need a baseline: at least 4 samples over at least 48 hours,
+// otherwise growth reports "insufficient_data" and raises nothing.
+export const DISK_THRESHOLDS = Object.freeze([95, 85, 70]);
+const MIN_BASELINE_SAMPLES = 4;
+const MIN_BASELINE_HOURS = 48;
+const RAPID_FACTOR = 3;
+const RAPID_MIN_BYTES_PER_DAY = 100 * 1024 * 1024;
+const FULL_SOON_DAYS = 14;
+
+export function evaluateStorageHealth({ disk, samples = [], now = Date.now() }) {
+  const alerts = [];
+  const usedPct = disk.capacityBytes > 0 ? Math.round((disk.usedBytes / disk.capacityBytes) * 1000) / 10 : null;
+  const threshold = DISK_THRESHOLDS.find((limit) => usedPct !== null && usedPct >= limit);
+  if (threshold) alerts.push(`disk_${threshold}`);
+
+  const usable = samples.filter((sample) => Number.isFinite(sample.freeDiskBytes) && Number.isFinite(Date.parse(sample.at)))
+    .filter((sample) => Date.parse(sample.at) >= now - 7 * 86400_000)
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  const rate = (from, to) => {
+    const days = (Date.parse(to.at) - Date.parse(from.at)) / 86400_000;
+    return days > 0 ? (from.freeDiskBytes - to.freeDiskBytes) / days : null;
+  };
+  let growth = { baseline: "insufficient_data", samples: usable.length };
+  let daysUntilFull = null;
+  const spanHours = usable.length > 1 ? (Date.parse(usable.at(-1).at) - Date.parse(usable[0].at)) / 3600_000 : 0;
+  if (usable.length >= MIN_BASELINE_SAMPLES && spanHours >= MIN_BASELINE_HOURS) {
+    const recentStart = usable.find((sample) => Date.parse(sample.at) >= Date.parse(usable.at(-1).at) - 86400_000);
+    const before = usable.filter((sample) => Date.parse(sample.at) <= Date.parse(recentStart.at));
+    const baselineRate = before.length > 1 ? rate(before[0], before.at(-1)) : rate(usable[0], usable.at(-1));
+    const recentRate = recentStart !== usable.at(-1) ? rate(recentStart, usable.at(-1)) : null;
+    growth = { baseline: "ok", samples: usable.length, baselineBytesPerDay: Math.round(baselineRate ?? 0), recentBytesPerDay: recentRate === null ? null : Math.round(recentRate) };
+    if (recentRate !== null && recentRate > RAPID_MIN_BYTES_PER_DAY && recentRate > RAPID_FACTOR * Math.max(baselineRate ?? 0, 0)) alerts.push("rapid_growth");
+    const worst = Math.max(baselineRate ?? 0, recentRate ?? 0);
+    if (worst > 0) {
+      daysUntilFull = Math.round((disk.freeBytes / worst) * 10) / 10;
+      if (daysUntilFull < FULL_SOON_DAYS) alerts.push("full_within_14_days");
+    }
+  }
+  const status = alerts.some((alert) => ["disk_95", "full_within_14_days"].includes(alert)) ? "critical" : alerts.length ? "warning" : "ok";
+  return { status, alerts, disk: { usedPct, capacityBytes: disk.capacityBytes, freeBytes: disk.freeBytes }, growth, daysUntilFull };
+}
+
 async function bytes(file) {
   try { return (await stat(file)).size } catch { return 0 }
 }
@@ -179,6 +227,18 @@ export function createStorageObservatory({
     return { version: REPORT_VERSION, section, generatedAt: new Date(clock()).toISOString(), ...body }
   }
 
+  // Cheap: cached disk figures and the samples file. Safe for readiness.
+  let healthCache = null;
+  async function health() {
+    if (healthCache && clock() - healthCache.at < LIGHT_TTL_MS) return healthCache.value;
+    const fs = await statfsImpl(dataDir);
+    const capacity = Number(fs.blocks) * Number(fs.bsize);
+    const disk = { capacityBytes: capacity, freeBytes: Number(fs.bavail) * Number(fs.bsize), usedBytes: capacity - Number(fs.bfree) * Number(fs.bsize) };
+    const value = evaluateStorageHealth({ disk, samples: await readSamples(), now: clock() });
+    healthCache = { at: clock(), value };
+    return value;
+  }
+
   const sections = {
     async overview() {
       const value = await lightReport()
@@ -208,6 +268,9 @@ export function createStorageObservatory({
       const samples = await readSamples()
       return envelope('growth', { samples: samples.length, last24h: growth(samples, 1), last7d: growth(samples, 7), last30d: growth(samples, 30) })
     },
+    async health() {
+      return envelope('health', await health());
+    },
     async maintenance() {
       if (!heavy) return null
       return envelope('maintenance', { collectedAt: heavy.collectedAt, market: heavy.maintenance, statisticsError: lastHeavyError })
@@ -227,6 +290,7 @@ export function createStorageObservatory({
       return { status: 200, body }
     },
     refresh,
+    health,
     start() {
       const first = setTimeout(refresh, FIRST_HEAVY_DELAY_MS)
       const every = setInterval(refresh, HEAVY_INTERVAL_MS)
