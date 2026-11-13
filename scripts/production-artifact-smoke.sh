@@ -125,7 +125,7 @@ start_container
 smoke_http
 probe_state | tee "$FIRST_STATE_FILE"
 
-grep -q '"schemaVersion":20' "$FIRST_STATE_FILE"
+grep -q '"schemaVersion":21' "$FIRST_STATE_FILE"
 grep -q '"members":3' "$FIRST_STATE_FILE"
 grep -q '"quests":1' "$FIRST_STATE_FILE"
 grep -q '"objectives":2' "$FIRST_STATE_FILE"
