@@ -51,7 +51,7 @@ export function WowIcon({
   const [attempt, setAttempt] = useState({ key: sourceKey, index: 0 })
   const index = attempt.key === sourceKey ? attempt.index : 0
   const [questionMarkFailed, setQuestionMarkFailed] = useState(false)
-  const qualityClass = Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
+  const qualityClass = quality != null && Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
   const shown = index < sources.length ? sources[index] : questionMarkFailed ? '' : QUESTION_MARK_ICON
   const failed = () => {
     if (shown === QUESTION_MARK_ICON) setQuestionMarkFailed(true)
@@ -259,14 +259,17 @@ export function ItemDetailCard({ item, compact = false }) {
   const durabilityCurrent = Number(item?.durability?.current)
   const durabilityMax = Number(item?.durability?.max)
   const hasDurability = Number.isFinite(durabilityCurrent) && Number.isFinite(durabilityMax) && durabilityMax > 0
+  const quality = item.quality ?? item.qualityId
+  const detailQualityClass = quality == null ? '' : ` item-detail--quality-${quality}`
+  const nameQualityClass = quality == null ? '' : ` item-quality-${quality}`
 
   return (
-    <article className={`item-detail item-detail--quality-${Number(item.quality ?? item.qualityId) || 0}${compact ? ' item-detail--compact' : ''}`}>
+    <article className={`item-detail${detailQualityClass}${compact ? ' item-detail--compact' : ''}`}>
       <div className="item-detail__eyebrow">Selected equipment</div>
       <div className="item-detail__topline">
         <ItemIcon item={item} size={compact ? 40 : 64} />
         <div>
-          <strong className={`item-detail__name item-quality-${Number(item.quality ?? item.qualityId) || 0}`}>
+          <strong className={`item-detail__name${nameQualityClass}`}>
             {item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item'}
           </strong>
           <span>{item.slot || 'Equipment'}</span>
