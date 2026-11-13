@@ -79,7 +79,7 @@ export function ItemLabel({ item, size = 22, tooltip = true, muted = false }) {
   const body = (
     <span className="gw-item">
       <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />
-      <span className={`gw-item__name gw-q${quality}${muted ? ' gw-item__name--muted' : ''}`}>{item.name || 'Unknown item'}</span>
+      <span className={`gw-item__name${quality == null ? '' : ` gw-q${quality}`}${muted ? ' gw-item__name--muted' : ''}`}>{item.name || 'Unknown item'}</span>
     </span>
   )
   const detail = item.item || item
