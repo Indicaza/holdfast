@@ -5,7 +5,7 @@ import { connectAndSync } from '../helpers/player.js'
 
 test('a timed dungeon upload shows the clock and split from the addon', async ({ page, context }) => {
   const transport = JSON.parse(readFileSync(new URL('../../backend/test/fixtures/dungeon-timer-transport.json', import.meta.url)))
-  await authenticate(context, 'rival')
+  await authenticate(context, 'dungeonRunner')
   await page.goto('/dashboard/dungeons')
   await connectAndSync(page, { deviceName: 'Dungeon timer', telemetry: [transport] })
   await page.reload()
