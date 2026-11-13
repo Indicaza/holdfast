@@ -102,17 +102,6 @@
   border-top: 1px solid rgba(196, 166, 103, .2);
 }
 
-.paper-doll--sheet .item-hover-card {
-  position: relative;
-  display: inline-block;
-  box-sizing: border-box;
-  width: var(--paper-doll-sheet-slot);
-  max-width: 100%;
-  height: var(--paper-doll-sheet-slot);
-  max-height: 100%;
-  place-self: center;
-}
-
 .paper-doll--sheet .paper-doll__slot {
   display: grid;
   box-sizing: border-box;

@@ -1,4 +1,5 @@
 import { withGuildDatabase } from "../Data/database.js";
+import { describeItems } from "../Items/describeItems.js";
 import { ensureTelemetryProjectionSchema } from "./telemetryProjection.js";
 
 function text(value, maxLength = 120) {
@@ -104,6 +105,13 @@ export function searchCraftFinderWithSkill(query = "", { characterIds = null } =
       });
     }
 
-    return [...grouped.values()].slice(0, 80);
+    const results = [...grouped.values()].slice(0, 80);
+    // The crafted item as the game shows it (quality, icon, tooltip), for
+    // the result's hover; null when the recipe's product is not known.
+    const crafted = describeItems(db, results.map((result) => ({ itemId: result.recipe.craftedItemId, name: result.recipe.craftedItemName || "" })));
+    results.forEach((result, index) => {
+      result.recipe.crafted = result.recipe.craftedItemId ? crafted[index] : null;
+    });
+    return results;
   });
 }

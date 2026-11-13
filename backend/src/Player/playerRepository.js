@@ -7,6 +7,7 @@
 
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 import { searchCraftFinderWithSkill } from "../Character/craftFinderRepository.js";
+import { describeItems } from "../Items/describeItems.js";
 import { readPlayerCharacterCards } from "../Character/ReadModel/readModelReader.js";
 import { ensureTelemetryProjectionSchema } from "../Character/telemetryProjection.js";
 import { readFarmingSessions } from "../Economy/farmingSessionRepository.js";
@@ -248,7 +249,8 @@ export function readPlayerFarming(memberId, { server = "" } = {}) {
       zone: row.top_zone || "",
     }));
 
-    const items = db.prepare(`
+    // Items carry the game's tooltip (describeItems), like everywhere else.
+    const items = describeItems(db, db.prepare(`
       SELECT i.item_key, MAX(i.item_id) AS item_id, MAX(i.item_name) AS item_name, MAX(i.quality_id) AS quality_id,
         MAX(i.icon_file_data_id) AS icon_file_data_id, SUM(i.quantity) AS quantity, COUNT(*) AS drops
       FROM economic_observations o JOIN economic_observation_outputs i ON i.observation_id = o.id
@@ -262,7 +264,7 @@ export function readPlayerFarming(memberId, { server = "" } = {}) {
       iconFileDataId: row.icon_file_data_id === null ? null : Number(row.icon_file_data_id),
       quantity: Number(row.quantity) || 0,
       drops: Number(row.drops) || 0,
-    }));
+    })));
 
     const recentRows = db.prepare(`
       SELECT o.id, o.discipline, o.source_key, o.source_name, o.zone, o.subzone, o.captured_at, o.realm, o.region,
@@ -275,20 +277,22 @@ export function readPlayerFarming(memberId, { server = "" } = {}) {
     `).all(...params);
     const outputs = new Map();
     if (recentRows.length) {
-      for (const row of db.prepare(`
+      const described = describeItems(db, db.prepare(`
         SELECT observation_id, item_key, item_id, item_name, quantity, quality_id, icon_file_data_id
         FROM economic_observation_outputs WHERE observation_id IN (${recentRows.map(() => "?").join(", ")})
-      `).all(...recentRows.map((row) => row.id))) {
-        const list = outputs.get(row.observation_id) || [];
-        list.push({
-          itemKey: row.item_key,
-          itemId: row.item_id === null ? null : Number(row.item_id),
-          name: row.item_name || (row.item_id ? `Item ${row.item_id}` : "Unknown item"),
-          quantity: Number(row.quantity) || 0,
-          qualityId: row.quality_id === null ? null : Number(row.quality_id),
-          iconFileDataId: row.icon_file_data_id === null ? null : Number(row.icon_file_data_id),
-        });
-        outputs.set(row.observation_id, list);
+      `).all(...recentRows.map((row) => row.id)).map((row) => ({
+        observationId: row.observation_id,
+        itemKey: row.item_key,
+        itemId: row.item_id === null ? null : Number(row.item_id),
+        name: row.item_name || (row.item_id ? `Item ${row.item_id}` : "Unknown item"),
+        quantity: Number(row.quantity) || 0,
+        qualityId: row.quality_id === null ? null : Number(row.quality_id),
+        iconFileDataId: row.icon_file_data_id === null ? null : Number(row.icon_file_data_id),
+      })));
+      for (const { observationId, ...output } of described) {
+        const list = outputs.get(observationId) || [];
+        list.push(output);
+        outputs.set(observationId, list);
       }
     }
 

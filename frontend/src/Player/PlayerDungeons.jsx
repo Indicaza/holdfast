@@ -6,7 +6,6 @@ import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
 import { classIdentity } from '../Intelligence/classIdentity.js'
 import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
-import { itemTooltipPending } from '../Intelligence/gameTooltipModel.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { Coins, MarketPriceCell } from '../Market/MarketComponents.jsx'
 import { auctionHref } from '../Market/marketFormat.js'
@@ -438,7 +437,7 @@ function LootItemLink({ item, market }) {
       <ItemLabel item={shown} size={22} tooltip={false} />
     </a>
   )
-  return itemTooltipPending(shown) ? link : <GameTooltipHover item={shown}>{link}</GameTooltipHover>
+  return <GameTooltipHover item={shown}>{link}</GameTooltipHover>
 }
 
 function LootPanel({ loot }) {

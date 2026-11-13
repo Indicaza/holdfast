@@ -91,6 +91,12 @@ export async function withHttpApp(run, options = {}) {
       if (value === undefined) delete process.env[key]
       else process.env[key] = value
     }
-    await rm(directory, { recursive: true, force: true })
+    // Windows keeps the SQLite file locked for a moment after close; the
+    // temporary directory is best effort, never a test failure.
+    try {
+      await rm(directory, { recursive: true, force: true, maxRetries: 3 })
+    } catch (error) {
+      if (!['EBUSY', 'EPERM', 'ENOTEMPTY'].includes(error?.code)) throw error
+    }
   }
 }

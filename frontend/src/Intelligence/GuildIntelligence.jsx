@@ -13,6 +13,7 @@ import CharacterProfileModal from './CharacterProfileModal.jsx'
 import { useCharacterParam } from './useCharacterParam.js'
 import EmptyTelemetry from './EmptyTelemetry.jsx'
 import FarmingIntelligence from './Farming/FarmingIntelligence.jsx'
+import { GameTooltipHover } from './GameTooltip.jsx'
 import IntelligenceAppShell from './IntelligenceAppShell.jsx'
 import intelligenceViews from './intelligenceViews.js'
 import { formatSyncAge, normalizeIntelligence } from './model.js'
@@ -251,11 +252,13 @@ function CraftFinder({ input, onInputChange, platform }) {
           {results.map((result) => (
             <article className="craft-result" key={result.recipe?.id || `${result.recipe?.professionName}-${result.recipe?.name}`}>
               <div className="craft-result__recipe">
-                <WowIcon iconFileId={result.recipe?.iconFileId} recipeId={result.recipe?.id} label={result.recipe?.name} size={50} />
-                <div>
-                  <strong>{result.recipe?.name || 'Unknown recipe'}</strong>
-                  <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill required` : ''}</span>
-                </div>
+                <GameTooltipHover item={result.recipe?.crafted} anchor="parent">
+                  <WowIcon iconFileId={result.recipe?.iconFileId} recipeId={result.recipe?.id} label={result.recipe?.name} size={50} />
+                  <div>
+                    <strong>{result.recipe?.name || 'Unknown recipe'}</strong>
+                    <span>{result.recipe?.professionName || 'Profession unknown'}{result.recipe?.requiredSkill ? ` · ${result.recipe.requiredSkill} skill required` : ''}</span>
+                  </div>
+                </GameTooltipHover>
               </div>
               <div className="craft-result__crafters">
                 {result.crafters?.map((crafter) => {

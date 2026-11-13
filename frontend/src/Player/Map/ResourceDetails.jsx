@@ -223,7 +223,7 @@ export default function ResourceDetails({
                 {selected && plotted ? (
                   <figure className="gw-rmap__modal-chart">
                     <figcaption>
-                      <ItemLabel item={selected} size={18} tooltip={false} />
+                      <ItemLabel item={selected} size={18} />
                       <span>by {disciplineLabel(source.discipline)} skill · {formatRate(selected.rate)} overall</span>
                     </figcaption>
                     <SkillRateLine rows={skillRows} itemName={selected.name} />

@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { wowAssetDescriptor } from './assetResolver.js'
@@ -51,7 +51,7 @@ export function WowIcon({
   const [attempt, setAttempt] = useState({ key: sourceKey, index: 0 })
   const index = attempt.key === sourceKey ? attempt.index : 0
   const [questionMarkFailed, setQuestionMarkFailed] = useState(false)
-  const qualityClass = Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
+  const qualityClass = quality != null && Number.isFinite(Number(quality)) ? ` wow-icon--quality-${Number(quality)}` : ''
   const shown = index < sources.length ? sources[index] : questionMarkFailed ? '' : QUESTION_MARK_ICON
   const failed = () => {
     if (shown === QUESTION_MARK_ICON) setQuestionMarkFailed(true)
@@ -196,59 +196,14 @@ function StatLines({ item }) {
   )
 }
 
-function DurabilityLine({ item }) {
-  const current = Number(item?.durability?.current)
-  const max = Number(item?.durability?.max)
-  if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return null
-  return <span>Durability {current} / {max}</span>
-}
-
-function TooltipBody({ item, compact = false }) {
-  const enchant = enchantLabel(item?.enchant)
-  const type = itemType(item)
-  const price = coinParts(item?.sellPrice)
-  const description = String(item?.description || '').trim()
-  const richLines = clientTooltipLines(item)
-  const hasClientTooltip = richLines.length > 0
-
-  return (
-    <>
-      <strong className={`item-tooltip__name item-quality-${Number(item?.quality ?? item?.qualityId) || 0}`}>
-        {item?.name || `Item ${item?.itemId || ''}`.trim() || 'Unknown item'}
-      </strong>
-      {item?.itemLevel ? <span className="item-tooltip__level">Item Level {item.itemLevel}</span> : null}
-      {hasClientTooltip ? <ClientTooltip item={item} limit={compact ? 12 : 40} /> : (
-        <>
-          {type ? <span>{type}</span> : null}
-          {item?.requiredLevel ? <span>Requires Level {item.requiredLevel}</span> : null}
-          {enchant ? <span className="item-tooltip__enchant">Enhancement: {enchant}</span> : null}
-          <StatLines item={item} />
-          <DurabilityLine item={item} />
-          {item?.spell?.name ? <span className="item-tooltip__effect">Effect: {item.spell.name}</span> : null}
-          {description && !compact ? <p>{description}</p> : null}
-        </>
-      )}
-      {price.length && !compact ? <span>Sell price: {price.join(' ')}</span> : null}
-      {item?.itemId && !compact ? <small>Item #{item.itemId}</small> : null}
-    </>
-  )
-}
-
-export function ItemTooltip({ item, side = 'right', id, compact = false }) {
-  if (!item) return null
-  return (
-    <div id={id} className={`item-tooltip item-tooltip--${side}`} role="tooltip">
-      <TooltipBody item={item} compact={compact} />
-    </div>
-  )
-}
-
 const TOOLTIP_GAP = 10
 const VIEWPORT_MARGIN = 12
 
 // Places a tooltip beside its anchor on the preferred side, flips when that
 // side has no room, and clamps it inside the viewport. Rendered into
-// document.body so no scrolling or clipping ancestor can cut it off.
+// document.body so no scrolling or clipping ancestor can cut it off. Item
+// tooltips come from GameTooltipHover (Intelligence/GameTooltip.jsx), the
+// game's own lines; this is the frame they and the stat tooltips share.
 export function FloatingTooltip({ anchor, side = 'right', id, className = '', children }) {
   const ref = useRef(null)
   const [position, setPosition] = useState(null)
@@ -293,44 +248,6 @@ export function FloatingTooltip({ anchor, side = 'right', id, className = '', ch
   )
 }
 
-function focusVisible(event) {
-  try {
-    return event.target.matches(':focus-visible')
-  } catch {
-    return true
-  }
-}
-
-export function ItemHoverCard({ item, children, side = 'right', className = '', tooltipClassName = '' }) {
-  const tooltipId = useId()
-  const [anchor, setAnchor] = useState(null)
-  if (!item) return children
-  // The wrapper is display: contents (no box), so measure the trigger inside it.
-  const measure = (event) => (event.currentTarget.firstElementChild || event.currentTarget).getBoundingClientRect()
-  const show = (event) => setAnchor(measure(event))
-  // Keyboard focus shows the tooltip; the focus a mouse click leaves behind
-  // must not keep it open after the pointer moves on.
-  const showOnFocus = (event) => {
-    if (focusVisible(event)) setAnchor(measure(event))
-  }
-  const hide = () => setAnchor(null)
-  return (
-    <span
-      className={`item-hover-card${className ? ` ${className}` : ''}`}
-      aria-describedby={anchor ? tooltipId : undefined}
-      onMouseEnter={show}
-      onMouseLeave={hide}
-      onFocus={showOnFocus}
-      onBlur={hide}
-    >
-      {children}
-      {anchor && typeof document !== 'undefined' ? (
-        <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={tooltipClassName}><TooltipBody item={item} /></FloatingTooltip>
-      ) : null}
-    </span>
-  )
-}
-
 export function ItemDetailCard({ item, compact = false }) {
   if (!item) return null
   const type = itemType(item)
@@ -342,14 +259,17 @@ export function ItemDetailCard({ item, compact = false }) {
   const durabilityCurrent = Number(item?.durability?.current)
   const durabilityMax = Number(item?.durability?.max)
   const hasDurability = Number.isFinite(durabilityCurrent) && Number.isFinite(durabilityMax) && durabilityMax > 0
+  const quality = item.quality ?? item.qualityId
+  const detailQualityClass = quality == null ? '' : ` item-detail--quality-${quality}`
+  const nameQualityClass = quality == null ? '' : ` item-quality-${quality}`
 
   return (
-    <article className={`item-detail item-detail--quality-${Number(item.quality ?? item.qualityId) || 0}${compact ? ' item-detail--compact' : ''}`}>
+    <article className={`item-detail${detailQualityClass}${compact ? ' item-detail--compact' : ''}`}>
       <div className="item-detail__eyebrow">Selected equipment</div>
       <div className="item-detail__topline">
         <ItemIcon item={item} size={compact ? 40 : 64} />
         <div>
-          <strong className={`item-detail__name item-quality-${Number(item.quality ?? item.qualityId) || 0}`}>
+          <strong className={`item-detail__name${nameQualityClass}`}>
             {item.name || `Item ${item.itemId || ''}`.trim() || 'Unknown item'}
           </strong>
           <span>{item.slot || 'Equipment'}</span>

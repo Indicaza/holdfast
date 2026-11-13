@@ -2,7 +2,7 @@
 // panels and states. Styles live in PlayerApp.css under .gw.
 
 import { GameTooltipHover } from '../Intelligence/GameTooltip.jsx'
-import { gameTooltipItem, itemTooltipPending } from '../Intelligence/gameTooltipModel.js'
+import { gameTooltipItem } from '../Intelligence/gameTooltipModel.js'
 import { CONFIDENCE_LEVELS, confidenceLabel, disciplineLabel, formatRate, rateRangeText } from '../Intelligence/Farming/farmingModel.js'
 import WowIcon from '../WowAssets/WowIcon.jsx'
 import Tip from './Tooltip.jsx'
@@ -70,18 +70,20 @@ export function DisciplineTag({ discipline, compact = false }) {
   )
 }
 
-// An item as the game shows it: icon, name in its quality colour, tooltip.
+// An item as the game shows it: icon, name in its quality colour, and the
+// game's tooltip on hover. An item the website knows only by name still
+// hovers, saying its full tooltip is yet to arrive (GameTooltipBody).
 export function ItemLabel({ item, size = 22, tooltip = true, muted = false }) {
   if (!item) return null
-  const quality = Number.isFinite(Number(item.qualityId)) ? Number(item.qualityId) : 1
+  const quality = item.qualityId ?? null
   const body = (
     <span className="gw-item">
       <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} quality={item.qualityId} size={size} />
-      <span className={`gw-item__name gw-q${quality}${muted ? ' gw-item__name--muted' : ''}`}>{item.name || 'Unknown item'}</span>
+      <span className={`gw-item__name${quality == null ? '' : ` gw-q${quality}`}${muted ? ' gw-item__name--muted' : ''}`}>{item.name || 'Unknown item'}</span>
     </span>
   )
-  const detail = gameTooltipItem(item.item || item)
-  return tooltip && detail && !itemTooltipPending(detail) ? <GameTooltipHover item={item.item || item}>{body}</GameTooltipHover> : body
+  const detail = item.item || item
+  return tooltip && gameTooltipItem(detail) ? <GameTooltipHover item={detail}>{body}</GameTooltipHover> : body
 }
 
 const CONFIDENCE_HELP = {
