@@ -90,6 +90,8 @@ export function statusTone(status) {
 
 const END_REASONS = {
   all_bosses_defeated: 'every boss defeated',
+  final_boss_defeated: 'final boss defeated',
+  instance_reset: 'instance reset for a new run',
   manual_finish: 'finished with /gw dungeon finish',
   left_instance: 'left and did not return within 10 minutes',
   logout_not_resumed: 'logged out and did not come back',

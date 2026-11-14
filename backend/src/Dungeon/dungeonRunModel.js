@@ -10,7 +10,12 @@
 // before; its checkpoints are derived from its timeline.
 export const DUNGEON_SCHEMA_VERSIONS = Object.freeze([1, 2]);
 export const MAX_CHECKPOINTS = 40;
-export const COMPLETION_BASES = Object.freeze(["lockout", "encounters", "manual", "none"]);
+// final_boss: the addon's boss registry knows the dungeon's final boss by
+// encounter ID (seen in the Forever client) and the client reported its
+// kill; optional encounters may still be up. final_boss_unconfirmed: the
+// final boss matched by name only; the run completed but is not verified.
+export const COMPLETION_BASES = Object.freeze(["lockout", "encounters", "final_boss", "final_boss_unconfirmed", "manual", "none"]);
+const FINAL_BOSS_CONFIDENCES = new Set(["observed", "documented"]);
 export const DUNGEON_STATUSES = ["open", "completed", "interrupted", "abandoned"];
 export const FINAL_DUNGEON_STATUSES = new Set(["completed", "interrupted", "abandoned"]);
 export const MAX_TIMELINE = 60;
@@ -70,6 +75,23 @@ function validTimelineEntry(entry, schema) {
     && optionalText(entry.source, 40) && optionalText(entry.reason, 60);
 }
 
+// A final-boss completion carries the boss that proved it. "final_boss" must
+// match a boss checkpoint with that encounter ID that the client itself
+// reported (encounter_end or boss_kill), so the claim can be checked here.
+function validCompletion(completion, checkpoints) {
+  if (!isObject(completion) || !COMPLETION_BASES.includes(completion.basis)) return false;
+  const final = completion.finalBoss;
+  if (completion.basis !== "final_boss" && completion.basis !== "final_boss_unconfirmed") return final === undefined;
+  if (!isObject(final) || !optionalInteger(final.encounterId, 1) || !optionalText(final.name, 120)
+    || !FINAL_BOSS_CONFIDENCES.has(final.confidence) || !optionalInteger(completion.registryVersion, 1, 10000)) return false;
+  if (completion.basis === "final_boss") {
+    if (!integer(final.encounterId, 1) || final.confidence !== "observed") return false;
+    return checkpoints.some((entry) => entry.kind === "boss" && entry.encounterId === final.encounterId
+      && (entry.source === "encounter_end" || entry.source === "boss_kill"));
+  }
+  return true;
+}
+
 function validCheckpoint(entry) {
   return isObject(entry) && typeof entry.id === "string" && /^[\w:.'-]{1,80}$/.test(entry.id) && CHECKPOINT_KINDS.has(entry.kind)
     && integer(entry.at, 0, 604800) && optionalText(entry.name) && optionalInteger(entry.encounterId, 1) && optionalText(entry.source, 40);
@@ -120,7 +142,7 @@ export function validDungeonRun(record) {
     if (!checkpoints || checkpoints.length > MAX_CHECKPOINTS || !checkpoints.every(validCheckpoint)) return false;
     if (checkpoints.some((entry) => p.timer ? !integer(entry.timerAt, 0, Math.min(entry.at, p.timer.seconds)) : entry.timerAt !== undefined)) return false;
     if (new Set(checkpoints.map((entry) => entry.id)).size !== checkpoints.length) return false;
-    if (p.completion !== undefined && !(isObject(p.completion) && COMPLETION_BASES.includes(p.completion.basis))) return false;
+    if (p.completion !== undefined && !validCompletion(p.completion, checkpoints)) return false;
     if (!optionalInteger(bosses.atEntry, 0, bosses.total ?? 1000)) return false;
     if (!optionalInteger(bosses.duplicatesIgnored, 0, 1000)) return false;
   } else if (p.checkpoints !== undefined || p.completion !== undefined || p.timer !== undefined) {
