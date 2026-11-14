@@ -389,3 +389,54 @@ test("records use one uninterrupted clock and accept a complete lockout", () => 
   assert.equal(marks.get(3).clear, false);
   assert.equal(referenceClear(runs[1], runs).id, 1);
 });
+
+// Final-boss completions (addon boss registry) ------------------------------------
+
+function finalBossRun(basis, final, checkpointSource = "encounter_end") {
+  const base = structuredClone(v2);
+  const p = base.payload;
+  p.bosses = { ...p.bosses, defeated: 2, total: 3 };
+  p.checkpoints = p.checkpoints.map((entry) => (entry.id === "boss:2" ? { ...entry, source: checkpointSource } : entry));
+  p.completion = { basis, finalBoss: final, registryVersion: 1 };
+  p.endReason = "final_boss_defeated";
+  return { kind: "event", envelope: base };
+}
+
+test("a final-boss completion is accepted only with its own kill evidence", () => {
+  const observed = { encounterId: 2, name: "Edwin VanCleef", confidence: "observed" };
+  assert.equal(validDungeonRun(finalBossRun("final_boss", observed)), true, "observed final boss with a matching kill");
+  assert.equal(validDungeonRun(finalBossRun("final_boss", { ...observed, encounterId: 99 })), false, "no kill with that encounter ID");
+  assert.equal(validDungeonRun(finalBossRun("final_boss", observed, "manual")), false, "a manual split is not a kill");
+  assert.equal(validDungeonRun(finalBossRun("final_boss", { ...observed, confidence: "documented" })), false, "verified needs an observed definition");
+  assert.equal(validDungeonRun(finalBossRun("final_boss", { name: "Edwin VanCleef", confidence: "observed" })), false, "verified needs an encounter ID");
+  assert.equal(validDungeonRun(finalBossRun("final_boss_unconfirmed", { name: "Aku'mai", confidence: "documented" })), true, "name-only completion is accepted as unconfirmed");
+  assert.equal(validDungeonRun(finalBossRun("final_boss_unconfirmed", { name: "Aku'mai", confidence: "guess" })), false);
+  const stray = structuredClone(v2);
+  stray.payload.completion = { basis: "lockout", finalBoss: observed };
+  assert.equal(validDungeonRun({ kind: "event", envelope: stray }), false, "a final boss only travels with a final-boss basis");
+  assert.equal(validDungeonRun({ kind: "event", envelope: structuredClone(v2) }), true, "existing schema 2 payloads are unchanged");
+  assert.equal(validDungeonRun({ kind: "event", envelope: structuredClone(v1) }), true, "schema 1 payloads are unchanged");
+});
+
+test("final-boss clears are verified and PB-eligible; unconfirmed ones are not", () => {
+  const timer = { starts: 1, startedBy: "combat", seconds: 900 };
+  const verified = fakeRun(1, { durationSeconds: 1000, completionBasis: "final_boss", endReason: "final_boss_defeated",
+    bosses: { defeated: 3, total: 4, encounterEvents: true }, timer });
+  const slower = fakeRun(5, { durationSeconds: 1300, completionBasis: "final_boss", endReason: "final_boss_defeated",
+    bosses: { defeated: 4, total: 4, encounterEvents: true }, timer: { ...timer, seconds: 1200 } });
+  const unconfirmed = fakeRun(2, { durationSeconds: 800, completionBasis: "final_boss_unconfirmed", endReason: "final_boss_defeated",
+    bosses: { defeated: 6, total: 7, encounterEvents: true }, timer: { ...timer, seconds: 700 } });
+  const partial = fakeRun(3, { durationSeconds: 600, completionBasis: "manual", endReason: "manual_finish",
+    bosses: { defeated: 3, total: 4, encounterEvents: true }, timer: { ...timer, seconds: 500 } });
+  assert.equal(completionQuality(verified).completion, "verified");
+  assert.match(completionQuality(verified).reasons[0], /Final boss defeated/);
+  assert.equal(completionQuality(unconfirmed).completion, "manual");
+  assert.match(completionQuality(unconfirmed).reasons.join(" "), /name only/);
+  assert.equal(completionQuality(partial).completion, "manual");
+  const { marks } = buildComparisons([verified, slower, unconfirmed, partial]);
+  assert.equal(marks.get(1).pb, true, "the verified final-boss clear is the best");
+  assert.notEqual(marks.get(2).pb, true, "an unconfirmed clear is never a PB, even if faster");
+  assert.notEqual(marks.get(3).pb, true, "a manual finish is never a PB");
+  // Historical rows keep their stored basis: a 3/4 manual finish stays manual.
+  assert.equal(completionQuality(fakeRun(4, { completionBasis: "manual", endReason: "manual_finish", bosses: { defeated: 3, total: 4, encounterEvents: true } })).completion, "manual");
+});

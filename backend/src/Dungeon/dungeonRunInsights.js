@@ -86,6 +86,16 @@ export function completionQuality(run) {
   if (total && (defeated >= total || run.completionBasis === "lockout")) {
     return { completion: "verified", reasons: [run.completionBasis === "lockout" ? "Every boss in the lockout is down." : `${defeated}/${total} bosses defeated.`] };
   }
+  // The final boss, known by encounter ID and reported dead by the client
+  // (checked when the run was received). Optional bosses may still be up.
+  if (run.completionBasis === "final_boss") {
+    return { completion: "verified", reasons: [total && defeated < total
+      ? `Final boss defeated (${defeated}/${total} encounters; the rest are optional or skipped).` : "Final boss defeated."] };
+  }
+  if (run.completionBasis === "final_boss_unconfirmed") {
+    reasons.push("Final boss recognised by name only; not verified.");
+    return { completion: "manual", reasons };
+  }
   if (total && defeated < total) reasons.push(`Only ${defeated}/${total} bosses recorded.`);
   if (run.endReason === "manual_finish") reasons.push("Finished with /gw dungeon finish.");
   if (!total) reasons.push("The instance reported no boss total.");
