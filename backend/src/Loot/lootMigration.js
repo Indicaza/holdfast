@@ -154,7 +154,11 @@ export const dungeonLootMigration = {
       WHERE o.activity = 'corpse_loot' AND o.source_kind = 'creature' AND o.source_id IS NOT NULL
         AND o.instance_id IN (SELECT instance_id FROM dungeon_loot_instances)
       GROUP BY o.instance_id, COALESCE(o.difficulty_id, 0), o.source_id, out.item_id`).run();
-    db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES ('dungeon_loot_revision', ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
-      .run(backfilled.changes > 0 ? "1" : "0", now);
+    // The catalog's revision counter starts with the first thing it holds;
+    // a database with no dungeon loot is left exactly as it was.
+    if (backfilled.changes > 0) {
+      db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES ('dungeon_loot_revision', '1', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
+        .run(now);
+    }
   },
 };
