@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  classificationLabel,
+  classificationTone,
   bossLabel,
   dungeonApiFilters,
   characterLabel,
@@ -185,4 +187,15 @@ test('row markers and header context', () => {
   const options = { characters: [{ id: 'c1', name: 'Rook' }, { id: 'c2', name: 'Alt' }] }
   assert.equal(contextLine({ runs: [run(1)], filters: { character: 'c1' }, options }), 'Rook · level 20 · Live Realm')
   assert.equal(contextLine({ runs: [run(1), run(2, { character: { id: 'c2', name: 'Alt' }, realm: 'Other' })], filters: {}, options }), '2 characters · 2 realms')
+})
+
+test('classification labels never call a partial run a failure', () => {
+  assert.equal(classificationLabel({ kind: 'partial', verification: 'none' }), 'Partial')
+  assert.equal(classificationLabel({ kind: 'dungeon_clear', verification: 'verified' }), 'Dungeon clear')
+  assert.equal(classificationLabel({ kind: 'dungeon_clear', verification: 'unconfirmed' }), 'Dungeon clear (unverified)')
+  assert.equal(classificationLabel({ kind: 'dungeon_clear', verification: 'manual' }), 'Finished by player')
+  assert.equal(classificationLabel({ kind: 'hundred_clear', verification: 'verified' }), '100% clear')
+  assert.equal(classificationLabel(null), null, 'older responses fall back to the status')
+  assert.equal(classificationTone({ kind: 'hundred_clear', verification: 'verified' }), 'ok')
+  assert.equal(classificationTone({ kind: 'partial', verification: 'none' }), 'quiet')
 })

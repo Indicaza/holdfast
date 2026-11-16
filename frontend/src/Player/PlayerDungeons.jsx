@@ -14,6 +14,8 @@ import {
   COMPLETION_LABELS,
   STATUS_FILTERS,
   STATUS_LABELS,
+  classificationLabel,
+  classificationTone,
   bossLabel,
   checkpointPace,
   contextLine,
@@ -49,8 +51,11 @@ function shortDate(seconds) {
   return new Date(seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function StatusTag({ status }) {
-  return <span className={`gw-tag gw-run-status gw-run-status--${statusTone(status)}`}>{STATUS_LABELS[status] || status}</span>
+// The run's classification when the server gives one, else its status.
+function StatusTag({ status, classification }) {
+  const label = classificationLabel(classification)
+  const tone = classificationTone(classification) || statusTone(status)
+  return <span className={`gw-tag gw-run-status gw-run-status--${tone}`}>{label || STATUS_LABELS[status] || status}</span>
 }
 
 function Markers({ run }) {
@@ -199,7 +204,7 @@ function RunList({ runs, filters, server }) {
                   <td className="gw-col-num">{bossLabel(run.bosses)}</td>
                   <td className="gw-col-num gw-hide-sm">{run.deaths}</td>
                   <td className="gw-col-num gw-hide-md">{run.wallet.available ? formatCopper(run.wallet.netCopper) : <span className="gw-muted" title="Money was not readable">—</span>}</td>
-                  <td><StatusTag status={run.status} /></td>
+                  <td><StatusTag status={run.status} classification={run.marks?.classification} /></td>
                 </tr>
               )
             })}
@@ -494,7 +499,7 @@ function RunDetail({ runId, filters, server }) {
           </p>
         </div>
         <Markers run={run} />
-        <StatusTag status={run.status} />
+        <StatusTag status={run.status} classification={run.marks?.classification} />
       </div>
       <p className="gw-muted gw-run-end">
         {run.status === 'open' ? 'Still open when WoW last saved. ' : run.endReason ? `Ended: ${endReasonLabel(run.endReason)}. ` : ''}

@@ -43,7 +43,33 @@ export function comparisonKey(run) {
   const dungeon = run.dungeon?.instanceId ? `i${run.dungeon.instanceId}` : `n${String(run.dungeon?.name || "").toLowerCase()}`;
   const difficulty = run.dungeon?.difficultyId ?? String(run.dungeon?.difficultyName || "").toLowerCase();
   const character = run.character?.id || run.character?.rawId || "";
-  return `${dungeon}|${difficulty}|${character}|${timingBasis(run)}`;
+  // A final-boss clear (optional bosses may be skipped) is never compared
+  // with a run that cleared every encounter.
+  const kind = run.completionBasis === "final_boss" || run.completionBasis === "final_boss_unconfirmed" ? "|dungeon_clear" : "";
+  return `${dungeon}|${difficulty}|${character}|${timingBasis(run)}${kind}`;
+}
+
+// What a run achieved, read from its stored evidence, so schema 1 and 2
+// rows read the same way. Never a failure: a run without a clear is partial.
+//   hundred_clear  every encounter the lockout lists (optional ones too)
+//   dungeon_clear  the final boss (verified by encounter ID, unconfirmed by
+//                  name), or the player's own finish (manual)
+//   partial        anything else, kept with its boss counts
+// The addon also reports full_clear and boss_farm; they need fields the
+// stored row does not keep, so they read as the evidence above here.
+export function runClassification(run) {
+  if (run.status === "open") return { kind: "in_progress", verification: "none" };
+  const total = Number(run.bosses?.total) || 0;
+  const defeated = Number(run.bosses?.defeated) || 0;
+  const basis = run.completionBasis;
+  if (basis === "lockout" || basis === "encounters" || (run.status === "completed" && total && defeated >= total)) {
+    return { kind: "hundred_clear", verification: "verified" };
+  }
+  if (basis === "final_boss") return { kind: "dungeon_clear", verification: "verified" };
+  if (basis === "final_boss_unconfirmed") return { kind: "dungeon_clear", verification: "unconfirmed" };
+  if (basis === "manual" || run.endReason === "manual_finish") return { kind: "dungeon_clear", verification: "manual" };
+  if (run.status === "completed") return { kind: "dungeon_clear", verification: "unconfirmed" };
+  return { kind: "partial", verification: "none" };
 }
 
 // Checkpoints: what the add-on sent (schema 2), or the boss kills and manual
@@ -160,6 +186,7 @@ export function buildComparisons(runs = []) {
         group: key,
         completion: quality.completion,
         completionReasons: quality.reasons,
+        classification: runClassification(run),
         clear,
         pb: Boolean(clear && fastest && fastest.id === run.id && clears.length >= MIN_COMPARE_RUNS),
         bestXp: Boolean(ratedRun && bestXp && bestXp.id === run.id && rated.length >= MIN_COMPARE_RUNS),

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 import { setSession } from "../src/Auth/session.js";
 import { withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
+import * as insights from "../src/Dungeon/dungeonRunInsights.js";
 import { buildComparisons, completionQuality, deriveCheckpoints, median, referenceClear } from "../src/Dungeon/dungeonRunInsights.js";
 import { validDungeonRun } from "../src/Dungeon/dungeonRunModel.js";
 import { factionForRace } from "../src/Dungeon/dungeonRunRepository.js";
@@ -439,4 +440,31 @@ test("final-boss clears are verified and PB-eligible; unconfirmed ones are not",
   assert.notEqual(marks.get(3).pb, true, "a manual finish is never a PB");
   // Historical rows keep their stored basis: a 3/4 manual finish stays manual.
   assert.equal(completionQuality(fakeRun(4, { completionBasis: "manual", endReason: "manual_finish", bosses: { defeated: 3, total: 4, encounterEvents: true } })).completion, "manual");
+});
+
+// Run classification ------------------------------------------------------------------
+
+test("runs are classified from stored evidence; partial runs are never failures", () => {
+  const { runClassification, comparisonKey } = insights;
+  assert.deepEqual(runClassification(fakeRun(1, { completionBasis: "lockout" })), { kind: "hundred_clear", verification: "verified" });
+  assert.deepEqual(runClassification(fakeRun(2, { completionBasis: "final_boss", bosses: { defeated: 3, total: 4 } })), { kind: "dungeon_clear", verification: "verified" });
+  assert.deepEqual(runClassification(fakeRun(3, { completionBasis: "final_boss_unconfirmed", bosses: { defeated: 6, total: 7 } })), { kind: "dungeon_clear", verification: "unconfirmed" });
+  assert.deepEqual(runClassification(fakeRun(4, { completionBasis: "manual", endReason: "manual_finish", bosses: { defeated: 3, total: 4 } })), { kind: "dungeon_clear", verification: "manual" });
+  assert.deepEqual(runClassification(fakeRun(5, { status: "abandoned", endReason: "left_instance", bosses: { defeated: 6, total: 7 } })), { kind: "partial", verification: "none" });
+  assert.deepEqual(runClassification(fakeRun(6, { status: "interrupted", bosses: { defeated: 0, total: 4 } })), { kind: "partial", verification: "none" });
+  assert.equal(runClassification(fakeRun(7, { status: "open" })).kind, "in_progress");
+  // A schema 1 row: completed with every boss down still reads as 100%.
+  assert.deepEqual(runClassification(fakeRun(8, { completionBasis: null, bosses: { defeated: 2, total: 2 } })), { kind: "hundred_clear", verification: "verified" });
+  // Final-boss clears are compared only with each other.
+  assert.notEqual(comparisonKey(fakeRun(9, { completionBasis: "final_boss" })), comparisonKey(fakeRun(10, { completionBasis: "lockout" })));
+  const timer = { starts: 1, startedBy: "combat" };
+  const runs = [
+    fakeRun(11, { completionBasis: "lockout", timer: { ...timer, seconds: 1500 } }),
+    fakeRun(12, { completionBasis: "lockout", timer: { ...timer, seconds: 1700 } }),
+    fakeRun(13, { completionBasis: "final_boss", bosses: { defeated: 3, total: 4, encounterEvents: true }, timer: { ...timer, seconds: 600 } }),
+  ];
+  const { marks } = buildComparisons(runs);
+  assert.equal(marks.get(11).pb, true, "the 100% best stays the 100% best");
+  assert.notEqual(marks.get(13).pb, true, "a faster dungeon clear does not take a 100% PB");
+  assert.equal(marks.get(13).classification.kind, "dungeon_clear");
 });
