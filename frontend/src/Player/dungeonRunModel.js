@@ -273,6 +273,31 @@ export function performanceSummary(runs = [], filters = {}) {
   return base
 }
 
+// What a run achieved (marks.classification from the server), in words.
+// A run without a clear is "Partial", never a failure.
+const CLASSIFICATION_LABELS = Object.freeze({
+  hundred_clear: '100% clear',
+  full_clear: 'Full clear',
+  dungeon_clear: 'Dungeon clear',
+  boss_farm: 'Boss farm',
+  partial: 'Partial',
+  in_progress: 'In progress',
+})
+
+export function classificationLabel(classification) {
+  if (!classification?.kind) return null
+  if (classification.kind === 'dungeon_clear' && classification.verification === 'manual') return 'Finished by player'
+  const label = CLASSIFICATION_LABELS[classification.kind] || classification.kind
+  return classification.verification === 'unconfirmed' ? `${label} (unverified)` : label
+}
+
+export function classificationTone(classification) {
+  if (!classification?.kind) return null
+  if (classification.kind === 'in_progress') return 'info'
+  if (classification.kind === 'partial') return 'quiet'
+  return classification.verification === 'verified' ? 'ok' : 'quiet'
+}
+
 export const COMPLETION_LABELS = Object.freeze({
   verified: 'Verified clear',
   manual: 'Unverified clear',
