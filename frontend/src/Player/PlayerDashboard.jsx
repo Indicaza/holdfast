@@ -275,7 +275,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}
-            {section === 'dungeons' ? <PlayerDungeons server={server} queryString={queryString} /> : null}
+            {section === 'dungeons' ? <PlayerDungeons server={server} queryString={queryString} characters={characters} /> : null}
             {section === 'sync' ? <PlayerSync data={overview.data} onChanged={overview.mutate} /> : null}
             {section === 'account' ? <AccountPage embedded /> : null}
           </>

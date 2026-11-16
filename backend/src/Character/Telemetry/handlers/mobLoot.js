@@ -1,6 +1,7 @@
 import { validMobLoot } from "../../../GameData/publicGameDataModel.js";
 import { recordMobLootInDatabase } from "../../../GameData/publicGameDataProjection.js";
 import { linkDungeonRunLootInDatabase } from "../../../Dungeon/dungeonRunRepository.js";
+import { recordLootWindowInDatabase } from "../../../Loot/lootCatalogRepository.js";
 
 export const mobLootTelemetryHandler = {
   eventType: "mob_loot",
@@ -12,6 +13,8 @@ export const mobLootTelemetryHandler = {
     const result = recordMobLootInDatabase(db, event);
     // The public loot fact stays anonymous; the run link is private.
     linkDungeonRunLootInDatabase(db, { ...event, source: "mob_loot", observationId: result?.observationId });
+    // Inside a dungeon, the sighting also feeds the dungeon loot catalog.
+    recordLootWindowInDatabase(db, { envelope: event.envelope, newItemIds: result?.newItemIds });
     return result;
   },
 };

@@ -51,17 +51,22 @@ function insertLoot(db, observation, outputs) {
     gameInteger(observation.location?.mapId, 1), gameText(observation.location?.zone), point.x, point.y,
     observation.location?.positionKind === "player_at_loot" ? "player_at_loot" : "player_at_cast", observation.capturedAt);
   const row = db.prepare("SELECT id FROM game_loot_observations WHERE observation_key = ?").get(observation.key);
+  // Items this observation had not reported before: a corpse looted twice
+  // (or resent) is one sighting of each item, for anything that counts them.
+  const seen = db.prepare("SELECT 1 FROM game_loot_outputs WHERE observation_id = ? AND item_id = ?");
+  const newItemIds = [];
   for (const output of outputs) {
     const itemId = gameInteger(output?.itemId, 1);
     const quantity = gameInteger(output?.quantity, 1, 100000);
     if (!itemId || !quantity) continue;
+    if (!seen.get(row.id, itemId)) newItemIds.push(itemId);
     learnPublicItemInDatabase(db, output, observation, { capturedAt: observation.capturedAt });
     db.prepare(`INSERT INTO game_loot_outputs (observation_id, item_id, quantity, is_quest_item) VALUES (?, ?, ?, ?)
       ON CONFLICT(observation_id, item_id) DO UPDATE SET quantity = MAX(game_loot_outputs.quantity, excluded.quantity),
         is_quest_item = MAX(game_loot_outputs.is_quest_item, excluded.is_quest_item)
     `).run(row.id, itemId, quantity, output.isQuestItem === true ? 1 : 0);
   }
-  return { status: "recorded", observationId: row.id };
+  return { status: "recorded", observationId: row.id, newItemIds };
 }
 
 export function recordMobLootInDatabase(db, { envelope, memberId }) {

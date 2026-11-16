@@ -16,6 +16,7 @@ import { publicGameDataMigration } from "../GameData/publicGameDataMigration.js"
 import { guildweaverTablesMigration } from "./guildweaverTablesMigration.js";
 import { guildDirectoryMigration } from "../Guild/Directory/guildDirectoryMigration.js";
 import { guildScopedOperationsMigration } from "./guildScopedOperationsMigration.js";
+import { dungeonLootMigration } from "../Loot/lootMigration.js";
 
 const DATABASE_FILE = "holdfast.sqlite";
 
@@ -832,6 +833,7 @@ const migrations = [
   marketDepthMigration,
   dungeonRunV2Migration,
   dungeonTimerMigration,
+  dungeonLootMigration,
 ];
 
 function configureDatabase(db) {
