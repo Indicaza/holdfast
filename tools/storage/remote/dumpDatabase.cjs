@@ -27,6 +27,8 @@
 //   K  table kept JSON      (unchanged since the base backup: not sent)
 //   E  table end JSON       Z  trailer JSON
 // stdin: optional JSON { base: { [table]: sha256 } } from the last backup.
+// Over SSH this file itself travels on stdin ahead of that JSON (a NUL byte
+// between them): Render refuses commands longer than about 12 KB.
 // A table whose digest matches is sent as K and copied from that backup.
 
 const crypto = require("node:crypto");
@@ -185,7 +187,9 @@ async function readStdin() {
 async function main(argv = process.argv.slice(1).filter((value) => value !== "--" && !value.endsWith("dumpDatabase.cjs"))) {
   const file = argv[0];
   if (!file) throw new Error("usage: dumpDatabase.cjs /path/to/holdfast.sqlite");
-  const request = await readStdin();
+  // Over SSH the bootstrap (backup.mjs) has already read stdin: the code,
+  // then the request.
+  const request = globalThis.__gwRequest ?? await readStdin();
   const base = request.base || {};
   const { DatabaseSync } = require("node:sqlite");
   const db = new DatabaseSync(file, { readOnly: true });
@@ -243,6 +247,9 @@ async function main(argv = process.argv.slice(1).filter((value) => value !== "--
 }
 
 module.exports = { FORMAT, VERSION, decodeRows, encodeRows, frame, tablePlans, tableDigest, databaseDigest, readTable, quote, main };
+// Over SSH the script runs inside an eval (see backup.mjs); strict mode keeps
+// main there, so it is handed out this way.
+globalThis.__gwMain = main;
 
 if (require.main === module) {
   main().catch((error) => {

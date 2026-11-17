@@ -51,12 +51,26 @@ import {
 } from "./lib.mjs";
 import { restoreBackup } from "./restore.mjs";
 
-// The process that writes the snapshot stream to its stdout.
+// Over SSH the command is only this bootstrap: Render refuses commands
+// longer than about 12 KB, so the dump script travels on stdin, followed by
+// a NUL byte and the request.
+const BOOTSTRAP = `const parts = []; process.stdin.on("data", (chunk) => parts.push(chunk)); process.stdin.on("end", () => {
+  const all = Buffer.concat(parts); const cut = all.indexOf(0);
+  globalThis.__gwRequest = JSON.parse(all.subarray(cut + 1).toString("utf8") || "{}");
+  eval(all.subarray(0, cut).toString("utf8"));
+  globalThis.__gwMain().catch((error) => { process.stderr.write("dump failed: " + error.message + "\\n"); process.exit(1); });
+});`;
+
+// The process that writes the snapshot stream to its stdout, and what to
+// write to its stdin for `request`.
 export function snapshotProcess({ ssh = "", local = "", remoteDb = "/data/holdfast.sqlite", spawnImpl = spawn }) {
-  if (local) return spawnImpl(process.execPath, [path.join(TOOLS_DIRECTORY, "remote", "dumpDatabase.cjs"), path.resolve(local)], { stdio: ["pipe", "pipe", "pipe"] });
+  if (local) {
+    const child = spawnImpl(process.execPath, [path.join(TOOLS_DIRECTORY, "remote", "dumpDatabase.cjs"), path.resolve(local)], { stdio: ["pipe", "pipe", "pipe"] });
+    return { child, input: (request) => JSON.stringify(request) };
+  }
   if (!ssh) throw new Error("Give --ssh user@host (Render: the service's SSH address) or --local file");
-  const command = remoteNodeCommand(`${dumpScriptSource()}\nmain().catch((error) => { process.stderr.write("dump failed: " + error.message + "\\n"); process.exit(1); });`, [remoteDb]);
-  return spawnImpl("ssh", sshArgs(ssh, command), { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+  const child = spawnImpl("ssh", sshArgs(ssh, remoteNodeCommand(BOOTSTRAP, [remoteDb])), { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+  return { child, input: (request) => Buffer.concat([Buffer.from(dumpScriptSource(), "utf8"), Buffer.from([0]), Buffer.from(JSON.stringify(request), "utf8")]) };
 }
 
 export async function runBackup({ ssh = "", local = "", remoteDb = "/data/holdfast.sqlite", root = dataRoot(), full = false, keep = 0,
@@ -71,12 +85,12 @@ export async function runBackup({ ssh = "", local = "", remoteDb = "/data/holdfa
   const target = path.join(partial, DATABASE_NAME);
   const started = Date.now();
 
-  const child = snapshotProcess({ ssh, local, remoteDb, spawnImpl });
+  const { child, input } = snapshotProcess({ ssh, local, remoteDb, spawnImpl });
   let stderr = "";
   child.stderr.on("data", (chunk) => { stderr = (stderr + chunk).slice(-4000); });
   const exited = new Promise((resolve) => child.once("close", (code, signal) => resolve({ code, signal })));
   const spawnError = new Promise((_, reject) => child.once("error", reject));
-  child.stdin.end(JSON.stringify({ base: previous ? Object.fromEntries(previous.manifest.tables.map((table) => [table.name, table.sha256])) : {} }));
+  child.stdin.end(input({ base: previous ? Object.fromEntries(previous.manifest.tables.map((table) => [table.name, table.sha256])) : {} }));
   let compressed = 0;
   child.stdout.on("data", (chunk) => { compressed += chunk.length; });
 

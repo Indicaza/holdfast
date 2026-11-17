@@ -227,8 +227,8 @@ function steadyState(file, now) {
 }
 
 async function compactCopy(source, target) {
-  const child = snapshotProcess({ local: source, spawnImpl: spawn });
-  child.stdin.end("{}");
+  const { child, input } = snapshotProcess({ local: source, spawnImpl: spawn });
+  child.stdin.end(input({}));
   let stderr = "";
   child.stderr.on("data", (chunk) => { stderr += chunk; });
   const exited = new Promise((resolve) => child.once("close", resolve));
