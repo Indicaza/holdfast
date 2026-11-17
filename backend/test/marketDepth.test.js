@@ -147,12 +147,11 @@ test("an in-game scan's price level is its total quantity across its auctions, n
   assert.deepEqual(api.ladder, [[12, 60, 3]]);
 });
 
-test("weekly history catches up after maintenance was paused, within the days still kept", async () => {
-  const { rollUpWindowDays, DAILY_DAYS } = await import("../src/Market/marketSeries.js");
+test("weekly and monthly history catch up after maintenance was paused", async () => {
+  const { rollUpWindowDays } = await import("../src/Market/marketSeries.js");
   const now = 1_800_000_000;
-  assert.equal(rollUpWindowDays(undefined, now), 15, "first run: the last two weeks");
+  assert.equal(rollUpWindowDays(undefined, now), Infinity, "first run: every day stored");
   assert.equal(rollUpWindowDays(now - 86400, now), 15, "daily: the last two weeks");
-  assert.equal(rollUpWindowDays(now - 40 * 86400, now), 48, "after 40 days down: back to the last roll-up and its week");
-  assert.equal(rollUpWindowDays(now - 4000 * 86400, now), DAILY_DAYS, "never past the days kept");
-  assert.equal(rollUpWindowDays(now + 3600, now), 15, "a clock that went backwards");
+  assert.equal(rollUpWindowDays(now - 40 * 86400, now), 49, "after 40 days down: back to the last roll-up and the days late observations can change");
+  assert.equal(rollUpWindowDays(now + 3600, now), Infinity, "a clock that went backwards: everything again (final rows are left alone)");
 });

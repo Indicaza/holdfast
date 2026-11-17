@@ -26,28 +26,34 @@ import {
   selectObservation,
 } from "./marketModel.js";
 import {
-  DAILY_DAYS,
   dayOf,
-  HOURLY_DAYS,
-  pruneSeriesInDatabase,
+  LATE_DAYS,
+  marketItemRangesInDatabase,
+  measureMarketStorageInDatabase,
   readMetricInputsInDatabase,
   readSeriesInDatabase,
   refreshReferencePricesInDatabase,
-  rollUpWeeksInDatabase,
+  refreshWatchedInDatabase,
+  RETENTION,
+  rollUpSeriesInDatabase,
   rollUpWindowDays,
+  runSeriesPruneStepInDatabase,
+  seriesPruneSteps,
   seriesWriter,
-  WEEKLY_YEARS,
 } from "./marketSeries.js";
 
-// Raw per-snapshot observations are evidence for "why this price" and for
-// choosing between sources; history lives in the series tables. In-game
-// scans are rare and are compared against API houses for three days. API
-// houses refresh hourly, so each observation repeats what the hourly series
-// keeps; a day (and two hours of margin) of them is evidence enough.
-export const OBSERVATION_RETENTION_SECONDS = 3 * 86400;
-export const API_OBSERVATION_RETENTION_SECONDS = 26 * 3600;
+// market_observations is current state: the latest observation of each
+// market, item variant, source and completeness, replaced in place. Snapshot
+// rows are bookkeeping (what was seen when, content hashes for "unchanged"):
+// a snapshot is kept while an observation names it, while it is the latest
+// of its scope, and for a day after, for diagnostics.
+export const SNAPSHOT_RETENTION_SECONDS = 26 * 3600;
+export { btreeBytesInDatabase, marketStorageObjectsInDatabase, measureMarketStorageInDatabase, STORAGE_BUDGET, storageStatus } from "./marketSeries.js";
+
 // Observations older than this are refused: history would be rewritten.
+// marketSeries.js LATE_DAYS (when a week or month is final) depends on it.
 export const MAX_OBSERVATION_AGE_SECONDS = 7 * 86400;
+if (MAX_OBSERVATION_AGE_SECONDS >= LATE_DAYS * 86400) throw new Error("A period would be final while observations for it are still accepted");
 const CHECK_RETENTION_SECONDS = 14 * 86400;
 const RUN_RETENTION_SECONDS = 30 * 86400;
 const MIN_REFERENCE_DAYS_FILTER = 5;
@@ -297,18 +303,19 @@ function rememberVariantNames(db, items, now) {
 function summaryRefresher(db, marketKey, now) {
   const markets = marketGroupInDatabase(db, marketKey);
   // The latest complete and the latest partial observation of each market
-  // and source: one indexed probe each. An observation counts as seen until
-  // its snapshot was last confirmed.
-  const probe = db.prepare(`SELECT o.*, sn.confirmed_at FROM market_observations o JOIN market_snapshots sn ON sn.id = o.snapshot_id
+  // and source: a primary-key range of one to three rows each
+  // (market_observations holds only current state). An observation counts
+  // as seen until its snapshot was last confirmed.
+  const probe = db.prepare(`SELECT o.*, sn.confirmed_at FROM market_observations o LEFT JOIN market_snapshots sn ON sn.id = o.snapshot_id
     WHERE o.market_key = ? AND o.item_key = ? AND o.source_type = ? AND o.complete = ? ORDER BY o.observed_at DESC LIMIT 1`);
   const combos = markets.flatMap((key) => SOURCE_TYPES.flatMap((source) => [[key, source, 1], [key, source, 0]]));
   const dayAgoStatement = db.prepare(`SELECT typical_close, min_close, last_at FROM market_series_hourly
     WHERE market_key = ? AND item_key = ? AND source_type = ? AND hour BETWEEN ? AND ?`);
-  const upsert = db.prepare(`INSERT INTO market_summaries (market_key, item_key, item_id, source_type, snapshot_id, complete, observed_at, confirmed_at,
+  const upsert = db.prepare(`INSERT INTO market_summaries (market_key, item_key, item_id, source_type, snapshot_id, origin_market_key, complete, observed_at, confirmed_at,
       min_unit_buyout, min_quantity, typical_unit_buyout, quantity, listings, price_points, selection_reason, notes_json, conflict, change_24h_pct, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(market_key, item_key) DO UPDATE SET item_id = excluded.item_id, source_type = excluded.source_type,
-      snapshot_id = excluded.snapshot_id, complete = excluded.complete, observed_at = excluded.observed_at, confirmed_at = excluded.confirmed_at,
+      snapshot_id = excluded.snapshot_id, origin_market_key = excluded.origin_market_key, complete = excluded.complete, observed_at = excluded.observed_at, confirmed_at = excluded.confirmed_at,
       min_unit_buyout = excluded.min_unit_buyout, min_quantity = excluded.min_quantity, typical_unit_buyout = excluded.typical_unit_buyout,
       quantity = excluded.quantity, listings = excluded.listings, price_points = excluded.price_points, selection_reason = excluded.selection_reason,
       notes_json = excluded.notes_json, conflict = excluded.conflict, change_24h_pct = excluded.change_24h_pct, updated_at = excluded.updated_at`);
@@ -336,7 +343,7 @@ function summaryRefresher(db, marketKey, now) {
     }
     const previous = before ? (before.typical_close ?? before.min_close) : null;
     const change = previous && current ? Math.round(((current - previous) / previous) * 1000) / 10 : null;
-    upsert.run(marketKey, itemKey, itemId, chosen.sourceType, chosen.snapshotId, chosen.complete ? 1 : 0, chosen.firstSeenAt, chosen.observedAt,
+    upsert.run(marketKey, itemKey, itemId, chosen.sourceType, chosen.snapshotId, chosen.marketKey, chosen.complete ? 1 : 0, chosen.firstSeenAt, chosen.observedAt,
       chosen.minUnitBuyout, chosen.minQuantity ?? null, chosen.typicalUnitBuyout, chosen.quantity, chosen.listings, chosen.pricePoints ?? null,
       selection.reason, JSON.stringify(selection.notes), selection.conflict ? 1 : 0, change, updatedAt);
   };
@@ -402,12 +409,22 @@ export function beginMarketSnapshotInDatabase(db, { market, sourceType, sourceId
   return { status: "recorded", snapshotId, scopeKey, observedAt: at, items: rows };
 }
 
-// Stores part of a snapshot's items: raw observations (when recorded),
-// history points and refreshed summaries for every market of the house.
+// Stores part of a snapshot's items: the current observation of each (when
+// recorded), history points and refreshed summaries for every market of the
+// house. The observation replaces the previous one of the same market,
+// variant, source, completeness and full view (scope_key; '' for item
+// searches and partial pages) unless that one is newer (a late retry).
 export function addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage, observedAt, items, mode = "recorded", now = nowSeconds() }) {
-  const insertObservation = db.prepare(`INSERT OR REPLACE INTO market_observations (snapshot_id, market_key, item_key, item_id, source_type,
+  const snapshot = snapshotId ? db.prepare("SELECT scope_key, coverage FROM market_snapshots WHERE id = ?").get(snapshotId) : null;
+  const scopeKey = snapshot?.coverage === "full" ? snapshot.scope_key : "";
+  const upsertObservation = db.prepare(`INSERT INTO market_observations (snapshot_id, scope_key, market_key, item_key, item_id, source_type,
       complete, observed_at, min_unit_buyout, min_quantity, typical_unit_buyout, max_unit_buyout, min_unit_bid, quantity, listings, bid_only_listings, price_points)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(market_key, item_key, source_type, complete, scope_key) DO UPDATE SET snapshot_id = excluded.snapshot_id,
+      item_id = excluded.item_id, observed_at = excluded.observed_at, min_unit_buyout = excluded.min_unit_buyout, min_quantity = excluded.min_quantity,
+      typical_unit_buyout = excluded.typical_unit_buyout, max_unit_buyout = excluded.max_unit_buyout, min_unit_bid = excluded.min_unit_bid,
+      quantity = excluded.quantity, listings = excluded.listings, bid_only_listings = excluded.bid_only_listings, price_points = excluded.price_points
+    WHERE excluded.observed_at >= market_observations.observed_at`);
   const writeSeries = seriesWriter(db);
   // The latest full price list per market, variant and source. Rows that
   // carry no listing detail (browse rows) never replace one that does.
@@ -421,7 +438,7 @@ export function addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourc
   for (const item of items) {
     const complete = coverage !== "partial" && item.complete !== false ? 1 : 0;
     if (mode === "recorded") {
-      insertObservation.run(snapshotId, market.marketKey, item.itemKey, item.itemId, sourceType, complete, observedAt,
+      upsertObservation.run(snapshotId, scopeKey, market.marketKey, item.itemKey, item.itemId, sourceType, complete, observedAt,
         item.minUnitBuyout ?? null, item.minQuantity ?? null, item.typicalUnitBuyout ?? null, item.maxUnitBuyout ?? null, item.minUnitBid ?? null,
         item.quantity, item.listings ?? null, item.bidOnlyListings || 0, item.pricePoints?.length ? JSON.stringify(item.pricePoints) : null);
     }
@@ -442,41 +459,45 @@ function observationSet(db, snapshot) {
   return ids.length >= snapshot.parts ? ids : null;
 }
 
-// Items a full snapshot implies are no longer listed: those the previous
-// full observation of the same scope listed that this one does not, plus
-// any whose summary still shows a quantity from an older full snapshot of
-// that scope (an earlier run that stopped before marking them all). They
-// are recorded as "none listed", so supply drops to zero instead of the
-// last price lingering. Partial and item-search snapshots never imply
-// anything about items they did not see. Reads only.
+// Items a full snapshot implies are no longer listed: every item the current
+// state of the same market, source and scope still shows as listed that
+// this observation (all its parts) did not see. That covers what the
+// previous full view listed and anything an earlier run stopped before
+// marking. They are recorded as "none listed", so supply drops to zero
+// instead of the last price lingering. Partial and item-search snapshots
+// never imply anything about items they did not see. Reads only.
 export function absentMarketItemsInDatabase(db, { snapshotId }) {
   const snapshot = db.prepare("SELECT * FROM market_snapshots WHERE id = ?").get(snapshotId);
   if (!snapshot || snapshot.coverage !== "full") return { items: [] };
   const current = observationSet(db, snapshot);
   if (!current) return { items: [], waiting: true };
   const marks = current.map(() => "?").join(",");
-  const gone = new Map();
-  const previousRow = db.prepare(`SELECT * FROM market_snapshots WHERE market_key = ? AND source_type = ? AND scope_key = ? AND coverage = 'full'
-      AND id NOT IN (${marks}) AND observed_at < ? ORDER BY observed_at DESC, id DESC LIMIT 1`)
-    .get(snapshot.market_key, snapshot.source_type, snapshot.scope_key, ...current, snapshot.observed_at);
-  const previous = previousRow ? observationSet(db, previousRow) : null;
-  if (previous) {
-    for (const row of db.prepare(`SELECT DISTINCT o.item_key, o.item_id FROM market_observations o WHERE o.snapshot_id IN (${previous.map(() => "?").join(",")})
-        AND o.quantity > 0 AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = o.item_key)`)
-      .all(...previous, ...current)) gone.set(row.item_key, row.item_id);
-  }
-  for (const row of db.prepare(`SELECT s.item_key, s.item_id FROM market_summaries s JOIN market_snapshots sn ON sn.id = s.snapshot_id
-      WHERE s.market_key = ? AND s.source_type = ? AND s.quantity > 0 AND sn.market_key = ? AND sn.scope_key = ? AND sn.coverage = 'full'
-        AND sn.observed_at < ? AND sn.id NOT IN (${marks})
-        AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.snapshot_id IN (${marks}) AND c.item_key = s.item_key)`)
-    .all(snapshot.market_key, snapshot.source_type, snapshot.market_key, snapshot.scope_key, snapshot.observed_at, ...current, ...current)) {
-    gone.set(row.item_key, row.item_id);
-  }
+  const gone = db.prepare(`SELECT o.item_key, o.item_id FROM market_observations o
+      WHERE o.market_key = ? AND o.source_type = ? AND o.scope_key = ? AND o.quantity > 0 AND o.complete = 1
+        AND o.snapshot_id NOT IN (${marks}) AND o.observed_at <= ?
+        AND NOT EXISTS (SELECT 1 FROM market_observations c WHERE c.market_key = o.market_key AND c.item_key = o.item_key
+          AND c.source_type = o.source_type AND c.snapshot_id IN (${marks}))
+      ORDER BY o.item_key`)
+    .all(snapshot.market_key, snapshot.source_type, snapshot.scope_key, ...current, snapshot.observed_at, ...current);
   if (current.length > 1) db.prepare("UPDATE market_markets SET last_full_at = MAX(COALESCE(last_full_at, 0), ?) WHERE market_key = ?").run(snapshot.observed_at, snapshot.market_key);
   return {
     observedAt: snapshot.observed_at,
-    items: [...gone].map(([itemKey, itemId]) => ({ itemKey, itemId, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true })),
+    items: gone.map((row) => ({ itemKey: row.item_key, itemId: row.item_id, minUnitBuyout: null, typicalUnitBuyout: null, quantity: 0, listings: 0, complete: true })),
   };
+}
+
+// After a full view's absent items are written: items it confirmed are
+// still not listed now belong to it, so they no longer hold an old snapshot
+// in place (and their "none listed" is confirmed as of this view). When
+// these were seen as none listed first is kept (observed_at).
+export function settleMarketSnapshotInDatabase(db, { snapshotId }) {
+  const snapshot = db.prepare("SELECT * FROM market_snapshots WHERE id = ?").get(snapshotId);
+  if (!snapshot || snapshot.coverage !== "full") return 0;
+  const current = observationSet(db, snapshot);
+  if (!current) return 0;
+  return Number(db.prepare(`UPDATE market_observations SET snapshot_id = ? WHERE market_key = ? AND source_type = ? AND scope_key = ?
+      AND quantity = 0 AND complete = 1 AND snapshot_id NOT IN (${current.map(() => "?").join(",")}) AND observed_at <= ?`)
+    .run(Math.max(...current), snapshot.market_key, snapshot.source_type, snapshot.scope_key, ...current, snapshot.observed_at).changes);
 }
 
 // Finishes a full snapshot in one transaction (in-game scans, tests). The
@@ -484,8 +505,8 @@ export function absentMarketItemsInDatabase(db, { snapshotId }) {
 export function finishMarketSnapshotInDatabase(db, { snapshotId, market, sourceType, now = nowSeconds() }) {
   const { items, waiting, observedAt } = absentMarketItemsInDatabase(db, { snapshotId });
   if (waiting) return { absent: 0, waiting: true };
-  if (!items.length) return { absent: 0 };
-  addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt, items, now });
+  if (items.length) addMarketSnapshotItemsInDatabase(db, { snapshotId, market, sourceType, coverage: "full", observedAt, items, now });
+  settleMarketSnapshotInDatabase(db, { snapshotId });
   return { absent: items.length };
 }
 
@@ -507,29 +528,43 @@ export function recordMarketCheckInDatabase(db, { marketKey, sourceType, sourceI
 }
 
 // Maintenance -------------------------------------------------------------------------
+//
+// One plan, run two ways: marketMaintenanceTasks yields small units of work
+// ({ name, run(db) }), each meant for its own short transaction.
+// maintainMarketsIfDue (marketRefresh.js) runs them with requests served in
+// between; runMarketMaintenanceInDatabase runs them in one go (tests, the
+// offline rebuild). Order:
+//
+//   1. incoming market state is already committed (ingestion's own
+//      transactions); the watched set is refreshed from it
+//   2. weekly and monthly aggregates are rolled up from days (once a day)
+//   3. retention deletes, finest resolution first; each delete checks that
+//      the coarser row holding what it removes exists (and is final)
+//   4. bookkeeping rows (snapshots, checks, runs) past their retention
+//   5. success is recorded last: an interrupted run is simply run again
+//
+// Every unit is idempotent, so a run cut short by a restart leaves nothing
+// half done that the next run would get wrong.
+const ROLLUP_SECONDS = 20 * 3600;
+const NAME_BATCH = 250;
 
-// The same retention rules as pruneMarketDataInDatabase, as bounded
-// deletes: each call of a step removes at most `limit` rows, so maintenance
-// runs as many short transactions and requests are served in between.
+// Bookkeeping retention as bounded deletes: each call of a step removes at
+// most `limit` rows.
 export function marketPruneSteps(now = nowSeconds()) {
-  const cutoff = now - OBSERVATION_RETENTION_SECONDS;
-  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
   const step = (name, table, where, ...params) => ({
     name,
     sql: `DELETE FROM ${table} WHERE rowid IN (SELECT rowid FROM ${table} WHERE ${where} LIMIT ?)`,
     params,
   });
   return [
-    // A snapshot still shown by a summary keeps its observations.
-    step("observations", "market_observations", `observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
-      AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
-    step("snapshots", "market_snapshots", `confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
-      AND id NOT IN (SELECT snapshot_id FROM market_summaries)`, apiCutoff, cutoff),
+    // A snapshot an observation still names, or the latest of its scope
+    // (what "unchanged" is judged against), stays.
+    step("snapshots", "market_snapshots", `confirmed_at < ? AND NOT EXISTS (SELECT 1 FROM market_observations o WHERE o.snapshot_id = market_snapshots.id)
+      AND id <> (SELECT l.id FROM market_snapshots l WHERE l.market_key = market_snapshots.market_key AND l.source_type = market_snapshots.source_type
+        AND l.scope_key = market_snapshots.scope_key ORDER BY l.confirmed_at DESC, l.id DESC LIMIT 1)`, now - SNAPSHOT_RETENTION_SECONDS),
     step("checks", "market_snapshot_checks", "checked_at < ?", now - CHECK_RETENTION_SECONDS),
-    step("hourly", "market_series_hourly", "hour < ?", Math.floor((now - HOURLY_DAYS * 86400) / 3600)),
-    step("daily", "market_series_daily", "day < ?", dayOf(now - DAILY_DAYS * 86400)),
-    step("weekly", "market_series_weekly", "week < ?", dayOf(now - WEEKLY_YEARS * 365 * 86400)),
     step("runs", "market_provider_runs", "started_at < ?", now - RUN_RETENTION_SECONDS),
+    // A price list no newer than this is history, not depth.
     step("ladders", "market_price_ladders", "observed_at < ?", now - CHECK_RETENTION_SECONDS),
     step("interest", "market_item_interest", "day < ?", dayOf(now - 30 * 86400)),
   ];
@@ -556,37 +591,102 @@ function noteMaintenance(db, name, now, detail) {
     ON CONFLICT(name) DO UPDATE SET ran_at = excluded.ran_at, detail = excluded.detail`).run(name, now, JSON.stringify(detail));
 }
 
-// Bounded storage: raw observations 3 days, checks 14, hourly series 10,
-// daily 400, weekly 10 years, provider runs 30 days.
-export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
-  const cutoff = now - OBSERVATION_RETENTION_SECONDS;
-  const apiCutoff = now - API_OBSERVATION_RETENTION_SECONDS;
-  // A snapshot still shown by a summary keeps its observations.
-  const observations = db.prepare(`DELETE FROM market_observations WHERE observed_at < ? AND (source_type <> 'addon_scan' OR observed_at < ?)
-    AND snapshot_id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
-  const snapshots = db.prepare(`DELETE FROM market_snapshots WHERE confirmed_at < ? AND (source_type <> 'addon_scan' OR confirmed_at < ?)
-    AND id NOT IN (SELECT snapshot_id FROM market_summaries)`).run(apiCutoff, cutoff).changes;
-  const checks = db.prepare("DELETE FROM market_snapshot_checks WHERE checked_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
-  const series = pruneSeriesInDatabase(db, now);
-  const runs = db.prepare("DELETE FROM market_provider_runs WHERE started_at < ?").run(now - RUN_RETENTION_SECONDS).changes;
-  // A price list no newer than the observation retention is history, not depth.
-  const ladders = db.prepare("DELETE FROM market_price_ladders WHERE observed_at < ?").run(now - CHECK_RETENTION_SECONDS).changes;
-  db.prepare("DELETE FROM market_item_interest WHERE day < ?").run(dayOf(now - 30 * 86400));
-  const result = { snapshots, observations, checks, ...series, runs, ladders };
-  noteMaintenance(db, "prune", now, result);
-  return result;
+const task = (name, run) => ({ name, run });
+
+function* marketRangeTasks(itemPage) {
+  const markets = yield task("markets", (db) => db.prepare(`SELECT market_key FROM market_markets UNION SELECT DISTINCT market_key FROM market_summaries
+    ORDER BY market_key`).all().map((row) => row.market_key));
+  const ranges = [];
+  for (const marketKey of markets) {
+    for (const range of yield task("item_ranges", (db) => marketItemRangesInDatabase(db, marketKey, itemPage))) ranges.push({ marketKey, range });
+  }
+  return ranges;
 }
 
-// Daily work: weekly roll-ups, reference prices, names learned since.
-export function runMarketMaintenanceInDatabase(db, now = nowSeconds()) {
-  const lastRollUp = db.prepare("SELECT ran_at FROM market_maintenance WHERE name = 'rollup'").get()?.ran_at;
-  const pruned = pruneMarketDataInDatabase(db, now);
-  const weeks = rollUpWeeksInDatabase(db, now, { sinceDays: rollUpWindowDays(lastRollUp, now) });
-  const references = refreshReferencePricesInDatabase(db, now);
-  const stale = db.prepare("SELECT item_id AS itemId FROM market_item_meta WHERE name_source IN ('', 'addon') LIMIT 5000").all();
-  const names = ensureItemMetaInDatabase(db, stale, now);
-  noteMaintenance(db, "rollup", now, { weeks, references, names });
-  return { pruned, weeks, references, names };
+function* pruneTasks(now, ranges, batchRows) {
+  const pruned = {};
+  const held = {};
+  for (const step of seriesPruneSteps(now)) {
+    pruned[step.name] = 0;
+    held[step.name] = 0;
+    for (const { marketKey, range } of ranges) {
+      const result = yield task(`prune_${step.name}`, (db) => runSeriesPruneStepInDatabase(db, step, marketKey, range));
+      pruned[step.name] += result.removed;
+      held[step.name] += result.held;
+    }
+  }
+  for (const step of marketPruneSteps(now)) {
+    pruned[step.name] = 0;
+    for (;;) {
+      const removed = yield task(`prune_${step.name}`, (db) => runMarketPruneStepInDatabase(db, step, batchRows));
+      pruned[step.name] += removed;
+      if (removed < batchRows) break;
+    }
+  }
+  yield task("record_prune", (db) => noteMaintenance(db, "prune", now, { ...pruned, held }));
+  return { pruned, held };
+}
+
+// The budget measurement in one go, recorded for diagnostics (tests, the
+// offline rebuild). dbstat reads every page of every Auction House table:
+// the website measures in a worker thread instead (marketStorageWorker.js),
+// never on the request thread.
+function* storageTasks(now) {
+  const storage = yield task("storage_measure", measureMarketStorageInDatabase);
+  yield task("record_storage", (db) => noteMaintenance(db, "storage", now, storage));
+  return storage;
+}
+
+export function recordMarketStorageInDatabase(db, now, storage) {
+  noteMaintenance(db, "storage", now, storage);
+}
+
+export function* marketMaintenanceTasks(now = nowSeconds(), { batchRows = 2000, itemPage = 500, measure = true } = {}) {
+  const watched = yield task("watched", (db) => refreshWatchedInDatabase(db, now));
+  const ranges = yield* marketRangeTasks(itemPage);
+  const rolled = { weeks: 0, months: 0, references: 0 };
+  const lastRollup = yield task("last_rollup", (db) => lastMarketMaintenanceInDatabase(db, "series_rollup"));
+  const rollup = !lastRollup || now - lastRollup >= ROLLUP_SECONDS;
+  if (rollup) {
+    const sinceDays = rollUpWindowDays(lastRollup, now);
+    for (const { marketKey, range } of ranges) {
+      const counts = yield task("series_rollup", (db) => rollUpSeriesInDatabase(db, now, { sinceDays, marketKey, range }));
+      rolled.weeks += counts.weeks;
+      rolled.months += counts.months;
+      rolled.references += yield task("reference_prices", (db) => refreshReferencePricesInDatabase(db, now, { marketKey, range }));
+    }
+    yield task("record_rollup", (db) => noteMaintenance(db, "series_rollup", now, { ...rolled, sinceDays: Number.isFinite(sinceDays) ? sinceDays : null }));
+  }
+  const { pruned, held } = yield* pruneTasks(now, ranges, batchRows);
+  let names = 0;
+  const stale = yield task("stale_names", (db) => db.prepare("SELECT item_id AS itemId FROM market_item_meta WHERE name_source IN ('', 'addon') LIMIT 5000").all());
+  for (let start = 0; start < stale.length; start += NAME_BATCH) {
+    names += yield task("item_names", (db) => ensureItemMetaInDatabase(db, stale.slice(start, start + NAME_BATCH), now));
+  }
+  const storage = measure ? yield* storageTasks(now) : null;
+  const summary = { watched, rollup, ...rolled, names };
+  yield task("record", (db) => noteMaintenance(db, "rollup", now, { ...summary, pruned, held, storage: storage && { bytes: storage.bytes, status: storage.status } }));
+  return { ...summary, pruned, held, storage };
+}
+
+function runTasks(db, tasks) {
+  let next = tasks.next();
+  while (!next.done) next = tasks.next(next.value.run(db));
+  return next.value;
+}
+
+// Retention alone, in one go.
+export function pruneMarketDataInDatabase(db, now = nowSeconds()) {
+  const { pruned, held } = runTasks(db, (function* plan() {
+    const ranges = yield* marketRangeTasks(2000);
+    return yield* pruneTasks(now, ranges, 1_000_000);
+  })());
+  return { ...pruned, held };
+}
+
+// The whole plan in one go (tests, the offline rebuild).
+export function runMarketMaintenanceInDatabase(db, now = nowSeconds(), options = {}) {
+  return runTasks(db, marketMaintenanceTasks(now, options));
 }
 
 // Reads ------------------------------------------------------------------------------
@@ -962,7 +1062,7 @@ export function suggestItems({ q = "", marketKey = "", limit = 8, now = nowSecon
 // the same market (of the house) that observation came from, else the
 // newest any market of the house has for the variant.
 function ladderInDatabase(db, summary, markets, now) {
-  const origin = db.prepare("SELECT market_key FROM market_snapshots WHERE id = ?").get(summary.snapshot_id)?.market_key || summary.market_key;
+  const origin = summary.origin_market_key || summary.market_key;
   const row = db.prepare("SELECT * FROM market_price_ladders WHERE market_key = ? AND item_key = ? AND source_type = ?").get(origin, summary.item_key, summary.source_type)
     || db.prepare(`SELECT * FROM market_price_ladders WHERE item_key = ? AND market_key IN (${markets.map(() => "?").join(",")}) ORDER BY observed_at DESC LIMIT 1`)
       .get(summary.item_key, ...markets);
@@ -975,7 +1075,7 @@ function ladderInDatabase(db, summary, markets, now) {
 }
 
 function evidenceFromRow(row) {
-  return { marketKey: row.market_key, itemKey: row.item_key, source: row.source_type, coverage: row.coverage, complete: row.complete === 1,
+  return { marketKey: row.market_key, itemKey: row.item_key, source: row.source_type, coverage: row.coverage ?? (row.complete === 1 ? "full" : "partial"), complete: row.complete === 1,
     observedAt: row.observed_at, confirmedAt: row.confirmed_at ?? row.observed_at, minUnitBuyout: row.min_unit_buyout, minQuantity: row.min_quantity ?? null,
     typicalUnitBuyout: row.typical_unit_buyout, maxUnitBuyout: row.max_unit_buyout, minUnitBid: row.min_unit_bid, quantity: row.quantity,
     listings: row.listings, bidOnlyListings: row.bid_only_listings, pricePoints: row.price_points ? json(row.price_points, []) : [] };
@@ -1045,8 +1145,9 @@ export function readItemMarket({ itemId, itemKey = "", marketKey = "", now = now
     const requestedKey = text(itemKey, 120);
     const focus = here.find((row) => row.item_key === requestedKey) || here.find((row) => row.item_key === `i:${id}`) || [...here].sort((a, b) => b.quantity - a.quantity)[0] || null;
     const markets = selected ? marketGroupInDatabase(db, selected) : [];
-    const evidence = focus ? db.prepare(`SELECT o.*, sn.coverage, sn.confirmed_at FROM market_observations o JOIN market_snapshots sn ON sn.id = o.snapshot_id
-      WHERE o.item_key = ? AND o.market_key IN (${markets.map(() => "?").join(",")}) ORDER BY sn.confirmed_at DESC LIMIT 20`).all(focus.item_key, ...markets) : [];
+    // The current observation of each market of the house and each source.
+    const evidence = focus ? db.prepare(`SELECT o.*, sn.coverage, sn.confirmed_at FROM market_observations o LEFT JOIN market_snapshots sn ON sn.id = o.snapshot_id
+      WHERE o.item_key = ? AND o.market_key IN (${markets.map(() => "?").join(",")}) ORDER BY COALESCE(sn.confirmed_at, o.observed_at) DESC LIMIT 20`).all(focus.item_key, ...markets) : [];
     const ladder = focus ? ladderInDatabase(db, focus, markets, now) : null;
     const marketRow = selected ? db.prepare("SELECT * FROM market_markets WHERE market_key = ?").get(selected) : null;
     // Listed here, confirmed none listed, or not known: the same rule as Search.
@@ -1107,7 +1208,7 @@ function analysisInDatabase(db, { marketKey, itemKey, now }) {
   const groups = marketGroupInDatabase(db, marketKey);
   // History from the market and source the shown price came from; failing
   // that, the market of the house with the most history.
-  const origin = db.prepare("SELECT market_key FROM market_snapshots WHERE id = ?").get(row.snapshot_id)?.market_key || marketKey;
+  const origin = row.origin_market_key || marketKey;
   let inputs = readMetricInputsInDatabase(db, { marketKey: origin, itemKey, sourceType: row.source_type, now });
   let basis = { marketKey: origin, source: row.source_type };
   if (!inputs.hourly.length && !inputs.daily.length) {
@@ -1120,7 +1221,7 @@ function analysisInDatabase(db, { marketKey, itemKey, now }) {
   }
   const current = { min: summary.minUnitBuyout, typical: summary.typicalUnitBuyout, quantity: summary.quantity, listings: summary.listings,
     minQuantity: summary.minQuantity, observedAt: summary.observedAt };
-  const metrics = marketMetrics({ current, hourly: inputs.hourly, daily: inputs.daily, now });
+  const metrics = marketMetrics({ current, hourly: inputs.hourly, daily: inputs.daily, hourlyHours: inputs.hourlyHours, now });
   return { itemKey, summary, basis, metrics, signals: marketSignals(metrics, { now }),
     note: summary.stale ? "The newest observation is more than a day old; metrics describe the past." : null };
 }
@@ -1230,8 +1331,8 @@ function refreshGroupSummaries(db, marketKeys, now) {
       refresh(row.item_key, row.item_id);
     }
     // Summaries whose evidence now belongs to another house are dropped.
-    db.prepare(`DELETE FROM market_summaries WHERE market_key = ? AND snapshot_id NOT IN
-      (SELECT id FROM market_snapshots WHERE market_key IN (${markets.map(() => "?").join(",")}))`).run(key, ...markets);
+    db.prepare(`DELETE FROM market_summaries WHERE market_key = ? AND COALESCE(origin_market_key, market_key) NOT IN (${markets.map(() => "?").join(",")})`)
+      .run(key, ...markets);
   }
 }
 
@@ -1273,7 +1374,7 @@ export function readMarketDiagnostics({ refresherStats = null, providerConfig = 
     const endpoints = db.prepare("SELECT * FROM market_provider_endpoints ORDER BY market_key, endpoint").all();
     const runs = db.prepare(`SELECT * FROM market_provider_runs ORDER BY started_at DESC LIMIT 40`).all();
     const tables = ["market_snapshots", "market_observations", "market_snapshot_checks", "market_summaries", "market_series_hourly", "market_series_daily",
-      "market_series_weekly", "market_item_meta", "market_provider_runs"];
+      "market_series_weekly", "market_series_monthly", "market_watched", "market_item_meta", "market_provider_runs"];
     const storage = Object.fromEntries(tables.map((table) => [table, db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n]));
     const pageSize = db.prepare("PRAGMA page_size").get().page_size;
     const pageCount = db.prepare("PRAGMA page_count").get().page_count;
@@ -1311,7 +1412,10 @@ export function readMarketDiagnostics({ refresherStats = null, providerConfig = 
       }),
       runs: runs.map((row) => ({ marketKey: row.market_key, provider: row.provider, startedAt: row.started_at, finishedAt: row.finished_at, status: row.status,
         httpStatus: row.http_status, auctions: row.auctions, error: row.error, detail: json(row.detail || "{}", {}) })),
-      storage: { rows: storage, databaseBytes: pageSize * pageCount, retention: { observationsDays: OBSERVATION_RETENTION_SECONDS / 86400, apiObservationsHours: API_OBSERVATION_RETENTION_SECONDS / 3600, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
+      // budget: the last measurement maintenance made (dbstat of every
+      // Auction House table and index), never measured on a request.
+      storage: { rows: storage, databaseBytes: pageSize * pageCount, budget: maintenance.storage?.detail ?? null,
+        retention: { ...RETENTION, observations: "latest per market, variant and source", snapshotHours: SNAPSHOT_RETENTION_SECONDS / 3600, checksDays: CHECK_RETENTION_SECONDS / 86400 } },
       maintenance,
       identity: conflicts,
       // Listed items still without a name or class, and icons by status.

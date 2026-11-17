@@ -227,13 +227,16 @@ test("history keeps every hour of a day, rolls up to days and weeks, leaves gaps
     }
     assert.ok(rollUpWeeksInDatabase(db, now, { sinceDays: 20 }) >= 2);
   });
-  const weekly = readItemSeries({ itemId: 2589, marketKey: API_MARKET.marketKey, range: "all", now });
+  const weekly = readItemSeries({ itemId: 2589, marketKey: API_MARKET.marketKey, range: "1y", now });
   assert.equal(weekly.resolution, "week");
   assert.ok(weekly.series[0].points.some((entry) => entry.typicalMedian === 200 || entry.days >= 2), "a week summarises its days");
+  const monthly = readItemSeries({ itemId: 2589, marketKey: API_MARKET.marketKey, range: "all", now });
+  assert.equal(monthly.resolution, "month");
+  assert.ok(monthly.series[0].points.length >= 1 && monthly.series[0].points.every((entry) => entry.days >= 1), "a month summarises its observed days");
   withGuildTransaction((db) => {
     const removed = pruneMarketDataInDatabase(db, now + 12 * 86400);
-    assert.ok(removed.hourly > 0, "hourly kept 8 days");
-    assert.equal(removed.daily, 0, "daily kept 400 days");
+    assert.ok(removed.hourly > 0, "hourly kept 48 hours");
+    assert.equal(removed.daily, 0, "daily kept 30 days");
     assert.ok(db.prepare("SELECT COUNT(*) AS n FROM market_summaries").get().n > 0, "summaries kept");
     assert.ok(db.prepare("SELECT COUNT(*) AS n FROM market_observations").get().n > 0, "the observation a summary shows is kept");
     assert.ok(db.prepare("SELECT COUNT(*) AS n FROM market_maintenance WHERE name = 'prune'").get().n === 1, "pruning is recorded for diagnostics");

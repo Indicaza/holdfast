@@ -38,7 +38,7 @@ function seed() {
 }
 
 const TABLES = ["market_observations", "market_snapshots", "market_snapshot_checks", "market_series_hourly", "market_series_daily",
-  "market_series_weekly", "market_summaries", "market_price_ladders", "market_item_meta"];
+  "market_series_weekly", "market_series_monthly", "market_watched", "market_summaries", "market_price_ladders", "market_item_meta"];
 
 function state() {
   return withGuildDatabase((db) => Object.fromEntries(TABLES.map((table) => {
@@ -81,14 +81,16 @@ test("batched maintenance leaves exactly the state one big transaction leaves, i
       withGuildTransaction((db) => runMarketMaintenanceInDatabase(db, NOW));
       return state();
     });
-    assert.ok(expected.market_observations.length > 0 && expected.market_series_weekly.length > 0, "the seed exercises pruning and roll-ups");
+    assert.ok(expected.market_observations.length > 0 && expected.market_series_weekly.length > 0 && expected.market_series_monthly.length > 0,
+      "the seed exercises pruning and roll-ups");
 
     await withDirectory(async () => {
       await copyFile(seeded.file, guildDatabaseFile());
-      const before = withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS count FROM market_observations").get().count);
+      const before = withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS count FROM market_series_hourly").get().count);
       let yields = 0;
       const result = await maintainMarketsIfDue({ now: NOW, batchRows: 100, yieldFn: async () => { yields += 1; } });
-      assert.ok(result.pruned.observations > 0 && result.pruned.observations < before);
+      assert.ok(result.pruned.hourly > 0 && result.pruned.hourly < before, "hourly history past 48 hours is pruned, the rest kept");
+      assert.ok(result.pruned.snapshots > 0, "superseded snapshots are dropped");
       assert.ok(result.transactions > 10, `split into many transactions (${result.transactions})`);
       assert.equal(yields, result.transactions, "requests are served between every transaction");
       assert.deepEqual(state(), expected);

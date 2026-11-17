@@ -10,6 +10,7 @@ import {
   formatCoinsShort,
   formatDateTime,
   formatDayLabel,
+  resolutionLabel,
   formatTick,
   niceMax,
   rollingMedian,
@@ -67,7 +68,7 @@ export function MarketCharts({ history, range, onRange, compact = false, status 
   useEffect(() => { setSourceIndex(0) }, [history?.itemKey, history?.marketKey])
   const active = all[Math.min(sourceIndex, Math.max(0, all.length - 1))] || null
   const points = useMemo(() => active?.points || [], [active])
-  const windowSeconds = history?.resolution === 'hour' ? 24 * 3600 : history?.resolution === 'day' ? 7 * 86400 : 4 * 7 * 86400
+  const windowSeconds = history?.resolution === 'hour' ? 24 * 3600 : history?.resolution === 'day' ? 7 * 86400 : history?.resolution === 'month' ? 3 * 30 * 86400 : 4 * 7 * 86400
   const withMedian = useMemo(() => {
     const medians = rollingMedian(points, windowSeconds)
     return points.map((point, index) => ({ ...point, median: medians[index].median }))
@@ -231,7 +232,7 @@ export function MarketCharts({ history, range, onRange, compact = false, status 
         {hoverPoint ? (
           <div className="gw-mc__tip" style={{ left: `${tooltipLeft}%` }} role="status">
             <strong>{history.resolution === 'hour' ? formatDateTime(hoverPoint.lastAt ?? hoverPoint.t) : formatDayLabel(hoverPoint.label, history.resolution)}</strong>
-            {hoverPoint.samples > 1 ? <small>{hoverPoint.samples} observations{history.resolution === 'hour' ? ' this hour' : history.resolution === 'day' ? ' that day' : ''}</small> : null}
+            {hoverPoint.samples > 1 ? <small>{hoverPoint.samples} observations{history.resolution === 'hour' ? ' this hour' : history.resolution === 'day' ? ' that day' : hoverPoint.days ? ` over ${hoverPoint.days} observed day${hoverPoint.days === 1 ? '' : 's'}` : ''}</small> : null}
             {PRICE_LINES.map((line) => (
               <span key={line.key}><i style={{ background: line.color }} />{line.label}<b>{formatCoins(hoverPoint[line.key])}</b></span>
             ))}
@@ -265,14 +266,14 @@ export function MarketCharts({ history, range, onRange, compact = false, status 
       </svg>
       {notices.length ? <ul className="gw-mc__notes">{notices.map((note) => <li key={note}>{note}</li>)}</ul> : null}
       <figcaption className="gw-mc__caption">
-        {SOURCE_LABELS[active.source] || active.source} · {history.resolution === 'hour' ? 'hourly' : history.resolution === 'day' ? 'daily' : 'weekly'} points · asking prices per unit, not sales{!compact ? ' · drag to zoom' : ''}
+        {SOURCE_LABELS[active.source] || active.source} · {resolutionLabel(history.resolution)} points · asking prices per unit, not sales{!compact ? ' · drag to zoom' : ''}
       </figcaption>
       {!compact ? (
         <details className="gw-mc__table">
           <summary>Table</summary>
           <div className="gw-table-wrap">
             <table className="gw-table gw-table--dense">
-              <thead><tr><th scope="col">{history.resolution === 'hour' ? 'Hour' : history.resolution === 'day' ? 'Day' : 'Week of'}</th><th scope="col" className="gw-col-num">Lowest</th>
+              <thead><tr><th scope="col">{history.resolution === 'hour' ? 'Hour' : history.resolution === 'day' ? 'Day' : history.resolution === 'month' ? 'Month' : 'Week of'}</th><th scope="col" className="gw-col-num">Lowest</th>
                 <th scope="col" className="gw-col-num">Typical</th><th scope="col" className="gw-col-num">Listed</th><th scope="col" className="gw-col-num">Auctions</th><th scope="col" className="gw-col-num">Observations</th></tr></thead>
               <tbody>{[...visible].reverse().map((point) => (
                 <tr key={point.t}><td>{history.resolution === 'hour' ? formatDateTime(point.lastAt ?? point.t) : formatDayLabel(point.label, history.resolution)}</td><td className="gw-col-num">{formatCoins(point.min)}</td>

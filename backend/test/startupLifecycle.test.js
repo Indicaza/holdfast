@@ -101,7 +101,7 @@ test("the real server binds, reports readiness with phase timings, and shuts dow
     assert.equal(ready.status, "ok");
     assert.equal(ready.startup.state, "ready");
     assert.deepEqual(ready.startup.phases.map((entry) => entry.name), [
-      "runtime_directory", "pre_migration_backup", "migrations", "telemetry_compaction",
+      "runtime_directory", "database_cutover", "pre_migration_backup", "migrations", "telemetry_compaction",
       "character_read_model", "recipe_store", "economic_backfill", "public_game_backfill", "application",
     ]);
     assert.ok(ready.startup.phases.every((entry) => entry.ok && Number.isInteger(entry.ms)));

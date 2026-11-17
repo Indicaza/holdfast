@@ -79,11 +79,18 @@ export function dailyVolatility(daily) {
 }
 
 // Metrics for one item variant in one market.
-//   current  the summary shown now: { min, typical, quantity, listings, minQuantity, observedAt }
-//   hourly   hourly points (t = bucket start), oldest first
-//   daily    daily points (t = day start, UTC), oldest first
-export function marketMetrics({ current = null, hourly = [], daily = [], now = Math.floor(Date.now() / 1000) }) {
+//   current      the summary shown now: { min, typical, quantity, listings, minQuantity, observedAt }
+//   hourly       hourly points (t = bucket start), oldest first
+//   daily        daily points (t = day start, UTC), oldest first
+//   hourlyHours  how much hourly detail is kept for this item: 7 days for
+//                watched items, 48 hours for the rest. With less than 7
+//                days, the 7-day figures come from daily points instead and
+//                say so (resolution "day", approximate), with confidence
+//                never above medium; too few days is insufficient_data.
+export function marketMetrics({ current = null, hourly = [], daily = [], hourlyHours = 168, now = Math.floor(Date.now() / 1000) }) {
+  const fromDays = hourlyHours < 168;
   const hours7 = windowOf(hourly, now - 7 * DAY, now);
+  const days7 = windowOf(daily, now - 7 * DAY, now);
   const days30 = windowOf(daily, now - 30 * DAY, now);
   const currentTypical = current ? (current.typical ?? current.min ?? null) : null;
 
@@ -92,12 +99,23 @@ export function marketMetrics({ current = null, hourly = [], daily = [], now = M
     ? { pct: pct(currentTypical, typicalOf(dayAgo)), from: typicalOf(dayAgo), at: dayAgo.lastAt ?? dayAgo.t }
     : { pct: null, reason: "No observation from 21–27 hours ago." };
 
-  const typical7 = hours7.map(typicalOf).filter(finite);
-  const daysCovered7 = new Set(hours7.map((point) => Math.floor(point.t / DAY))).size;
-  const median7d = typical7.length >= 6 && daysCovered7 >= 2
-    ? { value: median(typical7), samples: typical7.length, basis: "median of hourly typical asks" }
-    : { value: null, samples: typical7.length, reason: "Needs at least 6 observed hours over 2 days." };
-  const minMedian7 = median(hours7.map((point) => point.min));
+  let median7d;
+  let minMedian7;
+  if (fromDays) {
+    const typicalDays = days7.map(typicalOf).filter(finite);
+    median7d = typicalDays.length >= 3
+      ? { value: median(typicalDays), samples: typicalDays.length, resolution: "day", approximate: true,
+        basis: `median of daily closing typical asks (hourly detail is kept ${hourlyHours} hours for items nobody watches)` }
+      : { value: null, samples: typicalDays.length, resolution: "day", reason: "insufficient_data: needs at least 3 observed days." };
+    minMedian7 = median(days7.map((point) => point.min));
+  } else {
+    const typical7 = hours7.map(typicalOf).filter(finite);
+    const daysCovered7 = new Set(hours7.map((point) => Math.floor(point.t / DAY))).size;
+    median7d = typical7.length >= 6 && daysCovered7 >= 2
+      ? { value: median(typical7), samples: typical7.length, resolution: "hour", basis: "median of hourly typical asks" }
+      : { value: null, samples: typical7.length, resolution: "hour", reason: "Needs at least 6 observed hours over 2 days." };
+    minMedian7 = median(hours7.map((point) => point.min));
+  }
 
   const typical30 = days30.map(typicalOf).filter(finite);
   const median30d = typical30.length >= 5
@@ -115,8 +133,9 @@ export function marketMetrics({ current = null, hourly = [], daily = [], now = M
   const reference = median30d.value ?? median7d.value;
   // Only from a window with enough observations, like the typical median.
   const referenceMin = median30d.value ? minMedian30 : median7d.value ? minMedian7 : null;
-  const quantityMedian7 = median(hours7.map((point) => point.quantity));
-  const listingsMedian7 = median(hours7.map((point) => point.listings));
+  const supplyPoints = fromDays ? days7 : hours7;
+  const quantityMedian7 = median(supplyPoints.map((point) => point.quantity));
+  const listingsMedian7 = median(supplyPoints.map((point) => point.listings));
 
   const spikes = [];
   if (median7d.value) {
@@ -133,7 +152,7 @@ export function marketMetrics({ current = null, hourly = [], daily = [], now = M
     change24h,
     median7d,
     median30d,
-    range7d: range(hours7, "minLow", "typical"),
+    range7d: fromDays ? range(days7, "minLow", "typicalHigh") : range(hours7, "minLow", "typical"),
     range30d: range(days30, "minLow", "typicalHigh"),
     volatility30d: {
       value: volatility.value,
@@ -151,12 +170,15 @@ export function marketMetrics({ current = null, hourly = [], daily = [], now = M
       listings: current?.listings ?? null,
       listingsMedian7d: listingsMedian7,
       listingsChangePct: pct(current?.listings, listingsMedian7),
-      samples: hours7.filter((point) => finite(point.quantity)).length,
+      samples: supplyPoints.filter((point) => finite(point.quantity)).length,
+      resolution: fromDays ? "day" : "hour",
     },
     spikes: spikes.slice(-8),
+    spikesWindowHours: Math.min(168, hourlyHours),
     coverage: {
       hours7d: hours7.length,
-      hoursPossible7d: 168,
+      hoursPossible7d: Math.min(168, hourlyHours),
+      hourlyRetentionHours: hourlyHours,
       days30d: days30.length,
       daysPossible30d: 30,
     },
@@ -180,7 +202,10 @@ export function marketSignals(metrics, { now = Math.floor(Date.now() / 1000) } =
   const reference = metrics.median30d.value ? "30-day" : "7-day";
   const refSamples = metrics.median30d.value ? days : hours;
   const refWindow = metrics.median30d.value ? window30 : window7;
-  const refConfidence = metrics.median30d.value ? sampleConfidence(days, { high: 20, medium: 10 }) : sampleConfidence(hours, { high: 72, medium: 24 });
+  // A 7-day reference from daily points has far fewer observations behind
+  // it than one from hourly points: never more than medium.
+  const refConfidence = metrics.median30d.value ? sampleConfidence(days, { high: 20, medium: 10 })
+    : metrics.median7d.resolution === "day" ? sampleConfidence(hours, { high: Infinity, medium: 6 }) : sampleConfidence(hours, { high: 72, medium: 24 });
 
   if (finite(metrics.vsTypicalMin.pct) && metrics.vsTypicalMin.pct <= SIGNAL_RULES.belowMarketPct) {
     signals.push(signal("below_recent_market", "Below recent market",
@@ -202,8 +227,9 @@ export function marketSignals(metrics, { now = Math.floor(Date.now() / 1000) } =
     }
   }
   const supply = metrics.supply;
-  if (finite(supply.changePct) && supply.samples >= 12) {
-    const confidence = sampleConfidence(supply.samples, { high: 72, medium: 24 });
+  const daily = supply.resolution === "day";
+  if (finite(supply.changePct) && supply.samples >= (daily ? 5 : 12)) {
+    const confidence = daily ? sampleConfidence(supply.samples, { high: Infinity, medium: 6 }) : sampleConfidence(supply.samples, { high: 72, medium: 24 });
     if (supply.changePct >= SIGNAL_RULES.supplyRisePct) {
       signals.push(signal("supply_increasing", "Supply rising",
         `${supply.quantity.toLocaleString("en-US")} listed now, ${supply.changePct}% above the 7-day median of ${supply.median7d.toLocaleString("en-US")}.`,

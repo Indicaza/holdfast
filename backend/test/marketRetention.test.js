@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
 import { maintainMarketsIfDue } from "../src/Market/marketRefresh.js";
-import { marketPruneSteps, pruneMarketDataInDatabase, recordMarketSnapshotInDatabase, runMarketPruneStepInDatabase } from "../src/Market/marketRepository.js";
+import { marketPruneSteps, pruneMarketDataInDatabase, recordMarketSnapshotInDatabase, runMarketPruneStepInDatabase, SNAPSHOT_RETENTION_SECONDS } from "../src/Market/marketRepository.js";
 import { withHttpApp } from "../testSupport/httpHarness.js";
 
 const T = 1794300000;
@@ -23,7 +23,18 @@ function seed() {
 }
 
 const count = (source) => withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_observations WHERE source_type = ?").get(source).n);
+const snapshots = () => withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_snapshots").get().n);
 const NOW = T + 40 * 3600;
+
+test("observations are current state: each new snapshot replaces what it supersedes, at once", () => withHttpApp(async () => {
+  seed();
+  assert.equal(count("official_api"), 2, "one current observation per item, not one per snapshot");
+  assert.equal(count("addon_scan"), 1, "the in-game scan is the current state of its own source");
+  const current = withGuildDatabase((db) => db.prepare("SELECT item_key, min_unit_buyout, observed_at FROM market_observations WHERE source_type = 'official_api' ORDER BY item_key").all());
+  assert.deepEqual(current.map((row) => [row.item_key, row.min_unit_buyout, row.observed_at]), [["i:1", 139, T + 39 * 3600], ["i:2", 239, T + 39 * 3600]]);
+  const hourly = withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_series_hourly WHERE market_key = ?").get(API.marketKey).n);
+  assert.equal(hourly, 80, "the hourly series holds every hour");
+}));
 
 for (const [label, prune] of [
   ["bounded steps", async () => {
@@ -33,25 +44,26 @@ for (const [label, prune] of [
   }],
   ["single transaction", async () => withGuildTransaction((db) => pruneMarketDataInDatabase(db, NOW))],
 ]) {
-  test(`API observations are kept 26 hours and in-game scans three days (${label})`, () => withHttpApp(async () => {
+  test(`snapshots no observation names are dropped after a day; the latest of each scope stays (${label})`, () => withHttpApp(async () => {
     seed();
-    assert.equal(count("official_api"), 80);
+    assert.equal(snapshots(), 41);
     await prune();
-    // Kept: the last 27 hourly snapshots (26 h window inclusive), plus none
-    // older because the summaries point at the newest.
-    const kept = withGuildDatabase((db) => db.prepare("SELECT MIN(observed_at) AS oldest FROM market_observations WHERE source_type = 'official_api'").get().oldest);
-    assert.ok(kept >= NOW - 26 * 3600, "nothing older than 26 hours");
-    assert.ok(count("official_api") >= 2 * 26, "a day of API evidence kept");
-    assert.equal(count("addon_scan"), 1, "the in-game scan, 40 hours old, is kept");
-    const hourly = withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_series_hourly WHERE market_key = ?").get(API.marketKey).n);
-    assert.equal(hourly, 80, "the hourly series still holds every hour");
+    const kept = withGuildDatabase((db) => db.prepare("SELECT MIN(confirmed_at) AS oldest FROM market_snapshots WHERE source_type = 'official_api'").get().oldest);
+    assert.ok(kept >= NOW - SNAPSHOT_RETENTION_SECONDS, "no unreferenced API snapshot older than the bookkeeping window");
+    assert.ok(snapshots() <= 28, `bounded (${snapshots()})`);
+    assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_snapshots WHERE source_type = 'addon_scan'").get().n), 1,
+      "the in-game scan, 40 hours old, is kept: its observation names it");
+    assert.equal(count("official_api"), 2, "current state is never pruned");
   }));
 }
 
 test("scheduled maintenance applies the same rules", () => withHttpApp(async () => {
   seed();
   const result = await maintainMarketsIfDue({ now: NOW + 20 * 3600 });
-  assert.ok(result.pruned.observations > 0);
+  assert.ok(result.pruned.snapshots > 0);
   assert.equal(count("addon_scan"), 1);
-  assert.ok(count("official_api") <= 2 * 27);
+  assert.equal(count("official_api"), 2);
+  // 60 hours after the first: the in-game scan (named by its observation)
+  // and the API snapshots of the last 26 hours (hours 34-39).
+  assert.equal(snapshots(), 7, "only named snapshots and a day of bookkeeping");
 }));
