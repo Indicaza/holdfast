@@ -1,4 +1,6 @@
-import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
+import { Worker } from "node:worker_threads";
+
+import { guildDatabaseFile, withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 import { iconStorageConfig, storeIcons } from "../GameData/iconRegistry.js";
 import {
   addMarketSnapshotItemsInDatabase,
@@ -10,14 +12,12 @@ import {
   itemsMissingTooltipsInDatabase,
   itemsToLookUpInDatabase,
   lastMarketMaintenanceInDatabase,
-  marketKeysWithSummariesInDatabase,
-  marketPruneSteps,
+  marketMaintenanceTasks,
   markItemsLookedUpInDatabase,
-  recordMarketMaintenanceInDatabase,
-  runMarketPruneStepInDatabase,
+  recordMarketStorageInDatabase,
+  settleMarketSnapshotInDatabase,
   syncMarketCatalogInDatabase,
 } from "./marketRepository.js";
-import { marketItemRangesInDatabase, refreshReferencePricesInDatabase, rollUpWeeksInDatabase, rollUpWindowDays } from "./marketSeries.js";
 
 // Large houses are stored a chunk at a time, letting requests in between,
 // so the website never pauses for a whole house.
@@ -41,13 +41,13 @@ const TICK_MS = 60_000;
 const DISCOVER_SECONDS = 6 * 3600;
 const MAX_BACKOFF_SECONDS = 6 * 3600;
 const IDLE_MULTIPLIER = 4;
-// Pruning, weekly roll-ups and reference prices run daily, with or without
-// a provider (in-game scans need them too).
-const MAINTENANCE_SECONDS = 20 * 3600;
+// Retention runs every six hours (hourly history is kept 48 hours, so it
+// never holds more than 54); roll-ups and reference prices once a day
+// within it. With or without a provider (in-game scans need them too).
+const MAINTENANCE_SECONDS = 6 * 3600;
 const MAINTENANCE_CHECK_MS = 3600_000;
 const MAINTENANCE_BATCH_ROWS = 2000;
-const NAME_BATCH = 250;
-const ITEM_PAGE = 2000;
+const ITEM_PAGE = 500;
 // The Auction House item index follows the game data every few minutes, a
 // bounded batch per transaction (see syncMarketCatalogInDatabase).
 const CATALOG_SYNC_MS = 5 * 60_000;
@@ -150,6 +150,9 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
           absent += Math.min(CHUNK_ITEMS, gone.items.length - start);
           await yieldToRequests();
         }
+        // Items still not listed now belong to this snapshot, so the one
+        // before it is no longer referenced and maintenance can drop it.
+        if (!gone.waiting) withGuildTransaction((db) => settleMarketSnapshotInDatabase(db, { snapshotId: begun.snapshotId }));
       }
       outcome = { ...outcome, status: begun.status === "empty" ? "empty" : begun.status, snapshotId: begun.snapshotId ?? null, auctions: result.auctions,
         items: begun.items?.length || 0, absent, observedAt: result.observedAt };
@@ -250,62 +253,54 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
 }
 
 // Runs maintenance when the last run is older than MAINTENANCE_SECONDS, as
-// many short transactions with requests served in between: bounded deletes
-// for retention, then roll-ups and reference prices one market at a time,
-// then item names in batches. One transaction for all of it held the event
-// loop for many seconds on a production-sized database, longer than the
-// platform's health check waits, so the service was restarted mid-run and
-// the work, rolled back, started again after every restart.
+// many short transactions with requests served in between (the plan and
+// its order are in marketRepository.js, marketMaintenanceTasks). One
+// transaction for all of it held the event loop for many seconds on a
+// production-sized database, longer than the platform's health check
+// waits, so the service was restarted mid-run and the work, rolled back,
+// started again after every restart.
 //
-// Every step is idempotent: an interrupted run leaves rows that are either
-// already pruned or pruned next time, and roll-ups are recomputed. The run
-// is recorded as done only when every step has finished.
+// Every step is idempotent and the run is recorded as done only when every
+// step has finished: an interrupted run is run again from the start.
+// The storage budget measurement, in a worker thread with its own read-only
+// connection (dbstat reads every page).
+export function measureMarketStorage({ databaseFile = guildDatabaseFile() } = {}) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("./marketStorageWorker.js", import.meta.url), { workerData: { databaseFile } });
+    worker.once("message", (message) => (message.ok ? resolve(message.storage) : reject(new Error(message.error))));
+    worker.once("error", reject);
+    worker.once("exit", (code) => { if (code !== 0) reject(new Error(`market storage worker exited with ${code}`)); });
+  });
+}
+
 export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000), batchRows = MAINTENANCE_BATCH_ROWS,
-  yieldFn = yieldToRequests, clock = () => Date.now() } = {}) {
+  yieldFn = yieldToRequests, clock = () => Date.now(), force = false, measure = measureMarketStorage } = {}) {
   const last = withGuildDatabase((db) => lastMarketMaintenanceInDatabase(db, "rollup")) || 0;
-  if (now - last < MAINTENANCE_SECONDS) return null;
+  if (!force && now - last < MAINTENANCE_SECONDS) return null;
   const began = clock();
   let transactions = 0;
   let longest = { step: null, ms: 0 };
-  const step = async (name, fn) => {
+  const tasks = marketMaintenanceTasks(now, { batchRows, itemPage: ITEM_PAGE, measure: false });
+  let next = tasks.next();
+  while (!next.done) {
+    const { name, run } = next.value;
     const started = clock();
-    const result = withGuildTransaction(fn);
+    const result = withGuildTransaction(run);
     const ms = clock() - started;
     if (ms > longest.ms) longest = { step: name, ms: Math.round(ms) };
     transactions += 1;
     await yieldFn();
-    return result;
-  };
-
-  const pruned = {};
-  for (const prune of marketPruneSteps(now)) {
-    pruned[prune.name] = 0;
-    for (;;) {
-      const removed = await step(`prune_${prune.name}`, (db) => runMarketPruneStepInDatabase(db, prune, batchRows));
-      pruned[prune.name] += removed;
-      if (removed < batchRows) break;
-    }
+    next = tasks.next(result);
   }
-  await step("record", (db) => recordMarketMaintenanceInDatabase(db, "prune", now, pruned));
-
-  const sinceDays = rollUpWindowDays(last || null, now);
-  let weeks = 0;
-  let references = 0;
-  for (const marketKey of withGuildDatabase(marketKeysWithSummariesInDatabase)) {
-    for (const range of withGuildDatabase((db) => marketItemRangesInDatabase(db, marketKey, ITEM_PAGE))) {
-      weeks += await step("weekly_rollup", (db) => rollUpWeeksInDatabase(db, now, { sinceDays, marketKey, range }));
-      references += await step("reference_prices", (db) => refreshReferencePricesInDatabase(db, now, { marketKey, range }));
-    }
+  // A failed measurement never fails maintenance: the budget is a report.
+  let storage = null;
+  try {
+    storage = await measure();
+    withGuildTransaction((db) => recordMarketStorageInDatabase(db, now, storage));
+  } catch (error) {
+    storage = { status: "unknown", error: String(error.message || error).slice(0, 200) };
   }
-
-  let names = 0;
-  const stale = withGuildDatabase((db) => db.prepare("SELECT item_id AS itemId FROM market_item_meta WHERE name_source IN ('', 'addon') LIMIT 5000").all());
-  for (let start = 0; start < stale.length; start += NAME_BATCH) {
-    names += await step("item_names", (db) => ensureItemMetaInDatabase(db, stale.slice(start, start + NAME_BATCH), now));
-  }
-  const summary = { weeks, references, names };
-  await step("record", (db) => recordMarketMaintenanceInDatabase(db, "rollup", now, summary));
-  return { pruned, ...summary, transactions, longestTransaction: longest, ms: Math.round(clock() - began) };
+  return { ...next.value, storage, transactions, longestTransaction: longest, ms: Math.round(clock() - began) };
 }
 
 // Indexes new game data for Auction House search, yielding to requests
@@ -365,7 +360,15 @@ export function startMarketRefresher({ provider, itemProvider = null, intervalMs
     if (maintaining) return;
     maintaining = true;
     maintainMarketsIfDue()
-      .then((result) => { if (result) log.info?.(JSON.stringify({ event: "market_maintenance", ...result })); })
+      .then((result) => {
+        if (!result) return;
+        const { storage, ...rest } = result;
+        log.info?.(JSON.stringify({ event: "market_maintenance", ...rest, storage: storage && { bytes: storage.bytes, status: storage.status } }));
+        // Budget alerts: live Auction House storage (every market_* table
+        // and index) against 2 GiB (warning) and 3 GiB (critical).
+        if (storage?.status === "warning") log.warn?.(JSON.stringify({ event: "market_storage_budget", status: "warning", bytes: storage.bytes, budget: storage.budget }));
+        if (storage?.status === "critical") log.error?.(JSON.stringify({ event: "market_storage_budget", status: "critical", bytes: storage.bytes, budget: storage.budget }));
+      })
       .catch((error) => log.error?.("[market] maintenance failed", error))
       .finally(() => { maintaining = false; });
   };

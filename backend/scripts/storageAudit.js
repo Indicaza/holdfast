@@ -79,7 +79,8 @@ for (const table of userTables) {
     let gzipped = 0
     let logicalBytes = 0
     const biggest = []
-    for (const row of db.prepare(`SELECT rowid AS id, ${quoted(column)} AS value FROM ${quoted(table)}
+    const withoutRowid = db.prepare("SELECT wr FROM pragma_table_list WHERE schema = 'main' AND name = ?").get(table)?.wr === 1
+    for (const row of db.prepare(`SELECT ${withoutRowid ? 'NULL' : 'rowid'} AS id, ${quoted(column)} AS value FROM ${quoted(table)}
       WHERE typeof(${quoted(column)}) IN ('text', 'blob') AND length(${quoted(column)}) > 1024`).iterate()) {
       const raw = typeof row.value === 'string' ? Buffer.from(row.value) : Buffer.from(row.value)
       const digest = createHash('sha256').update(raw).digest('hex')

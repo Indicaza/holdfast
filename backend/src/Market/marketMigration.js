@@ -524,3 +524,170 @@ export const marketDepthMigration = {
     `);
   },
 };
+
+// Version 24: bounded Auction House storage.
+//
+// - market_observations becomes current state: per market, item variant,
+//   source and completeness, the latest observation of each full view
+//   (scope_key: a whole house, one API endpoint) and the latest of anything
+//   else (item searches, partial pages; scope_key ''). A newer observation
+//   replaces its row in place, so superseded observations are never kept,
+//   and what each full view last listed stays known for judging what the
+//   next one no longer lists.
+// - Summaries name the market their shown price came from
+//   (origin_market_key) instead of reaching through a snapshot, so old
+//   snapshots can be deleted.
+// - History tables become WITHOUT ROWID: the key is stored once, not once in
+//   the table and again in its primary-key index. Age indexes are dropped;
+//   retention walks each market's key range instead.
+// - market_series_monthly: months rolled up from days, kept 24 months.
+//   Weekly and monthly rows are marked final once nothing can change their
+//   days any more; only final rows ever allow their days to be deleted.
+// - market_watched: the item variants people care about (favorites,
+//   shopping lists, recent views), at most 3,000, kept at finer resolution.
+//
+// Hourly rows older than the longest hourly retention (7 days) are not
+// carried over: the daily rows written with them already hold those days.
+const SERIES_COLUMNS = `
+        min_low INTEGER,
+        min_high INTEGER,
+        min_close INTEGER,
+        typical_low INTEGER,
+        typical_high INTEGER,
+        typical_close INTEGER,
+        typical_median INTEGER,
+        quantity_low INTEGER NOT NULL,
+        quantity_high INTEGER NOT NULL,
+        quantity_close INTEGER NOT NULL,
+        listings_close INTEGER,
+        final INTEGER NOT NULL DEFAULT 0,`;
+
+export const marketBoundedStorageMigration = {
+  version: 24,
+  name: "auction_house_bounded_storage",
+  up(db) {
+    const hourlyFloor = Math.floor((Date.now() / 1000 - 7 * 86400) / 3600);
+    db.exec(`
+      CREATE TABLE market_observations_v24 (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        complete INTEGER NOT NULL,
+        scope_key TEXT NOT NULL DEFAULT '',
+        snapshot_id INTEGER NOT NULL,
+        item_id INTEGER NOT NULL,
+        observed_at INTEGER NOT NULL,
+        min_unit_buyout INTEGER,
+        min_quantity INTEGER,
+        typical_unit_buyout INTEGER,
+        max_unit_buyout INTEGER,
+        min_unit_bid INTEGER,
+        quantity INTEGER NOT NULL,
+        listings INTEGER,
+        bid_only_listings INTEGER NOT NULL DEFAULT 0,
+        price_points TEXT,
+        PRIMARY KEY(market_key, item_key, source_type, complete, scope_key)
+      ) WITHOUT ROWID;
+      -- The newest observation of each market, variant, source,
+      -- completeness and full view (SQLite takes the bare columns from the
+      -- MAX row).
+      INSERT INTO market_observations_v24 (market_key, item_key, source_type, complete, scope_key, snapshot_id, item_id, observed_at,
+          min_unit_buyout, min_quantity, typical_unit_buyout, max_unit_buyout, min_unit_bid, quantity, listings, bid_only_listings, price_points)
+        SELECT market_key, item_key, source_type, complete, bucket, snapshot_id, item_id, observed_at,
+          min_unit_buyout, min_quantity, typical_unit_buyout, max_unit_buyout, min_unit_bid, quantity, listings, bid_only_listings, price_points
+        FROM (SELECT o.*, CASE WHEN sn.coverage = 'full' THEN sn.scope_key ELSE '' END AS bucket, MAX(o.observed_at)
+          FROM market_observations o LEFT JOIN market_snapshots sn ON sn.id = o.snapshot_id
+          GROUP BY o.market_key, o.item_key, o.source_type, o.complete, bucket);
+      DROP TABLE market_observations;
+      ALTER TABLE market_observations_v24 RENAME TO market_observations;
+      CREATE INDEX market_observations_snapshot_idx ON market_observations(snapshot_id);
+      CREATE INDEX market_observations_scope_idx ON market_observations(market_key, source_type, scope_key, quantity);
+
+      ALTER TABLE market_summaries ADD COLUMN origin_market_key TEXT;
+      UPDATE market_summaries SET origin_market_key = COALESCE((SELECT sn.market_key FROM market_snapshots sn WHERE sn.id = market_summaries.snapshot_id), market_key);
+
+      CREATE TABLE market_series_hourly_v24 (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        hour INTEGER NOT NULL,
+        first_at INTEGER NOT NULL,
+        last_at INTEGER NOT NULL,
+        samples INTEGER NOT NULL,
+        min_low INTEGER,
+        min_close INTEGER,
+        typical_close INTEGER,
+        quantity_low INTEGER NOT NULL,
+        quantity_high INTEGER NOT NULL,
+        quantity_close INTEGER NOT NULL,
+        listings_close INTEGER,
+        PRIMARY KEY(market_key, item_key, source_type, hour)
+      ) WITHOUT ROWID;
+      INSERT INTO market_series_hourly_v24 SELECT market_key, item_key, source_type, hour, first_at, last_at, samples, min_low, min_close,
+        typical_close, quantity_low, quantity_high, quantity_close, listings_close FROM market_series_hourly WHERE hour >= ${hourlyFloor};
+      DROP TABLE market_series_hourly;
+      ALTER TABLE market_series_hourly_v24 RENAME TO market_series_hourly;
+
+      CREATE TABLE market_series_daily_v24 (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        day TEXT NOT NULL,
+        first_at INTEGER,
+        last_at INTEGER,
+        samples INTEGER NOT NULL,
+        min_low INTEGER,
+        min_high INTEGER,
+        min_close INTEGER,
+        typical_low INTEGER,
+        typical_high INTEGER,
+        typical_close INTEGER,
+        quantity_low INTEGER NOT NULL,
+        quantity_high INTEGER NOT NULL,
+        quantity_close INTEGER NOT NULL,
+        listings_close INTEGER,
+        PRIMARY KEY(market_key, item_key, source_type, day)
+      ) WITHOUT ROWID;
+      INSERT INTO market_series_daily_v24 SELECT market_key, item_key, source_type, day, first_at, last_at, samples, min_low, min_high, min_close,
+        typical_low, typical_high, typical_close, quantity_low, quantity_high, quantity_close, listings_close FROM market_series_daily;
+      DROP TABLE market_series_daily;
+      ALTER TABLE market_series_daily_v24 RENAME TO market_series_daily;
+
+      CREATE TABLE market_series_weekly_v24 (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        week TEXT NOT NULL,
+        days INTEGER NOT NULL,
+        samples INTEGER NOT NULL,${SERIES_COLUMNS}
+        PRIMARY KEY(market_key, item_key, source_type, week)
+      ) WITHOUT ROWID;
+      INSERT INTO market_series_weekly_v24 SELECT market_key, item_key, source_type, week, days, samples, min_low, min_high, min_close,
+        typical_low, typical_high, typical_close, typical_median, quantity_low, quantity_high, quantity_close, listings_close, 0 FROM market_series_weekly;
+      DROP TABLE market_series_weekly;
+      ALTER TABLE market_series_weekly_v24 RENAME TO market_series_weekly;
+
+      -- Months from days: lowest, highest and closing asks, the median of
+      -- the observed days' closing typical asks, supply, and how many days
+      -- had an observation (coverage). Never filled in where days are missing.
+      CREATE TABLE market_series_monthly (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        month TEXT NOT NULL,
+        days INTEGER NOT NULL,
+        samples INTEGER NOT NULL,${SERIES_COLUMNS}
+        PRIMARY KEY(market_key, item_key, source_type, month)
+      ) WITHOUT ROWID;
+
+      CREATE TABLE market_watched (
+        market_key TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        item_id INTEGER NOT NULL,
+        score REAL NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY(market_key, item_key)
+      ) WITHOUT ROWID;
+    `);
+  },
+};

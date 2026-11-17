@@ -59,3 +59,13 @@ todo.md
 backend/data/
 
 e2e/production-smoke-failure.png
+
+# Databases, backups and archives (tools/storage keeps them outside the repository)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite.partial
+*.db
+*.hfb
+*.ndjson.gz
+GuildweaverData/

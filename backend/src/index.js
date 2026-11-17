@@ -8,6 +8,7 @@ import { startDiscordBilletReconciler } from "./Discord/billetSync.js";
 import { ensureRuntimeDataDirectory, runtimeDataDirectory } from "./Data/runtimeData.js";
 import { closeGuildDatabase, guildDatabaseFile, withGuildDatabase, withGuildTransaction } from "./Data/database.js";
 import { initializeGuildData } from "./Data/initializeData.js";
+import { applyApprovedCutover } from "./Data/databaseCutover.js";
 import { backupGuildDatabaseBeforeMigrations, listStartupBackups } from "./Data/startupBackup.js";
 import { offsiteBackupConfig, startOffsiteBackupScheduler } from "./Data/offsiteBackup.js";
 import { compactReadModelPayloadsInDatabase, compactStoredTelemetry } from "./Character/Telemetry/telemetryJson.js";
@@ -107,6 +108,10 @@ process.once("SIGINT", () => shutdown("SIGINT"));
 
 try {
   await lifecycle.phase("runtime_directory", () => ensureRuntimeDataDirectory());
+
+  // A database rebuilt offline and approved by an operator replaces the
+  // current one before anything opens it (see Data/databaseCutover.js).
+  await lifecycle.phase("database_cutover", () => applyApprovedCutover());
 
   // A pre-migration snapshot only when this release has migrations to apply.
   const startupBackup = await lifecycle.phase("pre_migration_backup", () => backupGuildDatabaseBeforeMigrations());

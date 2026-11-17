@@ -10,7 +10,9 @@ export const memberIds = { member: 'e2e-member', officer: 'e2e-officer', owner: 
 export const objective = { questId: 'e2e-supply-run', objectiveId: 'e2e-linen' }
 
 export function persistentState() {
-  return withGuildDatabase((db) => Object.fromEntries(db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(({ name }) => [name, db.prepare(`SELECT * FROM "${name}" ORDER BY rowid`).all()])))
+  // WITHOUT ROWID tables have no rowid: they are read in primary-key order.
+  return withGuildDatabase((db) => Object.fromEntries(db.prepare("SELECT name, wr FROM pragma_table_list WHERE schema = 'main' AND type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all()
+    .map(({ name, wr }) => [name, db.prepare(`SELECT * FROM "${name}"${wr ? '' : ' ORDER BY rowid'}`).all()])))
 }
 
 // The app with guild features switched on (guild directory, registration,

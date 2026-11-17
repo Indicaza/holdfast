@@ -9,6 +9,7 @@ import {
   formatChange,
   formatCoins,
   formatCoinsShort,
+  formatDayLabel,
   isBlankState,
   niceMax,
   postingSuggestion,
@@ -17,6 +18,7 @@ import {
   readAuctionState,
   readRecentSearches,
   rememberSearch,
+  resolutionLabel,
   resolveMarket,
   rollingMedian,
   seriesSummary,
@@ -145,4 +147,11 @@ test('axes: time ticks on whole steps, round maxima, short coin labels', () => {
 test('series summary describes the visible window', () => {
   assert.deepEqual(seriesSummary([{ typical: 100 }, { typical: null, min: 80 }, { typical: 150 }]), { first: 100, last: 150, low: 80, high: 150, observations: 3, changePct: 50 })
   assert.equal(seriesSummary([]), null)
+})
+
+test('history points are labelled by their resolution, months included', () => {
+  assert.equal(formatDayLabel('2026-11-08'), 'Nov 8')
+  assert.equal(formatDayLabel('2026-11-02', 'week'), 'Week of Nov 2')
+  assert.equal(formatDayLabel('2026-11-01', 'month'), 'Nov 2026')
+  assert.deepEqual(['hour', 'day', 'week', 'month'].map(resolutionLabel), ['hourly', 'daily', 'weekly', 'monthly'])
 })

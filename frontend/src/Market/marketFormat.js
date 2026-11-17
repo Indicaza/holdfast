@@ -302,11 +302,19 @@ export function timeTicks(from, to, max = 6) {
   return { step, ticks }
 }
 
-// "Nov 8" for a day label (YYYY-MM-DD, UTC), "Week of Nov 3" for a week.
+// "Nov 8" for a day label (YYYY-MM-DD, UTC), "Week of Nov 3" for a week,
+// "Nov 2026" for a month.
 export function formatDayLabel(label, resolution = 'day') {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(label || ''))) return label || ''
-  const text = new Date(`${label}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  const date = new Date(`${label}T12:00:00Z`)
+  if (resolution === 'month') return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+  const text = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
   return resolution === 'week' ? `Week of ${text}` : text
+}
+
+// What one chart point is, for labels: "hourly", "daily", "weekly", "monthly".
+export function resolutionLabel(resolution) {
+  return { hour: 'hourly', day: 'daily', week: 'weekly', month: 'monthly' }[resolution] || resolution || ''
 }
 
 export function formatTick(seconds, step) {
