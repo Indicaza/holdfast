@@ -290,13 +290,33 @@ export async function rebuild({ from = "latest", root = dataRoot(), now = Math.f
     const after = compactTables.get(name);
     if (!after || after.sha256 !== table.sha256 || after.rows !== table.rows) preservedDiffer.push(name);
   }
+  // A table a pending migration added rows to (production may be behind
+  // this release) is still preserved when every original row is there,
+  // unchanged.
+  const preservedExtended = [];
+  if (preservedDiffer.length) {
+    const check = new DatabaseSync(compact, { readOnly: true });
+    check.prepare("ATTACH DATABASE ? AS o").run(`file:${source.file.replaceAll("\\", "/")}?mode=ro`);
+    try {
+      for (const name of [...preservedDiffer]) {
+        const columns = check.prepare("SELECT name FROM pragma_table_info(?, 'o')").all(name).map((row) => dump.quote(row.name)).join(", ");
+        const lost = Number(check.prepare(`SELECT COUNT(*) AS n FROM (SELECT ${columns} FROM o.${dump.quote(name)} EXCEPT SELECT ${columns} FROM main.${dump.quote(name)})`).get().n);
+        if (lost === 0) {
+          preservedDiffer.splice(preservedDiffer.indexOf(name), 1);
+          preservedExtended.push(name);
+        }
+      }
+    } finally {
+      check.close();
+    }
+  }
   const cross = crossChecks(source.file, compact, now);
   const website = await websiteChecks(compact, directory, now);
   const validation = {
     integrity: verified.integrity,
     foreignKeyViolations: { before: source.manifest.foreignKeyViolations ?? null, after: verified.foreignKeyViolations },
     compactMatchesWorkingCopy: verified.mismatches.length === 0,
-    preservedTablesIdentical: preservedDiffer.length === 0, preservedTablesDiffering: preservedDiffer, preservedTables: [...originalTables.keys()].filter((name) => !AH_STORAGE_TABLES.includes(name)).length,
+    preservedTablesIdentical: preservedDiffer.length === 0, preservedTablesDiffering: preservedDiffer, preservedTablesExtendedByMigrations: preservedExtended, preservedTables: [...originalTables.keys()].filter((name) => !AH_STORAGE_TABLES.includes(name)).length,
     ...cross,
     secondCleanupRemoved: removedAgain,
     website,

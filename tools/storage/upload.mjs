@@ -21,6 +21,7 @@
 // Nothing here deletes anything on the server.
 import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
+import { createGzip } from "node:zlib";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -93,7 +94,7 @@ export async function stage({ ssh, root = dataRoot(), rebuild = "latest", spawnI
   if (status.freeBytes < bytes + HEADROOM) {
     throw new Error(`Not enough room on /data: ${Math.round(status.freeBytes / 1024 ** 2)} MiB free, ${Math.round((bytes + HEADROOM) / 1024 ** 2)} MiB needed. See README.md (freeing space).`);
   }
-  await run("ssh", sshArgs(ssh, `mkdir -p ${REMOTE_DIR} && cat > ${REMOTE_DIR}/holdfast.sqlite.partial`), { input: createReadStream(built.file), spawnImpl });
+  await run("ssh", sshArgs(ssh, `mkdir -p ${REMOTE_DIR} && gunzip -c > ${REMOTE_DIR}/holdfast.sqlite.partial`), { input: createReadStream(built.file).pipe(createGzip({ level: 6 })), spawnImpl });
   const remote = JSON.parse(await run("ssh", sshArgs(ssh, remoteNodeCommand(HASH, [`${REMOTE_DIR}/holdfast.sqlite.partial`])), { spawnImpl }));
   if (remote.sha256 !== built.manifest.sha256 || remote.bytes !== bytes) throw new Error("The uploaded file does not match: not staged (the .partial file can be removed)");
   const manifest = { sha256: built.manifest.sha256, bytes, schemaVersion: built.manifest.schemaVersion, rebuild: built.id, backup: built.manifest.backup, stagedAt: new Date().toISOString() };
