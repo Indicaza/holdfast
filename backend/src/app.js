@@ -30,6 +30,7 @@ import { createDevelopmentIconMediaResolver } from "./Development/developmentIco
 import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { createGuildweaverQuestRouter } from "./Quest/guildweaverQuestRouter.js";
+import { createLootBridgeRouter } from "./Loot/lootRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
 import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
@@ -96,6 +97,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   app.use(attachSession);
   app.use("/api/bridge", createCharacterRouter());
   app.use("/api/bridge", createGuildweaverQuestRouter());
+  app.use("/api/bridge", createLootBridgeRouter());
   app.use("/api", requireTrustedMutationOrigin);
 
   async function readiness(req, res) {

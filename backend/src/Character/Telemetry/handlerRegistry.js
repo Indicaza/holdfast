@@ -11,6 +11,8 @@ import { professionSnapshotTelemetryHandler } from "./handlers/professionSnapsho
 import { professionsTelemetryHandler } from "./handlers/professions.js";
 import { statsTelemetryHandler } from "./handlers/stats.js";
 import { talentsTelemetryHandler } from "./handlers/talents.js";
+import { lootRollTelemetryHandler } from "./handlers/lootRoll.js";
+import { lootCatalogSnapshotTelemetryHandler } from "./handlers/lootCatalogSnapshot.js";
 
 const handlers = new Map(
   [
@@ -27,6 +29,8 @@ const handlers = new Map(
     auctionScanTelemetryHandler,
     mobLootTelemetryHandler,
     gameItemDefinitionTelemetryHandler,
+    lootRollTelemetryHandler,
+    lootCatalogSnapshotTelemetryHandler,
   ].map((handler) => [handler.eventType, handler]),
 );
 

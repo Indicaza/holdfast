@@ -23,6 +23,9 @@ Sizes below come from the local development copy (64.5 MiB, schema v17, 25 chara
 | `guildweaver_telemetry_records` | Transport | Bounded raw retention | gzip: 17.1 → 1.4 MiB | Keep a short window; confirm the bound on production |
 | `economic_observations` (+outputs) | Immutable observations | Kept | 21,222 rows; indexes 9.9 MiB > data 8.0 MiB | Keep every event. Query plans (41 test files) use every index, so none removed. Archive old years compressed later |
 | `game_loot_*`, `dungeon_*`, `farming_*` | Immutable observations | Kept | small locally | Keep; aggregate drop rates; archive, never delete |
+| `dungeon_loot_entries`, `dungeon_loot_changes`, `dungeon_loot_snapshots` | Projection, its change log, and immutable observations (journal lists) | Kept; entries are marked removed, never deleted | small (one row per dungeon, source, item, provenance) | Keep: the history is the point (`DUNGEON_LOOT.md`) |
+| `loot_roll_events` | Immutable observations (personal) | Kept | one row per roll a player saw | Keep while the account exists |
+| `character_wishlist_*` | Canonical state (personal) | Kept while the character exists; 200 items per character | tiny | Keep |
 | `public_game_*`, `game_data_catalog` | Shared definitions | Kept, versioned by build | 1.8 MiB | Keep; the target for de-duplicating character data |
 | `market_observations` | Immutable observations (raw evidence) | **API 26 h, in-game scans 3 days** (unless a summary uses it) | 204 B/row incl. indexes | **Done (#284):** link evidence reads the hourly series. Benchmark 120.1 → 49.7 MiB |
 | `market_series_hourly` | Historical aggregate | **8 days** (longest hourly range: 7 days) | 146 B/row; one row per item per hour | **Done (#284).** Next candidate: integer market/item ids (text keys in every row and index) |

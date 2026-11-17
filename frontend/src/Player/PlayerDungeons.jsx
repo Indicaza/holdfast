@@ -35,6 +35,8 @@ import {
   timelineTrack,
   xpSummary,
 } from './dungeonRunModel.js'
+import DungeonLoot from './DungeonLoot.jsx'
+import { lootHref, readLootQuery } from './lootModel.js'
 import { playerApiUrl, relativeTime } from './playerModel.js'
 import { EmptyState, ErrorState, Icon, ItemLabel, Panel, SkeletonRows, Stat, Tip } from './ui.jsx'
 import './PlayerDungeons.css'
@@ -530,9 +532,26 @@ function RunDetail({ runId, filters, server }) {
   )
 }
 
+// The Dungeons page: the player's runs, or dungeon loot beside a
+// character's wishlist (?view=loot). An open run shows alone.
+export default function PlayerDungeons({ server, queryString = '', characters = [] }) {
+  const query = useMemo(() => readLootQuery(queryString), [queryString])
+  const runOpen = useMemo(() => Boolean(readDungeonQuery(queryString).runId), [queryString])
+  if (runOpen && query.view !== 'loot') return <DungeonRuns server={server} queryString={queryString} />
+  return (
+    <div className="gw-stack">
+      <nav className="gw-seg gw-dcc-tabs" aria-label="Dungeon views">
+        <a href={dungeonHref({ server })} aria-current={query.view === 'runs' ? 'page' : undefined}><Icon name="dungeon" size={14} /> My runs</a>
+        <a href={lootHref({ server, character: query.character })} aria-current={query.view === 'loot' ? 'page' : undefined}><Icon name="loot" size={14} /> Loot &amp; wishlist</a>
+      </nav>
+      {query.view === 'loot' ? <DungeonLoot server={server} query={query} characters={characters} /> : <DungeonRuns server={server} queryString={queryString} />}
+    </div>
+  )
+}
+
 // The player's own dungeon and raid runs. Private: only the signed-in
 // account's runs are ever requested, and no party members are recorded.
-export default function PlayerDungeons({ server, queryString = '' }) {
+function DungeonRuns({ server, queryString = '' }) {
   const { filters, runId } = useMemo(() => readDungeonQuery(queryString), [queryString])
   const url = playerApiUrl('dungeon-runs', server, dungeonApiFilters(filters))
   const { status, data } = useLiveResource(url, { topics: TOPICS, enabled: !runId })

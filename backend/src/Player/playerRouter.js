@@ -17,6 +17,7 @@ import {
 import { requestedServer } from "./playerServers.js";
 import { readDungeonRun, readDungeonRuns } from "../Dungeon/dungeonRunRepository.js";
 import { createDungeonObjective, deleteDungeonObjective, readDungeonObjectives, updateDungeonObjective } from "../Dungeon/dungeonObjectiveRepository.js";
+import { createPlayerLootRouter } from "../Loot/lootRouter.js";
 
 // Mounted at /api/player: the signed-in player's own workspace. Every route
 // takes the account from the session (req.auth.user.id) and never from the
@@ -102,6 +103,8 @@ export function createPlayerRouter({ provider, icons } = {}) {
   router.patch("/dungeon-objectives/:objectiveId", objectiveWrite("updated", (req) => updateDungeonObjective({ memberId: owner(req), id: req.params.objectiveId,
     text: req.body?.text, targetBoss: req.body?.targetBoss, targetDungeon: req.body?.targetDungeon, completed: req.body?.completed, move: req.body?.move })));
   router.delete("/dungeon-objectives/:objectiveId", objectiveWrite("deleted", (req) => deleteDungeonObjective({ memberId: owner(req), id: req.params.objectiveId })));
+  // The dungeon loot catalog and the characters' gear wishlists.
+  router.use(createPlayerLootRouter());
   router.get("/devices", respond("devices", (req) => ({ devices: readPlayerDevices(owner(req)) })));
 
   // Disconnecting a device revokes its key: the bridge on that computer has
