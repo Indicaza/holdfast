@@ -18,13 +18,13 @@ import {
 
 test('dungeon page URLs keep filters, the open run and the server', () => {
   const href = dungeonHref({ filters: { character: 'c1', dungeon: 'The Deadmines', from: '2026-11-01' }, runId: 7, server: 'us:live realm' })
-  assert.equal(href, '/dashboard/dungeons?server=us%3Alive+realm&character=c1&dungeon=The+Deadmines&from=2026-11-01&run=7')
+  assert.equal(href, '/dashboard/dungeons?server=us%3Alive+realm&view=runs&character=c1&dungeon=The+Deadmines&from=2026-11-01&run=7')
   const read = readDungeonQuery(href.split('?')[1])
   assert.equal(read.runId, 7)
   assert.equal(read.filters.dungeon, 'The Deadmines')
   assert.equal(read.filters.realm, '')
   assert.equal(readDungeonQuery('run=abc').runId, null)
-  assert.equal(dungeonHref(), '/dashboard/dungeons')
+  assert.equal(dungeonHref(), '/dashboard/dungeons?view=runs')
 })
 
 test('formats run time, wallet change and XP without inventing numbers', () => {
@@ -84,7 +84,7 @@ function run(id, fields = {}) {
 
 test('status filter round-trips through the URL with the other filters', () => {
   const href = dungeonHref({ filters: { dungeon: 'The Deadmines', status: 'incomplete' }, server: '' })
-  assert.equal(href, '/dashboard/dungeons?dungeon=The+Deadmines&status=incomplete')
+  assert.equal(href, '/dashboard/dungeons?view=runs&dungeon=The+Deadmines&status=incomplete')
   assert.equal(readDungeonQuery(href.split('?')[1]).filters.status, 'incomplete')
   assert.equal(dungeonApiFilters({ status: 'completed', from: '', to: '' }).status, 'completed')
 })

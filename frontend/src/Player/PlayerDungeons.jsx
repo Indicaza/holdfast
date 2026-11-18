@@ -36,6 +36,9 @@ import {
   xpSummary,
 } from './dungeonRunModel.js'
 import DungeonLoot from './DungeonLoot.jsx'
+import AtlasModalHost from './Dungeons/AtlasModalHost.jsx'
+import { dungeonsView, exploreHref, withAtlasOpen } from './Dungeons/atlasModel.js'
+import DungeonExplore from './Dungeons/DungeonExplore.jsx'
 import { lootHref, readLootQuery } from './lootModel.js'
 import { playerApiUrl, relativeTime } from './playerModel.js'
 import { EmptyState, ErrorState, Icon, ItemLabel, Panel, SkeletonRows, Stat, Tip } from './ui.jsx'
@@ -192,6 +195,11 @@ function RunList({ runs, filters, server }) {
                       <span className="gw-muted">{[difficultyText(run.dungeon), dateLabel(run.startedAt)].filter(Boolean).join(' · ')}</span>
                     </a>
                     <Markers run={run} />
+                    {run.dungeon.instanceId ? (
+                      <a className="gw-link gw-atlas-guide-link" href={withAtlasOpen(dungeonHref({ filters, server }), { open: run.dungeon.instanceId })}>
+                        <Icon name="info" size={12} /> Guide
+                      </a>
+                    ) : null}
                   </td>
                   <td className="gw-hide-sm">
                     <ClassName character={run.character}>{run.character.name || 'Unknown'}</ClassName>
@@ -532,19 +540,27 @@ function RunDetail({ runId, filters, server }) {
   )
 }
 
-// The Dungeons page: the player's runs, or dungeon loot beside a
-// character's wishlist (?view=loot). An open run shows alone.
+// The Dungeons page: Explore (every dungeon as cards, the default), the
+// player's runs (?view=runs), and dungeon loot beside a character's
+// wishlist (?view=loot). An open run shows alone; an open dungeon
+// (?open=36) shows as a modal over whichever tab is on screen.
 export default function PlayerDungeons({ server, queryString = '', characters = [] }) {
   const query = useMemo(() => readLootQuery(queryString), [queryString])
+  const view = dungeonsView(queryString)
   const runOpen = useMemo(() => Boolean(readDungeonQuery(queryString).runId), [queryString])
-  if (runOpen && query.view !== 'loot') return <DungeonRuns server={server} queryString={queryString} />
+  const modal = <AtlasModalHost server={server} queryString={queryString} characters={characters} />
+  if (runOpen && view === 'runs') return <>{<DungeonRuns server={server} queryString={queryString} />}{modal}</>
   return (
     <div className="gw-stack">
       <nav className="gw-seg gw-dcc-tabs" aria-label="Dungeon views">
-        <a href={dungeonHref({ server })} aria-current={query.view === 'runs' ? 'page' : undefined}><Icon name="dungeon" size={14} /> My runs</a>
-        <a href={lootHref({ server, character: query.character })} aria-current={query.view === 'loot' ? 'page' : undefined}><Icon name="loot" size={14} /> Loot &amp; wishlist</a>
+        <a href={exploreHref({ server, character: query.character })} aria-current={view === 'explore' ? 'page' : undefined}><Icon name="search" size={14} /> Explore</a>
+        <a href={dungeonHref({ server })} aria-current={view === 'runs' ? 'page' : undefined}><Icon name="dungeon" size={14} /> My runs</a>
+        <a href={lootHref({ server, character: query.character })} aria-current={view === 'loot' ? 'page' : undefined}><Icon name="loot" size={14} /> Wishlist</a>
       </nav>
-      {query.view === 'loot' ? <DungeonLoot server={server} query={query} characters={characters} /> : <DungeonRuns server={server} queryString={queryString} />}
+      {view === 'explore' ? <DungeonExplore server={server} queryString={queryString} characters={characters} /> : null}
+      {view === 'loot' ? <DungeonLoot server={server} query={query} characters={characters} /> : null}
+      {view === 'runs' ? <DungeonRuns server={server} queryString={queryString} /> : null}
+      {modal}
     </div>
   )
 }

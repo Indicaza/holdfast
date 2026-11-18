@@ -91,7 +91,9 @@ function Preview({ result }) {
 // Copy a planning prompt for any AI, then paste its JSON answer back. The
 // answer is checked and previewed before anything is saved; a list with
 // errors saves nothing and comes with a repair prompt for the AI.
-export default function WishlistImport({ character, dungeon, onImported, onClose }) {
+// `scopes` (optional): [{ id, label, instanceIds }] the planning prompt can
+// be narrowed to (Plan My Gear); without it, an "Only this dungeon" box.
+export default function WishlistImport({ character, dungeon, onImported, onClose, scopes = null, initialScope = '', title = 'AI wishlist builder' }) {
   const [text, setText] = useState('')
   const [result, setResult] = useState(null)
   const [done, setDone] = useState(null)
@@ -100,6 +102,9 @@ export default function WishlistImport({ character, dungeon, onImported, onClose
   const [updateExisting, setUpdateExisting] = useState(true)
   const [onlyDungeon, setOnlyDungeon] = useState(false)
   const [manual, setManual] = useState(null)
+  const [scopeId, setScopeId] = useState(initialScope || scopes?.[0]?.id || '')
+  const scope = scopes?.find((entry) => entry.id === scopeId) || null
+  const promptIds = scopes ? (scope?.instanceIds || []) : onlyDungeon && dungeon ? [dungeon.instanceId] : []
   const base = `/api/player/wishlists/${encodeURIComponent(character.id)}`
 
   async function send(body) {
@@ -139,16 +144,23 @@ export default function WishlistImport({ character, dungeon, onImported, onClose
   const errors = result ? groupImportErrors(result.errors) : null
   const changes = result ? result.summary.add + result.summary.update : 0
   return (
-    <Panel id="player-wishlist-import" title="AI wishlist builder" className="gw-import"
+    <Panel id="player-wishlist-import" title={title} className="gw-import"
       description={`Plan ${character.name}'s upgrades with ChatGPT, Claude or any AI. Nothing here calls an AI or costs anything.`}
-      actions={<button type="button" className="gw-icon-btn gw-icon-btn--quiet" aria-label="Close the AI wishlist builder" onClick={onClose}><Icon name="close" size={16} /></button>}>
+      actions={<button type="button" className="gw-icon-btn gw-icon-btn--quiet" aria-label={`Close the ${title}`} onClick={onClose}><Icon name="close" size={16} /></button>}>
       <ol className="gw-import__steps">
         <li>
           <strong>Copy the planning prompt</strong> and paste it into your AI. It holds {character.name}'s level, class and gear, the wishlist so far, and the dungeon loot with item ids.
           <div className="gw-import__row">
             <CopyButton label="Copy AI planning prompt" primary onManual={(value) => setManual({ title: 'Planning prompt', value })}
-              load={async () => (await apiJson(`${base}/ai-prompt${onlyDungeon && dungeon ? `?dungeons=${dungeon.instanceId}` : ''}`)).prompt} />
-            {dungeon ? (
+              load={async () => (await apiJson(`${base}/ai-prompt${promptIds.length ? `?dungeons=${promptIds.join(',')}` : ''}`)).prompt} />
+            {scopes ? (
+              <label className="gw-import__check">
+                <span>Scope</span>
+                <select value={scopeId} onChange={(event) => setScopeId(event.target.value)} aria-label="Planning scope">
+                  {scopes.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+                </select>
+              </label>
+            ) : dungeon ? (
               <label className="gw-import__check"><input type="checkbox" checked={onlyDungeon} onChange={(event) => setOnlyDungeon(event.target.checked)} /> Only {dungeon.name}</label>
             ) : null}
           </div>
