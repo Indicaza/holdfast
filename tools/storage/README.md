@@ -9,11 +9,12 @@ repository, and `.gitignore` excludes database, backup and archive files.
 | Tool | What it does | Touches production? |
 |---|---|---|
 | `backup.mjs` | consistent snapshot over SSH, rebuilt and verified here, restore-tested | reads only |
+| `pullBackup.mjs` | server snapshot (writes paused briefly), chunked verified download, then the same checks as `backup.mjs` | writes and then removes `/data/snapshot/` |
 | `restore.mjs` | verified backup → new database file, checked | no |
 | `rebuild.mjs` | verified backup → compact database, cleaned and validated | no |
 | `archive.mjs` | detailed AH history per market and month, gzip, checksummed | no |
 | `upload.mjs` | `status` (read only), `stage`, `approve` the rebuilt database | `stage`/`approve` write under `/data/cutover` only |
-| `schedule.ps1` | daily backup and archive in Windows Task Scheduler | reads only |
+| `schedule.ps1` | daily `pullBackup.mjs` and archive in Windows Task Scheduler | as `pullBackup.mjs` |
 
 ## Where data goes
 
@@ -72,6 +73,20 @@ How a backup is made safe:
   verified backup are not sent; they are copied from that backup locally.
   Every backup is still a complete, standalone file. `--full` sends
   everything; `--keep N` keeps the newest N.
+
+**Use `pullBackup.mjs` while Auction House ingestion runs** (the scheduled
+backup does). `backup.mjs --ssh` holds one read transaction for the whole
+transfer, and SQLite cannot checkpoint past it: on production the WAL grew
+by about 250 MB a minute and the disk came close to full. `pullBackup.mjs`
+instead pauses writes for one `VACUUM INTO /data/snapshot/` (about 3 minutes
+for 1 GB; website writes in that window fail with "database is locked"),
+downloads that static file in 64 MiB chunks checked against the server's
+SHA-256, then runs `backup.mjs --local` on it, so the result is verified and
+restore-tested the same way. It needs free space for one copy plus 1 GiB.
+
+```bash
+node tools/storage/pullBackup.mjs --ssh srv-XXXX@ssh.ohio.render.com
+```
 
 Scheduled (as the logged-on user, whose SSH key is used):
 
