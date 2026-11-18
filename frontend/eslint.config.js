@@ -22,4 +22,9 @@ export default defineConfig([
       'react-hooks/preserve-manual-memoization': 'off',
     },
   },
+  {
+    // Component-test helpers are never hot-reloaded.
+    files: ['src/**/__tests__/**/*.{js,jsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])
