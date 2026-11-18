@@ -457,7 +457,8 @@ export default function DungeonDetailModal({
           {error ? <p className="gw-objectives__error" role="alert">{error}</p> : null}
           {detail.status === 'loading' && !detail.data ? <SkeletonRows rows={5} label={`Loading ${name}`} /> : null}
           {(detail.status === 'error' || detail.status === 'missing') && !detail.data ? <ErrorState>This dungeon could not be loaded.</ErrorState> : null}
-          {detail.data || listEntry ? (
+          {/* While the detail loads, only Overview can draw from the list entry: other sections would show empty states. */}
+          {detail.data || (listEntry && (section === 'overview' || detail.status !== 'loading')) ? (
             <>
               {section === 'overview' ? (
                 <Overview entry={merged} atlas={atlas} character={character} onBoss={openBoss}
