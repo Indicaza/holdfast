@@ -434,6 +434,10 @@ export default function ResourceMap({
   legendRail = false,
   openRequest = null,
   onDetailsChange,
+  // Extra clickable pins over the map (the Dungeon Entrances layer):
+  // [{ key, label, world: { x, y }, kind }]. They never start a drag.
+  pins = [],
+  onPin,
 }) {
   const discipline = filter.discipline || ''
   const item = filter.item || ''
@@ -927,6 +931,7 @@ export default function ResourceMap({
     : []
 
   const spotMarkers = weights.markers > 0.02 ? spots.map((spot, index) => ({ spot, index, at: toScreen(view, size, spot.world) })).filter((entry) => onScreen(entry.at)) : []
+  const pinMarkers = pins.map((pin) => ({ pin, at: toScreen(view, size, pin.world) })).filter((entry) => onScreen(entry.at, 20))
   const hoverAt = hover && !dragging ? toScreen(view, size, hover.world) : null
   const shownSources = visible.size
   const fullscreenLabel = fullscreen ? 'Exit full screen' : 'Full screen'
@@ -1097,6 +1102,20 @@ export default function ResourceMap({
                 <span key={`${spot.sourceKey}-${index}`} className="gw-rmap__marker" style={{ '--x': `${at.x}px`, '--y': `${at.y}px`, '--marker': colors.get(spot.sourceKey) }}>
                   {index + 1}
                 </span>
+              ))}
+            </div>
+          ) : null}
+
+          {pinMarkers.length ? (
+            <div className="gw-rmap__overlay gw-rmap__pins">
+              {pinMarkers.map(({ pin, at }) => (
+                <button key={pin.key} type="button" className={`gw-rmap__pin gw-rmap__pin--${pin.kind || 'dungeon'}`} style={{ '--x': `${at.x}px`, '--y': `${at.y}px` }}
+                  aria-label={`${pin.label} entrance`} title={pin.label}
+                  onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => event.stopPropagation()}
+                  onDoubleClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}
+                  onClick={(event) => { event.stopPropagation(); onPin?.(pin) }}>
+                  <Icon name="dungeon" size={14} />
+                </button>
               ))}
             </div>
           ) : null}

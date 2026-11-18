@@ -15,10 +15,11 @@ export function readDungeonQuery(queryString = '') {
 export function dungeonHref({ filters = {}, runId = null, server = '' } = {}) {
   const params = new URLSearchParams()
   if (server) params.set('server', server)
+  // The Dungeons page opens on Explore; runs links name their tab.
+  params.set('view', 'runs')
   for (const key of DUNGEON_FILTER_KEYS) if (filters[key]) params.set(key, filters[key])
   if (runId) params.set('run', String(runId))
-  const query = params.toString()
-  return `/dashboard/dungeons${query ? `?${query}` : ''}`
+  return `/dashboard/dungeons?${params.toString()}`
 }
 
 // The API filters: dates become the start and end of that day in the

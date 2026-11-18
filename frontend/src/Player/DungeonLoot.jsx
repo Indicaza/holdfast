@@ -27,6 +27,7 @@ import {
 import { onServerKey, relativeTime } from './playerModel.js'
 import { EmptyState, ErrorState, Icon, ItemLabel, Panel, SkeletonRows, Tip } from './ui.jsx'
 import WishlistImport from './WishlistImport.jsx'
+import { withAtlasOpen } from './Dungeons/atlasModel.js'
 import './DungeonLoot.css'
 
 const TOPICS = ['player']
@@ -147,7 +148,7 @@ function Changes({ changes }) {
 }
 
 // The right panel: one character's wishlist. Every change saves at once.
-function Wishlist({ character, resource, run, busy, error }) {
+function Wishlist({ character, resource, run, busy, error, guideHref }) {
   const data = resource.data
   const groups = useMemo(() => wishlistGroups(data?.items || []), [data])
   const path = (entry) => `/api/player/wishlists/${encodeURIComponent(character.id)}/items/${entry.itemKey}`
@@ -183,6 +184,7 @@ function Wishlist({ character, resource, run, busy, error }) {
         <p className="gw-wish-row__sources gw-muted">
           {[entry.item.slot, entry.itemKey !== `i:${entry.itemId}` ? `variant ${entry.itemKey}` : null].filter(Boolean).join(' · ')}
           {entry.item.slot ? ' · ' : ''}{sourcesText(entry.sources)}
+          {entry.sources?.[0]?.instanceId ? <> · <a className="gw-link" href={guideHref(entry.sources[0].instanceId)}>Guide</a></> : null}
         </p>
         {acquired ? (
           <div className="gw-wish-row__controls">
@@ -307,6 +309,11 @@ export default function DungeonLoot({ server, query, characters = [] }) {
             {dungeons.data.dungeons.map((entry) => <option key={entry.instanceId} value={entry.instanceId}>{entry.name} ({entry.itemCount})</option>)}
           </select>
         </label>
+        {dungeon ? (
+          <a className="gw-btn gw-btn--sm" href={withAtlasOpen(lootHref({ server, character: characterId, dungeon: dungeonId, filters: query.filters }), { open: dungeon.instanceId })}>
+            <Icon name="info" size={14} /> Dungeon guide
+          </a>
+        ) : null}
         <span className="gw-loot__bar-space" />
         <button type="button" className={`gw-btn gw-btn--sm${importing ? '' : ' gw-btn--primary'}`} disabled={!character} aria-expanded={importing} onClick={() => setImporting((open) => !open)}>
           <Icon name="sparkle" size={14} /> AI wishlist builder
@@ -363,7 +370,8 @@ export default function DungeonLoot({ server, query, characters = [] }) {
         </section>
 
         <aside className="gw-loot__side" aria-label="Wishlist">
-          {character ? <Wishlist character={character} resource={wishlist} run={run} busy={busy} error={error} /> : (
+          {character ? <Wishlist character={character} resource={wishlist} run={run} busy={busy} error={error}
+            guideHref={(instanceId) => withAtlasOpen(lootHref({ server, character: characterId, dungeon: dungeonId, filters: query.filters }), { open: instanceId, section: 'loot' })} /> : (
             <EmptyState title="No character to plan for yet." icon="characters">
               Log in to a character with Guildweaver running, then <kbd>/reload</kbd>. Its wishlist appears here.
             </EmptyState>
