@@ -46,6 +46,35 @@ An advertised item is marked removed only when a journal list for the same boss 
 
 Migration 23 fills the catalog from the corpse loot already recorded inside dungeons players ran.
 
+### Classic reference loot
+
+Beside the catalog, the Dungeon Atlas ships checked-in Classic reference loot
+(`backend/src/Atlas/data/reference-loot.json`; sources, filter and gaps in
+[dungeon-atlas-sources.md](dungeon-atlas-sources.md), API shape in
+[dungeon-atlas-contract-sprint2.md](dungeon-atlas-contract-sprint2.md)). It is
+not evidence and never enters `dungeon_loot_entries`: no `external` rows are
+written, the catalog's confidence rules are unchanged, and no drop chances are
+kept.
+
+- **Observed wins.** In the atlas detail a reference item the catalog holds for
+  that dungeon is `observed: true`, `verifiedForForever: true` and takes the
+  catalog's facts; every other reference item is `observed: false`,
+  `verifiedForForever: false`, tiered `classic-reference` (facts) /
+  `community-unverified` (who drops it).
+- **Known items.** `lootItemFactsInDatabase` falls back to the reference facts
+  (with a `reference` block: kind, armour, weapon, stats, set, tier) only when
+  the site's item index does not know the item by name, so a reference item can
+  be wished for, imported and alerted on like a catalog item. Unknown ids are
+  still refused.
+- **Sources.** `lootSourcesForItemsInDatabase` adds the reference sources of an
+  item (`reference: true`, `sourceKind: "reference"`, `confidence: "candidate"`,
+  `dungeonName`, `bossName`, `npcId`, `sourceType`: `boss`/`rare`/`trash`/`quest`)
+  for dungeons where the catalog has not observed it.
+- **AI prompt.** With `?dungeons=…`, each chosen dungeon's reference gear that
+  the catalog has not observed there is listed under its boss, marked
+  `[Classic reference: not yet observed on Forever]`, within the same level,
+  class and size limits. Without a dungeon choice the prompt is the catalog only.
+
 ## Character wishlists
 
 `character_wishlist_items`: one row per account, character and item identity (`i:<itemId>`, or a variant key such as `i:15210:s-1081`). Priority (`high`, `normal`, `low`), a note (140 characters), an optional source dungeon, where it came from (`manual`, `ai_import`), a position and a state. Not the Auction House favorites, which are account-wide and about prices.
@@ -154,6 +183,6 @@ Any order is safe; that order is the one in which each step is useful. Migration
 ## Not built yet
 
 - Automatic upgrade detection (the add-on reserves the blue "potential upgrade" category).
-- External loot tables (`external` provenance).
+- External loot tables as catalog evidence (`external` provenance). Classic reference loot is served beside the catalog instead (see above), never as evidence.
 - Drop rates in the catalog: sightings are positive evidence only, with no count of kills that dropped nothing.
 - Variant-aware ownership: an owned item is matched by item id, so owning one variant counts for another variant of the same item.

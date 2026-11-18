@@ -9,6 +9,7 @@
 // - Nothing derived from a non-Forever source claims verifiedForForever.
 
 import { adaptContent } from "./atlasContent.js";
+import { questDetailsOf } from "./atlasLoot.js";
 import { VANILLA_INSTANCE_IDS } from "./atlasSources.js";
 
 export const ATLAS_SCHEMA_VERSION = 1;
@@ -192,7 +193,7 @@ export function adaptAzerothCore(extract, { areaToInstance = new Map() } = {}) {
 
 // ---------------------------------------------------------------- Normalize
 
-export function normalize({ wago, azerothcore, creatures = null, spells = null, generatedAt = null }) {
+export function normalize({ wago, azerothcore, creatures = null, spells = null, loot = null, items = null, generatedAt = null }) {
   const areaToInstance = new Map((wago?.tables?.AreaTable || []).map((row) => [int(row.ID), int(row.ContinentID)]));
   const ac = azerothcore ? adaptAzerothCore(azerothcore, { areaToInstance }) : null;
   const content = creatures ? adaptContent(creatures, spells) : null;
@@ -200,9 +201,13 @@ export function normalize({ wago, azerothcore, creatures = null, spells = null, 
   const acProv = (confidence, note) => provenanceOf(creatures, { tier: "community-unverified", confidence, note });
   const spellProv = spells ? provenanceOf(spells, { tier: "classic-reference", confidence: "low",
     note: "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)" }) : null;
+  const zones = wago ? zoneRegions(wago.tables) : [];
+  const knownItems = new Set((items?.tables?.items || []).map((item) => item.id));
+  const questDetails = loot ? questDetailsOf(loot, { zonePointOf: (continentId, x, y) => zonePoint(zones, continentId, x, y),
+    instanceName: new Map([...base.values()].map((entry) => [entry.instanceId, entry.name])), knownItem: (itemId) => knownItems.has(itemId) }) : null;
   const dungeons = VANILLA_INSTANCE_IDS.filter((id) => base.has(id)).map((instanceId) => {
     const entry = base.get(instanceId);
-    const quests = ac?.quests.get(instanceId) || [];
+    const quests = (ac?.quests.get(instanceId) || []).map((quest) => (questDetails ? { ...quest, ...questDetails(quest) } : quest));
     const provenance = [...entry.provenance];
     if (quests.length) provenance.push(ac.questProvenance);
     const place = content?.instances.get(instanceId) || null;
@@ -238,7 +243,7 @@ export function normalize({ wago, azerothcore, creatures = null, spells = null, 
       artworkUrl: null, maps: place ? [place.layout] : [], bosses, creatures: trash, rares, rareCount: place ? rares.length : null, quests, provenance,
     };
   });
-  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore, creatures, spells].filter(Boolean).map((extract) => ({ source: extract.source,
+  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore, creatures, spells, loot].filter(Boolean).map((extract) => ({ source: extract.source,
     revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null, url: extract.url ?? null, license: extract.license ?? null })), dungeons };
 }
 
@@ -268,6 +273,12 @@ export function atlasProblems(atlas) {
         if (!ABILITY_CATEGORIES.includes(ability.category)) problems.push(`${where}: ${creature.name} ability category`);
         if (ability.verifiedForForever) problems.push(`${where}: ${creature.name} ${ability.name} claims Forever verification`);
       }
+    }
+    for (const quest of dungeon.quests || []) {
+      const location = quest.location;
+      if (location && location.mapId !== null && !(unit(location.x) && unit(location.y))) problems.push(`${where}: quest ${quest.questId} location out of range`);
+      for (const prerequisite of quest.prerequisites || []) if (!Number.isSafeInteger(prerequisite.questId)) problems.push(`${where}: quest ${quest.questId} prerequisite`);
+      for (const line of quest.provenance || []) if (!TIERS.includes(line.tier) || line.tier === "official-client") problems.push(`${where}: quest ${quest.questId} provenance`);
     }
     for (const map of dungeon.maps || []) {
       for (const point of map.points || []) if (!(unit(point[0]) && unit(point[1]))) { problems.push(`${where}: layout point out of range`); break; }

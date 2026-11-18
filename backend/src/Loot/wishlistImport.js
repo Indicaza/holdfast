@@ -12,6 +12,7 @@
 //
 // validateWishlistImport is pure: its lookups are passed in.
 
+import { referenceItemsByName } from "../Atlas/referenceLoot.js";
 import { withGuildTransaction } from "../Data/database.js";
 import { lootItemFactsInDatabase, lootSourcesForItemsInDatabase } from "./lootCatalogRepository.js";
 import { MAX_NOTE, MAX_SOURCE_DUNGEON, MAX_WISHLIST_ITEMS, PRIORITIES, isObject, normalizedName, wishlistItemKey } from "./lootModel.js";
@@ -280,7 +281,12 @@ export function importLookupsInDatabase(db, { catalogRevision = null } = {}) {
     itemsByName(name) {
       const rows = db.prepare(`SELECT m.item_id AS itemId, m.name, EXISTS(SELECT 1 FROM dungeon_loot_entries e WHERE e.item_id = m.item_id) AS dungeon
         FROM market_item_meta m WHERE m.name = ? COLLATE NOCASE AND m.name <> '' ORDER BY dungeon DESC, m.item_id LIMIT 9`).all(String(name).trim().slice(0, 120));
-      return rows.map((row) => ({ itemId: row.itemId, name: row.name, inDungeonCatalog: Boolean(row.dungeon) }));
+      const found = rows.map((row) => ({ itemId: row.itemId, name: row.name, inDungeonCatalog: Boolean(row.dungeon) }));
+      // Classic reference items the site's item index does not have yet.
+      for (const item of referenceItemsByName(name)) {
+        if (found.length < 9 && !found.some((entry) => entry.itemId === item.itemId)) found.push({ itemId: item.itemId, name: item.name, inDungeonCatalog: true });
+      }
+      return found;
     },
     sources(itemId) {
       if (!sources.has(itemId)) sources.set(itemId, lootSourcesForItemsInDatabase(db, [itemId]).get(itemId) || []);

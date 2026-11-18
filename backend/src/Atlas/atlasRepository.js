@@ -3,20 +3,11 @@
 // and joins it to the loot catalog's responses. Read-only, local: nothing
 // here calls another service.
 
-import { readFileSync } from "node:fs";
-
 import { normalizedName, wishlistItemKey } from "../Loot/lootModel.js";
+import { loadAtlas } from "./atlasData.js";
+import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
 
-const ATLAS_URL = new URL("./data/atlas.json", import.meta.url);
-let cached = null;
-
-export function loadAtlas() {
-  if (!cached) {
-    const atlas = JSON.parse(readFileSync(ATLAS_URL, "utf8"));
-    cached = { atlas, byId: new Map(atlas.dungeons.map((dungeon) => [dungeon.instanceId, dungeon])) };
-  }
-  return cached;
-}
+export { loadAtlas };
 
 export function atlasDungeon(instanceId) {
   return loadAtlas().byId.get(Number(instanceId)) || null;
@@ -34,14 +25,28 @@ export function atlasSummary(instanceId) {
     rareCount: dungeon.rareCount ?? null,
     questCount: dungeon.quests.length,
     kind: dungeon.kind,
+    // Classic reference loot (docs/dungeon-atlas-contract-sprint2.md).
+    ...referenceSummary(instanceId),
   };
+}
+
+// The catalog's item records of this dungeon by item id: what was observed
+// here. Observed facts win over reference facts.
+function observedItems(sources) {
+  const observed = new Map();
+  for (const source of sources || []) for (const item of source.items || []) if (!observed.has(item.itemId)) observed.set(item.itemId, item);
+  return observed;
+}
+
+function referenceList(itemIds, observed) {
+  return sortReferenceItems(itemIds.map((itemId) => referenceItem(itemId, { observed: observed.get(itemId) || null })).filter(Boolean));
 }
 
 // A boss joined to the catalog's source groups for it (by npc id, encounter
 // id or name): the item keys the catalog lists under them, and the catalog's
 // spelling of the name, so the frontend can match boss.name to
 // sources[].name. atlasName keeps the atlas source's own spelling.
-function bossWithCatalog(boss, sources) {
+function bossWithCatalog(boss, sources, reference = null, observed = new Map()) {
   const name = normalizedName(boss.name);
   const keys = new Set();
   let sourceName = null;
@@ -56,7 +61,8 @@ function bossWithCatalog(boss, sources) {
       if (key) keys.add(key);
     }
   }
-  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys] };
+  const referenceIds = reference?.bosses.find((entry) => entry.encounterId === boss.encounterId)?.itemIds || [];
+  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(referenceIds, observed) };
 }
 
 // The detail's `atlas`. `sources` is the catalog's source groups, used only
@@ -64,6 +70,8 @@ function bossWithCatalog(boss, sources) {
 export function atlasDetail(instanceId, sources = []) {
   const dungeon = atlasDungeon(instanceId);
   if (!dungeon) return null;
+  const reference = referenceDungeon(dungeon.instanceId);
+  const observed = observedItems(sources);
   return {
     description: dungeon.description,
     kind: dungeon.kind,
@@ -71,10 +79,24 @@ export function atlasDetail(instanceId, sources = []) {
     ...(dungeon.wings ? { wings: dungeon.wings } : {}),
     zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId,
     maps: dungeon.maps,
-    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources)),
+    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed)),
     creatures: dungeon.creatures,
-    rares: dungeon.rares,
-    quests: dungeon.quests,
+    rares: dungeon.rares.map((rare) => ({ ...rare,
+      referenceLoot: referenceList(reference?.rares.find((entry) => entry.npcId === rare.npcId)?.itemIds || [], observed) })),
+    // Trash and chest drops no boss or rare of the dungeon has.
+    dungeonLoot: sortReferenceItems((reference?.dungeonLoot || []).map((entry) => {
+      const item = referenceItem(entry.itemId, { observed: observed.get(entry.itemId) || null });
+      return item && { ...item, sourceName: entry.sourceName ?? null, npcId: entry.npcId ?? null };
+    }).filter(Boolean)),
+    referenceVersion: referenceVersion(),
+    quests: dungeon.quests.map((quest) => ({
+      ...quest,
+      objective: quest.objective ?? null, prerequisites: quest.prerequisites || [], location: quest.location ?? null, provenance: quest.provenance || [],
+      rewards: (quest.rewards || []).map((reward) => {
+        const item = referenceItem(reward.itemId, { observed: observed.get(reward.itemId) || null });
+        return item && { ...item, choice: reward.choice };
+      }).filter(Boolean),
+    })),
     entrance: dungeon.entrance,
     entrances: dungeon.entrances,
     artworkUrl: dungeon.artworkUrl,

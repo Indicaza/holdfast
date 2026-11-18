@@ -112,7 +112,10 @@ export function extractSpellContent({ spellIds, tables, dungeonNames = [] }) {
     return {
       id, name: text(names.get(id)[0].Name_lang), description: text(texts.get(id)?.[0]?.Description_lang),
       castMs: castTimes.get(int(m.CastingTimeIndex)) ?? 0, passive: ((int(m.Attributes_0) || 0) & 0x40) !== 0, school: int(m.SchoolMask) || 0,
-      interruptFlags: int(interrupts.get(id)?.[0]?.InterruptFlags) || 0, dispelType: int(c.DispelType) || 0, mechanic: int(c.Mechanic) || 0,
+      // SPELL_ATTR1_CHANNELED_1 / _2.
+      channeled: ((int(m.Attributes_1) || 0) & 0x44) !== 0,
+      interruptFlags: int(interrupts.get(id)?.[0]?.InterruptFlags) || 0, channelInterruptFlags: int(interrupts.get(id)?.[0]?.ChannelInterruptFlags_0) || 0,
+      preventionType: int(c.PreventionType) || 0, dispelType: int(c.DispelType) || 0, mechanic: int(c.Mechanic) || 0,
       effects: (effects.get(id) || []).sort((a, b) => int(a.EffectIndex) - int(b.EffectIndex))
         .map((row) => [int(row.Effect) || 0, int(row.EffectAura) || 0, int(row.ImplicitTarget_0) || 0, int(row.ImplicitTarget_1) || 0, int(row.EffectMechanic) || 0]),
     };
@@ -133,7 +136,23 @@ const DISPEL = Object.freeze({ 1: "Magic", 2: "Curse", 3: "Disease", 4: "Poison"
 // SpellMechanic values that take a player out of control.
 const CONTROL = Object.freeze({ 1: "charm", 2: "disorient", 5: "fear", 7: "root", 9: "silence", 10: "sleep", 12: "stun", 13: "freeze", 14: "knockout",
   17: "polymorph", 18: "banish", 24: "horror", 30: "sap" });
+// What makes a cast kickable (AzerothCore Spell::EffectInterruptCast, the
+// 1.12-3.3.5 rule): the spell's PreventionType includes silence, and its
+// InterruptFlags (a cast) or ChannelInterruptFlags (a channel) carry the
+// interrupt bit. A spell whose PreventionType is pacify only (melee
+// abilities) cannot be kicked whatever its InterruptFlags say.
 const SPELL_INTERRUPT_FLAG_INTERRUPT = 0x08;
+const CHANNEL_INTERRUPT_FLAG_INTERRUPT = 0x08;
+const SPELL_PREVENTION_TYPE_SILENCE = 0x01;
+
+// true / false when the client's flags decide it, null when interrupting
+// does not apply (an instant that is not channeled).
+export function spellInterruptible(spell) {
+  const kickable = ((spell.preventionType ?? 0) & SPELL_PREVENTION_TYPE_SILENCE) !== 0;
+  if (spell.castMs > 0) return kickable && ((spell.interruptFlags ?? 0) & SPELL_INTERRUPT_FLAG_INTERRUPT) !== 0;
+  if (spell.channeled) return kickable && ((spell.channelInterruptFlags ?? 0) & CHANNEL_INTERRUPT_FLAG_INTERRUPT) !== 0;
+  return null;
+}
 // Spell effects (3.3.5 / Classic numbering).
 const E = Object.freeze({ schoolDamage: 2, applyAura: 6, powerDrain: 8, heal: 10, weaponNoSchool: 17, summon: 28, weaponPercent: 31, persistentArea: 27,
   areaAuraParty: 35, weaponDamage: 58, powerBurn: 62, knockBack: 98, normalizedWeapon: 121, healthLeech: 9, healPct: 136 });
@@ -153,7 +172,7 @@ const harmful = (effect) => !FRIENDLY.has(effect[2]) || effect[2] === 0;
 // attention (cosmetic, passive, unnamed). Rules, in order:
 //   crowd-control  it applies a loss-of-control mechanic to enemies
 //   healer-danger  it drains or burns mana, or ticks damage over an area
-//   interrupt      a cast with a cast time the client marks interruptible
+//   interrupt      a cast or channel the client marks kickable (spellInterruptible)
 //   dispel         an enemy aura of a dispellable type, or a purgeable buff
 //   tank-danger    enrage/frenzy, healing or armour debuffs, single-target hits
 //   positioning    damage or knock-back over an area
@@ -169,7 +188,7 @@ export function classifySpell(spell) {
     ...onEnemies.filter((effect) => effect[0] === E.applyAura).map((effect) => ({ [A.modStun]: "stun", [A.modFear]: "fear", [A.modCharm]: "charm",
       [A.modRoot]: "root", [A.modSilence]: "silence" })[effect[1]]).filter(Boolean)])];
   const casted = spell.castMs > 0;
-  const interruptible = casted ? (spell.interruptFlags & SPELL_INTERRUPT_FLAG_INTERRUPT) !== 0 : null;
+  const interruptible = spellInterruptible(spell);
   const heals = effects.some((effect) => [E.heal, E.healPct].includes(effect[0]) || (effect[0] === E.applyAura && effect[1] === 8));
   const selfOnly = effects.every((effect) => FRIENDLY.has(effect[2]));
   const dispel = DISPEL[spell.dispelType] || null;
@@ -180,7 +199,7 @@ export function classifySpell(spell) {
   let category;
   let priority;
   if (controls.length && !selfOnly) { category = "crowd-control"; priority = "high"; } else if (drains || areaTicks) { category = "healer-danger"; priority = "high"; } else if (interruptible && (heals || onEnemies.length)) {
-    category = "interrupt"; priority = heals || spell.castMs >= 1500 ? "high" : "medium";
+    category = "interrupt"; priority = heals || spell.castMs >= 1500 || spell.channeled ? "high" : "medium";
   } else if (dispel && !selfOnly && onEnemies.some((effect) => effect[0] === E.applyAura)) { category = "dispel"; priority = "medium"; } else if (dispel === "Magic" && selfOnly && !heals) {
     category = "dispel"; priority = "low";
   } else if (/enrage|frenzy/i.test(spell.name) || onEnemies.some((effect) => effect[0] === E.applyAura && [A.modHealingPct, A.modDamageTakenPct, A.modResistance].includes(effect[1]))) {
@@ -190,7 +209,7 @@ export function classifySpell(spell) {
   } else { category = "special-mechanic"; priority = "low"; }
 
   const facts = [];
-  facts.push(casted ? `${(spell.castMs / 1000).toFixed(1).replace(/\.0$/, "")}s cast` : "instant");
+  facts.push(casted ? `${(spell.castMs / 1000).toFixed(1).replace(/\.0$/, "")}s cast` : spell.channeled ? "channeled" : "instant");
   if (interruptible === true) facts.push("interruptible");
   if (interruptible === false) facts.push("not interruptible");
   if (controls.length) facts.push(controls.join("/"));

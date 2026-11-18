@@ -8,7 +8,7 @@ import { parseScriptSpells } from "../src/Atlas/atlasSources.js";
 // Dungeon Atlas content: spawns, creature spells and the rules that turn
 // client spell facts into ability cards. Every input here is a fixture.
 
-const spell = (fields) => ({ id: 1, name: "Spell", description: null, castMs: 0, passive: false, school: 1, interruptFlags: 0, dispelType: 0, mechanic: 0,
+const spell = (fields) => ({ id: 1, name: "Spell", description: null, castMs: 0, passive: false, school: 1, interruptFlags: 0, preventionType: 1, dispelType: 0, mechanic: 0,
   effects: [[2, 0, 6, 0, 0]], ...fields });
 
 test("C++ scripts lend their spells only when they register one creature", () => {
