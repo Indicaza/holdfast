@@ -3,6 +3,9 @@
 **/.env
 **/node_modules
 **/data
+# The Dungeon Atlas's checked-in datasets are source, not runtime data: the
+# server reads them (backend/src/Atlas/atlasData.js).
+!backend/src/Atlas/data
 **/dist
 **/*.log
 upload

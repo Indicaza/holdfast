@@ -126,6 +126,16 @@ function entrance(value) {
 // Catalog dungeons (those with recorded loot) plus atlas-only dungeons the
 // backend knows about but has no loot for yet, so Explore and the world map
 // show every known dungeon. Catalog entries win on duplicate instance ids.
+// What a failed atlas request answered, for its error message: the HTTP
+// status and the server's error code (" (HTTP 500, loot_dungeons_unavailable)"),
+// or "" when nothing is known.
+export function loadFailureDetail(error) {
+  const status = Number(error?.status) || 0
+  const code = typeof error?.code === 'string' && /^[a-z0-9_]{1,64}$/.test(error.code) ? error.code : ''
+  const parts = [status ? `HTTP ${status}` : (error ? 'network error' : ''), code].filter(Boolean)
+  return parts.length ? ` (${parts.join(', ')})` : ''
+}
+
 export function listWithAtlasDungeons(data) {
   const catalog = Array.isArray(data?.dungeons) ? data.dungeons : []
   const extra = Array.isArray(data?.atlasDungeons) ? data.atlasDungeons : []

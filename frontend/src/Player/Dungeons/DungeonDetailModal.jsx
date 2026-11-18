@@ -14,6 +14,7 @@ import {
   groupAbilities,
   levelFit,
   levelText,
+  loadFailureDetail,
   markerPosition,
   needsUnverifiedBadge,
   normalizeAtlas,
@@ -456,7 +457,7 @@ export default function DungeonDetailModal({
           ) : null}
           {error ? <p className="gw-objectives__error" role="alert">{error}</p> : null}
           {detail.status === 'loading' && !detail.data ? <SkeletonRows rows={5} label={`Loading ${name}`} /> : null}
-          {(detail.status === 'error' || detail.status === 'missing') && !detail.data ? <ErrorState>This dungeon could not be loaded.</ErrorState> : null}
+          {(detail.status === 'error' || detail.status === 'missing') && !detail.data ? <ErrorState onRetry={detail.reload}>This dungeon could not be loaded{loadFailureDetail(detail.error)}.</ErrorState> : null}
           {/* While the detail loads, only Overview can draw from the list entry: other sections would show empty states. */}
           {detail.data || (listEntry && (section === 'overview' || detail.status !== 'loading')) ? (
             <>

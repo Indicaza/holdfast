@@ -44,6 +44,7 @@ import {
   withAtlasOpen,
   worldMapHref,
 } from '../src/Player/Dungeons/atlasModel.js'
+import { listWithAtlasDungeons as listWithAtlasDungeonsForFailure, loadFailureDetail } from '../src/Player/Dungeons/atlasModel.js'
 import { atlasZone } from '../src/Player/Map/atlas.js'
 
 const names = (list) => list.map((entry) => entry.name)
@@ -369,4 +370,17 @@ test('quests: giver object or name, coordinates in the game\'s style, missing fa
 test('choosing a character keeps every other param', () => {
   assert.equal(withCharacter('/dashboard/dungeons?view=explore&character=a&open=36&section=loot', 'b'), '/dashboard/dungeons?view=explore&character=b&open=36&section=loot')
   assert.equal(withCharacter('/map?zone=1436&open=36', 'b'), '/map?zone=1436&open=36&character=b')
+})
+
+test('a failed dungeon request says what the server answered; a degraded list still lists the atlas', () => {
+  assert.equal(loadFailureDetail({ status: 500, code: 'loot_dungeons_unavailable' }), ' (HTTP 500, loot_dungeons_unavailable)')
+  assert.equal(loadFailureDetail({ status: 401, code: 'unauthorized' }), ' (HTTP 401, unauthorized)', 'sign-in failures are named, not hidden')
+  assert.equal(loadFailureDetail(new TypeError('Failed to fetch')), ' (network error)')
+  assert.equal(loadFailureDetail({ status: 502, code: '<html>' }), ' (HTTP 502)', 'only a plain error code is shown')
+  assert.equal(loadFailureDetail(null), '')
+  // The server's degraded answer (observed catalog unreadable): no catalog
+  // dungeons, every reference dungeon in atlasDungeons.
+  const atlas = (instanceId) => ({ instanceId, name: `D${instanceId}`, atlas: { bossCount: 3 } })
+  const degraded = { schemaVersion: 1, revision: 0, dungeons: [], degraded: ['catalog', 'lootSlots'], atlasDungeons: [atlas(36), atlas(48)] }
+  assert.deepEqual(listWithAtlasDungeonsForFailure(degraded).map((entry) => entry.instanceId), [36, 48])
 })

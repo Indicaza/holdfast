@@ -103,6 +103,36 @@ probe_startup_backup() {
   '
 }
 
+# The Dungeon Atlas as the image serves it (the /api/player/loot/dungeons
+# handler and one dungeon's detail): its checked-in datasets must be in the
+# image, not only in the repository.
+probe_dungeon_atlas() {
+  docker exec -w /app/backend "$CONTAINER_NAME" node --input-type=module -e '
+    const { readDungeonList } = await import("/app/backend/src/Loot/lootRouter.js");
+    const { withAtlasDetail } = await import("/app/backend/src/Atlas/atlasRepository.js");
+    const list = readDungeonList();
+    const all = [...list.dungeons, ...(list.atlasDungeons || [])].filter((entry) => entry.atlas);
+    const detail = withAtlasDetail(null, 36);
+    console.log(JSON.stringify({
+      atlasDungeons: all.length,
+      degraded: list.degraded || [],
+      deadminesBosses: detail?.atlas?.bosses?.length || 0,
+      deadminesReferenceLoot: (detail?.atlas?.bosses || []).reduce((sum, boss) => sum + boss.referenceLoot.length, 0),
+    }));
+  '
+}
+
+smoke_atlas() {
+  local atlas
+  atlas="$(probe_dungeon_atlas)"
+  echo "$atlas"
+  echo "$atlas" | grep -q '"atlasDungeons":26,'
+  echo "$atlas" | grep -q '"degraded":\[\]'
+  echo "$atlas" | grep -Eq '"deadminesBosses":[1-9]'
+  echo "$atlas" | grep -Eq '"deadminesReferenceLoot":[1-9]'
+  curl --silent --output /dev/null --write-out '%{http_code}' "$BASE_URL/api/player/loot/dungeons" | grep -q '^401$'
+}
+
 smoke_http() {
   curl --fail --silent "$BASE_URL/api/health/live" | grep -q '"status":"ok"'
   curl --fail --silent "$BASE_URL/api/health/ready" | grep -q '"status":"ok"'
@@ -123,6 +153,7 @@ smoke_http() {
 echo "Booting exact production artifact for the first time..."
 start_container
 smoke_http
+smoke_atlas
 probe_state | tee "$FIRST_STATE_FILE"
 
 grep -q '"schemaVersion":24' "$FIRST_STATE_FILE"
@@ -162,4 +193,4 @@ echo "$BACKUP_STATE" | grep -q '"files":0'
 # Readiness reports the measured startup phases.
 curl --fail --silent "$BASE_URL/api/health/ready" | grep -qF '"phases":[{"name":"runtime_directory"'
 
-echo "Production artifact boot, HTTP smoke, no snapshot on ordinary restart, migration, and restart persistence all passed."
+echo "Production artifact boot, HTTP smoke, dungeon atlas, no snapshot on ordinary restart, migration, and restart persistence all passed."
