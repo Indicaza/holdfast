@@ -62,6 +62,16 @@ function ErrorList({ title, note, errors }) {
   )
 }
 
+// "priority normal → high, note added".
+function changeList(changes = {}) {
+  return Object.entries(changes || {}).map(([key, change]) => {
+    if (!change || typeof change !== 'object' || !('to' in change)) return key
+    if (!change.from) return `${key} added`
+    if (!change.to) return `${key} cleared`
+    return `${key} ${change.from} → ${change.to}`
+  }).join(', ')
+}
+
 const ACTION_LABELS = { add: 'Add', update: 'Update', unchanged: 'Already listed' }
 
 function Preview({ result }) {
@@ -74,7 +84,7 @@ function Preview({ result }) {
             <ItemLabel item={{ itemId: entry.itemId, name: entry.name, qualityId: entry.qualityId, iconFileDataId: entry.iconFileDataId }} size={18} tooltip={false} />
             <span className="gw-muted">
               {entry.priority}{entry.note ? ` · ${entry.note}` : ''}
-              {entry.action === 'update' ? ` · changes ${Object.keys(entry.changes).join(', ')}` : ''}
+              {entry.action === 'update' ? ` · ${changeList(entry.changes)}` : ''}
             </span>
           </li>
         ))}
@@ -93,7 +103,9 @@ function Preview({ result }) {
 // errors saves nothing and comes with a repair prompt for the AI.
 // `scopes` (optional): [{ id, label, instanceIds }] the planning prompt can
 // be narrowed to (Plan My Gear); without it, an "Only this dungeon" box.
-export default function WishlistImport({ character, dungeon, onImported, onClose, scopes = null, initialScope = '', title = 'AI wishlist builder' }) {
+// `instanceIds` + `scopeControl` (optional): the caller owns the scope
+// (Plan My Gear's dungeon picker); its control shows in step 1.
+export default function WishlistImport({ character, dungeon, onImported, onClose, scopes = null, initialScope = '', title = 'AI wishlist builder', instanceIds = null, scopeControl = null, header = null, copyDisabled = false }) {
   const [text, setText] = useState('')
   const [result, setResult] = useState(null)
   const [done, setDone] = useState(null)
@@ -104,7 +116,7 @@ export default function WishlistImport({ character, dungeon, onImported, onClose
   const [manual, setManual] = useState(null)
   const [scopeId, setScopeId] = useState(initialScope || scopes?.[0]?.id || '')
   const scope = scopes?.find((entry) => entry.id === scopeId) || null
-  const promptIds = scopes ? (scope?.instanceIds || []) : onlyDungeon && dungeon ? [dungeon.instanceId] : []
+  const promptIds = instanceIds || (scopes ? (scope?.instanceIds || []) : onlyDungeon && dungeon ? [dungeon.instanceId] : [])
   const base = `/api/player/wishlists/${encodeURIComponent(character.id)}`
 
   async function send(body) {
@@ -147,13 +159,14 @@ export default function WishlistImport({ character, dungeon, onImported, onClose
     <Panel id="player-wishlist-import" title={title} className="gw-import"
       description={`Plan ${character.name}'s upgrades with ChatGPT, Claude or any AI. Nothing here calls an AI or costs anything.`}
       actions={<button type="button" className="gw-icon-btn gw-icon-btn--quiet" aria-label={`Close the ${title}`} onClick={onClose}><Icon name="close" size={16} /></button>}>
+      {header}
       <ol className="gw-import__steps">
         <li>
           <strong>Copy the planning prompt</strong> and paste it into your AI. It holds {character.name}'s level, class and gear, the wishlist so far, and the dungeon loot with item ids.
           <div className="gw-import__row">
-            <CopyButton label="Copy AI planning prompt" primary onManual={(value) => setManual({ title: 'Planning prompt', value })}
+            <CopyButton label="Copy AI planning prompt" primary disabled={copyDisabled} onManual={(value) => setManual({ title: 'Planning prompt', value })}
               load={async () => (await apiJson(`${base}/ai-prompt${promptIds.length ? `?dungeons=${promptIds.join(',')}` : ''}`)).prompt} />
-            {scopes ? (
+            {scopeControl ? null : scopes ? (
               <label className="gw-import__check">
                 <span>Scope</span>
                 <select value={scopeId} onChange={(event) => setScopeId(event.target.value)} aria-label="Planning scope">
@@ -164,6 +177,7 @@ export default function WishlistImport({ character, dungeon, onImported, onClose
               <label className="gw-import__check"><input type="checkbox" checked={onlyDungeon} onChange={(event) => setOnlyDungeon(event.target.checked)} /> Only {dungeon.name}</label>
             ) : null}
           </div>
+          {scopeControl}
         </li>
         <li>
           <strong>Paste the AI's JSON answer</strong> and check it. Nothing is saved until you confirm.

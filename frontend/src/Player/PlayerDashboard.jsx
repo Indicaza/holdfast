@@ -202,7 +202,17 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   const [searchOpen, setSearchOpen] = useState(false)
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
-  const [characterId, openCharacter] = useCharacterParam()
+  const [characterParam, openCharacterParam] = useCharacterParam()
+  // On Dungeons and the map, ?character= is the character the page is
+  // for (filters, wishlist, the dungeon modal), not an open armory: there
+  // the armory opens only when asked for (search), and never by a link.
+  const characterIsPageState = section === 'dungeons' || section === 'map'
+  const [armoryOnPage, setArmoryOnPage] = useState({ section: '', id: '' })
+  const characterId = characterIsPageState ? (armoryOnPage.section === section ? armoryOnPage.id : '') : characterParam
+  const openCharacter = useCallback((id) => {
+    if (characterIsPageState) setArmoryOnPage({ section, id })
+    else openCharacterParam(id)
+  }, [characterIsPageState, section, openCharacterParam])
   // On the map, a resource picked in search opens over the map.
   const [mapRequest, setMapRequest] = useState(null)
   const openOnMap = useCallback((source) => setMapRequest({ ...source }), [])

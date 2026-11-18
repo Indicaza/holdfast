@@ -18,6 +18,16 @@ const ability = (spellId, name, category, priority, summary, extra = {}) => ({
   details: `${summary} (fixture detail text)`, source: 'classic-reference', verifiedForForever: false, ...extra,
 })
 
+// A Classic reference item (sprint-2 contract: ReferenceItem). Ids and facts
+// are copied from the backend's reference-loot.json (Deadmines).
+const ref = (itemId, name, extra = {}) => ({
+  itemId, itemKey: `i:${itemId}`, name, qualityId: 2, iconFileDataId: null, slot: null, itemLevel: null, requiredLevel: null,
+  itemClass: 'Armor', itemSubclass: null, classes: null, bindType: 'BoE', armor: null, weapon: null, stats: null, setName: null,
+  kind: 'gear', observed: false, verifiedForForever: false,
+  provenance: [{ source: 'classic-reference', revision: 'fixture-ref-1', confidence: 'medium', tier: 'classic-reference', retrievedAt: '2026-11-01T00:00:00Z', url: null }],
+  ...extra,
+})
+
 const provenance = [{ source: 'classic-reference', revision: 'fixture-1', confidence: 'medium', retrievedAt: '2026-11-01T00:00:00Z', url: null }]
 
 export const FIXTURE_DUNGEON_LIST = Object.freeze([
@@ -25,13 +35,15 @@ export const FIXTURE_DUNGEON_LIST = Object.freeze([
     instanceId: 36, name: 'The Deadmines', type: 'party', journalInstanceId: 63, firstSeenAt: '2026-09-01T00:00:00Z', lastSeenAt: '2026-11-10T00:00:00Z',
     itemCount: 24, sourceCount: 6, lastEvidenceAt: '2026-11-10T00:00:00Z',
     atlas: { levelMin: 17, levelMax: 26, recommendedLevel: 20, zoneName: 'Westfall', zoneMapId: 1436, entrance: { mapId: 1436, x: 0.42, y: 0.72 },
-      artworkUrl: '', bossCount: 6, rareCount: 1, questCount: 5, kind: 'dungeon', lootSlots: ['Chest', 'Legs', 'One-Hand', 'Back'] },
+      artworkUrl: '', bossCount: 6, rareCount: 1, questCount: 5, kind: 'dungeon', lootSlots: ['Chest', 'Legs', 'One-Hand', 'Back'],
+      referenceLootCount: 14, referenceItemIds: [872, 1930, 2041, 2042, 2874, 5191, 5193, 5201, 5202, 6087, 10399, 10400, 10403], referenceSlots: ['Back', 'Chest', 'Legs', 'One-Hand', 'Two-Hand', 'Waist'] },
   },
   {
     instanceId: 43, name: 'Wailing Caverns', type: 'party', journalInstanceId: 240, firstSeenAt: '2026-09-01T00:00:00Z', lastSeenAt: '2026-11-08T00:00:00Z',
     itemCount: 19, sourceCount: 7, lastEvidenceAt: '2026-11-08T00:00:00Z',
     atlas: { levelMin: 17, levelMax: 24, recommendedLevel: 20, zoneName: 'The Barrens', zoneMapId: 1413, entrance: { mapId: 1413, x: 0.46, y: 0.36 },
-      artworkUrl: '', bossCount: 5, rareCount: 1, questCount: 6, kind: 'dungeon', lootSlots: ['Chest', 'Two-Hand', 'Feet'] },
+      artworkUrl: '', bossCount: 5, rareCount: 1, questCount: 6, kind: 'dungeon', lootSlots: ['Chest', 'Two-Hand', 'Feet'],
+      referenceLootCount: 1, referenceItemIds: [6505], referenceSlots: ['Two-Hand'] },
   },
   {
     instanceId: 389, name: 'Ragefire Chasm', type: 'party', journalInstanceId: 226, firstSeenAt: '2026-09-01T00:00:00Z', lastSeenAt: '2026-11-02T00:00:00Z',
@@ -55,13 +67,13 @@ export const FIXTURE_DEADMINES_DETAIL = Object.freeze({
   instance: { instanceId: 36, name: 'The Deadmines', type: 'party', journalInstanceId: 63, firstSeenAt: '2026-09-01T00:00:00Z', lastSeenAt: '2026-11-10T00:00:00Z' },
   difficulties: { 1: 'Normal' },
   sources: [
-    { key: 'boss:rhahk\'zor', kind: 'boss', boss: true, name: 'Rhahk\'Zor', items: [item(872, 'Rockslicer', { slot: 'Two-Hand', itemClass: 'Weapon', itemSubclass: 'Axe', itemLevel: 22 })] },
+    { key: 'boss:rhahk\'zor', kind: 'boss', boss: true, name: 'Rhahk\'Zor', items: [item(872, 'Rockslicer', { slot: 'Two-Hand', itemClass: 'Weapon', itemSubclass: 'Two-Handed Axes', itemLevel: 21, requiredLevel: 16, qualityId: 2 })] },
     { key: 'boss:edwin vancleef', kind: 'boss', boss: true, name: 'Edwin VanCleef', items: [
-      item(5193, 'Cape of the Brotherhood', { slot: 'Back', itemSubclass: 'Cloth', itemLevel: 24 }),
-      item(5191, 'Cruel Barb', { slot: 'One-Hand', itemClass: 'Weapon', itemSubclass: 'Sword', itemLevel: 24 }),
-      item(10399, 'Blackened Defias Armor', { itemLevel: 24 }),
+      item(5193, 'Cape of the Brotherhood', { slot: 'Back', itemSubclass: 'Cloth', itemLevel: 25, requiredLevel: 20 }),
+      item(5191, 'Cruel Barb', { slot: 'One-Hand', itemClass: 'Weapon', itemSubclass: 'One-Handed Swords', itemLevel: 24, requiredLevel: 19 }),
+      item(10399, 'Blackened Defias Armor', { itemLevel: 24, requiredLevel: 19 }),
     ] },
-    { key: 'unknown', kind: 'unknown', boss: false, name: null, items: [item(1937, 'Buzz Saw', { slot: 'One-Hand', itemClass: 'Weapon', itemSubclass: 'Sword', confidence: 'reported' })] },
+    { key: 'unknown', kind: 'unknown', boss: false, name: null, items: [item(1937, 'Buzz Saw', { slot: 'One-Hand', itemClass: 'Weapon', itemSubclass: 'One-Handed Swords', confidence: 'reported' })] },
   ],
   changes: [],
   evidence: { note: 'Sightings are loot that was offered, not items anyone received.' },
@@ -72,25 +84,90 @@ export const FIXTURE_DEADMINES_DETAIL = Object.freeze({
     bosses: [
       { encounterId: 2741, npcId: 644, name: 'Rhahk\'Zor', portraitUrl: '', floorId: 1, mapPosition: { x: 0.22, y: 0.31 },
         abilities: [ability(6304, 'Rhahk\'Zor Slam', 'tank-danger', 'high', 'Heavy hit that stuns the tank for 3 seconds.')],
-        loot: ['i:872'], strategy: { tank: 'Face him away from the group.', summary: 'Tank and spank.' }, provenance },
-      { encounterId: 2746, npcId: 639, name: 'Edwin VanCleef', portraitUrl: '', floorId: 1, mapPosition: { x: 0.81, y: 0.64 },
+        loot: ['i:872'], strategy: { tank: 'Face him away from the group.', summary: 'Tank and spank.' }, provenance,
+        referenceLoot: [ref(872, 'Rockslicer', { slot: 'Two-Hand', itemClass: 'Weapon', itemSubclass: 'Two-Handed Axes', itemLevel: 21, requiredLevel: 16, bindType: 'BoP',
+          iconFileDataId: 135419, weapon: { minDamage: 36, maxDamage: 55, speed: 3.3, dps: 13.8 }, stats: [{ stat: 'Strength', value: 7 }], observed: true, verifiedForForever: true })] },
+      { encounterId: 2744, npcId: 647, name: 'Captain Greenskin', portraitUrl: '', floorId: 1, mapPosition: { x: 0.6, y: 0.4 },
+        abilities: [ability(5208, 'Poisoned Harpoon', 'interrupt', 'high', '2s cast · interruptible')], loot: [], strategy: null, provenance,
+        referenceLoot: [
+          ref(5201, 'Emberstone Staff', { qualityId: 3, iconFileDataId: 135150, slot: 'Two-Hand', itemClass: 'Weapon', itemSubclass: 'Staves', itemLevel: 23, requiredLevel: 18, bindType: 'BoP',
+            weapon: { minDamage: 47, maxDamage: 71, speed: 3, dps: 19.7 }, stats: [{ stat: 'Spirit', value: 5 }, { stat: 'Stamina', value: 5 }, { stat: 'Intellect', value: 8 }] }),
+          ref(10403, 'Blackened Defias Belt', { iconFileDataId: 132515, slot: 'Waist', itemSubclass: 'Leather', itemLevel: 22, requiredLevel: 17, armor: 45,
+            stats: [{ stat: 'Strength', value: 5 }], setName: 'Defias Leather', kind: 'set' }),
+        ] },
+      { encounterId: 2747, npcId: 639, name: 'Edwin VanCleef', portraitUrl: '', floorId: 1, mapPosition: { x: 0.81, y: 0.64 },
         abilities: [
           ability(5915, 'Thrash', 'tank-danger', 'medium', 'Extra attacks against the tank.'),
           ability(6253, 'Summon Blackguards', 'special-mechanic', 'high', 'Calls two Blackguards at half health. Crowd-control one.'),
           ability(9128, 'Battle Shout', 'interrupt', 'low', 'Not interruptible in Classic.', { interruptible: false }),
         ],
-        loot: ['i:5193', 'i:5191', 'i:10399'], strategy: { healer: 'Save mana for the adds.', dps: 'Kill the Blackguards first.' }, provenance },
-      { encounterId: 2744, npcId: 642, name: 'Sneed\'s Shredder', portraitUrl: '', floorId: 1, mapPosition: null, abilities: [], loot: [], strategy: {}, provenance },
+        loot: ['i:5193', 'i:5191', 'i:10399'], strategy: { healer: 'Save mana for the adds.', dps: 'Kill the Blackguards first.' }, provenance,
+        referenceLoot: [
+          ref(5191, 'Cruel Barb', { qualityId: 3, iconFileDataId: 135325, slot: 'One-Hand', itemClass: 'Weapon', itemSubclass: 'One-Handed Swords', itemLevel: 24, requiredLevel: 19, bindType: 'BoP',
+            weapon: { minDamage: 30, maxDamage: 57, speed: 2.8, dps: 15.5 }, stats: [], observed: true, verifiedForForever: true }),
+          ref(5193, 'Cape of the Brotherhood', { qualityId: 3, iconFileDataId: 133760, slot: 'Back', itemSubclass: 'Cloth', itemLevel: 25, requiredLevel: 20, bindType: 'BoP', armor: 21,
+            stats: [{ stat: 'Agility', value: 6 }, { stat: 'Stamina', value: 3 }], observed: true, verifiedForForever: true }),
+          ref(5202, 'Corsair\'s Overshirt', { qualityId: 3, iconFileDataId: 135012, slot: 'Chest', itemSubclass: 'Cloth', itemLevel: 24, requiredLevel: 19, bindType: 'BoP', armor: 42,
+            stats: [{ stat: 'Spirit', value: 11 }, { stat: 'Stamina', value: 5 }] }),
+          ref(10399, 'Blackened Defias Armor', { qualityId: 3, iconFileDataId: 132723, slot: 'Chest', itemSubclass: 'Leather', itemLevel: 24, requiredLevel: 19, bindType: 'BoP', armor: 92,
+            stats: [{ stat: 'Stamina', value: 11 }, { stat: 'Agility', value: 3 }, { stat: 'Strength', value: 4 }], setName: 'Defias Leather', kind: 'set', observed: true, verifiedForForever: true }),
+          ref(2874, 'An Unsent Letter', { qualityId: 1, iconFileDataId: 133471, slot: null, itemClass: 'Quest', itemSubclass: 'Quest', itemLevel: 16, requiredLevel: 16, bindType: 'BoP', stats: [], kind: 'other' }),
+        ] },
+      { encounterId: 2746, npcId: 645, name: 'Cookie', portraitUrl: '', floorId: 1, mapPosition: { x: 0.7, y: 0.5 },
+        abilities: [
+          ability(5174, 'Cookie\'s Cooking', 'healer-danger', 'high', 'Heals Cookie for a large amount. Interrupt or dispel.', { interruptible: true }),
+          ability(6306, 'Acid Splash', 'positioning', 'medium', 'Splashes acid in front of him.', { source: 'forever-reference', verifiedForForever: true }),
+        ],
+        loot: [], strategy: null, provenance },
+      { encounterId: null, npcId: 642, name: 'Sneed\'s Shredder', portraitUrl: '', floorId: 1, mapPosition: null, abilities: [], loot: [], strategy: {}, provenance },
     ],
-    creatures: [],
-    rares: [{ npcId: 596, name: 'Brainwashed Noble', floorId: 1, mapPosition: { x: 0.12, y: 0.2 } }],
+    creatures: [
+      { npcId: 4418, name: 'Defias Wizard', levelMin: 18, levelMax: 19, count: 2, abilities: [
+        ability(113, 'Chains of Ice', 'crowd-control', 'high', '1.5s cast · interruptible · root · Magic effect', { interruptible: true }),
+        ability(9053, 'Fireball', 'interrupt', 'high', '3s cast · interruptible'),
+      ] },
+    ],
+    rares: [{ npcId: 596, name: 'Brainwashed Noble', floorId: 1, mapPosition: { x: 0.12, y: 0.2 }, referenceLoot: [] }],
+    dungeonLoot: [
+      { ...ref(10400, 'Blackened Defias Leggings', { iconFileDataId: 134592, slot: 'Legs', itemSubclass: 'Leather', itemLevel: 18, requiredLevel: 13, armor: 65,
+        stats: [{ stat: 'Strength', value: 3 }, { stat: 'Agility', value: 3 }], setName: 'Defias Leather', kind: 'set' }), sourceName: null, npcId: null },
+      { ...ref(1930, 'Stonemason Cloak', { iconFileDataId: 133763, slot: 'Back', itemSubclass: 'Cloth', itemLevel: 18, requiredLevel: 13, armor: 16, stats: [{ stat: 'Stamina', value: 3 }], kind: 'boe' }),
+        sourceName: 'Defias Miner', npcId: 598 },
+    ],
+    referenceVersion: { dataset: 'atlas-reference-loot', revision: '1.15.8.63829 + 6ffb62ab', importedAt: '2026-11-01T00:00:00Z' },
     quests: [
-      { questId: 166, name: 'The Defias Brotherhood', level: 22, minLevel: 14, faction: 'Alliance', giver: 'Gryan Stoutmantle' },
-      { questId: 2040, name: 'Underground Assault', level: 20, minLevel: 15, faction: 'Alliance', giver: 'Shoni the Shilent' },
+      { questId: 166, name: 'The Defias Brotherhood', level: 22, minLevel: 14, faction: 'alliance', giver: { npcId: 234, name: 'Gryan Stoutmantle' },
+        objective: 'Bring the head of Edwin VanCleef to Gryan Stoutmantle.', prerequisites: [{ questId: 155, name: 'The Defias Brotherhood' }],
+        rewards: [
+          { ...ref(6087, 'Chausses of Westfall', { qualityId: 3, iconFileDataId: 134583, slot: 'Legs', itemSubclass: 'Mail', itemLevel: 24, armor: 173, stats: [{ stat: 'Stamina', value: 5 }, { stat: 'Strength', value: 11 }], kind: 'quest-reward', bindType: 'BoP' }), choice: true },
+          { ...ref(2041, 'Tunic of Westfall', { qualityId: 3, iconFileDataId: 132722, slot: 'Chest', itemSubclass: 'Leather', itemLevel: 24, armor: 92, stats: [{ stat: 'Stamina', value: 5 }, { stat: 'Agility', value: 11 }], kind: 'quest-reward', bindType: 'BoP' }), choice: true },
+          { ...ref(2042, 'Staff of Westfall', { qualityId: 3, iconFileDataId: 135147, slot: 'Two-Hand', itemClass: 'Weapon', itemSubclass: 'Staves', itemLevel: 24,
+            weapon: { minDamage: 49, maxDamage: 74, speed: 3, dps: 20.5 }, stats: [{ stat: 'Spirit', value: 11 }, { stat: 'Intellect', value: 5 }], kind: 'quest-reward', bindType: 'BoP' }), choice: true },
+        ],
+        location: { zoneName: 'Westfall', mapId: 1436, x: 0.565, y: 0.47 }, provenance },
+      { questId: 2040, name: 'Underground Assault', level: 20, minLevel: 15, faction: 'alliance', giver: { npcId: 6579, name: 'Shoni the Shilent' } },
     ],
     provenance,
   },
 })
+
+// The dungeon as the sprint-1 backend (current main) sends it: atlas, but
+// none of the sprint-2 fields (reference loot, dungeon loot, quest details).
+const omit = (value, keys) => Object.fromEntries(Object.entries(value).filter(([key]) => !keys.includes(key)))
+const sprintOneAtlas = omit(FIXTURE_DEADMINES_DETAIL.atlas, ['dungeonLoot', 'referenceVersion'])
+export const FIXTURE_DETAIL_SPRINT1 = Object.freeze({
+  ...FIXTURE_DEADMINES_DETAIL,
+  atlas: {
+    ...sprintOneAtlas,
+    bosses: sprintOneAtlas.bosses.map((boss) => omit(boss, ['referenceLoot'])),
+    rares: sprintOneAtlas.rares.map((rare) => omit(rare, ['referenceLoot'])),
+    quests: sprintOneAtlas.quests.map(({ questId, name, level, minLevel, faction, giver }) => ({ questId, name, level, minLevel, faction, giver })),
+  },
+})
+
+export const FIXTURE_DUNGEON_LIST_SPRINT1 = Object.freeze(FIXTURE_DUNGEON_LIST.map((entry) => (
+  entry.atlas ? { ...entry, atlas: omit(entry.atlas, ['referenceLootCount', 'referenceItemIds', 'referenceSlots']) } : entry
+)))
 
 // The same dungeon as today's backend sends it: no atlas.
 export const FIXTURE_DETAIL_WITHOUT_ATLAS = Object.freeze({ ...FIXTURE_DEADMINES_DETAIL, atlas: undefined })
@@ -102,6 +179,7 @@ export const FIXTURE_WISHLIST = Object.freeze({
   items: [
     { itemKey: 'i:5193', itemId: 5193, state: 'wanted', priority: 'high', note: '', item: { name: 'Cape of the Brotherhood' }, sources: [{ instanceId: 36, dungeon: 'The Deadmines', source: 'Edwin VanCleef' }] },
     { itemKey: 'i:5191', itemId: 5191, state: 'wanted', priority: 'normal', note: '', item: { name: 'Cruel Barb' }, sources: [{ instanceId: 36, dungeon: 'The Deadmines', source: 'Edwin VanCleef' }] },
+    { itemKey: 'i:5202', itemId: 5202, state: 'wanted', priority: 'normal', note: '', item: { name: 'Corsair\'s Overshirt' }, sources: [] },
     { itemKey: 'i:6505', itemId: 6505, state: 'acquired', priority: 'normal', note: '', item: { name: 'Crescent Staff' }, sources: [{ instanceId: 43, dungeon: 'Wailing Caverns', source: 'Verdan' }] },
   ],
 })

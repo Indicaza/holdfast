@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { navigate } from '../../Navigation/navigation.js'
 import { resolveCharacter } from '../lootModel.js'
 import { onServerKey } from '../playerModel.js'
-import { readAtlasQuery, withAtlasOpen } from './atlasModel.js'
+import { readAtlasQuery, withAtlasOpen, withCharacter } from './atlasModel.js'
 import DungeonDetailModal from './DungeonDetailModal.jsx'
 import { useDungeonList } from './useAtlasData.js'
 
@@ -21,9 +21,10 @@ export default function AtlasModalHost({ server = '', queryString = '', characte
   const list = useDungeonList()
   const onNavigate = useCallback(({ section = '', boss = '' }) => navigate(withAtlasOpen(here(), { open: query.open, section, boss }), { preserveScroll: true, replace: true }), [query.open])
   const onClose = useCallback(() => navigate(withAtlasOpen(here(), { open: null }), { preserveScroll: true }), [])
+  const onCharacter = useCallback((id) => navigate(withCharacter(here(), id), { preserveScroll: true, replace: true }), [])
   if (!query.open) return null
   return (
-    <DungeonDetailModal key={query.open} instanceId={query.open} dungeons={list.dungeons} character={character} server={server}
+    <DungeonDetailModal key={query.open} instanceId={query.open} dungeons={list.dungeons} character={character} characters={mine} onCharacter={onCharacter} server={server}
       section={query.section} boss={query.boss} onNavigate={onNavigate} onClose={onClose} showMapLink={showMapLink} />
   )
 }
