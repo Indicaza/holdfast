@@ -495,7 +495,11 @@ function weaponText(weapon) {
 // An item's facts as [label, value] lines, from whatever the record holds
 // (catalog or reference). Unknown facts are left out, never guessed.
 export function itemFacts(item = {}) {
-  const type = [item.itemSubclass, item.itemClass && item.itemClass !== item.itemSubclass ? String(item.itemClass).toLowerCase() : ''].filter(Boolean).join(' ')
+  // Subclasses are the client's names ("One-Handed Swords", "Plate"):
+  // armour gets "armor" after it, anything else is shown as is.
+  const subclass = item.itemSubclass || ''
+  const type = String(item.itemClass || '').toLowerCase() === 'armor' && subclass && !/^(miscellaneous|shields?)$/i.test(subclass)
+    ? `${subclass} armor` : subclass || item.itemClass || ''
   const stats = Array.isArray(item.stats) ? item.stats.filter((line) => line?.stat && finite(line.value) !== null).map((line) => `${line.value > 0 ? '+' : ''}${line.value} ${line.stat}`).join(', ') : ''
   return [
     ['Slot', item.slot || ''],

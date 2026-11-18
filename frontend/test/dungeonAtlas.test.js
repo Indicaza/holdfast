@@ -141,7 +141,7 @@ test('explore filters: search, zone, kind, slot, wishlist, fit and level range',
 })
 
 test('abilities group by category with the important first; unverified ones say so', () => {
-  const vancleef = FIXTURE_DEADMINES_DETAIL.atlas.bosses[1]
+  const vancleef = FIXTURE_DEADMINES_DETAIL.atlas.bosses.find((boss) => boss.name === 'Edwin VanCleef')
   const groups = groupAbilities([...vancleef.abilities, { name: 'Odd', category: 'unknown-thing', priority: 'low' }])
   assert.deepEqual(groups.map((group) => group.category), ['interrupt', 'tank-danger', 'special-mechanic'])
   assert.deepEqual(groups.at(-1).abilities.map((ability) => ability.name), ['Summon Blackguards', 'Odd'])
@@ -155,15 +155,16 @@ test('boss loot and map markers', () => {
   const [rhahk, vancleef, shredder] = [boss('Rhahk\'Zor'), boss('Edwin VanCleef'), boss('Sneed\'s Shredder')]
   // Observed loot first, then reference-only items; an item that is both stays one row.
   const rows = bossLoot(vancleef, FIXTURE_DEADMINES_DETAIL)
-  assert.deepEqual(rows.map((row) => row.item.name), ['Cape of the Brotherhood', 'Cruel Barb', 'Blackened Defias Armor', 'Corsair\'s Overshirt'])
-  assert.deepEqual(rows.map((row) => [row.observed, row.reference]), [[true, true], [true, true], [true, true], [false, true]])
+  assert.deepEqual(rows.map((row) => row.item.name), ['Cape of the Brotherhood', 'Cruel Barb', 'Blackened Defias Armor', 'Corsair\'s Overshirt', 'An Unsent Letter'])
+  assert.deepEqual(rows.map((row) => [row.observed, row.reference]), [[true, true], [true, true], [true, true], [false, true], [false, true]])
   // Reference facts fill what the observed record lacks; observed facts win.
-  assert.equal(rows[0].item.armor, 24)
-  assert.equal(rows[0].item.itemLevel, 24)
+  assert.equal(rows[0].item.armor, 21)
+  assert.equal(rows[0].item.itemLevel, 25)
   assert.equal(rows[2].item.setName, 'Defias Leather')
-  assert.deepEqual(bossLoot(rhahk, FIXTURE_DEADMINES_DETAIL).map((row) => row.item.itemId), [872, 5187])
+  assert.deepEqual(bossLoot(rhahk, FIXTURE_DEADMINES_DETAIL).map((row) => row.item.itemId), [872])
+  assert.equal(bossLoot(rhahk, FIXTURE_DEADMINES_DETAIL)[0].reference, true)
   // The sprint-1 backend: no referenceLoot, observed loot only.
-  assert.deepEqual(bossLoot(FIXTURE_DETAIL_SPRINT1.atlas.bosses[1], FIXTURE_DETAIL_SPRINT1).map((row) => row.item.itemId), [5193, 5191, 10399])
+  assert.deepEqual(bossLoot(FIXTURE_DETAIL_SPRINT1.atlas.bosses.find((entry) => entry.name === 'Edwin VanCleef'), FIXTURE_DETAIL_SPRINT1).map((row) => row.item.itemId), [5193, 5191, 10399])
   assert.deepEqual(bossLoot(shredder, FIXTURE_DEADMINES_DETAIL), [])
   assert.deepEqual(markerPosition(rhahk.mapPosition), { left: '22.00%', top: '31.00%' })
   assert.equal(markerPosition(shredder.mapPosition), null)
@@ -239,6 +240,7 @@ test('dungeon items: boss, trash and quest-reward rows, each item once', () => {
   assert.equal(staff.sourceKind, 'quest')
   assert.equal(staff.choice, true)
   assert.equal(rows.find((row) => row.item.itemId === 1937).sourceKind, 'other')
+  assert.equal(rows.find((row) => row.item.itemId === 1930).source, 'Defias Miner')
   assert.deepEqual(dungeonItems(FIXTURE_DETAIL_WITHOUT_ATLAS).map((row) => row.item.itemId), [872, 5193, 5191, 10399, 1937])
 })
 
@@ -257,12 +259,15 @@ test('gear targets: class restriction and required level within the dungeon rang
 })
 
 test('item facts list only what is known', () => {
-  const [, vancleef] = FIXTURE_DEADMINES_DETAIL.atlas.bosses
+  const vancleef = FIXTURE_DEADMINES_DETAIL.atlas.bosses.find((boss) => boss.name === 'Edwin VanCleef')
   const barb = vancleef.referenceLoot.find((item) => item.itemId === 5191)
   assert.deepEqual(itemFacts(barb), [
-    ['Slot', 'One-Hand'], ['Type', 'Sword weapon'], ['Item level', 24], ['Requires level', 19],
-    ['Weapon', '30–56 damage, speed 2.80, 15.4 dps'], ['Stats', '+12 Strength'], ['Binds', 'Binds when picked up'],
+    ['Slot', 'One-Hand'], ['Type', 'One-Handed Swords'], ['Item level', 24], ['Requires level', 19],
+    ['Weapon', '30–57 damage, speed 2.80, 15.5 dps'], ['Binds', 'Binds when picked up'],
   ])
+  const cape = vancleef.referenceLoot.find((item) => item.itemId === 5193)
+  assert.deepEqual(itemFacts(cape).slice(0, 2), [['Slot', 'Back'], ['Type', 'Cloth armor']])
+  assert.deepEqual(itemFacts({ itemClass: 'Armor', itemSubclass: 'Shields' })[0], ['Type', 'Shields'])
   assert.deepEqual(itemFacts({}), [])
   assert.equal(bindText(1), 'Binds when picked up')
   assert.equal(bindText('BoE'), 'Binds when equipped')
