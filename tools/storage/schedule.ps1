@@ -30,7 +30,7 @@ $runner = Join-Path $Root "run-backup.ps1"
 @"
 `$ErrorActionPreference = "Continue"
 `$log = Join-Path "$Root\logs" ("backup-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
-& "$Node" "$tools\backup.mjs" --ssh "$SshTarget" --root "$Root" --keep $Keep *>> `$log
+& "$Node" "$tools\pullBackup.mjs" --ssh "$SshTarget" --root "$Root" --keep $Keep *>> `$log
 if (`$LASTEXITCODE -ne 0) { exit `$LASTEXITCODE }
 & "$Node" "$tools\archive.mjs" export --root "$Root" *>> `$log
 exit `$LASTEXITCODE
