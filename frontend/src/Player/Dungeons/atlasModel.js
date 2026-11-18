@@ -454,17 +454,62 @@ function classAllows(item, character) {
   return item.classes.some((entry) => String(entry).trim().toLowerCase() === name)
 }
 
+// Classic (1.12) armour and weapon proficiencies: the types each class can
+// ever train. Mail (hunters, shamans) and plate (warriors, paladins) need
+// level 40. Not verified on Forever; an unknown class or type is allowed.
+const ARMOR_TYPES = { cloth: 'cloth', leather: 'leather', mail: 'mail', plate: 'plate', shields: 'shield', shield: 'shield',
+  librams: 'libram', idols: 'idol', totems: 'totem' }
+const CLASS_ARMOR = {
+  warrior: ['cloth', 'leather', 'mail', 'plate', 'shield'], paladin: ['cloth', 'leather', 'mail', 'plate', 'shield', 'libram'],
+  hunter: ['cloth', 'leather', 'mail'], rogue: ['cloth', 'leather'], priest: ['cloth'], shaman: ['cloth', 'leather', 'mail', 'shield', 'totem'],
+  mage: ['cloth'], warlock: ['cloth'], druid: ['cloth', 'leather', 'idol'],
+}
+const LATE_ARMOR = { hunter: 'mail', shaman: 'mail', warrior: 'plate', paladin: 'plate' }
+const WEAPON_TYPES = ['one-handed axes', 'two-handed axes', 'one-handed maces', 'two-handed maces', 'one-handed swords', 'two-handed swords',
+  'polearms', 'staves', 'daggers', 'fist weapons', 'bows', 'guns', 'crossbows', 'thrown', 'wands']
+const CLASS_WEAPONS = {
+  warrior: WEAPON_TYPES.filter((type) => type !== 'wands'),
+  paladin: ['one-handed axes', 'two-handed axes', 'one-handed maces', 'two-handed maces', 'one-handed swords', 'two-handed swords', 'polearms'],
+  hunter: ['one-handed axes', 'two-handed axes', 'one-handed swords', 'two-handed swords', 'polearms', 'staves', 'daggers', 'fist weapons',
+    'bows', 'guns', 'crossbows', 'thrown'],
+  rogue: ['one-handed maces', 'one-handed swords', 'daggers', 'fist weapons', 'bows', 'guns', 'crossbows', 'thrown'],
+  priest: ['one-handed maces', 'staves', 'daggers', 'wands'],
+  shaman: ['one-handed axes', 'two-handed axes', 'one-handed maces', 'two-handed maces', 'staves', 'daggers', 'fist weapons'],
+  mage: ['one-handed swords', 'staves', 'daggers', 'wands'],
+  warlock: ['one-handed swords', 'staves', 'daggers', 'wands'],
+  druid: ['one-handed maces', 'two-handed maces', 'staves', 'daggers', 'fist weapons'],
+}
+
+export function proficiencyAllows(item = {}, character = null, horizon = null) {
+  const cls = String(character?.className || '').trim().toLowerCase()
+  if (!CLASS_ARMOR[cls]) return true
+  const subclass = String(item.itemSubclass || '').trim().toLowerCase()
+  const itemClass = String(item.itemClass || '').trim().toLowerCase()
+  const armor = ARMOR_TYPES[subclass]
+  if (armor && itemClass !== 'weapon') {
+    if (!CLASS_ARMOR[cls].includes(armor)) return false
+    // Mail or plate is trained at 40: only gear needed at or after it.
+    if (LATE_ARMOR[cls] === armor) {
+      return Math.max(finite(character?.level) || 0, finite(horizon) || 0) >= 40
+    }
+    return true
+  }
+  if (WEAPON_TYPES.includes(subclass)) return CLASS_WEAPONS[cls].includes(subclass)
+  return true
+}
+
 // Gear a character can use from this dungeon: equippable, not restricted
-// to another class, and a required level the character has or will reach
-// within the dungeon's level range. Only facts the item carries are
-// checked; armor types and stats are never used to guess fit.
+// to another class, of an armour or weapon type the class can use (Classic
+// proficiencies, proficiencyAllows), and a required level the character has
+// or will reach within the dungeon's level range. Stats are never used to
+// guess fit.
 export function gearTargets(rows = [], character = null, atlasInput = null) {
   if (!character) return []
   const atlas = normalizeAtlas(atlasInput)
   const level = finite(character.level)
   const horizon = Math.max(level || 0, atlas.levelMax || 0) || null
   return rows.filter(({ item }) => {
-    if (!isEquippable(item) || !classAllows(item, character)) return false
+    if (!isEquippable(item) || !classAllows(item, character) || !proficiencyAllows(item, character, horizon)) return false
     const required = finite(item.requiredLevel)
     return !(required && horizon && required > horizon)
   }).map((row) => {

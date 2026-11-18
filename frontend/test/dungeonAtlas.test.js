@@ -258,6 +258,23 @@ test('gear targets: class restriction and required level within the dungeon rang
   assert.deepEqual(gearTargets(rows, null), [])
 })
 
+test('gear targets: armour and weapon types the class can use (Classic proficiencies)', () => {
+  const item = (id, name, itemClass, itemSubclass, requiredLevel = 30, slot = 'Chest') => ({ item: { itemKey: `i:${id}`, name, itemClass, itemSubclass, requiredLevel, slot } })
+  const rows = [
+    item(1, 'Leather vest', 'Armor', 'Leather'), item(2, 'Mail hauberk', 'Armor', 'Mail'), item(3, 'Plate helm', 'Armor', 'Plate', 44, 'Head'),
+    item(4, 'Shield', 'Armor', 'Shields', 30, 'Off Hand'), item(5, 'Dagger', 'Weapon', 'Daggers', 30, 'One-Hand'),
+    item(6, 'Great axe', 'Weapon', 'Two-Handed Axes', 30, 'Two-Hand'), item(7, 'Mace', 'Weapon', 'One-Handed Maces', 30, 'Main Hand'),
+    item(8, 'Orb', 'Armor', 'Miscellaneous', 30, 'Held In Off-hand'), item(9, 'Ring', 'Armor', 'Miscellaneous', 30, 'Finger'),
+  ]
+  const names = (character, levelMax = 48) => gearTargets(rows, character, { levelMin: 29, levelMax }).map((row) => row.item.name).sort()
+  assert.deepEqual(names({ name: 'Mira', level: 31, className: 'Rogue' }), ['Dagger', 'Leather vest', 'Mace', 'Orb', 'Ring'])
+  assert.deepEqual(names({ name: 'Bo', level: 31, className: 'Warrior' }, 38), ['Dagger', 'Great axe', 'Leather vest', 'Mace', 'Mail hauberk', 'Orb', 'Ring', 'Shield'],
+    'plate waits for level 40')
+  assert.ok(names({ name: 'Bo', level: 41, className: 'Warrior' }).includes('Plate helm'))
+  assert.ok(!names({ name: 'Hu', level: 31, className: 'Hunter' }, 38).includes('Mail hauberk'), 'hunters wear mail from 40')
+  assert.deepEqual(names({ name: 'X', level: 31, className: '' }).length, rows.length, 'unknown class: nothing filtered by type')
+})
+
 test('item facts list only what is known', () => {
   const vancleef = FIXTURE_DEADMINES_DETAIL.atlas.bosses.find((boss) => boss.name === 'Edwin VanCleef')
   const barb = vancleef.referenceLoot.find((item) => item.itemId === 5191)

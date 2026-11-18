@@ -162,7 +162,7 @@ export function PrepareView({ entry, atlas, detail, character, server, role, onR
           <>
             <p className="gw-muted">
               Items {character.name} ({[character.className, character.level ? `level ${character.level}` : null].filter(Boolean).join(', ') || 'class unknown'}) can use, from
-              {' '}{atlas.levelMax ? `now up to level ${atlas.levelMax}` : 'their current level'}: class restrictions and required level only.
+              {' '}{atlas.levelMax ? `now up to level ${atlas.levelMax}` : 'their current level'}: class restrictions, the class's armour and weapon types (Classic rules) and required level.
               {wanted.length ? ` ${wanted.length} already on the wishlist.` : ''}
             </p>
             <LootList rows={ordered} limit={8} empty={items.length ? `Nothing here that ${character.name} can use.` : 'No loot known for this dungeon yet.'} {...lootProps} />
