@@ -138,3 +138,39 @@ describe('the modal from the URL', () => {
     expect(screen.getByRole('dialog')).toBeTruthy()
   })
 })
+
+// Production, Nov 2026: the image lacked the atlas datasets and the list
+// answered 500 loot_dungeons_unavailable. The page must say what failed and
+// let the player try again.
+describe('when the dungeon list fails', () => {
+  test('the error names the HTTP status and code, and Try again loads the list', async () => {
+    let failing = true
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockApi([
+      { path: '/api/player/loot/dungeons', reply: () => (failing ? { status: 500, body: { error: 'loot_dungeons_unavailable' } } : { dungeons: FIXTURE_DUNGEON_LIST }) },
+      { path: /^\/api\/player\/loot\/dungeons\/\d+$/, reply: () => ({ status: 404, body: { error: 'not_found' } }) },
+      { path: /^\/api\/player\/wishlists\/[^/]+$/, reply: () => ({ limit: 50, items: [] }) },
+      { path: '/api/player/dungeon-runs', reply: () => ({ runs: [], comparisons: [], filters: {} }) },
+    ])
+    renderWithSession(<Page />)
+    const alert = await screen.findByRole('alert', {}, { timeout: 5000 })
+    expect(alert.textContent).toContain('The dungeon list could not be loaded (HTTP 500, loot_dungeons_unavailable).')
+    expect(errors).toHaveBeenCalled()
+    failing = false
+    fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByRole('link', { name: /^The Deadmines/ })).toBeTruthy()
+  })
+
+  test('a degraded list (observed loot unavailable) still shows the reference dungeons and says so', async () => {
+    const atlasOnly = FIXTURE_DUNGEON_LIST.filter((entry) => entry.atlas)
+    mockApi([
+      { path: '/api/player/loot/dungeons', reply: () => ({ dungeons: [], atlasDungeons: atlasOnly, degraded: ['catalog'] }) },
+      { path: /^\/api\/player\/loot\/dungeons\/\d+$/, reply: () => ({ status: 404, body: { error: 'not_found' } }) },
+      { path: /^\/api\/player\/wishlists\/[^/]+$/, reply: () => ({ limit: 50, items: [] }) },
+      { path: '/api/player/dungeon-runs', reply: () => ({ runs: [], comparisons: [], filters: {} }) },
+    ])
+    renderWithSession(<Page />)
+    expect(await screen.findByRole('link', { name: /^The Deadmines/ })).toBeTruthy()
+    expect(screen.getByRole('note').textContent).toContain('showing the reference atlas only')
+  })
+})

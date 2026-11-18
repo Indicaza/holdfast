@@ -13,6 +13,30 @@ import { deleteWishlistItem, ownedCharacterInDatabase, patchWishlistItem, putWis
 
 const WRITE_CODES = { invalid: 400, "not-found": 404, full: 409, "unknown-item": 422 };
 
+// The dungeon list: the observed loot catalog with the static atlas joined
+// in. The catalog and its item slots only enrich the atlas, so when either
+// cannot be read the atlas list is still served, the error is logged, and
+// `degraded` names what is missing. The atlas itself failing still throws.
+export function readDungeonList({ readCatalog = readLootDungeons, readSlots = () => withGuildDatabase((db) => lootSlotsByInstanceInDatabase(db)) } = {}) {
+  const degraded = [];
+  let catalog = { schemaVersion: 1, revision: 0, dungeons: [] };
+  try {
+    catalog = readCatalog();
+  } catch (error) {
+    console.error("Unable to read the loot catalog; serving the dungeon atlas without it", error);
+    degraded.push("catalog");
+  }
+  let slots = new Map();
+  try {
+    slots = readSlots();
+  } catch (error) {
+    console.error("Unable to read loot slots; serving the dungeon atlas without them", error);
+    degraded.push("lootSlots");
+  }
+  const list = withAtlasList(catalog, slots);
+  return degraded.length ? { ...list, degraded } : list;
+}
+
 // Routes of the signed-in player's workspace (mounted inside /api/player,
 // after its sign-in check). The catalog is shared and names no one; a
 // wishlist is read and written only for a character of the session's own
@@ -62,7 +86,7 @@ export function createPlayerLootRouter() {
   };
 
   // Each dungeon also carries `atlas` (docs/dungeon-atlas-contract.md).
-  router.get("/loot/dungeons", read("loot_dungeons", () => withAtlasList(readLootDungeons(), withGuildDatabase((db) => lootSlotsByInstanceInDatabase(db)))));
+  router.get("/loot/dungeons", read("loot_dungeons", () => readDungeonList()));
   router.get("/loot/dungeons/:instanceId", read("loot_dungeon", (req) => withGuildDatabase((db) =>
     withAtlasDetail(readLootDungeonInDatabase(db, req.params.instanceId, { wishlisted: wishlisted(db, req) }), req.params.instanceId,
       lootCatalogRevisionInDatabase(db)))));

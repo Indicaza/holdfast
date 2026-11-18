@@ -91,5 +91,14 @@ export function useLiveResource(url, { topics = [], matches = null, select = nul
     if (url && !options.current.select) replaceResource(url, next)
   }, [url])
 
-  return { ...state, mutate }
+  // Fetches again now (a "Try again" button). A failed resource shows its
+  // loading state meanwhile; one on screen keeps its data.
+  const reload = useCallback(() => {
+    setState((current) => (current.status === 'error' || current.status === 'missing'
+      ? { status: 'loading', data: null, error: null, refreshing: false }
+      : current))
+    setVersion((current) => current + 1)
+  }, [])
+
+  return { ...state, mutate, reload }
 }

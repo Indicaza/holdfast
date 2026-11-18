@@ -302,6 +302,7 @@ describe('missing data', () => {
   test('a detail that fails to load says so', async () => {
     mockApi([])
     renderWithSession(<Modal dungeons={[]} />)
-    expect(await screen.findByText('This dungeon could not be loaded.')).toBeTruthy()
+    expect((await screen.findByRole('alert')).textContent).toContain('This dungeon could not be loaded (HTTP 404, not_found).')
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy()
   })
 })

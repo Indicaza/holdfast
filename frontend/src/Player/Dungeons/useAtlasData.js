@@ -47,7 +47,10 @@ export function useDungeonList() {
     return [...merged, ...fixtures.FIXTURE_DUNGEON_LIST.filter((entry) => !have.has(entry.instanceId))]
   }, [resource.data, fixtures])
   const status = fixtures && resource.status !== 'loading' ? 'ready' : resource.status
-  return { status, dungeons, fixtures: Boolean(fixtures) }
+  // `degraded`: what the server could not add (observed catalog, loot
+  // slots); the static atlas is still there.
+  const degraded = Array.isArray(resource.data?.degraded) ? resource.data.degraded : []
+  return { status, dungeons, fixtures: Boolean(fixtures), error: resource.error, reload: resource.reload, degraded }
 }
 
 export function useDungeonDetail(instanceId) {
@@ -60,7 +63,7 @@ export function useDungeonDetail(instanceId) {
     return resource.data.atlas ? resource.data : { ...resource.data, atlas: fixture.atlas }
   }, [resource.data, fixture])
   const status = fixture && resource.status !== 'loading' ? 'ready' : resource.status
-  return { status, data }
+  return { status, data, error: resource.error, reload: resource.reload }
 }
 
 // Several dungeons' details at once (for the explore cards' gear counts),

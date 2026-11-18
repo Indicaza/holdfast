@@ -16,6 +16,7 @@ import {
   filterDungeons,
   gearTargets,
   levelFit,
+  loadFailureDetail,
   readAtlasQuery,
   recommendDungeon,
   runHistory,
@@ -156,6 +157,9 @@ export default function DungeonExplore({ server, queryString = '', characters = 
   const mine = useMemo(() => characters.filter((entry) => onServerKey(entry, server)), [characters, server])
   const character = resolveCharacter(mine, query.character)
   const list = useDungeonList()
+  useEffect(() => {
+    if (list.status === 'error' || list.status === 'missing') console.error('The dungeon list could not be loaded', list.error)
+  }, [list.status, list.error])
   const wishlist = useWishlist(character?.id || '')
   const runs = useDungeonRuns({ server, character: character?.id || '', enabled: Boolean(character) })
   const [planning, setPlanning] = useState(false)
@@ -190,10 +194,15 @@ export default function DungeonExplore({ server, queryString = '', characters = 
   const setFilters = useCallback((filters) => go({ filters }), [go])
 
   if (list.status === 'loading') return <SkeletonRows rows={6} label="Loading dungeons" />
-  if (list.status === 'error' || list.status === 'missing') return <ErrorState>The dungeon list could not be loaded.</ErrorState>
+  if (list.status === 'error' || list.status === 'missing') {
+    return <ErrorState onRetry={list.reload}>The dungeon list could not be loaded{loadFailureDetail(list.error)}.</ErrorState>
+  }
 
   return (
     <div className="gw-stack gw-atlas">
+      {list.degraded.length ? (
+        <p className="gw-callout gw-callout--warning" role="note">Observed loot could not be loaded right now: showing the reference atlas only.</p>
+      ) : null}
       {list.fixtures ? <p className="gw-callout gw-callout--warning" role="note">Development fixture data is merged in (?atlasFixtures=1). Not real game data.</p> : null}
       <div className="gw-atlas__bar">
         <Filters filters={query.filters} options={options} characters={mine} character={character} onChange={setFilters} onCharacter={(id) => go({ character: id })} recommendedCount={recommendedCount} />
