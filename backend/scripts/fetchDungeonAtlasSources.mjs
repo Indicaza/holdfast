@@ -5,16 +5,24 @@
 //
 //   src/Atlas/data/sources/wago-classic-era.json   Blizzard client tables (Classic Era build) via wago.tools
 //   src/Atlas/data/sources/azerothcore.json        AzerothCore world DB (GPL-2.0) at a pinned commit
+//   src/Atlas/data/sources/azerothcore-creatures.json   spawns, ranks and creature spells (see Atlas/atlasContent.js)
+//   src/Atlas/data/sources/wago-classic-era-spells.json the client's facts for those spells
 //
 // Then run `node scripts/importDungeonAtlas.mjs` to re-normalize.
 //
-//   node scripts/fetchDungeonAtlasSources.mjs [--azerothcore-ref <sha>]
+//   node scripts/fetchDungeonAtlasSources.mjs [--azerothcore-ref <sha>] [--content-only] [--from <dir>]
+//
+// --content-only refreshes only the two content extracts. --from reads the
+// upstream files from a local directory instead of the network (wago tables
+// as <Table>.csv, AzerothCore tables as <table>.sql, scripts under cpp/ with
+// cpp/list.txt naming their repository paths).
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { VANILLA_INSTANCE_IDS, parseCsv, parseSqlInserts } from "../src/Atlas/atlasSources.js";
+import { extractCreatureContent, extractSpellContent } from "../src/Atlas/atlasContent.js";
+import { VANILLA_INSTANCE_IDS, parseCsv, parseScriptSpells, parseSqlInserts } from "../src/Atlas/atlasSources.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "src", "Atlas", "data", "sources");
@@ -23,7 +31,25 @@ const AC_REF = refArg > 0 ? process.argv[refArg + 1] : "6ffb62abb867dabb258de681
 const AC_BASE = `https://raw.githubusercontent.com/azerothcore/azerothcore-wotlk/${AC_REF}/data/sql/base/db_world/`;
 const WAGO = (table) => `https://wago.tools/db2/${table}/csv?product=wow_classic_era`;
 
+const fromArg = process.argv.indexOf("--from");
+const FROM = fromArg > 0 ? process.argv[fromArg + 1] : null;
+const CONTENT_ONLY = process.argv.includes("--content-only");
+const AC_RAW = `https://raw.githubusercontent.com/azerothcore/azerothcore-wotlk/${AC_REF}/`;
+const AC_LICENSE = "AzerothCore world database, GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk). A WotLK (3.3.5) emulator database: vanilla content as the emulator models it.";
+const WAGO_LICENSE = "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art.";
+
+// A local copy when --from is given: wago URLs → <Table>.csv, AzerothCore
+// SQL → <table>.sql, scripts → cpp/<path with / as _>.
+function localPath(url) {
+  const wagoTable = /\/db2\/(\w+)\/csv/.exec(url);
+  if (wagoTable) return join(FROM, `${wagoTable[1]}.csv`);
+  const sql = /db_world\/(\w+\.sql)$/.exec(url);
+  if (sql) return join(FROM, sql[1]);
+  return join(FROM, "cpp", url.slice(AC_RAW.length).replace(/\//g, "_"));
+}
+
 async function text(url) {
+  if (FROM) return readFileSync(localPath(url), "utf8");
   const response = await fetch(url, { headers: { "User-Agent": "holdfast-dungeon-atlas-importer" } });
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.text();
@@ -39,7 +65,7 @@ async function wago() {
   const build = (lfg.header.find((name) => /^Field_\d+_\d+_\d+_\d+_/.test(name)) || "").replace(/^Field_(\d+)_(\d+)_(\d+)_(\d+)_.*$/, "$1.$2.$3.$4") || null;
   return {
     source: "wago-classic-era", url: "https://wago.tools/db2?product=wow_classic_era", revision: build ? `wow_classic_era ${build}+` : "wow_classic_era (latest)", retrievedAt,
-    license: "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art.",
+    license: WAGO_LICENSE,
     tables: {
       Map: map.rows.filter((row) => instanceSet.has(Number(row.ID))).map((row) => pick(row, ["ID", "MapName_lang", "MapDescription0_lang", "MapDescription1_lang", "InstanceType", "MaxPlayers", "AreaTableID"])),
       LFGDungeons: lfg.rows.filter((row) => ["1", "2"].includes(row.TypeID)).map((row) => pick(row, ["ID", "Name_lang", "MinLevel", "MaxLevel", "TypeID", "Faction", "MapID"])),
@@ -63,6 +89,42 @@ async function azerothcore() {
   return { teleportRows, questRows, starterRows };
 }
 
+// The C++ scripts of the vanilla dungeons' creatures, as repository paths.
+const SCRIPT_DIRS = /^src\/server\/scripts\/(EasternKingdoms|Kalimdor)\/(BlackfathomDeeps|BlackrockMountain|Deadmines|DireMaul|Gnomeregan|Maraudon|OnyxiasLair|RagefireChasm|RazorfenDowns|RazorfenKraul|ScarletMonastery|Scholomance|ShadowfangKeep|Stratholme|SunkenTemple|TheStockade|Uldaman|WailingCaverns|ZulFarrak|ZulGurub)\/.*\.cpp$/;
+async function scriptPaths() {
+  if (FROM) return readFileSync(join(FROM, "cpp", "list.txt"), "utf8").split(String.fromCharCode(10)).map((line) => line.trim()).filter(Boolean);
+  const tree = JSON.parse(await text(`https://api.github.com/repos/azerothcore/azerothcore-wotlk/git/trees/${AC_REF}?recursive=1`));
+  return tree.tree.filter((entry) => entry.type === "blob" && SCRIPT_DIRS.test(entry.path)).map((entry) => entry.path);
+}
+
+async function content(dungeonNames) {
+  const sql = (name) => text(`${AC_BASE}${name}.sql`).then((body) => parseSqlInserts(body, name));
+  const [spawnRows, templateRows, smartRows, ctsRows, encounterRows] = await Promise.all(
+    ["creature", "creature_template", "smart_scripts", "creature_template_spell", "instance_encounters"].map(sql));
+  const scriptFiles = [];
+  for (const path of (await scriptPaths()).sort()) scriptFiles.push({ path, ...parseScriptSpells(await text(`${AC_RAW}${path}`)) });
+  const creatures = extractCreatureContent({ spawnRows, templateRows, smartRows, ctsRows, encounterRows, scriptFiles });
+  const spellIds = [...new Set(creatures.creature_spells.map((row) => row[1]))];
+  const tableNames = ["SpellName", "Spell", "SpellMisc", "SpellCastTimes", "SpellInterrupts", "SpellCategories", "SpellEffect", "AreaTable"];
+  const tables = Object.fromEntries(await Promise.all(tableNames.map(async (name) => [name, parseCsv(await text(WAGO(name))).rows])));
+  const spells = extractSpellContent({ spellIds, tables, dungeonNames });
+  writeFileSync(join(outDir, "azerothcore-creatures.json"), `${JSON.stringify({ source: "azerothcore", url: `https://github.com/azerothcore/azerothcore-wotlk/tree/${AC_REF}`,
+    revision: AC_REF, retrievedAt, license: AC_LICENSE, tables: creatures })}
+`);
+  writeFileSync(join(outDir, "wago-classic-era-spells.json"), `${JSON.stringify({ source: "wago-classic-era", url: "https://wago.tools/db2?product=wow_classic_era",
+    revision: "wow_classic_era (latest)", retrievedAt, license: WAGO_LICENSE, tables: spells })}
+`);
+  console.log(`Wrote content extracts: ${creatures.spawns.length} spawns, ${creatures.creatures.length} creatures, ${creatures.creature_spells.length} creature spells, `
+    + `${spells.spells.length} spells, ${spells.dungeonAreas.length} dungeon areas.`);
+}
+
+mkdirSync(outDir, { recursive: true });
+if (CONTENT_ONLY) {
+  const existing = JSON.parse(readFileSync(join(outDir, "wago-classic-era.json"), "utf8"));
+  await content(existing.tables.Map.map((row) => row.MapName_lang));
+  process.exit(0);
+}
+
 const wagoExtract = await wago();
 const areaIds = new Set(wagoExtract.tables.AreaTable.map((row) => Number(row.ID)));
 const ac = await azerothcore();
@@ -74,11 +136,11 @@ const bossNames = new Set(wagoExtract.tables.DungeonEncounter.map((row) => row.N
 const creatures = parseSqlInserts(await text(`${AC_BASE}creature_template.sql`), "creature_template")
   .filter((row) => creatureIds.has(Number(row.entry)) || bossNames.has(row.name)).map((row) => pick(row, ["entry", "name", "subname", "rank"]));
 
-mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, "wago-classic-era.json"), `${JSON.stringify(wagoExtract, null, 1)}\n`);
 writeFileSync(join(outDir, "azerothcore.json"), `${JSON.stringify({
   source: "azerothcore", url: `https://github.com/azerothcore/azerothcore-wotlk/tree/${AC_REF}/data/sql/base/db_world`, revision: AC_REF, retrievedAt,
-  license: "AzerothCore world database, GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk). A WotLK (3.3.5) emulator database: vanilla content as the emulator models it.",
+  license: AC_LICENSE,
   tables: { areatrigger_teleport: ac.teleportRows, quest_template: questTemplate, creature_queststarter: queststarter, creature_template: creatures },
 }, null, 1)}\n`);
 console.log(`Wrote ${outDir}: ${wagoExtract.tables.DungeonEncounter.length} encounters, ${questTemplate.length} quests, ${creatures.length} creatures.`);
+await content(wagoExtract.tables.Map.map((row) => row.MapName_lang));

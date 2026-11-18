@@ -72,3 +72,18 @@ export function parseSqlInserts(sql, table) {
   }
   return rows;
 }
+
+// An AzerothCore C++ script file: the creature scripts it registers and the
+// spell ids its enums name (`SPELL_FOO = 1234`). Spells are only attributed
+// to a script when the file registers exactly one creature script, so adds
+// scripted beside a boss never lend it their spells.
+export function parseScriptSpells(cpp) {
+  const source = String(cpp || "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const scripts = new Set();
+  // RegisterCreatureAI(x), RegisterMoltenCoreCreatureAI(x) and the like.
+  for (const match of source.matchAll(/Register\w*CreatureAI\w*\(\s*(\w+)/g)) scripts.add(match[1]);
+  for (const match of source.matchAll(/CreatureScript\(\s*"(\w+)"/g)) scripts.add(match[1]);
+  for (const match of source.matchAll(/\bnew\s+((?:boss|npc)_\w+)\s*\(\s*\)/g)) scripts.add(match[1]);
+  const spells = [...new Set([...source.matchAll(/\bSPELL_\w+\s*=\s*(\d+)/g)].map((match) => Number(match[1])).filter((id) => id > 0))];
+  return { scripts: [...scripts].sort(), spells: spells.sort((a, b) => a - b) };
+}

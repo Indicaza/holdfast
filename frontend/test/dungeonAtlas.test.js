@@ -191,3 +191,10 @@ test('the dungeon list adds atlas-only dungeons without duplicating catalog ones
   assert.deepEqual(listWithAtlasDungeons(null), [])
   assert.deepEqual(listWithAtlasDungeons({ dungeons: [{ instanceId: 1 }] }).length, 1)
 })
+
+test('spawn layouts count as maps; empty map entries do not', async () => {
+  const { normalizeAtlas } = await import('../src/Player/Dungeons/atlasModel.js')
+  const layout = { floorId: 'layout', kind: 'spawn-layout', imageUrl: null, width: 600, height: 400, points: [[0.1, 0.2]] }
+  const atlas = normalizeAtlas({ maps: [layout, { floorId: 'blank', imageUrl: null, points: [] }, { floorId: 'art', imageUrl: '/maps/a.png' }] })
+  assert.deepEqual(atlas.maps.map((map) => map.floorId), ['layout', 'art'])
+})

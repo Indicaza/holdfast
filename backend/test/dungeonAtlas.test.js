@@ -97,20 +97,30 @@ test("the checked-in atlas is current, sourced and fabrication-free", () => {
   const { atlas } = loadAtlas();
   assert.deepEqual(atlasProblems(atlas), []);
   const read = (name) => JSON.parse(readFileSync(new URL(`../src/Atlas/data/sources/${name}`, import.meta.url), "utf8"));
-  const regenerated = normalize({ wago: read("wago-classic-era.json"), azerothcore: read("azerothcore.json"), generatedAt: atlas.generatedAt });
+  const regenerated = normalize({ wago: read("wago-classic-era.json"), azerothcore: read("azerothcore.json"), creatures: read("azerothcore-creatures.json"),
+    spells: read("wago-classic-era-spells.json"), generatedAt: atlas.generatedAt });
   assert.deepEqual(regenerated, atlas, "run node scripts/importDungeonAtlas.mjs");
   assert.ok(atlas.dungeons.length >= 20);
   for (const dungeon of atlas.dungeons) {
     assert.equal(dungeon.artworkUrl, null);
     for (const boss of dungeon.bosses) {
       assert.equal(boss.portraitUrl, null);
-      assert.equal(boss.mapPosition, null, "no in-dungeon positions are sourced yet");
-      for (const ability of boss.abilities) {
+      if (boss.mapPosition) assert.equal(boss.floorId, "layout", "positions are on the spawn layout");
+    }
+    for (const map of dungeon.maps) assert.deepEqual([map.floorId, map.kind, map.imageUrl], ["layout", "spawn-layout", null], "no map art is shipped");
+    for (const creature of [...dungeon.bosses, ...dungeon.creatures, ...dungeon.rares]) {
+      for (const ability of creature.abilities) {
         assert.ok(ABILITY_CATEGORIES.includes(ability.category));
-        if (ability.source === "classic-reference") assert.equal(ability.verifiedForForever, false);
+        assert.equal(ability.verifiedForForever, false, "nothing here is checked against Forever");
+        assert.equal(ability.source, "classic-reference");
       }
     }
   }
+  const deadmines = atlas.dungeons.find((dungeon) => dungeon.instanceId === 36);
+  assert.deepEqual(deadmines.rares.map((rare) => rare.name), ["Miner Johnson"]);
+  assert.ok(deadmines.bosses.find((boss) => boss.name === "Cookie").abilities.some((ability) => ability.category === "interrupt"));
+  for (const [id, zone] of [[48, "Ashenvale"], [209, "Tanaris"]]) assert.equal(atlas.dungeons.find((d) => d.instanceId === id).zoneName, zone);
+  for (const id of [90, 109]) assert.ok(atlas.dungeons.find((d) => d.instanceId === id).bosses.length >= 4, "the emulator's encounter list fills the client's gap");
 });
 
 test("dungeon list and detail carry atlas and keep every catalog field", () => withHttpApp(async ({ request }) => {
@@ -130,7 +140,7 @@ test("dungeon list and detail carry atlas and keep every catalog field", () => w
   assert.equal(deadmines.atlas.entrance.mapId, 1436, "zone uiMapID");
   assert.ok(deadmines.atlas.entrance.x >= 0 && deadmines.atlas.entrance.x <= 1 && deadmines.atlas.entrance.y >= 0 && deadmines.atlas.entrance.y <= 1);
   assert.equal(deadmines.atlas.kind, "dungeon");
-  assert.equal(deadmines.atlas.rareCount, null, "no rare source: unknown, not zero");
+  assert.equal(deadmines.atlas.rareCount, 1, "one rare spawn (Miner Johnson)");
   assert.ok(list.atlasDungeons.length > 0 && list.atlasDungeons.every((entry) => entry.atlas && entry.instanceId !== 36));
 
   const detail = (await request("/api/player/loot/dungeons/36", { rawCookie: ash.cookie })).json;

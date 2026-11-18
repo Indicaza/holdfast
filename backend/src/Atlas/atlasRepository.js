@@ -30,8 +30,8 @@ export function atlasSummary(instanceId) {
     levelMin: dungeon.levelMin, levelMax: dungeon.levelMax, recommendedLevel: dungeon.recommendedLevel,
     zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId, entrance: dungeon.entrance, artworkUrl: dungeon.artworkUrl,
     bossCount: dungeon.bosses.length,
-    // No rare-spawn source yet: unknown, not zero.
-    rareCount: dungeon.rares.length ? dungeon.rares.length : null,
+    // Known (0 included) once the dungeon has spawn data; null means unknown.
+    rareCount: dungeon.rareCount ?? null,
     questCount: dungeon.quests.length,
     kind: dungeon.kind,
   };
