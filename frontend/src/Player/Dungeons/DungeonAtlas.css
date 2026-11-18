@@ -265,8 +265,91 @@
 .gw-atlas-loot.is-wanted { border-color: color-mix(in srgb, var(--gw-loot) 45%, transparent); }
 .gw-atlas-loot__facts { font-size: 12px; }
 
-.gw-atlas-quests li, .gw-atlas-runs li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.3rem 0.8rem; padding: 0.45rem 0; border-bottom: 1px solid var(--gw-line); }
-.gw-atlas-quests span, .gw-atlas-runs span { font-size: 13px; }
+.gw-atlas-quests > li, .gw-atlas-runs > li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.3rem 0.8rem; padding: 0.45rem 0; border-bottom: 1px solid var(--gw-line); }
+.gw-atlas-quests > li > details > summary span, .gw-atlas-runs span { font-size: 13px; }
+
+/* Sprint 2: character facts on cards, preparation, quick guides, item facts. */
+.gw-atlas-card.is-recommended .gw-atlas-card__link { border-color: color-mix(in srgb, var(--gw-ok) 55%, transparent); }
+.gw-atlas-card__mine { display: flex; flex-wrap: wrap; gap: 0.2rem 0.75rem; }
+.gw-atlas-card__why { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; margin-top: auto; font-size: 12px; }
+.gw-atlas-filters__rec { font-weight: 600; }
+
+.gw-atlas-modal__character select { max-width: 11rem; }
+.gw-atlas-modal__who { font-size: 13px; }
+
+.gw-atlas-forme {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--gw-accent-line);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-accent-soft);
+  font-size: 13px;
+}
+
+.gw-atlas-loot { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; }
+.gw-atlas-loot__side { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.35rem; }
+.gw-atlas-loot__evidence { font-size: 11px; }
+.gw-atlas-loot__later { color: var(--gw-warn); }
+.gw-atlas-loot__more { grid-column: 1 / -1; font-size: 12px; }
+.gw-atlas-loot__more > summary { width: fit-content; color: var(--gw-dim); cursor: pointer; }
+.gw-atlas-loot__more[open] > summary { margin-bottom: 0.35rem; }
+.gw-atlas-loot__source { margin: 0.35rem 0 0; }
+.gw-atlas-loot.is-acquired { opacity: 0.8; }
+.gw-atlas-more { align-self: flex-start; }
+
+.gw-atlas-itemfacts { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.25rem 0.75rem; margin: 0; }
+.gw-atlas-itemfacts dt { color: var(--gw-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.gw-atlas-itemfacts dd { margin: 0; }
+
+.gw-atlas-rolebar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.6rem; }
+.gw-atlas-roles { display: inline-flex; flex-wrap: wrap; align-self: flex-start; max-width: 100%; }
+.gw-atlas-roles button[aria-pressed='true'] { background: var(--gw-raise); color: var(--gw-text); }
+.gw-atlas-roles__hint { font-size: 12px; }
+
+.gw-atlas-guide { padding: 0.6rem 0.75rem; border: 1px solid var(--gw-accent-line); border-radius: var(--gw-radius-sm); background: var(--gw-panel); }
+.gw-atlas-guide h4 { margin: 0 0 0.4rem; font-size: 13px; }
+.gw-atlas-guide ol { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.gw-atlas-guide__line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; padding-left: 0.5rem; border-left: 3px solid var(--gw-faint); }
+.gw-atlas-guide__line--high { border-left-color: var(--gw-bad); }
+.gw-atlas-guide__line--medium { border-left-color: var(--gw-warn); }
+.gw-atlas-guide__summary { flex-basis: 100%; color: var(--gw-dim); font-size: 13px; }
+.gw-atlas-allabilities > summary { cursor: pointer; }
+.gw-atlas-allabilities > summary h4 { display: inline; }
+.gw-atlas-allabilities[open] > summary { margin-bottom: 0.5rem; }
+
+.gw-atlas-prep { gap: 0.6rem; }
+.gw-atlas-prep__block { border: 1px solid var(--gw-line); border-radius: var(--gw-radius-sm); background: var(--gw-panel); }
+.gw-atlas-prep__block > summary { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.8rem; cursor: pointer; }
+.gw-atlas-prep__block > summary h3 { margin: 0; font-size: 14px; }
+.gw-atlas-prep__body { display: flex; flex-direction: column; gap: 0.6rem; padding: 0 0.8rem 0.8rem; }
+.gw-atlas-prep__encounter { display: flex; flex-direction: column; gap: 0.35rem; }
+.gw-atlas-prep__boss { align-self: flex-start; font-weight: 650; }
+.gw-atlas-empty { padding: 0.25rem 0; }
+.gw-atlas-history { margin: 0; font-size: 13px; }
+.gw-atlas-lootbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+
+.gw-atlas-quests li.gw-atlas-quest { display: block; }
+.gw-atlas-quest > details > summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.3rem 0.8rem; cursor: pointer; }
+.gw-atlas-quest > details[open] > summary { margin-bottom: 0.4rem; }
+.gw-atlas-quest__facts { display: grid; gap: 0.3rem; margin: 0 0 0.5rem; font-size: 13px; }
+.gw-atlas-quest__facts div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 0.5rem; }
+.gw-atlas-quest__facts dt { color: var(--gw-faint); }
+.gw-atlas-quest__facts dd { margin: 0; }
+.gw-atlas-quest__rewards { margin: 0.25rem 0 0.35rem; font-size: 12px; color: var(--gw-dim); }
+
+.gw-plan__character { margin-bottom: 0.5rem; }
+.gw-plan__scope { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem 0 0; padding: 0; border: 0; }
+.gw-plan__scope legend { margin-bottom: 0.3rem; font-size: 12px; color: var(--gw-dim); }
+.gw-plan__modes { display: flex; flex-wrap: wrap; }
+.gw-plan__modes button[aria-checked='true'] { background: var(--gw-raise); color: var(--gw-text); }
+.gw-plan__picker { display: flex; flex-direction: column; gap: 0.4rem; }
+.gw-plan__picker ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.2rem 0.75rem; max-height: 13rem; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.gw-plan__picker label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 13px; }
+.gw-plan__picker p { margin: 0; font-size: 12px; }
 
 /* Phones: a full-screen sheet and compact cards. */
 @media (max-width: 640px) {
@@ -278,8 +361,12 @@
   .gw-atlas-bosses { grid-template-columns: 1fr; }
   .gw-atlas-bosses nav ol { flex-direction: row; overflow-x: auto; }
   .gw-atlas-bosses nav button { width: auto; white-space: nowrap; }
-  .gw-atlas-loot { grid-template-columns: minmax(0, 1fr) auto; }
-  .gw-atlas-loot__facts { grid-column: 1 / -1; grid-row: 2; }
+  .gw-atlas-loot { grid-template-columns: minmax(0, 1fr); gap: 0.35rem; }
+  .gw-atlas-loot__side { justify-content: flex-start; }
+  .gw-atlas-modal__head { position: relative; padding-right: 3rem; }
+  .gw-atlas-modal__actions { width: 100%; }
+  .gw-atlas-modal__actions > .gw-icon-btn { position: absolute; top: 0.6rem; right: 0.6rem; }
+  .gw-atlas-quest__facts div { grid-template-columns: 1fr; gap: 0; }
   .gw-atlas-grid { grid-template-columns: 1fr; gap: 0.6rem; }
   .gw-atlas-card__link { flex-direction: row; }
   .gw-atlas-card__art { width: 4.5rem; height: auto; flex: none; }

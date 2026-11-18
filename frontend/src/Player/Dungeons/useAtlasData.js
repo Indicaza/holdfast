@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { apiJson } from '../../Api/apiClient.js'
+import { loadResource, peekResource } from '../../Api/resourceCache.js'
 import { runAuthenticatedMutation } from '../../Auth/authenticatedMutation.js'
 import { signInReturnTo } from '../../Auth/returnTo.js'
 import { useSession } from '../../Auth/sessionContext.js'
 import { useLiveResource } from '../../Live/useLiveResource.js'
+import { playerApiUrl } from '../playerModel.js'
 import { listWithAtlasDungeons } from './atlasModel.js'
 
 const TOPICS = ['player']
@@ -59,6 +61,43 @@ export function useDungeonDetail(instanceId) {
   }, [resource.data, fixture])
   const status = fixture && resource.status !== 'loading' ? 'ready' : resource.status
   return { status, data }
+}
+
+// Several dungeons' details at once (for the explore cards' gear counts),
+// through the same cache the modal reads, so opening one is instant.
+// instanceId → detail; dungeons still loading or failed are absent.
+export function useDungeonDetails(instanceIds = []) {
+  const key = instanceIds.join(',')
+  const fixtures = useAtlasFixtures()
+  const [loaded, setLoaded] = useState(() => new Map())
+  useEffect(() => {
+    if (!key) return undefined
+    let active = true
+    const ids = key.split(',').map(Number)
+    Promise.all(ids.map((id) => {
+      const url = `/api/player/loot/dungeons/${id}`
+      const cached = peekResource(url)?.payload
+      return (cached !== undefined ? Promise.resolve(cached) : loadResource(url, TOPICS)).then((data) => [id, data], () => [id, null])
+    })).then((entries) => {
+      if (active) setLoaded(new Map(entries.filter(([, data]) => data)))
+    })
+    return () => { active = false }
+  }, [key])
+  return useMemo(() => {
+    if (!fixtures) return loaded
+    const merged = new Map(loaded)
+    for (const [id, fixture] of Object.entries(fixtures.FIXTURE_DETAILS || {})) {
+      const real = merged.get(Number(id))
+      merged.set(Number(id), real?.atlas ? real : { ...(real || fixture), atlas: fixture.atlas })
+    }
+    return merged
+  }, [loaded, fixtures])
+}
+
+// The player's own runs, narrowed to a dungeon (by name) and character.
+export function useDungeonRuns({ server = '', dungeon = '', character = '', enabled = true } = {}) {
+  const url = enabled ? playerApiUrl('dungeon-runs', server, { dungeon, character }) : ''
+  return useLiveResource(url, { topics: TOPICS, enabled: Boolean(url) })
 }
 
 export function useWishlist(characterId) {

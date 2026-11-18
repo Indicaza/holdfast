@@ -1,28 +1,31 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { useLiveResource } from '../../Live/useLiveResource.js'
-import { dungeonHref, formatRunDuration } from '../dungeonRunModel.js'
-import { QUALITY_NAMES, acquisitionCopy } from '../lootModel.js'
-import { playerApiUrl, relativeTime } from '../playerModel.js'
-import { EmptyState, ErrorState, Icon, ItemLabel, SkeletonRows } from '../ui.jsx'
+import { relativeTime } from '../playerModel.js'
+import { EmptyState, ErrorState, Icon, SkeletonRows } from '../ui.jsx'
 import {
   ATLAS_SECTIONS,
   FIT_COPY,
   bossKey,
   bossLoot,
+  defaultRole,
+  dungeonItems,
   dungeonKind,
+  gearTargets,
   groupAbilities,
   levelFit,
   levelText,
-  lootRows,
   markerPosition,
   needsUnverifiedBadge,
   normalizeAtlas,
   provenanceCopy,
+  quickGuide,
   trapFocusIndex,
+  wishlistTargets,
   wishlistToggleRequest,
   worldMapHref,
 } from './atlasModel.js'
+import { LootList, UnverifiedBadge } from './AtlasLoot.jsx'
+import { PrepareView, QuestList, QuickGuide, RoleSelect, Runs } from './AtlasPrepare.jsx'
 import PlanMyGear from './PlanMyGear.jsx'
 import { useDungeonDetail, useWishlist, useWishlistMutation } from './useAtlasData.js'
 import './DungeonAtlas.css'
@@ -62,10 +65,6 @@ function useDialogFocus(panelRef, onClose) {
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus()
     }
   }, [panelRef])
-}
-
-function UnverifiedBadge() {
-  return <span className="gw-tag gw-tag--quiet gw-atlas-unverified" title="From a Classic reference; not yet checked on Forever">Classic reference — unverified for Forever</span>
 }
 
 // A floor map with boss (and rare) markers where their positions are known.
@@ -173,36 +172,6 @@ function Strategy({ strategy }) {
   return <dl className="gw-atlas-strategy">{lines.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{strategy[key]}</dd></div>)}</dl>
 }
 
-// One item: icon with the game's tooltip, facts, wanted state and toggle.
-function LootLine({ row, wish, character, busy, onToggle }) {
-  const { item } = row
-  const wanted = Boolean(wish && wish.state !== 'acquired')
-  const acquired = wish?.state === 'acquired'
-  const facts = [QUALITY_NAMES[item.qualityId], item.itemLevel ? `ilvl ${item.itemLevel}` : null, item.slot, row.source ? `from ${row.source}` : 'source not identified'].filter(Boolean)
-  return (
-    <li className={`gw-atlas-loot${wanted ? ' is-wanted' : ''}${acquired ? ' is-acquired' : ''}`}>
-      <ItemLabel item={item} size={26} muted={acquired} />
-      <span className="gw-atlas-loot__facts gw-muted">{facts.join(' · ')}</span>
-      {acquired ? <span className="gw-tag gw-tag--ok"><Icon name="check" size={12} /> {acquisitionCopy(wish).label}</span> : null}
-      {!acquired ? (
-        <button type="button" className={`gw-btn gw-btn--sm gw-loot-row__toggle${wanted ? ' is-on' : ''}`} aria-pressed={wanted} disabled={busy || !character}
-          aria-label={`${wanted ? 'Remove' : 'Add'} ${item.name} ${wanted ? 'from' : 'to'} ${character ? `${character.name}'s` : 'the'} wishlist`} onClick={() => onToggle(item, wanted)}>
-          <Icon name={wanted ? 'check' : 'plus'} size={14} /> {wanted ? 'Wanted' : 'Want'}
-        </button>
-      ) : null}
-    </li>
-  )
-}
-
-function LootList({ rows, wishes, character, busy, onToggle, empty = 'No loot recorded here yet.' }) {
-  if (!rows.length) return <p className="gw-muted">{empty}</p>
-  return (
-    <ul className="gw-atlas-loot-list">
-      {rows.map((row) => <LootLine key={`${row.sourceKey}-${row.item.itemKey}`} row={row} wish={wishes.get(row.item.itemKey)} character={character} busy={busy} onToggle={onToggle} />)}
-    </ul>
-  )
-}
-
 function Facts({ entry, atlas, character }) {
   const fit = levelFit(atlas, character)
   const kind = dungeonKind(entry)
@@ -223,28 +192,48 @@ function Facts({ entry, atlas, character }) {
   )
 }
 
-function Overview({ entry, atlas, character, onBoss }) {
+// The selected character's short answer: what is in it for them here.
+function ForCharacter({ character, gearCount, wishCount, onPrepare }) {
+  if (!character) return null
+  const parts = [
+    gearCount !== null ? `${gearCount} item${gearCount === 1 ? '' : 's'} ${character.name} can use` : null,
+    wishCount ? `${wishCount} on the wishlist` : null,
+  ].filter(Boolean)
+  return (
+    <div className="gw-atlas-forme">
+      <span>{parts.length ? parts.join(' · ') : `Nothing known here for ${character.name} yet.`}</span>
+      <button type="button" className="gw-btn gw-btn--sm" onClick={onPrepare}>Prepare for this run</button>
+    </div>
+  )
+}
+
+function Overview({ entry, atlas, character, onBoss, forCharacter }) {
   return (
     <div className="gw-atlas-section">
       {atlas.description ? <p>{atlas.description}</p> : null}
       <Facts entry={entry} atlas={atlas} character={character} />
-      {atlas.maps.map((map) => <FloorMap key={map.floorId ?? map.imageUrl} map={map} bosses={atlas.bosses} rares={atlas.rares} onBoss={onBoss} />)}
+      {forCharacter}
       {atlas.bosses.length ? (
         <>
           <h3>Bosses</h3>
           <ol className="gw-atlas-boss-chips">
-            {atlas.bosses.map((boss) => (
-              <li key={bossKey(boss)}>
-                <button type="button" className="gw-atlas-boss-chip" onClick={() => onBoss(boss)}>
-                  <Portrait boss={boss} size={28} />
-                  <span>{boss.name}</span>
-                  {groupAbilities(boss.abilities).some((group) => group.category === 'interrupt') ? <span className="gw-tag gw-tag--info">Interrupts</span> : null}
-                </button>
-              </li>
-            ))}
+            {atlas.bosses.map((boss) => {
+              const high = (boss.abilities || []).filter((ability) => ability.priority === 'high').length
+              return (
+                <li key={bossKey(boss)}>
+                  <button type="button" className="gw-atlas-boss-chip" onClick={() => onBoss(boss)}>
+                    <Portrait boss={boss} size={28} />
+                    <span>{boss.name}</span>
+                    {groupAbilities(boss.abilities).some((group) => group.category === 'interrupt') ? <span className="gw-tag gw-tag--info">Interrupts</span> : null}
+                    {high ? <span className="gw-tag gw-tag--warn">{high} high priority</span> : null}
+                  </button>
+                </li>
+              )
+            })}
           </ol>
         </>
       ) : null}
+      {atlas.maps.map((map) => <FloorMap key={map.floorId ?? map.imageUrl} map={map} bosses={atlas.bosses} rares={atlas.rares} onBoss={onBoss} />)}
       {atlas.rares.length ? (
         <>
           <h3>Rares</h3>
@@ -256,122 +245,141 @@ function Overview({ entry, atlas, character, onBoss }) {
         </>
       ) : null}
       {!atlas.known ? (
-        <p className="gw-muted gw-atlas-gap">Levels, bosses, maps and quests for this dungeon are not in the atlas yet. Its loot is below.</p>
+        <p className="gw-muted gw-atlas-gap">Levels, bosses, maps and quests for this dungeon are not in the atlas yet. Its loot is in the Loot tab.</p>
       ) : null}
       {atlas.provenance.length ? (
         <p className="gw-muted gw-atlas-provenance">
           Sources: {atlas.provenance.map((line, index) => (
             <span key={`${line.source}-${index}`}>{index ? ', ' : ''}{provenanceCopy(line).label}{line.revision ? ` (${line.revision})` : ''}{line.retrievedAt ? `, ${relativeTime(line.retrievedAt)}` : ''}</span>
           ))}
+          {atlas.referenceVersion ? <span>; reference loot {atlas.referenceVersion.dataset} {atlas.referenceVersion.revision}</span> : null}
         </p>
       ) : null}
     </div>
   )
 }
 
-function BossDetail({ boss, atlas, detail, ...loot }) {
+// Why a boss lists no loot, from what is known: chest encounters, and
+// whether the Classic reference was loaded at all.
+function bossLootEmpty(boss, atlas) {
+  const chests = [...new Set(atlas.dungeonLoot.filter((entry) => entry && !entry.npcId && entry.sourceName).map((entry) => entry.sourceName))]
+  if (chests.length) return `No loot linked to ${boss.name}. Chest loot (${chests.join(', ')}) is in the Loot tab.`
+  if (atlas.referenceVersion) return `No loot linked to ${boss.name}: Guildweaver has not seen it drop, and the Classic reference lists none for this encounter.`
+  return `No loot linked to ${boss.name} yet.`
+}
+
+function BossDetail({ boss, atlas, detail, role, onRole, character, lootProps }) {
   const map = atlas.maps.find((entry) => entry.floorId === boss.floorId) || atlas.maps[0]
+  const abilities = boss.abilities || []
+  const guide = quickGuide(abilities, role)
   return (
-    <article className="gw-atlas-boss">
+    <article className="gw-atlas-boss" aria-label={boss.name}>
       <header className="gw-atlas-boss__head">
-        <Portrait boss={boss} size={64} />
+        <Portrait boss={boss} size={56} />
         <div>
           <h3>{boss.name}</h3>
           {boss.npcId ? <p className="gw-muted">NPC {boss.npcId}{boss.encounterId ? ` · encounter ${boss.encounterId}` : ''}</p> : null}
         </div>
       </header>
-      {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
+      {abilities.length ? (
+        <>
+          <RoleSelect role={role} onRole={onRole} character={character} />
+          <QuickGuide abilities={abilities} role={role} />
+        </>
+      ) : null}
       <Strategy strategy={boss.strategy} />
-      <h4 className="gw-atlas-subhead">Abilities</h4>
-      <Abilities abilities={boss.abilities} />
+      {abilities.length ? (
+        <details className="gw-atlas-allabilities" open={!guide.length}>
+          <summary><h4 className="gw-atlas-subhead">All abilities ({abilities.length})</h4></summary>
+          <Abilities abilities={abilities} />
+        </details>
+      ) : <p className="gw-muted">No abilities recorded for this boss yet.</p>}
+      {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
       <h4 className="gw-atlas-subhead">Loot</h4>
-      <LootList rows={bossLoot(boss, detail)} empty="No loot linked to this boss yet." {...loot} />
+      <LootList rows={bossLoot(boss, detail)} empty={bossLootEmpty(boss, atlas)} {...lootProps} />
     </article>
   )
 }
 
-function Bosses({ atlas, detail, boss, onBoss, ...loot }) {
+function Bosses({ atlas, detail, boss, onBoss, ...rest }) {
   const selected = atlas.bosses.find((entry) => bossKey(entry) === boss) || atlas.bosses[0]
   if (!atlas.bosses.length) {
     return (
       <>
-        <p className="gw-muted">No boss details in the atlas yet. The Loot tab lists bosses seen dropping loot.</p>
+        <p className="gw-muted gw-atlas-empty">No boss details in the atlas yet. The Loot tab lists bosses seen dropping loot.</p>
         <DangerousTrash creatures={atlas.creatures} />
       </>
     )
   }
   return (
     <>
-    <div className="gw-atlas-bosses">
-      <nav aria-label="Bosses">
-        <ol>
-          {atlas.bosses.map((entry) => (
-            <li key={bossKey(entry)}>
-              <button type="button" aria-current={entry === selected ? 'true' : undefined} onClick={() => onBoss(entry)}>
-                <Portrait boss={entry} size={24} /> {entry.name}
-              </button>
-            </li>
-          ))}
-        </ol>
-      </nav>
-      <BossDetail key={bossKey(selected)} boss={selected} atlas={atlas} detail={detail} {...loot} />
+      <div className="gw-atlas-bosses">
+        <nav aria-label="Bosses">
+          <ol>
+            {atlas.bosses.map((entry) => (
+              <li key={bossKey(entry)}>
+                <button type="button" aria-current={entry === selected ? 'true' : undefined} onClick={() => onBoss(entry)}>
+                  <Portrait boss={entry} size={24} /> {entry.name}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <BossDetail key={bossKey(selected)} boss={selected} atlas={atlas} detail={detail} {...rest} />
+      </div>
+      <DangerousTrash creatures={atlas.creatures} />
+    </>
+  )
+}
+
+const LOOT_KINDS = [['', 'All loot'], ['observed', 'Seen by Guildweaver'], ['reference', 'Classic reference only']]
+
+function Loot({ items, character, atlas, lootProps }) {
+  const [kind, setKind] = useState('')
+  const [usable, setUsable] = useState(false)
+  const usableKeys = useMemo(() => new Set(gearTargets(items, character, atlas).map((row) => row.item.itemKey)), [items, character, atlas])
+  const rows = items.filter((row) => (kind === 'observed' ? row.observed : kind === 'reference' ? !row.observed : true) && (!usable || usableKeys.has(row.item.itemKey)))
+  const hasReference = items.some((row) => row.reference && !row.observed)
+  return (
+    <div className="gw-atlas-section">
+      <div className="gw-atlas-lootbar">
+        {hasReference ? (
+          <label className="gw-filter">
+            <span>Show</span>
+            <select value={kind} onChange={(event) => setKind(event.target.value)} aria-label="Which loot">
+              {LOOT_KINDS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          </label>
+        ) : null}
+        {character ? <label className="gw-loot__check"><input type="checkbox" checked={usable} onChange={(event) => setUsable(event.target.checked)} /> Only what {character.name} can use</label> : null}
+      </div>
+      {!character ? <p className="gw-muted">Choose a character to keep a wishlist.</p> : null}
+      {hasReference ? <p className="gw-muted gw-atlas-provenance">Classic reference items come from Classic data, not Guildweaver sightings. They are not verified for Forever and no drop chances are shown.</p> : null}
+      <LootList rows={rows} empty={items.length ? 'No loot matches.' : 'No loot recorded here yet.'} {...lootProps} />
     </div>
-    <DangerousTrash creatures={atlas.creatures} />
-    </>
-  )
-}
-
-function Quests({ atlas }) {
-  if (!atlas.quests.length) return <p className="gw-muted">No quests for this dungeon in the atlas yet.</p>
-  return (
-    <ul className="gw-atlas-quests">
-      {atlas.quests.map((quest) => (
-        <li key={quest.questId || quest.name}>
-          <strong>{quest.name}</strong>
-          <span className="gw-muted">{[quest.level ? `Level ${quest.level}` : null, quest.minLevel ? `from ${quest.minLevel}` : null, quest.faction, quest.giver ? `from ${quest.giver}` : null].filter(Boolean).join(' · ')}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function Runs({ entry, character, server }) {
-  const name = entry?.name || ''
-  const url = name ? playerApiUrl('dungeon-runs', server, { dungeon: name, character: character?.id || '' }) : ''
-  const { status, data } = useLiveResource(url, { topics: ['player'], enabled: Boolean(url) })
-  if (status === 'loading') return <SkeletonRows rows={3} label="Loading your runs" />
-  if (status === 'error' || status === 'missing') return <ErrorState>Your runs could not be loaded.</ErrorState>
-  const runs = data?.runs || []
-  const all = dungeonHref({ filters: { dungeon: name, character: character?.id || '' }, server })
-  if (!runs.length) return <p className="gw-muted">No runs of {name}{character ? ` by ${character.name}` : ''} synced yet.</p>
-  return (
-    <>
-      <ul className="gw-atlas-runs">
-        {runs.slice(0, 8).map((run) => (
-          <li key={run.id}>
-            <a href={dungeonHref({ filters: { dungeon: name }, runId: run.id, server })}>{run.character?.name || 'Run'}</a>
-            <span className="gw-muted">{formatRunDuration(run.timer?.seconds ?? run.durationSeconds)} · {relativeTime(run.startedAt ? new Date(run.startedAt * 1000).toISOString() : null)}</span>
-          </li>
-        ))}
-      </ul>
-      <a className="gw-link" href={all}>All runs here</a>
-    </>
   )
 }
 
 // One dungeon, opened from anywhere: cards, runs, loot, the wishlist and
 // the world map. Tabs and the boss shown live in the URL (?open=&section=
 // &boss=), so the view can be linked and Back closes it.
-export default function DungeonDetailModal({ instanceId, entry = null, dungeons = [], character = null, server = '', section = 'overview', boss = '', onNavigate, onClose, showMapLink = true }) {
+export default function DungeonDetailModal({
+  instanceId, entry = null, dungeons = [], character = null, characters = [], onCharacter = null,
+  server = '', section = 'overview', boss = '', onNavigate, onClose, showMapLink = true,
+}) {
   const panelRef = useRef(null)
   const titleId = useId()
   useDialogFocus(panelRef, onClose)
   const detail = useDungeonDetail(instanceId)
   const wishlist = useWishlist(character?.id || '')
   const mutate = useWishlistMutation()
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [planning, setPlanning] = useState(false)
+  // The quick guide's role follows the character until the player picks one.
+  const [roleChoice, setRoleChoice] = useState({ characterId: character?.id || '', role: null })
+  const role = roleChoice.characterId === (character?.id || '') && roleChoice.role !== null ? roleChoice.role : defaultRole(character)
+  const setRole = (next) => setRoleChoice({ characterId: character?.id || '', role: next })
 
   const listEntry = entry || dungeons.find((dungeon) => dungeon.instanceId === instanceId) || null
   const merged = useMemo(() => ({ ...(detail.data?.instance || {}), ...(listEntry || {}), atlas: detail.data?.atlas || listEntry?.atlas }), [detail.data, listEntry])
@@ -382,25 +390,32 @@ export default function DungeonDetailModal({ instanceId, entry = null, dungeons 
   }, [merged, listEntry])
   const name = merged.name || `Dungeon ${instanceId}`
   const wishes = useMemo(() => new Map((wishlist.data?.items || []).map((item) => [item.itemKey, item])), [wishlist.data])
-  const rows = useMemo(() => lootRows(detail.data), [detail.data])
+  const items = useMemo(() => dungeonItems(detail.data || {}, atlas), [detail.data, atlas])
+  const gearCount = detail.data && character ? gearTargets(items, character, atlas).length : null
+  const wishCount = useMemo(() => {
+    const keys = new Set(wishlistTargets(wishlist.data?.items || [], [{ instanceId, atlas: { referenceItemIds: atlas.referenceItemIds } }]).get(instanceId) || [])
+    for (const row of items) if (wishes.get(row.item.itemKey) && wishes.get(row.item.itemKey).state !== 'acquired') keys.add(row.item.itemKey)
+    return keys.size
+  }, [wishlist.data, instanceId, atlas.referenceItemIds, items, wishes])
 
   async function toggle(item, wanted) {
     if (!character) return
-    const request = wishlistToggleRequest(character.id, item, wanted, detail.data?.instance || listEntry)
-    setBusy(true)
+    const request = wishlistToggleRequest(character.id, item, wanted, detail.data?.instance || listEntry || { instanceId, name })
+    setBusy(item.itemKey)
     setError('')
     try {
       const result = await mutate(request.path, request.method, request.body)
       if (result?.items) wishlist.mutate(result)
     } catch (failure) {
-      setError(failure?.status === 409 ? 'This wishlist is full.' : failure?.status === 422 ? 'Guildweaver does not know that item yet.' : 'That change was not saved. Try again.')
+      setError(failure?.status === 409 ? 'This wishlist is full.' : failure?.status === 422 ? `Guildweaver does not know ${item.name || 'that item'} yet, so it cannot go on the wishlist.` : 'That change was not saved. Try again.')
     } finally {
-      setBusy(false)
+      setBusy('')
     }
   }
 
-  const loot = { wishes, character, busy, onToggle: toggle }
   const openBoss = (target) => onNavigate({ section: 'bosses', boss: bossKey(target) })
+  const onSource = (row) => (row.bossKey ? onNavigate({ section: 'bosses', boss: row.bossKey }) : row.sourceKind === 'quest' ? onNavigate({ section: 'quests', boss: '' }) : null)
+  const lootProps = { wishes, character, busyKey: busy, onToggle: toggle, onSource }
 
   return (
     <div className="gw-atlas-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -411,8 +426,17 @@ export default function DungeonDetailModal({ instanceId, entry = null, dungeons 
             <h2 id={titleId}>{name}</h2>
           </div>
           <div className="gw-atlas-modal__actions">
-            {showMapLink && atlas.entrance ? <a className="gw-btn gw-btn--sm" href={worldMapHref({ ...merged, instanceId, atlas })}><Icon name="map" size={14} /> Show on world map</a> : null}
-            <button type="button" className="gw-btn gw-btn--sm gw-btn--primary" disabled={!character} aria-expanded={planning} onClick={() => setPlanning((open) => !open)}>
+            {characters.length > 1 && onCharacter ? (
+              <label className="gw-filter gw-atlas-modal__character">
+                <span>Character</span>
+                <select value={character?.id || ''} onChange={(event) => onCharacter(event.target.value)} aria-label="Character">
+                  {characters.map((option) => <option key={option.id} value={option.id}>{option.name}{option.level ? ` · ${option.level}` : ''}</option>)}
+                </select>
+              </label>
+            ) : character ? <span className="gw-muted gw-atlas-modal__who">For {character.name}{character.level ? ` · ${character.level}` : ''}</span> : null}
+            {showMapLink && atlas.entrance ? <a className="gw-btn gw-btn--sm" href={worldMapHref({ ...merged, instanceId, atlas })}><Icon name="map" size={14} /> World map</a> : null}
+            <button type="button" className="gw-btn gw-btn--sm gw-btn--primary" disabled={!character} aria-expanded={planning} onClick={() => setPlanning((open) => !open)}
+              title={character ? undefined : 'Sync a character to plan gear'}>
               <Icon name="sparkle" size={14} /> Plan my gear
             </button>
             <button type="button" className="gw-icon-btn gw-icon-btn--quiet" aria-label="Close" data-autofocus onClick={onClose}><Icon name="close" /></button>
@@ -427,23 +451,25 @@ export default function DungeonDetailModal({ instanceId, entry = null, dungeons 
 
         <div className="gw-atlas-modal__body">
           {planning && character ? (
-            <PlanMyGear character={character} dungeon={{ instanceId, name }} dungeons={dungeons} onClose={() => setPlanning(false)}
-              onImported={(next) => { if (next) wishlist.mutate(next) }} />
+            <PlanMyGear character={character} characters={characters} onCharacter={onCharacter} dungeon={{ instanceId, name }} dungeons={dungeons}
+              onClose={() => setPlanning(false)} onImported={(next) => { if (next) wishlist.mutate(next) }} />
           ) : null}
           {error ? <p className="gw-objectives__error" role="alert">{error}</p> : null}
           {detail.status === 'loading' && !detail.data ? <SkeletonRows rows={5} label={`Loading ${name}`} /> : null}
           {(detail.status === 'error' || detail.status === 'missing') && !detail.data ? <ErrorState>This dungeon could not be loaded.</ErrorState> : null}
           {detail.data || listEntry ? (
             <>
-              {section === 'overview' ? <Overview entry={merged} atlas={atlas} character={character} onBoss={openBoss} /> : null}
-              {section === 'bosses' ? <Bosses atlas={atlas} detail={detail.data} boss={boss} onBoss={openBoss} {...loot} /> : null}
-              {section === 'loot' ? (
-                <>
-                  {!character ? <p className="gw-muted">Sync a character to keep a wishlist.</p> : null}
-                  <LootList rows={rows} {...loot} />
-                </>
+              {section === 'overview' ? (
+                <Overview entry={merged} atlas={atlas} character={character} onBoss={openBoss}
+                  forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} onPrepare={() => onNavigate({ section: 'prepare', boss: '' })} />} />
               ) : null}
-              {section === 'quests' ? <Quests atlas={atlas} /> : null}
+              {section === 'prepare' ? (
+                <PrepareView entry={merged} atlas={atlas} detail={detail.data} character={character} server={server} role={role} onRole={setRole}
+                  wishes={wishes} lootProps={lootProps} onBoss={openBoss} onPlan={character ? () => setPlanning(true) : null} />
+              ) : null}
+              {section === 'bosses' ? <Bosses atlas={atlas} detail={detail.data} boss={boss} onBoss={openBoss} role={role} onRole={setRole} character={character} lootProps={lootProps} /> : null}
+              {section === 'loot' ? <Loot items={items} character={character} atlas={atlas} lootProps={lootProps} /> : null}
+              {section === 'quests' ? <div className="gw-atlas-section"><QuestList quests={atlas.quests} rewardProps={lootProps} /></div> : null}
               {section === 'runs' ? <Runs entry={merged} character={character} server={server} /> : null}
             </>
           ) : detail.status === 'ready' ? <EmptyState title="Nothing known about this dungeon yet." icon="dungeon" /> : null}
