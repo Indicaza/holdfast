@@ -1,0 +1,4918 @@
+{
+ "source": "wago-classic-era",
+ "url": "https://wago.tools/db2?product=wow_classic_era",
+ "revision": "wow_classic_era 1.15.8.63829+",
+ "retrievedAt": "2026-11-18T01:20:52.248Z",
+ "license": "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art.",
+ "tables": {
+  "Map": [
+   {
+    "ID": "33",
+    "MapName_lang": "Shadowfang Keep",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "34",
+    "MapName_lang": "Stormwind Stockade",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "717"
+   },
+   {
+    "ID": "36",
+    "MapName_lang": "Deadmines",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "43",
+    "MapName_lang": "Wailing Caverns",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "718"
+   },
+   {
+    "ID": "47",
+    "MapName_lang": "Razorfen Kraul",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "48",
+    "MapName_lang": "Blackfathom Deeps",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "719"
+   },
+   {
+    "ID": "70",
+    "MapName_lang": "Uldaman",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "1337"
+   },
+   {
+    "ID": "90",
+    "MapName_lang": "Gnomeregan",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "721"
+   },
+   {
+    "ID": "109",
+    "MapName_lang": "Sunken Temple",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "20",
+    "AreaTableID": "1477"
+   },
+   {
+    "ID": "129",
+    "MapName_lang": "Razorfen Downs",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "189",
+    "MapName_lang": "Scarlet Monastery",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "209",
+    "MapName_lang": "Zul'Farrak",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "229",
+    "MapName_lang": "Blackrock Spire",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "1583"
+   },
+   {
+    "ID": "230",
+    "MapName_lang": "Blackrock Depths",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "5",
+    "AreaTableID": "1584"
+   },
+   {
+    "ID": "249",
+    "MapName_lang": "Onyxia's Lair",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "40",
+    "AreaTableID": "2159"
+   },
+   {
+    "ID": "289",
+    "MapName_lang": "Scholomance",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "5",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "309",
+    "MapName_lang": "Zul'Gurub",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "20",
+    "AreaTableID": "1977"
+   },
+   {
+    "ID": "329",
+    "MapName_lang": "Stratholme",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "5",
+    "AreaTableID": "0"
+   },
+   {
+    "ID": "349",
+    "MapName_lang": "Maraudon",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "2100"
+   },
+   {
+    "ID": "389",
+    "MapName_lang": "Ragefire Chasm",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "10",
+    "AreaTableID": "2437"
+   },
+   {
+    "ID": "409",
+    "MapName_lang": "Molten Core",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "40",
+    "AreaTableID": "2717"
+   },
+   {
+    "ID": "429",
+    "MapName_lang": "Dire Maul",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "1",
+    "MaxPlayers": "5",
+    "AreaTableID": "2557"
+   },
+   {
+    "ID": "469",
+    "MapName_lang": "Blackwing Lair",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "40",
+    "AreaTableID": "2677"
+   },
+   {
+    "ID": "509",
+    "MapName_lang": "Ruins of Ahn'Qiraj",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "20",
+    "AreaTableID": "3429"
+   },
+   {
+    "ID": "531",
+    "MapName_lang": "Ahn'Qiraj Temple",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "40",
+    "AreaTableID": "3428"
+   },
+   {
+    "ID": "533",
+    "MapName_lang": "Naxxramas",
+    "MapDescription0_lang": "",
+    "MapDescription1_lang": "",
+    "InstanceType": "2",
+    "MaxPlayers": "40",
+    "AreaTableID": "3456"
+   }
+  ],
+  "LFGDungeons": [
+   {
+    "ID": "1",
+    "Name_lang": "Wailing Caverns",
+    "MinLevel": "15",
+    "MaxLevel": "28",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "2",
+    "Name_lang": "Scholomance",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "3",
+    "Name_lang": "Ragefire Chasm",
+    "MinLevel": "13",
+    "MaxLevel": "22",
+    "TypeID": "1",
+    "Faction": "0",
+    "MapID": "0"
+   },
+   {
+    "ID": "5",
+    "Name_lang": "Deadmines",
+    "MinLevel": "15",
+    "MaxLevel": "28",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "7",
+    "Name_lang": "Shadowfang Keep",
+    "MinLevel": "18",
+    "MaxLevel": "32",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "9",
+    "Name_lang": "Blackfathom Deeps",
+    "MinLevel": "20",
+    "MaxLevel": "34",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "11",
+    "Name_lang": "Stormwind Stockades",
+    "MinLevel": "22",
+    "MaxLevel": "34",
+    "TypeID": "1",
+    "Faction": "1",
+    "MapID": "0"
+   },
+   {
+    "ID": "13",
+    "Name_lang": "Gnomeregan",
+    "MinLevel": "24",
+    "MaxLevel": "40",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "15",
+    "Name_lang": "Razorfen Kraul",
+    "MinLevel": "24",
+    "MaxLevel": "40",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "17",
+    "Name_lang": "Scarlet Monastery",
+    "MinLevel": "29",
+    "MaxLevel": "48",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "19",
+    "Name_lang": "Razorfen Downs",
+    "MinLevel": "33",
+    "MaxLevel": "47",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "21",
+    "Name_lang": "Uldaman",
+    "MinLevel": "38",
+    "MaxLevel": "53",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "23",
+    "Name_lang": "Zul'Farak",
+    "MinLevel": "43",
+    "MaxLevel": "54",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "25",
+    "Name_lang": "Maraudon",
+    "MinLevel": "40",
+    "MaxLevel": "58",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "27",
+    "Name_lang": "Sunken Temple",
+    "MinLevel": "44",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "29",
+    "Name_lang": "Blackrock Depths",
+    "MinLevel": "48",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "31",
+    "Name_lang": "Lower Blackrock Spire",
+    "MinLevel": "52",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "33",
+    "Name_lang": "Dire Maul - East",
+    "MinLevel": "54",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "35",
+    "Name_lang": "Dire Maul - West",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "37",
+    "Name_lang": "Dire Maul - North",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "39",
+    "Name_lang": "Stratholme",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "1",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "41",
+    "Name_lang": "Zul'Gurub",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "2",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "43",
+    "Name_lang": "Upper Blackrock Spire",
+    "MinLevel": "56",
+    "MaxLevel": "60",
+    "TypeID": "2",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "45",
+    "Name_lang": "Onyxia",
+    "MinLevel": "60",
+    "MaxLevel": "60",
+    "TypeID": "2",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "47",
+    "Name_lang": "Molten Core",
+    "MinLevel": "60",
+    "MaxLevel": "60",
+    "TypeID": "2",
+    "Faction": "-1",
+    "MapID": "0"
+   },
+   {
+    "ID": "49",
+    "Name_lang": "Blackwing Lair",
+    "MinLevel": "60",
+    "MaxLevel": "60",
+    "TypeID": "2",
+    "Faction": "-1",
+    "MapID": "0"
+   }
+  ],
+  "DungeonEncounter": [
+   {
+    "ID": "227",
+    "Name_lang": "High Interrogator Gerstahn",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "228",
+    "Name_lang": "Lord Roccor",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "229",
+    "Name_lang": "Houndmaster Grebmar",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "230",
+    "Name_lang": "Ring of Law",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "231",
+    "Name_lang": "Pyromancer Loregrain",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "232",
+    "Name_lang": "Lord Incendius",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "233",
+    "Name_lang": "Warder Stilgiss",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "234",
+    "Name_lang": "Fineous Darkvire",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "235",
+    "Name_lang": "Bael'Gar",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "236",
+    "Name_lang": "General Angerforge",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "237",
+    "Name_lang": "Golem Lord Argelmach",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "10000"
+   },
+   {
+    "ID": "238",
+    "Name_lang": "Hurley Blackbreath",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "11000"
+   },
+   {
+    "ID": "239",
+    "Name_lang": "Phalanx",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "12000"
+   },
+   {
+    "ID": "240",
+    "Name_lang": "Ribbly Screwspigot",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "13000"
+   },
+   {
+    "ID": "241",
+    "Name_lang": "Plugger Spazzring",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "14000"
+   },
+   {
+    "ID": "242",
+    "Name_lang": "Ambassador Flamelash",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "15000"
+   },
+   {
+    "ID": "243",
+    "Name_lang": "The Seven",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "16000"
+   },
+   {
+    "ID": "244",
+    "Name_lang": "Magmus",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "17000"
+   },
+   {
+    "ID": "267",
+    "Name_lang": "Highlord Omokk",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "268",
+    "Name_lang": "Shadow Hunter Vosh'gajin",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "269",
+    "Name_lang": "War Master Voone",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "270",
+    "Name_lang": "Mother Smolderweb",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "271",
+    "Name_lang": "Urok Doomhowl",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "272",
+    "Name_lang": "Quartermaster Zigris",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "273",
+    "Name_lang": "Gizrul the Slavener",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "274",
+    "Name_lang": "Halycon",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "5500"
+   },
+   {
+    "ID": "275",
+    "Name_lang": "Overlord Wyrmthalak",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "343",
+    "Name_lang": "Zevrim Thornhoof",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "344",
+    "Name_lang": "Hydrospawn",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "345",
+    "Name_lang": "Lethtendris",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "346",
+    "Name_lang": "Alzzin the Wildshaper",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "347",
+    "Name_lang": "Illyanna Ravenoak",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "348",
+    "Name_lang": "Magister Kalendris",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "349",
+    "Name_lang": "Immol'thar",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "350",
+    "Name_lang": "Tendris Warpwood",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "3500"
+   },
+   {
+    "ID": "361",
+    "Name_lang": "Prince Tortheldrin",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "362",
+    "Name_lang": "Guard Mol'dar",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "363",
+    "Name_lang": "Stomper Kreeg",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "364",
+    "Name_lang": "Guard Fengus",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "10000"
+   },
+   {
+    "ID": "365",
+    "Name_lang": "Guard Slip'kik",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "11000"
+   },
+   {
+    "ID": "366",
+    "Name_lang": "Captain Kromcrush",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "12000"
+   },
+   {
+    "ID": "367",
+    "Name_lang": "Cho'Rush the Observer",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "13000"
+   },
+   {
+    "ID": "368",
+    "Name_lang": "King Gordok",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "14000"
+   },
+   {
+    "ID": "422",
+    "Name_lang": "Noxxion",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "423",
+    "Name_lang": "Razorlash",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "424",
+    "Name_lang": "Lord Vyletongue",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "425",
+    "Name_lang": "Celebras the Cursed",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "426",
+    "Name_lang": "Landslide",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "427",
+    "Name_lang": "Tinkerer Gizlock",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "1500"
+   },
+   {
+    "ID": "428",
+    "Name_lang": "Rotgrip",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "429",
+    "Name_lang": "Princess Theradras",
+    "MapID": "349",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "444",
+    "Name_lang": "Interrogator Vishas",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "446",
+    "Name_lang": "Houndmaster Loksey",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "447",
+    "Name_lang": "Arcanist Doan",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "448",
+    "Name_lang": "Herod",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "449",
+    "Name_lang": "High Inquisitor Fairbanks",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "450",
+    "Name_lang": "High Inquisitor Whitemane",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "472",
+    "Name_lang": "The Unforgiven",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "6500"
+   },
+   {
+    "ID": "473",
+    "Name_lang": "Hearthsinger Forresten",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "474",
+    "Name_lang": "Timmy the Cruel",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "475",
+    "Name_lang": "Cannon Master Willey",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "476",
+    "Name_lang": "Malor the Zealous",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "2500"
+   },
+   {
+    "ID": "477",
+    "Name_lang": "Archivist Galford",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "478",
+    "Name_lang": "Balnazzar",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "479",
+    "Name_lang": "Baroness Anastari",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "480",
+    "Name_lang": "Nerub'enkan",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "481",
+    "Name_lang": "Maleki the Pallid",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "482",
+    "Name_lang": "Magistrate Barthilas",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "10000"
+   },
+   {
+    "ID": "483",
+    "Name_lang": "Ramstein the Gorger",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "11000"
+   },
+   {
+    "ID": "484",
+    "Name_lang": "Baron Rivendare",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "12000"
+   },
+   {
+    "ID": "486",
+    "Name_lang": "Dreamscythe",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "487",
+    "Name_lang": "Weaver",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "488",
+    "Name_lang": "Jammal'an the Prophet",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "500"
+   },
+   {
+    "ID": "490",
+    "Name_lang": "Morphaz",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "491",
+    "Name_lang": "Hazzas",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "492",
+    "Name_lang": "Avatar of Hakkar",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "-500"
+   },
+   {
+    "ID": "493",
+    "Name_lang": "Shade of Eranikus",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "547",
+    "Name_lang": "Revelosh",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "548",
+    "Name_lang": "The Lost Dwarves",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "549",
+    "Name_lang": "Ironaya",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "551",
+    "Name_lang": "Ancient Stone Keeper",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "552",
+    "Name_lang": "Galgann Firehammer",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "553",
+    "Name_lang": "Grimlok",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "554",
+    "Name_lang": "Archaedas",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "585",
+    "Name_lang": "Lady Anacondra",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "586",
+    "Name_lang": "Lord Cobrahn",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "587",
+    "Name_lang": "Kresh",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "588",
+    "Name_lang": "Lord Pythas",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "589",
+    "Name_lang": "Skum",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "590",
+    "Name_lang": "Lord Serpentis",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "591",
+    "Name_lang": "Verdan the Everliving",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "592",
+    "Name_lang": "Mutanus the Devourer",
+    "MapID": "43",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "593",
+    "Name_lang": "Hydromancer Velratha",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "594",
+    "Name_lang": "Gahz'rilla",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "595",
+    "Name_lang": "Antu'sul",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "596",
+    "Name_lang": "Theka the Martyr",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "597",
+    "Name_lang": "Witch Doctor Zum'rah",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "598",
+    "Name_lang": "Nekrum Gutchewer",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "599",
+    "Name_lang": "Shadowpriest Sezz'ziz",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "600",
+    "Name_lang": "Chief Ukorz Sandscalp",
+    "MapID": "209",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "610",
+    "Name_lang": "Razorgore the Untamed",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "611",
+    "Name_lang": "Vaelastrasz the Corrupt",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "612",
+    "Name_lang": "Broodlord Lashlayer",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "613",
+    "Name_lang": "Firemaw",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "614",
+    "Name_lang": "Ebonroc",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "615",
+    "Name_lang": "Flamegor",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "616",
+    "Name_lang": "Chromaggus",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "617",
+    "Name_lang": "Nefarian",
+    "MapID": "469",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "663",
+    "Name_lang": "Lucifron",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "664",
+    "Name_lang": "Magmadar",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "665",
+    "Name_lang": "Gehennas",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "666",
+    "Name_lang": "Garr",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "667",
+    "Name_lang": "Shazzrah",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "668",
+    "Name_lang": "Baron Geddon",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "669",
+    "Name_lang": "Sulfuron Harbinger",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "670",
+    "Name_lang": "Golemagg the Incinerator",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "671",
+    "Name_lang": "Majordomo Executus",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "672",
+    "Name_lang": "Ragnaros",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "709",
+    "Name_lang": "The Prophet Skeram",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "710",
+    "Name_lang": "Silithid Royalty",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "711",
+    "Name_lang": "Battleguard Sartura",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "712",
+    "Name_lang": "Fankriss the Unyielding",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "713",
+    "Name_lang": "Viscidus",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "714",
+    "Name_lang": "Princess Huhuran",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "715",
+    "Name_lang": "Twin Emperors",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "716",
+    "Name_lang": "Ouro",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "717",
+    "Name_lang": "C'thun",
+    "MapID": "531",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "718",
+    "Name_lang": "Kurinnaxx",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "719",
+    "Name_lang": "General Rajaxx",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "720",
+    "Name_lang": "Moam",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "721",
+    "Name_lang": "Buru the Gorger",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "722",
+    "Name_lang": "Ayamiss the Hunter",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "723",
+    "Name_lang": "Ossirian the Unscarred",
+    "MapID": "509",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "784",
+    "Name_lang": "High Priest Venoxis",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "785",
+    "Name_lang": "High Priestess Jeklik",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "-1000"
+   },
+   {
+    "ID": "786",
+    "Name_lang": "High Priestess Mar'li",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "787",
+    "Name_lang": "Bloodlord Mandokir",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "788",
+    "Name_lang": "Edge of Madness",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "789",
+    "Name_lang": "High Priest Thekal",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "790",
+    "Name_lang": "Gahz'ranka",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "791",
+    "Name_lang": "High Priestess Arlokk",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "792",
+    "Name_lang": "Jin'do the Hexxer",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "793",
+    "Name_lang": "Hakkar",
+    "MapID": "309",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "1084",
+    "Name_lang": "Onyxia",
+    "MapID": "249",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "1107",
+    "Name_lang": "Anub'Rekhan",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "1108",
+    "Name_lang": "Gluth",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "1109",
+    "Name_lang": "Gothik the Harvester",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "500"
+   },
+   {
+    "ID": "1110",
+    "Name_lang": "Grand Widow Faerlina",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "250"
+   },
+   {
+    "ID": "1111",
+    "Name_lang": "Grobbulus",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "750"
+   },
+   {
+    "ID": "1112",
+    "Name_lang": "Heigan the Unclean",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "375"
+   },
+   {
+    "ID": "1113",
+    "Name_lang": "Instructor Razuvious",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "437"
+   },
+   {
+    "ID": "1114",
+    "Name_lang": "Kel'Thuzad",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "1115",
+    "Name_lang": "Loatheb",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "406"
+   },
+   {
+    "ID": "1116",
+    "Name_lang": "Maexxna",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "312"
+   },
+   {
+    "ID": "1117",
+    "Name_lang": "Noth the Plaguebringer",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "343"
+   },
+   {
+    "ID": "1118",
+    "Name_lang": "Patchwerk",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "625"
+   },
+   {
+    "ID": "1119",
+    "Name_lang": "Sapphiron",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "1500"
+   },
+   {
+    "ID": "1120",
+    "Name_lang": "Thaddius",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "1250"
+   },
+   {
+    "ID": "1121",
+    "Name_lang": "The Four Horsemen",
+    "MapID": "533",
+    "DifficultyID": "0",
+    "OrderIndex": "562"
+   },
+   {
+    "ID": "1887",
+    "Name_lang": "Obsidian Sentinel",
+    "MapID": "70",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2694",
+    "Name_lang": "Baron Aquanis",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2697",
+    "Name_lang": "Ghamoo-ra",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2699",
+    "Name_lang": "Lady Sarevess",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2704",
+    "Name_lang": "Gelihast",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2710",
+    "Name_lang": "Lorgus Jett",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2732",
+    "Name_lang": "Oggleflint",
+    "MapID": "389",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2733",
+    "Name_lang": "Taragaman the Hungerer",
+    "MapID": "389",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2734",
+    "Name_lang": "Jergosh the Invoker",
+    "MapID": "389",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2735",
+    "Name_lang": "Bazzalan",
+    "MapID": "389",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2741",
+    "Name_lang": "Rhahk'Zor",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2742",
+    "Name_lang": "Sneed",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2743",
+    "Name_lang": "Gilnid",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2744",
+    "Name_lang": "Captain Greenskin",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2745",
+    "Name_lang": "Mr. Smite",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2746",
+    "Name_lang": "Cookie",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2747",
+    "Name_lang": "Edwin VanCleef",
+    "MapID": "36",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "2748",
+    "Name_lang": "Rethilgore",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2749",
+    "Name_lang": "Razorclaw the Butcher",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2750",
+    "Name_lang": "Baron Silverlaine",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2751",
+    "Name_lang": "Commander Springvale",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2752",
+    "Name_lang": "Odo the Blindwatcher",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2753",
+    "Name_lang": "Fenrus the Devourer",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2754",
+    "Name_lang": "Wolf Master Nandos",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "2755",
+    "Name_lang": "Archmage Arugal",
+    "MapID": "33",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "2756",
+    "Name_lang": "Targorr the Dread",
+    "MapID": "34",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2757",
+    "Name_lang": "Kam Deepfury",
+    "MapID": "34",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2758",
+    "Name_lang": "Hamhock",
+    "MapID": "34",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2759",
+    "Name_lang": "Dextren Ward",
+    "MapID": "34",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2760",
+    "Name_lang": "Bazil Thredd",
+    "MapID": "34",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2761",
+    "Name_lang": "Ghamoo-ra",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2762",
+    "Name_lang": "Lady Sarevess",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2763",
+    "Name_lang": "Geilhast",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2764",
+    "Name_lang": "Lorgus Jett",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2765",
+    "Name_lang": "Old Serra'kis",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2766",
+    "Name_lang": "Twilight Lord Kelris",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2767",
+    "Name_lang": "Aku'mai",
+    "MapID": "48",
+    "DifficultyID": "201",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "2768",
+    "Name_lang": "Grubbis",
+    "MapID": "90",
+    "DifficultyID": "201",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2769",
+    "Name_lang": "Viscous Fallout",
+    "MapID": "90",
+    "DifficultyID": "201",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2770",
+    "Name_lang": "Electrocutioner 6000",
+    "MapID": "90",
+    "DifficultyID": "201",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2771",
+    "Name_lang": "Crowd Pummeler 9-60",
+    "MapID": "90",
+    "DifficultyID": "201",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2772",
+    "Name_lang": "Mekgineer Thermaplugg",
+    "MapID": "90",
+    "DifficultyID": "201",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2773",
+    "Name_lang": "Roogug",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2774",
+    "Name_lang": "Aggem Thorncurse",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2775",
+    "Name_lang": "Death Speaker Jargba",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2776",
+    "Name_lang": "Overlord Ramtusk",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2777",
+    "Name_lang": "Agathelos the Raging",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2778",
+    "Name_lang": "Charlga Razorflank",
+    "MapID": "47",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2779",
+    "Name_lang": "Bloodmage Thalnos",
+    "MapID": "189",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2780",
+    "Name_lang": "Tuten'kash",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2781",
+    "Name_lang": "Plaguemaw the Rotting",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2782",
+    "Name_lang": "Mordresh Fire Eye",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2783",
+    "Name_lang": "Ragglesnout",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2784",
+    "Name_lang": "Glutton",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2785",
+    "Name_lang": "Amnennar the Coldbringer",
+    "MapID": "129",
+    "DifficultyID": "0",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2789",
+    "Name_lang": "Princess Moira Bronzebeard",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "18000"
+   },
+   {
+    "ID": "2790",
+    "Name_lang": "Emperor Dagran Thaurissan",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "19000"
+   },
+   {
+    "ID": "2791",
+    "Name_lang": "The Vault",
+    "MapID": "230",
+    "DifficultyID": "0",
+    "OrderIndex": "14500"
+   },
+   {
+    "ID": "2792",
+    "Name_lang": "Pusillin",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "2500"
+   },
+   {
+    "ID": "2793",
+    "Name_lang": "Lord Hel'nurath",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "15000"
+   },
+   {
+    "ID": "2794",
+    "Name_lang": "Tsu'zee",
+    "MapID": "429",
+    "DifficultyID": "0",
+    "OrderIndex": "16000"
+   },
+   {
+    "ID": "2795",
+    "Name_lang": "Black Guard Swordsmith",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "13000"
+   },
+   {
+    "ID": "2796",
+    "Name_lang": "Crimson Hammersmith",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "14000"
+   },
+   {
+    "ID": "2797",
+    "Name_lang": "Ezra Grimm",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "15000"
+   },
+   {
+    "ID": "2798",
+    "Name_lang": "Postmaster Malown",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "16000"
+   },
+   {
+    "ID": "2799",
+    "Name_lang": "Skul",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "17000"
+   },
+   {
+    "ID": "2800",
+    "Name_lang": "Stonespine",
+    "MapID": "329",
+    "DifficultyID": "0",
+    "OrderIndex": "18000"
+   },
+   {
+    "ID": "2801",
+    "Name_lang": "Darkmaster Gandling",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "12000"
+   },
+   {
+    "ID": "2802",
+    "Name_lang": "Doctor Theolen Krastinov",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-7"
+   },
+   {
+    "ID": "2803",
+    "Name_lang": "Instructor Malicia",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-15"
+   },
+   {
+    "ID": "2804",
+    "Name_lang": "Jandice Barov",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-500"
+   },
+   {
+    "ID": "2805",
+    "Name_lang": "Kirtonos",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-1000"
+   },
+   {
+    "ID": "2806",
+    "Name_lang": "Lady Illucia Barov",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "11500"
+   },
+   {
+    "ID": "2807",
+    "Name_lang": "Lord Alexei Barov",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "11250"
+   },
+   {
+    "ID": "2808",
+    "Name_lang": "Lorekeeper Polkelt",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "2809",
+    "Name_lang": "Marduk Blackpool",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-125"
+   },
+   {
+    "ID": "2810",
+    "Name_lang": "Ras Frostwhisperer",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-31"
+   },
+   {
+    "ID": "2811",
+    "Name_lang": "Rattlegore",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-250"
+   },
+   {
+    "ID": "2812",
+    "Name_lang": "The Ravenian",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "11000"
+   },
+   {
+    "ID": "2813",
+    "Name_lang": "Vectus",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-62"
+   },
+   {
+    "ID": "2814",
+    "Name_lang": "Atal'alarion",
+    "MapID": "109",
+    "DifficultyID": "201",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "2825",
+    "Name_lang": "Twilight Lord Kelris",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "2891",
+    "Name_lang": "Aku'mai",
+    "MapID": "48",
+    "DifficultyID": "198",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "2899",
+    "Name_lang": "Crowd Pummeler 9-60",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2910",
+    "Name_lang": "Aku'mai",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2911",
+    "Name_lang": "Twilight Lord Kelris",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-1000"
+   },
+   {
+    "ID": "2912",
+    "Name_lang": "Old Serra'kis",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-2000"
+   },
+   {
+    "ID": "2913",
+    "Name_lang": "Lorgus Jett",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-3000"
+   },
+   {
+    "ID": "2914",
+    "Name_lang": "Geilhast",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-4000"
+   },
+   {
+    "ID": "2915",
+    "Name_lang": "Lady Sarevess",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-5000"
+   },
+   {
+    "ID": "2916",
+    "Name_lang": "Ghamoo-ra",
+    "MapID": "48",
+    "DifficultyID": "1",
+    "OrderIndex": "-6000"
+   },
+   {
+    "ID": "2925",
+    "Name_lang": "Grubbis",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2927",
+    "Name_lang": "Electrocutioner 6000",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "2928",
+    "Name_lang": "Viscous Fallout",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "4500"
+   },
+   {
+    "ID": "2935",
+    "Name_lang": "Mechanical Menagerie",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "2940",
+    "Name_lang": "Mekgineer Thermaplugg",
+    "MapID": "90",
+    "DifficultyID": "198",
+    "OrderIndex": "8000"
+   },
+   {
+    "ID": "2952",
+    "Name_lang": "Atal'alarion",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "0"
+   },
+   {
+    "ID": "2953",
+    "Name_lang": "Festering Rotslime",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "1000"
+   },
+   {
+    "ID": "2954",
+    "Name_lang": "Atal'ai Defenders",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "2000"
+   },
+   {
+    "ID": "2955",
+    "Name_lang": "Dreamscythe and Weaver",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "3000"
+   },
+   {
+    "ID": "2956",
+    "Name_lang": "Avatar of Hakkar",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "4000"
+   },
+   {
+    "ID": "2957",
+    "Name_lang": "Jammal'an and Ogom",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "5000"
+   },
+   {
+    "ID": "2958",
+    "Name_lang": "Morphaz and Hazzas",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "6000"
+   },
+   {
+    "ID": "2959",
+    "Name_lang": "Shade of Eranikus",
+    "MapID": "109",
+    "DifficultyID": "215",
+    "OrderIndex": "7000"
+   },
+   {
+    "ID": "3018",
+    "Name_lang": "The Molten Core",
+    "MapID": "409",
+    "DifficultyID": "0",
+    "OrderIndex": "10000"
+   },
+   {
+    "ID": "3055",
+    "Name_lang": "Kormok",
+    "MapID": "289",
+    "DifficultyID": "0",
+    "OrderIndex": "-46"
+   },
+   {
+    "ID": "3062",
+    "Name_lang": "Pyroguard Emberseer",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "9000"
+   },
+   {
+    "ID": "3063",
+    "Name_lang": "Warchief Rend Blackhand",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "10000"
+   },
+   {
+    "ID": "3068",
+    "Name_lang": "The Beast",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "11000"
+   },
+   {
+    "ID": "3069",
+    "Name_lang": "General Drakkisath",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "12000"
+   },
+   {
+    "ID": "3070",
+    "Name_lang": "Lord Valthalak",
+    "MapID": "229",
+    "DifficultyID": "0",
+    "OrderIndex": "13000"
+   }
+  ],
+  "AreaTrigger": [
+   {
+    "ID": "45",
+    "ContinentID": "0",
+    "Pos_0": "2924.3798828125",
+    "Pos_1": "-798.42901611328",
+    "Pos_2": "161.61099243164"
+   },
+   {
+    "ID": "71",
+    "ContinentID": "0",
+    "Pos_0": "-10645.900390625",
+    "Pos_1": "1179.0600585938",
+    "Pos_2": "48.17810058594"
+   },
+   {
+    "ID": "78",
+    "ContinentID": "0",
+    "Pos_0": "-11208.5",
+    "Pos_1": "1685.3399658203",
+    "Pos_2": "25.76119995117"
+   },
+   {
+    "ID": "84",
+    "ContinentID": "0",
+    "Pos_0": "16449.900390625",
+    "Pos_1": "16393.19921875",
+    "Pos_2": "69.44439697266"
+   },
+   {
+    "ID": "87",
+    "ContinentID": "0",
+    "Pos_0": "-9077.33984375",
+    "Pos_1": "-552.92498779297",
+    "Pos_2": "60.34759902954"
+   },
+   {
+    "ID": "88",
+    "ContinentID": "0",
+    "Pos_0": "-9843.5400390625",
+    "Pos_1": "127.52500152588",
+    "Pos_2": "5.36980009079"
+   },
+   {
+    "ID": "97",
+    "ContinentID": "0",
+    "Pos_0": "-5660.330078125",
+    "Pos_1": "755.29901123047",
+    "Pos_2": "389.60501098633"
+   },
+   {
+    "ID": "98",
+    "ContinentID": "0",
+    "Pos_0": "-11634.799804688",
+    "Pos_1": "-54.06969833374",
+    "Pos_2": "13.44390010834"
+   },
+   {
+    "ID": "100",
+    "ContinentID": "0",
+    "Pos_0": "2019.3493652344",
+    "Pos_1": "1904.359375",
+    "Pos_2": "105.14444732666"
+   },
+   {
+    "ID": "101",
+    "ContinentID": "0",
+    "Pos_0": "-8761.849609375",
+    "Pos_1": "848.55700683594",
+    "Pos_2": "87.80519866943"
+   },
+   {
+    "ID": "107",
+    "ContinentID": "0",
+    "Pos_0": "-8667.5595703125",
+    "Pos_1": "623.56298828125",
+    "Pos_2": "85.40540313721"
+   },
+   {
+    "ID": "145",
+    "ContinentID": "0",
+    "Pos_0": "-229.49000549316",
+    "Pos_1": "1576.3499755859",
+    "Pos_2": "78.8908996582"
+   },
+   {
+    "ID": "168",
+    "ContinentID": "0",
+    "Pos_0": "-5584.2065429688",
+    "Pos_1": "759.83215332031",
+    "Pos_2": "384.29016113281"
+   },
+   {
+    "ID": "169",
+    "ContinentID": "0",
+    "Pos_0": "-5586.4599609375",
+    "Pos_1": "679.29797363281",
+    "Pos_2": "384.95498657227"
+   },
+   {
+    "ID": "171",
+    "ContinentID": "0",
+    "Pos_0": "-5763.7202148438",
+    "Pos_1": "-3439.580078125",
+    "Pos_2": "306.36599731445"
+   },
+   {
+    "ID": "173",
+    "ContinentID": "0",
+    "Pos_0": "1058.1099853516",
+    "Pos_1": "1554.6800537109",
+    "Pos_2": "-15"
+   },
+   {
+    "ID": "175",
+    "ContinentID": "0",
+    "Pos_0": "-4086.3601074219",
+    "Pos_1": "-2610.9499511719",
+    "Pos_2": "46.01430130005"
+   },
+   {
+    "ID": "178",
+    "ContinentID": "0",
+    "Pos_0": "683.77099609375",
+    "Pos_1": "-912.14398193359",
+    "Pos_2": "174.5"
+   },
+   {
+    "ID": "196",
+    "ContinentID": "0",
+    "Pos_0": "-12153.62109375",
+    "Pos_1": "894.01373291016",
+    "Pos_2": "9.53891277313"
+   },
+   {
+    "ID": "197",
+    "ContinentID": "0",
+    "Pos_0": "-9796.1796875",
+    "Pos_1": "157.77299499512",
+    "Pos_2": "25.38780021667"
+   },
+   {
+    "ID": "205",
+    "ContinentID": "1",
+    "Pos_0": "-1895.7800292969",
+    "Pos_1": "-1109.0400390625",
+    "Pos_2": "86.18299865723"
+   },
+   {
+    "ID": "216",
+    "ContinentID": "1",
+    "Pos_0": "90.1003036499",
+    "Pos_1": "-1943.4399414062",
+    "Pos_2": "79.47270202637"
+   },
+   {
+    "ID": "217",
+    "ContinentID": "1",
+    "Pos_0": "10708.799804688",
+    "Pos_1": "762.09197998047",
+    "Pos_2": "1321.3699951172"
+   },
+   {
+    "ID": "218",
+    "ContinentID": "1",
+    "Pos_0": "9859.08984375",
+    "Pos_1": "588.76098632813",
+    "Pos_2": "1300.6099853516"
+   },
+   {
+    "ID": "219",
+    "ContinentID": "1",
+    "Pos_0": "9556.240234375",
+    "Pos_1": "1654.7700195312",
+    "Pos_2": "1299.4899902344"
+   },
+   {
+    "ID": "220",
+    "ContinentID": "1",
+    "Pos_0": "10675.200195312",
+    "Pos_1": "1857.4499511719",
+    "Pos_2": "1324.1700439453"
+   },
+   {
+    "ID": "223",
+    "ContinentID": "1",
+    "Pos_0": "4508.169921875",
+    "Pos_1": "373.37600708008",
+    "Pos_2": "32.51250076294"
+   },
+   {
+    "ID": "224",
+    "ContinentID": "1",
+    "Pos_0": "4605.5698242188",
+    "Pos_1": "385.15798950195",
+    "Pos_2": "31.4827003479"
+   },
+   {
+    "ID": "225",
+    "ContinentID": "1",
+    "Pos_0": "4558.3598632812",
+    "Pos_1": "421.4460144043",
+    "Pos_2": "33.74250030518"
+   },
+   {
+    "ID": "228",
+    "ContinentID": "1",
+    "Pos_0": "-753.59600830078",
+    "Pos_1": "-2212.7800292969",
+    "Pos_2": "21.54030036926"
+   },
+   {
+    "ID": "230",
+    "ContinentID": "1",
+    "Pos_0": "6744.9799804688",
+    "Pos_1": "41.11640167236",
+    "Pos_2": "47.60409927368"
+   },
+   {
+    "ID": "231",
+    "ContinentID": "1",
+    "Pos_0": "5996.5600585938",
+    "Pos_1": "365.20999145508",
+    "Pos_2": "21.86610031128"
+   },
+   {
+    "ID": "232",
+    "ContinentID": "1",
+    "Pos_0": "5980.169921875",
+    "Pos_1": "330.66900634766",
+    "Pos_2": "21.76549911499"
+   },
+   {
+    "ID": "233",
+    "ContinentID": "1",
+    "Pos_0": "4916.990234375",
+    "Pos_1": "328.42999267578",
+    "Pos_2": "36.76779937744"
+   },
+   {
+    "ID": "234",
+    "ContinentID": "1",
+    "Pos_0": "4641.1899414062",
+    "Pos_1": "55.38010025024",
+    "Pos_2": "66.63069915771"
+   },
+   {
+    "ID": "235",
+    "ContinentID": "1",
+    "Pos_0": "4554.6499023438",
+    "Pos_1": "146.35400390625",
+    "Pos_2": "59.50270080566"
+   },
+   {
+    "ID": "236",
+    "ContinentID": "1",
+    "Pos_0": "4643.3798828125",
+    "Pos_1": "145.34899902344",
+    "Pos_2": "57.90470123291"
+   },
+   {
+    "ID": "237",
+    "ContinentID": "1",
+    "Pos_0": "4504.3100585938",
+    "Pos_1": "32.32960128784",
+    "Pos_2": "86.49130249023"
+   },
+   {
+    "ID": "238",
+    "ContinentID": "1",
+    "Pos_0": "6876.2797851562",
+    "Pos_1": "-486.02899169922",
+    "Pos_2": "40.14360046387"
+   },
+   {
+    "ID": "239",
+    "ContinentID": "1",
+    "Pos_0": "3469.4299316406",
+    "Pos_1": "847.61999511719",
+    "Pos_2": "5.36475992203"
+   },
+   {
+    "ID": "244",
+    "ContinentID": "1",
+    "Pos_0": "-4456.7001953125",
+    "Pos_1": "-1655.9899902344",
+    "Pos_2": "86.10949707031"
+   },
+   {
+    "ID": "246",
+    "ContinentID": "1",
+    "Pos_0": "-4932.5297851562",
+    "Pos_1": "-1596.0500488281",
+    "Pos_2": "84.81569671631"
+   },
+   {
+    "ID": "257",
+    "ContinentID": "1",
+    "Pos_0": "4252.3701171875",
+    "Pos_1": "756.97399902344",
+    "Pos_2": "-23.06319999695"
+   },
+   {
+    "ID": "284",
+    "ContinentID": "0",
+    "Pos_0": "-8681.3701171875",
+    "Pos_1": "434.40600585938",
+    "Pos_2": "99.25789642334"
+   },
+   {
+    "ID": "286",
+    "ContinentID": "0",
+    "Pos_0": "-6053.7299804688",
+    "Pos_1": "-2954.6298828125",
+    "Pos_2": "213.68600463867"
+   },
+   {
+    "ID": "302",
+    "ContinentID": "1",
+    "Pos_0": "-3463.2600097656",
+    "Pos_1": "-4123.1298828125",
+    "Pos_2": "17.10429954529"
+   },
+   {
+    "ID": "303",
+    "ContinentID": "1",
+    "Pos_0": "-4058.75",
+    "Pos_1": "-2732.5400390625",
+    "Pos_2": "35.33010101318"
+   },
+   {
+    "ID": "324",
+    "ContinentID": "0",
+    "Pos_0": "-5161.330078125",
+    "Pos_1": "939.62298583984",
+    "Pos_2": "258.28799438477"
+   },
+   {
+    "ID": "342",
+    "ContinentID": "0",
+    "Pos_0": "-9029.173828125",
+    "Pos_1": "-608.32885742188",
+    "Pos_2": "56.46789932251"
+   },
+   {
+    "ID": "362",
+    "ContinentID": "0",
+    "Pos_0": "-10429.434570312",
+    "Pos_1": "-3828.8408203125",
+    "Pos_2": "-31.62964630127"
+   },
+   {
+    "ID": "382",
+    "ContinentID": "0",
+    "Pos_0": "-8681.400390625",
+    "Pos_1": "434.43899536133",
+    "Pos_2": "99.25900268555"
+   },
+   {
+    "ID": "422",
+    "ContinentID": "1",
+    "Pos_0": "-93.16139984131",
+    "Pos_1": "1691.1500244141",
+    "Pos_2": "89.06490325928"
+   },
+   {
+    "ID": "442",
+    "ContinentID": "1",
+    "Pos_0": "-4666.5200195312",
+    "Pos_1": "-2536.8200683594",
+    "Pos_2": "86.96710205078"
+   },
+   {
+    "ID": "446",
+    "ContinentID": "0",
+    "Pos_0": "-10162.700195312",
+    "Pos_1": "-3998.6499023438",
+    "Pos_2": "-107.97799682617"
+   },
+   {
+    "ID": "482",
+    "ContinentID": "0",
+    "Pos_0": "-8932.7802734375",
+    "Pos_1": "-1986.4000244141",
+    "Pos_2": "139.9049987793"
+   },
+   {
+    "ID": "522",
+    "ContinentID": "1",
+    "Pos_0": "-1679.3000488281",
+    "Pos_1": "-4328.9599609375",
+    "Pos_2": "2.58591008186"
+   },
+   {
+    "ID": "523",
+    "ContinentID": "0",
+    "Pos_0": "-4858.2700195312",
+    "Pos_1": "785.03002929688",
+    "Pos_2": "241.05999755859"
+   },
+   {
+    "ID": "527",
+    "ContinentID": "1",
+    "Pos_0": "9947.48046875",
+    "Pos_1": "2630.0400390625",
+    "Pos_2": "1318.5999755859"
+   },
+   {
+    "ID": "542",
+    "ContinentID": "1",
+    "Pos_0": "8799.41015625",
+    "Pos_1": "969.78698730469",
+    "Pos_2": "30.24090003967"
+   },
+   {
+    "ID": "562",
+    "ContinentID": "0",
+    "Pos_0": "-9465.580078125",
+    "Pos_1": "16.84720039368",
+    "Pos_2": "65.92099761963"
+   },
+   {
+    "ID": "610",
+    "ContinentID": "0",
+    "Pos_0": "2925.1799316406",
+    "Pos_1": "-820.54498291016",
+    "Pos_2": "161.63400268555"
+   },
+   {
+    "ID": "612",
+    "ContinentID": "0",
+    "Pos_0": "2877.9799804688",
+    "Pos_1": "-839.26702880859",
+    "Pos_2": "163.04899597168"
+   },
+   {
+    "ID": "614",
+    "ContinentID": "0",
+    "Pos_0": "2859.7299804688",
+    "Pos_1": "-824.90997314453",
+    "Pos_2": "162.08299255371"
+   },
+   {
+    "ID": "682",
+    "ContinentID": "0",
+    "Pos_0": "-9219.3701171875",
+    "Pos_1": "-2149.9399414062",
+    "Pos_2": "70.60600280762"
+   },
+   {
+    "ID": "702",
+    "ContinentID": "0",
+    "Pos_0": "-9023.259765625",
+    "Pos_1": "892.39801025391",
+    "Pos_2": "33.50960159302"
+   },
+   {
+    "ID": "704",
+    "ContinentID": "0",
+    "Pos_0": "-9020.08984375",
+    "Pos_1": "880.50201416016",
+    "Pos_2": "151.57600402832"
+   },
+   {
+    "ID": "707",
+    "ContinentID": "0",
+    "Pos_0": "-10517",
+    "Pos_1": "-1158.3900146484",
+    "Pos_2": "39.05419921875"
+   },
+   {
+    "ID": "708",
+    "ContinentID": "0",
+    "Pos_0": "-854.54699707031",
+    "Pos_1": "-576.31402587891",
+    "Pos_2": "18.46590042114"
+   },
+   {
+    "ID": "709",
+    "ContinentID": "1",
+    "Pos_0": "-3615.4899902344",
+    "Pos_1": "-4467.33984375",
+    "Pos_2": "24.3141002655"
+   },
+   {
+    "ID": "710",
+    "ContinentID": "0",
+    "Pos_0": "-5601.4599609375",
+    "Pos_1": "-530.74700927734",
+    "Pos_2": "395.48300170898"
+   },
+   {
+    "ID": "712",
+    "ContinentID": "0",
+    "Pos_0": "-5390.1801757812",
+    "Pos_1": "-2953.9299316406",
+    "Pos_2": "322.0299987793"
+   },
+   {
+    "ID": "713",
+    "ContinentID": "0",
+    "Pos_0": "-3823.0600585938",
+    "Pos_1": "-834.52600097656",
+    "Pos_2": "18.27890014648"
+   },
+   {
+    "ID": "715",
+    "ContinentID": "1",
+    "Pos_0": "9809.0498046875",
+    "Pos_1": "959.18798828125",
+    "Pos_2": "1315.3499755859"
+   },
+   {
+    "ID": "716",
+    "ContinentID": "1",
+    "Pos_0": "6410.009765625",
+    "Pos_1": "527.03497314453",
+    "Pos_2": "14.05780029297"
+   },
+   {
+    "ID": "717",
+    "ContinentID": "1",
+    "Pos_0": "2756.6398925781",
+    "Pos_1": "-423.05700683594",
+    "Pos_2": "119.3870010376"
+   },
+   {
+    "ID": "719",
+    "ContinentID": "0",
+    "Pos_0": "2266.6799316406",
+    "Pos_1": "245.99299621582",
+    "Pos_2": "44.41450119019"
+   },
+   {
+    "ID": "720",
+    "ContinentID": "0",
+    "Pos_0": "511.53601074219",
+    "Pos_1": "1638.6300048828",
+    "Pos_2": "75.41729736328"
+   },
+   {
+    "ID": "721",
+    "ContinentID": "0",
+    "Pos_0": "-4.944439888",
+    "Pos_1": "-934.90997314453",
+    "Pos_2": "62.46860122681"
+   },
+   {
+    "ID": "722",
+    "ContinentID": "1",
+    "Pos_0": "-2366.6999511719",
+    "Pos_1": "-345.98300170898",
+    "Pos_2": "-1.29313004017"
+   },
+   {
+    "ID": "742",
+    "ContinentID": "1",
+    "Pos_0": "-405.31100463867",
+    "Pos_1": "-2645.2900390625",
+    "Pos_2": "111.97200012207"
+   },
+   {
+    "ID": "743",
+    "ContinentID": "1",
+    "Pos_0": "-1051.4399414062",
+    "Pos_1": "-3653.8100585938",
+    "Pos_2": "31.13520050049"
+   },
+   {
+    "ID": "802",
+    "ContinentID": "0",
+    "Pos_0": "-3752.8100585938",
+    "Pos_1": "-851.55798339844",
+    "Pos_2": "10.11530017853"
+   },
+   {
+    "ID": "803",
+    "ContinentID": "0",
+    "Pos_0": "-3668.3400878906",
+    "Pos_1": "-823.83898925781",
+    "Pos_2": "9.89914989471"
+   },
+   {
+    "ID": "843",
+    "ContinentID": "1",
+    "Pos_0": "341.42001342773",
+    "Pos_1": "-4684.7001953125",
+    "Pos_2": "30.94930076599"
+   },
+   {
+    "ID": "844",
+    "ContinentID": "0",
+    "Pos_0": "-10487.299804688",
+    "Pos_1": "-3256.8701171875",
+    "Pos_2": "39.89640045166"
+   },
+   {
+    "ID": "862",
+    "ContinentID": "0",
+    "Pos_0": "-14457",
+    "Pos_1": "496.45001220703",
+    "Pos_2": "39.13919830322"
+   },
+   {
+    "ID": "902",
+    "ContinentID": "0",
+    "Pos_0": "-6606.4799804688",
+    "Pos_1": "-3762.1899414062",
+    "Pos_2": "266.91000366211"
+   },
+   {
+    "ID": "924",
+    "ContinentID": "1",
+    "Pos_0": "-6773.490234375",
+    "Pos_1": "-2889.7700195312",
+    "Pos_2": "15.106300354"
+   },
+   {
+    "ID": "942",
+    "ContinentID": "1",
+    "Pos_0": "-4950.6499023438",
+    "Pos_1": "-1625.1400146484",
+    "Pos_2": "-3.01570010185"
+   },
+   {
+    "ID": "943",
+    "ContinentID": "1",
+    "Pos_0": "-4950.740234375",
+    "Pos_1": "-1595.1400146484",
+    "Pos_2": "-3.01570010185"
+   },
+   {
+    "ID": "944",
+    "ContinentID": "1",
+    "Pos_0": "-4950.6499023438",
+    "Pos_1": "-1567.0999755859",
+    "Pos_2": "-3.01570010185"
+   },
+   {
+    "ID": "982",
+    "ContinentID": "1",
+    "Pos_0": "-2372.5100097656",
+    "Pos_1": "-1991.6400146484",
+    "Pos_2": "120.97499847412"
+   },
+   {
+    "ID": "1022",
+    "ContinentID": "1",
+    "Pos_0": "898.48199462891",
+    "Pos_1": "922.68798828125",
+    "Pos_2": "126.78800201416"
+   },
+   {
+    "ID": "1023",
+    "ContinentID": "1",
+    "Pos_0": "-7162.1401367188",
+    "Pos_1": "-3845.9499511719",
+    "Pos_2": "8.78192996979"
+   },
+   {
+    "ID": "1024",
+    "ContinentID": "1",
+    "Pos_0": "-4370.830078125",
+    "Pos_1": "3289.1499023438",
+    "Pos_2": "23.7823009491"
+   },
+   {
+    "ID": "1025",
+    "ContinentID": "1",
+    "Pos_0": "-4461.919921875",
+    "Pos_1": "242.57800292969",
+    "Pos_2": "45.24649810791"
+   },
+   {
+    "ID": "1042",
+    "ContinentID": "0",
+    "Pos_0": "357.2200012207",
+    "Pos_1": "-2106.0900878906",
+    "Pos_2": "121.83899688721"
+   },
+   {
+    "ID": "1103",
+    "ContinentID": "0",
+    "Pos_0": "-14468",
+    "Pos_1": "457.51300048828",
+    "Pos_2": "15.98219966888"
+   },
+   {
+    "ID": "1104",
+    "ContinentID": "0",
+    "Pos_0": "-5096.759765625",
+    "Pos_1": "750.20501708984",
+    "Pos_2": "260.54998779297"
+   },
+   {
+    "ID": "1125",
+    "ContinentID": "0",
+    "Pos_0": "-8561.5400390625",
+    "Pos_1": "823.38299560547",
+    "Pos_2": "106.51899719238"
+   },
+   {
+    "ID": "1205",
+    "ContinentID": "0",
+    "Pos_0": "-295.63900756836",
+    "Pos_1": "-3460.6799316406",
+    "Pos_2": "193.88400268555"
+   },
+   {
+    "ID": "1387",
+    "ContinentID": "1",
+    "Pos_0": "4260.7299804688",
+    "Pos_1": "-6273.6401367188",
+    "Pos_2": "90.22889709473"
+   },
+   {
+    "ID": "1388",
+    "ContinentID": "1",
+    "Pos_0": "4277.580078125",
+    "Pos_1": "-6296",
+    "Pos_2": "95.57640075684"
+   },
+   {
+    "ID": "1426",
+    "ContinentID": "0",
+    "Pos_0": "-11204.5",
+    "Pos_1": "-2730.6101074219",
+    "Pos_2": "14.89719963074"
+   },
+   {
+    "ID": "1427",
+    "ContinentID": "0",
+    "Pos_0": "-11079.700195312",
+    "Pos_1": "-2855.6398925781",
+    "Pos_2": "10.69110012054"
+   },
+   {
+    "ID": "1428",
+    "ContinentID": "0",
+    "Pos_0": "-11208.099609375",
+    "Pos_1": "-2960.4799804688",
+    "Pos_2": "9.21448993683"
+   },
+   {
+    "ID": "1429",
+    "ContinentID": "0",
+    "Pos_0": "-11337.400390625",
+    "Pos_1": "-2848.9299316406",
+    "Pos_2": "9.34403991699"
+   },
+   {
+    "ID": "1446",
+    "ContinentID": "0",
+    "Pos_0": "-11185.099609375",
+    "Pos_1": "-2834.6298828125",
+    "Pos_2": "116.47399902344"
+   },
+   {
+    "ID": "1466",
+    "ContinentID": "0",
+    "Pos_0": "-7176.6298828125",
+    "Pos_1": "-937.6669921875",
+    "Pos_2": "170.20599365234"
+   },
+   {
+    "ID": "1468",
+    "ContinentID": "0",
+    "Pos_0": "-7518.1899414062",
+    "Pos_1": "-1239.1300048828",
+    "Pos_2": "287.24301147461"
+   },
+   {
+    "ID": "1506",
+    "ContinentID": "0",
+    "Pos_0": "-7921.1401367188",
+    "Pos_1": "-2604.1799316406",
+    "Pos_2": "223.34599304199"
+   },
+   {
+    "ID": "1606",
+    "ContinentID": "0",
+    "Pos_0": "-6657.3500976562",
+    "Pos_1": "-2157.1000976562",
+    "Pos_2": "264.13299560547"
+   },
+   {
+    "ID": "1646",
+    "ContinentID": "0",
+    "Pos_0": "-907.86499023438",
+    "Pos_1": "-3534.2399902344",
+    "Pos_2": "83.7878036499"
+   },
+   {
+    "ID": "1667",
+    "ContinentID": "1",
+    "Pos_0": "-3464.7099609375",
+    "Pos_1": "-4120.9301757812",
+    "Pos_2": "17.0986995697"
+   },
+   {
+    "ID": "1726",
+    "ContinentID": "1",
+    "Pos_0": "-7286.009765625",
+    "Pos_1": "-2125.0600585938",
+    "Pos_2": "-272.11401367188"
+   },
+   {
+    "ID": "1727",
+    "ContinentID": "1",
+    "Pos_0": "-7208.419921875",
+    "Pos_1": "-2027.0899658203",
+    "Pos_2": "-271.73999023438"
+   },
+   {
+    "ID": "1728",
+    "ContinentID": "1",
+    "Pos_0": "-7170.0200195312",
+    "Pos_1": "-1852.7900390625",
+    "Pos_2": "-272.9880065918"
+   },
+   {
+    "ID": "1729",
+    "ContinentID": "1",
+    "Pos_0": "-7395.1899414062",
+    "Pos_1": "-1735.6800537109",
+    "Pos_2": "-279.76300048828"
+   },
+   {
+    "ID": "1730",
+    "ContinentID": "1",
+    "Pos_0": "-7449.8999023438",
+    "Pos_1": "-2111.5700683594",
+    "Pos_2": "-271.76599121094"
+   },
+   {
+    "ID": "1731",
+    "ContinentID": "1",
+    "Pos_0": "-7463.3500976562",
+    "Pos_1": "-1957.6400146484",
+    "Pos_2": "-272.53201293945"
+   },
+   {
+    "ID": "1732",
+    "ContinentID": "1",
+    "Pos_0": "-7509.580078125",
+    "Pos_1": "-1946.5600585938",
+    "Pos_2": "-270.53698730469"
+   },
+   {
+    "ID": "1733",
+    "ContinentID": "1",
+    "Pos_0": "-7516.8701171875",
+    "Pos_1": "-1829.7600097656",
+    "Pos_2": "-272.64700317383"
+   },
+   {
+    "ID": "1734",
+    "ContinentID": "1",
+    "Pos_0": "-7594.1201171875",
+    "Pos_1": "-1771.6199951172",
+    "Pos_2": "-273.61199951172"
+   },
+   {
+    "ID": "1735",
+    "ContinentID": "1",
+    "Pos_0": "-7748.8999023438",
+    "Pos_1": "-1721.1400146484",
+    "Pos_2": "-271.90899658203"
+   },
+   {
+    "ID": "1736",
+    "ContinentID": "1",
+    "Pos_0": "-7768.6098632812",
+    "Pos_1": "-1957.6300048828",
+    "Pos_2": "-272.12600708008"
+   },
+   {
+    "ID": "1737",
+    "ContinentID": "1",
+    "Pos_0": "-7612.5600585938",
+    "Pos_1": "-1930.8699951172",
+    "Pos_2": "-271.82800292969"
+   },
+   {
+    "ID": "1738",
+    "ContinentID": "1",
+    "Pos_0": "-7952.2001953125",
+    "Pos_1": "-1792.0100097656",
+    "Pos_2": "-272.89300537109"
+   },
+   {
+    "ID": "1739",
+    "ContinentID": "1",
+    "Pos_0": "-7895.2900390625",
+    "Pos_1": "-1623.6199951172",
+    "Pos_2": "-269.70700073242"
+   },
+   {
+    "ID": "1740",
+    "ContinentID": "1",
+    "Pos_0": "-7874.1801757812",
+    "Pos_1": "-1806.3000488281",
+    "Pos_2": "-271.45901489258"
+   },
+   {
+    "ID": "1766",
+    "ContinentID": "1",
+    "Pos_0": "-7308.7133789062",
+    "Pos_1": "-2001.4731445312",
+    "Pos_2": "-272.45050048828"
+   },
+   {
+    "ID": "1906",
+    "ContinentID": "1",
+    "Pos_0": "6818.5600585938",
+    "Pos_1": "-391.73498535156",
+    "Pos_2": "40.12300109863"
+   },
+   {
+    "ID": "1966",
+    "ContinentID": "1",
+    "Pos_0": "4988.9702148438",
+    "Pos_1": "547.00201416016",
+    "Pos_2": "5.37929010391"
+   },
+   {
+    "ID": "2173",
+    "ContinentID": "0",
+    "Pos_0": "-8346.4599609375",
+    "Pos_1": "514.03100585938",
+    "Pos_2": "96.59889984131"
+   },
+   {
+    "ID": "2175",
+    "ContinentID": "0",
+    "Pos_0": "-4840.259765625",
+    "Pos_1": "-1330.4599609375",
+    "Pos_2": "508.17199707031"
+   },
+   {
+    "ID": "2206",
+    "ContinentID": "1",
+    "Pos_0": "5483.8999023438",
+    "Pos_1": "-749.88098144531",
+    "Pos_2": "334.62100219727"
+   },
+   {
+    "ID": "2207",
+    "ContinentID": "1",
+    "Pos_0": "5552.08984375",
+    "Pos_1": "-683.81298828125",
+    "Pos_2": "335.25"
+   },
+   {
+    "ID": "2208",
+    "ContinentID": "1",
+    "Pos_0": "5587.0200195312",
+    "Pos_1": "-784.02502441406",
+    "Pos_2": "335.8219909668"
+   },
+   {
+    "ID": "2211",
+    "ContinentID": "1",
+    "Pos_0": "6107.6201171875",
+    "Pos_1": "-4181.6000976562",
+    "Pos_2": "852.32202148438"
+   },
+   {
+    "ID": "2213",
+    "ContinentID": "1",
+    "Pos_0": "5893.3198242188",
+    "Pos_1": "-4054.830078125",
+    "Pos_2": "596.32202148438"
+   },
+   {
+    "ID": "2214",
+    "ContinentID": "0",
+    "Pos_0": "3237.4599609375",
+    "Pos_1": "-4060.6000976562",
+    "Pos_2": "112.01000213623"
+   },
+   {
+    "ID": "2216",
+    "ContinentID": "0",
+    "Pos_0": "3392.4599609375",
+    "Pos_1": "-3396.7700195312",
+    "Pos_2": "143.07299804688"
+   },
+   {
+    "ID": "2217",
+    "ContinentID": "0",
+    "Pos_0": "3392.5600585938",
+    "Pos_1": "-3361.7800292969",
+    "Pos_2": "142.80200195313"
+   },
+   {
+    "ID": "2230",
+    "ContinentID": "1",
+    "Pos_0": "1818.4000244141",
+    "Pos_1": "-4427.259765625",
+    "Pos_2": "-10.44779968262"
+   },
+   {
+    "ID": "2246",
+    "ContinentID": "0",
+    "Pos_0": "1757.2600097656",
+    "Pos_1": "-1165.9300537109",
+    "Pos_2": "59.60250091553"
+   },
+   {
+    "ID": "2248",
+    "ContinentID": "0",
+    "Pos_0": "1855.1300048828",
+    "Pos_1": "-1569.2199707031",
+    "Pos_2": "59.18249893188"
+   },
+   {
+    "ID": "2250",
+    "ContinentID": "0",
+    "Pos_0": "1462.1300048828",
+    "Pos_1": "-1864.0200195312",
+    "Pos_2": "58.70280075073"
+   },
+   {
+    "ID": "2252",
+    "ContinentID": "0",
+    "Pos_0": "1668.1199951172",
+    "Pos_1": "-2282.5600585938",
+    "Pos_2": "59.2220993042"
+   },
+   {
+    "ID": "2266",
+    "ContinentID": "1",
+    "Pos_0": "245.58700561523",
+    "Pos_1": "1251.9899902344",
+    "Pos_2": "210.14500427246"
+   },
+   {
+    "ID": "2267",
+    "ContinentID": "1",
+    "Pos_0": "-1596.1600341797",
+    "Pos_1": "3145.2600097656",
+    "Pos_2": "61.36180114746"
+   },
+   {
+    "ID": "2286",
+    "ContinentID": "1",
+    "Pos_0": "-5477.91015625",
+    "Pos_1": "-2460.3200683594",
+    "Pos_2": "89.28369903564"
+   },
+   {
+    "ID": "2287",
+    "ContinentID": "1",
+    "Pos_0": "6687.990234375",
+    "Pos_1": "-4670.0698242188",
+    "Pos_2": "723.89099121094"
+   },
+   {
+    "ID": "2327",
+    "ContinentID": "1",
+    "Pos_0": "5018.91015625",
+    "Pos_1": "-4563.9399414062",
+    "Pos_2": "851.75"
+   },
+   {
+    "ID": "2387",
+    "ContinentID": "0",
+    "Pos_0": "-9897.2099609375",
+    "Pos_1": "-3725.0900878906",
+    "Pos_2": "24.66710090637"
+   },
+   {
+    "ID": "2412",
+    "ContinentID": "0",
+    "Pos_0": "97.43199920654",
+    "Pos_1": "-176.2740020752",
+    "Pos_2": "127.86599731445"
+   },
+   {
+    "ID": "2413",
+    "ContinentID": "0",
+    "Pos_0": "544.83001708984",
+    "Pos_1": "-1079.9499511719",
+    "Pos_2": "109.4940032959"
+   },
+   {
+    "ID": "2486",
+    "ContinentID": "1",
+    "Pos_0": "6207.5",
+    "Pos_1": "-152.83299255371",
+    "Pos_2": "79.8184967041"
+   },
+   {
+    "ID": "2527",
+    "ContinentID": "1",
+    "Pos_0": "1643.3599853516",
+    "Pos_1": "-4233.6000976562",
+    "Pos_2": "56.15570068359"
+   },
+   {
+    "ID": "2532",
+    "ContinentID": "0",
+    "Pos_0": "-8768.080078125",
+    "Pos_1": "409.20498657227",
+    "Pos_2": "103.92099761963"
+   },
+   {
+    "ID": "2567",
+    "ContinentID": "0",
+    "Pos_0": "1282.0500488281",
+    "Pos_1": "-2548.7299804688",
+    "Pos_2": "85.39939880371"
+   },
+   {
+    "ID": "2610",
+    "ContinentID": "1",
+    "Pos_0": "2343.5700683594",
+    "Pos_1": "-2569",
+    "Pos_2": "118.827003479"
+   },
+   {
+    "ID": "2626",
+    "ContinentID": "0",
+    "Pos_0": "1756.7900390625",
+    "Pos_1": "-1200.1500244141",
+    "Pos_2": "60.73519897461"
+   },
+   {
+    "ID": "2627",
+    "ContinentID": "0",
+    "Pos_0": "1723.3199462891",
+    "Pos_1": "-1198.3800048828",
+    "Pos_2": "60.00960159302"
+   },
+   {
+    "ID": "2628",
+    "ContinentID": "0",
+    "Pos_0": "1723.0999755859",
+    "Pos_1": "-1166.7099609375",
+    "Pos_2": "59.57749938965"
+   },
+   {
+    "ID": "2629",
+    "ContinentID": "0",
+    "Pos_0": "1879.5985107422",
+    "Pos_1": "-1546.0826416016",
+    "Pos_2": "59.03010940552"
+   },
+   {
+    "ID": "2630",
+    "ContinentID": "0",
+    "Pos_0": "1903",
+    "Pos_1": "-1570.2600097656",
+    "Pos_2": "59.70349884033"
+   },
+   {
+    "ID": "2631",
+    "ContinentID": "0",
+    "Pos_0": "1878.0799560547",
+    "Pos_1": "-1593.7399902344",
+    "Pos_2": "59.47389984131"
+   },
+   {
+    "ID": "2632",
+    "ContinentID": "0",
+    "Pos_0": "1487.0300292969",
+    "Pos_1": "-1840.9100341797",
+    "Pos_2": "58.66749954224"
+   },
+   {
+    "ID": "2633",
+    "ContinentID": "0",
+    "Pos_0": "1510.4599609375",
+    "Pos_1": "-1863.2399902344",
+    "Pos_2": "59.10599899292"
+   },
+   {
+    "ID": "2634",
+    "ContinentID": "0",
+    "Pos_0": "1485.6099853516",
+    "Pos_1": "-1888.6899414062",
+    "Pos_2": "59.09019851685"
+   },
+   {
+    "ID": "2635",
+    "ContinentID": "0",
+    "Pos_0": "1681.1168212891",
+    "Pos_1": "-2250.9318847656",
+    "Pos_2": "59.02111816406"
+   },
+   {
+    "ID": "2636",
+    "ContinentID": "0",
+    "Pos_0": "1712.75",
+    "Pos_1": "-2263.2800292969",
+    "Pos_2": "64.08889770508"
+   },
+   {
+    "ID": "2637",
+    "ContinentID": "0",
+    "Pos_0": "1700.25",
+    "Pos_1": "-2295.3601074219",
+    "Pos_2": "58.98460006714"
+   },
+   {
+    "ID": "2647",
+    "ContinentID": "0",
+    "Pos_0": "2841.8100585938",
+    "Pos_1": "-1544.5200195312",
+    "Pos_2": "190.51600646973"
+   },
+   {
+    "ID": "2706",
+    "ContinentID": "0",
+    "Pos_0": "2964.5600585938",
+    "Pos_1": "-2712.8898925781",
+    "Pos_2": "98.74459838867"
+   },
+   {
+    "ID": "2707",
+    "ContinentID": "0",
+    "Pos_0": "2980.1000976562",
+    "Pos_1": "-2720.919921875",
+    "Pos_2": "99.93370056152"
+   },
+   {
+    "ID": "2726",
+    "ContinentID": "0",
+    "Pos_0": "1868.9599609375",
+    "Pos_1": "-3223.3898925781",
+    "Pos_2": "123.06500244141"
+   },
+   {
+    "ID": "2746",
+    "ContinentID": "0",
+    "Pos_0": "-8821.3603515625",
+    "Pos_1": "633.29699707031",
+    "Pos_2": "94.07579803467"
+   },
+   {
+    "ID": "2786",
+    "ContinentID": "0",
+    "Pos_0": "-9050.8701171875",
+    "Pos_1": "445.4580078125",
+    "Pos_2": "93.0558013916"
+   },
+   {
+    "ID": "2848",
+    "ContinentID": "1",
+    "Pos_0": "-4768.6098632812",
+    "Pos_1": "-3752.1101074219",
+    "Pos_2": "53.43170166016"
+   },
+   {
+    "ID": "2926",
+    "ContinentID": "1",
+    "Pos_0": "1999.1500244141",
+    "Pos_1": "-1121.2800292969",
+    "Pos_2": "97.35369873047"
+   },
+   {
+    "ID": "2946",
+    "ContinentID": "1",
+    "Pos_0": "2.00574994087",
+    "Pos_1": "402.67300415039",
+    "Pos_2": "101.0120010376"
+   },
+   {
+    "ID": "3066",
+    "ContinentID": "0",
+    "Pos_0": "18.94479942322",
+    "Pos_1": "-1448.2199707031",
+    "Pos_2": "176.14999389648"
+   },
+   {
+    "ID": "3106",
+    "ContinentID": "0",
+    "Pos_0": "-30.05330085754",
+    "Pos_1": "-1576.5",
+    "Pos_2": "194.45300292969"
+   },
+   {
+    "ID": "3133",
+    "ContinentID": "1",
+    "Pos_0": "-1484.0699462891",
+    "Pos_1": "2617.5700683594",
+    "Pos_2": "75.71440124512"
+   },
+   {
+    "ID": "3134",
+    "ContinentID": "1",
+    "Pos_0": "-1181.9799804688",
+    "Pos_1": "2861.9499511719",
+    "Pos_2": "85.25810241699"
+   },
+   {
+    "ID": "3146",
+    "ContinentID": "1",
+    "Pos_0": "-7180.9399414062",
+    "Pos_1": "441.1369934082",
+    "Pos_2": "26.54490089417"
+   },
+   {
+    "ID": "3183",
+    "ContinentID": "1",
+    "Pos_0": "-3730.4799804688",
+    "Pos_1": "933.97497558594",
+    "Pos_2": "160.97300720215"
+   },
+   {
+    "ID": "3184",
+    "ContinentID": "1",
+    "Pos_0": "-3981.580078125",
+    "Pos_1": "771.19299316406",
+    "Pos_2": "160.96200561523"
+   },
+   {
+    "ID": "3185",
+    "ContinentID": "1",
+    "Pos_0": "-4028.2099609375",
+    "Pos_1": "123.96600341797",
+    "Pos_2": "26.8108997345"
+   },
+   {
+    "ID": "3186",
+    "ContinentID": "1",
+    "Pos_0": "-3837.7900390625",
+    "Pos_1": "1250.2299804688",
+    "Pos_2": "160.22300720215"
+   },
+   {
+    "ID": "3187",
+    "ContinentID": "1",
+    "Pos_0": "-3741.9599609375",
+    "Pos_1": "1249.1800537109",
+    "Pos_2": "160.21699523926"
+   },
+   {
+    "ID": "3189",
+    "ContinentID": "1",
+    "Pos_0": "-3520.6499023438",
+    "Pos_1": "1068.7199707031",
+    "Pos_2": "161.12800598145"
+   },
+   {
+    "ID": "3366",
+    "ContinentID": "0",
+    "Pos_0": "2832.0700683594",
+    "Pos_1": "-1540.4799804688",
+    "Pos_2": "190.16499328613"
+   },
+   {
+    "ID": "3367",
+    "ContinentID": "0",
+    "Pos_0": "2843.3999023438",
+    "Pos_1": "-1553.2600097656",
+    "Pos_2": "190.72099304199"
+   },
+   {
+    "ID": "3528",
+    "ContinentID": "0",
+    "Pos_0": "-7510.8701171875",
+    "Pos_1": "-1035.8699951172",
+    "Pos_2": "182.95199584961"
+   },
+   {
+    "ID": "3529",
+    "ContinentID": "0",
+    "Pos_0": "-7512.16015625",
+    "Pos_1": "-1034.7800292969",
+    "Pos_2": "177.20799255371"
+   },
+   {
+    "ID": "3530",
+    "ContinentID": "0",
+    "Pos_0": "-8536.1796875",
+    "Pos_1": "452.16500854492",
+    "Pos_2": "104.91699981689"
+   },
+   {
+    "ID": "3546",
+    "ContinentID": "1",
+    "Pos_0": "9933.9404296875",
+    "Pos_1": "2500.9799804688",
+    "Pos_2": "1317.8199462891"
+   },
+   {
+    "ID": "3547",
+    "ContinentID": "0",
+    "Pos_0": "1642.0999755859",
+    "Pos_1": "239.84300231934",
+    "Pos_2": "62.59159851074"
+   },
+   {
+    "ID": "3548",
+    "ContinentID": "0",
+    "Pos_0": "-4754.5600585938",
+    "Pos_1": "-3313.8000488281",
+    "Pos_2": "313.56399536133"
+   },
+   {
+    "ID": "3549",
+    "ContinentID": "1",
+    "Pos_0": "1253.7900390625",
+    "Pos_1": "-2227.5200195312",
+    "Pos_2": "92.24800109863"
+   },
+   {
+    "ID": "3550",
+    "ContinentID": "1",
+    "Pos_0": "-959.29901123047",
+    "Pos_1": "-3759.2099609375",
+    "Pos_2": "4.98618984222"
+   },
+   {
+    "ID": "3551",
+    "ContinentID": "1",
+    "Pos_0": "-998.18298339844",
+    "Pos_1": "-3822.0700683594",
+    "Pos_2": "5.29540014267"
+   },
+   {
+    "ID": "3552",
+    "ContinentID": "0",
+    "Pos_0": "-11413.599609375",
+    "Pos_1": "1954.9100341797",
+    "Pos_2": "14.24090003967"
+   },
+   {
+    "ID": "3586",
+    "ContinentID": "1",
+    "Pos_0": "6221.83984375",
+    "Pos_1": "-1152.75",
+    "Pos_2": "383.23098754883"
+   },
+   {
+    "ID": "3587",
+    "ContinentID": "1",
+    "Pos_0": "6221.8901367188",
+    "Pos_1": "-1153",
+    "Pos_2": "383.27200317383"
+   },
+   {
+    "ID": "3606",
+    "ContinentID": "0",
+    "Pos_0": "-7514.8100585938",
+    "Pos_1": "-1033.1199951172",
+    "Pos_2": "163.80599975586"
+   },
+   {
+    "ID": "3650",
+    "ContinentID": "1",
+    "Pos_0": "1422.3299560547",
+    "Pos_1": "-1855.3299560547",
+    "Pos_2": "135.77499389648"
+   },
+   {
+    "ID": "3654",
+    "ContinentID": "1",
+    "Pos_0": "1034.1899414062",
+    "Pos_1": "-2087.7399902344",
+    "Pos_2": "123.37200164795"
+   },
+   {
+    "ID": "3690",
+    "ContinentID": "0",
+    "Pos_0": "-622.14202880859",
+    "Pos_1": "-4582.1401367188",
+    "Pos_2": "22.57609939575"
+   },
+   {
+    "ID": "3847",
+    "ContinentID": "0",
+    "Pos_0": "-7663.3999023438",
+    "Pos_1": "-1218.3699951172",
+    "Pos_2": "287.78799438477"
+   },
+   {
+    "ID": "3886",
+    "ContinentID": "0",
+    "Pos_0": "-12432.799804688",
+    "Pos_1": "205.16900634766",
+    "Pos_2": "2.36514997482"
+   },
+   {
+    "ID": "3928",
+    "ContinentID": "0",
+    "Pos_0": "-11915.799804688",
+    "Pos_1": "-1236.4300537109",
+    "Pos_2": "96.15019989014"
+   },
+   {
+    "ID": "3953",
+    "ContinentID": "0",
+    "Pos_0": "-1189.2700195312",
+    "Pos_1": "-2532.1899414062",
+    "Pos_2": "22.70499992371"
+   },
+   {
+    "ID": "3954",
+    "ContinentID": "0",
+    "Pos_0": "-811.42498779297",
+    "Pos_1": "-3505.8200683594",
+    "Pos_2": "73.13770294189"
+   },
+   {
+    "ID": "3985",
+    "ContinentID": "1",
+    "Pos_0": "-6864.9799804688",
+    "Pos_1": "731.61199951172",
+    "Pos_2": "50"
+   },
+   {
+    "ID": "3986",
+    "ContinentID": "1",
+    "Pos_0": "-8194.259765625",
+    "Pos_1": "-4676.4399414062",
+    "Pos_2": "11.36540031433"
+   },
+   {
+    "ID": "3991",
+    "ContinentID": "0",
+    "Pos_0": "1733.3199462891",
+    "Pos_1": "526.47399902344",
+    "Pos_2": "34.24940109253"
+   },
+   {
+    "ID": "4008",
+    "ContinentID": "1",
+    "Pos_0": "-8424.9404296875",
+    "Pos_1": "1508.6500244141",
+    "Pos_2": "32.01419830322"
+   },
+   {
+    "ID": "4010",
+    "ContinentID": "1",
+    "Pos_0": "-8230.400390625",
+    "Pos_1": "2005.3299560547",
+    "Pos_2": "129.8630065918"
+   },
+   {
+    "ID": "4015",
+    "ContinentID": "1",
+    "Pos_0": "5085.8198242188",
+    "Pos_1": "-5110.6401367188",
+    "Pos_2": "929.97900390625"
+   },
+   {
+    "ID": "4017",
+    "ContinentID": "0",
+    "Pos_0": "-10636.200195312",
+    "Pos_1": "-391.30700683594",
+    "Pos_2": "101.87799835205"
+   },
+   {
+    "ID": "4026",
+    "ContinentID": "0",
+    "Pos_0": "-5049.33984375",
+    "Pos_1": "-818.45397949219",
+    "Pos_2": "495.29501342773"
+   },
+   {
+    "ID": "4027",
+    "ContinentID": "1",
+    "Pos_0": "1332.2700195312",
+    "Pos_1": "-4607.669921875",
+    "Pos_2": "24.36949920654"
+   },
+   {
+    "ID": "4028",
+    "ContinentID": "0",
+    "Pos_0": "2051.3601074219",
+    "Pos_1": "272.5719909668",
+    "Pos_2": "57.16339874268"
+   },
+   {
+    "ID": "4029",
+    "ContinentID": "0",
+    "Pos_0": "-14294.299804688",
+    "Pos_1": "516.08801269531",
+    "Pos_2": "8.9539899826"
+   },
+   {
+    "ID": "4030",
+    "ContinentID": "0",
+    "Pos_0": "-3755.1049804688",
+    "Pos_1": "-775.70477294922",
+    "Pos_2": "9.88801002502"
+   },
+   {
+    "ID": "4031",
+    "ContinentID": "1",
+    "Pos_0": "-7166.0600585938",
+    "Pos_1": "-3917.9399414062",
+    "Pos_2": "9.39558029175"
+   },
+   {
+    "ID": "4032",
+    "ContinentID": "0",
+    "Pos_0": "-8823.48046875",
+    "Pos_1": "540.30102539063",
+    "Pos_2": "96.9036026001"
+   },
+   {
+    "ID": "4055",
+    "ContinentID": "0",
+    "Pos_0": "3133.1499023438",
+    "Pos_1": "-3730.2900390625",
+    "Pos_2": "138.65899658203"
+   },
+   {
+    "ID": "4057",
+    "ContinentID": "0",
+    "Pos_0": "3133.2600097656",
+    "Pos_1": "-3730.8400878906",
+    "Pos_2": "138.65800476074"
+   },
+   {
+    "ID": "4058",
+    "ContinentID": "0",
+    "Pos_0": "2298.169921875",
+    "Pos_1": "-5340.9799804688",
+    "Pos_2": "90.87989807129"
+   },
+   {
+    "ID": "4090",
+    "ContinentID": "1",
+    "Pos_0": "2716.6000976562",
+    "Pos_1": "1496.8199462891",
+    "Pos_2": "236.82800292969"
+   },
+   {
+    "ID": "4092",
+    "ContinentID": "0",
+    "Pos_0": "-9061.9296875",
+    "Pos_1": "349.75799560547",
+    "Pos_2": "93.08209991455"
+   },
+   {
+    "ID": "4094",
+    "ContinentID": "0",
+    "Pos_0": "-9118.9599609375",
+    "Pos_1": "327.8219909668",
+    "Pos_2": "93.15869903564"
+   },
+   {
+    "ID": "4095",
+    "ContinentID": "0",
+    "Pos_0": "-9182.6201171875",
+    "Pos_1": "414.85699462891",
+    "Pos_2": "89.55760192871"
+   },
+   {
+    "ID": "4096",
+    "ContinentID": "0",
+    "Pos_0": "-9218.1298828125",
+    "Pos_1": "318.62701416016",
+    "Pos_2": "73.88410186768"
+   },
+   {
+    "ID": "4098",
+    "ContinentID": "0",
+    "Pos_0": "-5163.25",
+    "Pos_1": "-645.92199707031",
+    "Pos_2": "397.01501464844"
+   },
+   {
+    "ID": "4099",
+    "ContinentID": "0",
+    "Pos_0": "-5175.1899414062",
+    "Pos_1": "-588.08502197266",
+    "Pos_2": "397.9880065918"
+   },
+   {
+    "ID": "4100",
+    "ContinentID": "0",
+    "Pos_0": "1979.9899902344",
+    "Pos_1": "305.25201416016",
+    "Pos_2": "41.18650054932"
+   },
+   {
+    "ID": "4101",
+    "ContinentID": "1",
+    "Pos_0": "1217.9699707031",
+    "Pos_1": "-4339.2998046875",
+    "Pos_2": "25.91239929199"
+   },
+   {
+    "ID": "4102",
+    "ContinentID": "1",
+    "Pos_0": "1169.5500488281",
+    "Pos_1": "-4320.0600585938",
+    "Pos_2": "20.87560081482"
+   },
+   {
+    "ID": "4103",
+    "ContinentID": "1",
+    "Pos_0": "-1545.3900146484",
+    "Pos_1": "51.30059814453",
+    "Pos_2": "5.39339017868"
+   },
+   {
+    "ID": "4104",
+    "ContinentID": "1",
+    "Pos_0": "9914.169921875",
+    "Pos_1": "1864.6700439453",
+    "Pos_2": "1321.2600097656"
+   },
+   {
+    "ID": "4105",
+    "ContinentID": "1",
+    "Pos_0": "9948.009765625",
+    "Pos_1": "1932.5300292969",
+    "Pos_2": "1328.6999511719"
+   },
+   {
+    "ID": "4162",
+    "ContinentID": "1",
+    "Pos_0": "-7142.0400390625",
+    "Pos_1": "1397.9200439453",
+    "Pos_2": "4.32688999176"
+   },
+   {
+    "ID": "4168",
+    "ContinentID": "1",
+    "Pos_0": "-7588.4799804688",
+    "Pos_1": "756.80603027344",
+    "Pos_2": "-16.4248008728"
+   },
+   {
+    "ID": "4189",
+    "ContinentID": "0",
+    "Pos_0": "1782.1999511719",
+    "Pos_1": "151.59199523926",
+    "Pos_2": "-62.29029846191"
+   }
+  ],
+  "UiMapAssignment": [
+   {
+    "UiMapID": "1411",
+    "MapID": "1",
+    "Region_0": "-1716.6666259766",
+    "Region_1": "-7249.9995117188",
+    "Region_3": "1808.3332519531",
+    "Region_4": "-1962.4998779297"
+   },
+   {
+    "UiMapID": "1412",
+    "MapID": "1",
+    "Region_0": "-3697.9165039062",
+    "Region_1": "-3089.5832519531",
+    "Region_3": "-272.91665649414",
+    "Region_4": "2047.9166259766"
+   },
+   {
+    "UiMapID": "1413",
+    "MapID": "1",
+    "Region_0": "-5143.75",
+    "Region_1": "-7510.4165039062",
+    "Region_3": "1612.4998779297",
+    "Region_4": "2622.9165039062"
+   },
+   {
+    "UiMapID": "1414",
+    "MapID": "1",
+    "Region_0": "-11733.299804688",
+    "Region_1": "-19733.2109375",
+    "Region_3": "12799.900390625",
+    "Region_4": "17066.599609375"
+   },
+   {
+    "UiMapID": "1415",
+    "MapID": "0",
+    "Region_0": "-16000",
+    "Region_1": "-19199.900390625",
+    "Region_3": "7466.6000976562",
+    "Region_4": "16000"
+   },
+   {
+    "UiMapID": "1416",
+    "MapID": "0",
+    "Region_0": "-366.66665649414",
+    "Region_1": "-2016.6666259766",
+    "Region_3": "1500",
+    "Region_4": "783.33331298828"
+   },
+   {
+    "UiMapID": "1417",
+    "MapID": "0",
+    "Region_0": "-2533.3332519531",
+    "Region_1": "-4466.6665039062",
+    "Region_3": "-133.33332824707",
+    "Region_4": "-866.66662597656"
+   },
+   {
+    "UiMapID": "1418",
+    "MapID": "0",
+    "Region_0": "-7547.9165039062",
+    "Region_1": "-4566.6665039062",
+    "Region_3": "-5889.5830078125",
+    "Region_4": "-2079.1665039062"
+   },
+   {
+    "UiMapID": "1419",
+    "MapID": "0",
+    "Region_0": "-12800",
+    "Region_1": "-4591.6665039062",
+    "Region_3": "-10566.666015625",
+    "Region_4": "-1241.6666259766"
+   },
+   {
+    "UiMapID": "1420",
+    "MapID": "0",
+    "Region_0": "824.99993896484",
+    "Region_1": "-1485.4166259766",
+    "Region_3": "3837.4997558594",
+    "Region_4": "3033.3332519531"
+   },
+   {
+    "UiMapID": "1421",
+    "MapID": "0",
+    "Region_0": "-1133.3332519531",
+    "Region_1": "-750",
+    "Region_3": "1666.6666259766",
+    "Region_4": "3449.9997558594"
+   },
+   {
+    "UiMapID": "1422",
+    "MapID": "0",
+    "Region_0": "499.99996948242",
+    "Region_1": "-3883.3332519531",
+    "Region_3": "3366.6665039062",
+    "Region_4": "416.66665649414"
+   },
+   {
+    "UiMapID": "1423",
+    "MapID": "0",
+    "Region_0": "1218.75",
+    "Region_1": "-6056.25",
+    "Region_3": "3799.9997558594",
+    "Region_4": "-2185.4165039062"
+   },
+   {
+    "UiMapID": "1424",
+    "MapID": "0",
+    "Region_0": "-1733.3332519531",
+    "Region_1": "-2133.3332519531",
+    "Region_3": "400",
+    "Region_4": "1066.6666259766"
+   },
+   {
+    "UiMapID": "1425",
+    "MapID": "0",
+    "Region_0": "-1100",
+    "Region_1": "-5425",
+    "Region_3": "1466.6666259766",
+    "Region_4": "-1575"
+   },
+   {
+    "UiMapID": "1426",
+    "MapID": "0",
+    "Region_0": "-7160.4165039062",
+    "Region_1": "-3122.9165039062",
+    "Region_3": "-3877.0832519531",
+    "Region_4": "1802.0832519531"
+   },
+   {
+    "UiMapID": "1427",
+    "MapID": "0",
+    "Region_0": "-7587.4995117188",
+    "Region_1": "-2554.1665039062",
+    "Region_3": "-6100",
+    "Region_4": "-322.91665649414"
+   },
+   {
+    "UiMapID": "1428",
+    "MapID": "0",
+    "Region_0": "-8983.3330078125",
+    "Region_1": "-3195.8332519531",
+    "Region_3": "-7031.2495117188",
+    "Region_4": "-266.66665649414"
+   },
+   {
+    "UiMapID": "1429",
+    "MapID": "0",
+    "Region_0": "-10254.166015625",
+    "Region_1": "-1935.4166259766",
+    "Region_3": "-7939.5830078125",
+    "Region_4": "1535.4166259766"
+   },
+   {
+    "UiMapID": "1430",
+    "MapID": "0",
+    "Region_0": "-11533.333007812",
+    "Region_1": "-3333.3332519531",
+    "Region_3": "-9866.666015625",
+    "Region_4": "-833.33331298828"
+   },
+   {
+    "UiMapID": "1431",
+    "MapID": "0",
+    "Region_0": "-11516.666015625",
+    "Region_1": "-1866.6666259766",
+    "Region_3": "-9716.666015625",
+    "Region_4": "833.33331298828"
+   },
+   {
+    "UiMapID": "1432",
+    "MapID": "0",
+    "Region_0": "-6327.0830078125",
+    "Region_1": "-4752.0830078125",
+    "Region_3": "-4487.5",
+    "Region_4": "-1993.7498779297"
+   },
+   {
+    "UiMapID": "1433",
+    "MapID": "0",
+    "Region_0": "-10022.916015625",
+    "Region_1": "-3741.6665039062",
+    "Region_3": "-8575",
+    "Region_4": "-1570.8332519531"
+   },
+   {
+    "UiMapID": "1434",
+    "MapID": "0",
+    "Region_0": "-15422.916015625",
+    "Region_1": "-4160.4165039062",
+    "Region_3": "-11168.75",
+    "Region_4": "2220.8332519531"
+   },
+   {
+    "UiMapID": "1435",
+    "MapID": "0",
+    "Region_0": "-11150",
+    "Region_1": "-4516.6665039062",
+    "Region_3": "-9620.8330078125",
+    "Region_4": "-2222.9165039062"
+   },
+   {
+    "UiMapID": "1436",
+    "MapID": "0",
+    "Region_0": "-11733.333007812",
+    "Region_1": "-483.33331298828",
+    "Region_3": "-9400",
+    "Region_4": "3016.6665039062"
+   },
+   {
+    "UiMapID": "1437",
+    "MapID": "0",
+    "Region_0": "-4904.1665039062",
+    "Region_1": "-4525",
+    "Region_3": "-2147.9165039062",
+    "Region_4": "-389.58331298828"
+   },
+   {
+    "UiMapID": "1438",
+    "MapID": "1",
+    "Region_0": "8437.5",
+    "Region_1": "-1277.0832519531",
+    "Region_3": "11831.25",
+    "Region_4": "3814.5832519531"
+   },
+   {
+    "UiMapID": "1439",
+    "MapID": "1",
+    "Region_0": "3966.6665039062",
+    "Region_1": "-3608.3332519531",
+    "Region_3": "8333.3330078125",
+    "Region_4": "2941.6665039062"
+   },
+   {
+    "UiMapID": "1440",
+    "MapID": "1",
+    "Region_0": "829.16662597656",
+    "Region_1": "-4066.6665039062",
+    "Region_3": "4672.9165039062",
+    "Region_4": "1699.9998779297"
+   },
+   {
+    "UiMapID": "1441",
+    "MapID": "1",
+    "Region_0": "-6899.9995117188",
+    "Region_1": "-4833.3330078125",
+    "Region_3": "-3966.6665039062",
+    "Region_4": "-433.33331298828"
+   },
+   {
+    "UiMapID": "1442",
+    "MapID": "1",
+    "Region_0": "-339.58331298828",
+    "Region_1": "-1637.4998779297",
+    "Region_3": "2916.6665039062",
+    "Region_4": "3245.8332519531"
+   },
+   {
+    "UiMapID": "1443",
+    "MapID": "1",
+    "Region_0": "-2545.8332519531",
+    "Region_1": "-262.5",
+    "Region_3": "452.08331298828",
+    "Region_4": "4233.3330078125"
+   },
+   {
+    "UiMapID": "1444",
+    "MapID": "1",
+    "Region_0": "-6999.9995117188",
+    "Region_1": "-1508.3332519531",
+    "Region_3": "-2366.6665039062",
+    "Region_4": "5441.6665039062"
+   },
+   {
+    "UiMapID": "1445",
+    "MapID": "1",
+    "Region_0": "-5533.3330078125",
+    "Region_1": "-6225",
+    "Region_3": "-2033.3332519531",
+    "Region_4": "-974.99993896484"
+   },
+   {
+    "UiMapID": "1446",
+    "MapID": "1",
+    "Region_0": "-10475",
+    "Region_1": "-7118.7495117188",
+    "Region_3": "-5875",
+    "Region_4": "-218.74998474121"
+   },
+   {
+    "UiMapID": "1447",
+    "MapID": "1",
+    "Region_0": "1960.4166259766",
+    "Region_1": "-8347.916015625",
+    "Region_3": "5341.6665039062",
+    "Region_4": "-3277.0832519531"
+   },
+   {
+    "UiMapID": "1448",
+    "MapID": "1",
+    "Region_0": "3299.9997558594",
+    "Region_1": "-4108.3330078125",
+    "Region_3": "7133.3330078125",
+    "Region_4": "1641.6666259766"
+   },
+   {
+    "UiMapID": "1449",
+    "MapID": "1",
+    "Region_0": "-8433.3330078125",
+    "Region_1": "-3166.6665039062",
+    "Region_3": "-5966.6665039062",
+    "Region_4": "533.33331298828"
+   },
+   {
+    "UiMapID": "1450",
+    "MapID": "1",
+    "Region_0": "6952.0830078125",
+    "Region_1": "-3689.5832519531",
+    "Region_3": "8491.666015625",
+    "Region_4": "-1381.25"
+   },
+   {
+    "UiMapID": "1451",
+    "MapID": "1",
+    "Region_0": "-8281.25",
+    "Region_1": "-945.833984375",
+    "Region_3": "-5958.333984375",
+    "Region_4": "2537.5"
+   },
+   {
+    "UiMapID": "1452",
+    "MapID": "1",
+    "Region_0": "3799.9997558594",
+    "Region_1": "-7416.6665039062",
+    "Region_3": "8533.3330078125",
+    "Region_4": "-316.66665649414"
+   },
+   {
+    "UiMapID": "1453",
+    "MapID": "0",
+    "Region_0": "-9175.205078125",
+    "Region_1": "36.70063018799",
+    "Region_3": "-8278.8505859375",
+    "Region_4": "1380.9714355469"
+   },
+   {
+    "UiMapID": "1454",
+    "MapID": "1",
+    "Region_0": "1338.4605712891",
+    "Region_1": "-5083.2055664062",
+    "Region_3": "2273.8771972656",
+    "Region_4": "-3680.6010742188"
+   },
+   {
+    "UiMapID": "1455",
+    "MapID": "0",
+    "Region_0": "-5096.845703125",
+    "Region_1": "-1504.2164306641",
+    "Region_3": "-4569.2412109375",
+    "Region_4": "-713.59136962891"
+   },
+   {
+    "UiMapID": "1456",
+    "MapID": "1",
+    "Region_0": "-1545.8332519531",
+    "Region_1": "-527.08331298828",
+    "Region_3": "-849.99993896484",
+    "Region_4": "516.66662597656"
+   },
+   {
+    "UiMapID": "1457",
+    "MapID": "1",
+    "Region_0": "9532.5869140625",
+    "Region_1": "1880.0295410156",
+    "Region_3": "10238.31640625",
+    "Region_4": "2938.3627929688"
+   },
+   {
+    "UiMapID": "1458",
+    "MapID": "0",
+    "Region_0": "1237.8411865234",
+    "Region_1": "-86.18240356445",
+    "Region_3": "1877.9453125",
+    "Region_4": "873.19262695313"
+   },
+   {
+    "UiMapID": "1463",
+    "MapID": "0",
+    "Region_0": "-15980",
+    "Region_1": "-11880",
+    "Region_3": "5817",
+    "Region_4": "9917"
+   },
+   {
+    "UiMapID": "1464",
+    "MapID": "1",
+    "Region_0": "-11870",
+    "Region_1": "-13370",
+    "Region_3": "12470",
+    "Region_4": "10970"
+   },
+   {
+    "UiMapID": "947",
+    "MapID": "0",
+    "Region_0": "-16000",
+    "Region_1": "-7466.7001953125",
+    "Region_3": "6933.2998046875",
+    "Region_4": "8000"
+   },
+   {
+    "UiMapID": "947",
+    "MapID": "1",
+    "Region_0": "-12800",
+    "Region_1": "-9600",
+    "Region_3": "12266.700195312",
+    "Region_4": "6933.2998046875"
+   }
+  ],
+  "UiMap": [
+   {
+    "ID": "1411",
+    "Name_lang": "Durotar",
+    "Type": "3"
+   },
+   {
+    "ID": "1412",
+    "Name_lang": "Mulgore",
+    "Type": "3"
+   },
+   {
+    "ID": "1413",
+    "Name_lang": "The Barrens",
+    "Type": "3"
+   },
+   {
+    "ID": "1416",
+    "Name_lang": "Alterac Mountains",
+    "Type": "3"
+   },
+   {
+    "ID": "1417",
+    "Name_lang": "Arathi Highlands",
+    "Type": "3"
+   },
+   {
+    "ID": "1418",
+    "Name_lang": "Badlands",
+    "Type": "3"
+   },
+   {
+    "ID": "1419",
+    "Name_lang": "Blasted Lands",
+    "Type": "3"
+   },
+   {
+    "ID": "1420",
+    "Name_lang": "Tirisfal Glades",
+    "Type": "3"
+   },
+   {
+    "ID": "1421",
+    "Name_lang": "Silverpine Forest",
+    "Type": "3"
+   },
+   {
+    "ID": "1422",
+    "Name_lang": "Western Plaguelands",
+    "Type": "3"
+   },
+   {
+    "ID": "1423",
+    "Name_lang": "Eastern Plaguelands",
+    "Type": "3"
+   },
+   {
+    "ID": "1424",
+    "Name_lang": "Hillsbrad Foothills",
+    "Type": "3"
+   },
+   {
+    "ID": "1425",
+    "Name_lang": "The Hinterlands",
+    "Type": "3"
+   },
+   {
+    "ID": "1426",
+    "Name_lang": "Dun Morogh",
+    "Type": "3"
+   },
+   {
+    "ID": "1427",
+    "Name_lang": "Searing Gorge",
+    "Type": "3"
+   },
+   {
+    "ID": "1428",
+    "Name_lang": "Burning Steppes",
+    "Type": "3"
+   },
+   {
+    "ID": "1429",
+    "Name_lang": "Elwynn Forest",
+    "Type": "3"
+   },
+   {
+    "ID": "1430",
+    "Name_lang": "Deadwind Pass",
+    "Type": "3"
+   },
+   {
+    "ID": "1431",
+    "Name_lang": "Duskwood",
+    "Type": "3"
+   },
+   {
+    "ID": "1432",
+    "Name_lang": "Loch Modan",
+    "Type": "3"
+   },
+   {
+    "ID": "1433",
+    "Name_lang": "Redridge Mountains",
+    "Type": "3"
+   },
+   {
+    "ID": "1434",
+    "Name_lang": "Stranglethorn Vale",
+    "Type": "3"
+   },
+   {
+    "ID": "1435",
+    "Name_lang": "Swamp of Sorrows",
+    "Type": "3"
+   },
+   {
+    "ID": "1436",
+    "Name_lang": "Westfall",
+    "Type": "3"
+   },
+   {
+    "ID": "1437",
+    "Name_lang": "Wetlands",
+    "Type": "3"
+   },
+   {
+    "ID": "1438",
+    "Name_lang": "Teldrassil",
+    "Type": "3"
+   },
+   {
+    "ID": "1439",
+    "Name_lang": "Darkshore",
+    "Type": "3"
+   },
+   {
+    "ID": "1440",
+    "Name_lang": "Ashenvale",
+    "Type": "3"
+   },
+   {
+    "ID": "1441",
+    "Name_lang": "Thousand Needles",
+    "Type": "3"
+   },
+   {
+    "ID": "1442",
+    "Name_lang": "Stonetalon Mountains",
+    "Type": "3"
+   },
+   {
+    "ID": "1443",
+    "Name_lang": "Desolace",
+    "Type": "3"
+   },
+   {
+    "ID": "1444",
+    "Name_lang": "Feralas",
+    "Type": "3"
+   },
+   {
+    "ID": "1445",
+    "Name_lang": "Dustwallow Marsh",
+    "Type": "3"
+   },
+   {
+    "ID": "1446",
+    "Name_lang": "Tanaris",
+    "Type": "3"
+   },
+   {
+    "ID": "1447",
+    "Name_lang": "Azshara",
+    "Type": "3"
+   },
+   {
+    "ID": "1448",
+    "Name_lang": "Felwood",
+    "Type": "3"
+   },
+   {
+    "ID": "1449",
+    "Name_lang": "Un'Goro Crater",
+    "Type": "3"
+   },
+   {
+    "ID": "1450",
+    "Name_lang": "Moonglade",
+    "Type": "3"
+   },
+   {
+    "ID": "1451",
+    "Name_lang": "Silithus",
+    "Type": "3"
+   },
+   {
+    "ID": "1452",
+    "Name_lang": "Winterspring",
+    "Type": "3"
+   },
+   {
+    "ID": "1453",
+    "Name_lang": "Stormwind City",
+    "Type": "3"
+   },
+   {
+    "ID": "1454",
+    "Name_lang": "Orgrimmar",
+    "Type": "3"
+   },
+   {
+    "ID": "1455",
+    "Name_lang": "Ironforge",
+    "Type": "3"
+   },
+   {
+    "ID": "1456",
+    "Name_lang": "Thunder Bluff",
+    "Type": "3"
+   },
+   {
+    "ID": "1457",
+    "Name_lang": "Darnassus",
+    "Type": "3"
+   },
+   {
+    "ID": "1458",
+    "Name_lang": "Undercity",
+    "Type": "3"
+   },
+   {
+    "ID": "1459",
+    "Name_lang": "Alterac Valley",
+    "Type": "3"
+   },
+   {
+    "ID": "1460",
+    "Name_lang": "Warsong Gulch",
+    "Type": "3"
+   },
+   {
+    "ID": "1461",
+    "Name_lang": "Arathi Basin",
+    "Type": "3"
+   }
+  ],
+  "AreaTable": [
+   {
+    "ID": "206",
+    "AreaName_lang": "Westfall",
+    "ContinentID": "36"
+   },
+   {
+    "ID": "207",
+    "AreaName_lang": "The Great Sea",
+    "ContinentID": "36"
+   },
+   {
+    "ID": "208",
+    "AreaName_lang": "Unused Ironcladcove",
+    "ContinentID": "36"
+   },
+   {
+    "ID": "209",
+    "AreaName_lang": "Shadowfang Keep",
+    "ContinentID": "33"
+   },
+   {
+    "ID": "210",
+    "AreaName_lang": "***On Map Dungeon***",
+    "ContinentID": "36"
+   },
+   {
+    "ID": "491",
+    "AreaName_lang": "Razorfen Kraul",
+    "ContinentID": "47"
+   },
+   {
+    "ID": "717",
+    "AreaName_lang": "The Stockade",
+    "ContinentID": "34"
+   },
+   {
+    "ID": "718",
+    "AreaName_lang": "Wailing Caverns",
+    "ContinentID": "43"
+   },
+   {
+    "ID": "719",
+    "AreaName_lang": "Blackfathom Deeps",
+    "ContinentID": "48"
+   },
+   {
+    "ID": "721",
+    "AreaName_lang": "Gnomeregan",
+    "ContinentID": "90"
+   },
+   {
+    "ID": "722",
+    "AreaName_lang": "Razorfen Downs",
+    "ContinentID": "129"
+   },
+   {
+    "ID": "796",
+    "AreaName_lang": "Scarlet Monastery",
+    "ContinentID": "189"
+   },
+   {
+    "ID": "1176",
+    "AreaName_lang": "Zul'Farrak",
+    "ContinentID": "209"
+   },
+   {
+    "ID": "1337",
+    "AreaName_lang": "Uldaman",
+    "ContinentID": "70"
+   },
+   {
+    "ID": "1417",
+    "AreaName_lang": "Sunken Temple",
+    "ContinentID": "109"
+   },
+   {
+    "ID": "1581",
+    "AreaName_lang": "The Deadmines",
+    "ContinentID": "36"
+   },
+   {
+    "ID": "1977",
+    "AreaName_lang": "Zul'Gurub",
+    "ContinentID": "309"
+   },
+   {
+    "ID": "2017",
+    "AreaName_lang": "Stratholme",
+    "ContinentID": "329"
+   },
+   {
+    "ID": "2057",
+    "AreaName_lang": "Scholomance",
+    "ContinentID": "289"
+   },
+   {
+    "ID": "2100",
+    "AreaName_lang": "Maraudon",
+    "ContinentID": "349"
+   },
+   {
+    "ID": "2437",
+    "AreaName_lang": "Ragefire Chasm",
+    "ContinentID": "389"
+   },
+   {
+    "ID": "2557",
+    "AreaName_lang": "Dire Maul",
+    "ContinentID": "429"
+   },
+   {
+    "ID": "2677",
+    "AreaName_lang": "Blackwing Lair",
+    "ContinentID": "469"
+   },
+   {
+    "ID": "2717",
+    "AreaName_lang": "Molten Core",
+    "ContinentID": "409"
+   },
+   {
+    "ID": "3428",
+    "AreaName_lang": "Ahn'Qiraj",
+    "ContinentID": "531"
+   },
+   {
+    "ID": "3429",
+    "AreaName_lang": "Ruins of Ahn'Qiraj",
+    "ContinentID": "509"
+   },
+   {
+    "ID": "3456",
+    "AreaName_lang": "Naxxramas",
+    "ContinentID": "533"
+   },
+   {
+    "ID": "16076",
+    "AreaName_lang": "Temple of Ahn'Qiraj",
+    "ContinentID": "531"
+   }
+  ]
+ }
+}

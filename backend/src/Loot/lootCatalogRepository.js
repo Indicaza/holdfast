@@ -441,6 +441,22 @@ export function searchLootItemsInDatabase(db, { q = "", limit = 60, wishlisted =
   }) };
 }
 
+// The distinct equip slots of each dungeon's active catalog loot, as the
+// item records name them (`slot`): instanceId → sorted slot names.
+export function lootSlotsByInstanceInDatabase(db) {
+  const rows = db.prepare("SELECT DISTINCT instance_id, item_id FROM dungeon_loot_entries WHERE status = 'active'").all();
+  const item = lootItemFactsInDatabase(db, rows.map((row) => row.item_id));
+  const slots = new Map();
+  for (const row of rows) {
+    const slot = item(row.item_id).slot;
+    if (!slot) continue;
+    const id = Number(row.instance_id);
+    if (!slots.has(id)) slots.set(id, new Set());
+    slots.get(id).add(slot);
+  }
+  return new Map([...slots].map(([id, set]) => [id, [...set].sort()]));
+}
+
 // What changed in the catalog lately, across every dungeon.
 export function readLootChanges({ limit = 50 } = {}) {
   return withGuildDatabase((db) => {

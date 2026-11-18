@@ -1,11 +1,12 @@
 import { Router } from "express";
 
+import { withAtlasDetail, withAtlasList } from "../Atlas/atlasRepository.js";
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import { readLootBridgeSnapshot } from "./lootBridge.js";
-import { readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
+import { lootCatalogRevisionInDatabase, lootSlotsByInstanceInDatabase, readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
 import { importWishlist } from "./wishlistImport.js";
 import { readPlanningPrompt } from "./wishlistPrompt.js";
 import { deleteWishlistItem, ownedCharacterInDatabase, patchWishlistItem, putWishlistItem, readWishlist, readWishlistSummary, wishlistItemKeysInDatabase } from "./wishlistRepository.js";
@@ -60,9 +61,11 @@ export function createPlayerLootRouter() {
     return character ? wishlistItemKeysInDatabase(db, owner(req), character.id) : new Set();
   };
 
-  router.get("/loot/dungeons", read("loot_dungeons", () => readLootDungeons()));
+  // Each dungeon also carries `atlas` (docs/dungeon-atlas-contract.md).
+  router.get("/loot/dungeons", read("loot_dungeons", () => withAtlasList(readLootDungeons(), withGuildDatabase((db) => lootSlotsByInstanceInDatabase(db)))));
   router.get("/loot/dungeons/:instanceId", read("loot_dungeon", (req) => withGuildDatabase((db) =>
-    readLootDungeonInDatabase(db, req.params.instanceId, { wishlisted: wishlisted(db, req) }))));
+    withAtlasDetail(readLootDungeonInDatabase(db, req.params.instanceId, { wishlisted: wishlisted(db, req) }), req.params.instanceId,
+      lootCatalogRevisionInDatabase(db)))));
   router.get("/loot/items", read("loot_items", (req) => withGuildDatabase((db) =>
     searchLootItemsInDatabase(db, { q: String(req.query?.q ?? "").slice(0, 80), wishlisted: wishlisted(db, req) }))));
   router.get("/loot/changes", read("loot_changes", (req) => readLootChanges({ limit: req.query?.limit })));
