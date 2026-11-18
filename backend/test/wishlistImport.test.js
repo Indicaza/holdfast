@@ -286,7 +286,13 @@ test("the planning prompt over HTTP is built from the player's own character and
 
   const narrowed = (await request(`/api/player/wishlists/${rook}/ai-prompt?dungeons=43`, { rawCookie: ash.cookie })).json;
   assert.ok(!narrowed.prompt.includes("5191 | Cruel Barb"), "narrowed to one dungeon");
-  assert.equal(narrowed.candidates, 1);
+  // A chosen dungeon also brings its Classic reference loot, labeled, with
+  // the catalog's observed item listed once (under its observed source).
+  assert.ok(narrowed.candidates > 1);
+  assert.match(narrowed.prompt, /\[Classic reference: not yet observed on Forever\]/);
+  assert.match(narrowed.prompt, /Sources marked \[Classic reference\] come from Classic/);
+  assert.equal(narrowed.prompt.split("6468 | Deviate Scale Belt | Waist").length - 1, 1, "an observed item is not repeated as reference");
+  assert.ok(!prompt.includes("Classic reference"), "no dungeon chosen: the catalog only");
 }));
 
 test("the prompt's stats are the few numbers a gear plan needs", async () => {

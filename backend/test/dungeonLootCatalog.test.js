@@ -238,7 +238,10 @@ test("bosses the client reported, searching, and what an existing database start
 
   const search = (await request("/api/player/loot/items?q=phantom", { rawCookie: ash.cookie })).json;
   assert.equal(search.items.length, 1);
-  assert.deepEqual(search.items[0].sources.map((source) => source.dungeon).sort(), ["The Deadmines", "Wailing Caverns"], "one item, two dungeons");
+  assert.deepEqual(search.items[0].sources.filter((source) => !source.reference).map((source) => source.dungeon).sort(), ["The Deadmines", "Wailing Caverns"],
+    "one item, two dungeons");
+  assert.ok(search.items[0].sources.filter((source) => source.reference).every((source) => source.confidence === "candidate" && source.sourceKind === "reference"
+    && ![36, 43].includes(source.instanceId)), "Classic reference sources only where nothing was observed, and only as candidates");
   assert.equal(search.items[0].confidence, "confirmed");
   assert.equal((await request("/api/player/loot/items?q=p", { rawCookie: ash.cookie })).json.items.length, 0, "too short to search");
 }));

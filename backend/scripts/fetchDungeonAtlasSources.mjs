@@ -7,12 +7,16 @@
 //   src/Atlas/data/sources/azerothcore.json        AzerothCore world DB (GPL-2.0) at a pinned commit
 //   src/Atlas/data/sources/azerothcore-creatures.json   spawns, ranks and creature spells (see Atlas/atlasContent.js)
 //   src/Atlas/data/sources/wago-classic-era-spells.json the client's facts for those spells
+//   src/Atlas/data/sources/azerothcore-loot.json   who drops which item, quest details (see Atlas/atlasLoot.js)
+//   src/Atlas/data/sources/wago-classic-era-items.json  the client's facts for those items
 //
 // Then run `node scripts/importDungeonAtlas.mjs` to re-normalize.
 //
-//   node scripts/fetchDungeonAtlasSources.mjs [--azerothcore-ref <sha>] [--content-only] [--from <dir>]
+//   node scripts/fetchDungeonAtlasSources.mjs [--azerothcore-ref <sha>] [--content-only | --loot-only] [--from <dir>]
 //
-// --content-only refreshes only the two content extracts. --from reads the
+// --content-only refreshes only the two content extracts; --loot-only only
+// the two reference-loot extracts (it reads the current atlas.json for the
+// bosses, rares and quests to attach them to). --from reads the
 // upstream files from a local directory instead of the network (wago tables
 // as <Table>.csv, AzerothCore tables as <table>.sql, scripts under cpp/ with
 // cpp/list.txt naming their repository paths).
@@ -22,6 +26,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { extractCreatureContent, extractSpellContent } from "../src/Atlas/atlasContent.js";
+import { extractItemFacts, extractQuestDetails, extractReferenceLoot } from "../src/Atlas/atlasLoot.js";
 import { VANILLA_INSTANCE_IDS, parseCsv, parseScriptSpells, parseSqlInserts } from "../src/Atlas/atlasSources.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +39,7 @@ const WAGO = (table) => `https://wago.tools/db2/${table}/csv?product=wow_classic
 const fromArg = process.argv.indexOf("--from");
 const FROM = fromArg > 0 ? process.argv[fromArg + 1] : null;
 const CONTENT_ONLY = process.argv.includes("--content-only");
+const LOOT_ONLY = process.argv.includes("--loot-only");
 const AC_RAW = `https://raw.githubusercontent.com/azerothcore/azerothcore-wotlk/${AC_REF}/`;
 const AC_LICENSE = "AzerothCore world database, GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk). A WotLK (3.3.5) emulator database: vanilla content as the emulator models it.";
 const WAGO_LICENSE = "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art.";
@@ -118,7 +124,49 @@ async function content(dungeonNames) {
     + `${spells.spells.length} spells, ${spells.dungeonAreas.length} dungeon areas.`);
 }
 
+// One table row per line, so a refresh reviews as a readable diff.
+function rowsJson(extract) {
+  const tables = Object.entries(extract.tables).map(([name, rows]) => `  ${JSON.stringify(name)}: [\n${rows.map((row) => `   ${JSON.stringify(row)}`).join(",\n")}\n  ]`);
+  const head = Object.entries(extract).filter(([key]) => key !== "tables").map(([key, value]) => ` ${JSON.stringify(key)}: ${JSON.stringify(value)}`);
+  return `{\n${head.join(",\n")},\n "tables": {\n${tables.join(",\n")}\n }\n}\n`;
+}
+
+async function loot() {
+  const atlas = JSON.parse(readFileSync(join(outDir, "..", "atlas.json"), "utf8"));
+  const anchors = new Map();
+  for (const dungeon of atlas.dungeons) {
+    for (const creature of [...dungeon.bosses, ...dungeon.rares]) if (creature.npcId) anchors.set(creature.npcId, dungeon.instanceId);
+  }
+  const questIds = atlas.dungeons.flatMap((dungeon) => dungeon.quests.map((quest) => quest.questId));
+  const sql = (name) => text(`${AC_BASE}${name}.sql`).then((body) => parseSqlInserts(body, name));
+  const [lootRows, referenceRows, templateRows, spawnRows, questRows, addonRows, starterRows, objectLootRows, objectTemplateRows, objectRows] = await Promise.all(
+    ["creature_loot_template", "reference_loot_template", "creature_template", "creature", "quest_template", "quest_template_addon", "creature_queststarter",
+      "gameobject_loot_template", "gameobject_template", "gameobject"].map(sql));
+  const tables = Object.fromEntries(await Promise.all(["ItemSparse", "Item", "ItemSet", "ItemClass", "ItemSubClass"]
+    .map(async (name) => [name, parseCsv(await text(WAGO(name))).rows])));
+  // The newest client build a column of the table is named after.
+  const build = Object.keys(tables.ItemSparse[0] || {}).map((name) => /^Field_(\d+)_(\d+)_(\d+)_(\d+)_/.exec(name)).filter(Boolean)
+    .map((match) => match.slice(1, 5).map(Number)).sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3]).at(-1)?.join(".") || null;
+  const all = extractItemFacts({ tables });
+  const links = extractReferenceLoot({ lootRows, referenceRows, templateRows, spawnRows, objectLootRows, objectTemplateRows, objectRows,
+    items: all.items, anchors });
+  const quests = extractQuestDetails({ questRows, addonRows, starterRows, spawnRows, questIds });
+  const itemIds = new Set([...links.creature_loot.map((row) => row[1]), ...links.object_loot.map((row) => row[1]), ...quests.quest_details.flatMap((row) => [...row.rewardItems, ...row.choiceItems])]);
+  const items = { ...all, items: all.items.filter((item) => itemIds.has(item.id)) };
+  writeFileSync(join(outDir, "azerothcore-loot.json"), rowsJson({ source: "azerothcore", url: `https://github.com/azerothcore/azerothcore-wotlk/tree/${AC_REF}/data/sql/base/db_world`,
+    revision: AC_REF, retrievedAt, license: AC_LICENSE, tables: { ...links, ...quests } }));
+  writeFileSync(join(outDir, "wago-classic-era-items.json"), rowsJson({ source: "wago-classic-era", url: "https://wago.tools/db2?product=wow_classic_era",
+    revision: build ? `wow_classic_era ${build}+` : "wow_classic_era (latest)", retrievedAt, license: WAGO_LICENSE, tables: items }));
+  console.log(`Wrote loot extracts: ${links.creature_loot.length} creature drops from ${links.creatures.length} creatures, `
+    + `${links.object_loot.length} chest drops from ${links.objects.length} chests, ${items.items.length} items, `
+    + `${quests.quest_details.length} quest details, ${quests.quest_giver_spawns.length} giver spawns.`);
+}
+
 mkdirSync(outDir, { recursive: true });
+if (LOOT_ONLY) {
+  await loot();
+  process.exit(0);
+}
 if (CONTENT_ONLY) {
   const existing = JSON.parse(readFileSync(join(outDir, "wago-classic-era.json"), "utf8"));
   await content(existing.tables.Map.map((row) => row.MapName_lang));
@@ -144,3 +192,4 @@ writeFileSync(join(outDir, "azerothcore.json"), `${JSON.stringify({
 }, null, 1)}\n`);
 console.log(`Wrote ${outDir}: ${wagoExtract.tables.DungeonEncounter.length} encounters, ${questTemplate.length} quests, ${creatures.length} creatures.`);
 await content(wagoExtract.tables.Map.map((row) => row.MapName_lang));
+console.log("Run node scripts/importDungeonAtlas.mjs, then --loot-only (it reads the new atlas.json), then import again.");

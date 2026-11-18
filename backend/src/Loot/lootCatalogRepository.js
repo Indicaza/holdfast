@@ -17,6 +17,7 @@ import { gameBuildKey } from "../GameData/gameDataCatalog.js";
 import { gameContext, gameInteger, gameText } from "../GameData/publicGameDataModel.js";
 import { learnPublicItemInDatabase } from "../GameData/publicGameDataProjection.js";
 import { itemsInDatabase } from "../Market/marketRepository.js";
+import { referenceItemFacts, referenceSourcesOf } from "../Atlas/referenceLoot.js";
 import { bestConfidence, compareBuilds, CONFIDENCE_ORDER, dungeonInstance, isObject, listOf, normalizedName, slotLabel, sourceConfidence,
   wishlistItemKey } from "./lootModel.js";
 
@@ -246,7 +247,10 @@ export function classesFromTooltip(lines = []) {
 }
 
 // Item facts for catalog and wishlist rows, by id, from the website's item
-// index (the same one the Auction House uses).
+// index (the same one the Auction House uses). An item the index does not
+// know by name but the Dungeon Atlas's Classic reference loot does gets the
+// reference facts, marked `reference` (Atlas/referenceLoot.js); the index,
+// fed by what players' clients saw, wins whenever it knows the item.
 export function lootItemFactsInDatabase(db, itemIds) {
   const ids = [...new Set(itemIds.filter((id) => Number.isSafeInteger(id) && id > 0))];
   const facts = new Map();
@@ -261,6 +265,10 @@ export function lootItemFactsInDatabase(db, itemIds) {
   }
   return (itemId) => {
     const known = facts.get(itemId) || { name: `Item ${itemId}`, nameKnown: false };
+    if (!known.nameKnown) {
+      const reference = referenceItemFacts(itemId);
+      if (reference) return reference;
+    }
     const inventoryType = slots.get(itemId) ?? null;
     const lines = known.tooltipLines || [];
     return {
@@ -417,6 +425,18 @@ export function lootSourcesForItemsInDatabase(db, itemIds) {
       list.push({ instanceId: group.instanceId, dungeon: group.dungeon, source: group.source, sourceKind: group.sourceKind, confidence, difficultyIds,
         sightings: evidence.find((line) => line.provenance === "loot_window")?.evidenceCount || 0 });
       out.set(group.itemId, list);
+    }
+  }
+  // Classic reference sources, for dungeons where the catalog has not
+  // observed the item (observed evidence wins). Always candidates.
+  for (const id of ids) {
+    const observedIn = new Set((out.get(id) || []).map((entry) => entry.instanceId));
+    for (const source of referenceSourcesOf(id)) {
+      if (observedIn.has(source.instanceId)) continue;
+      const list = out.get(id) || [];
+      list.push({ instanceId: source.instanceId, dungeon: source.dungeonName, source: source.bossName ?? null, sourceKind: "reference", confidence: "candidate",
+        difficultyIds: [], sightings: 0, ...source });
+      out.set(id, list);
     }
   }
   for (const list of out.values()) {

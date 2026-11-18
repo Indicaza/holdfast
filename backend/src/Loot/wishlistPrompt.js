@@ -6,6 +6,8 @@
 // Both state the output format the same way (IMPORT_FORMAT), and both tell
 // the AI that item ids come from the list it was given and nowhere else.
 
+import { atlasDungeon } from "../Atlas/atlasRepository.js";
+import { referenceDungeon, referenceItemFacts, referenceSourcesOf } from "../Atlas/referenceLoot.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { readCharacterSectionsInDatabase } from "../Character/ReadModel/sectionStore.js";
 import { lootCatalogRevisionInDatabase, lootItemFactsInDatabase, readLootDungeonInDatabase } from "./lootCatalogRepository.js";
@@ -79,12 +81,15 @@ export function buildPlanningPrompt({ character, equipment = [], stats = [], dun
   lines.push("", `DUNGEON LOOT CATALOG${catalogRevision === null ? "" : ` (revision ${catalogRevision})`}`,
     "Format: itemId | name | slot, type, item level, required level. Sources are bosses or creatures players saw the item drop from,",
     'or that the game\'s own journal lists ("advertised": listed, not yet seen; "reported": seen in a group roll, source unknown).',
-    "The catalog is incomplete: an item missing here may still exist, but you cannot recommend it because you do not have its id.");
+    "The catalog is incomplete: an item missing here may still exist, but you cannot recommend it because you do not have its id.",
+    ...(dungeons.some((dungeon) => dungeon.sources.some((source) => source.reference))
+      ? ["Sources marked [Classic reference] come from Classic (1.12) reference data, not from players: the item may differ or be missing on Forever. Say so in the note when you recommend one."]
+      : []));
   if (!dungeons.length) lines.push("  (no dungeon loot is known yet)");
   for (const dungeon of dungeons) {
     lines.push("", `${dungeon.name}`);
     for (const source of dungeon.sources) {
-      lines.push(` ${source.name || "Source not identified"}${source.boss ? " (boss)" : ""}:`);
+      lines.push(` ${source.name || "Source not identified"}${source.boss ? " (boss)" : ""}${source.reference ? " [Classic reference: not yet observed on Forever]" : ""}:`);
       for (const item of source.items) lines.push(itemLine(item));
     }
   }
@@ -178,30 +183,49 @@ export function readPlanningPrompt({ memberId, characterId, instanceIds = [] }) 
     });
 
     const wanted = new Set(instanceIds.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0));
-    const instances = db.prepare("SELECT instance_id FROM dungeon_loot_instances ORDER BY name COLLATE NOCASE").all()
-      .map((row) => row.instance_id).filter((id) => !wanted.size || wanted.has(id));
+    const catalogIds = db.prepare("SELECT instance_id FROM dungeon_loot_instances ORDER BY name COLLATE NOCASE").all().map((row) => row.instance_id);
+    // Selected dungeons the catalog has not seen still bring their Classic
+    // reference loot.
+    const instances = [...catalogIds.filter((id) => !wanted.size || wanted.has(id)), ...[...wanted].filter((id) => !catalogIds.includes(id) && atlasDungeon(id))];
     let budget = MAX_PROMPT_CANDIDATES;
     let omitted = 0;
     const dungeons = [];
     const classKey = normalizedName(character.className);
+    // Gear only, that the game does not restrict to another class, within
+    // reach of the character's level. Delisted items stay out.
+    const take = (item) => {
+      if (!item.equippable || !item.nameKnown || item.confidence === "delisted") return false;
+      if (item.classes && classKey && !item.classes.some((name) => normalizedName(name) === classKey)) return false;
+      if (character.level && item.requiredLevel && item.requiredLevel > character.level + LEVEL_HEADROOM) { omitted += 1; return false; }
+      if (budget <= 0) { omitted += 1; return false; }
+      budget -= 1;
+      return true;
+    };
     for (const instanceId of instances) {
       const dungeon = readLootDungeonInDatabase(db, instanceId);
       const sources = [];
       for (const source of dungeon?.sources || []) {
-        const items = [];
-        for (const item of source.items) {
-          // Gear only, that the game does not restrict to another class,
-          // within reach of the character's level. Delisted items stay out.
-          if (!item.equippable || !item.nameKnown || item.confidence === "delisted") continue;
-          if (item.classes && classKey && !item.classes.some((name) => normalizedName(name) === classKey)) continue;
-          if (character.level && item.requiredLevel && item.requiredLevel > character.level + LEVEL_HEADROOM) { omitted += 1; continue; }
-          if (budget <= 0) { omitted += 1; continue; }
-          budget -= 1;
-          items.push(item);
-        }
+        const items = source.items.filter(take);
         if (items.length) sources.push({ name: source.name, boss: source.boss, items });
       }
-      if (sources.length) dungeons.push({ name: dungeon.instance.name, sources });
+      // Classic reference loot of a dungeon the player picked, for items the
+      // catalog has not observed there (labeled as reference).
+      if (wanted.has(instanceId)) {
+        const observed = new Set((dungeon?.sources || []).flatMap((source) => source.items.map((item) => item.itemId)));
+        const groups = new Map();
+        for (const itemId of referenceDungeon(instanceId)?.itemIds || []) {
+          if (observed.has(itemId)) continue;
+          const origin = referenceSourcesOf(itemId).find((entry) => entry.instanceId === instanceId && entry.sourceType !== "quest");
+          if (!origin) continue;
+          const item = referenceItemFacts(itemId);
+          if (!item || !take({ ...item, confidence: "classic reference" })) continue;
+          const key = `${origin.sourceType}:${origin.bossName || ""}`;
+          if (!groups.has(key)) groups.set(key, { name: origin.bossName, boss: origin.sourceType === "boss", reference: true, items: [] });
+          groups.get(key).items.push({ ...item, confidence: "classic reference" });
+        }
+        sources.push(...groups.values());
+      }
+      if (sources.length) dungeons.push({ name: dungeon?.instance.name || atlasDungeon(instanceId).name, sources });
     }
     const wishlist = (readWishlistInDatabase(db, member, character.id)?.items || []).map((entry) => ({ itemId: entry.itemId, name: entry.item.name, priority: entry.priority, note: entry.note, state: entry.state }));
     const catalogRevision = lootCatalogRevisionInDatabase(db);
