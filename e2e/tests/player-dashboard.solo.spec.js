@@ -26,7 +26,7 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toBeVisible()
   await expect(page.getByText('Connect a computer to start syncing.')).toBeVisible()
   await expect(page.getByText('so uploads arrive at those moments', { exact: false })).toBeVisible()
-  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Characters/, /^Professions/, /^Gathering/, /^Dungeon runs/, /^Drop rates/, /^Resource map/, /^Auction House/, /^Download & sync/, /^Account/])
+  await expect(rail(page).getByRole('link')).toHaveText([/^Home/, /^Characters/, /^Professions/, /^Gathering/, /^Dungeons/, /^Drop rates/, /^Resource map/, /^Auction House/, /^Download & sync/, /^Account/])
   // An app, not a page of the site: its own frame, no site navbar.
   await expect(page.locator('.navbar')).toHaveCount(0)
   // Community drop rates are one click away before the player has synced anything.
