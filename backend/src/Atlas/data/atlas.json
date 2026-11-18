@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-18T04:21:05.615Z",
+ "generatedAt": "2026-11-18T08:16:15.790Z",
  "sources": [
   {
    "source": "wago-classic-era",
@@ -26,7 +26,7 @@
   {
    "source": "wago-classic-era",
    "revision": "wow_classic_era (latest)",
-   "retrievedAt": "2026-11-18T04:21:05.615Z",
+   "retrievedAt": "2026-11-18T08:16:15.790Z",
    "url": "https://wago.tools/db2?product=wow_classic_era",
    "license": "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art."
   }
@@ -963,7 +963,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1036,7 +1036,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1109,7 +1109,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1193,7 +1193,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1214,10 +1214,10 @@
       {
        "spellId": 7481,
        "name": "Howling Rage",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "5s cast · interruptible · area",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "5s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -1266,7 +1266,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1339,7 +1339,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1360,10 +1360,10 @@
       {
        "spellId": 7487,
        "name": "Call Bleak Worg",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "1.3s cast · interruptible",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "1.3s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -1371,10 +1371,10 @@
       {
        "spellId": 7489,
        "name": "Call Lupine Horror",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "1.3s cast · interruptible",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "1.3s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -1423,7 +1423,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1479,8 +1479,8 @@
        "name": "Shadow Port",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": true,
-       "summary": "0.3s cast · interruptible",
+       "interruptible": false,
+       "summary": "0.3s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -1529,7 +1529,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -1640,26 +1640,6 @@
      ]
     },
     {
-     "npcId": 3873,
-     "name": "Tormented Officer",
-     "levelMin": 20,
-     "levelMax": 20,
-     "count": 6,
-     "abilities": [
-      {
-       "spellId": 7054,
-       "name": "Forsaken Skills",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2.5s cast · interruptible · Curse effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
      "npcId": 3864,
      "name": "Fel Steed",
      "levelMin": 19,
@@ -1673,37 +1653,6 @@
        "priority": "high",
        "interruptible": null,
        "summary": "instant · stun · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 3854,
-     "name": "Shadowfang Wolfguard",
-     "levelMin": 20,
-     "levelMax": 20,
-     "count": 1,
-     "abilities": [
-      {
-       "spellId": 7106,
-       "name": "Dark Restore",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · heals",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 7107,
-       "name": "Summon Wolfguard Worg",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -1856,7 +1805,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -2352,7 +2301,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -2447,7 +2396,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -2531,7 +2480,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -2626,7 +2575,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -2710,7 +2659,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -3000,7 +2949,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -3933,7 +3882,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -3985,10 +3934,10 @@
       {
        "spellId": 5213,
        "name": "Molten Metal",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible",
+       "category": "tank-danger",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -4037,7 +3986,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -4110,7 +4059,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -4216,7 +4165,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -4239,8 +4188,8 @@
        "name": "Acid Splash",
        "category": "healer-danger",
        "priority": "high",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -4300,7 +4249,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -4384,7 +4333,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -4426,8 +4375,8 @@
        "name": "Quick Flame Ward",
        "category": "dispel",
        "priority": "low",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · Magic effect",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -4479,8 +4428,8 @@
        "name": "Quick Flame Ward",
        "category": "dispel",
        "priority": "low",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · Magic effect",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -4499,8 +4448,8 @@
        "name": "Melt Ore",
        "category": "healer-danger",
        "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -4561,40 +4510,9 @@
        "name": "Quick Flame Ward",
        "category": "dispel",
        "priority": "low",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · Magic effect",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · Magic effect",
        "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 622,
-     "name": "Goblin Engineer",
-     "levelMin": 18,
-     "levelMax": 19,
-     "count": 6,
-     "abilities": [
-      {
-       "spellId": 3605,
-       "name": "Summon Remote-Controlled Golem",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 6660,
-       "name": "Shoot",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": "Shoots at an enemy, inflicting Physical damage.",
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -4830,7 +4748,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -6084,7 +6002,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6190,7 +6108,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6339,7 +6257,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6412,7 +6330,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6507,7 +6425,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6580,7 +6498,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -6664,8 +6582,8 @@
        "name": "Nature Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -6698,26 +6616,6 @@
        "interruptible": true,
        "summary": "3s cast · interruptible · Magic effect · heals",
        "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 5756,
-     "name": "Deviate Venomwing",
-     "levelMin": 19,
-     "levelMax": 19,
-     "count": 12,
-     "abilities": [
-      {
-       "spellId": 7951,
-       "name": "Toxic Spit",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2.5s cast · interruptible · Poison effect",
-       "details": "Inflicts Nature damage to an enemy.",
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -6942,7 +6840,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -7807,7 +7705,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -7828,10 +7726,10 @@
       {
        "spellId": 8286,
        "name": "Summon Boar Spirit",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -7880,7 +7778,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -7964,7 +7862,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -8048,7 +7946,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -8132,7 +8030,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -8238,7 +8136,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -8580,10 +8478,10 @@
       {
        "spellId": 8259,
        "name": "Whirling Barrage",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · area",
+       "category": "positioning",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -8655,7 +8553,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -9564,7 +9462,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -9670,7 +9568,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -9776,7 +9674,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -9864,8 +9762,8 @@
        "name": "Blackfathom Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -9914,7 +9812,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -9998,7 +9896,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -10448,7 +10346,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -11708,7 +11606,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -11825,7 +11723,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -11920,7 +11818,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -11993,7 +11891,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -12099,7 +11997,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -12216,7 +12114,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -12250,8 +12148,8 @@
        "name": "Awaken Earthen Dwarf",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -12261,8 +12159,8 @@
        "name": "Awaken Earthen Guardians",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant · area",
+       "interruptible": false,
+       "summary": "channeled · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -12344,7 +12242,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -12688,7 +12586,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -14103,7 +14001,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -14189,7 +14087,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -14275,7 +14173,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -14350,7 +14248,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -14485,8 +14383,8 @@
        "name": "Electrified Net",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible · root",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible · root",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -14618,37 +14516,6 @@
        "verifiedForForever": false
       }
      ]
-    },
-    {
-     "npcId": 6407,
-     "name": "Holdout Technician",
-     "levelMin": 26,
-     "levelMax": 27,
-     "count": 3,
-     "abilities": [
-      {
-       "spellId": 8858,
-       "name": "Bomb",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · area",
-       "details": "Bombs all enemies in a selected area, inflicting Fire damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 6660,
-       "name": "Shoot",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": "Shoots at an enemy, inflicting Physical damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
     }
    ],
    "rares": [
@@ -14764,7 +14631,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -16007,7 +15874,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16082,7 +15949,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16157,7 +16024,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16198,17 +16065,6 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 8376,
-       "name": "Earthgrab Totem",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 10893,
        "name": "Shadow Word: Pain",
        "category": "dispel",
@@ -16220,12 +16076,23 @@
        "verifiedForForever": false
       },
       {
+       "spellId": 8376,
+       "name": "Earthgrab Totem",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 13540,
        "name": "Green Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -16276,7 +16143,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16351,7 +16218,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16426,7 +16293,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16523,7 +16390,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -16678,23 +16545,23 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 12151,
-       "name": "Summon Atal'ai Skeleton",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 12040,
        "name": "Shadow Shield",
        "category": "dispel",
        "priority": "low",
        "interruptible": null,
        "summary": "instant · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 12151,
+       "name": "Summon Atal'ai Skeleton",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -17095,7 +16962,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -18289,7 +18156,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -18395,7 +18262,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -18479,7 +18346,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -18585,7 +18452,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -18647,83 +18514,30 @@
      ]
     },
     {
-     "npcId": 7332,
-     "name": "Withered Spearhide",
-     "levelMin": 34,
-     "levelMax": 35,
-     "count": 7,
-     "abilities": [
-      {
-       "spellId": 11397,
-       "name": "Diseased Shot",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · Disease effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 8599,
-       "name": "Enrage",
-       "category": "tank-danger",
-       "priority": "high",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 6660,
-       "name": "Shoot",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": "Shoots at an enemy, inflicting Physical damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 7342,
-     "name": "Skeletal Summoner",
-     "levelMin": 36,
+     "npcId": 7341,
+     "name": "Skeletal Frostweaver",
+     "levelMin": 35,
      "levelMax": 36,
      "count": 6,
      "abilities": [
       {
-       "spellId": 9532,
-       "name": "Lightning Bolt",
+       "spellId": 8427,
+       "name": "Blizzard",
        "category": "interrupt",
        "priority": "high",
        "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": "Blasts an enemy with lightning, inflicting Nature damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 12258,
-       "name": "Summon Shadowcaster",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "5s cast · interruptible",
+       "summary": "channeled · interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
       },
       {
-       "spellId": 11980,
-       "name": "Curse of Weakness",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Curse effect",
+       "spellId": 9672,
+       "name": "Frostbolt",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "3s cast · interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -18873,6 +18687,48 @@
        "verifiedForForever": false
       }
      ]
+    },
+    {
+     "npcId": 7332,
+     "name": "Withered Spearhide",
+     "levelMin": 34,
+     "levelMax": 35,
+     "count": 7,
+     "abilities": [
+      {
+       "spellId": 8599,
+       "name": "Enrage",
+       "category": "tank-danger",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 11397,
+       "name": "Diseased Shot",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · Disease effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 6660,
+       "name": "Shoot",
+       "category": "tank-danger",
+       "priority": "low",
+       "interruptible": null,
+       "summary": "instant",
+       "details": "Shoots at an enemy, inflicting Physical damage.",
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
     }
    ],
    "rares": [],
@@ -19013,7 +18869,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -19906,7 +19762,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20012,7 +19868,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20096,7 +19952,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20213,7 +20069,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20269,8 +20125,8 @@
        "name": "Whirlwind",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -20319,7 +20175,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20425,7 +20281,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20542,7 +20398,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -20846,23 +20702,23 @@
        "verifiedForForever": false
       },
       {
+       "spellId": 9373,
+       "name": "Soul Siphon",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 7399,
        "name": "Terrify",
        "category": "crowd-control",
        "priority": "high",
        "interruptible": null,
        "summary": "instant · fear · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 9373,
-       "name": "Soul Siphon",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -21082,7 +20938,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -22196,7 +22052,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -22279,17 +22135,6 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 8376,
-       "name": "Earthgrab Totem",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 11894,
        "name": "Antu'sul's Minion",
        "category": "special-mechanic",
@@ -22307,6 +22152,17 @@
        "priority": "low",
        "interruptible": null,
        "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 8376,
+       "name": "Earthgrab Totem",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -22355,7 +22211,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -22428,7 +22284,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -22534,7 +22390,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -22702,7 +22558,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -22710,6 +22566,59 @@
     }
    ],
    "creatures": [
+    {
+     "npcId": 7606,
+     "name": "Oro Eyegouge",
+     "levelMin": 44,
+     "levelMax": 44,
+     "count": 1,
+     "abilities": [
+      {
+       "spellId": 11962,
+       "name": "Immolate",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "2s cast · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 11990,
+       "name": "Rain of Fire",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · area",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 9613,
+       "name": "Shadow Bolt",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "3s cast · interruptible",
+       "details": "Hurls a bolt of dark magic at an enemy, inflicting Shadow damage.",
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 12741,
+       "name": "Curse of Weakness",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": null,
+       "summary": "instant · Curse effect · area",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
     {
      "npcId": 5650,
      "name": "Sandfury Witch Doctor",
@@ -22800,59 +22709,6 @@
        "interruptible": null,
        "summary": "instant",
        "details": "Shoots at an enemy, inflicting Physical damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 7606,
-     "name": "Oro Eyegouge",
-     "levelMin": 44,
-     "levelMax": 44,
-     "count": 1,
-     "abilities": [
-      {
-       "spellId": 11962,
-       "name": "Immolate",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 9613,
-       "name": "Shadow Bolt",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": "Hurls a bolt of dark magic at an enemy, inflicting Shadow damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 12741,
-       "name": "Curse of Weakness",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Curse effect · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 11990,
-       "name": "Rain of Fire",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant · area",
-       "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -23221,7 +23077,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -25565,7 +25421,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -25649,7 +25505,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -25683,8 +25539,8 @@
        "name": "Throw Axe",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · stun",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · stun",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -25788,7 +25644,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -25883,7 +25739,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -25937,8 +25793,8 @@
        "name": "Hooked Net",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible · root · area",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible · root · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -25948,8 +25804,8 @@
        "name": "Stun Bomb",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · stun · area",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · stun · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -26020,7 +25876,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26104,7 +25960,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26230,7 +26086,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26340,8 +26196,8 @@
        "name": "Whirlwind",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -26390,7 +26246,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26529,7 +26385,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26668,7 +26524,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -26752,8 +26608,8 @@
        "name": "Shadow Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -27006,8 +26862,8 @@
        "name": "Shadow Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -27380,8 +27236,8 @@
        "name": "Enlarge",
        "category": "dispel",
        "priority": "low",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · Magic effect",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -27442,7 +27298,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -29952,7 +29808,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30047,7 +29903,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30142,7 +29998,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30270,7 +30126,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30376,7 +30232,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30482,7 +30338,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30599,7 +30455,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30618,23 +30474,23 @@
      },
      "abilities": [
       {
-       "spellId": 13895,
-       "name": "Summon Spawn of Bael'Gar",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "4s cast · interruptible · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 13880,
        "name": "Magma Splash",
        "category": "tank-danger",
        "priority": "medium",
        "interruptible": null,
        "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 13895,
+       "name": "Summon Spawn of Bael'Gar",
+       "category": "positioning",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "4s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -30683,7 +30539,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30778,7 +30634,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30873,7 +30729,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -30979,7 +30835,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31074,7 +30930,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31158,7 +31014,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31264,7 +31120,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31435,7 +31291,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31530,7 +31386,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -31614,7 +31470,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -32206,7 +32062,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -34038,7 +33894,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34133,7 +33989,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34239,7 +34095,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34323,7 +34179,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34504,7 +34360,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34599,7 +34455,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34694,7 +34550,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34800,7 +34656,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -34819,6 +34675,17 @@
      },
      "abilities": [
       {
+       "spellId": 11700,
+       "name": "Drain Life",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 11668,
        "name": "Immolate",
        "category": "interrupt",
@@ -34836,17 +34703,6 @@
        "priority": "high",
        "interruptible": true,
        "summary": "1.5s cast · interruptible · Curse effect · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 11700,
-       "name": "Drain Life",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -34906,7 +34762,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -35012,7 +34868,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -35031,6 +34887,17 @@
      },
      "abilities": [
       {
+       "spellId": 15790,
+       "name": "Arcane Missiles",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 18702,
        "name": "Curse of the Darkmaster",
        "category": "interrupt",
@@ -35044,22 +34911,11 @@
       {
        "spellId": 17950,
        "name": "Shadow Portal",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible",
-       "details": "Teleports an enemy to one of 6 locations within Scholomance.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 15790,
-       "name": "Arcane Missiles",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
+       "interruptible": false,
+       "summary": "1s cast · not interruptible",
+       "details": "Teleports an enemy to one of 6 locations within Scholomance.",
        "source": "classic-reference",
        "verifiedForForever": false
       },
@@ -35118,7 +34974,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -35169,10 +35025,10 @@
       {
        "spellId": 17165,
        "name": "Mind Flay",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -35185,6 +35041,48 @@
        "interruptible": null,
        "summary": "instant",
        "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 10470,
+     "name": "Scholomance Neophyte",
+     "levelMin": 57,
+     "levelMax": 58,
+     "count": 17,
+     "abilities": [
+      {
+       "spellId": 12542,
+       "name": "Fear",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "1.5s cast · interruptible · fear · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 17165,
+       "name": "Mind Flay",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 12739,
+       "name": "Shadow Bolt",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "3s cast · interruptible",
+       "details": "Hurls a bolt of dark magic at an enemy, inflicting Shadow damage.",
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -35209,12 +35107,12 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 16531,
-       "name": "Summon Frail Skeleton",
+       "spellId": 17620,
+       "name": "Drain Life",
        "category": "interrupt",
        "priority": "high",
        "interruptible": true,
-       "summary": "10s cast · interruptible",
+       "summary": "channeled · interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -35231,12 +35129,12 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 17620,
-       "name": "Drain Life",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
+       "spellId": 16531,
+       "name": "Summon Frail Skeleton",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "10s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -35301,48 +35199,6 @@
        "priority": "low",
        "interruptible": null,
        "summary": "instant · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 10470,
-     "name": "Scholomance Neophyte",
-     "levelMin": 57,
-     "levelMax": 58,
-     "count": 17,
-     "abilities": [
-      {
-       "spellId": 12542,
-       "name": "Fear",
-       "category": "crowd-control",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · fear · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 12739,
-       "name": "Shadow Bolt",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": "Hurls a bolt of dark magic at an enemy, inflicting Shadow damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 17165,
-       "name": "Mind Flay",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -35719,7 +35575,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -38171,23 +38027,23 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 23862,
-       "name": "Venom Spit",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · Poison effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 23858,
        "name": "Holy Nova",
        "category": "positioning",
        "priority": "medium",
        "interruptible": null,
        "summary": "instant · Magic effect · area · heals",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 23862,
+       "name": "Venom Spit",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "1.5s cast · not interruptible · Poison effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -38302,7 +38158,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -38321,6 +38177,17 @@
      },
      "abilities": [
       {
+       "spellId": 24300,
+       "name": "Drain Life",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 24110,
        "name": "Enveloping Webs",
        "category": "crowd-control",
@@ -38338,17 +38205,6 @@
        "priority": "high",
        "interruptible": null,
        "summary": "instant · Poison effect · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 24300,
-       "name": "Drain Life",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -38408,7 +38264,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -38514,7 +38370,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -38568,10 +38424,10 @@
       {
        "spellId": 24189,
        "name": "Force Punch",
-       "category": "interrupt",
+       "category": "positioning",
        "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -38642,7 +38498,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -38858,8 +38714,8 @@
        "name": "Blood Siphon",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -38919,7 +38775,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -38961,8 +38817,8 @@
        "name": "Soul Tap",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": null,
-       "summary": "instant · silence",
+       "interruptible": false,
+       "summary": "channeled · not interruptible · silence",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -39224,8 +39080,8 @@
        "name": "Venom Spit",
        "category": "healer-danger",
        "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · Poison effect · area",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · Poison effect · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -39889,7 +39745,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -41499,7 +41355,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -41583,7 +41439,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -41689,7 +41545,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -41795,7 +41651,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -41890,7 +41746,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -41994,7 +41850,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42111,7 +41967,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42141,23 +41997,23 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 17235,
-       "name": "Raise Undead Scarab",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 6016,
        "name": "Pierce Armor",
        "category": "special-mechanic",
        "priority": "low",
        "interruptible": null,
        "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 17235,
+       "name": "Raise Undead Scarab",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -42206,7 +42062,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42224,6 +42080,28 @@
       "y": 0.116
      },
      "abilities": [
+      {
+       "spellId": 17238,
+       "name": "Drain Life",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 17243,
+       "name": "Drain Mana",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
       {
        "spellId": 17503,
        "name": "Frostbolt",
@@ -42256,28 +42134,6 @@
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
-      },
-      {
-       "spellId": 17238,
-       "name": "Drain Life",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 17243,
-       "name": "Drain Mana",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
       }
      ],
      "strategy": null,
@@ -42323,7 +42179,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42429,7 +42285,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42577,7 +42433,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42809,7 +42665,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -42882,7 +42738,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -43096,8 +42952,8 @@
        "name": "Shadow Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -43140,6 +42996,59 @@
        "priority": "high",
        "interruptible": true,
        "summary": "2s cast · interruptible · Magic effect · heals",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 10412,
+     "name": "Crypt Crawler",
+     "levelMin": 58,
+     "levelMax": 59,
+     "count": 7,
+     "abilities": [
+      {
+       "spellId": 3589,
+       "name": "Deafening Screech",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant · silence · area",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 15471,
+       "name": "Enveloping Web",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant · root/silence",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 16430,
+       "name": "Soul Tap",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 1604,
+       "name": "Dazed",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": null,
+       "summary": "instant",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -43288,59 +43197,6 @@
        "priority": "low",
        "interruptible": null,
        "summary": "instant · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 10421,
-     "name": "Crimson Defender",
-     "levelMin": 58,
-     "levelMax": 59,
-     "count": 9,
-     "abilities": [
-      {
-       "spellId": 13005,
-       "name": "Hammer of Justice",
-       "category": "crowd-control",
-       "priority": "high",
-       "interruptible": null,
-       "summary": "instant · stun · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 15493,
-       "name": "Holy Light",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2.5s cast · interruptible · heals",
-       "details": "Calls upon Holy magic to heal an ally.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 8258,
-       "name": "Devotion Aura",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 13874,
-       "name": "Divine Shield",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -43585,7 +43441,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -45571,7 +45427,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -45644,7 +45500,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -45663,17 +45519,6 @@
      },
      "abilities": [
       {
-       "spellId": 9143,
-       "name": "Bomb",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · area",
-       "details": "Bombs all enemies in a selected area, inflicting Fire damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 29419,
        "name": "Flash Bomb",
        "category": "crowd-control",
@@ -45685,12 +45530,23 @@
        "verifiedForForever": false
       },
       {
+       "spellId": 9143,
+       "name": "Bomb",
+       "category": "positioning",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · area",
+       "details": "Bombs all enemies in a selected area, inflicting Fire damage.",
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 21833,
        "name": "Goblin Dragon Gun",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -45750,7 +45606,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -45856,7 +45712,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -45890,8 +45746,8 @@
        "name": "Twisted Tranquility",
        "category": "healer-danger",
        "priority": "high",
-       "interruptible": null,
-       "summary": "instant · area",
+       "interruptible": true,
+       "summary": "channeled · interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -45962,7 +45818,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -45985,8 +45841,8 @@
        "name": "Summon Shardlings",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": null,
-       "summary": "instant · stun · area",
+       "interruptible": false,
+       "summary": "channeled · not interruptible · stun · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -46057,7 +45913,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -46130,7 +45986,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -46149,17 +46005,6 @@
      },
      "abilities": [
       {
-       "spellId": 21832,
-       "name": "Boulder",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible",
-       "details": "Hurls a boulder at an enemy.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 21869,
        "name": "Repulsive Gaze",
        "category": "crowd-control",
@@ -46167,6 +46012,17 @@
        "interruptible": null,
        "summary": "instant · fear · area",
        "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 21832,
+       "name": "Boulder",
+       "category": "tank-danger",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible",
+       "details": "Hurls a boulder at an enemy.",
        "source": "classic-reference",
        "verifiedForForever": false
       },
@@ -46236,7 +46092,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -46358,37 +46214,6 @@
      ]
     },
     {
-     "npcId": 12206,
-     "name": "Primordial Behemoth",
-     "levelMin": 47,
-     "levelMax": 47,
-     "count": 16,
-     "abilities": [
-      {
-       "spellId": 21071,
-       "name": "Boulder",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · area",
-       "details": "Hurls boulders at nearby enemies, inflicting Physical damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 5568,
-       "name": "Trample",
-       "category": "positioning",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
      "npcId": 11790,
      "name": "Putridus Satyr",
      "levelMin": 42,
@@ -46475,6 +46300,26 @@
        "priority": "low",
        "interruptible": null,
        "summary": "instant · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 12223,
+     "name": "Cavern Lurker",
+     "levelMin": 44,
+     "levelMax": 45,
+     "count": 8,
+     "abilities": [
+      {
+       "spellId": 11428,
+       "name": "Knockdown",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant · stun",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -46704,7 +46549,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -47399,7 +47244,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -47483,7 +47328,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -47567,7 +47412,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -47788,7 +47633,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -48783,7 +48628,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -48911,7 +48756,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -49006,7 +48851,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -49166,7 +49011,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -49272,7 +49117,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -49378,7 +49223,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -49891,7 +49736,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -52416,7 +52261,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -52522,7 +52367,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -52547,17 +52392,6 @@
        "priority": "high",
        "interruptible": true,
        "summary": "2s cast · interruptible · Curse effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22710,
-       "name": "Enlarge",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -52602,6 +52436,17 @@
        "priority": "medium",
        "interruptible": null,
        "summary": "instant · Curse effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 22710,
+       "name": "Enlarge",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": false,
+       "summary": "2s cast · not interruptible · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -52650,7 +52495,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -52756,7 +52601,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -52906,7 +52751,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53012,7 +52857,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53031,23 +52876,23 @@
      },
      "abilities": [
       {
-       "spellId": 20904,
-       "name": "Aimed Shot",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 5116,
        "name": "Concussive Shot",
        "category": "dispel",
        "priority": "medium",
        "interruptible": null,
        "summary": "instant · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 20904,
+       "name": "Aimed Shot",
+       "category": "tank-danger",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "3s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -53090,8 +52935,8 @@
        "name": "Volley",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant · area",
+       "interruptible": false,
+       "summary": "channeled · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -53140,7 +52985,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53181,6 +53026,17 @@
        "verifiedForForever": false
       },
       {
+       "spellId": 22919,
+       "name": "Mind Flay",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
        "spellId": 15654,
        "name": "Shadow Word: Pain",
        "category": "dispel",
@@ -53196,19 +53052,8 @@
        "name": "Dark Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22919,
-       "name": "Mind Flay",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -53268,7 +53113,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53385,7 +53230,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53441,8 +53286,8 @@
        "name": "Whirlwind",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -53491,7 +53336,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53630,7 +53475,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53747,7 +53592,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -53897,7 +53742,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54047,7 +53892,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54164,7 +54009,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54271,23 +54116,23 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 8376,
-       "name": "Earthgrab Totem",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 16170,
        "name": "Bloodlust",
        "category": "dispel",
        "priority": "low",
        "interruptible": null,
        "summary": "instant · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 8376,
+       "name": "Earthgrab Totem",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -54347,7 +54192,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54453,7 +54298,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54579,7 +54424,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -54652,6 +54497,48 @@
      ]
     },
     {
+     "npcId": 11470,
+     "name": "Eldreth Sorcerer",
+     "levelMin": 58,
+     "levelMax": 59,
+     "count": 18,
+     "abilities": [
+      {
+       "spellId": 16006,
+       "name": "Chain Lightning",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "3s cast · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 13323,
+       "name": "Polymorph",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "1.5s cast · interruptible · polymorph · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 22823,
+       "name": "Starshards",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
      "npcId": 11448,
      "name": "Gordok Warlock",
      "levelMin": 59,
@@ -54707,8 +54594,8 @@
        "name": "Dark Channeling",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -54824,48 +54711,6 @@
       {
        "spellId": 15615,
        "name": "Pummel",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 11470,
-     "name": "Eldreth Sorcerer",
-     "levelMin": 58,
-     "levelMax": 59,
-     "count": 18,
-     "abilities": [
-      {
-       "spellId": 16006,
-       "name": "Chain Lightning",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 13323,
-       "name": "Polymorph",
-       "category": "crowd-control",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · polymorph · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22823,
-       "name": "Starshards",
        "category": "tank-danger",
        "priority": "low",
        "interruptible": null,
@@ -55488,7 +55333,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -56736,17 +56581,6 @@
        "verifiedForForever": false
       },
       {
-       "spellId": 19873,
-       "name": "Destroy Egg",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible",
-       "details": "Destroys a nearby egg.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
        "spellId": 22425,
        "name": "Fireball Volley",
        "category": "interrupt",
@@ -56776,6 +56610,17 @@
        "interruptible": null,
        "summary": "instant",
        "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 19873,
+       "name": "Destroy Egg",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "3s cast · not interruptible",
+       "details": "Destroys a nearby egg.",
        "source": "classic-reference",
        "verifiedForForever": false
       },
@@ -56817,8 +56662,8 @@
        "name": "Possess",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -56878,7 +56723,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -56956,8 +56801,8 @@
        "name": "Corruption",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant · area",
+       "interruptible": false,
+       "summary": "channeled · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -57017,7 +56862,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57134,7 +56979,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57177,10 +57022,10 @@
       {
        "spellId": 23339,
        "name": "Wing Buffet",
-       "category": "interrupt",
+       "category": "positioning",
        "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -57240,7 +57085,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57272,10 +57117,10 @@
       {
        "spellId": 23339,
        "name": "Wing Buffet",
-       "category": "interrupt",
+       "category": "positioning",
        "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -57346,7 +57191,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57389,10 +57234,10 @@
       {
        "spellId": 23339,
        "name": "Wing Buffet",
-       "category": "interrupt",
+       "category": "positioning",
        "priority": "medium",
-       "interruptible": true,
-       "summary": "1s cast · interruptible · area",
+       "interruptible": false,
+       "summary": "1s cast · not interruptible · area",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -57452,7 +57297,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57723,7 +57568,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -57762,6 +57607,59 @@
     }
    ],
    "creatures": [
+    {
+     "npcId": 12557,
+     "name": "Grethok the Controller",
+     "levelMin": 62,
+     "levelMax": 62,
+     "count": 1,
+     "abilities": [
+      {
+       "spellId": 22272,
+       "name": "Arcane Missiles",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 14515,
+       "name": "Dominate Mind",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "2s cast · interruptible · charm · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 22274,
+       "name": "Greater Polymorph",
+       "category": "crowd-control",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant · polymorph · Magic effect",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 13747,
+       "name": "Slow",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": null,
+       "summary": "instant · Magic effect · area",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
     {
      "npcId": 12468,
      "name": "Death Talon Hatcher",
@@ -57856,90 +57754,6 @@
      ]
     },
     {
-     "npcId": 12557,
-     "name": "Grethok the Controller",
-     "levelMin": 62,
-     "levelMax": 62,
-     "count": 1,
-     "abilities": [
-      {
-       "spellId": 14515,
-       "name": "Dominate Mind",
-       "category": "crowd-control",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "2s cast · interruptible · charm · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22274,
-       "name": "Greater Polymorph",
-       "category": "crowd-control",
-       "priority": "high",
-       "interruptible": null,
-       "summary": "instant · polymorph · Magic effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 13747,
-       "name": "Slow",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Magic effect · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22272,
-       "name": "Arcane Missiles",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 13996,
-     "name": "Blackwing Technician",
-     "levelMin": 60,
-     "levelMax": 60,
-     "count": 71,
-     "abilities": [
-      {
-       "spellId": 22334,
-       "name": "Bomb",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible · area",
-       "details": "Bombs all enemies in a selected area, inflicting Fire damage.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 22335,
-       "name": "Bottle of Poison",
-       "category": "dispel",
-       "priority": "medium",
-       "interruptible": null,
-       "summary": "instant · Poison effect",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
      "npcId": 12459,
      "name": "Blackwing Warlock",
      "levelMin": 61,
@@ -57960,10 +57774,10 @@
       {
        "spellId": 22372,
        "name": "Demon Portal",
-       "category": "interrupt",
-       "priority": "medium",
-       "interruptible": true,
-       "summary": "0.5s cast · interruptible",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "0.5s cast · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -57976,37 +57790,6 @@
        "interruptible": null,
        "summary": "instant · area",
        "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 12458,
-     "name": "Blackwing Taskmaster",
-     "levelMin": 62,
-     "levelMax": 62,
-     "count": 9,
-     "abilities": [
-      {
-       "spellId": 22458,
-       "name": "Healing Circle",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "3s cast · interruptible · area · heals",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 17289,
-       "name": "Shadow Shock",
-       "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": "Instantly lashes an enemy with dark magic, inflicting Shadow damage.",
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -58048,6 +57831,37 @@
        "priority": "low",
        "interruptible": null,
        "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 12464,
+     "name": "Death Talon Seether",
+     "levelMin": 62,
+     "levelMax": 62,
+     "count": 4,
+     "abilities": [
+      {
+       "spellId": 22428,
+       "name": "Frenzy",
+       "category": "tank-danger",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 22433,
+       "name": "Flame Buffet",
+       "category": "dispel",
+       "priority": "medium",
+       "interruptible": null,
+       "summary": "instant · Magic effect",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -58132,7 +57946,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -59592,7 +59406,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -59698,7 +59512,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -60055,7 +59869,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -61787,7 +61601,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -61915,7 +61729,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -62010,7 +61824,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -62094,7 +61908,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -62200,7 +62014,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -62317,8 +62131,8 @@
        "name": "Mind Flay",
        "category": "crowd-control",
        "priority": "high",
-       "interruptible": null,
-       "summary": "instant · fear",
+       "interruptible": true,
+       "summary": "channeled · interruptible · fear",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -62401,8 +62215,8 @@
        "name": "Whirlwind",
        "category": "special-mechanic",
        "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
+       "interruptible": false,
+       "summary": "channeled · not interruptible",
        "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
@@ -63409,7 +63223,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
@@ -65781,7 +65595,7 @@
        "revision": "wow_classic_era (latest)",
        "confidence": "low",
        "tier": "classic-reference",
-       "retrievedAt": "2026-11-18T04:21:05.615Z",
+       "retrievedAt": "2026-11-18T08:16:15.790Z",
        "url": "https://wago.tools/db2?product=wow_classic_era",
        "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
       }
@@ -66069,37 +65883,6 @@
      ]
     },
     {
-     "npcId": 16168,
-     "name": "Stoneskin Gargoyle",
-     "levelMin": 81,
-     "levelMax": 81,
-     "count": 11,
-     "abilities": [
-      {
-       "spellId": 29325,
-       "name": "Acid Volley",
-       "category": "healer-danger",
-       "priority": "high",
-       "interruptible": null,
-       "summary": "instant · area",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 28995,
-       "name": "Stoneskin",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "6s cast · interruptible · heals",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
      "npcId": 16215,
      "name": "Unholy Staff",
      "levelMin": 81,
@@ -66142,6 +65925,26 @@
      ]
     },
     {
+     "npcId": 16236,
+     "name": "Eye Stalk",
+     "levelMin": 81,
+     "levelMax": 81,
+     "count": 17,
+     "abilities": [
+      {
+       "spellId": 29407,
+       "name": "Mind Flay",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
      "npcId": 15976,
      "name": "Venom Stalker",
      "levelMin": 81,
@@ -66156,6 +65959,57 @@
        "interruptible": null,
        "summary": "instant · Poison effect · area",
        "details": "Charges an enemy and causes poison damage to all within 10 yards of the target.",
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 16168,
+     "name": "Stoneskin Gargoyle",
+     "levelMin": 81,
+     "levelMax": 81,
+     "count": 11,
+     "abilities": [
+      {
+       "spellId": 29325,
+       "name": "Acid Volley",
+       "category": "healer-danger",
+       "priority": "high",
+       "interruptible": null,
+       "summary": "instant · area",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      },
+      {
+       "spellId": 28995,
+       "name": "Stoneskin",
+       "category": "special-mechanic",
+       "priority": "low",
+       "interruptible": false,
+       "summary": "6s cast · not interruptible · heals",
+       "details": null,
+       "source": "classic-reference",
+       "verifiedForForever": false
+      }
+     ]
+    },
+    {
+     "npcId": 16022,
+     "name": "Surgical Assistant",
+     "levelMin": 80,
+     "levelMax": 80,
+     "count": 9,
+     "abilities": [
+      {
+       "spellId": 28310,
+       "name": "Mind Flay",
+       "category": "interrupt",
+       "priority": "high",
+       "interruptible": true,
+       "summary": "channeled · interruptible",
+       "details": null,
        "source": "classic-reference",
        "verifiedForForever": false
       }
@@ -66214,68 +66068,6 @@
        "spellId": 7160,
        "name": "Execute",
        "category": "tank-danger",
-       "priority": "low",
-       "interruptible": null,
-       "summary": "instant",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 16020,
-     "name": "Mad Scientist",
-     "levelMin": 81,
-     "levelMax": 81,
-     "count": 6,
-     "abilities": [
-      {
-       "spellId": 28301,
-       "name": "Mana Burn",
-       "category": "healer-danger",
-       "priority": "high",
-       "interruptible": null,
-       "summary": "instant · drains mana",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 28306,
-       "name": "Great Heal",
-       "category": "special-mechanic",
-       "priority": "low",
-       "interruptible": false,
-       "summary": "2s cast · not interruptible · heals",
-       "details": "Calls upon Holy magic to heal an ally.",
-       "source": "classic-reference",
-       "verifiedForForever": false
-      }
-     ]
-    },
-    {
-     "npcId": 16029,
-     "name": "Sludge Belcher",
-     "levelMin": 82,
-     "levelMax": 82,
-     "count": 5,
-     "abilities": [
-      {
-       "spellId": 27891,
-       "name": "Disease Buffet",
-       "category": "interrupt",
-       "priority": "high",
-       "interruptible": true,
-       "summary": "1.5s cast · interruptible",
-       "details": null,
-       "source": "classic-reference",
-       "verifiedForForever": false
-      },
-      {
-       "spellId": 28362,
-       "name": "Disease Cloud",
-       "category": "special-mechanic",
        "priority": "low",
        "interruptible": null,
        "summary": "instant",
@@ -67105,7 +66897,7 @@
      "revision": "wow_classic_era (latest)",
      "confidence": "low",
      "tier": "classic-reference",
-     "retrievedAt": "2026-11-18T04:21:05.615Z",
+     "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
     }
