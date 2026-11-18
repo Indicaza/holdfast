@@ -139,7 +139,8 @@ export function normalizeAtlas(atlas) {
     kind: source.kind === 'raid' ? 'raid' : source.kind === 'dungeon' ? 'dungeon' : null,
     lootSlots: list(source.lootSlots),
     description: source.description || '',
-    maps: list(source.maps).filter((map) => map && map.imageUrl),
+    // A map is either art (imageUrl) or a spawn layout the site draws (points).
+    maps: list(source.maps).filter((map) => map && (map.imageUrl || (Array.isArray(map.points) && map.points.length))),
     bosses: list(source.bosses),
     creatures: list(source.creatures),
     rares: list(source.rares),

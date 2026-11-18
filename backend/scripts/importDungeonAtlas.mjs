@@ -20,9 +20,11 @@ const read = (name) => {
 };
 const wago = read("wago-classic-era.json");
 const azerothcore = read("azerothcore.json");
+const creatures = read("azerothcore-creatures.json");
+const spells = read("wago-classic-era-spells.json");
 // generatedAt follows the newest extract, so re-running changes nothing.
-const generatedAt = [wago?.retrievedAt, azerothcore?.retrievedAt].filter(Boolean).sort().at(-1) ?? null;
-const atlas = normalize({ wago, azerothcore, generatedAt });
+const generatedAt = [wago?.retrievedAt, azerothcore?.retrievedAt, creatures?.retrievedAt, spells?.retrievedAt].filter(Boolean).sort().at(-1) ?? null;
+const atlas = normalize({ wago, azerothcore, creatures, spells, generatedAt });
 const problems = atlasProblems(atlas);
 if (problems.length) {
   console.error(`Atlas invariants broken:\n- ${problems.join("\n- ")}`);
@@ -44,4 +46,4 @@ if (process.argv.includes("--check")) {
 const count = (fn) => atlas.dungeons.reduce((sum, dungeon) => sum + fn(dungeon), 0);
 console.log(`${atlas.dungeons.length} dungeons, ${count((d) => d.bosses.length)} bosses (${count((d) => d.bosses.filter((b) => b.npcId).length)} with npc ids), `
   + `${count((d) => d.bosses.reduce((n, b) => n + b.abilities.length, 0))} abilities, ${count((d) => d.quests.length)} quests, `
-  + `${atlas.dungeons.filter((d) => d.entrance).length} entrances, ${atlas.dungeons.filter((d) => d.levelMin !== null).length} level bands.`);
+  + `${count((d) => d.rares.length)} rares, ${count((d) => d.creatures.length)} dangerous trash, ${count((d) => d.maps.length)} layouts, ${atlas.dungeons.filter((d) => d.entrance).length} entrances, ${atlas.dungeons.filter((d) => d.levelMin !== null).length} level bands.`);

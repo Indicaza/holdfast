@@ -68,22 +68,67 @@ function UnverifiedBadge() {
   return <span className="gw-tag gw-tag--quiet gw-atlas-unverified" title="From a Classic reference; not yet checked on Forever">Classic reference — unverified for Forever</span>
 }
 
-// A floor map with boss markers where their positions are known.
-function FloorMap({ map, bosses, onBoss, highlight = '' }) {
-  const placed = bosses.filter((boss) => (boss.floorId ?? map.floorId) === map.floorId && markerPosition(boss.mapPosition))
+// A floor map with boss (and rare) markers where their positions are known.
+// Without map art it is the spawn layout: every creature position in the
+// dungeon, drawn by the site. Multi-level dungeons overlap on it.
+function FloorMap({ map, bosses, rares = [], onBoss, highlight = '' }) {
+  const onFloor = (entry) => (entry.floorId ?? map.floorId) === map.floorId && markerPosition(entry.mapPosition)
+  const placed = bosses.filter(onFloor)
+  const placedRares = rares.filter(onFloor)
+  const layout = !map.imageUrl
+  const caption = layout ? 'Spawn layout: every creature position, north up. Not an in-game map; levels overlap.' : map.name
   return (
     <figure className="gw-atlas-floor">
-      <div className="gw-atlas-floor__frame" style={map.width && map.height ? { aspectRatio: `${map.width} / ${map.height}` } : undefined}>
-        <img src={map.imageUrl} alt={`Map of ${map.name || 'this floor'}`} loading="lazy" />
-        {placed.map((boss, index) => (
+      <div className={`gw-atlas-floor__frame${layout ? ' gw-atlas-floor__frame--layout' : ''}`} style={map.width && map.height ? { aspectRatio: `${map.width} / ${map.height}` } : undefined}>
+        {layout ? (
+          <svg className="gw-atlas-floor__plot" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Creature positions in this dungeon">
+            {map.points.map(([x, y]) => <rect key={`${x}:${y}`} x={x * 100 - 0.5} y={y * 100 - 0.5} width="1" height="1" />)}
+          </svg>
+        ) : <img src={map.imageUrl} alt={`Map of ${map.name || 'this floor'}`} loading="lazy" />}
+        {placedRares.map((rare) => (
+          <span key={`rare-${rare.npcId || rare.name}`} className="gw-atlas-floor__marker gw-atlas-floor__marker--rare" style={markerPosition(rare.mapPosition)}
+            title={`${rare.name} (rare)`} aria-label={`${rare.name}, rare, on the map`} role="img">★</span>
+        ))}
+        {placed.map((boss) => (
           <button key={bossKey(boss)} type="button" className={`gw-atlas-floor__marker${highlight === bossKey(boss) ? ' is-active' : ''}`}
-            style={markerPosition(boss.mapPosition)} aria-label={`${boss.name} on the map`} onClick={() => onBoss?.(boss)}>
-            {index + 1}
+            style={markerPosition(boss.mapPosition)} aria-label={`${boss.name} on the map`} title={boss.name} onClick={() => onBoss?.(boss)}>
+            {bosses.indexOf(boss) + 1}
           </button>
         ))}
       </div>
-      {map.name ? <figcaption className="gw-muted">{map.name}{placed.length < bosses.length ? ' · some boss positions are not known yet' : ''}</figcaption> : null}
+      {caption ? <figcaption className="gw-muted">{caption}{placed.length < bosses.length ? ' Some boss positions are not known.' : ''}</figcaption> : null}
     </figure>
+  )
+}
+
+function levelRange(entry) {
+  if (!entry.levelMin) return ''
+  return entry.levelMax && entry.levelMax !== entry.levelMin ? `level ${entry.levelMin}–${entry.levelMax}` : `level ${entry.levelMin}`
+}
+
+// Elite trash whose casts can wipe a pull: concise, expandable.
+function DangerousTrash({ creatures }) {
+  if (!creatures.length) return null
+  return (
+    <section className="gw-atlas-trash" aria-label="Dangerous trash">
+      <h3>Dangerous trash</h3>
+      <ul>
+        {creatures.map((creature) => (
+          <li key={creature.npcId || creature.name}>
+            <details>
+              <summary>
+                <strong>{creature.name}</strong>
+                <span className="gw-muted">{[creature.count > 1 ? `×${creature.count}` : null, levelRange(creature)].filter(Boolean).join(' · ')}</span>
+                {(creature.abilities || []).filter((ability) => ability.priority === 'high').slice(0, 3).map((ability) => (
+                  <span key={ability.spellId || ability.name} className="gw-tag gw-tag--warn">{ability.name}</span>
+                ))}
+              </summary>
+              <Abilities abilities={creature.abilities || []} />
+            </details>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -183,7 +228,7 @@ function Overview({ entry, atlas, character, onBoss }) {
     <div className="gw-atlas-section">
       {atlas.description ? <p>{atlas.description}</p> : null}
       <Facts entry={entry} atlas={atlas} character={character} />
-      {atlas.maps.map((map) => <FloorMap key={map.floorId ?? map.imageUrl} map={map} bosses={atlas.bosses} onBoss={onBoss} />)}
+      {atlas.maps.map((map) => <FloorMap key={map.floorId ?? map.imageUrl} map={map} bosses={atlas.bosses} rares={atlas.rares} onBoss={onBoss} />)}
       {atlas.bosses.length ? (
         <>
           <h3>Bosses</h3>
@@ -203,7 +248,11 @@ function Overview({ entry, atlas, character, onBoss }) {
       {atlas.rares.length ? (
         <>
           <h3>Rares</h3>
-          <ul className="gw-atlas-plain">{atlas.rares.map((rare) => <li key={rare.npcId || rare.name}>{rare.name}</li>)}</ul>
+          <ul className="gw-atlas-plain">{atlas.rares.map((rare) => (
+            <li key={rare.npcId || rare.name}>
+              <strong>{rare.name}</strong> <span className="gw-muted">{[rare.elite ? 'rare elite' : 'rare', levelRange(rare), markerPosition(rare.mapPosition) ? 'on the map (★)' : null].filter(Boolean).join(' · ')}</span>
+            </li>
+          ))}</ul>
         </>
       ) : null}
       {!atlas.known ? (
@@ -243,8 +292,16 @@ function BossDetail({ boss, atlas, detail, ...loot }) {
 
 function Bosses({ atlas, detail, boss, onBoss, ...loot }) {
   const selected = atlas.bosses.find((entry) => bossKey(entry) === boss) || atlas.bosses[0]
-  if (!atlas.bosses.length) return <p className="gw-muted">No boss details in the atlas yet. The Loot tab lists bosses seen dropping loot.</p>
+  if (!atlas.bosses.length) {
+    return (
+      <>
+        <p className="gw-muted">No boss details in the atlas yet. The Loot tab lists bosses seen dropping loot.</p>
+        <DangerousTrash creatures={atlas.creatures} />
+      </>
+    )
+  }
   return (
+    <>
     <div className="gw-atlas-bosses">
       <nav aria-label="Bosses">
         <ol>
@@ -259,6 +316,8 @@ function Bosses({ atlas, detail, boss, onBoss, ...loot }) {
       </nav>
       <BossDetail key={bossKey(selected)} boss={selected} atlas={atlas} detail={detail} {...loot} />
     </div>
+    <DangerousTrash creatures={atlas.creatures} />
+    </>
   )
 }
 

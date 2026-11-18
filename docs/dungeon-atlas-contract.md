@@ -21,7 +21,7 @@ atlas: {
   entrance: { mapId, x, y } | null,
   artworkUrl,                  // null        (no licensed art)
   bossCount,                   // int
-  rareCount,                   // null        (unknown: no rare-spawn source yet; never 0 by default)
+  rareCount,                   // int | null  (rare spawns; 0 is a known zero, null = no spawn data)
   questCount,                  // int
   kind: "dungeon" | "raid",
   lootSlots: string[]          // optional addition: distinct `slot` strings of the catalog's active loot
@@ -42,10 +42,11 @@ atlas: {
   description,                 // string | null
   kind, levelMin, levelMax, recommendedLevel, zoneName, zoneMapId, artworkUrl,   // as in the list
   wings?: [{ name, levelMin, levelMax }],   // optional: client LFG wings (Dire Maul, Blackrock Spire)
-  maps: [{ floorId, name, imageUrl, width, height }],   // [] today
+  maps: [{ floorId, name, imageUrl, width, height, kind?, points? }],
+                               // today: one spawn layout per dungeon (see Units)
   bosses: [Boss],
-  creatures: [],               // [] today
-  rares: [{ npcId, name, floorId, mapPosition }],       // [] today
+  creatures: [{ npcId, name, levelMin, levelMax, count, abilities: [Ability] }],   // dangerous elite trash, ≤ 8
+  rares: [{ npcId, name, levelMin, levelMax, elite, floorId, mapPosition, abilities: [Ability] }],
   quests: [{ questId, name, level, minLevel, faction, giver }],
   entrance: { mapId, x, y } | null,
   entrances?: [{ mapId, zoneName, x, y, label, areaTriggerId }],   // optional: every known entrance
@@ -114,5 +115,9 @@ published yet (see gaps in `dungeon-atlas-sources.md`).
   site's map borders (a city rectangle wins, else the nearest zone centre). Near
   zone borders this can differ from the game's own zone; the point itself is
   exact either way.
-- **In-dungeon** `mapPosition`: normalized 0–1 on the floor map `floorId`, or
-  `null` when unknown (all `null` today: the Classic client has no dungeon maps).
+- **In-dungeon** `mapPosition`: normalized 0–1 (from the top left) on the floor
+  map `floorId`, or `null` when unknown. Today the only floor is the spawn
+  layout: `{ floorId: "layout", kind: "spawn-layout", imageUrl: null, width,
+  height, points: [[x, y], …] }`, where `width`/`height` are the world extent in
+  yards (aspect ratio) and `points` are the 0–1 cells holding any spawn. A map
+  with `imageUrl` is art; one with `points` is drawn by the client.

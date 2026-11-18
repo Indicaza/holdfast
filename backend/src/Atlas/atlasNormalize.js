@@ -8,6 +8,7 @@
 // - Every fact group names its source, revision, tier and confidence.
 // - Nothing derived from a non-Forever source claims verifiedForForever.
 
+import { adaptContent } from "./atlasContent.js";
 import { VANILLA_INSTANCE_IDS } from "./atlasSources.js";
 
 export const ATLAS_SCHEMA_VERSION = 1;
@@ -51,7 +52,7 @@ export function provenanceOf(extract, { tier, confidence, note = null }) {
 
 // Blizzard's Classic Era client tables: names, kind, level bands, the boss
 // list, and where the client's entrance triggers stand.
-export function adaptWagoClassicEra(extract, { teleports = new Map() } = {}) {
+export function adaptWagoClassicEra(extract, { teleports = new Map(), zoneOf = new Map() } = {}) {
   const t = extract.tables;
   const prov = (confidence, note) => provenanceOf(extract, { tier: "classic-reference", confidence, note });
   const out = new Map();
@@ -105,7 +106,9 @@ export function adaptWagoClassicEra(extract, { teleports = new Map() } = {}) {
     const target = teleports.get(int(row.ID));
     const entry = target && out.get(target.instanceId);
     if (!entry) continue;
-    const point = zonePoint(zones, int(row.ContinentID), Number(row.Pos_0), Number(row.Pos_1));
+    // The client's own area named after the dungeon says which zone it is in;
+    // that zone frames the entrance when its rectangle holds it.
+    const point = zonePoint(zones, int(row.ContinentID), Number(row.Pos_0), Number(row.Pos_1), zoneOf.get(entry.name) ?? null);
     if (!point) continue;
     entry.entrances.push({ ...point, areaTriggerId: int(row.ID), label: target.label });
   }
@@ -133,11 +136,11 @@ function zoneRegions(tables) {
 // zone frames it; near borders the cell can differ from the game's own zone
 // (docs/dungeon-atlas-sources.md lists the known cases).
 const CITY_MAP_IDS = new Set([1453, 1454, 1455, 1456, 1457, 1458]);
-export function zonePoint(zones, continentId, worldX, worldY) {
+export function zonePoint(zones, continentId, worldX, worldY, preferredZone = null) {
   if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return null;
   const holding = zones.filter((z) => z.continentId === continentId && worldX >= z.minX && worldX <= z.maxX && worldY >= z.minY && worldY <= z.maxY);
   const distance = (z) => Math.hypot(worldX - (z.minX + z.maxX) / 2, worldY - (z.minY + z.maxY) / 2);
-  const zone = holding.find((z) => CITY_MAP_IDS.has(z.mapId)) || holding.filter((z) => !CITY_MAP_IDS.has(z.mapId)).sort((a, b) => distance(a) - distance(b))[0];
+  const zone = holding.find((z) => preferredZone && z.name === preferredZone) || holding.find((z) => CITY_MAP_IDS.has(z.mapId)) || holding.filter((z) => !CITY_MAP_IDS.has(z.mapId)).sort((a, b) => distance(a) - distance(b))[0];
   if (!zone) return null;
   return { mapId: zone.mapId, zoneName: zone.name, x: round4((zone.maxY - worldY) / (zone.maxY - zone.minY)), y: round4((zone.maxX - worldX) / (zone.maxX - zone.minX)) };
 }
@@ -189,20 +192,42 @@ export function adaptAzerothCore(extract, { areaToInstance = new Map() } = {}) {
 
 // ---------------------------------------------------------------- Normalize
 
-export function normalize({ wago, azerothcore, generatedAt = null }) {
+export function normalize({ wago, azerothcore, creatures = null, spells = null, generatedAt = null }) {
   const areaToInstance = new Map((wago?.tables?.AreaTable || []).map((row) => [int(row.ID), int(row.ContinentID)]));
   const ac = azerothcore ? adaptAzerothCore(azerothcore, { areaToInstance }) : null;
-  const base = wago ? adaptWagoClassicEra(wago, { teleports: ac?.teleports || new Map() }) : new Map();
+  const content = creatures ? adaptContent(creatures, spells) : null;
+  const base = wago ? adaptWagoClassicEra(wago, { teleports: ac?.teleports || new Map(), zoneOf: content?.zoneOf || new Map() }) : new Map();
+  const acProv = (confidence, note) => provenanceOf(creatures, { tier: "community-unverified", confidence, note });
+  const spellProv = spells ? provenanceOf(spells, { tier: "classic-reference", confidence: "low",
+    note: "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)" }) : null;
   const dungeons = VANILLA_INSTANCE_IDS.filter((id) => base.has(id)).map((instanceId) => {
     const entry = base.get(instanceId);
     const quests = ac?.quests.get(instanceId) || [];
     const provenance = [...entry.provenance];
     if (quests.length) provenance.push(ac.questProvenance);
-    const bosses = entry.bosses.map((boss) => {
-      const npcId = ac ? ac.npcIdOf(boss.name) : null;
-      return { encounterId: boss.encounterId, npcId, name: boss.name, order: boss.order, portraitUrl: null, floorId: null, mapPosition: null, abilities: [],
-        strategy: null, provenance: [entry.provenance.find((line) => line.note?.startsWith("DungeonEncounter")), ...(npcId ? [ac.npcProvenance] : [])].filter(Boolean) };
+    const place = content?.instances.get(instanceId) || null;
+    // The client lists no encounters for some dungeons (Gnomeregan, Sunken
+    // Temple); the emulator's encounter table does.
+    const listed = entry.bosses.length ? entry.bosses.map((boss) => ({ ...boss, npcId: ac ? ac.npcIdOf(boss.name) : null, fromEmulator: false }))
+      : (place?.encounters || []).map((boss, index) => ({ encounterId: boss.encounterId, npcId: boss.npcId, name: boss.name, order: index, fromEmulator: true }));
+    if (!entry.bosses.length && listed.length) provenance.push(acProv("medium", "instance_encounters: boss list (the client has none for this dungeon)"));
+    const bosses = listed.map((boss) => {
+      const { npcId } = boss;
+      const mapPosition = npcId && place ? place.positionOf(npcId) : null;
+      const abilities = npcId ? content?.abilitiesOf.get(npcId) || [] : [];
+      return { encounterId: boss.encounterId, npcId, name: boss.name, order: boss.order, portraitUrl: null, floorId: mapPosition ? "layout" : null, mapPosition, abilities,
+        strategy: null, provenance: [
+          boss.fromEmulator ? acProv("medium", "instance_encounters") : entry.provenance.find((line) => line.note?.startsWith("DungeonEncounter")),
+          ...(npcId && !boss.fromEmulator ? [ac.npcProvenance] : []),
+          ...(mapPosition ? [acProv("medium", "creature: spawn position on the spawn layout")] : []),
+          ...(abilities.length ? [acProv("medium", "smart_scripts, creature_template_spell, C++ script spell enums: which spells it casts"), spellProv] : []),
+        ].filter(Boolean) };
     });
+    const bossIds = new Set(bosses.map((boss) => boss.npcId).filter(Boolean));
+    const rares = place ? place.rares.filter((rare) => !bossIds.has(rare.npcId)) : [];
+    const trash = place ? place.trash(bossIds) : [];
+    if (place) provenance.push(acProv("medium", "creature, creature_template: spawn layout, rares (rank 2/4) and elite trash with high-priority spells"));
+    if (spellProv && (trash.length || bosses.some((boss) => boss.abilities.length))) provenance.push(spellProv);
     const entrance = entry.entrances[0] || null;
     return {
       instanceId, name: entry.name, kind: entry.kind, maxPlayers: entry.maxPlayers, description: entry.description,
@@ -210,10 +235,10 @@ export function normalize({ wago, azerothcore, generatedAt = null }) {
       zoneName: entrance?.zoneName ?? null, zoneMapId: entrance?.mapId ?? null,
       entrance: entrance ? { mapId: entrance.mapId, x: entrance.x, y: entrance.y } : null,
       entrances: entry.entrances.map(({ mapId, zoneName, x, y, label, areaTriggerId }) => ({ mapId, zoneName, x, y, label, areaTriggerId })),
-      artworkUrl: null, maps: [], bosses, creatures: [], rares: [], quests, provenance,
+      artworkUrl: null, maps: place ? [place.layout] : [], bosses, creatures: trash, rares, rareCount: place ? rares.length : null, quests, provenance,
     };
   });
-  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore].filter(Boolean).map((extract) => ({ source: extract.source,
+  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore, creatures, spells].filter(Boolean).map((extract) => ({ source: extract.source,
     revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null, url: extract.url ?? null, license: extract.license ?? null })), dungeons };
 }
 
@@ -236,6 +261,16 @@ export function atlasProblems(atlas) {
           problems.push(`${where}: ${boss.name} ${ability.name} claims Forever verification from ${ability.source}`);
         }
       }
+    }
+    for (const creature of [...(dungeon.creatures || []), ...(dungeon.rares || [])]) {
+      if (creature.mapPosition && !(unit(creature.mapPosition.x) && unit(creature.mapPosition.y))) problems.push(`${where}: ${creature.name} mapPosition`);
+      for (const ability of creature.abilities || []) {
+        if (!ABILITY_CATEGORIES.includes(ability.category)) problems.push(`${where}: ${creature.name} ability category`);
+        if (ability.verifiedForForever) problems.push(`${where}: ${creature.name} ${ability.name} claims Forever verification`);
+      }
+    }
+    for (const map of dungeon.maps || []) {
+      for (const point of map.points || []) if (!(unit(point[0]) && unit(point[1]))) { problems.push(`${where}: layout point out of range`); break; }
     }
     for (const art of [dungeon.artworkUrl, ...(dungeon.bosses || []).map((boss) => boss.portraitUrl), ...(dungeon.maps || []).map((map) => map.imageUrl)]) {
       if (art !== null && !String(art).startsWith("/")) problems.push(`${where}: art must be a local asset or null`);
