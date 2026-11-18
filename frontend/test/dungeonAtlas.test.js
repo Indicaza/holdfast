@@ -4,12 +4,25 @@ import assert from 'node:assert/strict'
 import {
   FIXTURE_CHARACTER,
   FIXTURE_DEADMINES_DETAIL,
+  FIXTURE_DETAIL_SPRINT1,
   FIXTURE_DETAIL_WITHOUT_ATLAS,
   FIXTURE_DUNGEON_LIST,
+  FIXTURE_DUNGEON_LIST_SPRINT1,
   FIXTURE_WISHLIST,
 } from '../src/Player/Dungeons/__fixtures__/atlas.js'
 import {
+  bindText,
   bossLoot,
+  defaultRole,
+  dungeonItems,
+  gearTargets,
+  itemFacts,
+  questModel,
+  quickGuide,
+  recommendDungeon,
+  runHistory,
+  wishlistTargets,
+  withCharacter,
   cardModel,
   dungeonsView,
   entranceMarkers,
@@ -138,9 +151,19 @@ test('abilities group by category with the important first; unverified ones say 
 })
 
 test('boss loot and map markers', () => {
-  const [rhahk, vancleef, shredder] = FIXTURE_DEADMINES_DETAIL.atlas.bosses
-  assert.deepEqual(bossLoot(vancleef, FIXTURE_DEADMINES_DETAIL).map((row) => row.item.name), ['Cape of the Brotherhood', 'Cruel Barb', 'Blackened Defias Armor'])
-  assert.deepEqual(bossLoot(rhahk, FIXTURE_DEADMINES_DETAIL).map((row) => row.item.itemId), [872])
+  const boss = (name) => FIXTURE_DEADMINES_DETAIL.atlas.bosses.find((entry) => entry.name === name)
+  const [rhahk, vancleef, shredder] = [boss('Rhahk\'Zor'), boss('Edwin VanCleef'), boss('Sneed\'s Shredder')]
+  // Observed loot first, then reference-only items; an item that is both stays one row.
+  const rows = bossLoot(vancleef, FIXTURE_DEADMINES_DETAIL)
+  assert.deepEqual(rows.map((row) => row.item.name), ['Cape of the Brotherhood', 'Cruel Barb', 'Blackened Defias Armor', 'Corsair\'s Overshirt'])
+  assert.deepEqual(rows.map((row) => [row.observed, row.reference]), [[true, true], [true, true], [true, true], [false, true]])
+  // Reference facts fill what the observed record lacks; observed facts win.
+  assert.equal(rows[0].item.armor, 24)
+  assert.equal(rows[0].item.itemLevel, 24)
+  assert.equal(rows[2].item.setName, 'Defias Leather')
+  assert.deepEqual(bossLoot(rhahk, FIXTURE_DEADMINES_DETAIL).map((row) => row.item.itemId), [872, 5187])
+  // The sprint-1 backend: no referenceLoot, observed loot only.
+  assert.deepEqual(bossLoot(FIXTURE_DETAIL_SPRINT1.atlas.bosses[1], FIXTURE_DETAIL_SPRINT1).map((row) => row.item.itemId), [5193, 5191, 10399])
   assert.deepEqual(bossLoot(shredder, FIXTURE_DEADMINES_DETAIL), [])
   assert.deepEqual(markerPosition(rhahk.mapPosition), { left: '22.00%', top: '31.00%' })
   assert.equal(markerPosition(shredder.mapPosition), null)
@@ -197,4 +220,131 @@ test('spawn layouts count as maps; empty map entries do not', async () => {
   const layout = { floorId: 'layout', kind: 'spawn-layout', imageUrl: null, width: 600, height: 400, points: [[0.1, 0.2]] }
   const atlas = normalizeAtlas({ maps: [layout, { floorId: 'blank', imageUrl: null, points: [] }, { floorId: 'art', imageUrl: '/maps/a.png' }] })
   assert.deepEqual(atlas.maps.map((map) => map.floorId), ['layout', 'art'])
+})
+
+test('wishlist targets: known sources plus reference item ids; acquired items aside', () => {
+  const targets = wishlistTargets(FIXTURE_WISHLIST.items, FIXTURE_DUNGEON_LIST)
+  assert.deepEqual(targets.get(36), ['i:5193', 'i:5191', 'i:5202'])
+  assert.equal(targets.has(43), false)
+  // Without the sprint-2 list fields only the wishlist's own sources count.
+  assert.deepEqual(wishlistTargets(FIXTURE_WISHLIST.items, FIXTURE_DUNGEON_LIST_SPRINT1).get(36), ['i:5193', 'i:5191'])
+})
+
+test('dungeon items: boss, trash and quest-reward rows, each item once', () => {
+  const rows = dungeonItems(FIXTURE_DEADMINES_DETAIL)
+  const keys = rows.map((row) => row.item.itemKey)
+  assert.equal(new Set(keys).size, keys.length)
+  assert.equal(rows.find((row) => row.item.itemId === 10400).sourceKind, 'trash')
+  const staff = rows.find((row) => row.item.itemId === 2042)
+  assert.equal(staff.sourceKind, 'quest')
+  assert.equal(staff.choice, true)
+  assert.equal(rows.find((row) => row.item.itemId === 1937).sourceKind, 'other')
+  assert.deepEqual(dungeonItems(FIXTURE_DETAIL_WITHOUT_ATLAS).map((row) => row.item.itemId), [872, 5193, 5191, 10399, 1937])
+})
+
+test('gear targets: class restriction and required level within the dungeon range only', () => {
+  const rows = [
+    { item: { itemKey: 'i:1', name: 'Now', slot: 'Chest', requiredLevel: 18 } },
+    { item: { itemKey: 'i:2', name: 'Later', slot: 'Chest', requiredLevel: 24 } },
+    { item: { itemKey: 'i:3', name: 'Too far', slot: 'Chest', requiredLevel: 40 } },
+    { item: { itemKey: 'i:4', name: 'Mage only', slot: 'Head', classes: ['Mage'] } },
+    { item: { itemKey: 'i:5', name: 'Linen Cloth', slot: null } },
+    { item: { itemKey: 'i:6', name: 'Unknown', slot: 'Feet' } },
+  ]
+  const targets = gearTargets(rows, { name: 'Rook', level: 20, className: 'Rogue' }, { levelMin: 17, levelMax: 26 })
+  assert.deepEqual(targets.map((row) => [row.item.name, row.usableNow]).sort(), [['Later', false], ['Now', true], ['Unknown', true]])
+  assert.deepEqual(gearTargets(rows, null), [])
+})
+
+test('item facts list only what is known', () => {
+  const [, vancleef] = FIXTURE_DEADMINES_DETAIL.atlas.bosses
+  const barb = vancleef.referenceLoot.find((item) => item.itemId === 5191)
+  assert.deepEqual(itemFacts(barb), [
+    ['Slot', 'One-Hand'], ['Type', 'Sword weapon'], ['Item level', 24], ['Requires level', 19],
+    ['Weapon', '30–56 damage, speed 2.80, 15.4 dps'], ['Stats', '+12 Strength'], ['Binds', 'Binds when picked up'],
+  ])
+  assert.deepEqual(itemFacts({}), [])
+  assert.equal(bindText(1), 'Binds when picked up')
+  assert.equal(bindText('BoE'), 'Binds when equipped')
+  assert.equal(bindText(0), '')
+})
+
+test('the quick guide: 2–4 lines, role categories first, from ability data only', () => {
+  const abilities = [
+    { name: 'Cleave', category: 'tank-danger', priority: 'high' },
+    { name: 'Heal', category: 'healer-danger', priority: 'high', interruptible: true },
+    { name: 'Fear', category: 'crowd-control', priority: 'medium' },
+    { name: 'Curse', category: 'dispel', priority: 'medium', verifiedForForever: true },
+    { name: 'Shout', category: 'special-mechanic', priority: 'low' },
+  ]
+  const names = (role) => quickGuide(abilities, role).map((line) => line.ability.name)
+  assert.deepEqual(names('tank'), ['Cleave', 'Heal'])
+  assert.deepEqual(names('healer'), ['Heal', 'Curse', 'Cleave'])
+  assert.deepEqual(names('dps'), ['Heal', 'Fear', 'Cleave'])
+  assert.deepEqual(names(''), ['Cleave', 'Heal'])
+  const [heal] = quickGuide(abilities, 'healer')
+  assert.equal(heal.action, 'Healer danger')
+  assert.equal(heal.unverified, true)
+  assert.equal(quickGuide(abilities, 'healer')[1].unverified, false)
+  // Only low-priority abilities: the two most important still show.
+  assert.equal(quickGuide([{ name: 'A', category: 'special-mechanic', priority: 'low' }, { name: 'B', priority: 'low' }, { name: 'C', priority: 'low' }], 'tank').length, 2)
+  assert.deepEqual(quickGuide([], 'tank'), [])
+  assert.equal(quickGuide([{ name: 'Shout', category: 'interrupt', priority: 'high', interruptible: false }], 'dps')[0].action, 'Cannot be interrupted')
+})
+
+test('the default role comes from the character, never a guess for hybrid classes', () => {
+  assert.equal(defaultRole({ className: 'Rogue' }), 'dps')
+  assert.equal(defaultRole({ className: 'Warrior' }), '')
+  assert.equal(defaultRole({ className: 'Warrior', spec: 'Protection' }), 'tank')
+  assert.equal(defaultRole({ className: 'Druid', spec: { name: 'Restoration' } }), 'healer')
+  assert.equal(defaultRole({ className: 'Priest', role: 'healer' }), 'healer')
+  assert.equal(defaultRole(null), '')
+})
+
+test('recommendations come from facts and carry their reasons', () => {
+  const [deadmines, wailing, ragefire, molten, blackfathom] = FIXTURE_DUNGEON_LIST
+  const rook = { name: 'Rook', level: 20, className: 'Rogue' }
+  const fit = recommendDungeon(deadmines, { character: rook, wishCount: 3, usable: 5 })
+  assert.equal(fit.recommended, true)
+  assert.deepEqual(fit.reasons, ['Levels 17–26 suits Rook (level 20)', '3 wishlist items drop here', '5 drops a Rogue can use', '5 quests'])
+  assert.equal(recommendDungeon(wailing, { character: rook }).recommended, true)
+  // Outlevelled, but it drops a wishlist item: still recommended, for that reason only.
+  assert.deepEqual(recommendDungeon(ragefire, { character: rook, wishCount: 1 }).reasons, ['1 wishlist item drops here'])
+  assert.equal(recommendDungeon(ragefire, { character: rook }).recommended, false)
+  // Too high a level: never, whatever it drops.
+  assert.equal(recommendDungeon(molten, { character: rook, wishCount: 4 }).recommended, false)
+  assert.equal(recommendDungeon(blackfathom, { character: rook }).recommended, false)
+  assert.equal(recommendDungeon(deadmines, {}).recommended, false)
+  const ctx = { character: rook, wishCounts, recommendations: new Map(FIXTURE_DUNGEON_LIST.map((entry) => [entry.instanceId, recommendDungeon(entry, { character: rook, wishCount: wishCounts.get(entry.instanceId) || 0 })])) }
+  assert.deepEqual(names(filterDungeons(FIXTURE_DUNGEON_LIST, { rec: '1' }, ctx)), ['The Deadmines', 'Wailing Caverns'])
+})
+
+test('run history per dungeon: count, completed, best time, last run', () => {
+  const history = runHistory([
+    { status: 'completed', startedAt: 100, durationSeconds: 900, timer: { seconds: 880 }, dungeon: { instanceId: 36, name: 'The Deadmines' } },
+    { status: 'completed', startedAt: 300, durationSeconds: 1200, dungeon: { instanceId: 36, name: 'The Deadmines' } },
+    { status: 'abandoned', startedAt: 200, durationSeconds: 300, dungeon: { instanceId: 36, name: 'The Deadmines' } },
+  ])
+  assert.deepEqual(history.get({ instanceId: 36 }), { count: 3, completed: 2, lastStartedAt: 300, bestSeconds: 880 })
+  assert.deepEqual(history.get({ name: 'the deadmines' }), { count: 3, completed: 2, lastStartedAt: 300, bestSeconds: 880 })
+  assert.equal(history.get({ instanceId: 43 }), null)
+})
+
+test('quests: giver object or name, coordinates in the game\'s style, missing facts left out', () => {
+  const [full, bare] = FIXTURE_DEADMINES_DETAIL.atlas.quests
+  const quest = questModel(full)
+  assert.equal(quest.giver, 'Gryan Stoutmantle')
+  assert.equal(quest.faction, 'Alliance')
+  assert.deepEqual(quest.location, { zoneName: 'Westfall', mapId: 1436, coords: '56.5, 47.0' })
+  assert.deepEqual(quest.prerequisites, ['The Defias Brotherhood'])
+  assert.equal(quest.rewards.length, 3)
+  const minimal = questModel({ ...bare, giver: 'Shoni the Shilent' })
+  assert.equal(minimal.giver, 'Shoni the Shilent')
+  assert.equal(minimal.location, null)
+  assert.deepEqual(minimal.rewards, [])
+})
+
+test('choosing a character keeps every other param', () => {
+  assert.equal(withCharacter('/dashboard/dungeons?view=explore&character=a&open=36&section=loot', 'b'), '/dashboard/dungeons?view=explore&character=b&open=36&section=loot')
+  assert.equal(withCharacter('/map?zone=1436&open=36', 'b'), '/map?zone=1436&open=36&character=b')
 })
