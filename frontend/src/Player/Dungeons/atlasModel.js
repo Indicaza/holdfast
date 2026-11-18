@@ -99,7 +99,6 @@ export function worldMapHref(dungeon = {}) {
   const mapId = atlas.entrance?.mapId || atlas.zoneMapId
   if (mapId) params.set('zone', String(mapId))
   params.set('dungeons', '1')
-  if (dungeon.instanceId) params.set('open', String(dungeon.instanceId))
   return `/map?${params.toString()}`
 }
 
@@ -112,6 +111,16 @@ function entrance(value) {
 }
 
 // Every atlas field with a safe default, whatever (or nothing) arrived.
+// Catalog dungeons (those with recorded loot) plus atlas-only dungeons the
+// backend knows about but has no loot for yet, so Explore and the world map
+// show every known dungeon. Catalog entries win on duplicate instance ids.
+export function listWithAtlasDungeons(data) {
+  const catalog = Array.isArray(data?.dungeons) ? data.dungeons : []
+  const extra = Array.isArray(data?.atlasDungeons) ? data.atlasDungeons : []
+  const have = new Set(catalog.map((entry) => entry.instanceId))
+  return [...catalog, ...extra.filter((entry) => entry && !have.has(entry.instanceId))]
+}
+
 export function normalizeAtlas(atlas) {
   const source = atlas && typeof atlas === 'object' ? atlas : {}
   const list = (value) => (Array.isArray(value) ? value : [])

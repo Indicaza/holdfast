@@ -1557,8 +1557,10 @@
 /* ------------------------------------------------- Dungeon entrance pins */
 .gw-rmap__pin {
   position: absolute;
-  top: 0;
-  left: 0;
+  /* Placed with left/top: .gw-rmap button forces transform: none. */
+  top: var(--y);
+  left: var(--x);
+  margin: -13px 0 0 -13px;
   display: grid;
   place-items: center;
   width: 26px;
@@ -1570,7 +1572,6 @@
   color: var(--gw-loot);
   cursor: pointer;
   pointer-events: auto;
-  transform: translate(var(--x), var(--y)) translate(-50%, -50%);
 }
 
 .gw-rmap__pin--raid { border-color: var(--gw-bad); color: var(--gw-bad); }

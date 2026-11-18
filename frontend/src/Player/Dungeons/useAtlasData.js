@@ -5,6 +5,7 @@ import { runAuthenticatedMutation } from '../../Auth/authenticatedMutation.js'
 import { signInReturnTo } from '../../Auth/returnTo.js'
 import { useSession } from '../../Auth/sessionContext.js'
 import { useLiveResource } from '../../Live/useLiveResource.js'
+import { listWithAtlasDungeons } from './atlasModel.js'
 
 const TOPICS = ['player']
 
@@ -36,7 +37,7 @@ export function useDungeonList() {
   const resource = useLiveResource('/api/player/loot/dungeons', { topics: TOPICS })
   const fixtures = useAtlasFixtures()
   const dungeons = useMemo(() => {
-    const real = resource.data?.dungeons || []
+    const real = listWithAtlasDungeons(resource.data)
     if (!fixtures) return real
     const byId = new Map(fixtures.FIXTURE_DUNGEON_LIST.map((entry) => [entry.instanceId, entry]))
     const merged = real.map((entry) => (entry.atlas || !byId.get(entry.instanceId)?.atlas ? entry : { ...entry, atlas: byId.get(entry.instanceId).atlas }))

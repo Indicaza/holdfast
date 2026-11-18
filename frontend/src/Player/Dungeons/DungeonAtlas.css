@@ -121,7 +121,7 @@
 .gw-atlas-modal__title h2 { margin: 0; font-size: 1.35rem; }
 .gw-atlas-modal__title p { margin: 0 0 0.2rem; font-size: 13px; }
 .gw-atlas-modal__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-.gw-atlas-tabs { margin: 0 1.25rem; align-self: flex-start; max-width: calc(100% - 2.5rem); overflow-x: auto; }
+.gw-atlas-tabs { margin: 0 1.25rem; align-self: flex-start; max-width: calc(100% - 2.5rem); overflow-x: auto; flex-shrink: 0; }
 .gw-atlas-tabs button[aria-current='page'] { background: var(--gw-raise); color: var(--gw-text); }
 
 .gw-atlas-modal__body {

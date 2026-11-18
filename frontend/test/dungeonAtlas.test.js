@@ -167,8 +167,8 @@ test('world map entrances: only known entrances in placeable zones', () => {
   const westfall = atlasZone(1436)
   assert.ok(Math.abs(markers[0].world.x - (westfall.rect.x + 0.42 * westfall.rect.width)) < 1e-9)
   assert.equal(markers[2].kind, 'raid')
-  assert.equal(worldMapHref(FIXTURE_DUNGEON_LIST[0]), '/map?zone=1436&dungeons=1&open=36')
-  assert.equal(worldMapHref({ instanceId: 48 }), '/map?dungeons=1&open=48')
+  assert.equal(worldMapHref(FIXTURE_DUNGEON_LIST[0]), '/map?zone=1436&dungeons=1')
+  assert.equal(worldMapHref({ instanceId: 48 }), '/map?dungeons=1')
 })
 
 test('the modal focus trap wraps at both ends and pulls focus inside', () => {
@@ -178,4 +178,16 @@ test('the modal focus trap wraps at both ends and pulls focus inside', () => {
   assert.equal(trapFocusIndex(4, -1, false), 0)
   assert.equal(trapFocusIndex(4, -1, true), 3)
   assert.equal(trapFocusIndex(0, -1, false), -1)
+})
+
+test('the dungeon list adds atlas-only dungeons without duplicating catalog ones', async () => {
+  const { listWithAtlasDungeons } = await import('../src/Player/Dungeons/atlasModel.js')
+  const list = listWithAtlasDungeons({
+    dungeons: [{ instanceId: 34, name: 'The Stockade', itemCount: 4 }],
+    atlasDungeons: [{ instanceId: 34, name: 'The Stockade' }, { instanceId: 33, name: 'Shadowfang Keep' }],
+  })
+  assert.deepEqual(list.map((entry) => entry.instanceId), [34, 33])
+  assert.equal(list[0].itemCount, 4)
+  assert.deepEqual(listWithAtlasDungeons(null), [])
+  assert.deepEqual(listWithAtlasDungeons({ dungeons: [{ instanceId: 1 }] }).length, 1)
 })
