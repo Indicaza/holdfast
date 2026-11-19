@@ -57,7 +57,7 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
   const onFocusZone = useCallback((mapId) => replaceParam('zone', mapId), [])
   const onDetailsChange = useCallback((sourceKey) => replaceParam('resource', sourceKey), [])
   const entrances = useEntrancePins(queryString)
-  const onPin = useCallback((pin) => navigate(withAtlasOpen(`${window.location.pathname}${window.location.search}`, { open: pin.instanceId }), { preserveScroll: true }), [])
+  const onPin = useCallback((pin) => navigate(withAtlasOpen(`${window.location.pathname}${window.location.search}`, { open: pin.open ?? pin.instanceId }), { preserveScroll: true }), [])
 
   return (
     <div className="gw-mapview">

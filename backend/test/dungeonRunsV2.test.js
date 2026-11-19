@@ -46,6 +46,38 @@ test("accepts schema 1 and 2, rejects mixed or malformed schema 2", () => {
   assert.equal(validDungeonRun(event(payload(v2, { checkpoints: {} }))), true);
 });
 
+test("completion bases: the addon's required-boss clears are accepted; nothing that was valid regresses", () => {
+  const event = (envelope) => ({ kind: "event", envelope });
+  const withBasis = (completion, extra = {}) => event(payload(v2, { completion, ...extra }));
+  // Every basis valid before keeps its rules.
+  assert.equal(validDungeonRun(event(v1)), true, "schema 1 unchanged");
+  assert.equal(validDungeonRun(event(v2)), true, "the schema 2 fixture (lockout) unchanged");
+  for (const basis of ["lockout", "encounters", "manual", "none"]) assert.equal(validDungeonRun(withBasis({ basis })), true, basis);
+  assert.equal(validDungeonRun(withBasis({ basis: "final_boss_unconfirmed", finalBoss: { name: "Edwin VanCleef", confidence: "documented" } })), true);
+  const boss = v2.payload.checkpoints.find((entry) => entry.kind === "boss" && entry.encounterId);
+  assert.equal(validDungeonRun(withBasis({ basis: "final_boss", finalBoss: { encounterId: boss.encounterId, name: boss.name, confidence: "observed" },
+    registryVersion: 1 })), true, "final_boss with its checkpoint");
+  assert.equal(validDungeonRun(withBasis({ basis: "final_boss", finalBoss: { encounterId: 999999, name: "Nobody", confidence: "observed" } })), false,
+    "final_boss still needs the client's kill");
+
+  // The addon's full clears (every mandatory boss), with its additive fields.
+  const additive = { bosses: { ...v2.payload.bosses, mandatoryDefeated: 2, mandatoryTotal: 2, optionalDefeated: 0, unknownDefeated: 0, coverage: "roster" },
+    endReason: "required_bosses_defeated" };
+  for (const basis of ["required_bosses", "required_bosses_unconfirmed"]) {
+    assert.equal(validDungeonRun(withBasis({ basis })), true, basis);
+    assert.equal(validDungeonRun(withBasis({ basis }, additive)), true, `${basis} with the addon's additive fields`);
+    assert.equal(validDungeonRun(withBasis({ basis, finalBoss: { encounterId: boss.encounterId, name: boss.name, confidence: "observed" } })), false,
+      `${basis} carries no finalBoss block`);
+  }
+
+  // Anything else is still refused.
+  for (const basis of ["vibes", "", "REQUIRED_BOSSES", "required_boss", "hundred_clear", null, 7]) {
+    assert.equal(validDungeonRun(withBasis({ basis })), false, String(basis));
+  }
+  assert.equal(validDungeonRun(withBasis("required_bosses")), false, "completion is an object");
+  assert.equal(validDungeonRun(event(payload(v1, { completion: { basis: "required_bosses" } }))), false, "never on schema 1");
+});
+
 function fakeRun(id, fields = {}) {
   return {
     id, startedAt: 1000 + id, status: "completed", endReason: "all_bosses_defeated", durationSeconds: 1800,
@@ -186,6 +218,22 @@ function seedCatalogAndPrices() {
       items: [item(2589, 9999), item(5191, 9999999)] });
   });
 }
+
+test("a required-boss clear is accepted at ingest and stored as the addon sent it", () => withHttpApp(async ({ request }) => {
+  const ash = await connect(request, { id: "discord-dv2-required", username: "ash" });
+  await syncCharacter(request, ash.token, "character-rook", "Rook");
+  for (const [runId, basis] of [["dungeon-required", "required_bosses"], ["dungeon-required-name", "required_bosses_unconfirmed"]]) {
+    const response = await upload(request, ash.token, payload(v2, { runId, endReason: "required_bosses_defeated", completion: { basis },
+      bosses: { ...v2.payload.bosses, mandatoryDefeated: 2, mandatoryTotal: 2, optionalDefeated: 0, unknownDefeated: 0, coverage: "roster" } }));
+    assert.ok([200, 201].includes(response.status), response.text);
+  }
+  const list = (await request("/api/player/dungeon-runs", { rawCookie: ash.cookie })).json;
+  const byId = Object.fromEntries(list.runs.map((run) => [run.runId, run]));
+  assert.equal(byId["dungeon-required"].completionBasis, "required_bosses", "stored as the addon sent it");
+  assert.equal(byId["dungeon-required-name"].completionBasis, "required_bosses_unconfirmed");
+  assert.equal(byId["dungeon-required"].status, "completed");
+  assert.equal(byId["dungeon-required"].endReason, "required_bosses_defeated");
+}));
 
 test("v2 runs store checkpoints, keep v1 working, and stay idempotent and private", () => withHttpApp(async ({ request }) => {
   const ash = await connect(request, ASH);

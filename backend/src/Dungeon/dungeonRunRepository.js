@@ -1,3 +1,5 @@
+import { atlasDungeon } from "../Atlas/atlasRepository.js";
+import { hasWings, parentKeyFor, wingForKills } from "../Atlas/atlasWings.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { clientMarketKey } from "../Market/marketModel.js";
 import { itemsInDatabase, readPricesInDatabase } from "../Market/marketRepository.js";
@@ -175,6 +177,31 @@ function rawIdsFor(names, character) {
 // bests and typical values. Bounded; a player's own runs only.
 const COMPARISON_LIMIT = 5000;
 
+// Which dungeon a run belongs to, read from it and never stored: its
+// dungeon key, and for a dungeon played as wings the wing its boss kills
+// prove (every kill of an assigned boss in one wing). A run with no such
+// kill, or kills in two wings, stays on its dungeon (wing: null). The
+// stored run and its instance ID are unchanged.
+function dungeonIdentity(run, checkpoints) {
+  const atlas = run.dungeon.instanceId ? atlasDungeon(run.dungeon.instanceId) : null;
+  if (!atlas) return { dungeonKey: null, wing: null };
+  const kills = (checkpoints || []).filter((entry) => entry.kind === "boss" && entry.source !== "manual");
+  const wing = hasWings(atlas.instanceId) ? wingForKills(atlas, kills) : null;
+  return { dungeonKey: wing?.dungeonKey || parentKeyFor(atlas), parentKey: parentKeyFor(atlas), wing };
+}
+
+function withDungeonIdentity(db, member, runs) {
+  const ids = runs.filter((run) => hasWings(run.dungeon.instanceId)).map((run) => run.id);
+  const checkpoints = new Map();
+  const columns = columnExists(db, "dungeon_runs", "checkpoints_json") ? "checkpoints_json, timeline_json" : "timeline_json";
+  for (let start = 0; start < ids.length; start += 400) {
+    const chunk = ids.slice(start, start + 400);
+    for (const row of db.prepare(`SELECT id, ${columns} FROM dungeon_runs WHERE member_id = ? AND id IN (${chunk.map(() => "?").join(", ")})`)
+      .all(member, ...chunk)) checkpoints.set(Number(row.id), checkpointsFor(row).list);
+  }
+  return runs.map((run) => ({ ...run, dungeon: { ...run.dungeon, ...dungeonIdentity(run, checkpoints.get(run.id) || []) } }));
+}
+
 // The signed-in player's own runs, newest first, with how each compares
 // to the same character's other runs of the same dungeon and difficulty.
 // Every read is scoped to one account; there is no read of anyone else's.
@@ -213,6 +240,7 @@ export function readDungeonRuns({ memberId, server = "", character = "", realm =
       if (wantStatus === "incomplete" && run.status === "completed") return false;
       return true;
     }).slice(0, cappedLimit).map((run) => ({ ...run, marks: marks.get(run.id) || null }));
+    const identified = withDungeonIdentity(db, member, runs);
 
     const all = db.prepare("SELECT DISTINCT raw_character_id, realm, instance_name FROM dungeon_runs WHERE member_id = ?").all(member);
     const characters = new Map();
@@ -223,7 +251,7 @@ export function readDungeonRuns({ memberId, server = "", character = "", realm =
     }
     const last = db.prepare("SELECT MAX(received_at) AS at FROM dungeon_runs WHERE member_id = ?").get(member);
     return {
-      runs,
+      runs: identified,
       comparisons: groups,
       lastReceivedAt: last?.at || null,
       truncated: inScope.length >= COMPARISON_LIMIT,
@@ -387,6 +415,7 @@ export function readDungeonRun({ memberId, id }) {
     const checkpoints = checkpointsFor(row);
     run.checkpoints = checkpoints.list;
     run.checkpointBasis = checkpoints.basis;
+    run.dungeon = { ...run.dungeon, ...dungeonIdentity(run, checkpoints.list) };
 
     // The same character's runs of the same dungeon and difficulty.
     const raw = run.character.linked ? rawIdsFor(names, run.character.id) : [row.raw_character_id];

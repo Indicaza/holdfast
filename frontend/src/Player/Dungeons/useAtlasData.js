@@ -53,8 +53,9 @@ export function useDungeonList() {
   return { status, dungeons, fixtures: Boolean(fixtures), error: resource.error, reload: resource.reload, degraded }
 }
 
+// instanceId: the game's instance ID, a dungeon key or a wing key.
 export function useDungeonDetail(instanceId) {
-  const resource = useLiveResource(instanceId ? `/api/player/loot/dungeons/${instanceId}` : '', { topics: TOPICS, enabled: Boolean(instanceId) })
+  const resource = useLiveResource(instanceId ? `/api/player/loot/dungeons/${encodeURIComponent(instanceId)}` : '', { topics: TOPICS, enabled: Boolean(instanceId) })
   const fixtures = useAtlasFixtures()
   const fixture = fixtures?.FIXTURE_DETAILS?.[instanceId] || null
   const data = useMemo(() => {
@@ -76,9 +77,10 @@ export function useDungeonDetails(instanceIds = []) {
   useEffect(() => {
     if (!key) return undefined
     let active = true
-    const ids = key.split(',').map(Number)
+    // Instance IDs and wing keys (a wing key has no comma).
+    const ids = key.split(',').map((id) => (/^\d+$/.test(id) ? Number(id) : id))
     Promise.all(ids.map((id) => {
-      const url = `/api/player/loot/dungeons/${id}`
+      const url = `/api/player/loot/dungeons/${encodeURIComponent(id)}`
       const cached = peekResource(url)?.payload
       return (cached !== undefined ? Promise.resolve(cached) : loadResource(url, TOPICS)).then((data) => [id, data], () => [id, null])
     })).then((entries) => {

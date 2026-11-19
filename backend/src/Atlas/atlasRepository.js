@@ -6,6 +6,7 @@
 import { normalizedName, wishlistItemKey } from "../Loot/lootModel.js";
 import { loadAtlas } from "./atlasData.js";
 import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
+import { isWingKey, parentKeyFor, unassignedOf, wingsOf } from "./atlasWings.js";
 
 export { loadAtlas };
 
@@ -13,11 +14,39 @@ export function atlasDungeon(instanceId) {
   return loadAtlas().byId.get(Number(instanceId)) || null;
 }
 
+// What a dungeon id in a URL names: a numeric instance ID (the dungeon, as
+// before), a dungeon key ("deadmines"), or a wing key
+// ("scarlet-monastery:library"). { instanceId, wingKey } or null.
+export function resolveDungeonId(value) {
+  const text = String(value ?? "").trim().toLowerCase();
+  if (/^\d{1,9}$/.test(text)) return { instanceId: Number(text), wingKey: null };
+  if (!/^[a-z0-9-]{1,80}(:[a-z0-9-]{1,40})?$/.test(text)) return null;
+  for (const dungeon of loadAtlas().atlas.dungeons) {
+    if (isWingKey(text)) {
+      if (wingsOf(dungeon).some((wing) => wing.dungeonKey === text)) return { instanceId: dungeon.instanceId, wingKey: text };
+    } else if (parentKeyFor(dungeon) === text) {
+      return { instanceId: dungeon.instanceId, wingKey: null };
+    }
+  }
+  return null;
+}
+
+// A wing's identity as list entries and details carry it.
+function wingIdentity(wing) {
+  return { dungeonKey: wing.dungeonKey, parentKey: wing.parentKey, instanceId: wing.instanceId, wing: wing.wing, name: wing.name,
+    levelMin: wing.levelMin, levelMax: wing.levelMax };
+}
+
 // The list entry's `atlas`, or null when the atlas has no such dungeon.
 export function atlasSummary(instanceId) {
   const dungeon = atlasDungeon(instanceId);
   if (!dungeon) return null;
+  const wings = wingsOf(dungeon);
   return {
+    // Optional additions: the dungeon's stable key, and its wings when they
+    // are played as separate dungeons (see Atlas/atlasWings.js).
+    dungeonKey: parentKeyFor(dungeon),
+    ...(wings.length ? { wingEntries: wings.map(wingIdentity) } : {}),
     levelMin: dungeon.levelMin, levelMax: dungeon.levelMax, recommendedLevel: dungeon.recommendedLevel,
     zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId, entrance: dungeon.entrance, artworkUrl: dungeon.artworkUrl,
     bossCount: dungeon.bosses.length,
@@ -72,7 +101,10 @@ export function atlasDetail(instanceId, sources = []) {
   if (!dungeon) return null;
   const reference = referenceDungeon(dungeon.instanceId);
   const observed = observedItems(sources);
+  const wings = wingsOf(dungeon);
   return {
+    dungeonKey: parentKeyFor(dungeon),
+    ...(wings.length ? { wingEntries: wings.map(wingIdentity) } : {}),
     description: dungeon.description,
     kind: dungeon.kind,
     levelMin: dungeon.levelMin, levelMax: dungeon.levelMax, recommendedLevel: dungeon.recommendedLevel,
@@ -104,6 +136,109 @@ export function atlasDetail(instanceId, sources = []) {
   };
 }
 
+// Does a catalog source group stand for this boss or rare (npc id, encounter
+// id or name)?
+function sourceMatches(source, entry) {
+  if (source.kind === "unknown") return false;
+  const name = normalizedName(entry.name);
+  return Boolean((entry.npcId && source.npcIds?.includes(entry.npcId)) || (entry.encounterId && source.encounterIds?.includes(entry.encounterId))
+    || (name && normalizedName(source.name) === name));
+}
+
+// The list entry of one wing: its own bosses, rares and reference loot;
+// quests and trash loot are the dungeon's, shared by every wing.
+function wingSummary(dungeon, wing) {
+  const reference = referenceDungeon(dungeon.instanceId);
+  const own = new Set();
+  for (const boss of wing.bosses) for (const id of reference?.bosses.find((entry) => entry.encounterId === boss.encounterId)?.itemIds || []) own.add(id);
+  for (const rare of wing.rares) for (const id of reference?.rares.find((entry) => entry.npcId === rare.npcId)?.itemIds || []) own.add(id);
+  const shared = new Set((reference?.dungeonLoot || []).map((entry) => entry.itemId));
+  for (const quest of dungeon.quests) for (const reward of quest.rewards || []) shared.add(reward.itemId);
+  const base = referenceSummary(dungeon.instanceId);
+  const ids = [...new Set([...own, ...[...shared].filter((id) => base.referenceItemIds.includes(id))])];
+  const { referenceSlots } = referenceSummary(dungeon.instanceId);
+  return {
+    ...wingIdentity(wing),
+    levelSource: wing.levelSource,
+    recommendedLevel: dungeon.recommendedLevel,
+    zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId, entrance: wing.entrance, artworkUrl: dungeon.artworkUrl,
+    bossCount: wing.bosses.length,
+    rareCount: dungeon.rareCount === null || dungeon.rareCount === undefined ? null : wing.rares.length,
+    questCount: dungeon.quests.length,
+    sharedQuestCount: dungeon.quests.length,
+    kind: dungeon.kind,
+    referenceLootCount: ids.length, referenceItemIds: ids,
+    referenceSlots: referenceSlots.filter((slot) => ids.some((id) => referenceItem(id)?.slot === slot)),
+    // Who the wing's bosses and rares are, so a client can tell a wishlist
+    // source of this wing from one of a sibling wing.
+    bossNpcIds: [...wing.bosses, ...wing.rares].map((entry) => entry.npcId).filter(Boolean),
+    bossNames: [...wing.bosses, ...wing.rares].map((entry) => entry.name),
+  };
+}
+
+// Every wing of every multi-wing atlas dungeon, as list entries.
+// lootSlots: instanceId → the catalog's slots (the instance's, not the wing's).
+export function atlasWingEntries(lootSlots = new Map()) {
+  const entries = [];
+  for (const dungeon of loadAtlas().atlas.dungeons) {
+    for (const wing of wingsOf(dungeon)) {
+      entries.push({ instanceId: dungeon.instanceId, dungeonKey: wing.dungeonKey, parentKey: wing.parentKey, wing: wing.wing, name: wing.name,
+        instanceName: dungeon.name, type: dungeon.kind === "raid" ? "raid" : "party",
+        atlas: { ...wingSummary(dungeon, wing), lootSlots: lootSlots.get(Number(dungeon.instanceId)) || [] } });
+    }
+  }
+  return entries;
+}
+
+// A wing's detail: the dungeon's catalog detail and atlas, narrowed to the
+// wing. Catalog sources that are one of this wing's bosses or rares are the
+// wing's; ones that are a sibling wing's are left out; the rest (trash, an
+// unassigned boss, unknown sources) are kept and marked shared. Null when
+// the key names no wing.
+export function withAtlasWingDetail(detail, wingKey, revision = 0) {
+  for (const dungeon of loadAtlas().atlas.dungeons) {
+    const wings = wingsOf(dungeon);
+    const wing = wings.find((entry) => entry.dungeonKey === wingKey);
+    if (!wing) continue;
+    const others = wings.filter((entry) => entry !== wing).flatMap((entry) => [...entry.bosses, ...entry.rares]);
+    const mine = [...wing.bosses, ...wing.rares];
+    const sources = [];
+    let leftOut = 0;
+    for (const source of detail?.sources || []) {
+      if (mine.some((entry) => sourceMatches(source, entry))) sources.push({ ...source, wingAttribution: "wing" });
+      else if (others.some((entry) => sourceMatches(source, entry))) leftOut += 1;
+      else sources.push({ ...source, wingAttribution: "shared" });
+    }
+    const base = detail || withAtlasDetail(null, dungeon.instanceId, revision);
+    const full = atlasDetail(dungeon.instanceId, sources);
+    const npcIds = new Set(mine.map((entry) => entry.npcId));
+    const unassigned = unassignedOf(dungeon);
+    const shared = (list) => list.map((entry) => ({ ...entry, wingAttribution: "shared" }));
+    return {
+      ...base,
+      sources,
+      wing: { ...wingIdentity(wing), slug: wing.slug, parentName: wing.parentName, levelSource: wing.levelSource, sourcesLeftOut: leftOut,
+        siblings: wings.filter((entry) => entry !== wing).map(wingIdentity) },
+      atlas: {
+        ...full,
+        dungeonKey: wing.dungeonKey, parentKey: wing.parentKey, wing: wing.wing, name: wing.name,
+        levelMin: wing.levelMin, levelMax: wing.levelMax, levelSource: wing.levelSource,
+        bosses: full.bosses.filter((boss) => boss.npcId && npcIds.has(boss.npcId)),
+        rares: full.rares.filter((rare) => rare.npcId && npcIds.has(rare.npcId)),
+        creatures: shared(full.creatures),
+        quests: shared(full.quests),
+        dungeonLoot: shared(full.dungeonLoot),
+        entrance: wing.entrance, entrances: wing.entrances, entrancesShared: wing.entrancesShared,
+        floors: wing.floors,
+        // Bosses and rares of the dungeon no source places in a wing.
+        unassigned: { bosses: unassigned.bosses.map((boss) => boss.name), rares: unassigned.rares.map((rare) => rare.name) },
+        provenance: [...full.provenance, ...wing.provenance],
+      },
+    };
+  }
+  return null;
+}
+
 // Atlas dungeons the loot catalog has not seen yet, for the list response.
 export function atlasOnlyDungeons(knownIds) {
   const known = new Set([...knownIds].map(Number));
@@ -120,7 +255,10 @@ export function withAtlasList(list, lootSlots = new Map()) {
     const atlas = atlasSummary(dungeon.instanceId);
     return { ...dungeon, atlas: atlas && { ...atlas, lootSlots: lootSlots.get(Number(dungeon.instanceId)) || [] } };
   }),
-    atlasDungeons: atlasOnlyDungeons(list.dungeons.map((dungeon) => dungeon.instanceId)) };
+    atlasDungeons: atlasOnlyDungeons(list.dungeons.map((dungeon) => dungeon.instanceId)),
+    // Optional addition: one entry per wing of a multi-wing dungeon. The
+    // dungeon's own entry above is unchanged (old clients, numeric links).
+    atlasWings: atlasWingEntries(lootSlots) };
 }
 
 // A catalog detail with `atlas` added. A dungeon the catalog has never seen

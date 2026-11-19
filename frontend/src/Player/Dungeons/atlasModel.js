@@ -41,6 +41,26 @@ function int(value) {
   return Number.isSafeInteger(number) && number > 0 ? number : null
 }
 
+// A wing's dungeon key: "scarlet-monastery:library".
+const WING_KEY = /^[a-z0-9-]{1,80}:[a-z0-9-]{1,40}$/
+
+// The open dungeon in a URL: the game's instance ID (a number, as links
+// have always had it), or a wing's key.
+export function openId(value) {
+  const text = String(value ?? '').trim().toLowerCase()
+  return WING_KEY.test(text) ? text : int(text)
+}
+
+export function isWingEntry(dungeon) {
+  return Boolean(dungeon && typeof dungeon.dungeonKey === 'string' && WING_KEY.test(dungeon.dungeonKey))
+}
+
+// A list entry's identity in links and lookups: a wing's key, else the
+// game's instance ID. Every wing of a dungeon shares one instance ID.
+export function entryKey(dungeon) {
+  return isWingEntry(dungeon) ? dungeon.dungeonKey : int(dungeon?.instanceId)
+}
+
 function finite(value) {
   const number = Number(value)
   return value !== null && value !== undefined && value !== '' && Number.isFinite(number) ? number : null
@@ -62,7 +82,7 @@ export function readAtlasQuery(queryString = '') {
   const section = params.get('section')
   return {
     character: params.get('character') || '',
-    open: int(params.get('open')),
+    open: openId(params.get('open')),
     section: ATLAS_SECTIONS.some(([id]) => id === section) ? section : 'overview',
     boss: params.get('boss') || '',
     filters: Object.fromEntries(EXPLORE_FILTER_KEYS.map((key) => [key, params.get(key) || ''])),
@@ -136,11 +156,28 @@ export function loadFailureDetail(error) {
   return parts.length ? ` (${parts.join(', ')})` : ''
 }
 
+// The explorer's entries: the catalog's dungeons and the atlas-only ones,
+// with a dungeon played as wings (atlasWings) listed once per wing instead.
+// The dungeon itself stays reachable by its instance ID (old links).
 export function listWithAtlasDungeons(data) {
   const catalog = Array.isArray(data?.dungeons) ? data.dungeons : []
   const extra = Array.isArray(data?.atlasDungeons) ? data.atlasDungeons : []
+  const wings = (Array.isArray(data?.atlasWings) ? data.atlasWings : []).filter(isWingEntry)
   const have = new Set(catalog.map((entry) => entry.instanceId))
-  return [...catalog, ...extra.filter((entry) => entry && !have.has(entry.instanceId))]
+  const dungeons = [...catalog, ...extra.filter((entry) => entry && !have.has(entry.instanceId))]
+  if (!wings.length) return dungeons
+  const winged = new Set(wings.map((entry) => int(entry.instanceId)))
+  const out = []
+  const placed = new Set()
+  for (const dungeon of dungeons) {
+    const id = int(dungeon.instanceId)
+    if (!winged.has(id)) { out.push(dungeon); continue }
+    if (placed.has(id)) continue
+    placed.add(id)
+    for (const wing of wings) if (int(wing.instanceId) === id) out.push(wing)
+  }
+  for (const wing of wings) if (!placed.has(int(wing.instanceId))) out.push(wing)
+  return out
 }
 
 export function normalizeAtlas(atlas) {
@@ -174,6 +211,15 @@ export function normalizeAtlas(atlas) {
     rares: list(source.rares),
     quests: list(source.quests),
     provenance: list(source.provenance),
+    // Wings (see docs/dungeon-atlas-contract.md): a dungeon lists its wings;
+    // a wing says its floors, what it shares and what no wing owns.
+    dungeonKey: typeof source.dungeonKey === 'string' ? source.dungeonKey : '',
+    wingEntries: list(source.wingEntries).filter(isWingEntry),
+    wing: typeof source.wing === 'string' ? source.wing : '',
+    floors: list(source.floors).filter((floor) => floor && floor.name),
+    unassigned: { bosses: list(source.unassigned?.bosses), rares: list(source.unassigned?.rares) },
+    levelSource: source.levelSource || '',
+    entrancesShared: source.entrancesShared === true,
   }
 }
 
@@ -234,7 +280,8 @@ export function cardModel(dungeon = {}, { character = null, wishCounts = new Map
   const atlas = normalizeAtlas(dungeon.atlas)
   const fit = levelFit(atlas, character)
   return {
-    id: dungeon.instanceId,
+    id: entryKey(dungeon),
+    wing: isWingEntry(dungeon) ? dungeon.wing || '' : '',
     name: dungeon.name || `Instance ${dungeon.instanceId}`,
     artworkUrl: atlas.artworkUrl,
     levels: levelText(atlas),
@@ -244,7 +291,7 @@ export function cardModel(dungeon = {}, { character = null, wishCounts = new Map
     questCount: atlas.questCount,
     itemCount: Number(dungeon.itemCount) || 0,
     referenceLootCount: atlas.referenceLootCount,
-    wishlistDrops: wishCounts.get(dungeon.instanceId) || 0,
+    wishlistDrops: wishCounts.get(entryKey(dungeon)) || 0,
     fit,
     hasEntrance: Boolean(atlas.entrance),
   }
@@ -261,9 +308,9 @@ export function filterDungeons(dungeons = [], filters = {}, { character = null, 
     if (filters.zone && atlas.zoneName !== filters.zone) return false
     if (filters.kind && dungeonKind(dungeon) !== filters.kind) return false
     if (filters.lootSlot && !atlas.lootSlots.includes(filters.lootSlot) && !atlas.referenceSlots.includes(filters.lootSlot)) return false
-    if (filters.wish && !(wishCounts.get(dungeon.instanceId) > 0)) return false
+    if (filters.wish && !(wishCounts.get(entryKey(dungeon)) > 0)) return false
     if (filters.fit && levelFit(atlas, character) !== 'fit') return false
-    if (filters.rec && !recommendations?.get(dungeon.instanceId)?.recommended) return false
+    if (filters.rec && !recommendations?.get(entryKey(dungeon))?.recommended) return false
     // A level range keeps dungeons that overlap it; unknown levels drop out.
     if (lmin !== null || lmax !== null) {
       const low = atlas.levelMin ?? atlas.recommendedLevel
@@ -276,8 +323,8 @@ export function filterDungeons(dungeons = [], filters = {}, { character = null, 
   }).sort((a, b) => {
     // "Recommended" lists the strongest reasons first.
     if (filters.rec && recommendations) {
-      const ra = recommendations.get(a.instanceId)?.score || 0
-      const rb = recommendations.get(b.instanceId)?.score || 0
+      const ra = recommendations.get(entryKey(a))?.score || 0
+      const rb = recommendations.get(entryKey(b))?.score || 0
       if (ra !== rb) return rb - ra
     }
     const fa = levelFit(a.atlas, character) === 'fit' ? 0 : 1
@@ -573,6 +620,10 @@ export function itemFacts(item = {}) {
 // The player's wishlist matched to dungeons: the item's known sources,
 // plus the dungeon's reference item ids (list field, sprint 2). Acquired
 // items are left out. instanceId → itemKey[].
+// A wing's entries are keyed by its wing key (entryKey): a source names
+// the wing when it is one of its bosses or rares, a sibling wing's boss is
+// not this wing's, and a source naming no wing's boss (trash, chests, an
+// unassigned boss) is shared by every wing.
 export function wishlistTargets(items = [], dungeons = []) {
   const targets = new Map()
   const add = (id, key) => {
@@ -582,13 +633,29 @@ export function wishlistTargets(items = [], dungeons = []) {
     targets.set(id, list)
   }
   const wanted = items.filter((entry) => entry && entry.state !== 'acquired')
-  for (const entry of wanted) for (const source of entry.sources || []) add(int(source.instanceId), entry.itemKey)
+  const wings = dungeons.filter(isWingEntry)
+  const owns = (wing, source) => {
+    const atlas = wing.atlas || {}
+    const npcId = int(source.npcId)
+    const name = normalizedName(source.bossName || source.source || source.sourceName)
+    return Boolean((npcId && (atlas.bossNpcIds || []).includes(npcId)) || (name && (atlas.bossNames || []).some((boss) => normalizedName(boss) === name)))
+  }
+  for (const entry of wanted) {
+    for (const source of entry.sources || []) {
+      const id = int(source.instanceId)
+      add(id, entry.itemKey)
+      const siblings = wings.filter((wing) => int(wing.instanceId) === id)
+      if (!siblings.length) continue
+      const owner = siblings.find((wing) => owns(wing, source))
+      for (const wing of owner ? [owner] : siblings) add(wing.dungeonKey, entry.itemKey)
+    }
+  }
   for (const dungeon of dungeons) {
     const ids = new Set(normalizeAtlas(dungeon.atlas).referenceItemIds)
     if (!ids.size) continue
     for (const entry of wanted) {
       const itemId = int(entry.itemId) || int(String(entry.itemKey || '').replace(/^i:/, ''))
-      if (itemId && ids.has(itemId)) add(dungeon.instanceId, entry.itemKey)
+      if (itemId && ids.has(itemId)) add(entryKey(dungeon), entry.itemKey)
     }
   }
   return targets
@@ -598,14 +665,23 @@ export function countsOf(targets = new Map()) {
   return new Map([...targets].map(([id, keys]) => [id, keys.length]))
 }
 
-// The player's own runs summed per dungeon (by instance id, else name).
+// The player's own runs summed per dungeon (by instance id, else name), and
+// per wing for runs whose boss kills prove one (run.dungeon.wing). A wing
+// shows only those; a run that proves no wing stays on its dungeon.
 export function runHistory(runs = []) {
   const byId = new Map()
   const byName = new Map()
+  const byWing = new Map()
+  const blank = () => ({ count: 0, completed: 0, lastStartedAt: null, bestSeconds: null })
   for (const run of runs || []) {
+    const wingKey = run?.dungeon?.wing?.dungeonKey
+    if (wingKey) {
+      if (!byWing.has(wingKey)) byWing.set(wingKey, blank())
+      tally(byWing.get(wingKey), run)
+    }
     const id = int(run?.dungeon?.instanceId)
     const name = normalizedName(run?.dungeon?.name)
-    const current = (id && byId.get(id)) || (name && byName.get(name)) || { count: 0, completed: 0, lastStartedAt: null, bestSeconds: null }
+    const current = (id && byId.get(id)) || (name && byName.get(name)) || blank()
     current.count += 1
     if (run.status === 'completed') {
       current.completed += 1
@@ -617,7 +693,26 @@ export function runHistory(runs = []) {
     if (id) byId.set(id, current)
     if (name) byName.set(name, current)
   }
-  return { get: (dungeon) => byId.get(int(dungeon?.instanceId)) || byName.get(normalizedName(dungeon?.name)) || null }
+  return { get: (dungeon) => (isWingEntry(dungeon) ? byWing.get(dungeon.dungeonKey) || null
+    : byId.get(int(dungeon?.instanceId)) || byName.get(normalizedName(dungeon?.name)) || null) }
+}
+
+function tally(current, run) {
+  current.count += 1
+  if (run.status === 'completed') {
+    current.completed += 1
+    const seconds = finite(run.timer?.seconds ?? run.durationSeconds)
+    if (seconds && (current.bestSeconds === null || seconds < current.bestSeconds)) current.bestSeconds = seconds
+  }
+  const started = finite(run.startedAt)
+  if (started && (current.lastStartedAt === null || started > current.lastStartedAt)) current.lastStartedAt = started
+}
+
+// Runs shown for one entry: a wing's own (proved by boss kills), or every
+// run of the dungeon.
+export function runsForEntry(runs = [], dungeon = null) {
+  if (!isWingEntry(dungeon)) return runs || []
+  return (runs || []).filter((run) => run?.dungeon?.wing?.dungeonKey === dungeon.dungeonKey)
 }
 
 function plural(count, one, many = `${one}s`) {
@@ -742,7 +837,8 @@ export const MAX_PLAN_DUNGEONS = 40
 // (?dungeons=36,48; the server keeps the first 40). [] = the whole catalog.
 export function planScope(scope, { dungeon = null, dungeons = [], character = null } = {}) {
   if (scope === 'dungeon' && dungeon) return [dungeon.instanceId]
-  if (scope === 'appropriate') return appropriateDungeons(dungeons, character).map((entry) => entry.instanceId).slice(0, MAX_PLAN_DUNGEONS)
+  // The prompt takes instance IDs: a dungeon's wings are one instance.
+  if (scope === 'appropriate') return [...new Set(appropriateDungeons(dungeons, character).map((entry) => entry.instanceId))].slice(0, MAX_PLAN_DUNGEONS)
   return []
 }
 
@@ -756,8 +852,9 @@ export function entranceMarkers(dungeons = [], locateZone) {
     const zone = locateZone(atlas.entrance.mapId)
     if (!zone?.rect) continue
     markers.push({
-      key: `dungeon:${dungeon.instanceId}`,
+      key: `dungeon:${entryKey(dungeon)}`,
       instanceId: dungeon.instanceId,
+      open: entryKey(dungeon),
       label: dungeon.name,
       kind: dungeonKind(dungeon),
       world: { x: zone.rect.x + atlas.entrance.x * zone.rect.width, y: zone.rect.y + atlas.entrance.y * zone.rect.height },

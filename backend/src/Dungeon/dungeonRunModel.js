@@ -14,7 +14,14 @@ export const MAX_CHECKPOINTS = 40;
 // encounter ID (seen in the Forever client) and the client reported its
 // kill; optional encounters may still be up. final_boss_unconfirmed: the
 // final boss matched by name only; the run completed but is not verified.
-export const COMPLETION_BASES = Object.freeze(["lockout", "encounters", "final_boss", "final_boss_unconfirmed", "manual", "none"]);
+// required_bosses: every mandatory boss (required and final) of a roster the
+// addon knows completely is down, each matched by an observed encounter ID;
+// optional bosses may still be up. required_bosses_unconfirmed: the same,
+// with a boss matched by name only or not yet observed. Neither carries a
+// finalBoss block. The read side (dungeonRunInsights) does not name them
+// yet: they read from the run's boss counts like any other completed run.
+export const COMPLETION_BASES = Object.freeze(["lockout", "encounters", "required_bosses", "required_bosses_unconfirmed", "final_boss",
+  "final_boss_unconfirmed", "manual", "none"]);
 const FINAL_BOSS_CONFIDENCES = new Set(["observed", "documented"]);
 export const DUNGEON_STATUSES = ["open", "completed", "interrupted", "abandoned"];
 export const FINAL_DUNGEON_STATUSES = new Set(["completed", "interrupted", "abandoned"]);

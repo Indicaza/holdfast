@@ -7,13 +7,14 @@ import { formatRunDuration } from '../dungeonRunModel.js'
 import { relativeTime } from '../playerModel.js'
 import { EmptyState, ErrorState, Icon, SkeletonRows } from '../ui.jsx'
 import {
-  FIT_COPY,
   cardModel,
   countsOf,
   dungeonItems,
+  entryKey,
   exploreHref,
   exploreOptions,
   filterDungeons,
+  FIT_COPY,
   gearTargets,
   levelFit,
   loadFailureDetail,
@@ -168,8 +169,8 @@ export default function DungeonExplore({ server, queryString = '', characters = 
   // Details of the dungeons that matter to the character (their level, or
   // their wishlist), to count the gear they can use. Bounded.
   const candidates = useMemo(() => (character ? list.dungeons
-    .filter((dungeon) => levelFit(dungeon.atlas, character) === 'fit' || wishCounts.get(dungeon.instanceId) > 0)
-    .map((dungeon) => dungeon.instanceId).slice(0, DETAIL_BUDGET) : []), [list.dungeons, character, wishCounts])
+    .filter((dungeon) => levelFit(dungeon.atlas, character) === 'fit' || wishCounts.get(entryKey(dungeon)) > 0)
+    .map(entryKey).slice(0, DETAIL_BUDGET) : []), [list.dungeons, character, wishCounts])
   const details = useDungeonDetails(candidates)
   const gear = useMemo(() => {
     const counts = new Map()
@@ -182,8 +183,8 @@ export default function DungeonExplore({ server, queryString = '', characters = 
     }
     return counts
   }, [candidates, details, character])
-  const recommendations = useMemo(() => new Map(list.dungeons.map((dungeon) => [dungeon.instanceId,
-    recommendDungeon(dungeon, { character, wishCount: wishCounts.get(dungeon.instanceId) || 0, usable: gear.get(dungeon.instanceId)?.gear ?? null })])), [list.dungeons, character, wishCounts, gear])
+  const recommendations = useMemo(() => new Map(list.dungeons.map((dungeon) => [entryKey(dungeon),
+    recommendDungeon(dungeon, { character, wishCount: wishCounts.get(entryKey(dungeon)) || 0, usable: gear.get(entryKey(dungeon))?.gear ?? null })])), [list.dungeons, character, wishCounts, gear])
   const recommendedCount = useMemo(() => [...recommendations.values()].filter((entry) => entry.recommended).length, [recommendations])
   const options = useMemo(() => exploreOptions(list.dungeons), [list.dungeons])
   const shown = useMemo(() => filterDungeons(list.dungeons, query.filters, { character, wishCounts, recommendations }), [list.dungeons, query.filters, character, wishCounts, recommendations])
@@ -223,10 +224,10 @@ export default function DungeonExplore({ server, queryString = '', characters = 
         <>
           <p className="gw-muted gw-atlas__count" role="status">{shown.length} of {list.dungeons.length} dungeon{list.dungeons.length === 1 ? '' : 's'}</p>
           <ul className="gw-atlas-grid">
-            {shown.map((dungeon) => <DungeonCard key={dungeon.instanceId} card={cardModel(dungeon, { character, wishCounts })} character={character}
-              gear={gear.get(dungeon.instanceId) || null} history={history.get(dungeon)} historyKnown={runs.status === 'ready'}
-              recommendation={recommendations.get(dungeon.instanceId)}
-              href={exploreHref({ server, character: characterId, filters: query.filters, open: dungeon.instanceId })} />)}
+            {shown.map((dungeon) => <DungeonCard key={entryKey(dungeon)} card={cardModel(dungeon, { character, wishCounts })} character={character}
+              gear={gear.get(entryKey(dungeon)) || null} history={history.get(dungeon)} historyKnown={runs.status === 'ready'}
+              recommendation={recommendations.get(entryKey(dungeon))}
+              href={exploreHref({ server, character: characterId, filters: query.filters, open: entryKey(dungeon) })} />)}
           </ul>
         </>
       )}
