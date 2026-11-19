@@ -134,7 +134,7 @@ test("dungeon list and detail carry atlas and keep every catalog field", () => w
   for (const key of ["instanceId", "name", "type", "journalInstanceId", "firstSeenAt", "lastSeenAt", "itemCount", "sourceCount", "lastEvidenceAt"]) {
     assert.ok(key in deadmines, `list keeps ${key}`);
   }
-  assert.deepEqual(Object.keys(deadmines.atlas).sort(), ["artworkUrl", "bossCount", "entrance", "kind", "levelMax", "levelMin", "lootSlots", "questCount",
+  assert.deepEqual(Object.keys(deadmines.atlas).sort(), ["artworkUrl", "bossCount", "dungeonKey", "entrance", "kind", "levelMax", "levelMin", "lootSlots", "questCount",
     "rareCount", "recommendedLevel", "referenceItemIds", "referenceLootCount", "referenceSlots", "zoneMapId", "zoneName"]);
   assert.deepEqual(deadmines.atlas.lootSlots, ["One-Hand"], "the catalog's own slot names");
   assert.equal(deadmines.atlas.entrance.mapId, 1436, "zone uiMapID");

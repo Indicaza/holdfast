@@ -121,3 +121,82 @@ published yet (see gaps in `dungeon-atlas-sources.md`).
   height, points: [[x, y], …] }`, where `width`/`height` are the world extent in
   yards (aspect ratio) and `points` are the 0–1 cells holding any spawn. A map
   with `imageUrl` is art; one with `points` is drawn by the client.
+
+## Dungeon identities and wings
+
+Some dungeons are several dungeons on one game map: each wing has its own
+entrance and is run on its own, but every wing reports the same numeric
+instance ID. The atlas gives every dungeon a stable **dungeon key** and every
+such wing a **wing key**; the numeric instance ID stays the game's map ID and is
+never a wing's identity.
+
+```
+dungeonKey   "deadmines", "scarlet-monastery"          a dungeon (slug of its atlas name)
+             "scarlet-monastery:library"                a wing: <parent key>:<wing slug>
+parentKey    "scarlet-monastery"                        the dungeon a wing belongs to
+instanceId   189                                        shared by every wing of the dungeon
+```
+
+Wings (curated in `backend/src/Atlas/atlasWings.js`, each fact with its source):
+
+| Dungeon | Wings | Bosses and rares | Levels | Floors | Entrances |
+| --- | --- | --- | --- | --- | --- |
+| Scarlet Monastery (189) | graveyard, library, armory, cathedral | DungeonPlanner and InstanceJournal agree | InstanceJournal | OpenMap | the atlas's own trigger names |
+| Dire Maul (429) | east, west, north | DungeonPlanner, InstanceJournal | client LFGDungeons | OpenMap | the atlas's own trigger names |
+| Stratholme (329) | live, undead | DungeonPlanner | the dungeon's (no source per half) | OpenMap | shared (not sourced per half) |
+| Blackrock Spire (229) | lower, upper | DungeonPlanner, InstanceJournal | client LFGDungeons | none (OpenMap's say Lower for every floor) | shared (one entrance) |
+
+A boss or rare belongs to a wing only when a source places it there and none
+places it elsewhere. Anything else stays on the dungeon as **unassigned**
+(today: Lord Hel'nurath in Dire Maul; Black Guard Swordsmith, Crimson
+Hammersmith, Ezra Grimm, Skul and Stonespine in Stratholme; Burning Felguard in
+Blackrock Spire). No source used here attributes quests, trash or chest loot to
+a wing: a wing shows them marked shared, never as its own.
+
+### GET /api/player/loot/dungeons
+
+- Every `atlas` gains `dungeonKey`; a dungeon with wings also gains
+  `wingEntries: [{ dungeonKey, parentKey, instanceId, wing, name, levelMin, levelMax }]`.
+- **Optional addition:** top-level `atlasWings`, one entry per wing:
+  `{ instanceId, dungeonKey, parentKey, wing, name, instanceName, type, atlas }`.
+  Its `atlas` is the list summary narrowed to the wing (`bossCount`,
+  `rareCount`, `referenceItemIds` of its own bosses and rares plus the shared
+  trash and quest loot, `levelMin`/`levelMax`/`levelSource`) plus
+  `bossNpcIds`/`bossNames` (its bosses and rares) and `sharedQuestCount`.
+  `lootSlots` is the instance's. The dungeon's own entry in `dungeons` is
+  unchanged, so old clients see exactly what they saw before.
+
+### GET /api/player/loot/dungeons/:id
+
+`:id` is the numeric instance ID (unchanged: the whole dungeon), a dungeon key
+(the same dungeon) or a wing key. Unknown ids answer 404.
+
+A wing's detail is the dungeon's detail narrowed to the wing:
+
+- `instance` stays the game's instance (instanceId 189): wishlist sources,
+  gear planning and runs keep using it.
+- `wing: { dungeonKey, parentKey, instanceId, wing, name, levelMin, levelMax, slug, parentName, levelSource, sourcesLeftOut, siblings }`.
+- `sources`: catalog source groups that are one of the wing's bosses or rares
+  (`wingAttribution: "wing"`), and ones that are no wing's boss, such as trash or
+  unknown sources (`"shared"`). Source groups of a sibling wing's bosses are
+  left out (`wing.sourcesLeftOut` counts them). Observed loot is never moved.
+- `atlas`: `bosses` and `rares` of the wing only; `creatures`, `quests` and
+  `dungeonLoot` marked `wingAttribution: "shared"`; `levelMin`/`levelMax` with
+  `levelSource` (`instance-journal`, `wago-classic-era` or `parent`);
+  `entrances` (the wing's, or every entrance with `entrancesShared: true`);
+  `floors: [{ name, source }]` (names only, no art); `unassigned: { bosses, rares }`
+  (names); `maps` is the dungeon's spawn layout; `provenance` adds the wing's sources.
+
+### Runs (GET /api/player/dungeon-runs, /dungeon-runs/:id)
+
+Each run's `dungeon` gains, read from the stored run and never written back:
+`dungeonKey`, `parentKey` and `wing: { dungeonKey, wing, name, evidence: "boss_kills", bosses } | null`.
+A run belongs to a wing only when every kill of a boss some wing owns is in
+that one wing; a run with no such kill, or kills in two wings, stays on its
+dungeon (`wing: null`). Stored runs, run IDs and every old field are unchanged.
+
+### Website links
+
+`?open=` holds a numeric instance ID (the whole dungeon, as old links always
+did; its Overview lists the wings) or a wing key (`?open=scarlet-monastery%3Alibrary`).
+

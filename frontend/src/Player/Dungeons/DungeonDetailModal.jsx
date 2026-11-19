@@ -10,6 +10,7 @@ import {
   defaultRole,
   dungeonItems,
   dungeonKind,
+  entryKey,
   gearTargets,
   groupAbilities,
   levelFit,
@@ -23,6 +24,7 @@ import {
   trapFocusIndex,
   wishlistTargets,
   wishlistToggleRequest,
+  withAtlasOpen,
   worldMapHref,
 } from './atlasModel.js'
 import { LootList, UnverifiedBadge } from './AtlasLoot.jsx'
@@ -208,12 +210,48 @@ function ForCharacter({ character, gearCount, wishCount, onPrepare }) {
   )
 }
 
+// The wings of a dungeon played as separate dungeons, each its own page.
+function Wings({ atlas }) {
+  if (!atlas.wingEntries.length || atlas.wing) return null
+  const here = typeof window === 'undefined' ? '/dashboard/dungeons' : `${window.location.pathname}${window.location.search}${window.location.hash}`
+  return (
+    <section className="gw-atlas-wings" aria-label="Wings">
+      <h3>Wings</h3>
+      <p className="gw-muted">Each wing is entered and run on its own. This page covers the whole dungeon.</p>
+      <ul className="gw-atlas-plain">
+        {atlas.wingEntries.map((wing) => (
+          <li key={wing.dungeonKey}>
+            <a className="gw-link" href={withAtlasOpen(here, { open: wing.dungeonKey })}>{wing.name}</a>
+            {wing.levelMin ? <span className="gw-muted"> · {levelText(wing).toLowerCase()}</span> : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+// What a wing does not own: shared quests and trash, unplaced bosses.
+function WingNote({ atlas }) {
+  if (!atlas.wing) return null
+  const unplaced = [...atlas.unassigned.bosses, ...atlas.unassigned.rares]
+  return (
+    <p className="gw-muted gw-atlas-provenance">
+      {atlas.floors.length ? `Floors: ${atlas.floors.map((floor) => floor.name).join(', ')}. ` : ''}
+      Quests, trash and chest loot are listed for the whole dungeon: no source ties them to one wing.
+      {unplaced.length ? ` Not placed in a wing: ${unplaced.join(', ')}.` : ''}
+      {atlas.levelSource === 'parent' ? ' The level band is the whole dungeon\'s.' : ''}
+    </p>
+  )
+}
+
 function Overview({ entry, atlas, character, onBoss, forCharacter }) {
   return (
     <div className="gw-atlas-section">
       {atlas.description ? <p>{atlas.description}</p> : null}
       <Facts entry={entry} atlas={atlas} character={character} />
       {forCharacter}
+      <Wings atlas={atlas} />
+      <WingNote atlas={atlas} />
       {atlas.bosses.length ? (
         <>
           <h3>Bosses</h3>
@@ -382,8 +420,17 @@ export default function DungeonDetailModal({
   const role = roleChoice.characterId === (character?.id || '') && roleChoice.role !== null ? roleChoice.role : defaultRole(character)
   const setRole = (next) => setRoleChoice({ characterId: character?.id || '', role: next })
 
-  const listEntry = entry || dungeons.find((dungeon) => dungeon.instanceId === instanceId) || null
-  const merged = useMemo(() => ({ ...(detail.data?.instance || {}), ...(listEntry || {}), atlas: detail.data?.atlas || listEntry?.atlas }), [detail.data, listEntry])
+  // instanceId is what ?open= holds: the game's instance ID (the whole
+  // dungeon) or a wing's key.
+  const listEntry = entry || dungeons.find((dungeon) => String(entryKey(dungeon)) === String(instanceId)) || null
+  const wing = detail.data?.wing || null
+  const merged = useMemo(() => ({ ...(detail.data?.instance || {}), ...(listEntry || {}),
+    ...(wing ? { dungeonKey: wing.dungeonKey, wing: wing.wing, name: wing.name, instanceName: detail.data.instance?.name } : {}),
+    atlas: detail.data?.atlas || listEntry?.atlas }), [detail.data, listEntry, wing])
+  // The game's instance: what the wishlist, gear planning and runs use.
+  const gameInstanceId = Number(detail.data?.instance?.instanceId ?? listEntry?.instanceId ?? instanceId) || null
+  const gameInstanceName = merged.instanceName || detail.data?.instance?.name || listEntry?.name || ''
+  const siblings = useMemo(() => dungeons.filter((dungeon) => Number(dungeon.instanceId) === gameInstanceId), [dungeons, gameInstanceId])
   const atlas = useMemo(() => {
     const full = normalizeAtlas(merged.atlas)
     const fromList = normalizeAtlas(listEntry?.atlas)
@@ -394,14 +441,17 @@ export default function DungeonDetailModal({
   const items = useMemo(() => dungeonItems(detail.data || {}, atlas), [detail.data, atlas])
   const gearCount = detail.data && character ? gearTargets(items, character, atlas).length : null
   const wishCount = useMemo(() => {
-    const keys = new Set(wishlistTargets(wishlist.data?.items || [], [{ instanceId, atlas: { referenceItemIds: atlas.referenceItemIds } }]).get(instanceId) || [])
+    const self = listEntry && entryKey(listEntry) === entryKey(merged) ? listEntry
+      : { ...merged, instanceId: gameInstanceId, atlas: { ...(listEntry?.atlas || {}), referenceItemIds: atlas.referenceItemIds } }
+    const context = [self, ...siblings.filter((dungeon) => entryKey(dungeon) !== entryKey(self))]
+    const keys = new Set(wishlistTargets(wishlist.data?.items || [], context).get(entryKey(self)) || [])
     for (const row of items) if (wishes.get(row.item.itemKey) && wishes.get(row.item.itemKey).state !== 'acquired') keys.add(row.item.itemKey)
     return keys.size
-  }, [wishlist.data, instanceId, atlas.referenceItemIds, items, wishes])
+  }, [wishlist.data, listEntry, merged, gameInstanceId, siblings, atlas.referenceItemIds, items, wishes])
 
   async function toggle(item, wanted) {
     if (!character) return
-    const request = wishlistToggleRequest(character.id, item, wanted, detail.data?.instance || listEntry || { instanceId, name })
+    const request = wishlistToggleRequest(character.id, item, wanted, gameInstanceId ? { instanceId: gameInstanceId, name: gameInstanceName || name } : null)
     setBusy(item.itemKey)
     setError('')
     try {
@@ -435,7 +485,7 @@ export default function DungeonDetailModal({
                 </select>
               </label>
             ) : character ? <span className="gw-muted gw-atlas-modal__who">For {character.name}{character.level ? ` · ${character.level}` : ''}</span> : null}
-            {showMapLink && atlas.entrance ? <a className="gw-btn gw-btn--sm" href={worldMapHref({ ...merged, instanceId, atlas })}><Icon name="map" size={14} /> World map</a> : null}
+            {showMapLink && atlas.entrance ? <a className="gw-btn gw-btn--sm" href={worldMapHref({ ...merged, instanceId: gameInstanceId, atlas })}><Icon name="map" size={14} /> World map</a> : null}
             <button type="button" className="gw-btn gw-btn--sm gw-btn--primary" disabled={!character} aria-expanded={planning} onClick={() => setPlanning((open) => !open)}
               title={character ? undefined : 'Sync a character to plan gear'}>
               <Icon name="sparkle" size={14} /> Plan my gear
@@ -452,7 +502,7 @@ export default function DungeonDetailModal({
 
         <div className="gw-atlas-modal__body">
           {planning && character ? (
-            <PlanMyGear character={character} characters={characters} onCharacter={onCharacter} dungeon={{ instanceId, name }} dungeons={dungeons}
+            <PlanMyGear character={character} characters={characters} onCharacter={onCharacter} dungeon={{ instanceId: gameInstanceId, name }} dungeons={dungeons}
               onClose={() => setPlanning(false)} onImported={(next) => { if (next) wishlist.mutate(next) }} />
           ) : null}
           {error ? <p className="gw-objectives__error" role="alert">{error}</p> : null}
@@ -471,7 +521,12 @@ export default function DungeonDetailModal({
               ) : null}
               {section === 'bosses' ? <Bosses atlas={atlas} detail={detail.data} boss={boss} onBoss={openBoss} role={role} onRole={setRole} character={character} lootProps={lootProps} /> : null}
               {section === 'loot' ? <Loot items={items} character={character} atlas={atlas} lootProps={lootProps} /> : null}
-              {section === 'quests' ? <div className="gw-atlas-section"><QuestList quests={atlas.quests} rewardProps={lootProps} /></div> : null}
+              {section === 'quests' ? (
+                <div className="gw-atlas-section">
+                  {atlas.wing && atlas.quests.length ? <p className="gw-muted">These are the whole dungeon's quests: no source ties a quest to one wing.</p> : null}
+                  <QuestList quests={atlas.quests} rewardProps={lootProps} />
+                </div>
+              ) : null}
               {section === 'runs' ? <Runs entry={merged} character={character} server={server} /> : null}
             </>
           ) : detail.status === 'ready' ? <EmptyState title="Nothing known about this dungeon yet." icon="dungeon" /> : null}

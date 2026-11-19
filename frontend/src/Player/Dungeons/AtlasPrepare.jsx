@@ -4,14 +4,16 @@ import { dungeonHref, formatRunDuration } from '../dungeonRunModel.js'
 import { relativeTime } from '../playerModel.js'
 import { ErrorState, Icon, SkeletonRows } from '../ui.jsx'
 import {
-  ROLES,
   bossKey,
   dungeonItems,
   gearTargets,
+  isWingEntry,
   needsUnverifiedBadge,
   questModel,
   quickGuide,
+  ROLES,
   runHistory,
+  runsForEntry,
 } from './atlasModel.js'
 import { LootList, UnverifiedBadge } from './AtlasLoot.jsx'
 import { useDungeonRuns } from './useAtlasData.js'
@@ -99,18 +101,22 @@ export function QuestList({ quests = [], rewardProps, empty = 'No quests for thi
 }
 
 // The player's own runs of this dungeon (by the selected character).
+// A wing lists the runs its boss kills prove; runs that prove no wing stay
+// on the dungeon (opened by its instance ID).
 export function Runs({ entry, character, server, compact = false }) {
-  const name = entry?.name || ''
+  // Runs carry the game's instance name; a wing's own name is the label.
+  const name = entry?.instanceName || entry?.name || ''
+  const label = entry?.name || name
   const { status, data } = useDungeonRuns({ server, dungeon: name, character: character?.id || '' })
-  const runs = useMemo(() => data?.runs || [], [data])
-  const summary = useMemo(() => runHistory(runs).get({ name }), [runs, name])
+  const runs = useMemo(() => runsForEntry(data?.runs || [], entry), [data, entry])
+  const summary = useMemo(() => runHistory(runs).get(isWingEntry(entry) ? entry : { name }), [runs, name, entry])
   if (status === 'loading') return <SkeletonRows rows={3} label="Loading your runs" />
   if (status === 'error' || status === 'missing') return <ErrorState>Your runs could not be loaded.</ErrorState>
   const all = dungeonHref({ filters: { dungeon: name, character: character?.id || '' }, server })
   if (!runs.length) {
     return (
       <p className="gw-muted gw-atlas-empty">
-        No runs of {name}{character ? ` by ${character.name}` : ''} synced yet. Run it with Guildweaver on, then <kbd>/reload</kbd>: your time, deaths and loot show here.
+        No runs of {label}{character ? ` by ${character.name}` : ''} synced yet. Run it with Guildweaver on, then <kbd>/reload</kbd>: your time, deaths and loot show here.
       </p>
     )
   }

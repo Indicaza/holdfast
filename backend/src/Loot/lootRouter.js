@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { withAtlasDetail, withAtlasList } from "../Atlas/atlasRepository.js";
+import { resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
@@ -87,9 +87,17 @@ export function createPlayerLootRouter() {
 
   // Each dungeon also carries `atlas` (docs/dungeon-atlas-contract.md).
   router.get("/loot/dungeons", read("loot_dungeons", () => readDungeonList()));
-  router.get("/loot/dungeons/:instanceId", read("loot_dungeon", (req) => withGuildDatabase((db) =>
-    withAtlasDetail(readLootDungeonInDatabase(db, req.params.instanceId, { wishlisted: wishlisted(db, req) }), req.params.instanceId,
-      lootCatalogRevisionInDatabase(db)))));
+  // :instanceId is the game's instance ID (the whole dungeon, as before), a
+  // dungeon key ("deadmines") or a wing key ("scarlet-monastery:library").
+  router.get("/loot/dungeons/:instanceId", read("loot_dungeon", (req) => {
+    const target = resolveDungeonId(req.params.instanceId);
+    if (!target) return null;
+    return withGuildDatabase((db) => {
+      const detail = readLootDungeonInDatabase(db, target.instanceId, { wishlisted: wishlisted(db, req) });
+      const revision = lootCatalogRevisionInDatabase(db);
+      return target.wingKey ? withAtlasWingDetail(detail, target.wingKey, revision) : withAtlasDetail(detail, target.instanceId, revision);
+    });
+  }));
   router.get("/loot/items", read("loot_items", (req) => withGuildDatabase((db) =>
     searchLootItemsInDatabase(db, { q: String(req.query?.q ?? "").slice(0, 80), wishlisted: wishlisted(db, req) }))));
   router.get("/loot/changes", read("loot_changes", (req) => readLootChanges({ limit: req.query?.limit })));
