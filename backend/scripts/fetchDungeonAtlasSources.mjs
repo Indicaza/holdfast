@@ -21,12 +21,12 @@
 // as <Table>.csv, AzerothCore tables as <table>.sql, scripts under cpp/ with
 // cpp/list.txt naming their repository paths).
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { extractCreatureContent, extractSpellContent } from "../src/Atlas/atlasContent.js";
-import { extractItemFacts, extractQuestDetails, extractReferenceLoot } from "../src/Atlas/atlasLoot.js";
+import { extractItemFacts, extractQuestDetails, extractReferenceLoot, worldDropItems } from "../src/Atlas/atlasLoot.js";
 import { VANILLA_INSTANCE_IDS, parseCsv, parseScriptSpells, parseSqlInserts } from "../src/Atlas/atlasSources.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -151,7 +151,14 @@ async function loot() {
   const links = extractReferenceLoot({ lootRows, referenceRows, templateRows, spawnRows, objectLootRows, objectTemplateRows, objectRows,
     items: all.items, anchors });
   const quests = extractQuestDetails({ questRows, addonRows, starterRows, spawnRows, questIds });
-  const itemIds = new Set([...links.creature_loot.map((row) => row[1]), ...links.object_loot.map((row) => row[1]), ...quests.quest_details.flatMap((row) => [...row.rewardItems, ...row.choiceItems])]);
+  // DungeonPlanner's drop lists (scripts/fetchDungeonPlannerSources.mjs), when
+  // present: their items need facts too, and the ones the emulator says drop
+  // in the open world are marked as such (the import leaves them out).
+  const plannerPath = join(outDir, "dungeonplanner-loot.json");
+  const plannerIds = existsSync(plannerPath) ? [...new Set(JSON.parse(readFileSync(plannerPath, "utf8")).tables.loot.map((row) => row[2]))] : [];
+  links.world_drops = worldDropItems({ lootRows, referenceRows, templateRows, spawnRows, itemIds: plannerIds }).map((itemId) => [itemId]);
+  const itemIds = new Set([...links.creature_loot.map((row) => row[1]), ...links.object_loot.map((row) => row[1]), ...plannerIds,
+    ...quests.quest_details.flatMap((row) => [...row.rewardItems, ...row.choiceItems])]);
   const items = { ...all, items: all.items.filter((item) => itemIds.has(item.id)) };
   writeFileSync(join(outDir, "azerothcore-loot.json"), rowsJson({ source: "azerothcore", url: `https://github.com/azerothcore/azerothcore-wotlk/tree/${AC_REF}/data/sql/base/db_world`,
     revision: AC_REF, retrievedAt, license: AC_LICENSE, tables: { ...links, ...quests } }));

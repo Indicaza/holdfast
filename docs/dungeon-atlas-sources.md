@@ -213,3 +213,74 @@ kind of creature is not a place).
   and dungeon-related quests whose zone is not the dungeon's are missed.
   Quests started by an item have no giver and no location.
 - `recommendedLevel`, `strategy`, map art, portraits and artwork: not sourced.
+
+## Reference loot: two sources (sprint step 3A)
+
+Reference loot now comes from two sources, both Classic reference data and
+never evidence for WoW Forever:
+
+| Source | Licence | Used for |
+| --- | --- | --- |
+| AzerothCore world DB (`azerothcore-loot.json`) | GPL-2.0 | `creature_loot_template` / `reference_loot_template`: which creature or chest drops it; world drops (any creature spawned outside the vanilla dungeons drops it) |
+| DungeonPlanner (`dungeonplanner-loot.json`), https://github.com/xdk78/DungeonPlanner | MIT | Its boss drop lists (`data-src/bosses/*.json`): facts (NPC and item ids) its authors took from Wowhead Classic NPC pages and warcraft.wiki.gg. Read from a local checkout; no website is fetched or scraped |
+| The Classic Era client (`wago-classic-era-items.json`) | facts | Every item fact (name, icon, quality, levels, slot, binding, type, stats, set) |
+
+InstanceJournal (public domain) was checked and not used for loot: it is
+built for Turtle WoW, whose dungeon loot differs (custom items such as
+80721).
+
+**Pipeline.**
+1. `node scripts/fetchDungeonPlannerSources.mjs --from <DungeonPlanner checkout>`
+   writes `dungeonplanner-loot.json` (the classic instances' bosses and their
+   drops, by `instanceMapID`; `--check` verifies it against the checkout).
+2. `node scripts/fetchDungeonAtlasSources.mjs --loot-only [--from <dir>]` adds
+   item facts for DungeonPlanner's items and records which of them are world
+   drops (`world_drops`).
+3. `node scripts/importDungeonAtlas.mjs` merges them. Every step is
+   deterministic: the same inputs give byte-identical files.
+
+**Merge rules** (`normalizeReferenceLoot`):
+- A boss's items are the union of both sources. Each boss and rare keeps
+  `sources: { azerothcore: [ids], "dungeon-planner": [ids] }`, and the API
+  marks each served item with `referenceSources`.
+- An encounter without one NPC in the atlas (Ring of Law, The Seven, Twin
+  Emperors, The Four Horsemen, ...) uses the NPC DungeonPlanner names for it:
+  by exact name, by a unique name prefix ("Kirtonos" is "Kirtonos the
+  Herald"), or by one documented alias (the client's "Geilhast" is Gelihast,
+  NPC 6243).
+- A chest whose every drop one boss's DungeonPlanner list holds, and no other
+  boss's, is that boss's (`chests`). Today that covers Majordomo's Cache of the
+  Firelord and the Chest of The Seven.
+- An item either source puts on a boss is that boss's, never shared trash.
+  Shared drops keep every creature or chest that drops them (`sources`);
+  `sourceName` stays for the single-source case.
+- Left out on purpose: world drops (DungeonPlanner lists Wowhead's world
+  drops; 441 rows) and grey/white/consumable items (24 rows), counted in
+  `excluded`.
+- Not invented: items the Classic client has no facts for are recorded in
+  `gaps`. There are 56, all Forever-only drops DungeonPlanner lists from the
+  Forever wiki, such as the new Stockade and Ragefire boss loot.
+- Observed Forever loot (the loot catalog) still wins over every reference
+  fact.
+
+**Coverage** (`node scripts/atlasLootCoverage.mjs`, also asserted by
+`test/dungeonAtlasLootSources.test.js`):
+
+| Measure | Before | After |
+| --- | --- | --- |
+| Dungeons with reference loot | 26 / 26 | 26 / 26 |
+| Bosses with loot | 203 / 240 | 230 / 240 |
+| Rares with loot | 27 / 27 | 27 / 27 |
+| Distinct items | 2027 | 2204 |
+| Shared drops with no named source | 151 | 0 |
+| Shared (trash/chest) drops | 310 | 205 |
+| Items without icon or facts | 0 | 0 |
+
+The ten bosses still without reference loot:
+- The four Stockade bosses, Ragefire's Oggleflint and Bazzalan: their Classic
+  tables hold only world drops. Their Forever loot is in `gaps`, without client
+  facts.
+- Rethilgore: only grey and white items.
+- The Vault (an event), Ezra Grimm and "The Molten Core": no creature to read
+  from.
+

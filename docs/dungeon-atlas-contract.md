@@ -220,3 +220,16 @@ key it does not know, so it is safe for any server version. The site does not
 store it: it derives a run's wing from the stored boss checkpoints (above),
 which is the same evidence.
 
+## Reference loot sources (optional additions, sprint step 3A)
+
+- A boss's and a rare's `referenceLoot[]` items gain `referenceSources`, which
+  says who lists the item for that creature: `"azerothcore"`,
+  `"dungeon-planner"` or both.
+- `dungeonLoot[]` entries gain `sources: [{ npcId, name } | { objectId, name }]`,
+  every creature or chest that drops the item. `sourceName` and `npcId` are
+  unchanged: the single source, else null.
+- `reference-loot.json` gains, per boss, `sources` (item ids by source) and
+  `chests` (a boss's own chest), plus top-level `gaps` (listed items without
+  client facts) and `excluded` (counts of world drops and filtered items).
+  The served API shape is otherwise unchanged.
+

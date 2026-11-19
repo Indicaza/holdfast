@@ -303,8 +303,9 @@ function Overview({ entry, atlas, character, onBoss, forCharacter }) {
 function bossLootEmpty(boss, atlas) {
   const chests = [...new Set(atlas.dungeonLoot.filter((entry) => entry && !entry.npcId && entry.sourceName).map((entry) => entry.sourceName))]
   if (chests.length) return `No loot linked to ${boss.name}. Chest loot (${chests.join(', ')}) is in the Loot tab.`
-  if (atlas.referenceVersion) return `No loot linked to ${boss.name}: Guildweaver has not seen it drop, and the Classic reference lists none for this encounter.`
-  return `No loot linked to ${boss.name} yet.`
+  // Never "drops nothing": only that no source here links an item to it.
+  if (atlas.referenceVersion) return `No loot data for ${boss.name} yet: Guildweaver has not seen it drop, and no Classic reference source links an item to it. That does not mean it drops nothing.`
+  return `Loot data for ${boss.name} is not available yet.`
 }
 
 function BossDetail({ boss, atlas, detail, role, onRole, character, lootProps }) {

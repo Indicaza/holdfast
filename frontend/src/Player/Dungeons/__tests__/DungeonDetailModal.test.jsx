@@ -272,7 +272,7 @@ describe('missing data', () => {
     resetHarness()
     api({ detail: detail({ dungeonLoot: [] }) })
     renderWithSession(<Modal section="bosses" boss="9999" />)
-    expect(await screen.findByText(/the Classic reference lists none for this encounter/)).toBeTruthy()
+    expect(await screen.findByText(/no Classic reference source links an item to it. That does not mean it drops nothing/)).toBeTruthy()
   })
 
   test('the sprint-1 backend (no reference loot, no quest details) still works', async () => {

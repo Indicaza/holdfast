@@ -26,6 +26,10 @@ import { VANILLA_INSTANCE_IDS } from "./atlasSources.js";
 export const REFERENCE_LOOT_SCHEMA_VERSION = 1;
 export const REFERENCE_LOOT_DATASET = "atlas-reference-loot";
 export const REFERENCE_KINDS = Object.freeze(["gear", "set", "rare", "boe", "material", "quest-reward", "other"]);
+// Who lists a reference drop (a boss's or rare's `sources`).
+const EMULATOR = "azerothcore";
+const PLANNER = "dungeon-planner";
+export const REFERENCE_LOOT_SOURCES = Object.freeze([EMULATOR, PLANNER]);
 
 const int = (value) => {
   const number = Number(value);
@@ -221,6 +225,52 @@ export function extractReferenceLoot({ lootRows = [], referenceRows = [], templa
   return { creature_loot: creatureLinks.sort(byIds), creatures: sourcesOf("c:", true), object_loot: objectLinks.sort(byIds), objects: sourcesOf("o:", false) };
 }
 
+// Of the given items, the ones some creature spawned outside the vanilla
+// dungeons drops (a world drop): the same rule extractReferenceLoot applies
+// to its own links, for items another source lists. Sorted ids.
+export function worldDropItems({ lootRows = [], referenceRows = [], templateRows = [], spawnRows = [], itemIds = [] }) {
+  const wanted = new Set(itemIds);
+  if (!wanted.size) return [];
+  const instances = new Set(VANILLA_INSTANCE_IDS);
+  const group = (rows) => {
+    const map = new Map();
+    for (const row of rows) {
+      const entry = int(row.Entry);
+      if (!map.has(entry)) map.set(entry, []);
+      map.get(entry).push(row);
+    }
+    return map;
+  };
+  const references = group(referenceRows);
+  const loot = group(lootRows);
+  const resolved = new Map();
+  const resolve = (rows, depth = 0) => {
+    const out = new Set();
+    if (depth > 8) return out;
+    for (const row of rows || []) {
+      if (row.QuestRequired === "1" || !((int(row.LootMode) ?? 1) & 1)) continue;
+      const reference = int(row.Reference);
+      if (reference) {
+        if (!resolved.has(reference)) resolved.set(reference, resolve(references.get(reference), depth + 1));
+        for (const id of resolved.get(reference)) out.add(id);
+      } else if (int(row.Item)) out.add(int(row.Item));
+    }
+    return out;
+  };
+  const outside = new Set();
+  for (const row of spawnRows) {
+    const map = int(row.map);
+    if (map !== null && !instances.has(map)) for (const key of ["id1", "id2", "id3", "id"]) if (int(row[key])) outside.add(int(row[key]));
+  }
+  const world = new Set();
+  for (const row of templateRows) {
+    const npcId = int(row.entry);
+    if (!npcId || !outside.has(npcId) || !int(row.lootid)) continue;
+    for (const itemId of resolve(loot.get(int(row.lootid)))) if (wanted.has(itemId)) world.add(itemId);
+  }
+  return [...world].sort((a, b) => a - b);
+}
+
 // Quest details for the atlas's quests: objective, prerequisites, rewards
 // and where the giver stands.
 export function extractQuestDetails({ questRows = [], addonRows = [], starterRows = [], spawnRows = [], questIds = [] }) {
@@ -296,12 +346,27 @@ export function referenceItemOf(item, { classNames = new Map(), subclassNames = 
   };
 }
 
+// Boss names as both sources spell them, compared without case, spacing or
+// punctuation ("C'Thun" and "C'thun" are one boss).
+const nameKey = (value) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+// Encounter names the Classic client spells unlike the creature: its
+// DungeonEncounter row for Blackfathom Deeps' Gelihast (NPC 6243) reads
+// "Geilhast".
+const NAME_ALIASES = Object.freeze({ geilhast: "gelihast" });
+
 // The served reference dataset (data/reference-loot.json) from the loot and
 // item extracts and the normalized atlas (for its bosses, rares, quests).
 //   items      itemId → ReferenceItem (shared by every dungeon)
-//   dungeons   per dungeon: boss/rare item ids by npc, dungeonLoot (trash),
-//              quest reward ids
-export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null }) {
+//   dungeons   per dungeon: boss/rare item ids by npc, with which source
+//              lists each (sources), dungeonLoot (trash and chests, with
+//              every creature or chest that drops it), quest reward ids
+//   gaps       what a source lists but could not be kept, and why
+// Sources: the AzerothCore extract (loot) and, when given, DungeonPlanner's
+// drop lists (planner, see Atlas/atlasPlanner.js). A boss's items are the
+// union of both; every item keeps the sources that list it. An item either
+// source places on a boss is that boss's, never shared trash; an item the
+// emulator says drops in the open world is left out whoever lists it.
+export function normalizeReferenceLoot({ atlas, loot, items, planner = null, generatedAt = null }) {
   const lootProv = loot ? { source: loot.source, revision: loot.revision ?? null, confidence: "medium", tier: "community-unverified",
     retrievedAt: loot.retrievedAt ?? null, url: loot.url ?? null, note: "creature_loot_template / reference_loot_template: which creature drops it (no drop chances)" } : null;
   const itemProv = items ? { source: items.source, revision: items.revision ?? null, confidence: "high", tier: "classic-reference",
@@ -322,6 +387,34 @@ export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null 
   };
   const dropsOf = linksOf(loot?.tables?.creature_loot);
   const objectDrops = linksOf(loot?.tables?.object_loot);
+  // DungeonPlanner: per instance, its bosses (npc and name) and their drops.
+  const worldDrops = new Set((loot?.tables?.world_drops || []).map(([itemId]) => itemId));
+  const plannerBosses = new Map();
+  for (const [instanceId, npcId, name] of planner?.tables?.creatures || []) {
+    if (!plannerBosses.has(instanceId)) plannerBosses.set(instanceId, []);
+    plannerBosses.get(instanceId).push({ npcId, name });
+  }
+  const plannerDrops = new Map();
+  // Items a source lists that could not be kept: the ones without client
+  // facts one by one (a gap to close), the deliberate exclusions as counts.
+  const gaps = [];
+  const excluded = {};
+  for (const [instanceId, npcId, itemId, , , forever] of planner?.tables?.loot || []) {
+    const fact = facts.get(itemId);
+    // Kept only what the Classic client knows, worth listing, not a world drop.
+    let reason = null;
+    if (!fact) reason = forever ? "forever-item-without-client-facts" : "not-in-client";
+    else if (!curateItem(fact)) reason = "filtered-by-curation";
+    else if (worldDrops.has(itemId)) reason = "world-drop";
+    if (reason) {
+      if (reason === "forever-item-without-client-facts" || reason === "not-in-client") gaps.push({ instanceId, npcId, itemId, source: PLANNER, reason });
+      else excluded[reason] = (excluded[reason] || 0) + 1;
+      continue;
+    }
+    const key = `${instanceId}:${npcId}`;
+    if (!plannerDrops.has(key)) plannerDrops.set(key, new Set());
+    plannerDrops.get(key).add(itemId);
+  }
 
   const used = new Map();
   const use = (itemId, kind) => {
@@ -333,22 +426,58 @@ export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null 
   for (const dungeon of atlas?.dungeons || []) {
     const id = dungeon.instanceId;
     const here = [...creatures.values()].filter((creature) => creature.instances.includes(id));
-    // A boss's loot npc: the atlas's npc id, else the one creature of that
-    // exact name with loot in this dungeon.
+    // A boss's loot npc: the atlas's npc id, else the boss of that name in
+    // DungeonPlanner's list for this dungeon (it names a representative NPC
+    // for encounters of several creatures: Ring of Law, The Seven, ...), else
+    // the one creature of that exact name with loot in this dungeon.
+    const planned = plannerBosses.get(id) || [];
     const lootNpcOf = (boss) => {
       if (boss.npcId) return boss.npcId;
+      const raw = nameKey(boss.atlasName || boss.name);
+      const key = NAME_ALIASES[raw] || raw;
+      const fromPlanner = planned.filter((entry) => nameKey(entry.name) === key);
+      if (fromPlanner.length === 1) return fromPlanner[0].npcId;
+      // One name the start of the other ("Kirtonos" and "Kirtonos the Herald",
+      // "Ras Frostwhisperer" and "Ras Frostwhisper"), when only one boss fits.
+      const prefixed = key.length >= 6 ? planned.filter((entry) => {
+        const other = nameKey(entry.name);
+        return other.length >= 6 && (other.startsWith(key) || key.startsWith(other));
+      }) : [];
+      if (prefixed.length === 1) return prefixed[0].npcId;
       const named = here.filter((creature) => creature.name === (boss.atlasName || boss.name));
       return named.length === 1 ? named[0].npcId : null;
     };
     const taken = new Set();
+    const chestOwned = new Set();
     const bosses = [];
     for (const boss of dungeon.bosses) {
       const npcId = lootNpcOf(boss);
-      const itemIds = npcId ? [...new Set(dropsOf.get(npcId) || [])].sort((a, b) => a - b) : [];
       if (npcId) taken.add(npcId);
+      const fromEmulator = npcId ? [...new Set(dropsOf.get(npcId) || [])] : [];
+      const fromPlanner = npcId ? [...(plannerDrops.get(`${id}:${npcId}`) || [])] : [];
+      // A chest of this dungeon whose every drop this boss's DungeonPlanner
+      // list holds, and no other boss's, is this boss's chest (Majordomo's
+      // Cache of the Firelord): its drops are the emulator's for this boss.
+      const plannerSet = new Set(fromPlanner);
+      const chests = [];
+      for (const object of objects.values()) {
+        if (!object.instances.includes(id) || !fromPlanner.length) continue;
+        const contents = objectDrops.get(object.entry) || [];
+        if (!contents.length || !contents.every((itemId) => plannerSet.has(itemId))) continue;
+        const elsewhere = planned.some((other) => other.npcId !== npcId
+          && contents.some((itemId) => (plannerDrops.get(`${id}:${other.npcId}`) || new Set()).has(itemId)));
+        if (elsewhere) continue;
+        chests.push({ objectId: object.entry, name: object.name });
+        for (const itemId of contents) if (!fromEmulator.includes(itemId)) fromEmulator.push(itemId);
+        chestOwned.add(object.entry);
+      }
+      const itemIds = [...new Set([...fromEmulator, ...fromPlanner])].sort((a, b) => a - b);
       if (!itemIds.length) continue;
       for (const itemId of itemIds) use(itemId, curateItem(facts.get(itemId)));
-      bosses.push({ encounterId: boss.encounterId, npcId, itemIds });
+      const sources = {};
+      if (fromEmulator.length) sources[EMULATOR] = fromEmulator.sort((a, b) => a - b);
+      if (fromPlanner.length) sources[PLANNER] = fromPlanner.sort((a, b) => a - b);
+      bosses.push({ encounterId: boss.encounterId, npcId, itemIds, sources, ...(chests.length ? { chests } : {}) });
     }
     const bossItems = new Set(bosses.flatMap((boss) => boss.itemIds));
     const rares = [];
@@ -361,7 +490,7 @@ export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null 
         // Gear only rare spawns drop is the dungeon's "rare" loot.
         use(itemId, kind === "gear" && !bossItems.has(itemId) ? "rare" : kind);
       }
-      rares.push({ npcId: rare.npcId, itemIds });
+      rares.push({ npcId: rare.npcId, itemIds, sources: { [EMULATOR]: itemIds } });
     }
     const rareItems = new Set(rares.flatMap((rare) => rare.itemIds));
     // Trash and shared drops: items no boss or rare of this dungeon drops.
@@ -383,12 +512,18 @@ export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null 
         trash.get(itemId).add(`o:${object.entry}`);
       }
     }
+    // npcId and sourceName name the one creature or chest that drops it
+    // (null when several do); `sources` lists every one of them.
     const dungeonLoot = [...trash].map(([itemId, sources]) => {
       use(itemId, curateItem(facts.get(itemId)));
       const [only] = sources.size === 1 ? [...sources] : [null];
       const object = typeof only === "string" ? objects.get(Number(only.slice(2))) : null;
       const creature = typeof only === "number" ? creatures.get(only) : null;
-      return { itemId, npcId: creature?.npcId ?? null, sourceName: creature?.name ?? object?.name ?? null };
+      const all = [...sources].map((source) => (typeof source === "string"
+        ? { objectId: Number(source.slice(2)), name: objects.get(Number(source.slice(2)))?.name ?? null }
+        : { npcId: source, name: creatures.get(source)?.name ?? null }))
+        .sort((a, b) => (a.npcId ?? 1e9) - (b.npcId ?? 1e9) || (a.objectId ?? 0) - (b.objectId ?? 0));
+      return { itemId, npcId: creature?.npcId ?? null, sourceName: creature?.name ?? object?.name ?? null, sources: all };
     }).sort((a, b) => a.itemId - b.itemId);
     const questRewards = [];
     for (const quest of dungeon.quests || []) {
@@ -403,17 +538,21 @@ export function normalizeReferenceLoot({ atlas, loot, items, generatedAt = null 
   }
   // Every item shares the same provenance; it is stored once and added to
   // each item when served (Atlas/referenceLoot.js).
-  const provenance = [itemProv, lootProv].filter(Boolean);
+  const plannerProv = planner ? { source: planner.source, revision: planner.revision ?? null, confidence: "medium", tier: "community-unverified",
+    retrievedAt: planner.retrievedAt ?? null, url: planner.url ?? null, note: "DungeonPlanner boss drop lists (from Wowhead Classic and warcraft.wiki.gg, facts only; no drop chances)" } : null;
+  const provenance = [itemProv, lootProv, plannerProv].filter(Boolean);
   const out = {};
   for (const itemId of [...used.keys()].sort((a, b) => a - b)) {
     out[itemId] = referenceItemOf(facts.get(itemId), { classNames, subclassNames, kind: used.get(itemId) });
   }
-  const revision = [items?.revision, loot?.revision].filter(Boolean).join(" + ") || null;
+  const revision = [items?.revision, loot?.revision, planner?.revision && `dungeon-planner ${planner.revision.slice(0, 12)}`].filter(Boolean).join(" + ") || null;
   return {
     schemaVersion: REFERENCE_LOOT_SCHEMA_VERSION, dataset: REFERENCE_LOOT_DATASET, revision, generatedAt, provenance,
     filter: "Dungeon-only drops of creatures and chests (nothing outside the vanilla dungeons drops them): uncommon+ weapons, armour, bags and quivers, set items, rare+ items, uncommon+ trade goods, reagents and recipes, quest starters; plus the atlas quests' reward items. No drop chances.",
-    sources: [items, loot].filter(Boolean).map((extract) => ({ source: extract.source, revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null,
+    sources: [items, loot, planner].filter(Boolean).map((extract) => ({ source: extract.source, revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null,
       url: extract.url ?? null, license: extract.license ?? null })),
+    gaps: gaps.sort((a, b) => a.instanceId - b.instanceId || a.npcId - b.npcId || a.itemId - b.itemId),
+    excluded: Object.fromEntries(Object.entries(excluded).sort()),
     items: out, dungeons,
   };
 }
@@ -497,14 +636,27 @@ export function referenceLootProblems(reference, atlas) {
       }
     };
     const encounters = new Set(atlasDungeon.bosses.map((boss) => boss.encounterId));
+    const checkSources = (entry, label) => {
+      const listed = new Set();
+      for (const [source, itemIds] of Object.entries(entry.sources || {})) {
+        if (!REFERENCE_LOOT_SOURCES.includes(source)) problems.push(`${where}: ${label} source ${source} unknown`);
+        for (const itemId of itemIds) {
+          if (!entry.itemIds.includes(itemId)) problems.push(`${where}: ${label} source ${source} lists ${itemId} outside itemIds`);
+          listed.add(itemId);
+        }
+      }
+      for (const itemId of entry.itemIds) if (!listed.has(itemId)) problems.push(`${where}: ${label} item ${itemId} has no source`);
+    };
     for (const boss of dungeon.bosses) {
       if (!encounters.has(boss.encounterId)) problems.push(`${where}: boss ${boss.encounterId} not in the atlas`);
       check(boss.itemIds, `boss ${boss.encounterId}`);
+      checkSources(boss, `boss ${boss.encounterId}`);
     }
     const rareIds = new Set((atlasDungeon.rares || []).map((rare) => rare.npcId));
     for (const rare of dungeon.rares) {
       if (!rareIds.has(rare.npcId)) problems.push(`${where}: rare ${rare.npcId} not in the atlas`);
       check(rare.itemIds, `rare ${rare.npcId}`);
+      checkSources(rare, `rare ${rare.npcId}`);
     }
     check(dungeon.dungeonLoot.map((entry) => entry.itemId), "dungeonLoot");
     for (const quest of atlasDungeon.quests || []) {

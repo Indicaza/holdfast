@@ -26,10 +26,12 @@ const creatures = read("azerothcore-creatures.json");
 const spells = read("wago-classic-era-spells.json");
 const loot = read("azerothcore-loot.json");
 const items = read("wago-classic-era-items.json");
+// Optional second loot source (scripts/fetchDungeonPlannerSources.mjs).
+const planner = read("dungeonplanner-loot.json");
 // generatedAt follows the newest extract, so re-running changes nothing.
 const newest = (...extracts) => extracts.map((extract) => extract?.retrievedAt).filter(Boolean).sort().at(-1) ?? null;
 const atlas = normalize({ wago, azerothcore, creatures, spells, loot, items, generatedAt: newest(wago, azerothcore, creatures, spells, loot, items) });
-const reference = normalizeReferenceLoot({ atlas, loot, items, generatedAt: newest(loot, items) });
+const reference = normalizeReferenceLoot({ atlas, loot, items, planner, generatedAt: newest(loot, items) });
 const problems = [...atlasProblems(atlas), ...referenceLootProblems(reference, atlas)];
 if (problems.length) {
   console.error(`Atlas invariants broken:\n- ${problems.join("\n- ")}`);

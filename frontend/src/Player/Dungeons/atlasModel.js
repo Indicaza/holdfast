@@ -468,6 +468,15 @@ export function bossLoot(boss = {}, detail = {}) {
 // (observed and reference), rares, trash and shared drops, quest
 // rewards, then any observed loot not tied to a boss. The first source
 // listed wins for an item seen twice.
+// Where a shared (trash or chest) drop comes from: the one creature or chest,
+// else the ones the reference names (up to three), else "trash and shared".
+export function sharedSourceLabel(raw = {}) {
+  if (raw?.sourceName) return raw.sourceName
+  const names = [...new Set((Array.isArray(raw?.sources) ? raw.sources : []).map((source) => source?.name).filter(Boolean))]
+  if (!names.length) return 'Trash and shared drops'
+  return names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ')
+}
+
 export function dungeonItems(detail = {}, atlasInput = null) {
   const atlas = normalizeAtlas(atlasInput ?? detail?.atlas)
   const rows = []
@@ -488,7 +497,7 @@ export function dungeonItems(detail = {}, atlasInput = null) {
       : { item: ref, source, sourceKey: `${sourceKind}:${normalizedName(source)}`, boss: false, observed: ref.observed === true, reference: true, sourceKind, ...extra })
   }
   for (const rare of atlas.rares) for (const raw of rare.referenceLoot || []) fromReference(raw, rare.name ? `${rare.name} (rare)` : 'Rare spawn', 'rare')
-  for (const raw of atlas.dungeonLoot) fromReference(raw, raw?.sourceName || 'Trash and shared drops', 'trash')
+  for (const raw of atlas.dungeonLoot) fromReference(raw, sharedSourceLabel(raw), 'trash')
   for (const quest of atlas.quests) {
     for (const raw of Array.isArray(quest?.rewards) ? quest.rewards : []) fromReference(raw, `Quest: ${quest.name || 'unnamed'}`, 'quest', { questId: quest.questId ?? null, choice: raw?.choice === true })
   }

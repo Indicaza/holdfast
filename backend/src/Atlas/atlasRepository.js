@@ -67,8 +67,15 @@ function observedItems(sources) {
   return observed;
 }
 
-function referenceList(itemIds, observed) {
-  return sortReferenceItems(itemIds.map((itemId) => referenceItem(itemId, { observed: observed.get(itemId) || null })).filter(Boolean));
+// sources: the reference entry's { source: itemIds } (who lists each item);
+// each item says which reference sources list it (referenceSources).
+function referenceList(itemIds, observed, sources = null) {
+  const by = new Map();
+  for (const [source, ids] of Object.entries(sources || {})) for (const itemId of ids) by.set(itemId, [...(by.get(itemId) || []), source]);
+  return sortReferenceItems(itemIds.map((itemId) => {
+    const item = referenceItem(itemId, { observed: observed.get(itemId) || null });
+    return item && (by.size ? { ...item, referenceSources: (by.get(itemId) || []).sort() } : item);
+  }).filter(Boolean));
 }
 
 // A boss joined to the catalog's source groups for it (by npc id, encounter
@@ -90,8 +97,8 @@ function bossWithCatalog(boss, sources, reference = null, observed = new Map()) 
       if (key) keys.add(key);
     }
   }
-  const referenceIds = reference?.bosses.find((entry) => entry.encounterId === boss.encounterId)?.itemIds || [];
-  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(referenceIds, observed) };
+  const entry = reference?.bosses.find((candidate) => candidate.encounterId === boss.encounterId);
+  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(entry?.itemIds || [], observed, entry?.sources) };
 }
 
 // The detail's `atlas`. `sources` is the catalog's source groups, used only
@@ -113,12 +120,16 @@ export function atlasDetail(instanceId, sources = []) {
     maps: dungeon.maps,
     bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed)),
     creatures: dungeon.creatures,
-    rares: dungeon.rares.map((rare) => ({ ...rare,
-      referenceLoot: referenceList(reference?.rares.find((entry) => entry.npcId === rare.npcId)?.itemIds || [], observed) })),
+    rares: dungeon.rares.map((rare) => {
+      const entry = reference?.rares.find((candidate) => candidate.npcId === rare.npcId);
+      return { ...rare, referenceLoot: referenceList(entry?.itemIds || [], observed, entry?.sources) };
+    }),
     // Trash and chest drops no boss or rare of the dungeon has.
     dungeonLoot: sortReferenceItems((reference?.dungeonLoot || []).map((entry) => {
       const item = referenceItem(entry.itemId, { observed: observed.get(entry.itemId) || null });
-      return item && { ...item, sourceName: entry.sourceName ?? null, npcId: entry.npcId ?? null };
+      // sourceName/npcId: the one creature or chest that drops it (null when
+      // several do); sources: every one of them (optional addition).
+      return item && { ...item, sourceName: entry.sourceName ?? null, npcId: entry.npcId ?? null, sources: entry.sources || [] };
     }).filter(Boolean)),
     referenceVersion: referenceVersion(),
     quests: dungeon.quests.map((quest) => ({
