@@ -99,17 +99,20 @@ test("the checked-in reference loot is current, sourced and free of drop chances
   const reference = loadReferenceData();
   assert.deepEqual(referenceLootProblems(reference, atlas), []);
   const regenerated = normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: readSource("wago-classic-era-items.json"),
-    generatedAt: reference.generatedAt });
+    planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt });
   assert.deepEqual(JSON.parse(JSON.stringify(regenerated)), reference, "run node scripts/importDungeonAtlas.mjs");
   assert.deepEqual(normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: readSource("wago-classic-era-items.json"),
-    generatedAt: reference.generatedAt }), regenerated, "idempotent");
+    planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt }), regenerated, "idempotent");
   // No drop chance anywhere: no key that names one, in the data or its extract.
   const chanceKeys = (text) => [...text.matchAll(/"([^"]*chance[^"]*)"\s*:/gi)].map((match) => match[1]);
   assert.deepEqual(chanceKeys(readFileSync(new URL("reference-loot.json", DATA), "utf8")), []);
   assert.deepEqual(chanceKeys(readFileSync(new URL("sources/azerothcore-loot.json", DATA), "utf8")), []);
+  assert.deepEqual(chanceKeys(readFileSync(new URL("sources/dungeonplanner-loot.json", DATA), "utf8")), []);
 
-  // Provenance: the Classic client for facts, the emulator for who drops it.
-  assert.deepEqual(reference.provenance.map((line) => [line.source, line.tier]), [["wago-classic-era", "classic-reference"], ["azerothcore", "community-unverified"]]);
+  // Provenance: the Classic client for facts; the emulator and DungeonPlanner
+  // (Wowhead Classic drop lists) for who drops it.
+  assert.deepEqual(reference.provenance.map((line) => [line.source, line.tier]), [["wago-classic-era", "classic-reference"], ["azerothcore", "community-unverified"],
+    ["dungeon-planner", "community-unverified"]]);
   assert.ok(reference.provenance.every((line) => line.revision && line.retrievedAt && line.url));
   assert.ok(reference.sources.every((source) => source.license && source.revision));
 
@@ -144,7 +147,15 @@ test("bosses, rares and trash are linked to the right dungeon", () => {
     for (const rare of dungeon.rares) assert.ok(atlasDungeon.rares.some((entry) => entry.npcId === rare.npcId));
   }
   const moltenCore = reference.dungeons.find((dungeon) => dungeon.instanceId === 409);
-  assert.ok(moltenCore.dungeonLoot.some((entry) => entry.sourceName === "Cache of the Firelord"), "chest loot under the chest's name");
+  // Majordomo's chest: the emulator's Cache of the Firelord holds exactly the
+  // drops DungeonPlanner lists for him, so the chest is his.
+  const majordomo = moltenCore.bosses.find((boss) => boss.npcId === 12018);
+  assert.deepEqual(majordomo.chests, [{ objectId: 179703, name: "Cache of the Firelord" }], "the chest's name is kept");
+  assert.ok(majordomo.sources.azerothcore.includes(18646) && majordomo.sources["dungeon-planner"].includes(18646), "both sources, the emulator through the chest");
+  assert.ok(!moltenCore.dungeonLoot.some((entry) => entry.itemId === 18646), "never shared trash as well");
+  // A chest no boss's list explains stays shared loot under its own name.
+  const depths = reference.dungeons.find((dungeon) => dungeon.instanceId === 230);
+  assert.ok(depths.dungeonLoot.some((entry) => (entry.sources || []).some((source) => source.objectId && source.name === "Secret Safe")), "chest loot under the chest's name");
   assert.deepEqual(referenceSourcesOf(5193).map((source) => [source.instanceId, source.bossName, source.sourceType, source.reference]),
     [[36, "Edwin VanCleef", "boss", true]]);
 });
