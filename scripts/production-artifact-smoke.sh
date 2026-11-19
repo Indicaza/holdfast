@@ -126,7 +126,8 @@ smoke_atlas() {
   local atlas
   atlas="$(probe_dungeon_atlas)"
   echo "$atlas"
-  echo "$atlas" | grep -q '"atlasDungeons":26,'
+  # 26 original instances and the 9 WoW Forever dungeons.
+  echo "$atlas" | grep -q '"atlasDungeons":35,'
   echo "$atlas" | grep -q '"degraded":\[\]'
   echo "$atlas" | grep -Eq '"deadminesBosses":[1-9]'
   echo "$atlas" | grep -Eq '"deadminesReferenceLoot":[1-9]'
