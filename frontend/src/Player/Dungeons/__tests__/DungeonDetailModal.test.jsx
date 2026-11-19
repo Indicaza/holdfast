@@ -293,6 +293,21 @@ describe('missing data', () => {
     expect(quest.textContent).not.toContain('Rewards')
   })
 
+  test('a WoW Forever dungeon says what is known and lists unknown drops by item id', async () => {
+    const drop = (itemId, npcId) => ({ itemId, itemKey: `i:${itemId}`, npcId, factsKnown: false, verifiedForForever: false })
+    const faldrim = { encounterId: null, npcId: 261306, name: 'Faldrim Anvilmar', abilities: [], loot: [], referenceLoot: [], unresolvedLoot: [drop(273805, 261306)] }
+    const atlas = { ...FIXTURE_DEADMINES_DETAIL.atlas, origin: 'forever', floorNames: ['The Hall of Thanes'], bosses: [faldrim], dungeonLoot: [],
+      unresolvedLoot: [drop(273805, 261306), drop(273806, null)] }
+    api({ detail: { ...FIXTURE_DEADMINES_DETAIL, sources: [], atlas } })
+    const { unmount } = renderWithSession(<Modal />)
+    expect(await screen.findByText(/A WoW Forever dungeon: its bosses and level band come from the game client \(The Hall of Thanes\)/)).toBeTruthy()
+    unmount()
+    resetHarness()
+    api({ detail: { ...FIXTURE_DEADMINES_DETAIL, sources: [], atlas } })
+    renderWithSession(<Modal section="bosses" boss={String(261306)} />)
+    expect(await screen.findByText('1 more drop is listed for Faldrim Anvilmar without item details yet (item 273805).')).toBeTruthy()
+  })
+
   test('a dungeon without any atlas still opens with its loot', async () => {
     api({ detail: FIXTURE_DETAIL_WITHOUT_ATLAS })
     renderWithSession(<Modal dungeons={[]} />)

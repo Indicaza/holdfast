@@ -255,7 +255,8 @@ test("the checked-in wing manifest is generated from atlasWings.js and current",
   assert.equal(checkedIn, wingManifestText(), "run node scripts/exportWingManifest.mjs");
   const manifest = buildWingManifest();
   assert.deepEqual(manifest.dungeons.flatMap((dungeon) => dungeon.wings.map((wing) => wing.dungeonKey)), EXPECTED_KEYS);
-  assert.equal(manifest.dungeons.length, atlasDungeon(36) ? 26 : 0, "every atlas dungeon has its key");
+  assert.equal(manifest.dungeons.length, 35, "every atlas dungeon has its key, WoW Forever's included");
+  assert.equal(manifest.dungeons.find((dungeon) => dungeon.instanceId === 3065).dungeonKey, "the-hall-of-thanes");
   assert.equal(manifest.dungeons.find((dungeon) => dungeon.instanceId === 36).dungeonKey, "deadmines");
   const library = manifest.dungeons.find((dungeon) => dungeon.instanceId === 189).wings.find((wing) => wing.slug === "library");
   assert.deepEqual(library.bosses.map((boss) => [boss.encounterId, boss.npcId]), [[446, 3974], [447, 6487]]);

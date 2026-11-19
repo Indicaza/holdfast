@@ -31,7 +31,10 @@ const items = read("wago-classic-era-items.json");
 const planner = read("dungeonplanner-loot.json");
 // generatedAt follows the newest extract, so re-running changes nothing.
 const newest = (...extracts) => extracts.map((extract) => extract?.retrievedAt).filter(Boolean).sort().at(-1) ?? null;
-const atlas = normalize({ wago, azerothcore, creatures, spells, loot, items, generatedAt: newest(wago, azerothcore, creatures, spells, loot, items) });
+// WoW Forever's own instances (scripts/fetchForeverSources.mjs).
+const forever = read("forever-instances.json");
+const atlas = normalize({ wago, azerothcore, creatures, spells, loot, items, forever, planner,
+  generatedAt: newest(wago, azerothcore, creatures, spells, loot, items, forever) });
 const reference = normalizeReferenceLoot({ atlas, loot, items, planner, generatedAt: newest(loot, items) });
 // The dungeon quest catalog (fetchDungeonAtlasSources.mjs --quests-only).
 const questSources = read("azerothcore-quests.json");

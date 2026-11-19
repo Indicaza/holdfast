@@ -159,7 +159,7 @@ kind of creature is not a place).
 
 ## Coverage (at this commit)
 
-- 26 vanilla dungeons and raids (Season of Discovery maps excluded).
+- 26 vanilla dungeons and raids (Season of Discovery maps excluded), plus 9 WoW Forever dungeons (below; the counts in this section are the original 26).
 - 23 with level bands (not AQ20, AQ40, Naxxramas: not in the client's LFG table).
 - 23 with a world entrance (+ extra entrances for SM, Dire Maul, Stratholme,
   Maraudon, Uldaman, Gnomeregan, Molten Core). None for Blackwing Lair, Ruins of
@@ -284,3 +284,38 @@ The ten bosses still without reference loot:
 - The Vault (an event), Ezra Grimm and "The Molten Core": no creature to read
   from.
 
+
+## WoW Forever dungeons (sprint step 4A.5)
+
+The atlas also carries the nine dungeons WoW Forever added (`origin: "forever"`):
+City of Dalaran 2959, The Drowned City 2970, Blackmaw Hold 2974, Alcaz Prison
+2994, Excavation Site: Wetlands 2998, Ruins of Lordaeron 2999, Shaper's Terrace
+3001, Krol'dok Stronghold 3039, The Hall of Thanes 3065.
+
+- Identity: `cd backend && node scripts/fetchForeverSources.mjs --openmap <OpenMap checkout> [--check]`
+  writes `src/Atlas/data/sources/forever-instances.json` from OpenMap's
+  `OpenMap/Data/Forever/Places.lua`, which is generated from the Forever
+  client's own tables (client build 1.60.1). It keeps instance map IDs, names,
+  dungeon/raid, level band, entrance (zone uiMap + coordinates) and encounter
+  names in client order (58). Nothing is fetched: the checkout is local, and its
+  commit plus client build is the extract's `revision`. `--check` fails when the
+  extract no longer matches the checkout.
+- NPC IDs: from DungeonPlanner, only when its creature name equals the client's
+  encounter name exactly (35 of 58). Different names (the client's
+  "Infurnus", the guide's "Magmatus") get no NPC ID.
+- Encounter IDs: only those Guildweaver players' clients reported
+  (`FOREVER_OBSERVED` in `atlasForever.js`: 3480 Saltspine, 3481 Shadetooth).
+- Floors: DungeonPlanner's floor names (`floorNames`). No map art, layouts,
+  abilities, rares or trash: `coverage` says so per field.
+- Loot: DungeonPlanner lists Forever-only item IDs (270000+) the Classic data
+  has no facts for. They stay in `reference-loot.json` `gaps` and are served as
+  `unresolvedLoot` (by id, `factsKnown: false`, `verifiedForForever: false`),
+  never as Classic reference items. The same applies to Forever's new drops in
+  original dungeons.
+- Quests: DungeonPlanner's quest lists for seven of the nine; Blackmaw Hold and
+  Shaper's Terrace have none (`curated: false` means no list, not no quests).
+  Forever quests have no AzerothCore row, so `prerequisitesKnown: false` and
+  readiness is `unknown`, never `ready` or `missing`.
+- Announced but not in the client's tables (no ID, not in the atlas): Hyjal
+  Summit, Barrow Deeps. `node scripts/atlasCensus.mjs [--json]` prints the
+  census of every instance and these.

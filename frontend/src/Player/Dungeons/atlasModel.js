@@ -219,6 +219,12 @@ export function normalizeAtlas(atlas) {
     floors: list(source.floors).filter((floor) => floor && floor.name),
     unassigned: { bosses: list(source.unassigned?.bosses), rares: list(source.unassigned?.rares) },
     levelSource: source.levelSource || '',
+    // WoW Forever's own dungeons: origin, what is known, listed drops
+    // whose item details are unknown (by id).
+    origin: source.origin === 'forever' ? 'forever' : 'classic',
+    coverage: source.coverage && typeof source.coverage === 'object' ? source.coverage : null,
+    floorNames: list(source.floorNames).filter((name) => typeof name === 'string'),
+    unresolvedLoot: list(source.unresolvedLoot).filter((entry) => entry && Number.isSafeInteger(entry.itemId)),
     entrancesShared: source.entrancesShared === true,
   }
 }

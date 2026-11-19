@@ -244,10 +244,20 @@ function WingNote({ atlas }) {
   )
 }
 
+// Drops a guide lists by item ID whose details nobody has reported yet.
+function UnresolvedLoot({ entries, owner }) {
+  if (!entries?.length) return null
+  const ids = entries.map((entry) => entry.itemId).join(', ')
+  return <p className="gw-muted gw-atlas-provenance">{entries.length} more drop{entries.length === 1 ? ' is' : 's are'} listed{owner ? ` for ${owner}` : ''} without item details yet (item {ids}).</p>
+}
+
 function Overview({ entry, atlas, character, onBoss, forCharacter }) {
   return (
     <div className="gw-atlas-section">
       {atlas.description ? <p>{atlas.description}</p> : null}
+      {atlas.origin === 'forever' ? (
+        <p className="gw-muted">A WoW Forever dungeon: its bosses and level band come from the game client{atlas.floorNames.length ? ` (${atlas.floorNames.join(', ')})` : ''}. Maps, abilities and most item details are not known yet.</p>
+      ) : null}
       <Facts entry={entry} atlas={atlas} character={character} />
       {forCharacter}
       <Wings atlas={atlas} />
@@ -337,6 +347,7 @@ function BossDetail({ boss, atlas, detail, role, onRole, character, lootProps })
       {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
       <h4 className="gw-atlas-subhead">Loot</h4>
       <LootList rows={bossLoot(boss, detail)} empty={bossLootEmpty(boss, atlas)} {...lootProps} />
+      <UnresolvedLoot entries={boss.unresolvedLoot} owner={boss.name} />
     </article>
   )
 }
@@ -396,6 +407,7 @@ function Loot({ items, character, atlas, lootProps }) {
       {!character ? <p className="gw-muted">Choose a character to keep a wishlist.</p> : null}
       {hasReference ? <p className="gw-muted gw-atlas-provenance">Classic reference items come from Classic data, not Guildweaver sightings. They are not verified for Forever and no drop chances are shown.</p> : null}
       <LootList rows={rows} empty={items.length ? 'No loot matches.' : 'No loot recorded here yet.'} {...lootProps} />
+      <UnresolvedLoot entries={atlas.unresolvedLoot} />
     </div>
   )
 }

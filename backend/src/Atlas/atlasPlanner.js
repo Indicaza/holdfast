@@ -26,6 +26,7 @@ const int = (value) => {
 //   creatures  [instanceId, npcId, name, slug]    one per boss
 //   loot       [instanceId, npcId, itemId, src, notable, forever]
 //   quests     [instanceId, slug, questId, name, level, minLevel, side, giverNpcId]
+//   floors     [instanceId, floor, name]   a Forever dungeon's floors
 //              its dungeon quest list (side "a", "h" or "b"; nulls unknown)
 // src is DungeonPlanner's own source id (1 Wowhead Classic, 2
 // warcraft.wiki.gg, 3 Wowhead Forever); notable and forever are its flags
@@ -35,17 +36,25 @@ export function extractPlannerLoot({ dungeons = {}, bosses = {} }) {
   const creatures = [];
   const loot = [];
   const quests = [];
+  const floors = [];
   const sourceNames = new Map();
   for (const slug of Object.keys(bosses).sort()) {
     const file = bosses[slug];
     const dungeon = dungeons[slug];
     const instanceId = int(dungeon?.instanceMapID);
-    if (!file || file.origin !== "classic" || !instanceId || !instances.has(instanceId)) continue;
+    // Classic instances the atlas covers, and Forever's own instances with
+    // a map ID (the atlas adds those from the client's tables).
+    const forever = file?.origin === "forever";
+    if (!file || !instanceId || !(forever || (file.origin === "classic" && instances.has(instanceId)))) continue;
+    if (forever) {
+      for (const map of dungeon.maps || []) if (int(map.floor) && map.name) floors.push([instanceId, int(map.floor), String(map.name)]);
+    }
     for (const source of file.sources || []) if (int(source.id) && source.name) sourceNames.set(int(source.id), String(source.name));
     for (const quest of file.quests || []) {
       const questId = int(quest.id);
       if (!questId) continue;
-      const side = ["a", "h", "b"].includes(quest.side) ? quest.side : null;
+      // "a"/"h"/"b", or spelled out in its Forever files.
+      const side = { a: "a", h: "h", b: "b", alliance: "a", horde: "h", both: "b" }[quest.side] ?? null;
       quests.push([instanceId, slug, questId, quest.name ? String(quest.name) : null, int(quest.level), int(quest.req), side, int(quest.giver)]);
     }
     for (const boss of file.bosses || []) {
@@ -75,6 +84,7 @@ export function extractPlannerLoot({ dungeons = {}, bosses = {} }) {
     // One row per wing file and quest (a wing's list is its dungeon's).
     quests: [...new Map(quests.map((row) => [`${row[1]}:${row[2]}`, row])).values()]
       .sort((a, b) => a[0] - b[0] || (a[1] > b[1] ? 1 : a[1] < b[1] ? -1 : 0) || a[2] - b[2]),
+    floors: [...new Map(floors.map((row) => [`${row[0]}:${row[1]}`, row])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]),
     sourceNames: [...sourceNames].sort((a, b) => a[0] - b[0]),
   };
 }

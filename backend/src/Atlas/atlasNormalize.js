@@ -11,6 +11,7 @@
 import { adaptContent } from "./atlasContent.js";
 import { questDetailsOf } from "./atlasLoot.js";
 import { VANILLA_INSTANCE_IDS } from "./atlasSources.js";
+import { normalizeForever } from "./atlasForever.js";
 
 export const ATLAS_SCHEMA_VERSION = 1;
 export const TIERS = Object.freeze(["official-client", "forever-reference", "classic-reference", "community-unverified"]);
@@ -193,7 +194,9 @@ export function adaptAzerothCore(extract, { areaToInstance = new Map() } = {}) {
 
 // ---------------------------------------------------------------- Normalize
 
-export function normalize({ wago, azerothcore, creatures = null, spells = null, loot = null, items = null, generatedAt = null }) {
+// forever / planner: WoW Forever's own instances (Atlas/atlasForever.js),
+// added after the original game's.
+export function normalize({ wago, azerothcore, creatures = null, spells = null, loot = null, items = null, forever = null, planner = null, generatedAt = null }) {
   const areaToInstance = new Map((wago?.tables?.AreaTable || []).map((row) => [int(row.ID), int(row.ContinentID)]));
   const ac = azerothcore ? adaptAzerothCore(azerothcore, { areaToInstance }) : null;
   const content = creatures ? adaptContent(creatures, spells) : null;
@@ -243,7 +246,13 @@ export function normalize({ wago, azerothcore, creatures = null, spells = null, 
       artworkUrl: null, maps: place ? [place.layout] : [], bosses, creatures: trash, rares, rareCount: place ? rares.length : null, quests, provenance,
     };
   });
-  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore, creatures, spells, loot].filter(Boolean).map((extract) => ({ source: extract.source,
+  // Forever's own instances: the client's tables, never Classic reference.
+  const zoneNames = new Map((wago?.tables?.UiMap || []).map((row) => [int(row.ID), text(row.Name_lang)]));
+  const known = new Set(dungeons.map((dungeon) => dungeon.instanceId));
+  for (const entry of normalizeForever({ forever, planner, zoneName: (uiMapId) => zoneNames.get(uiMapId) ?? null })) {
+    if (!known.has(entry.instanceId)) dungeons.push(entry);
+  }
+  return { schemaVersion: ATLAS_SCHEMA_VERSION, generatedAt, sources: [wago, azerothcore, creatures, spells, loot, forever].filter(Boolean).map((extract) => ({ source: extract.source,
     revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null, url: extract.url ?? null, license: extract.license ?? null })), dungeons };
 }
 

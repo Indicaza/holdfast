@@ -64,13 +64,13 @@ test("the dungeon list serves the static atlas when the observed catalog or its 
     const list = readDungeonList({ readCatalog: broken, readSlots: broken });
     assert.deepEqual(list.degraded, ["catalog", "lootSlots"]);
     assert.deepEqual(list.dungeons, []);
-    assert.equal(list.atlasDungeons.length, 26, "all 26 reference dungeons");
+    assert.equal(list.atlasDungeons.length, 35, "all 35 atlas dungeons: 26 original, 9 WoW Forever");
     assert.ok(list.atlasDungeons.every((entry) => entry.atlas && entry.atlas.bossCount > 0));
     assert.equal(errors.length, 2, "both failures are logged, not hidden");
 
     const empty = readDungeonList({ readCatalog: () => ({ schemaVersion: 1, revision: 0, dungeons: [] }), readSlots: () => new Map() });
     assert.equal(empty.degraded, undefined, "an empty catalog is not a failure");
-    assert.equal(empty.atlasDungeons.length, 26);
+    assert.equal(empty.atlasDungeons.length, 35);
   } finally {
     console.error = original;
   }
