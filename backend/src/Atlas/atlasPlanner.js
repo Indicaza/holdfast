@@ -25,6 +25,8 @@ const int = (value) => {
 // their instanceMapID) and `bosses` (data-src/bosses/*.json), keyed by slug.
 //   creatures  [instanceId, npcId, name, slug]    one per boss
 //   loot       [instanceId, npcId, itemId, src, notable, forever]
+//   quests     [instanceId, slug, questId, name, level, minLevel, side, giverNpcId]
+//              its dungeon quest list (side "a", "h" or "b"; nulls unknown)
 // src is DungeonPlanner's own source id (1 Wowhead Classic, 2
 // warcraft.wiki.gg, 3 Wowhead Forever); notable and forever are its flags
 // (0/1). Only classic instances the atlas covers are kept.
@@ -32,6 +34,7 @@ export function extractPlannerLoot({ dungeons = {}, bosses = {} }) {
   const instances = new Set(VANILLA_INSTANCE_IDS);
   const creatures = [];
   const loot = [];
+  const quests = [];
   const sourceNames = new Map();
   for (const slug of Object.keys(bosses).sort()) {
     const file = bosses[slug];
@@ -39,6 +42,12 @@ export function extractPlannerLoot({ dungeons = {}, bosses = {} }) {
     const instanceId = int(dungeon?.instanceMapID);
     if (!file || file.origin !== "classic" || !instanceId || !instances.has(instanceId)) continue;
     for (const source of file.sources || []) if (int(source.id) && source.name) sourceNames.set(int(source.id), String(source.name));
+    for (const quest of file.quests || []) {
+      const questId = int(quest.id);
+      if (!questId) continue;
+      const side = ["a", "h", "b"].includes(quest.side) ? quest.side : null;
+      quests.push([instanceId, slug, questId, quest.name ? String(quest.name) : null, int(quest.level), int(quest.req), side, int(quest.giver)]);
+    }
     for (const boss of file.bosses || []) {
       const npcId = int(boss.npcID);
       if (!npcId || !boss.name) continue;
@@ -63,6 +72,9 @@ export function extractPlannerLoot({ dungeons = {}, bosses = {} }) {
   return {
     creatures: unique(creatures).sort(byIds),
     loot: unique(loot).sort(byIds),
+    // One row per wing file and quest (a wing's list is its dungeon's).
+    quests: [...new Map(quests.map((row) => [`${row[1]}:${row[2]}`, row])).values()]
+      .sort((a, b) => a[0] - b[0] || (a[1] > b[1] ? 1 : a[1] < b[1] ? -1 : 0) || a[2] - b[2]),
     sourceNames: [...sourceNames].sort((a, b) => a[0] - b[0]),
   };
 }

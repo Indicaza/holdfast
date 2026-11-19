@@ -13,7 +13,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { normalizeReferenceLoot, referenceLootProblems } from "../src/Atlas/atlasLoot.js";
-import { atlasProblems, normalize } from "../src/Atlas/atlasNormalize.js";
+import { atlasProblems, normalize, zonePoint, zoneRegions } from "../src/Atlas/atlasNormalize.js";
+import { buildQuestCatalog, questCatalogProblems } from "../src/Atlas/atlasQuests.js";
 
 const dataDir = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "Atlas", "data");
 const read = (name) => {
@@ -32,7 +33,13 @@ const planner = read("dungeonplanner-loot.json");
 const newest = (...extracts) => extracts.map((extract) => extract?.retrievedAt).filter(Boolean).sort().at(-1) ?? null;
 const atlas = normalize({ wago, azerothcore, creatures, spells, loot, items, generatedAt: newest(wago, azerothcore, creatures, spells, loot, items) });
 const reference = normalizeReferenceLoot({ atlas, loot, items, planner, generatedAt: newest(loot, items) });
-const problems = [...atlasProblems(atlas), ...referenceLootProblems(reference, atlas)];
+// The dungeon quest catalog (fetchDungeonAtlasSources.mjs --quests-only).
+const questSources = read("azerothcore-quests.json");
+const zones = wago ? zoneRegions(wago.tables) : [];
+const questCatalog = questSources ? buildQuestCatalog({ atlas, quests: questSources, planner,
+  areaToInstance: new Map((wago?.tables?.AreaTable || []).map((row) => [Number(row.ID), Number(row.ContinentID)])),
+  zonePointOf: (continentId, x, y) => zonePoint(zones, continentId, x, y), generatedAt: newest(questSources, planner) }) : null;
+const problems = [...atlasProblems(atlas), ...referenceLootProblems(reference, atlas), ...(questCatalog ? questCatalogProblems(questCatalog, atlas) : [])];
 if (problems.length) {
   console.error(`Atlas invariants broken:\n- ${problems.join("\n- ")}`);
   process.exit(1);
@@ -46,7 +53,15 @@ function referenceJson(data) {
   return `{\n${lines.join(",\n")},\n "items": {\n${itemLines.join(",\n")}\n },\n "dungeons": [\n${dungeons.map((d) => `  ${JSON.stringify(d)}`).join(",\n")}\n ]\n}\n`;
 }
 
-const outputs = [["atlas.json", `${JSON.stringify(atlas, null, 1)}\n`], ["reference-loot.json", referenceJson(reference)]];
+// The quest catalog: one dungeon per line.
+function catalogJson(data) {
+  const { dungeons, ...head } = data;
+  const lines = Object.entries(head).map(([key, value]) => ` ${JSON.stringify(key)}: ${JSON.stringify(value)}`);
+  return `{\n${lines.join(",\n")},\n "dungeons": [\n${dungeons.map((d) => `  ${JSON.stringify(d)}`).join(",\n")}\n ]\n}\n`;
+}
+
+const outputs = [["atlas.json", `${JSON.stringify(atlas, null, 1)}\n`], ["reference-loot.json", referenceJson(reference)],
+  ...(questCatalog ? [["quest-catalog.json", catalogJson(questCatalog)]] : [])];
 if (process.argv.includes("--check")) {
   let stale = false;
   for (const [name, output] of outputs) {
