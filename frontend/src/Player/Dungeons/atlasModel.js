@@ -888,3 +888,123 @@ export function trapFocusIndex(count, current, shift) {
   if (!shift && current === count - 1) return 0
   return null
 }
+
+// ------------------------------------------------------------ Quest readiness
+
+// A quest's state for the selected character (GET …/readiness?character=).
+export const QUEST_STATE_COPY = Object.freeze({
+  completed: { label: 'Completed', tone: 'ok', mark: '✓' },
+  accepted: { label: 'In quest log', tone: 'info', mark: '◆' },
+  available: { label: 'Pick up', tone: 'warn', mark: '!' },
+  prerequisites: { label: 'Needs an earlier quest', tone: 'bad', mark: '✕' },
+  ineligible: { label: 'Not for this character', tone: 'quiet', mark: '–' },
+  unknown: { label: 'Not known', tone: 'quiet', mark: '?' },
+})
+
+export const READINESS_COPY = Object.freeze({
+  ready: { label: 'Ready', tone: 'ok' },
+  missing: { label: 'Quests to pick up', tone: 'warn' },
+  blocked: { label: 'Blocked', tone: 'bad' },
+  unknown: { label: 'Not known', tone: 'quiet' },
+  none: { label: 'No dungeon quests', tone: 'quiet' },
+})
+
+const PREREQUISITE_COPY = { done: 'done', accepted: 'in quest log', missing: 'not done', unknown: 'not known' }
+
+function readinessQuest(raw = {}) {
+  const location = raw.giver?.location && typeof raw.giver.location === 'object' ? raw.giver.location : null
+  const x = finite(location?.x)
+  const y = finite(location?.y)
+  return {
+    questId: int(raw.questId),
+    name: raw.name || (raw.questId ? `Quest ${raw.questId}` : 'Unnamed quest'),
+    state: QUEST_STATE_COPY[raw.state] ? raw.state : 'unknown',
+    reasons: Array.isArray(raw.reasons) ? raw.reasons : [],
+    relevance: raw.relevance || 'dungeon',
+    level: finite(raw.level),
+    minLevel: finite(raw.minLevel),
+    giver: raw.giver?.name || '',
+    startsFromItem: int(raw.startsFromItem),
+    location: location ? {
+      zoneName: location.zoneName || '',
+      mapId: int(location.mapId),
+      coords: x !== null && y !== null && x >= 0 && x <= 1 && y >= 0 && y <= 1 ? `${(x * 100).toFixed(1)}, ${(y * 100).toFixed(1)}` : '',
+    } : null,
+    prerequisitesKnown: raw.prerequisitesKnown !== false,
+    prerequisites: (Array.isArray(raw.prerequisites) ? raw.prerequisites : []).map((entry) => ({
+      questId: int(entry?.questId),
+      name: entry?.name || (entry?.questId ? `Quest ${entry.questId}` : 'Unnamed quest'),
+      status: PREREQUISITE_COPY[entry?.status] ? entry.status : 'unknown',
+      statusLabel: PREREQUISITE_COPY[entry?.status] || PREREQUISITE_COPY.unknown,
+    })),
+    objectivesComplete: raw.objectivesComplete === true ? true : raw.objectivesComplete === false ? false : null,
+  }
+}
+
+// Why a quest's state is "unknown", in a few words.
+export function unknownReason(quest) {
+  const reasons = quest.reasons || []
+  if (reasons.includes('prerequisites-not-known')) return 'its quest chain is not known'
+  if (reasons.includes('completion-not-reported') || reasons.includes('quest-log-not-reported')) return 'quest data not synced'
+  if (reasons.includes('reputation-not-reported')) return 'needs a reputation'
+  if (reasons.includes('prerequisite-state-not-reported')) return 'earlier quests not reported'
+  if (reasons.includes('eligibility-not-reported')) return 'who can take it is not known'
+  return ''
+}
+
+// The readiness response, for the website: a summary and the quests in
+// groups (what to pick up first; completed and ineligible last). Optional
+// and repeatable quests never change the summary.
+export function readinessModel(data) {
+  if (!data || typeof data !== 'object' || !READINESS_COPY[data.readiness]) return null
+  const required = (data.quests || []).map(readinessQuest)
+  const optional = [...(data.optional || []), ...(data.repeatable || [])].map(readinessQuest)
+  const chain = (data.prerequisites || []).map(readinessQuest)
+  const applies = (quest) => quest.state !== 'ineligible'
+  const byState = (list, ...states) => list.filter((quest) => states.includes(quest.state))
+  const counts = {
+    required: required.filter(applies).length,
+    completed: byState(required, 'completed').length,
+    accepted: byState(required, 'accepted').length,
+    needed: byState(required, 'available').length,
+    blocked: byState(required, 'prerequisites').length,
+    unknown: byState(required, 'unknown').length,
+    ineligible: byState(required, 'ineligible').length,
+  }
+  const groups = [
+    { id: 'needed', title: 'Pick up before you go', quests: byState(required, 'available') },
+    { id: 'blocked', title: 'Needs an earlier quest first', quests: byState(required, 'prerequisites') },
+    { id: 'unknown', title: 'Not known yet', quests: byState(required, 'unknown') },
+    { id: 'accepted', title: 'In the quest log', quests: byState(required, 'accepted') },
+    { id: 'chains', title: 'Prerequisite chains', quests: chain.filter((quest) => applies(quest) && quest.state !== 'completed'), quiet: true },
+    { id: 'optional', title: 'Optional quests', quests: optional.filter((quest) => applies(quest) && quest.state !== 'completed'), quiet: true },
+    { id: 'completed', title: 'Completed', quests: [...byState(required, 'completed'), ...byState(optional, 'completed')], quiet: true },
+  ].filter((group) => group.quests.length)
+  const character = data.character && typeof data.character === 'object' ? data.character : null
+  return {
+    readiness: data.readiness,
+    ...READINESS_COPY[data.readiness],
+    counts,
+    groups,
+    questList: data.questList === 'unknown' ? 'unknown' : 'curated',
+    capturedAt: character?.capturedAt || null,
+    synced: Boolean(character),
+    partial: Boolean(character) && (character.completedCoverage !== 'full' || character.questLogCoverage !== 'full'),
+    chainsUnknown: [...required, ...optional].some((quest) => !quest.prerequisitesKnown),
+    ineligible: counts.ineligible,
+  }
+}
+
+// One line for the summary: "2 of 5 required done · 1 in the quest log · 2 to pick up".
+export function readinessLine(model) {
+  if (!model) return ''
+  const { counts } = model
+  if (!counts.required) return model.questList === 'unknown' ? 'No source lists this dungeon\'s quests yet. That does not mean it has none.' : 'No dungeon quests apply to this character.'
+  return [
+    `${counts.completed} of ${counts.required} required done`,
+    counts.accepted ? `${counts.accepted} in the quest log` : null,
+    counts.needed ? `${counts.needed} to pick up` : null,
+    counts.blocked ? `${counts.blocked} waiting on an earlier quest` : null,
+    counts.unknown ? `${counts.unknown} not known` : null,
+  ].filter(Boolean).join(' · ')
+}

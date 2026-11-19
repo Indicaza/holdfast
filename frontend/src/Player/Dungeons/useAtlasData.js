@@ -105,6 +105,15 @@ export function useDungeonRuns({ server = '', dungeon = '', character = '', enab
   return useLiveResource(url, { topics: TOPICS, enabled: Boolean(url) })
 }
 
+// The selected character's quest readiness for a dungeon or wing, from the
+// quest state the add-on last synced. A new upload publishes the player
+// topic, which refreshes it.
+export function useDungeonReadiness(instanceId, characterId) {
+  const url = instanceId && characterId
+    ? `/api/player/loot/dungeons/${encodeURIComponent(instanceId)}/readiness?character=${encodeURIComponent(characterId)}` : ''
+  return useLiveResource(url, { topics: TOPICS, enabled: Boolean(url) })
+}
+
 export function useWishlist(characterId) {
   return useLiveResource(characterId ? `/api/player/wishlists/${encodeURIComponent(characterId)}` : '', { topics: TOPICS, enabled: Boolean(characterId) })
 }

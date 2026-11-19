@@ -9,11 +9,15 @@ import {
   gearTargets,
   isWingEntry,
   needsUnverifiedBadge,
+  QUEST_STATE_COPY,
   questModel,
   quickGuide,
+  readinessLine,
+  readinessModel,
   ROLES,
   runHistory,
   runsForEntry,
+  unknownReason,
 } from './atlasModel.js'
 import { LootList, UnverifiedBadge } from './AtlasLoot.jsx'
 import { useDungeonRuns } from './useAtlasData.js'
@@ -153,7 +157,7 @@ function Block({ title, count = null, open = true, children, id }) {
 
 // What to know before going in, for the selected character: gear they can
 // use, quests, the dangerous encounters for their role, and their history.
-export function PrepareView({ entry, atlas, detail, character, server, role, onRole, wishes, lootProps, onBoss, onPlan }) {
+export function PrepareView({ entry, atlas, detail, character, server, role, onRole, wishes, lootProps, onBoss, onPlan, readiness = null, onQuests = null }) {
   const items = useMemo(() => dungeonItems(detail || {}, atlas), [detail, atlas])
   const targets = useMemo(() => gearTargets(items, character, atlas), [items, character, atlas])
   const wanted = targets.filter((row) => wishes.has(row.item.itemKey))
@@ -177,7 +181,8 @@ export function PrepareView({ entry, atlas, detail, character, server, role, onR
         )}
       </Block>
       <Block id="quests" title="Quests" count={atlas.quests.length}>
-        <QuestList quests={atlas.quests} rewardProps={lootProps} />
+        {character && readiness ? <QuestReadiness resource={readiness} character={character} compact onOpen={onQuests} /> : null}
+        {!character || !readinessModel(readiness?.data) ? <QuestList quests={atlas.quests} rewardProps={lootProps} /> : null}
       </Block>
       <Block id="danger" title="Dangerous encounters" count={bosses.length + trash.length}>
         <RoleSelect role={role} onRole={onRole} character={character} />
@@ -200,5 +205,94 @@ export function PrepareView({ entry, atlas, detail, character, server, role, onR
         <Runs entry={entry} character={character} server={server} compact />
       </Block>
     </div>
+  )
+}
+
+// ------------------------------------------------------------ Quest readiness
+
+function QuestStateTag({ state, objectivesComplete = null }) {
+  const copy = QUEST_STATE_COPY[state] || QUEST_STATE_COPY.unknown
+  const label = state === 'accepted' && objectivesComplete ? 'Ready to turn in' : copy.label
+  return <span className={`gw-tag gw-atlas-qstate gw-atlas-qstate--${copy.tone}`}><span aria-hidden="true">{copy.mark}</span> {label}</span>
+}
+
+const INELIGIBLE_COPY = { faction: 'other faction', race: 'race', class: 'class', 'level-below-minimum': 'level too low', 'level-above-maximum': 'level too high' }
+
+function ReadinessQuest({ quest }) {
+  const where = quest.location ? [quest.location.zoneName, quest.location.coords].filter(Boolean).join(' ') : ''
+  const meta = [quest.level ? `Level ${quest.level}` : null, quest.minLevel ? `from ${quest.minLevel}` : null].filter(Boolean).join(' · ')
+  const why = quest.state === 'unknown' ? unknownReason(quest) : ''
+  return (
+    <li className="gw-atlas-rquest" data-quest={quest.questId} data-state={quest.state}>
+      <div className="gw-atlas-rquest__head">
+        <QuestStateTag state={quest.state} objectivesComplete={quest.objectivesComplete} />
+        <strong>{quest.name}</strong>
+        {meta ? <span className="gw-muted">{meta}</span> : null}
+        {quest.state === 'ineligible' && INELIGIBLE_COPY[quest.reasons[0]] ? <span className="gw-muted">({INELIGIBLE_COPY[quest.reasons[0]]})</span> : null}
+      </div>
+      {quest.giver || where || quest.startsFromItem ? (
+        <p className="gw-atlas-rquest__where gw-muted">
+          {quest.giver ? `From ${quest.giver}` : quest.startsFromItem ? `Starts from item ${quest.startsFromItem}` : ''}
+          {where ? `${quest.giver || quest.startsFromItem ? ', ' : ''}${where}` : ''}
+          {quest.location?.mapId ? <> <a className="gw-link" href={`/map?zone=${quest.location.mapId}`}><Icon name="map" size={12} /> Map</a></> : null}
+        </p>
+      ) : null}
+      {quest.prerequisites.length ? (
+        <p className="gw-atlas-rquest__chain">
+          <span className="gw-muted">Needs </span>
+          {quest.prerequisites.map((step, index) => (
+            <span key={step.questId || step.name} className={`gw-atlas-rquest__step gw-atlas-rquest__step--${step.status}`}>
+              {index ? ', ' : ''}{step.name} <span className="gw-muted">({step.statusLabel})</span>
+            </span>
+          ))}
+        </p>
+      ) : null}
+      {why ? <p className="gw-atlas-rquest__why gw-muted">Not known: {why}.</p> : null}
+    </li>
+  )
+}
+
+// The selected character's readiness in one line, and how fresh it is.
+export function ReadinessSummary({ model, character, onOpen = null }) {
+  if (!model) return null
+  const who = character?.name || 'this character'
+  return (
+    <div className={`gw-atlas-readiness gw-atlas-readiness--${model.tone}`} data-readiness={model.readiness}>
+      <div className="gw-atlas-readiness__head">
+        <span className={`gw-tag gw-atlas-qstate gw-atlas-qstate--${model.tone}`}>{model.label}</span>
+        <span>{readinessLine(model)}</span>
+        {onOpen ? <button type="button" className="gw-link gw-atlas-readiness__open" onClick={onOpen}>See quests</button> : null}
+      </div>
+      <p className="gw-muted gw-atlas-readiness__fresh">
+        {model.synced
+          ? `Quests as of ${relativeTime(model.capturedAt)}, from the last sync: /reload or log out in WoW to update.${model.partial ? ' Part of the quest data could not be read.' : ''}`
+          : `No quest data synced for ${who} yet. Play with Guildweaver on, then /reload.`}
+        {model.chainsUnknown ? ' The quest chains of this WoW Forever dungeon are not known.' : ''}
+      </p>
+    </div>
+  )
+}
+
+// The selected character's quests by state, what to pick up first.
+// compact (Prepare): only what still needs doing.
+export function QuestReadiness({ resource, character, compact = false, onOpen = null }) {
+  const model = useMemo(() => readinessModel(resource?.data), [resource?.data])
+  if (!character) return null
+  if (resource?.status === 'loading' && !resource.data) return <SkeletonRows rows={2} label="Loading quest state" />
+  if (!model) return resource?.status === 'error' ? <p className="gw-muted">{character.name}'s quest state could not be loaded.</p> : null
+  const groups = compact ? model.groups.filter((group) => !group.quiet && group.id !== 'accepted') : model.groups
+  return (
+    <section className="gw-atlas-rgroups" aria-label={`Quest readiness for ${character.name}`}>
+      <ReadinessSummary model={model} character={character} onOpen={compact ? onOpen : null} />
+      {groups.map((group) => (
+        <details key={group.id} className="gw-atlas-rgroup" open={!group.quiet} data-group={group.id}>
+          <summary><h4>{group.title}</h4><span className="gw-tag gw-tag--quiet">{group.quests.length}</span></summary>
+          <ul className="gw-atlas-plain gw-atlas-rlist">{group.quests.map((quest) => <ReadinessQuest key={`${group.id}-${quest.questId}`} quest={quest} />)}</ul>
+        </details>
+      ))}
+      {!compact && model.ineligible ? (
+        <p className="gw-muted">{model.ineligible} dungeon quest{model.ineligible === 1 ? ' is' : 's are'} not for {character.name} (faction, race, class or level).</p>
+      ) : null}
+    </section>
   )
 }

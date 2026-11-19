@@ -164,3 +164,21 @@ export function evaluateReadiness(quests, state, { wingKey = null } = {}) {
     unknownRelevance: group("unknown"),
   };
 }
+
+// Where one prerequisite stands for the character: "done" (completed),
+// "accepted" (in the quest log), "missing" (known to be neither), or
+// "unknown". A mustBeActive prerequisite counts only from the quest log.
+export function prerequisiteStatus(prerequisite, state) {
+  const logged = inLog(state, prerequisite.questId);
+  if (prerequisite.mustBeActive) return logged === true ? "accepted" : logged === false ? "missing" : "unknown";
+  const done = doneState(state, prerequisite.questId);
+  if (done === true) return "done";
+  if (logged === true) return "accepted";
+  return done === false ? "missing" : "unknown";
+}
+
+// A character state that reports nothing: every quest that depends on the
+// character is unknown, so readiness can never be "ready" from it.
+export function emptyCharacterState() {
+  return readCharacterState({ schemaVersion: READINESS_SCHEMA, completed: { coverage: "none" }, questLog: { coverage: "none" } }).state;
+}
