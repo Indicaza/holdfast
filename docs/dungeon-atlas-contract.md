@@ -233,3 +233,22 @@ which is the same evidence.
   client facts) and `excluded` (counts of world drops and filtered items).
   The served API shape is otherwise unchanged.
 
+
+## WoW Forever dungeons (optional additions, sprint step 4A.5)
+
+- List `atlas` and detail `atlas` gain `origin`: `"classic"` or `"forever"`.
+  Forever dungeons also carry `coverage`, what is known per kind of fact
+  (`identity: "client"`; `bosses: "client-names" | "none"`;
+  `encounterIds: "partial-observed" | "none"`; `npcIds: "complete" | "partial" | "none"`;
+  `maps`, `abilities: "none"`; `rares`, `trash: "unknown"`), and `floorNames`
+  (string list).
+- Detail `atlas.unresolvedLoot[]` and each boss's `unresolvedLoot[]`:
+  `{ itemId, itemKey, npcId, sourceName, source, reason, factsKnown: false, observed: false, verifiedForForever: false }`:
+  drops a guide lists by item ID with no known item facts. Clients show the IDs,
+  not guessed names.
+- Quests gain `prerequisitesKnown` (boolean). `false`: no source records the
+  quest's chain; readiness reports it as `unknown` with reason
+  `prerequisites-not-known`.
+- A Forever boss's `encounterId` and `npcId` may be null: unknown, not absent.
+- Forever dungeons resolve by instance ID and by key (`/dungeons/the-hall-of-thanes`);
+  the wing manifest lists all 35 dungeons.

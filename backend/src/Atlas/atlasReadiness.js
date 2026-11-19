@@ -125,8 +125,10 @@ export function questState(quest, state) {
     if (met === false) return { state: "prerequisites", reasons: [`prerequisite:${prerequisite.questId}`] };
     if (met === null) prerequisitesUnknown = true;
   }
+  // A quest whose chain no source records: its prerequisites are not known.
+  if (quest.prerequisitesKnown === false && !prerequisitesUnknown) prerequisitesUnknown = true;
   if (eligibilityUnknown) reasons.push("eligibility-not-reported");
-  if (prerequisitesUnknown) reasons.push("prerequisite-state-not-reported");
+  if (prerequisitesUnknown) reasons.push(quest.prerequisitesKnown === false ? "prerequisites-not-known" : "prerequisite-state-not-reported");
   // Not done and not in the log, both known: it can be taken.
   if (done === null && !quest.repeatable) reasons.push("completion-not-reported");
   if (logged === null) reasons.push("quest-log-not-reported");

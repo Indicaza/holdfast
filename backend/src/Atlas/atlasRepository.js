@@ -4,7 +4,7 @@
 // here calls another service.
 
 import { normalizedName, wishlistItemKey } from "../Loot/lootModel.js";
-import { loadAtlas, loadQuestCatalog } from "./atlasData.js";
+import { loadAtlas, loadQuestCatalog, loadReferenceData } from "./atlasData.js";
 import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
 import { isWingKey, parentKeyFor, unassignedOf, wingsOf } from "./atlasWings.js";
 import { DEFAULT_RELEVANCE } from "./atlasQuests.js";
@@ -15,6 +15,37 @@ export { loadAtlas };
 export function atlasDungeon(instanceId) {
   return loadAtlas().byId.get(Number(instanceId)) || null;
 }
+
+// Drops a source lists for this dungeon whose item the Classic client does
+// not know (Forever's own items): kept by id, without facts, never dropped
+// silently (reference-loot.json `gaps`). sourceName: the boss it is listed for.
+function unresolvedLootOf(dungeon) {
+  const names = new Map(dungeon.bosses.filter((boss) => boss.npcId).map((boss) => [boss.npcId, boss.name]));
+  return (loadReferenceData().gaps || []).filter((gap) => gap.instanceId === dungeon.instanceId).map((gap) => ({
+    itemId: gap.itemId, itemKey: `i:${gap.itemId}`, npcId: gap.npcId ?? null, sourceName: names.get(gap.npcId) ?? null,
+    source: gap.source, reason: gap.reason, factsKnown: false, observed: false, verifiedForForever: false,
+  }));
+}
+
+// A Forever dungeon's quests in the atlas quest shape, from the quest
+// catalog (the atlas itself has no Classic quest records for it).
+function catalogQuestsOf(dungeon) {
+  const entry = loadQuestCatalog().byId.get(dungeon.instanceId);
+  return (entry?.quests || []).filter((quest) => quest.relevance === "dungeon").map((quest) => ({
+    questId: quest.questId, name: quest.name, level: quest.level, minLevel: quest.minLevel, faction: quest.faction,
+    giver: quest.giver?.kind === "npc" ? { npcId: quest.giver.id, name: quest.giver.name } : null,
+    objective: quest.objective, prerequisites: quest.prerequisites, prerequisitesKnown: quest.prerequisitesKnown, location: quest.giver?.location ?? null,
+    rewards: quest.rewards, provenance: [],
+  }));
+}
+
+const questsOf = (dungeon) => (dungeon.origin === "forever" ? catalogQuestsOf(dungeon) : dungeon.quests);
+
+// Optional additions for WoW Forever's own instances: where it comes from
+// and what is known of it.
+const originOf = (dungeon) => (dungeon.origin === "forever"
+  ? { origin: "forever", coverage: dungeon.coverage, floorNames: dungeon.floorNames || [] }
+  : { origin: "classic" });
 
 // What a dungeon id in a URL names: a numeric instance ID (the dungeon, as
 // before), a dungeon key ("deadmines"), or a wing key
@@ -54,8 +85,9 @@ export function atlasSummary(instanceId) {
     bossCount: dungeon.bosses.length,
     // Known (0 included) once the dungeon has spawn data; null means unknown.
     rareCount: dungeon.rareCount ?? null,
-    questCount: dungeon.quests.length,
+    questCount: questsOf(dungeon).length,
     kind: dungeon.kind,
+    ...originOf(dungeon),
     // Classic reference loot (docs/dungeon-atlas-contract-sprint2.md).
     ...referenceSummary(instanceId),
   };
@@ -84,7 +116,7 @@ function referenceList(itemIds, observed, sources = null) {
 // id or name): the item keys the catalog lists under them, and the catalog's
 // spelling of the name, so the frontend can match boss.name to
 // sources[].name. atlasName keeps the atlas source's own spelling.
-function bossWithCatalog(boss, sources, reference = null, observed = new Map()) {
+function bossWithCatalog(boss, sources, reference = null, observed = new Map(), unresolved = []) {
   const name = normalizedName(boss.name);
   const keys = new Set();
   let sourceName = null;
@@ -99,8 +131,9 @@ function bossWithCatalog(boss, sources, reference = null, observed = new Map()) 
       if (key) keys.add(key);
     }
   }
-  const entry = reference?.bosses.find((candidate) => candidate.encounterId === boss.encounterId);
-  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(entry?.itemIds || [], observed, entry?.sources) };
+  const entry = reference?.bosses.find((candidate) => (boss.encounterId && candidate.encounterId === boss.encounterId) || (boss.npcId && candidate.npcId === boss.npcId));
+  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(entry?.itemIds || [], observed, entry?.sources),
+    unresolvedLoot: unresolved.filter((gap) => boss.npcId && gap.npcId === boss.npcId) };
 }
 
 // The detail's `atlas`. `sources` is the catalog's source groups, used only
@@ -111,16 +144,20 @@ export function atlasDetail(instanceId, sources = []) {
   const reference = referenceDungeon(dungeon.instanceId);
   const observed = observedItems(sources);
   const wings = wingsOf(dungeon);
+  const unresolved = unresolvedLootOf(dungeon);
   return {
     dungeonKey: parentKeyFor(dungeon),
     ...(wings.length ? { wingEntries: wings.map(wingIdentity) } : {}),
+    ...originOf(dungeon),
     description: dungeon.description,
     kind: dungeon.kind,
     levelMin: dungeon.levelMin, levelMax: dungeon.levelMax, recommendedLevel: dungeon.recommendedLevel,
     ...(dungeon.wings ? { wings: dungeon.wings } : {}),
     zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId,
     maps: dungeon.maps,
-    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed)),
+    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed, unresolved)),
+    // Listed drops whose item the client does not know (optional addition).
+    unresolvedLoot: unresolved,
     creatures: dungeon.creatures,
     rares: dungeon.rares.map((rare) => {
       const entry = reference?.rares.find((candidate) => candidate.npcId === rare.npcId);
@@ -134,7 +171,7 @@ export function atlasDetail(instanceId, sources = []) {
       return item && { ...item, sourceName: entry.sourceName ?? null, npcId: entry.npcId ?? null, sources: entry.sources || [] };
     }).filter(Boolean)),
     referenceVersion: referenceVersion(),
-    quests: dungeon.quests.map((quest) => ({
+    quests: questsOf(dungeon).map((quest) => ({
       ...quest,
       objective: quest.objective ?? null, prerequisites: quest.prerequisites || [], location: quest.location ?? null, provenance: quest.provenance || [],
       rewards: (quest.rewards || []).map((reward) => {

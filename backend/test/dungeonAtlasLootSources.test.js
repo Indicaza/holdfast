@@ -90,16 +90,23 @@ test("invariants catch a boss item no source lists, or an unknown source", () =>
   assert.match(referenceLootProblems(broken, ATLAS).join("\n"), /source wowhead unknown/);
 });
 
-test("DungeonPlanner's extract: classic instances only, by instance map ID, deterministic", () => {
-  const dungeons = { "the-deadmines": { instanceMapID: 36 }, "hall-of-thanes": { instanceMapID: 2959 }, "wailing-caverns": { instanceMapID: 43 } };
+test("DungeonPlanner's extract: the atlas's classic instances and Forever's with a map ID, deterministic", () => {
+  const dungeons = { "the-deadmines": { instanceMapID: 36 }, "hall-of-thanes": { instanceMapID: 3065, maps: [{ floor: 1, name: "The Hall of Thanes" }] },
+    "wailing-caverns": { instanceMapID: 43 }, "hyjal-summit": { instanceMapID: null }, "custom-classic": { instanceMapID: 9999 } };
   const bosses = {
     "wailing-caverns": { origin: "classic", sources: [{ id: 1, name: "Wowhead Classic" }], bosses: [{ name: "Kresh", npcID: 3653, loot: [{ item: 13245, src: 1 }] }] },
     "the-deadmines": { origin: "classic", bosses: [{ name: "Edwin VanCleef", npcID: 639, loot: [{ item: 5191, src: 1, notable: true }, { item: 5191, src: 2 }, { item: 0 }] }] },
-    "hall-of-thanes": { origin: "forever", bosses: [{ name: "New Boss", npcID: 1, loot: [{ item: 1 }] }] },
+    "hall-of-thanes": { origin: "forever", bosses: [{ name: "New Boss", npcID: 1, loot: [{ item: 1, forever: true }] }],
+      quests: [{ id: 98423, name: "A Quest", level: 15, req: 13, side: "alliance", giver: 5 }] },
+    "hyjal-summit": { origin: "forever", bosses: [{ name: "Raid Boss", npcID: 2 }] },
+    "custom-classic": { origin: "classic", bosses: [{ name: "Not In The Atlas", npcID: 3 }] },
   };
   const out = extractPlannerLoot({ dungeons, bosses });
-  assert.deepEqual(out.creatures, [[36, 639, "Edwin VanCleef", "the-deadmines"], [43, 3653, "Kresh", "wailing-caverns"]]);
-  assert.deepEqual(out.loot, [[36, 639, 5191, 1, 1, 0], [43, 3653, 13245, 1, 0, 0]], "one row per boss and item; the Forever-only dungeon left out");
+  assert.deepEqual(out.creatures, [[36, 639, "Edwin VanCleef", "the-deadmines"], [43, 3653, "Kresh", "wailing-caverns"], [3065, 1, "New Boss", "hall-of-thanes"]],
+    "no instance without a map ID, no classic instance the atlas does not cover");
+  assert.deepEqual(out.loot, [[36, 639, 5191, 1, 1, 0], [43, 3653, 13245, 1, 0, 0], [3065, 1, 1, 0, 0, 1]], "one row per boss and item");
+  assert.deepEqual(out.floors, [[3065, 1, "The Hall of Thanes"]]);
+  assert.deepEqual(out.quests, [[3065, "hall-of-thanes", 98423, "A Quest", 15, 13, "a", 5]], "a spelled-out side read as its letter");
   assert.deepEqual(extractPlannerLoot({ dungeons, bosses }), out);
   assert.deepEqual(out.sourceNames, [[1, "Wowhead Classic"]]);
 });
@@ -134,7 +141,10 @@ test("the checked-in data: coverage, wings and served sources", () => {
   const depths = reference.dungeons.find((dungeon) => dungeon.instanceId === 230);
   for (const npcId of [9027, 9039]) assert.ok(depths.bosses.some((boss) => boss.npcId === npcId), `BRD encounter ${npcId}`);
   // The bosses still without reference loot, each with a reason.
-  const empty = report.dungeons.flatMap((dungeon) => dungeon.bosses.filter((boss) => !boss.items).map((boss) => `${dungeon.instanceId}:${boss.name}`)).sort();
+  // (Original dungeons: WoW Forever's have no Classic item facts; their
+  // listed drops are gaps, tested in dungeonForever.test.js.)
+  const empty = report.dungeons.filter((dungeon) => dungeon.instanceId < 2000)
+    .flatMap((dungeon) => dungeon.bosses.filter((boss) => !boss.items).map((boss) => `${dungeon.instanceId}:${boss.name}`)).sort();
   assert.deepEqual(empty, ["230:The Vault", "329:Ezra Grimm", "33:Rethilgore", "34:Bazil Thredd", "34:Dextren Ward", "34:Hamhock", "34:Targorr the Dread",
     "389:Bazzalan", "389:Oggleflint", "409:The Molten Core"], "the known gaps, and no new ones");
   for (const dungeon of report.dungeons) for (const boss of dungeon.bosses) if (!boss.items) assert.ok(boss.missing, `${boss.name} has a reason`);

@@ -36,6 +36,13 @@
    "retrievedAt": "2026-11-19T05:19:59.568Z",
    "url": "https://github.com/azerothcore/azerothcore-wotlk/tree/6ffb62abb867dabb258de6813ff5d06d6b011543/data/sql/base/db_world",
    "license": "AzerothCore world database, GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk). A WotLK (3.3.5) emulator database: vanilla content as the emulator models it."
+  },
+  {
+   "source": "openmap-forever",
+   "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+   "retrievedAt": "2026-11-16T23:56:53.000Z",
+   "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+   "license": "OpenMap, MIT (https://github.com/openmap-world/openmap/blob/main/LICENSE). Places.lua is generated from the WoW Forever client's tables: names and numbers only, no art."
   }
  ],
  "dungeons": [
@@ -76447,6 +76454,2291 @@
      "retrievedAt": "2026-11-18T08:16:15.790Z",
      "url": "https://wago.tools/db2?product=wow_classic_era",
      "note": "Spell facts from the client; category and priority derived by rule (Atlas/atlasContent.js classifySpell)"
+    }
+   ]
+  },
+  {
+   "instanceId": 2959,
+   "name": "City of Dalaran",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 28,
+   "levelMax": 35,
+   "recommendedLevel": null,
+   "zoneName": "Alterac Mountains",
+   "zoneMapId": 1416,
+   "entrance": {
+    "mapId": 1416,
+    "x": 0.085,
+    "y": 0.593
+   },
+   "entrances": [
+    {
+     "mapId": 1416,
+     "zoneName": "Alterac Mountains",
+     "x": 0.085,
+     "y": 0.593,
+     "label": "City of Dalaran (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 245999,
+     "name": "Arcane Anomaly",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 246003,
+     "name": "Fel Ancient",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 246008,
+     "name": "Mana Devourer",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Mana Elemental",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 246017,
+     "name": "Unstable Sentinel",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 246020,
+     "name": "Shade of the Archmage",
+     "order": 6000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 247032,
+     "name": "Lyn the Ignored",
+     "order": 7000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 247126,
+     "name": "Atrexis the Grave Knight",
+     "order": 8000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Mana Wraith",
+     "order": 9000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "City of Dalaran",
+    "The Underbelly"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 2970,
+   "name": "The Drowned City",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 35,
+   "levelMax": 42,
+   "recommendedLevel": null,
+   "zoneName": "Stranglethorn Vale",
+   "zoneMapId": 1434,
+   "entrance": {
+    "mapId": 1434,
+    "x": 0.213,
+    "y": 0.278
+   },
+   "entrances": [
+    {
+     "mapId": 1434,
+     "zoneName": "Stranglethorn Vale",
+     "x": 0.213,
+     "y": 0.278,
+     "label": "The Drowned City (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 258905,
+     "name": "Zul'Alai",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 258924,
+     "name": "Var'Taka",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 260042,
+     "name": "Captain Dreadrise",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Deathless Guardians",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 263886,
+     "name": "Primeval Elemental",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 260243,
+     "name": "Min'loth the Serpent",
+     "order": 6000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "The Drowned City"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 2974,
+   "name": "Blackmaw Hold",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 55,
+   "levelMax": 60,
+   "recommendedLevel": null,
+   "zoneName": "Azshara",
+   "zoneMapId": 1447,
+   "entrance": {
+    "mapId": 1447,
+    "x": 0.386,
+    "y": 0.332
+   },
+   "entrances": [
+    {
+     "mapId": 1447,
+     "zoneName": "Azshara",
+     "x": 0.386,
+     "y": 0.332,
+     "label": "Blackmaw Hold (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Withermaw",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Impaan the Imprisoner",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Elder Shaman Bloodmane",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Bonesnout the Unbroken",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Varrox Bleakhoof",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Blackmaw Behemoth",
+     "order": 6000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Unbound Spirit",
+     "order": 7000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Blackmaw Grove",
+    "Festering Grotto",
+    "Fallen Grove",
+    "Burrow",
+    "Elders' Cavern",
+    "Forbidden Magic"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "none",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    }
+   ]
+  },
+  {
+   "instanceId": 2994,
+   "name": "Alcaz Prison",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 48,
+   "levelMax": 55,
+   "recommendedLevel": null,
+   "zoneName": "Dustwallow Marsh",
+   "zoneMapId": 1445,
+   "entrance": {
+    "mapId": 1445,
+    "x": 0.753,
+    "y": 0.141
+   },
+   "entrances": [
+    {
+     "mapId": 1445,
+     "zoneName": "Dustwallow Marsh",
+     "x": 0.753,
+     "y": 0.141,
+     "label": "Alcaz Prison (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 255391,
+     "name": "Overseer Wrex",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 255997,
+     "name": "Tidemistress Ca'zass",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 257016,
+     "name": "Katerina the Cleaner",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 256236,
+     "name": "The Questioner",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 255707,
+     "name": "Blazeroar",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Alcaz Prison"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "complete",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 2998,
+   "name": "Excavation Site: Wetlands",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 26,
+   "levelMax": 33,
+   "recommendedLevel": null,
+   "zoneName": "Wetlands",
+   "zoneMapId": 1437,
+   "entrance": {
+    "mapId": 1437,
+    "x": 0.478,
+    "y": 0.562
+   },
+   "entrances": [
+    {
+     "mapId": 1437,
+     "zoneName": "Wetlands",
+     "x": 0.478,
+     "y": 0.562,
+     "label": "Excavation Site: Wetlands (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": 3480,
+     "npcId": 260322,
+     "name": "Saltspine",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      },
+      {
+       "source": "guildweaver-observed",
+       "revision": null,
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": null,
+       "url": null,
+       "note": "Encounter IDs a Guildweaver player's client reported (ENCOUNTER_END, Details! encounter records, 2026-11-13)"
+      }
+     ]
+    },
+    {
+     "encounterId": 3481,
+     "npcId": 260325,
+     "name": "Shadetooth",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      },
+      {
+       "source": "guildweaver-observed",
+       "revision": null,
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": null,
+       "url": null,
+       "note": "Encounter IDs a Guildweaver player's client reported (ENCOUNTER_END, Details! encounter records, 2026-11-13)"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 260808,
+     "name": "Highland Horror",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 260326,
+     "name": "Relic Guardian",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Excavation Site: Wetlands"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "partial-observed",
+    "npcIds": "complete",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 2999,
+   "name": "Ruins of Lordaeron",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 15,
+   "levelMax": 22,
+   "recommendedLevel": null,
+   "zoneName": "Undercity",
+   "zoneMapId": 1458,
+   "entrance": {
+    "mapId": 1458,
+    "x": 0.725,
+    "y": 0.114
+   },
+   "entrances": [
+    {
+     "mapId": 1458,
+     "zoneName": "Undercity",
+     "x": 0.725,
+     "y": 0.114,
+     "label": "Ruins of Lordaeron (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 250483,
+     "name": "Witherfang",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 250631,
+     "name": "The Abandoned",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "The Butcher",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 250657,
+     "name": "Rath'mael",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Lordaeron Captain",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 256035,
+     "name": "Viktor the Vile",
+     "order": 6000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 256097,
+     "name": "Bjork",
+     "order": 7000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Ruins of Lordaeron"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 3001,
+   "name": "Shaper's Terrace",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 58,
+   "levelMax": 60,
+   "recommendedLevel": null,
+   "zoneName": "Un'Goro Crater",
+   "zoneMapId": 1449,
+   "entrance": {
+    "mapId": 1449,
+    "x": 0.481,
+    "y": 0.061
+   },
+   "entrances": [
+    {
+     "mapId": 1449,
+     "zoneName": "Un'Goro Crater",
+     "x": 0.481,
+     "y": 0.061,
+     "label": "Shaper's Terrace (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Titanosaur",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Ravasaur Hunters",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 76389,
+     "name": "Thunderhoof",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Venomridge",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Direhorn Matriarch",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Cinder",
+     "order": 6000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "King Op",
+     "order": 7000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 262297,
+     "name": "Snowtalon",
+     "order": 8000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Bolt",
+     "order": 9000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 272561,
+     "name": "Vitrix",
+     "order": 10000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Nanaya",
+     "order": 11000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Shaper's Terrace"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 3039,
+   "name": "Krol'dok Stronghold",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 40,
+   "levelMax": 47,
+   "recommendedLevel": null,
+   "zoneName": null,
+   "zoneMapId": 2548,
+   "entrance": {
+    "mapId": 2548,
+    "x": 0.375,
+    "y": 0.373
+   },
+   "entrances": [
+    {
+     "mapId": 2548,
+     "zoneName": null,
+     "x": 0.375,
+     "y": 0.373,
+     "label": "Krol'dok Stronghold (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 258966,
+     "name": "Slavecrusher Grox",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 258972,
+     "name": "Twilight Commander Zarmok",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Handler Ashka",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 258964,
+     "name": "Nar'gurk",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Overseer Mugg",
+     "order": 5000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "Krol'dok Stronghold"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+    }
+   ]
+  },
+  {
+   "instanceId": 3065,
+   "name": "The Hall of Thanes",
+   "kind": "dungeon",
+   "maxPlayers": 5,
+   "description": null,
+   "levelMin": 13,
+   "levelMax": 20,
+   "recommendedLevel": null,
+   "zoneName": "Ironforge",
+   "zoneMapId": 1455,
+   "entrance": {
+    "mapId": 1455,
+    "x": 0.277,
+    "y": 0.479
+   },
+   "entrances": [
+    {
+     "mapId": 1455,
+     "zoneName": "Ironforge",
+     "x": 0.277,
+     "y": 0.479,
+     "label": "The Hall of Thanes (Entrance)",
+     "areaTriggerId": null
+    }
+   ],
+   "artworkUrl": null,
+   "maps": [],
+   "bosses": [
+    {
+     "encounterId": null,
+     "npcId": 261306,
+     "name": "Faldrim Anvilmar",
+     "order": 1000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": null,
+     "name": "Infurnus",
+     "order": 2000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 261311,
+     "name": "Plunder",
+     "order": 3000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    },
+    {
+     "encounterId": null,
+     "npcId": 261319,
+     "name": "Durgen Dirgehammer",
+     "order": 4000,
+     "portraitUrl": null,
+     "floorId": null,
+     "mapPosition": null,
+     "abilities": [],
+     "loot": [],
+     "strategy": null,
+     "provenance": [
+      {
+       "source": "openmap-forever",
+       "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+       "confidence": "high",
+       "tier": "forever-reference",
+       "retrievedAt": "2026-11-16T23:56:53.000Z",
+       "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+       "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+      },
+      {
+       "source": "dungeon-planner",
+       "revision": "377442628b547659090afe561aa41c7444ba39b2",
+       "confidence": "low",
+       "tier": "community-unverified",
+       "retrievedAt": "2026-11-17T15:20:39.000Z",
+       "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+       "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
+      }
+     ]
+    }
+   ],
+   "creatures": [],
+   "rares": [],
+   "rareCount": null,
+   "quests": [],
+   "origin": "forever",
+   "floorNames": [
+    "The Hall of Thanes"
+   ],
+   "coverage": {
+    "identity": "client",
+    "bosses": "client-names",
+    "encounterIds": "none",
+    "npcIds": "partial",
+    "maps": "none",
+    "abilities": "none",
+    "rares": "unknown",
+    "trash": "unknown"
+   },
+   "provenance": [
+    {
+     "source": "openmap-forever",
+     "revision": "0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef (client build 1.60.1.70888)",
+     "confidence": "high",
+     "tier": "forever-reference",
+     "retrievedAt": "2026-11-16T23:56:53.000Z",
+     "url": "https://github.com/openmap-world/openmap/blob/0f4d2e4b6fe82b9032618fd3b824eaaa5b36dcef/OpenMap/Data/Forever/Places.lua",
+     "note": "The Forever client's tables (OpenMap Places.lua): instance map ID, name, Group Finder level band, entrance, encounter names in order"
+    },
+    {
+     "source": "dungeon-planner",
+     "revision": "377442628b547659090afe561aa41c7444ba39b2",
+     "confidence": "low",
+     "tier": "community-unverified",
+     "retrievedAt": "2026-11-17T15:20:39.000Z",
+     "url": "https://github.com/xdk78/DungeonPlanner/tree/377442628b547659090afe561aa41c7444ba39b2/data-src/bosses",
+     "note": "DungeonPlanner: NPC IDs and floor names from Forever web guides"
     }
    ]
   }

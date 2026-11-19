@@ -98,7 +98,8 @@ test("the checked-in atlas is current, sourced and fabrication-free", () => {
   assert.deepEqual(atlasProblems(atlas), []);
   const read = (name) => JSON.parse(readFileSync(new URL(`../src/Atlas/data/sources/${name}`, import.meta.url), "utf8"));
   const regenerated = normalize({ wago: read("wago-classic-era.json"), azerothcore: read("azerothcore.json"), creatures: read("azerothcore-creatures.json"),
-    spells: read("wago-classic-era-spells.json"), loot: read("azerothcore-loot.json"), items: read("wago-classic-era-items.json"), generatedAt: atlas.generatedAt });
+    spells: read("wago-classic-era-spells.json"), loot: read("azerothcore-loot.json"), items: read("wago-classic-era-items.json"),
+    forever: read("forever-instances.json"), planner: read("dungeonplanner-loot.json"), generatedAt: atlas.generatedAt });
   assert.deepEqual(regenerated, atlas, "run node scripts/importDungeonAtlas.mjs");
   assert.ok(atlas.dungeons.length >= 20);
   for (const dungeon of atlas.dungeons) {
@@ -134,7 +135,7 @@ test("dungeon list and detail carry atlas and keep every catalog field", () => w
   for (const key of ["instanceId", "name", "type", "journalInstanceId", "firstSeenAt", "lastSeenAt", "itemCount", "sourceCount", "lastEvidenceAt"]) {
     assert.ok(key in deadmines, `list keeps ${key}`);
   }
-  assert.deepEqual(Object.keys(deadmines.atlas).sort(), ["artworkUrl", "bossCount", "dungeonKey", "entrance", "kind", "levelMax", "levelMin", "lootSlots", "questCount",
+  assert.deepEqual(Object.keys(deadmines.atlas).sort(), ["artworkUrl", "bossCount", "dungeonKey", "entrance", "kind", "levelMax", "levelMin", "lootSlots", "origin", "questCount",
     "rareCount", "recommendedLevel", "referenceItemIds", "referenceLootCount", "referenceSlots", "zoneMapId", "zoneName"]);
   assert.deepEqual(deadmines.atlas.lootSlots, ["One-Hand"], "the catalog's own slot names");
   assert.equal(deadmines.atlas.entrance.mapId, 1436, "zone uiMapID");

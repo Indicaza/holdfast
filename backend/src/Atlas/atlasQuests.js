@@ -14,8 +14,11 @@
 //   repeatable    repeatable (AzerothCore's SpecialFlags), shown apart
 //   zone          only the dungeon's zone (QuestSortID) ties it here:
 //                 hidden unless asked for
-//   unknown       DungeonPlanner lists it, but no quest record exists to
-//                 say anything else
+//   unknown       DungeonPlanner lists it for an original dungeon, but no
+//                 quest record exists to say anything else
+// WoW Forever's own dungeons have no Classic quest records: the quests
+// DungeonPlanner lists for them are "dungeon" quests with
+// prerequisitesKnown: false (their chains are not known).
 // Nothing is inferred: a prerequisite is AzerothCore's PrevQuestID only, a
 // faction its AllowableRaces only, a class its AllowableClasses only.
 
@@ -110,6 +113,7 @@ export function buildQuestCatalog({ atlas, quests: source, planner = null, areaT
       classes: row ? classRule(row.classes) : null,
       repeatable: repeatable(row),
       prerequisites: prerequisitesOf(row),
+      prerequisitesKnown: Boolean(row),
       exclusiveGroup: row?.group || null,
       breadcrumbFor: row?.breadcrumbFor || null,
       // A reputation the quest asks for: the readiness model cannot check it.
@@ -137,7 +141,8 @@ export function buildQuestCatalog({ atlas, quests: source, planner = null, areaT
       const final = relevance !== "zone" && relevance !== "unknown" && repeatable(row) ? "repeatable" : relevance;
       picked.set(questId, questOf(questId, final, { instanceId: id, wingKeys, evidence: row?.evidence || [], plannerRow: listed.get(questId) || null, ...extra }));
     };
-    for (const questId of [...listed.keys()].sort((a, b) => a - b)) pick(questId, rows.has(questId) ? "dungeon" : "unknown");
+    const forever = dungeon.origin === "forever";
+    for (const questId of [...listed.keys()].sort((a, b) => a - b)) pick(questId, rows.has(questId) || forever ? "dungeon" : "unknown");
     for (const row of rows.values()) if (row.evidence.some(([instanceId]) => instanceId === id)) pick(row.id, "optional");
     // Prerequisites of what is shown, to the start of each chain; breadcrumbs
     // that lead to it.
@@ -155,6 +160,8 @@ export function buildQuestCatalog({ atlas, quests: source, planner = null, areaT
     for (const row of rows.values()) if (areaToInstance.get(row.sort) === id) pick(row.id, "zone");
     const list = [...picked.values()].sort((a, b) => QUEST_RELEVANCE.indexOf(a.relevance) - QUEST_RELEVANCE.indexOf(b.relevance)
       || (a.minLevel ?? 0) - (b.minLevel ?? 0) || a.questId - b.questId);
+    // curated: a dungeon quest list exists; without one, an empty list does
+    // not mean the dungeon has no quests.
     dungeons.push({ instanceId: id, name: dungeon.name, curated: listed.size > 0, quests: list });
   }
   return {
