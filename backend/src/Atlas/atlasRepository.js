@@ -4,9 +4,11 @@
 // here calls another service.
 
 import { normalizedName, wishlistItemKey } from "../Loot/lootModel.js";
-import { loadAtlas } from "./atlasData.js";
+import { loadAtlas, loadQuestCatalog } from "./atlasData.js";
 import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
 import { isWingKey, parentKeyFor, unassignedOf, wingsOf } from "./atlasWings.js";
+import { DEFAULT_RELEVANCE } from "./atlasQuests.js";
+import { evaluateReadiness, readCharacterState } from "./atlasReadiness.js";
 
 export { loadAtlas };
 
@@ -285,4 +287,50 @@ export function withAtlasDetail(detail, instanceId, revision = 0) {
     evidence: { note: "Nobody has reported loot from this dungeon yet. The atlas facts come from the sources listed in its provenance." },
     atlas: atlasDetail(dungeon.instanceId, []),
   };
+}
+
+// ------------------------------------------------------------ Quests
+
+// A dungeon's (or wing's) quest catalog for the API: the quests shown by
+// default (every relevance but "zone"), or all with include "all". A wing
+// leaves out quests attributed to a sibling wing. Rewards are served as
+// ReferenceItems (unknown ids left out). Null when the id names no dungeon.
+export function atlasQuests(id, { include = "" } = {}) {
+  const target = resolveDungeonId(id);
+  if (!target) return null;
+  const dungeon = atlasDungeon(target.instanceId);
+  const entry = loadQuestCatalog().byId.get(target.instanceId);
+  if (!dungeon || !entry) return null;
+  const all = include === "all";
+  const quests = entry.quests
+    .filter((quest) => (all || DEFAULT_RELEVANCE.includes(quest.relevance)) && (!target.wingKey || !quest.wing || quest.wing === target.wingKey))
+    .map((quest) => ({ ...quest, rewards: quest.rewards.map((reward) => {
+      const item = referenceItem(reward.itemId);
+      return item && { ...item, choice: reward.choice };
+    }).filter(Boolean), verifiedForForever: false }));
+  const wing = target.wingKey ? wingsOf(dungeon).find((candidate) => candidate.dungeonKey === target.wingKey) : null;
+  const { catalog } = loadQuestCatalog();
+  return {
+    schemaVersion: catalog.schemaVersion,
+    dungeon: { instanceId: dungeon.instanceId, dungeonKey: wing?.dungeonKey || parentKeyFor(dungeon), name: wing?.name || dungeon.name,
+      wing: wing ? wing.wing : null },
+    curated: entry.curated,
+    relevance: catalog.relevance,
+    included: all ? "all" : "default",
+    hiddenZoneQuests: all ? 0 : entry.quests.filter((quest) => quest.relevance === "zone").length,
+    quests,
+    sources: catalog.sources,
+  };
+}
+
+// Readiness of a character (the state it is given) for a dungeon or wing.
+// { status: "ok", result } | { status: "invalid", problems } | null.
+export function atlasReadiness(id, rawState) {
+  const target = resolveDungeonId(id);
+  const entry = target && loadQuestCatalog().byId.get(target.instanceId);
+  if (!entry) return null;
+  const { state, problems } = readCharacterState(rawState);
+  if (!state) return { status: "invalid", problems };
+  return { status: "ok", result: { dungeon: { instanceId: target.instanceId, dungeonKey: target.wingKey || parentKeyFor(atlasDungeon(target.instanceId)) },
+    ...evaluateReadiness(entry.quests, state, { wingKey: target.wingKey }) } };
 }

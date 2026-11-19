@@ -18,6 +18,18 @@ export function loadAtlas() {
   return atlasCache;
 }
 
+const QUESTS_URL = new URL("./data/quest-catalog.json", import.meta.url);
+let questCache = null;
+
+// The dungeon quest catalog (data/quest-catalog.json), by instance ID.
+export function loadQuestCatalog() {
+  if (!questCache) {
+    const catalog = JSON.parse(readFileSync(QUESTS_URL, "utf8"));
+    questCache = { catalog, byId: new Map(catalog.dungeons.map((dungeon) => [dungeon.instanceId, dungeon])) };
+  }
+  return questCache;
+}
+
 export function loadReferenceData() {
   if (!referenceCache) referenceCache = JSON.parse(readFileSync(REFERENCE_URL, "utf8"));
   return referenceCache;

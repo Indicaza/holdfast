@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 
 import { extractCreatureContent, extractSpellContent } from "../src/Atlas/atlasContent.js";
 import { extractItemFacts, extractQuestDetails, extractReferenceLoot, worldDropItems } from "../src/Atlas/atlasLoot.js";
+import { extractQuestSources } from "../src/Atlas/atlasQuestSources.js";
 import { VANILLA_INSTANCE_IDS, parseCsv, parseScriptSpells, parseSqlInserts } from "../src/Atlas/atlasSources.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -40,6 +41,7 @@ const fromArg = process.argv.indexOf("--from");
 const FROM = fromArg > 0 ? process.argv[fromArg + 1] : null;
 const CONTENT_ONLY = process.argv.includes("--content-only");
 const LOOT_ONLY = process.argv.includes("--loot-only");
+const QUESTS_ONLY = process.argv.includes("--quests-only");
 const AC_RAW = `https://raw.githubusercontent.com/azerothcore/azerothcore-wotlk/${AC_REF}/`;
 const AC_LICENSE = "AzerothCore world database, GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk). A WotLK (3.3.5) emulator database: vanilla content as the emulator models it.";
 const WAGO_LICENSE = "Factual game data extracted from the World of Warcraft Classic Era client (Blizzard Entertainment). Names and numbers only; no art.";
@@ -169,7 +171,30 @@ async function loot() {
     + `${quests.quest_details.length} quest details, ${quests.quest_giver_spawns.length} giver spawns.`);
 }
 
+// The dungeon quest catalog's source (see Atlas/atlasQuestSources.js): every
+// quest a dungeon's evidence, zone or DungeonPlanner list names, with its
+// chain. Reads the wago extract (dungeon areas) and DungeonPlanner's extract.
+async function questSources() {
+  const wagoExtract = JSON.parse(readFileSync(join(outDir, "wago-classic-era.json"), "utf8"));
+  const areaToInstance = new Map(wagoExtract.tables.AreaTable.map((row) => [Number(row.ID), Number(row.ContinentID)]));
+  const plannerPath = join(outDir, "dungeonplanner-loot.json");
+  const plannerQuestIds = existsSync(plannerPath) ? (JSON.parse(readFileSync(plannerPath, "utf8")).tables.quests || []).map((row) => row[2]) : [];
+  const sql = (name) => text(`${AC_BASE}${name}.sql`).then((body) => parseSqlInserts(body, name));
+  const [questRows, addonRows, starterRows, objectStarterRows, templateRows, spawnRows, objectRows, objectTemplateRows, lootRows, objectLootRows] = await Promise.all(
+    ["quest_template", "quest_template_addon", "creature_queststarter", "gameobject_queststarter", "creature_template", "creature", "gameobject",
+      "gameobject_template", "creature_loot_template", "gameobject_loot_template"].map(sql));
+  const tables = extractQuestSources({ questRows, addonRows, starterRows, objectStarterRows, templateRows, spawnRows, objectRows, objectTemplateRows,
+    lootRows, objectLootRows, areaToInstance, plannerQuestIds });
+  writeFileSync(join(outDir, "azerothcore-quests.json"), rowsJson({ source: "azerothcore", url: `https://github.com/azerothcore/azerothcore-wotlk/tree/${AC_REF}/data/sql/base/db_world`,
+    revision: AC_REF, retrievedAt, license: AC_LICENSE, tables }));
+  console.log(`Wrote quest sources: ${tables.quests.length} quests, ${tables.givers.length} givers.`);
+}
+
 mkdirSync(outDir, { recursive: true });
+if (QUESTS_ONLY) {
+  await questSources();
+  process.exit(0);
+}
 if (LOOT_ONLY) {
   await loot();
   process.exit(0);

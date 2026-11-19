@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
+import { atlasQuests, atlasReadiness, resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
@@ -98,6 +98,22 @@ export function createPlayerLootRouter() {
       return target.wingKey ? withAtlasWingDetail(detail, target.wingKey, revision) : withAtlasDetail(detail, target.instanceId, revision);
     });
   }));
+  // A dungeon's quest catalog (?include=all adds the zone-only quests), and a
+  // character's readiness for it from the quest state the caller sends
+  // (docs/dungeon-quest-readiness.md). Nothing is stored.
+  router.get("/loot/dungeons/:instanceId/quests", read("dungeon_quests", (req) =>
+    atlasQuests(req.params.instanceId, { include: String(req.query?.include || "") })));
+  router.post("/loot/dungeons/:instanceId/readiness", (req, res) => {
+    try {
+      const outcome = atlasReadiness(req.params.instanceId, req.body?.state);
+      if (!outcome) { res.status(404).json({ error: "dungeon_quests_not_found" }); return; }
+      if (outcome.status === "invalid") { res.status(400).json({ error: "invalid_quest_state", problems: outcome.problems }); return; }
+      res.json(outcome.result);
+    } catch (error) {
+      console.error("Unable to evaluate dungeon readiness", error);
+      res.status(500).json({ error: "dungeon_readiness_failed" });
+    }
+  });
   router.get("/loot/items", read("loot_items", (req) => withGuildDatabase((db) =>
     searchLootItemsInDatabase(db, { q: String(req.query?.q ?? "").slice(0, 80), wishlisted: wishlisted(db, req) }))));
   router.get("/loot/changes", read("loot_changes", (req) => readLootChanges({ limit: req.query?.limit })));

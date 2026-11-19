@@ -120,7 +120,7 @@ export function adaptWagoClassicEra(extract, { teleports = new Map(), zoneOf = n
   return out;
 }
 
-function zoneRegions(tables) {
+export function zoneRegions(tables) {
   const names = new Map((tables.UiMap || []).filter((row) => row.Type === "3").map((row) => [int(row.ID), text(row.Name_lang)]));
   return (tables.UiMapAssignment || []).filter((row) => names.has(int(row.UiMapID))).map((row) => ({
     mapId: int(row.UiMapID), name: names.get(int(row.UiMapID)), continentId: int(row.MapID),
