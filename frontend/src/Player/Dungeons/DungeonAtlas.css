@@ -376,3 +376,27 @@
   .gw-atlas-card__link { transition: none; }
   .gw-atlas-card__link:hover { transform: none; }
 }
+
+/* Quest readiness for the selected character (sprint step 4B). */
+.gw-atlas-qstate { gap: 0.25rem; white-space: nowrap; }
+.gw-atlas-qstate--ok { border-color: color-mix(in srgb, var(--gw-ok) 35%, transparent); background: color-mix(in srgb, var(--gw-ok) 8%, transparent); color: var(--gw-ok); }
+.gw-atlas-qstate--info { border-color: color-mix(in srgb, var(--gw-info) 35%, transparent); background: color-mix(in srgb, var(--gw-info) 8%, transparent); color: var(--gw-info); }
+.gw-atlas-qstate--warn { border-color: color-mix(in srgb, var(--gw-warn) 40%, transparent); background: color-mix(in srgb, var(--gw-warn) 10%, transparent); color: var(--gw-warn); }
+.gw-atlas-qstate--bad { border-color: color-mix(in srgb, var(--gw-bad) 35%, transparent); background: color-mix(in srgb, var(--gw-bad) 8%, transparent); color: var(--gw-bad); }
+.gw-atlas-qstate--quiet { color: var(--gw-faint); border-color: var(--gw-line); }
+
+.gw-atlas-forme .gw-atlas-readiness { flex-basis: 100%; }
+.gw-atlas-readiness { display: grid; gap: 0.2rem; font-size: 13px; }
+.gw-atlas-readiness__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem; }
+.gw-atlas-readiness__open { margin-left: auto; }
+.gw-atlas-readiness__fresh { margin: 0; font-size: 12px; }
+
+.gw-atlas-rgroups { display: grid; gap: 0.6rem; margin-bottom: 0.8rem; }
+.gw-atlas-rgroup > summary { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.gw-atlas-rgroup > summary h4 { margin: 0; font-size: 13px; }
+.gw-atlas-rlist { margin-top: 0.35rem; }
+.gw-atlas-rquest { display: grid; gap: 0.15rem; padding: 0.4rem 0; border-bottom: 1px solid var(--gw-line); font-size: 13px; }
+.gw-atlas-rquest__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; }
+.gw-atlas-rquest__where, .gw-atlas-rquest__chain, .gw-atlas-rquest__why { margin: 0; font-size: 12px; }
+.gw-atlas-rquest__step--missing { color: var(--gw-bad); }
+.gw-atlas-rquest__step--done { color: var(--gw-ok); }

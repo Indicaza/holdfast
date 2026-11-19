@@ -13,6 +13,7 @@ import { statsTelemetryHandler } from "./handlers/stats.js";
 import { talentsTelemetryHandler } from "./handlers/talents.js";
 import { lootRollTelemetryHandler } from "./handlers/lootRoll.js";
 import { lootCatalogSnapshotTelemetryHandler } from "./handlers/lootCatalogSnapshot.js";
+import { questStateTelemetryHandler } from "./handlers/questState.js";
 
 const handlers = new Map(
   [
@@ -31,6 +32,7 @@ const handlers = new Map(
     gameItemDefinitionTelemetryHandler,
     lootRollTelemetryHandler,
     lootCatalogSnapshotTelemetryHandler,
+    questStateTelemetryHandler,
   ].map((handler) => [handler.eventType, handler]),
 );
 

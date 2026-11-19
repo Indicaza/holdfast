@@ -21,6 +21,7 @@ import {
   normalizeAtlas,
   provenanceCopy,
   quickGuide,
+  readinessModel,
   trapFocusIndex,
   wishlistTargets,
   wishlistToggleRequest,
@@ -28,9 +29,9 @@ import {
   worldMapHref,
 } from './atlasModel.js'
 import { LootList, UnverifiedBadge } from './AtlasLoot.jsx'
-import { PrepareView, QuestList, QuickGuide, RoleSelect, Runs } from './AtlasPrepare.jsx'
+import { PrepareView, QuestList, QuestReadiness, QuickGuide, ReadinessSummary, RoleSelect, Runs } from './AtlasPrepare.jsx'
 import PlanMyGear from './PlanMyGear.jsx'
-import { useDungeonDetail, useWishlist, useWishlistMutation } from './useAtlasData.js'
+import { useDungeonDetail, useDungeonReadiness, useWishlist, useWishlistMutation } from './useAtlasData.js'
 import './DungeonAtlas.css'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
@@ -196,7 +197,7 @@ function Facts({ entry, atlas, character }) {
 }
 
 // The selected character's short answer: what is in it for them here.
-function ForCharacter({ character, gearCount, wishCount, onPrepare }) {
+function ForCharacter({ character, gearCount, wishCount, onPrepare, readiness = null, onQuests = null }) {
   if (!character) return null
   const parts = [
     gearCount !== null ? `${gearCount} item${gearCount === 1 ? '' : 's'} ${character.name} can use` : null,
@@ -206,6 +207,7 @@ function ForCharacter({ character, gearCount, wishCount, onPrepare }) {
     <div className="gw-atlas-forme">
       <span>{parts.length ? parts.join(' · ') : `Nothing known here for ${character.name} yet.`}</span>
       <button type="button" className="gw-btn gw-btn--sm" onClick={onPrepare}>Prepare for this run</button>
+      {readiness ? <ReadinessSummary model={readiness} character={character} onOpen={onQuests} /> : null}
     </div>
   )
 }
@@ -480,6 +482,10 @@ export default function DungeonDetailModal({
   const openBoss = (target) => onNavigate({ section: 'bosses', boss: bossKey(target) })
   const onSource = (row) => (row.bossKey ? onNavigate({ section: 'bosses', boss: row.bossKey }) : row.sourceKind === 'quest' ? onNavigate({ section: 'quests', boss: '' }) : null)
   const lootProps = { wishes, character, busyKey: busy, onToggle: toggle, onSource }
+  // The character's quest readiness (instanceId is a dungeon or a wing key).
+  const readiness = useDungeonReadiness(character ? instanceId : '', character?.id || '')
+  const readinessSummary = useMemo(() => readinessModel(readiness.data), [readiness.data])
+  const openQuests = () => onNavigate({ section: 'quests', boss: '' })
 
   return (
     <div className="gw-atlas-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -526,18 +532,26 @@ export default function DungeonDetailModal({
             <>
               {section === 'overview' ? (
                 <Overview entry={merged} atlas={atlas} character={character} onBoss={openBoss}
-                  forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} onPrepare={() => onNavigate({ section: 'prepare', boss: '' })} />} />
+                  forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} onPrepare={() => onNavigate({ section: 'prepare', boss: '' })}
+                    readiness={readinessSummary} onQuests={openQuests} />} />
               ) : null}
               {section === 'prepare' ? (
                 <PrepareView entry={merged} atlas={atlas} detail={detail.data} character={character} server={server} role={role} onRole={setRole}
-                  wishes={wishes} lootProps={lootProps} onBoss={openBoss} onPlan={character ? () => setPlanning(true) : null} />
+                  wishes={wishes} lootProps={lootProps} onBoss={openBoss} onPlan={character ? () => setPlanning(true) : null}
+                  readiness={character ? readiness : null} onQuests={openQuests} />
               ) : null}
               {section === 'bosses' ? <Bosses atlas={atlas} detail={detail.data} boss={boss} onBoss={openBoss} role={role} onRole={setRole} character={character} lootProps={lootProps} /> : null}
               {section === 'loot' ? <Loot items={items} character={character} atlas={atlas} lootProps={lootProps} /> : null}
               {section === 'quests' ? (
                 <div className="gw-atlas-section">
+                  {character ? <QuestReadiness resource={readiness} character={character} /> : null}
                   {atlas.wing && atlas.quests.length ? <p className="gw-muted">These are the whole dungeon's quests: no source ties a quest to one wing.</p> : null}
-                  <QuestList quests={atlas.quests} rewardProps={lootProps} />
+                  {character && readinessSummary ? (
+                    <details className="gw-atlas-rgroup" data-group="details">
+                      <summary><h4>Quest details and rewards</h4><span className="gw-tag gw-tag--quiet">{atlas.quests.length}</span></summary>
+                      <QuestList quests={atlas.quests} rewardProps={lootProps} />
+                    </details>
+                  ) : <QuestList quests={atlas.quests} rewardProps={lootProps} />}
                 </div>
               ) : null}
               {section === 'runs' ? <Runs entry={merged} character={character} server={server} /> : null}

@@ -1,6 +1,7 @@
 import { Router } from "express";
 
-import { atlasQuests, atlasReadiness, resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
+import { atlasCharacterReadiness, atlasQuests, atlasReadiness, resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
+import { readCharacterQuestStateInDatabase } from "../Character/characterQuestStateRepository.js";
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
 import { withGuildDatabase } from "../Data/database.js";
 import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
@@ -9,7 +10,7 @@ import { readLootBridgeSnapshot } from "./lootBridge.js";
 import { lootCatalogRevisionInDatabase, lootSlotsByInstanceInDatabase, readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
 import { importWishlist } from "./wishlistImport.js";
 import { readPlanningPrompt } from "./wishlistPrompt.js";
-import { deleteWishlistItem, ownedCharacterInDatabase, patchWishlistItem, putWishlistItem, readWishlist, readWishlistSummary, wishlistItemKeysInDatabase } from "./wishlistRepository.js";
+import { deleteWishlistItem, ownedCharacterInDatabase, patchWishlistItem, rawCharacterIdsInDatabase, putWishlistItem, readWishlist, readWishlistSummary, wishlistItemKeysInDatabase } from "./wishlistRepository.js";
 
 const WRITE_CODES = { invalid: 400, "not-found": 404, full: 409, "unknown-item": 422 };
 
@@ -103,6 +104,18 @@ export function createPlayerLootRouter() {
   // (docs/dungeon-quest-readiness.md). Nothing is stored.
   router.get("/loot/dungeons/:instanceId/quests", read("dungeon_quests", (req) =>
     atlasQuests(req.params.instanceId, { include: String(req.query?.include || "") })));
+  // The selected character's readiness, from the quest state the add-on
+  // last synced for it (?character=, one of the caller's own characters;
+  // anyone else's answers 404 like a missing one). `character` says when
+  // that state was captured, or is null when none was synced.
+  router.get("/loot/dungeons/:instanceId/readiness", read("dungeon_readiness", (req) => withGuildDatabase((db) => {
+    const character = req.query?.character ? ownedCharacterInDatabase(db, owner(req), req.query.character) : null;
+    if (!character) return null;
+    const stored = readCharacterQuestStateInDatabase(db, { memberId: owner(req), characterId: character.id,
+      rawCharacterIds: rawCharacterIdsInDatabase(db, owner(req), character.id) });
+    const result = atlasCharacterReadiness(req.params.instanceId, stored);
+    return result && { ...result, characterId: character.id };
+  })));
   router.post("/loot/dungeons/:instanceId/readiness", (req, res) => {
     try {
       const outcome = atlasReadiness(req.params.instanceId, req.body?.state);

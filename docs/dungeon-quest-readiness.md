@@ -216,6 +216,54 @@ payload (schemaVersion 1) {
 - `questLog.entries` lists the quest log's quests. `coverage: full` only after
   a complete scan, never while the log is still loading.
 - The server turns a stored payload into the character state above
-  (`questLog.questIds` = the entries' ids) and calls the readiness model. No
-  ingest exists yet; until it does, the website can post a state to
-  `/readiness`.
+  (`questLog.questIds` = the entries' ids) and calls the readiness model.
+
+### Ingest (sprint step 4B)
+
+`Character/Telemetry/handlers/questState.js` validates and canonicalizes
+the payload; the generic transport does the rest (idempotency, stream
+revisions, raw history capped at 20 per stream, latest state, all in one
+transaction). The handler refuses:
+- a payload with any field the contract does not name (so no titles or other
+  text are ever stored), a bad coverage, non-integer ids, more than 20,000
+  completed ids or 100 log entries;
+- `completed.coverage: "none"` with ids, `"full"` with `checkedQuestIds`, and
+  `"checked"` without them or with a yes it did not ask;
+- `questLog.coverage: "none"` with entries (a log that could not be read is
+  `none`, never an empty full list);
+- a `kind` other than `state`, and a `streamKey` other than
+  `quest_state:<envelope characterId>` (a stream cannot carry another
+  character).
+
+The canonical payload sorts and deduplicates ids, and `isComplete` is
+`true`, `false` or `null`. The latest state is kept per account, character
+and event type, and an older capture that arrives later never replaces a newer
+one. A quest state adds nothing to the public armory.
+
+`Character/characterQuestStateRepository.js` reads it back for the owning
+account only: the newest report among the character's add-on ids (one per
+installation).
+
+### `GET /api/player/loot/dungeons/:id/readiness?character=<id>`
+
+- `:id` is an instance ID, a dungeon key or a wing key; `character` must be
+  one of the caller's own characters (anyone else's answers 404).
+- It returns the same groups as the POST, each entry adding `level`,
+  `minLevel`, `faction`, `repeatable`, `giver` (`{ kind, id, name, location }`),
+  `startsFromItem`, `prerequisitesKnown`, `prerequisites`
+  (`[{ questId, name, mustBeActive, status }]`, status `done`, `accepted`,
+  `missing` or `unknown`), and `objectivesComplete` (from the quest log, for
+  accepted quests).
+- It also returns:
+  - `questList`: `curated`, or `unknown` when no source lists the dungeon's
+    quests (Blackmaw Hold, Shaper's Terrace, Zul'Gurub, Ahn'Qiraj Temple,
+    Onyxia's Lair). There, `none` means "no list", not "no quests".
+  - `character`: `{ capturedAt, receivedAt, completedCoverage,
+    questLogCoverage }`, or `null` when nothing was synced.
+  - `characterId`.
+- With nothing synced, every quest that depends on the character is
+  `unknown`, so readiness is `unknown` (or `none` when no dungeon quest
+  exists): never `ready`.
+- A new upload publishes the player topic, so an open page refetches it.
+  The data is only as fresh as the last SavedVariables write and bridge sync
+  (`/reload` or logging out), and the page says when it was captured.

@@ -8,7 +8,7 @@ import { loadAtlas, loadQuestCatalog, loadReferenceData } from "./atlasData.js";
 import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
 import { isWingKey, parentKeyFor, unassignedOf, wingsOf } from "./atlasWings.js";
 import { DEFAULT_RELEVANCE } from "./atlasQuests.js";
-import { evaluateReadiness, readCharacterState } from "./atlasReadiness.js";
+import { emptyCharacterState, evaluateReadiness, prerequisiteStatus, readCharacterState } from "./atlasReadiness.js";
 
 export { loadAtlas };
 
@@ -370,4 +370,51 @@ export function atlasReadiness(id, rawState) {
   if (!state) return { status: "invalid", problems };
   return { status: "ok", result: { dungeon: { instanceId: target.instanceId, dungeonKey: target.wingKey || parentKeyFor(atlasDungeon(target.instanceId)) },
     ...evaluateReadiness(entry.quests, state, { wingKey: target.wingKey }) } };
+}
+
+// A character's readiness for a dungeon or wing from the quest state the
+// add-on reported (Atlas/characterQuestState.js), with what the website
+// needs to show it: each quest's giver and where it is, its prerequisite
+// chain and where each link stands, and whether the quest's objectives are
+// done (from the quest log). `stored` is { state, questLog, capturedAt,
+// receivedAt } or null when nothing was reported: then every quest that
+// depends on the character is "unknown" and readiness is never "ready".
+// `questList`: "curated" when a source lists the dungeon's quests,
+// "unknown" when none does (an empty list there is not "no quests").
+export function atlasCharacterReadiness(id, stored) {
+  const target = resolveDungeonId(id);
+  const entry = target && loadQuestCatalog().byId.get(target.instanceId);
+  if (!entry) return null;
+  const state = stored?.state || emptyCharacterState();
+  const byId = new Map(entry.quests.map((quest) => [quest.questId, quest]));
+  const logEntries = new Map((stored?.questLog?.entries || []).map((logEntry) => [logEntry.questId, logEntry]));
+  const result = evaluateReadiness(entry.quests, state, { wingKey: target.wingKey });
+  const enrich = (row) => {
+    const quest = byId.get(row.questId) || {};
+    return {
+      ...row,
+      level: quest.level ?? null,
+      minLevel: quest.minLevel ?? null,
+      faction: quest.faction ?? null,
+      repeatable: quest.repeatable === true,
+      giver: quest.giver ? { kind: quest.giver.kind, id: quest.giver.id, name: quest.giver.name, location: quest.giver.location ?? null } : null,
+      startsFromItem: quest.startsFromItem ?? null,
+      prerequisitesKnown: quest.prerequisitesKnown !== false,
+      prerequisites: (quest.prerequisites || []).map((prerequisite) => ({ questId: prerequisite.questId, name: prerequisite.name ?? null,
+        mustBeActive: prerequisite.mustBeActive === true, status: prerequisiteStatus(prerequisite, state) })),
+      objectivesComplete: row.state === "accepted" ? (logEntries.get(row.questId)?.isComplete ?? null) : null,
+      verifiedForForever: false,
+    };
+  };
+  const groups = ["quests", "optional", "prerequisites", "repeatable", "unknownRelevance"];
+  return {
+    dungeon: { instanceId: target.instanceId, dungeonKey: target.wingKey || parentKeyFor(atlasDungeon(target.instanceId)) },
+    ...result,
+    ...Object.fromEntries(groups.map((group) => [group, result[group].map(enrich)])),
+    questList: entry.curated ? "curated" : "unknown",
+    character: stored ? {
+      capturedAt: stored.capturedAt, receivedAt: stored.receivedAt,
+      completedCoverage: state.completed.coverage, questLogCoverage: state.questLog.coverage,
+    } : null,
+  };
 }
