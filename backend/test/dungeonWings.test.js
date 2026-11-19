@@ -6,6 +6,8 @@ import { withGuildDatabase } from "../src/Data/database.js";
 import { atlasDungeon, atlasWingEntries, resolveDungeonId, withAtlasWingDetail } from "../src/Atlas/atlasRepository.js";
 import { hasWings, parentKeyFor, unassignedOf, wingDefinitions, wingForKills, wingsOf } from "../src/Atlas/atlasWings.js";
 import { referenceDungeon } from "../src/Atlas/referenceLoot.js";
+import { buildWingManifest, wingManifestText } from "../src/Atlas/atlasWingManifest.js";
+import { validDungeonRun } from "../src/Dungeon/dungeonRunModel.js";
 import { withHttpApp } from "../testSupport/httpHarness.js";
 import { ITEMS, connect, corpseLoot, post, seedItems, syncCharacter } from "../testSupport/lootHarness.js";
 
@@ -240,4 +242,25 @@ test("boss kills prove a wing only when they agree", () => {
   assert.equal(wingForKills(strat, [{ name: "Skul" }]), null);
   assert.equal(wingForKills(strat, [{ name: "Skul" }, { name: "Baron Rivendare" }]).dungeonKey, "stratholme:undead");
   assert.equal(wingForKills(atlasDungeon(36), [{ name: "Edwin VanCleef" }]), null, "no wings, no wing");
+});
+
+test("the checked-in wing manifest is generated from atlasWings.js and current", () => {
+  const checkedIn = fs.readFileSync(new URL("../src/Atlas/data/wing-manifest.json", import.meta.url), "utf8").split(String.fromCharCode(13)).join("");
+  assert.equal(checkedIn, wingManifestText(), "run node scripts/exportWingManifest.mjs");
+  const manifest = buildWingManifest();
+  assert.deepEqual(manifest.dungeons.flatMap((dungeon) => dungeon.wings.map((wing) => wing.dungeonKey)), EXPECTED_KEYS);
+  assert.equal(manifest.dungeons.length, atlasDungeon(36) ? 26 : 0, "every atlas dungeon has its key");
+  assert.equal(manifest.dungeons.find((dungeon) => dungeon.instanceId === 36).dungeonKey, "deadmines");
+  const library = manifest.dungeons.find((dungeon) => dungeon.instanceId === 189).wings.find((wing) => wing.slug === "library");
+  assert.deepEqual(library.bosses.map((boss) => [boss.encounterId, boss.npcId]), [[446, 3974], [447, 6487]]);
+  assert.deepEqual(library.entrances.map((place) => place.areaTriggerId), [614]);
+  assert.deepEqual(manifest.dungeons.find((dungeon) => dungeon.instanceId === 429).unassigned.bosses.map((boss) => boss.name), ["Lord Hel'nurath"]);
+  assert.deepEqual(buildWingManifest(), manifest, "deterministic");
+});
+
+test("a run that carries the add-on's optional wing evidence is accepted unchanged", () => {
+  const event = (payload) => ({ kind: "event", envelope: { ...v2, payload: { ...v2.payload, ...payload } } });
+  assert.equal(validDungeonRun(event({})), true);
+  assert.equal(validDungeonRun(event({ wing: { dungeonKey: "scarlet-monastery:library", evidence: "boss_kill", encounterId: 447 } })), true);
+  assert.equal(validDungeonRun(event({ wing: null })), true, "an unresolved wing");
 });
