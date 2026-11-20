@@ -223,8 +223,13 @@ or rare (`loot_opportunities`, `Loot/lootObservationRepository.js`).
 - **Rebuild**: rates are computed from the opportunity rows on request; there
   is no stored aggregate to drift.
 
+**Preliminary.** Every observed rate is served with `status:
+"preliminary"` and a reason, and shown as preliminary, until the
+loot-window coverage is verified in the real client (below). The counts are
+real; how complete each window was is not yet proven.
+
 Served as `observedLoot` on the dungeon detail's bosses and rares
-(`GET /api/player/loot/dungeons/:id`): `{ build, eligibleKills,
+(`GET /api/player/loot/dungeons/:id`): `{ status, reason, build, eligibleKills,
 partialWindows, lastObservedAt, noDropUpper, builds: [...], items: [{ itemId,
 drops, sightings, percent, low, high }] }`.
 

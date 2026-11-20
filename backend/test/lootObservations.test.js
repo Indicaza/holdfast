@@ -75,6 +75,8 @@ test("observed rates: one corpse once, complete windows only, per build, nobody 
   const rates = withGuildDatabase((db) => observedLootRatesInDatabase(db, [639, 657]));
   assert.equal(rates.has(657), false, "trash is not counted");
   const vancleef = rates.get(639);
+  assert.equal(vancleef.status, "preliminary", "preliminary until the loot-window coverage is verified in game");
+  assert.match(vancleef.reason, /not been verified in game/);
   assert.equal(vancleef.build, "70400", "the newest build with complete windows is the one rated");
   assert.deepEqual(vancleef.builds.map((entry) => entry.build), ["70400", "70338"]);
   const old = vancleef.builds.find((entry) => entry.build === "70338");
