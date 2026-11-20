@@ -151,3 +151,43 @@ Still open:
 - Rebuilding the drop rates from permitted sources: Guildweaver's own
   observations (PR 3) replace ForeverDB's as samples grow.
 - Quality and item level for Forever's own items the client does not name.
+- ForeverDB's API (keyed) was not used.
+
+## Boss loot relationships and reference drop rates (PR 2)
+
+`src/Atlas/lootRelationships.js` writes `data/foreverdb/loot-relationships.json` (GPL-3.0, see Licensing)
+(`scripts/importDungeonAtlas.mjs`): for each atlas boss, every item a source
+places on it, who lists it, and each source's own rate.
+
+- **Matching**: a ForeverDB boss to an atlas boss by NPC id, else by its exact
+  name (case and punctuation aside). 254 of ForeverDB's 257 bosses in the
+  atlas's dungeons match; Avatar of Hakkar, Miner Johnson and Grubbis (not
+  atlas bosses) do not, and are listed.
+- **Scope**, never assumed from the dungeon alone:
+  - `boss`: a guide or the emulator lists it for this boss, or it is an item
+    WoW Forever added (id ≥ 25,000) that ForeverDB sees on this boss only;
+  - `dungeon`: a Forever-added item seen on two or more bosses of the dungeon;
+  - `world`: the emulator's world-drop list, or ForeverDB sees it on bosses
+    of three or more instances;
+  - `corpse`: seen on the corpse in Forever, but nothing says it is the
+    boss's own (an original green, a recipe).
+  Only `boss` items are a boss's loot table; every scope keeps its rates.
+- **Rates** are kept per source and never averaged: `{ source, method,
+  percent, kills, seen, revision }`, method `observed` (ForeverDB: drops
+  seen in Forever over that boss's looted kills, `kills` given) or
+  `classic` (ForeverDB's CMaNGOS fallback, not a Forever measurement).
+- **Discrepancies**: a drop the guides place on one boss that Forever's
+  players saw only on another boss of the dungeon (12, all in Dire Maul and
+  similar shared-book cases) is reported, not resolved.
+
+Served (optional additions to the dungeon detail): each `referenceLoot`
+entry with known rates gets `referenceRates`; a boss's own drops only
+ForeverDB knows come in `foreverLoot`, with `source: "foreverdb"` and the
+credit, never as Classic reference. `reference-loot.json` itself stays
+chance-free.
+
+| | |
+| --- | --- |
+| Relationships | 4,726: 2,219 listed by both, 527 by the reference only, 78 by ForeverDB only (boss), 1,253 seen on a corpse or shared, 649 world drops |
+| Rates | 1,839 observed in Forever (1,479 with a kill count), 2,360 Classic |
+| Boss loot with an observed Forever rate | 279 of 2,824 boss-scope relationships, on 82 of 298 bosses |
