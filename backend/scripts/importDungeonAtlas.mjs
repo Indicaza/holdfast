@@ -23,6 +23,12 @@ const read = (name) => {
   const path = join(dataDir, "sources", name);
   return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null;
 };
+// ForeverDB's data, under its own licence (data/foreverdb/README.md): read from
+// its own directory, and everything built with it is written back there.
+const readForeverDb = (name) => {
+  const path = join(dataDir, "foreverdb", name);
+  return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null;
+};
 const wago = read("wago-classic-era.json");
 const azerothcore = read("azerothcore.json");
 const creatures = read("azerothcore-creatures.json");
@@ -41,41 +47,62 @@ const atlas = normalize({ wago, azerothcore, creatures, spells, loot, items, for
 // tables (scripts/fetchLootSources.mjs), ForeverDB's gear facts and the
 // Classic Era client's, merged field by field by precedence, with every
 // disagreement kept. The reference loot reads its item facts from them.
+// Two sets: the base (MIT; the Forever and Classic clients only) and, when
+// ForeverDB's extract is present, the same with its facts merged in, written
+// to data/foreverdb/ under its licence. The site serves the second when it
+// is there (Atlas/atlasData.js).
 const foreverItems = read("wago-forever-items.json");
-const foreverDbItems = read("foreverdb-items.json");
-const { definitions, factItems, sources: definitionSources } = referenceItemInputs({ classic: items, forever: foreverItems, foreverdb: foreverDbItems });
-const itemDefinitions = { schemaVersion: definitions.schemaVersion, dataset: "item-definitions", generatedAt: newest(foreverItems, foreverDbItems, items),
-  precedence: ["wago-forever", "foreverdb", "wago-classic-era"], sources: definitionSources, report: definitions.report, items: definitions.items };
-const reference = normalizeReferenceLoot({ atlas, loot, items: factItems, planner, sources: definitionSources,
-  generatedAt: newest(loot, items, foreverItems, foreverDbItems) });
-// Boss loot relationships and reference drop rates (docs/loot-sources.md):
-// the reference loot's lists and ForeverDB's per-boss loot, side by side;
-// items only ForeverDB places on a boss get their facts here, from the
-// definitions, so they can be served.
-const foreverDbLoot = read("foreverdb-loot.json");
-const definitionById = new Map(definitions.items.map((item) => [item.itemId, item]));
-const relationships = buildLootRelationships({ atlas, reference, foreverDb: foreverDbLoot,
-  worldDrops: new Set((loot?.tables?.world_drops || []).map(([itemId]) => itemId)), categoryOf: (itemId) => definitionById.get(itemId)?.category ?? null,
-  generatedAt: newest(foreverDbLoot, loot, items, foreverItems, foreverDbItems) });
-const classNames = new Map((items?.tables?.classes || []).map(([id, name]) => [id, name]));
-const subclassNames = new Map((items?.tables?.subclasses || []).map(([classId, subclassId, name]) => [`${classId}:${subclassId}`, name]));
-const extraItems = {};
-for (const dungeon of relationships.dungeons) {
-  // Served: the bosses' own loot ("boss") that the reference loot lacks.
-  for (const entry of dungeon.bosses.flatMap((boss) => boss.items).filter((item) => item.scope === "boss")) {
-    const definition = definitionById.get(entry.itemId);
-    if (reference.items[entry.itemId] || extraItems[entry.itemId] || !definition?.name) continue;
-    extraItems[entry.itemId] = referenceItemOf(definitionAsFacts(definition), { classNames, subclassNames });
-  }
+const foreverDbItems = readForeverDb("foreverdb-items.json");
+const foreverDbNotice = foreverDbItems?.notice ?? null;
+function itemSet(foreverdb) {
+  const { definitions, factItems, sources } = referenceItemInputs({ classic: items, forever: foreverItems, foreverdb });
+  const precedence = foreverdb ? ["wago-forever", "foreverdb", "wago-classic-era"] : ["wago-forever", "wago-classic-era"];
+  const head = foreverdb ? { notice: foreverDbNotice, license: "GPL-3.0 with ForeverDB.net's attribution term (data/foreverdb/README.md); not MIT" } : {};
+  const itemDefinitions = { ...head, schemaVersion: definitions.schemaVersion, dataset: "item-definitions", generatedAt: newest(foreverItems, foreverdb, items),
+    precedence, sources, report: definitions.report, items: definitions.items };
+  const reference = { ...head, ...normalizeReferenceLoot({ atlas, loot, items: factItems, planner, sources,
+    generatedAt: newest(loot, items, foreverItems, foreverdb) }) };
+  return { definitions, itemDefinitions, reference };
 }
-relationships.items = Object.fromEntries(Object.entries(extraItems).sort((a, b) => Number(a[0]) - Number(b[0])));
+const base = itemSet(null);
+const withForeverDb = foreverDbItems ? itemSet(foreverDbItems) : null;
+// What the rest of this script builds on: the fullest set.
+const { definitions, itemDefinitions, reference } = withForeverDb || base;
+// Boss loot relationships and reference drop rates (docs/loot-sources.md):
+// the reference loot's lists and ForeverDB's per-boss loot, side by side.
+// Built from ForeverDB's loot (its own material), so written to
+// data/foreverdb/ under its licence, and only when its extracts are there.
+// Items only ForeverDB places on a boss get their facts here, from the
+// definitions, so they can be served.
+const foreverDbLoot = readForeverDb("foreverdb-loot.json");
+let relationships = null;
+if (withForeverDb && foreverDbLoot) {
+  const definitionById = new Map(definitions.items.map((item) => [item.itemId, item]));
+  relationships = { notice: foreverDbNotice, license: "GPL-3.0 with ForeverDB.net's attribution term (data/foreverdb/README.md); not MIT",
+    ...buildLootRelationships({ atlas, reference, foreverDb: foreverDbLoot,
+      worldDrops: new Set((loot?.tables?.world_drops || []).map(([itemId]) => itemId)), categoryOf: (itemId) => definitionById.get(itemId)?.category ?? null,
+      generatedAt: newest(foreverDbLoot, loot, items, foreverItems, foreverDbItems) }) };
+  const classNames = new Map((items?.tables?.classes || []).map(([id, name]) => [id, name]));
+  const subclassNames = new Map((items?.tables?.subclasses || []).map(([classId, subclassId, name]) => [`${classId}:${subclassId}`, name]));
+  const extraItems = {};
+  for (const dungeon of relationships.dungeons) {
+    // Served: the bosses' own loot ("boss") that the reference loot lacks.
+    for (const entry of dungeon.bosses.flatMap((boss) => boss.items).filter((item) => item.scope === "boss")) {
+      const definition = definitionById.get(entry.itemId);
+      if (reference.items[entry.itemId] || extraItems[entry.itemId] || !definition?.name) continue;
+      extraItems[entry.itemId] = referenceItemOf(definitionAsFacts(definition), { classNames, subclassNames });
+    }
+  }
+  relationships.items = Object.fromEntries(Object.entries(extraItems).sort((a, b) => Number(a[0]) - Number(b[0])));
+}
 // The dungeon quest catalog (fetchDungeonAtlasSources.mjs --quests-only).
 const questSources = read("azerothcore-quests.json");
 const zones = wago ? zoneRegions(wago.tables) : [];
 const questCatalog = questSources ? buildQuestCatalog({ atlas, quests: questSources, planner,
   areaToInstance: new Map((wago?.tables?.AreaTable || []).map((row) => [Number(row.ID), Number(row.ContinentID)])),
   zonePointOf: (continentId, x, y) => zonePoint(zones, continentId, x, y), generatedAt: newest(questSources, planner) }) : null;
-const problems = [...atlasProblems(atlas), ...referenceLootProblems(reference, atlas), ...(questCatalog ? questCatalogProblems(questCatalog, atlas) : [])];
+const problems = [...atlasProblems(atlas), ...referenceLootProblems(base.reference, atlas), ...(withForeverDb ? referenceLootProblems(withForeverDb.reference, atlas) : []),
+  ...(questCatalog ? questCatalogProblems(questCatalog, atlas) : [])];
 if (problems.length) {
   console.error(`Atlas invariants broken:\n- ${problems.join("\n- ")}`);
   process.exit(1);
@@ -111,8 +138,10 @@ function definitionsJson(data) {
   return `{\n${lines.join(",\n")},\n "items": [\n${list.map((item) => `  ${JSON.stringify(item)}`).join(",\n")}\n ]\n}\n`;
 }
 
-const outputs = [["atlas.json", `${JSON.stringify(atlas, null, 1)}\n`], ["reference-loot.json", referenceJson(reference)],
-  ["item-definitions.json", definitionsJson(itemDefinitions)], ["loot-relationships.json", relationshipsJson(relationships)],
+const outputs = [["atlas.json", `${JSON.stringify(atlas, null, 1)}\n`], ["reference-loot.json", referenceJson(base.reference)],
+  ["item-definitions.json", definitionsJson(base.itemDefinitions)],
+  ...(withForeverDb ? [["foreverdb/reference-loot.json", referenceJson(withForeverDb.reference)], ["foreverdb/item-definitions.json", definitionsJson(withForeverDb.itemDefinitions)]] : []),
+  ...(relationships ? [["foreverdb/loot-relationships.json", relationshipsJson(relationships)]] : []),
   ...(questCatalog ? [["quest-catalog.json", catalogJson(questCatalog)]] : [])];
 if (process.argv.includes("--check")) {
   let stale = false;
@@ -135,10 +164,12 @@ console.log(`${atlas.dungeons.length} dungeons, ${count((d) => d.bosses.length)}
   + `${count((d) => d.bosses.reduce((n, b) => n + b.abilities.length, 0))} abilities, ${count((d) => d.quests.length)} quests, `
   + `${count((d) => d.rares.length)} rares, ${count((d) => d.creatures.length)} dangerous trash, ${count((d) => d.maps.length)} layouts, ${atlas.dungeons.filter((d) => d.entrance).length} entrances, ${atlas.dungeons.filter((d) => d.levelMin !== null).length} level bands.`);
 const defReport = itemDefinitions.report;
+console.log(`Base (MIT): ${Object.keys(base.reference.items).length} reference items, ${base.reference.gaps.length} gaps. `
+  + (withForeverDb ? `With ForeverDB (data/foreverdb/, GPL-3.0): ${Object.keys(withForeverDb.reference.items).length} items, ${withForeverDb.reference.gaps.length} gaps.` : "No ForeverDB data."));
 console.log(`Item definitions: ${defReport.items} items (${defReport.foreverClient} named by the Forever client, ${defReport.hiddenInClient} not named by it), `
   + `${defReport.unknownName} without a name, ${defReport.unknownQuality} without a quality, ${defReport.conflicts} with disagreeing sources.`);
-const rel = relationships.report;
-console.log(`Loot relationships: ${rel.relationships} (${rel.both} in both, ${rel.referenceOnly} reference only, ${rel.foreverDbOnly} ForeverDB only, `
+const rel = relationships?.report;
+if (rel) console.log(`Loot relationships: ${rel.relationships} (${rel.both} in both, ${rel.referenceOnly} reference only, ${rel.foreverDbOnly} ForeverDB only, `
   + `${rel.foreverDbCorpse} seen on a corpse only, ${rel.foreverDbWorld} ForeverDB world drops); ${rel.observedRates} observed rates (${rel.ratesWithKills} with kills), ${rel.classicRates} Classic rates; `
   + `bosses matched ${rel.bossesMatched}/${rel.fdbBosses}, ${rel.placementDiscrepancies.length} placement discrepancies.`);
 const refCount = (fn) => reference.dungeons.reduce((sum, dungeon) => sum + fn(dungeon), 0);

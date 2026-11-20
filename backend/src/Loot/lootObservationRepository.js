@@ -53,6 +53,15 @@ export const lootObservationMigration = {
   },
 };
 
+// Every observed rate is marked preliminary until the loot-window coverage
+// is checked in the real WoW Forever client (that GetLootSourceInfo maps
+// every slot, what a second looter sees under group loot): the counts are
+// real, how complete each window was is not yet proven.
+export const OBSERVED_RATES_STATUS = Object.freeze({
+  status: "preliminary",
+  reason: "Loot-window coverage on WoW Forever has not been verified in game yet; these rates may change.",
+});
+
 const hash = (parts) => createHash("sha256").update(parts.map((part) => String(part ?? "")).join("\u001f")).digest("hex");
 const INSPECTIONS = new Set(["complete", "partial"]);
 const RANK = { legacy: 0, partial: 1, complete: 2 };
@@ -162,6 +171,7 @@ export function observedLootRatesInDatabase(db, npcIds = []) {
       FROM loot_opportunity_items i JOIN loot_opportunities o ON o.id = i.opportunity_id
       WHERE o.npc_id = ? AND o.game_build = ? GROUP BY i.item_id ORDER BY i.item_id`).all(npcId, rated.build);
     out.set(npcId, {
+      ...OBSERVED_RATES_STATUS,
       npcId,
       build: rated.build,
       eligibleKills: rated.complete,
