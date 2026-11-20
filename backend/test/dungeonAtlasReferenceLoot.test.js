@@ -7,6 +7,7 @@ import { cleanObjective, curateItem, extractQuestDetails, extractReferenceLoot, 
   REFERENCE_KINDS } from "../src/Atlas/atlasLoot.js";
 import { loadAtlas } from "../src/Atlas/atlasRepository.js";
 import { loadReferenceData } from "../src/Atlas/atlasData.js";
+import { referenceItemInputs } from "../src/Atlas/itemDefinitions.js";
 import { referenceItem, referenceItemFacts, referenceSourcesOf } from "../src/Atlas/referenceLoot.js";
 import { withHttpApp } from "../testSupport/httpHarness.js";
 import { ITEMS, connect, corpseLoot, seedItems, syncCharacter } from "../testSupport/lootHarness.js";
@@ -52,7 +53,9 @@ test("item facts: only what the client row says, null when unknown", () => {
   assert.deepEqual(chest.classes, ["Rogue", "Druid"]);
   assert.equal(referenceItemOf(item({ allowableClass: 32767 })).classes, null, "every class: no restriction");
   assert.equal(referenceItemOf(item({ randomStats: true, stats: [] })).stats, null, "a random suffix: stats unknown");
-  assert.equal(referenceItemOf(item({ stats: [[45, 10]] })).stats, null, "a stat this reader cannot name: unknown, not partial");
+  assert.equal(referenceItemOf(item({ stats: [[99, 10]] })).stats, null, "a stat this reader cannot name: unknown, not partial");
+  assert.deepEqual(referenceItemOf(item({ stats: [[45, 10]] })).stats, [{ stat: "Spell Power", value: 10 }], "ForeverDB's spell power");
+  assert.equal(referenceItemOf(item({ stats: [], statsKnown: false })).stats, null, "no source states its stats: unknown, not none");
   assert.deepEqual([referenceItemOf(item({ requiredLevel: 0, itemLevel: 0, icon: null })).requiredLevel, referenceItemOf(item({ icon: null })).iconFileDataId], [null, null]);
 });
 
@@ -98,11 +101,18 @@ test("the checked-in reference loot is current, sourced and free of drop chances
   const { atlas } = loadAtlas();
   const reference = loadReferenceData();
   assert.deepEqual(referenceLootProblems(reference, atlas), []);
-  const regenerated = normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: readSource("wago-classic-era-items.json"),
+  const inputs = () => referenceItemInputs({ classic: readSource("wago-classic-era-items.json"), forever: readSource("wago-forever-items.json"),
+    foreverdb: readSource("foreverdb-items.json") });
+  const { factItems, sources } = inputs();
+  const regenerated = normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: factItems, sources,
     planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt });
   assert.deepEqual(JSON.parse(JSON.stringify(regenerated)), reference, "run node scripts/importDungeonAtlas.mjs");
-  assert.deepEqual(normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: readSource("wago-classic-era-items.json"),
+  const again = inputs();
+  assert.deepEqual(normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: again.factItems, sources: again.sources,
     planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt }), regenerated, "idempotent");
+  // The item facts' own sources, apart from the drops' provenance.
+  assert.deepEqual(reference.itemFactSources.map((line) => line.source), ["wago-forever", "foreverdb", "wago-classic-era"]);
+  assert.equal(reference.itemFactSources[1].attribution, "Data from ForeverDB.net");
   // No drop chance anywhere: no key that names one, in the data or its extract.
   const chanceKeys = (text) => [...text.matchAll(/"([^"]*chance[^"]*)"\s*:/gi)].map((match) => match[1]);
   assert.deepEqual(chanceKeys(readFileSync(new URL("reference-loot.json", DATA), "utf8")), []);

@@ -127,12 +127,18 @@ test("the checked-in data: coverage, wings and served sources", () => {
   const reference = loadReferenceData();
   const report = coverageReport({ atlas, reference, loot: read("sources/azerothcore-loot.json"), manifest: read("wing-manifest.json") });
   const t = report.totals;
-  assert.equal(t.dungeonsWithLoot, 26);
+  // 26 original dungeons, and 7 of the 9 WoW Forever ones whose guide lists
+  // drops now have their items' facts (Blackmaw Hold and Shaper's Terrace: none listed).
+  assert.equal(t.dungeonsWithLoot, 33);
   assert.ok(t.bossesWithLoot >= 230, `bosses with loot: ${t.bossesWithLoot}`);
   assert.equal(t.raresWithLoot, t.rares);
   assert.equal(t.unattributedItems, 0, "every shared drop names its creatures or chests");
-  assert.equal(t.itemsWithoutIcon, 0);
-  assert.equal(t.itemsWithoutFacts, 0);
+  // Items the Forever client does not name: no source gives every icon or
+  // quality yet (unknown, never guessed); every Classic item has both.
+  const unknownIcon = Object.values(reference.items).filter((item) => !item.iconFileDataId);
+  assert.equal(t.itemsWithoutIcon, unknownIcon.length);
+  assert.ok(unknownIcon.every((item) => item.foreverClient === "hidden" && !item.factSources.includes("wago-classic-era")), "only Forever's own items lack an icon");
+  assert.ok(Object.values(reference.items).every((item) => item.qualityId !== null || !item.factSources.includes("wago-classic-era")), "every Classic item has its quality");
   // Naxxramas: the emulator's loot is the WotLK version; DungeonPlanner's is the Classic one.
   const naxx = reference.dungeons.find((dungeon) => dungeon.instanceId === 533);
   assert.equal(naxx.bosses.length, 15, "every Naxxramas boss has reference loot");
@@ -140,13 +146,12 @@ test("the checked-in data: coverage, wings and served sources", () => {
   // Encounters of several creatures, through DungeonPlanner's representative NPC.
   const depths = reference.dungeons.find((dungeon) => dungeon.instanceId === 230);
   for (const npcId of [9027, 9039]) assert.ok(depths.bosses.some((boss) => boss.npcId === npcId), `BRD encounter ${npcId}`);
-  // The bosses still without reference loot, each with a reason.
-  // (Original dungeons: WoW Forever's have no Classic item facts; their
-  // listed drops are gaps, tested in dungeonForever.test.js.)
+  // The bosses still without reference loot, each with a reason. (Rethilgore,
+  // the Stockade's four and Ragefire Chasm's two drop only items WoW Forever
+  // added; their facts now come from the Forever client and ForeverDB.)
   const empty = report.dungeons.filter((dungeon) => dungeon.instanceId < 2000)
     .flatMap((dungeon) => dungeon.bosses.filter((boss) => !boss.items).map((boss) => `${dungeon.instanceId}:${boss.name}`)).sort();
-  assert.deepEqual(empty, ["230:The Vault", "329:Ezra Grimm", "33:Rethilgore", "34:Bazil Thredd", "34:Dextren Ward", "34:Hamhock", "34:Targorr the Dread",
-    "389:Bazzalan", "389:Oggleflint", "409:The Molten Core"], "the known gaps, and no new ones");
+  assert.deepEqual(empty, ["230:The Vault", "329:Ezra Grimm", "409:The Molten Core"], "the known gaps, and no new ones");
   for (const dungeon of report.dungeons) for (const boss of dungeon.bosses) if (!boss.items) assert.ok(boss.missing, `${boss.name} has a reason`);
   // Served: a boss's items carry who lists them; a shared drop all its sources.
   const detail = atlasDetail(189, []);
