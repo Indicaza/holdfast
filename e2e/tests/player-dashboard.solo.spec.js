@@ -46,9 +46,14 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByRole('heading', { name: 'Your characters' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Three steps to your first sync.' })).toHaveCount(0)
   const scorecards = page.getByRole('region', { name: 'Your summary' })
-  await expect(scorecards.locator('article').filter({ hasText: 'Characters' }).locator('strong')).toHaveText('3')
-  // Most recently synced first.
+  // Most recently synced first, and that server is shown: All servers only when chosen.
   await expect(page.getByLabel('Server').locator('option')).toHaveText(['All servers', 'Shadowmoon (1)', 'Doomhowl (2)'])
+  await expect(page.getByLabel('Server')).toHaveValue('us:shadowmoon')
+  await expect(page).toHaveURL(/\/dashboard\?server=us%3Ashadowmoon$/)
+  await expect(scorecards.locator('article').filter({ hasText: 'Characters' }).locator('strong')).toHaveText('1')
+  await page.getByLabel('Server').selectOption({ label: 'All servers' })
+  await expect(page).toHaveURL(/\/dashboard\?server=all$/)
+  await expect(scorecards.locator('article').filter({ hasText: 'Characters' }).locator('strong')).toHaveText('3')
 
   // The server choice filters every tool and survives navigation.
   await page.getByLabel('Server').selectOption({ label: 'Doomhowl (2)' })
@@ -125,16 +130,17 @@ test('a new player follows the first-run checklist to their first sync, then see
   await expect(page.getByText('No farming on this server yet.')).toBeVisible()
 
   // A fresh visit remembers the server; a server the player lacks falls back
-  // to the remembered one, and All servers clears the memory.
+  // to the remembered one, and All servers is remembered too.
   await page.goto('/dashboard/characters')
   await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
   await expect(page.locator('.gw-char-row')).toHaveCount(1)
   await page.goto('/dashboard/characters?server=eu%3Asomewhere-else')
   await expect(page).toHaveURL(/server=us%3Ashadowmoon/)
   await page.getByLabel('Server').selectOption({ label: 'All servers' })
-  await expect(page).toHaveURL((url) => !url.search.includes('server='))
+  await expect(page).toHaveURL(/server=all$/)
   await expect(page.locator('.gw-char-row')).toHaveCount(3)
-  await page.reload()
+  await page.goto('/dashboard/characters')
+  await expect(page).toHaveURL(/server=all$/)
   await expect(page.locator('.gw-char-row')).toHaveCount(3)
 
   // The armory opens in place from the player's own data.
@@ -193,7 +199,7 @@ test('signed in, every page is in one app frame; signing out leaves nothing behi
 
   await account(page).click()
   await menu.getByRole('menuitem', { name: 'Account' }).click()
-  await expect(page).toHaveURL(/\/dashboard\/account$/)
+  await expect(page).toHaveURL(/\/dashboard\/account(\?server=[^&]+)?$/)
   await expect(page.locator('.navbar')).toHaveCount(0)
   await expect(account(page)).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByRole('heading', { name: 'Signed in with Discord' })).toBeVisible()
@@ -202,12 +208,12 @@ test('signed in, every page is in one app frame; signing out leaves nothing behi
 
   // The site's own pages open inside the app, never under a second navbar.
   await page.goto('/download')
-  await expect(page).toHaveURL(/\/dashboard\/sync$/)
+  await expect(page).toHaveURL(/\/dashboard\/sync(\?server=[^&]+)?$/)
   await expect(heading(page)).toHaveText('Download & sync')
   await expect(page.locator('.navbar')).toHaveCount(0)
   await expect(page.locator('.gw-device')).toHaveCount(1)
   await page.goto('/')
-  await expect(page).toHaveURL(/\/dashboard$/)
+  await expect(page).toHaveURL(/\/dashboard(\?server=[^&]+)?$/)
   await expect(heading(page)).toHaveText('Home')
   await expect(page.locator('.navbar')).toHaveCount(0)
 
