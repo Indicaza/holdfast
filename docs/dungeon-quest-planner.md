@@ -66,3 +66,111 @@ Rules:
 
 Example fixture: `backend/test/fixtures/editorial-quest-plan.deadmines.json`
 (synthetic, marked `"synthetic": true`).
+
+## The plan (engine `backend/src/Atlas/atlasQuestPlan.js`, plan schema 1)
+
+`buildQuestPlan({ dungeon, quests, state, questLog, editorial, wingKey, party })`
+is pure and deterministic: the same input gives a byte-identical plan (no
+clock; every list in a fixed order; the catalog's input order does not
+matter). Every quest state comes from `atlasReadiness.js` (`questState`,
+`prerequisiteStatus`); `readiness` is `evaluateReadiness` over the catalog
+with the editorial data laid over it.
+
+```json
+{
+  "schemaVersion": 1,
+  "dungeon": { "instanceId": 36, "dungeonKey": "deadmines", "name": "…", "wingKey": null, "zoneName": "Westfall" },
+  "editorial": { "used": false, "revision": null },
+  "party": null,
+  "readiness": { "readiness": "missing", "required": 5, "counts": { "completed": 0, "…": 0 } },
+  "next": "collect:q168:travel",
+  "sections": [ { "key": "collect", "steps": [Step], "notes": [{ "text", "verified", "source" }] }, "…" ],
+  "waypoints": [Waypoint],
+  "counts": { "collect": { "total": 0, "done": 0, "todo": 0, "blocked": 0, "unknown": 0, "ineligible": 0 }, "…": {} },
+  "hidden": { "ineligible": 3 },
+  "problems": [ { "code": "prerequisite-cycle", "questIds": [1, 2] } ]
+}
+```
+
+Sections, always in this order: `collect`, `share`, `enter`, `optional`,
+`repeatable`, `unknown`, `turnIn`.
+
+- **collect**: the dungeon quests the character can take (ineligible ones
+  are only counted in `hidden`), with every undone link of their chains.
+  Topological: a prerequisite before the quests that need it, a shared one
+  once. Among the quests that can come next: one in the zone of the step
+  before, then by (zone, minLevel, questId); no zone sorts last. A completed
+  or accepted dungeon quest is one collapsed `done` step and its chain is not
+  listed. A dungeon quest that waits on another dungeon quest not done yet
+  is not here: it is a `follow-up` in turnIn. Step kinds: `quest`,
+  `prerequisite`; children `travel` (left out when the step before has the
+  same giver at the same spot), `accept`, `complete-prerequisite` (a
+  prerequisite to finish and turn in, or a prerequisite the catalog does not
+  list: "not in our data") and `note` (editorial steps).
+- **share**: collect quests with `shareable: "yes"` whose state is
+  `available` (eligible, prerequisites met). Children: `ask-share`, then the
+  `travel` fallback (`optional: true`). No group member is assumed to hold it.
+- **enter**: `verify` (every collect `quest` step done), `travel` to the
+  entrance (editorial entrance, else the atlas's), `enter`.
+- **optional**, **repeatable**: one step per quest of that relevance.
+- **unknown**: quests of unknown relevance, and quests in a prerequisite
+  cycle, with `reasons`.
+- **turnIn**: accepted quests (not prerequisites): `turn-in` when the quest
+  log says the objectives are complete (`objectivesComplete: true`; status
+  `unknown` when it does not say), `finish-objectives` when it says they are
+  not. A turn-in waypoint only from editorial `turnIn`; otherwise
+  `location: "not-in-our-data"` (no source has quest enders; objective text
+  is never parsed). Then `follow-up`: quests a dungeon quest unlocks.
+
+Step: `{ id, kind, questId, status, text, waypoint, verified, source,
+children, location?, optional?, reasons?, collapsed?, objectivesComplete? }`.
+`id` is stable (`collect:q166`, `collect:q166:travel`, `share:q168:ask`,
+`enter:verify`, `turnin:q166`, `followup:q2199`). `status`: `done`, `todo`,
+`blocked` (waits on an earlier quest), `unknown`, `ineligible`. `source`:
+`catalog`, `editorial` or `atlas`. `text` is short English; clients may
+word it their own way.
+
+Waypoint: `{ id, mapSystem: "uiMap", mapId, x, y, zoneName, target,
+targetType: "quest-giver" | "prerequisite-giver" | "turn-in" | "entrance",
+source, verified }`, built only from a positive mapId and 0–1 coordinates.
+Catalog giver positions are AzerothCore spawns projected onto UiMap ids:
+`verified: false`, not checked on Forever.
+
+`next` is the first `todo` leaf (not a note, not an optional fallback) in
+collect, then in turnIn's `turn-in` steps, then in enter; `null` when
+nothing is known to be doable (for example, no quest state reported).
+
+Problems: `duplicate-quest`, `prerequisite-not-in-catalog`,
+`prerequisite-cycle`, `invalid-quest`, and `editorial-*` (schema, instance,
+invalid field, dropped location/instruction/quest, duplicate, not in catalog).
+
+## API
+
+- `GET /api/player/loot/dungeons/:id/plan?character=` — the caller's own
+  character (per realm), from the quest state the add-on last synced; same
+  ownership and realm handling as `/readiness` (anyone else's character
+  answers 404). Adds `characterId`, `character` (capture times and coverage,
+  or null) and `questList`.
+- `POST /api/player/loot/dungeons/:id/plan` `{ state, editorial?, party? }` —
+  the state as `/readiness` takes it; `state.questLog.entries` (`{ questId,
+  isComplete }`) may stand in for `questIds`. `editorial` previews a document
+  without publishing it. 400 with `problems` for an invalid state.
+
+`:id` is an instance id, a dungeon key or a wing key, as everywhere else.
+
+## CMS integration
+
+Published editorial data is read through one hook,
+`loadEditorialQuestPlan(instanceId)` in
+`backend/src/Atlas/atlasQuestPlanRepository.js`, which returns null for now.
+The CMS branch adds `publishedEditorialQuestPlan(instanceId)` in
+`backend/src/Atlas/editorialQuestPlan.js`; wiring it is one line in that
+hook. The planner validates whatever it returns, so a bad document gives
+`problems`, never a broken plan.
+
+## Add-on
+
+`Systems/DungeonQuestPlan.lua` (Indicaza/guildweaver) runs the same rules
+over the packaged catalog, without editorial data. `scripts/questPlanParity.mjs`
+there writes `test/fixtures/quest-plan-parity.json` from this engine, and
+the add-on's spec compares ids, kinds, statuses, order and waypoints.
