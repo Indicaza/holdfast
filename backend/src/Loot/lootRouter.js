@@ -8,6 +8,7 @@ import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import { readLootBridgeSnapshot } from "./lootBridge.js";
 import { lootCatalogRevisionInDatabase, lootSlotsByInstanceInDatabase, readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
+import { withObservedRates } from "./lootObservationRepository.js";
 import { importWishlist } from "./wishlistImport.js";
 import { readPlanningPrompt } from "./wishlistPrompt.js";
 import { deleteWishlistItem, ownedCharacterInDatabase, patchWishlistItem, rawCharacterIdsInDatabase, putWishlistItem, readWishlist, readWishlistSummary, wishlistItemKeysInDatabase } from "./wishlistRepository.js";
@@ -96,7 +97,9 @@ export function createPlayerLootRouter() {
     return withGuildDatabase((db) => {
       const detail = readLootDungeonInDatabase(db, target.instanceId, { wishlisted: wishlisted(db, req) });
       const revision = lootCatalogRevisionInDatabase(db);
-      return target.wingKey ? withAtlasWingDetail(detail, target.wingKey, revision) : withAtlasDetail(detail, target.instanceId, revision);
+      const served = target.wingKey ? withAtlasWingDetail(detail, target.wingKey, revision) : withAtlasDetail(detail, target.instanceId, revision);
+      // Guildweaver's own observed drop rates (aggregates only, no player named).
+      return withObservedRates(db, served);
     });
   }));
   // A dungeon's quest catalog (?include=all adds the zone-only quests), and a

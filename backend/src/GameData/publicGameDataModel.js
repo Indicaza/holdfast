@@ -43,6 +43,16 @@ export function publicItemDefinition(raw = {}, { base = false } = {}) {
   return item;
 }
 
+// The add-on's own word on the window (optional; older add-ons send none):
+// complete or partial, why partial, and how many slots it had.
+function validInspection(capture) {
+  if (capture.inspection === undefined) return capture.partialReason === undefined && capture.slotCount === undefined;
+  if (!["complete", "partial"].includes(capture.inspection)) return false;
+  if (capture.partialReason !== undefined && capture.partialReason !== null
+    && !(capture.inspection === "partial" && typeof capture.partialReason === "string" && /^[a-z-]{1,40}$/.test(capture.partialReason))) return false;
+  return capture.slotCount === undefined || (Number.isInteger(capture.slotCount) && capture.slotCount >= 0 && capture.slotCount <= 200);
+}
+
 export function validMobLoot({ kind, envelope, payloadSchemaVersion }) {
   const payload = envelope?.payload;
   const source = payload?.source;
@@ -53,7 +63,9 @@ export function validMobLoot({ kind, envelope, payloadSchemaVersion }) {
     && gameInteger(source.npcId, 1) !== null && Number(parts[5]) === source.npcId
     && Boolean(gameContext(envelope).gameBuild && gameText(envelope.realm, 96) && gameText(envelope.region, 16))
     && payload?.capture?.attribution === "loot_source_pairs" && payload.capture.visibility === "visible_to_observer"
-    && payload.capture.yieldBasis === "loot_window" && Array.isArray(payload.outputs) && payload.outputs.length > 0 && payload.outputs.length <= 200
+    && payload.capture.yieldBasis === "loot_window" && validInspection(payload.capture)
+    // No items is a window too, but only when the add-on says it saw the whole of it.
+    && Array.isArray(payload.outputs) && (payload.outputs.length > 0 || payload.capture.inspection === "complete") && payload.outputs.length <= 200
     && new Set(payload.outputs.map((entry) => gameInteger(entry?.itemId, 1))).size === payload.outputs.length
     && payload.outputs.every((output) => gameInteger(output?.itemId, 1) !== null && gameInteger(output.quantity, 1, 100000) !== null);
 }

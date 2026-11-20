@@ -187,7 +187,7 @@ test("the rebuild cleans a bloated database, keeps everything else identical, an
   const result = await rebuild({ root: backupRoot, now, log: quiet });
   const { manifest } = result;
   assert.equal(manifest.ok, true, JSON.stringify(manifest.validation));
-  assert.equal(manifest.schemaVersion, 24);
+  assert.equal(manifest.schemaVersion, 25);
   assert.equal(manifest.validation.integrity, "ok");
   assert.equal(manifest.validation.preservedTablesIdentical, true);
   assert.ok(manifest.validation.preservedTables > 50);

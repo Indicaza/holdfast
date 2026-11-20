@@ -116,7 +116,7 @@ test("production startup snapshot captures the old database before migrations ru
     live.close();
 
     assert.deepEqual(inspectDatabase(guildDatabaseFile()), {
-      migration: 24,
+      migration: 25,
       members: 1,
       sentinel: "pre-migration-copy",
       integrity: "ok",
