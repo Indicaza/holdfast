@@ -34,3 +34,20 @@ export function loadReferenceData() {
   if (!referenceCache) referenceCache = JSON.parse(readFileSync(REFERENCE_URL, "utf8"));
   return referenceCache;
 }
+
+const RELATIONSHIPS_URL = new URL("./data/loot-relationships.json", import.meta.url);
+let relationshipsCache = null;
+
+// Boss loot relationships and reference drop rates (data/loot-relationships.json,
+// docs/loot-sources.md), by instance ID; null when the file is absent.
+export function loadLootRelationships() {
+  if (relationshipsCache === null) {
+    try {
+      const data = JSON.parse(readFileSync(RELATIONSHIPS_URL, "utf8"));
+      relationshipsCache = { data, byId: new Map(data.dungeons.map((dungeon) => [dungeon.instanceId, dungeon])) };
+    } catch {
+      relationshipsCache = false;
+    }
+  }
+  return relationshipsCache || null;
+}

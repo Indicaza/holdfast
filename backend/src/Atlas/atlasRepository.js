@@ -4,7 +4,7 @@
 // here calls another service.
 
 import { normalizedName, wishlistItemKey } from "../Loot/lootModel.js";
-import { loadAtlas, loadQuestCatalog, loadReferenceData } from "./atlasData.js";
+import { loadAtlas, loadLootRelationships, loadQuestCatalog, loadReferenceData } from "./atlasData.js";
 import { referenceDungeon, referenceItem, referenceSummary, referenceVersion, sortReferenceItems } from "./referenceLoot.js";
 import { isWingKey, parentKeyFor, unassignedOf, wingsOf } from "./atlasWings.js";
 import { DEFAULT_RELEVANCE } from "./atlasQuests.js";
@@ -116,7 +116,35 @@ function referenceList(itemIds, observed, sources = null) {
 // id or name): the item keys the catalog lists under them, and the catalog's
 // spelling of the name, so the frontend can match boss.name to
 // sources[].name. atlasName keeps the atlas source's own spelling.
-function bossWithCatalog(boss, sources, reference = null, observed = new Map(), unresolved = []) {
+// A boss's relationships entry (data/loot-relationships.json), by encounter,
+// npc id or name.
+function relationshipsOf(dungeonId, boss) {
+  const dungeon = loadLootRelationships()?.byId.get(dungeonId);
+  return dungeon?.bosses.find((entry) => (boss.encounterId && entry.encounterId === boss.encounterId) || (boss.npcId && entry.npcId === boss.npcId)
+    || entry.name === boss.name) || null;
+}
+
+// The reference drop rates of a boss's loot, and the drops only ForeverDB
+// places on it (its own loot, "boss" scope): optional additions. Each rate
+// keeps its source, method ("observed" in Forever over `kills` looted kills,
+// or "classic" data) and revision; nothing is averaged.
+function withRates(dungeonId, boss, referenceLoot) {
+  const entry = relationshipsOf(dungeonId, boss);
+  if (!entry) return { referenceLoot };
+  const byItem = new Map(entry.items.map((item) => [item.itemId, item]));
+  const rated = referenceLoot.map((item) => {
+    const relation = byItem.get(item.itemId);
+    return relation?.rates ? { ...item, referenceRates: relation.rates } : item;
+  });
+  const listed = new Set(referenceLoot.map((item) => item.itemId));
+  const extras = loadLootRelationships()?.data.items || {};
+  const foreverLoot = entry.items.filter((item) => item.scope === "boss" && !listed.has(item.itemId) && extras[item.itemId])
+    .map((item) => ({ ...extras[item.itemId], observed: false, verifiedForForever: false, source: "foreverdb", attribution: "Data from ForeverDB.net",
+      referenceRates: item.rates || [] }));
+  return { referenceLoot: rated, ...(foreverLoot.length ? { foreverLoot: sortReferenceItems(foreverLoot) } : {}) };
+}
+
+function bossWithCatalog(boss, sources, reference = null, observed = new Map(), unresolved = [], dungeonId = null) {
   const name = normalizedName(boss.name);
   const keys = new Set();
   let sourceName = null;
@@ -132,7 +160,8 @@ function bossWithCatalog(boss, sources, reference = null, observed = new Map(), 
     }
   }
   const entry = reference?.bosses.find((candidate) => (boss.encounterId && candidate.encounterId === boss.encounterId) || (boss.npcId && candidate.npcId === boss.npcId));
-  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys], referenceLoot: referenceList(entry?.itemIds || [], observed, entry?.sources),
+  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys],
+    ...withRates(dungeonId, boss, referenceList(entry?.itemIds || [], observed, entry?.sources)),
     unresolvedLoot: unresolved.filter((gap) => boss.npcId && gap.npcId === boss.npcId) };
 }
 
@@ -155,7 +184,7 @@ export function atlasDetail(instanceId, sources = []) {
     ...(dungeon.wings ? { wings: dungeon.wings } : {}),
     zoneName: dungeon.zoneName, zoneMapId: dungeon.zoneMapId,
     maps: dungeon.maps,
-    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed, unresolved)),
+    bosses: dungeon.bosses.map((boss) => bossWithCatalog(boss, sources, reference, observed, unresolved, dungeon.instanceId)),
     // Listed drops whose item the client does not know (optional addition).
     unresolvedLoot: unresolved,
     creatures: dungeon.creatures,
