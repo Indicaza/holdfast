@@ -9,7 +9,7 @@ import {
   recordCharacterSnapshotInDatabase,
 } from "./characterSnapshotRepository.js";
 import {
-  ownedCharacterIdInDatabase,
+  realmCharacterIdInDatabase,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
 } from "./characterIdentityRepository.js";
@@ -221,7 +221,7 @@ export async function syncGuildweaverCharacter({
         )
         .get(normalizedMemberId)?.sort_order || 0,
     );
-    const characterId = existing?.id || ownedCharacterIdInDatabase(db, normalizedMemberId, preferredId);
+    const characterId = existing?.id || realmCharacterIdInDatabase(db, normalizedMemberId, preferredId, { realm, region });
     if (!characterId) {
       return { status: "invalid", character: null, snapshot: null };
     }

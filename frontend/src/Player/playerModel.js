@@ -27,6 +27,10 @@ export const DASHBOARD_GROUPS = Object.freeze([
 
 const SERVER_PARAM = 'server'
 const STORAGE_PREFIX = 'guildweaver:server:'
+// "All servers" as the player chose it (in the URL and remembered), so it
+// is never mistaken for "nothing chosen yet".
+export const ALL_SERVERS = 'all'
+const UNKNOWN_SERVER = 'unknown'
 
 // A dashboard section's URL, keeping the chosen server ('' = all servers).
 export function dashboardHref(section = 'overview', server = '') {
@@ -38,15 +42,24 @@ export function readServerParam(search = globalThis.location?.search || '') {
   return new URLSearchParams(search).get(SERVER_PARAM) || ''
 }
 
-// The server to show: the URL's when it names one of the player's servers,
-// otherwise the one this player last chose on this browser, otherwise all.
-// A server the player does not have (an old link, or someone else's) never
-// shows an empty page: it falls back the same way.
+// The server to show ('' = all servers): the URL's when it names one of the
+// player's servers or "all", otherwise the one this player last chose on
+// this browser, otherwise the most recently active server (servers come
+// most recent first; a known realm before "unknown"). All servers is only
+// ever shown when chosen. A server the player does not have (an old link,
+// or someone else's) falls back the same way.
 export function resolveServer({ requested = '', stored = '', servers = [] } = {}) {
   const known = new Set(servers.map((server) => server.key))
+  if (requested === ALL_SERVERS) return ''
   if (requested && known.has(requested)) return requested
+  if (stored === ALL_SERVERS) return ''
   if (stored && known.has(stored)) return stored
-  return ''
+  return (servers.find((server) => server.key !== UNKNOWN_SERVER) || servers[0])?.key || ''
+}
+
+// The URL's server value for a resolved server: "all" for all servers.
+export function serverParamValue(server) {
+  return server || ALL_SERVERS
 }
 
 // Remembered per account and browser, so another account on the same

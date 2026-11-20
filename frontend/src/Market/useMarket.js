@@ -43,7 +43,7 @@ export async function marketWrite(url, { method = 'PUT', body } = {}) {
 export function useMarkets(requested = '', server = '', faction = '') {
   const markets = useMarketResource('/api/market/markets')
   const list = useMemo(() => markets.data?.markets || [], [markets.data])
-  const candidates = useMemo(() => marketChoices(list, server, faction).keys, [list, server, faction])
+  const candidates = useMemo(() => marketChoices(list, server, faction).autoKeys, [list, server, faction])
   const marketKey = resolveMarket(list, requested, storedMarket(), candidates)
   useEffect(() => { if (marketKey) storeMarket(marketKey) }, [marketKey])
   return { status: markets.status, markets: list, marketKey, market: list.find((entry) => entry.marketKey === marketKey) || null, reload: markets.reload }

@@ -5,6 +5,7 @@ import { authResultMessage } from '../src/Auth/authResult.js'
 import { signInReturnTo } from '../src/Auth/returnTo.js'
 import { readGuildFeatures } from '../src/Features/guildFeatures.js'
 import {
+  ALL_SERVERS,
   DASHBOARD_VIEWS,
   characterServerKey,
   charactersByServer,
@@ -13,6 +14,7 @@ import {
   playerApiUrl,
   resolveServer,
   serverLabel,
+  serverParamValue,
   setupSteps,
   storeServer,
   storedServer,
@@ -76,14 +78,32 @@ test('every dashboard view has a real route and keeps the chosen server', () => 
   assert.equal(playerApiUrl('farming'), '/api/player/farming')
 })
 
-test('the server shown is the link\'s, then the remembered one, and never one the player lacks', () => {
+test('the server shown is the link\'s, then the remembered one, then the most recent; never one the player lacks', () => {
   assert.equal(resolveServer({ requested: 'us:shadowmoon', stored: 'us:doomhowl', servers }), 'us:shadowmoon')
   assert.equal(resolveServer({ requested: '', stored: 'us:doomhowl', servers }), 'us:doomhowl')
   assert.equal(resolveServer({ requested: 'us:someone-elses', stored: 'us:doomhowl', servers }), 'us:doomhowl')
-  assert.equal(resolveServer({ requested: 'us:someone-elses', stored: '', servers }), '')
-  assert.equal(resolveServer({ requested: '', stored: 'us:gone', servers }), '')
+  // Nothing chosen: the most recently active server (servers come most recent first), not all servers.
+  assert.equal(resolveServer({ requested: 'us:someone-elses', stored: '', servers }), 'us:doomhowl')
+  assert.equal(resolveServer({ requested: '', stored: 'us:gone', servers }), 'us:doomhowl')
+  assert.equal(resolveServer({ requested: '', stored: '', servers: [] }), '')
+  assert.equal(resolveServer({ requested: '', stored: '', servers: [{ key: 'unknown' }, ...servers] }), 'us:doomhowl', 'a known realm before unknown')
+  assert.equal(resolveServer({ requested: '', stored: '', servers: [{ key: 'unknown' }] }), 'unknown')
   assert.equal(serverLabel(servers, ''), 'All servers')
   assert.equal(serverLabel(servers, 'us:doomhowl'), 'Doomhowl')
+})
+
+test('All servers is an explicit choice, in the link and remembered', () => {
+  assert.equal(resolveServer({ requested: ALL_SERVERS, stored: 'us:doomhowl', servers }), '')
+  assert.equal(resolveServer({ requested: '', stored: ALL_SERVERS, servers }), '')
+  assert.equal(resolveServer({ requested: 'us:shadowmoon', stored: ALL_SERVERS, servers }), 'us:shadowmoon')
+  assert.equal(serverParamValue(''), 'all')
+  assert.equal(serverParamValue('us:doomhowl'), 'us:doomhowl')
+  const storage = memoryStorage()
+  storeServer('ash', serverParamValue(''), storage)
+  assert.equal(resolveServer({ requested: '', stored: storedServer('ash', storage), servers }), '', 'switching to All servers survives a reload')
+  storeServer('ash', serverParamValue('us:shadowmoon'), storage)
+  assert.equal(resolveServer({ requested: '', stored: storedServer('ash', storage), servers }), 'us:shadowmoon', 'and so does a server')
+  assert.equal(withServer('/dashboard/characters', serverParamValue('')), '/dashboard/characters?server=all')
 })
 
 test('the remembered server belongs to one account on one browser', () => {

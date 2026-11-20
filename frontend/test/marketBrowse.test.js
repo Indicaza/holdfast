@@ -152,6 +152,34 @@ test('the auction houses offered follow the chosen server', async () => {
   assert.equal(resolveMarket(markets, '', 'game:us:normal:horde', normal.keys), 'game:us:normal:horde')
 })
 
+test('a server with no auction data shows none: never another realm\'s house in its place', async () => {
+  const { marketChoices } = await import('../src/Market/marketBrowse.js')
+  const { resolveMarket } = await import('../src/Market/marketFormat.js')
+  const markets = [
+    { marketKey: 'game:us:rp-pvp:horde', kind: 'client_house', region: 'us', realm: 'RP-PvP', faction: 'horde', items: 50, lastCheckedAt: 10, linkedMarketKey: 'api:us:house-116' },
+    { marketKey: 'game:us:pvp:alliance', kind: 'client_house', region: 'us', realm: 'PvP', faction: 'alliance', items: 0, lastCheckedAt: 5 },
+    { marketKey: 'api:us:house-116', kind: 'api_house', region: 'us', name: 'US Horde (116)', faction: 'horde', items: 800, lastCheckedAt: 40 },
+    { marketKey: 'api:us:house-200', kind: 'api_house', region: 'us', name: 'US Horde (200)', faction: 'horde', items: 700, lastCheckedAt: 40 },
+  ]
+  // The player moved from RP-PvP to PvP, where no house has been scanned yet.
+  const fresh = marketChoices(markets, 'us:pve', 'horde')
+  assert.equal(fresh.otherServers, true, 'the picker still offers the others, and says so')
+  assert.deepEqual(fresh.autoKeys, [])
+  assert.equal(resolveMarket(markets, '', 'game:us:rp-pvp:horde', fresh.autoKeys), '', 'the remembered RP-PvP house is not shown for another server')
+  assert.equal(resolveMarket(markets, 'game:us:rp-pvp:horde', '', fresh.autoKeys), 'game:us:rp-pvp:horde', 'unless the player picks it')
+  // A server with a house but no listings: its own (empty) house, not the RP-PvP one or an unlinked API house.
+  const pvp = marketChoices(markets, 'us:pvp', 'horde')
+  assert.deepEqual(pvp.autoKeys, ['game:us:pvp:alliance'], 'only its own houses, and API houses linked to it')
+  assert.equal(resolveMarket(markets, '', 'game:us:rp-pvp:horde', pvp.autoKeys), 'game:us:pvp:alliance')
+  assert.ok(pvp.keys.includes('api:us:house-200'), 'an unlinked API house can still be picked')
+  assert.ok(!pvp.keys.includes('api:us:house-116'), 'a house linked to RP-PvP is not offered for PvP')
+  // The API house linked to RP-PvP counts as RP-PvP's own.
+  assert.deepEqual(marketChoices(markets, 'us:rp-pvp', 'horde').autoKeys, ['game:us:rp-pvp:horde', 'api:us:house-116'])
+  // All servers: every house, the freshest with data.
+  assert.equal(marketChoices(markets, '').autoKeys, null)
+  assert.equal(resolveMarket(markets, '', '', null), 'api:us:house-116')
+})
+
 test('a link to an item\'s history opens its window on History', () => {
   const { windows } = openInspector([], { itemId: 2589, tab: 'history' }, screen)
   assert.equal(windows[0].tab, 'history')

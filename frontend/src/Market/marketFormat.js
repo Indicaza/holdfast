@@ -215,26 +215,29 @@ export function storedAuctionQuery(storage = globalThis.localStorage) {
 
 export function storeAuctionQuery(queryString, storage = globalThis.localStorage) {
   const params = new URLSearchParams(queryString)
+  // The server, and with it the house, come from the server chosen now.
   params.delete('server')
+  params.delete('market')
   try { storage?.setItem(LAST_STATE_KEY, params.toString()) } catch { /* a convenience */ }
 }
 
-// The market to show: the URL's, else the remembered one, else the freshest
-// market with data.
+// The market to show: the URL's (the player picked it), else the remembered
+// one, else the freshest market with data. With a server chosen,
+// `candidates` are that server's own houses: only those are chosen for the
+// player, and none (an empty state) when it has none. Another realm's
+// house is never shown in its place.
 export function resolveMarket(markets = [], requested = '', remembered = '', candidates = null) {
   const keys = new Set(markets.map((market) => market.marketKey))
   if (requested && keys.has(requested)) return requested
-  // The houses offered for the chosen server, when there is one.
-  const allowed = candidates?.length ? new Set(candidates) : keys
-  if (remembered && allowed.has(remembered)) return remembered
-  const offered = markets.filter((market) => allowed.has(market.marketKey))
-  // With a server chosen: its own houses first, in the order offered.
-  if (candidates?.length) {
+  if (Array.isArray(candidates)) {
+    const own = candidates.filter((key) => keys.has(key))
+    if (remembered && own.includes(remembered)) return remembered
     const byKey = new Map(markets.map((market) => [market.marketKey, market]))
-    return candidates.find((key) => byKey.get(key)?.items > 0) || candidates[0]
+    return own.find((key) => byKey.get(key)?.items > 0) || own[0] || ''
   }
-  const withData = [...offered].filter((market) => market.items > 0).sort((a, b) => (b.lastCheckedAt || b.lastSnapshotAt || 0) - (a.lastCheckedAt || a.lastSnapshotAt || 0))
-  return withData[0]?.marketKey || offered[0]?.marketKey || markets[0]?.marketKey || ''
+  if (remembered && keys.has(remembered)) return remembered
+  const withData = markets.filter((market) => market.items > 0).sort((a, b) => (b.lastCheckedAt || b.lastSnapshotAt || 0) - (a.lastCheckedAt || a.lastSnapshotAt || 0))
+  return withData[0]?.marketKey || markets[0]?.marketKey || ''
 }
 
 // Chart math ---------------------------------------------------------------------------

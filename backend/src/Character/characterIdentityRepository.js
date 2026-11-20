@@ -47,21 +47,25 @@ export function readGuildweaverCharacterAliasInDatabase({
   return uniqueAcrossDevices?.character_id || null;
 }
 
+// A character is account + region + realm + name. The same name on another
+// realm is another character, so a name only matches with a known realm
+// (never "any realm" when the upload has none), and a known region must
+// agree too.
 function characterByStableIdentity(db, { memberId, characterName, realm, region }) {
   const name = text(characterName, 96);
-  if (!name) return null;
-
   const normalizedRealm = text(realm, 120);
+  if (!name || !normalizedRealm) return null;
+
   const normalizedRegion = text(region, 32);
   return db
     .prepare(`
       SELECT c.id, c.is_main, c.sort_order
       FROM characters c
-      LEFT JOIN telemetry_characters t ON t.character_id = c.id
+      JOIN telemetry_characters t ON t.character_id = c.id
       WHERE c.member_id = ?
         AND c.name = ? COLLATE NOCASE
-        AND (? = '' OR LOWER(COALESCE(t.realm, '')) = LOWER(?))
-        AND (? = '' OR COALESCE(t.region, '') = '' OR LOWER(t.region) = LOWER(?))
+        AND LOWER(TRIM(COALESCE(t.realm, ''))) = LOWER(?)
+        AND (? = '' OR TRIM(COALESCE(t.region, '')) = '' OR LOWER(t.region) = LOWER(?))
       ORDER BY c.sort_order, c.id
       LIMIT 1
     `)
@@ -69,10 +73,23 @@ function characterByStableIdentity(db, { memberId, characterName, realm, region 
       text(memberId, 160),
       name,
       normalizedRealm,
-      normalizedRealm,
       normalizedRegion,
       normalizedRegion,
     );
+}
+
+// True when the character is known on another realm (or region) than the
+// upload's. Unknown on either side is not a conflict: it proves nothing.
+export function characterRealmConflictInDatabase(db, characterId, { realm = "", region = "" } = {}) {
+  const incomingRealm = text(realm, 120).toLowerCase();
+  if (!characterId || !incomingRealm || !tableExists(db, "telemetry_characters")) return false;
+  const known = db.prepare("SELECT realm, region FROM telemetry_characters WHERE character_id = ?").get(String(characterId));
+  const knownRealm = text(known?.realm, 120).toLowerCase();
+  if (!knownRealm) return false;
+  if (knownRealm !== incomingRealm) return true;
+  const knownRegion = text(known?.region, 32).toLowerCase();
+  const incomingRegion = text(region, 32).toLowerCase();
+  return Boolean(knownRegion && incomingRegion && knownRegion !== incomingRegion);
 }
 
 // The id a new character of this account takes. Ids come from the upload
@@ -88,6 +105,16 @@ export function ownedCharacterIdInDatabase(db, memberId, preferredId) {
   const existing = db.prepare("SELECT member_id FROM characters WHERE id = ?").get(id);
   if (!existing || existing.member_id === member) return id;
   return `${id}@${member}`.slice(0, 400);
+}
+
+// The same, on a realm: when the id is already this account's character on
+// another realm, the upload's character gets its own stable id for its
+// realm instead of joining the other realm's character.
+export function realmCharacterIdInDatabase(db, memberId, preferredId, { realm = "", region = "" } = {}) {
+  const id = ownedCharacterIdInDatabase(db, memberId, preferredId);
+  if (!id || !characterRealmConflictInDatabase(db, id, { realm, region })) return id;
+  const server = `${text(region, 32)}:${text(realm, 120)}`.toLowerCase();
+  return `${id}~${server}`.slice(0, 400);
 }
 
 export function resolveGuildweaverCharacterIdentityInDatabase({
@@ -107,7 +134,8 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
     deviceId,
     rawCharacterId,
   });
-  if (aliased) {
+  // An alias never carries a character to another realm.
+  if (aliased && !characterRealmConflictInDatabase(db, aliased, { realm, region })) {
     return db
       .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")
       .get(aliased, text(memberId, 160));
@@ -126,7 +154,7 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
 
   // Keep GUID/legacy/direct IDs working for characters that predate the alias
   // ledger or whose name/realm is temporarily unavailable.
-  const preferred = ownedCharacterIdInDatabase(db, memberId, preferredCharacterId);
+  const preferred = realmCharacterIdInDatabase(db, memberId, preferredCharacterId, { realm, region });
   if (preferred) {
     return db
       .prepare("SELECT id, is_main, sort_order FROM characters WHERE id = ? AND member_id = ? LIMIT 1")

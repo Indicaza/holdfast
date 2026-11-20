@@ -288,8 +288,8 @@ export function projectTelemetrySnapshotInDatabase({
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(character_id) DO UPDATE SET
       organization_id = excluded.organization_id,
-      realm = excluded.realm,
-      region = excluded.region,
+      realm = CASE WHEN excluded.realm <> '' THEN excluded.realm ELSE telemetry_characters.realm END,
+      region = CASE WHEN excluded.region <> '' THEN excluded.region ELSE telemetry_characters.region END,
       guild_name = excluded.guild_name,
       level = excluded.level,
       schema_version = excluded.schema_version,
