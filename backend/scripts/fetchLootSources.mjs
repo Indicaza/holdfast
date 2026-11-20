@@ -5,6 +5,8 @@
 //   wago-forever-items.json  the WoW Forever client's item tables (ItemSparse,
 //                            Item, ItemSet) via wago.tools, product "wowf", at
 //                            one pinned build, for the items the atlas needs
+// and, under src/Atlas/data/foreverdb/ (GPL-3.0 with ForeverDB's attribution
+// term, not MIT: see that directory's README.md):
 //   foreverdb-items.json     ForeverDB's gear facts and names for those items
 //   foreverdb-loot.json      ForeverDB's per-boss loot of the atlas's
 //                            instances, with drop rates over looted kills
@@ -43,10 +45,12 @@ const USER_AGENT = "holdfast-loot-importer (+https://github.com/Indicaza/holdfas
 const here = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(here, "..", "src", "Atlas", "data");
 const outDir = join(dataDir, "sources");
+// ForeverDB's data stays apart, under its own licence (data/foreverdb/README.md).
+const foreverDbDir = join(dataDir, "foreverdb");
 const FOREVERDB = "https://foreverdb.net/";
 const FOREVERDB_FILES = ["Gear.lua", "GearSources.lua", "Loot.lua"];
 const WAGO_LICENSE = "Factual game data extracted from the World of Warcraft: Forever client (Blizzard Entertainment), via wago.tools CSV exports. Names and numbers only; no art.";
-const FOREVERDB_LICENSE = "ForeverDB.net add-on data, GPL-3.0 with an attribution term (section 7(b)): credit \"Data from ForeverDB.net\" with a link to https://foreverdb.net wherever it is shown.";
+const FOREVERDB_LICENSE = "ForeverDB.net add-on data, GPL-3.0 with an attribution term (section 7(b)): keep ForeverDB's notice line and credit \"Data from ForeverDB.net (https://foreverdb.net)\" (data/foreverdb/FOREVERDB-LICENSE.txt). Not MIT.";
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -119,6 +123,9 @@ for (const name of FOREVERDB_FILES) {
   files[name] = { text: body.toString("utf8"), sha256: entry.sha256 };
 }
 const foreverDbVersion = manifest.data.version;
+// The attribution term asks to keep this line in every file taken from it.
+const foreverDbNotice = files["Loot.lua"].text.split("\n")[0].trim();
+if (!foreverDbNotice.startsWith("-- Data: ForeverDB.net (https://foreverdb.net)")) throw new Error("ForeverDB's Loot.lua lacks its notice line; refusing it");
 const foreverDbClient = foreverDbBuild(files["Loot.lua"].text);
 const gear = parseForeverDbGear(files["Gear.lua"].text);
 const names = parseForeverDbNames(files["GearSources.lua"].text);
@@ -164,10 +171,10 @@ for (const instance of loot) {
 const outputs = {
   "wago-forever-items.json": rowsJson({ source: "wago-forever", url: "https://wago.tools/db2?product=wowf", revision: `wowf ${build}`, retrievedAt, license: WAGO_LICENSE },
     { items: client }),
-  "foreverdb-items.json": rowsJson({ source: "foreverdb", url: "https://foreverdb.net", revision: `${foreverDbVersion} (client ${foreverDbClient})`, retrievedAt,
+  "foreverdb-items.json": rowsJson({ notice: foreverDbNotice, source: "foreverdb", url: "https://foreverdb.net", revision: `${foreverDbVersion} (client ${foreverDbClient})`, retrievedAt,
     license: FOREVERDB_LICENSE, attribution: "Data from ForeverDB.net", files: { "Gear.lua": files["Gear.lua"].sha256, "GearSources.lua": files["GearSources.lua"].sha256 },
     note: `Gear.lua layout checked against the Forever client: ${agree} items agree, ${disagree} disagree.` }, { items: foreverDbItems }),
-  "foreverdb-loot.json": rowsJson({ source: "foreverdb", url: "https://foreverdb.net/dungeons", revision: `${foreverDbVersion} (client ${foreverDbClient})`, retrievedAt,
+  "foreverdb-loot.json": rowsJson({ notice: foreverDbNotice, source: "foreverdb", url: "https://foreverdb.net/dungeons", revision: `${foreverDbVersion} (client ${foreverDbClient})`, retrievedAt,
     license: FOREVERDB_LICENSE, attribution: "Data from ForeverDB.net", files: { "Loot.lua": files["Loot.lua"].sha256 },
     columns: ["instanceId", "bossIndex", "bossName", "npcId", "itemId", "pct", "src", "hidden", "kills", "seen"],
     note: "Per boss (bossIndex 0: the instance's trash). src f: seen in WoW Forever, pct measured over `kills` looted kills; src c: Classic data (CMaNGOS); pct null: not known; seen: drops players saw." },
@@ -175,9 +182,10 @@ const outputs = {
 };
 
 const tablesOf = (json) => JSON.stringify(JSON.parse(json).tables);
+const pathOf = (name) => join(name.startsWith("foreverdb-") ? foreverDbDir : outDir, name);
 if (CHECK) {
   const stale = Object.entries(outputs).filter(([name, json]) => {
-    const path = join(outDir, name);
+    const path = pathOf(name);
     return !existsSync(path) || tablesOf(readFileSync(path, "utf8")) !== tablesOf(json);
   }).map(([name]) => name);
   if (stale.length) {
@@ -186,7 +194,7 @@ if (CHECK) {
   }
   console.log("Loot source extracts are current.");
 } else {
-  for (const [name, json] of Object.entries(outputs)) writeFileSync(join(outDir, name), json);
+  for (const [name, json] of Object.entries(outputs)) writeFileSync(pathOf(name), json);
   console.log(`wowf ${build}: ${client.length} of ${wanted.size} wanted items (${client.filter((row) => row.hidden).length} hidden by the client). `
     + `ForeverDB ${foreverDbVersion}: ${foreverDbItems.length} gear facts, ${lootRows.length} loot rows in ${instances.length} atlas instances `
     + `(gear layout: ${agree} agree, ${disagree} disagree).`);

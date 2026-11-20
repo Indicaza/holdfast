@@ -93,7 +93,8 @@ test("conflicting rates from two sources stay two rates", () => {
 });
 
 test("the checked-in relationships and the served rates", () => {
-  const data = read("loot-relationships.json");
+  const data = read("foreverdb/loot-relationships.json");
+  assert.ok(data.notice.startsWith("-- Data: ForeverDB.net (https://foreverdb.net)"), "ForeverDB's notice line kept");
   assert.equal(data.dataset, "loot-relationships");
   assert.equal(data.sources[0].attribution, "Data from ForeverDB.net");
   assert.ok(data.report.bossesMatched >= 250, `bosses matched: ${data.report.bossesMatched}`);

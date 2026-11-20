@@ -7,6 +7,16 @@ import { readFileSync } from "node:fs";
 
 const ATLAS_URL = new URL("./data/atlas.json", import.meta.url);
 const REFERENCE_URL = new URL("./data/reference-loot.json", import.meta.url);
+// The reference loot with ForeverDB's item facts (GPL-3.0 with its attribution
+// term, data/foreverdb/README.md), served when present unless
+// HOLDFAST_FOREVERDB_DATA=off; the MIT base otherwise.
+const FOREVERDB_REFERENCE_URL = new URL("./data/foreverdb/reference-loot.json", import.meta.url);
+export function foreverDbDataEnabled() {
+  return String(process.env.HOLDFAST_FOREVERDB_DATA || "").toLowerCase() !== "off";
+}
+function readJson(url) {
+  try { return JSON.parse(readFileSync(url, "utf8")); } catch { return null; }
+}
 let atlasCache = null;
 let referenceCache = null;
 
@@ -31,17 +41,22 @@ export function loadQuestCatalog() {
 }
 
 export function loadReferenceData() {
-  if (!referenceCache) referenceCache = JSON.parse(readFileSync(REFERENCE_URL, "utf8"));
+  if (!referenceCache) referenceCache = (foreverDbDataEnabled() && readJson(FOREVERDB_REFERENCE_URL)) || JSON.parse(readFileSync(REFERENCE_URL, "utf8"));
   return referenceCache;
 }
 
-const RELATIONSHIPS_URL = new URL("./data/loot-relationships.json", import.meta.url);
+const RELATIONSHIPS_URL = new URL("./data/foreverdb/loot-relationships.json", import.meta.url);
 let relationshipsCache = null;
 
-// Boss loot relationships and reference drop rates (data/loot-relationships.json,
-// docs/loot-sources.md), by instance ID; null when the file is absent.
+// Boss loot relationships and reference drop rates (data/foreverdb/loot-relationships.json,
+// docs/loot-sources.md: ForeverDB's licence), by instance ID; null when the
+// file is absent or ForeverDB's data is switched off.
 export function loadLootRelationships() {
   if (relationshipsCache === null) {
+    if (!foreverDbDataEnabled()) {
+      relationshipsCache = false;
+      return null;
+    }
     try {
       const data = JSON.parse(readFileSync(RELATIONSHIPS_URL, "utf8"));
       relationshipsCache = { data, byId: new Map(data.dungeons.map((dungeon) => [dungeon.instanceId, dungeon])) };
