@@ -235,3 +235,33 @@ drops, sightings, percent, low, high }] }`.
 
 Not verified in the real client: whether `GetLootSourceInfo` maps every
 slot on Forever, and how group loot shows a corpse to the second looter.
+
+## In the journal (PR 4)
+
+Website (dungeon modal, boss loot): each row shows its reference rate and
+Guildweaver's observed rate side by side, each with its count, for example
+"Reference: 23.5% · ForeverDB, 17 kills · Guildweaver (preliminary): 16.7%
+(12 of 72 kills, 9.8%–26.9%)" (the reason it is preliminary on hover, until
+the loot-window coverage is verified in game); "not seen in 72 kills (under 5.1%)" for an item Guildweaver
+has never seen; "seen 2×, no full loot count yet" without complete windows.
+Classic-data rates say so. A boss's ForeverDB-only drops are labelled "WoW
+Forever (ForeverDB)", WoW Forever's own items "WoW Forever item", quest items
+"Quest item", and an ungraded item "quality unknown". "Data from
+ForeverDB.net" (linked) is shown under any list holding ForeverDB data.
+
+Add-on (Guildweaver, packaged atlas): the reference rates and ForeverDB's
+boss drops travel in the exported file (`--relationships`); the tooltip
+shows the rate and the credit. Guildweaver's observed rates are server-side
+and shown on the website only.
+
+## Keeping it current
+
+`.github/workflows/loot-sources-refresh.yml` runs weekly (and on demand):
+fetch both sources at their latest build and version, regenerate, run the
+data tests, and open a pull request when anything changed. A bad import
+fails before a PR (the fetch refuses partial or inconsistent sources, the
+importer checks the atlas invariants, the tests check the data); a good one
+waits for review, so a broken upstream can never replace the served data.
+Observations are never touched by a refresh: they are kept per game build,
+and rates of one build are never shown as another's. After a refresh merges,
+regenerate the add-on's atlas from `main`.

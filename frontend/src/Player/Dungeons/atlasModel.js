@@ -467,7 +467,63 @@ export function bossLoot(boss = {}, detail = {}) {
       : { item: ref, source: boss.name, sourceKey: `boss:${name}`, boss: true, observed: ref.observed === true, reference: true })
     have.add(ref.itemKey)
   }
-  return mine.map((row) => ({ ...row, bossKey: bossKey(boss), sourceKind: 'boss' }))
+  // The boss's own drops only ForeverDB lists (a WoW Forever source, not Classic reference).
+  for (const raw of Array.isArray(boss.foreverLoot) ? boss.foreverLoot : []) {
+    const ref = referenceItem(raw)
+    if (!ref || have.has(ref.itemKey)) continue
+    mine.push({ item: ref, source: boss.name, sourceKey: `boss:${name}`, boss: true, observed: false, reference: true, foreverDb: true })
+    have.add(ref.itemKey)
+  }
+  const observed = observedLootOf(boss)
+  return mine.map((row) => ({ ...row, bossKey: bossKey(boss), sourceKind: 'boss', observedRate: observed ? observedRateOf(observed, row.item.itemId) : null }))
+}
+
+// ------------------------------------------------------------ Drop rates
+
+// The boss's (or rare's) Guildweaver observations (`observedLoot`), or null.
+export function observedLootOf(creature) {
+  const raw = creature?.observedLoot
+  if (!raw || typeof raw !== 'object') return null
+  return { eligibleKills: int(raw.eligibleKills) ?? 0, noDropUpper: finite(raw.noDropUpper), build: raw.build || null,
+    // Preliminary until the loot-window coverage is verified in game (the server says so).
+    preliminary: raw.status !== 'verified', reason: typeof raw.reason === 'string' ? raw.reason : null,
+    items: new Map((Array.isArray(raw.items) ? raw.items : []).filter((item) => int(item?.itemId)).map((item) => [int(item.itemId), item])) }
+}
+
+// One item's observed rate: drops over complete loot windows (with the 95%
+// interval), sightings only when no complete window exists, or "not seen in
+// N kills" with its upper bound. Null when nobody has looted the boss.
+export function observedRateOf(observed, itemId) {
+  if (!observed) return null
+  const item = observed.items.get(int(itemId))
+  const kills = observed.eligibleKills
+  const status = { preliminary: observed.preliminary !== false, reason: observed.reason ?? null }
+  if (item && kills > 0) {
+    return { ...status, drops: int(item.drops) ?? 0, kills, percent: finite(item.percent), low: finite(item.low), high: finite(item.high), sightings: int(item.sightings) ?? 0 }
+  }
+  if (item) return { ...status, drops: 0, kills: 0, percent: null, low: null, high: null, sightings: int(item.sightings) ?? 0 }
+  if (kills > 0) return { ...status, drops: 0, kills, percent: 0, low: 0, high: observed.noDropUpper, sightings: 0 }
+  return null
+}
+
+// One decimal, as the sources give it ("18.4%", "20%").
+const pct = (value) => `${Math.round(Number(value) * 10) / 10}%`
+
+// "18.4% · ForeverDB, 72 kills"; Classic data says so.
+export function referenceRateText(rate) {
+  if (!rate || rate.percent === null || rate.percent === undefined) return null
+  const who = rate.source === 'foreverdb' ? 'ForeverDB' : rate.source
+  if (rate.method === 'classic') return `${pct(rate.percent)} · ${who}, Classic data`
+  return `${pct(rate.percent)} · ${who}${rate.kills ? `, ${rate.kills} kills` : ''}`
+}
+
+// "16.7% (12 of 72 kills, 9.8–26.9%)": never a percentage without its count.
+export function observedRateText(rate) {
+  if (!rate) return null
+  if (!rate.kills) return rate.sightings ? `seen ${rate.sightings}×, no full loot count yet` : null
+  if (!rate.drops) return `not seen in ${rate.kills} kill${rate.kills === 1 ? '' : 's'}${rate.high !== null && rate.high !== undefined ? ` (under ${pct(rate.high)})` : ''}`
+  const range = rate.low !== null && rate.low !== undefined && rate.high !== null && rate.high !== undefined ? `, ${pct(rate.low)}–${pct(rate.high)}` : ''
+  return `${pct(rate.percent)} (${rate.drops} of ${rate.kills} kills${range})`
 }
 
 // Every item the dungeon is known to give, one row per item: boss loot
