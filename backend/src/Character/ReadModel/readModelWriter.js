@@ -9,7 +9,7 @@
 // whenever one changes.
 
 import {
-  ownedCharacterIdInDatabase,
+  realmCharacterIdInDatabase,
   readGuildweaverCharacterAliasInDatabase,
   recordGuildweaverCharacterAliasInDatabase,
   resolveGuildweaverCharacterIdentityInDatabase,
@@ -198,7 +198,9 @@ export function refreshCharacterDerivedInDatabase(db, characterId, changed = nul
     ON CONFLICT(character_id) DO UPDATE SET
       member_id = excluded.member_id, name = excluded.name, first_name = excluded.first_name,
       last_name = excluded.last_name, race = excluded.race, class_name = excluded.class_name,
-      spec = excluded.spec, level = excluded.level, realm = excluded.realm, region = excluded.region,
+      spec = excluded.spec, level = excluded.level,
+      realm = CASE WHEN excluded.realm <> '' THEN excluded.realm ELSE character_cards.realm END,
+      region = CASE WHEN excluded.region <> '' THEN excluded.region ELSE character_cards.region END,
       guild_name = excluded.guild_name, organization_name = excluded.organization_name,
       professions_json = excluded.professions_json,
       known_recipe_count = excluded.known_recipe_count, vitals_json = excluded.vitals_json,
@@ -235,7 +237,9 @@ export function refreshCharacterDerivedInDatabase(db, characterId, changed = nul
       character_id, organization_id, realm, region, guild_name, level, schema_version, game_build, last_seen_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?)
     ON CONFLICT(character_id) DO UPDATE SET
-      organization_id = excluded.organization_id, realm = excluded.realm, region = excluded.region,
+      organization_id = excluded.organization_id,
+      realm = CASE WHEN excluded.realm <> '' THEN excluded.realm ELSE telemetry_characters.realm END,
+      region = CASE WHEN excluded.region <> '' THEN excluded.region ELSE telemetry_characters.region END,
       guild_name = excluded.guild_name, level = excluded.level, schema_version = excluded.schema_version,
       last_seen_at = excluded.last_seen_at, updated_at = excluded.updated_at
   `).run(
@@ -266,7 +270,9 @@ function resolveCharacterInDatabase(db, { memberId, deviceId, rawCharacterId, id
   const member = db.prepare("SELECT id FROM members WHERE id = ?").get(memberId);
   if (!member) return { characterId: null, associated: false };
 
-  const preferredId = rawCharacterId ? ownedCharacterIdInDatabase(db, memberId, `guildweaver-id:${rawCharacterId}`) : "";
+  const preferredId = rawCharacterId
+    ? realmCharacterIdInDatabase(db, memberId, `guildweaver-id:${rawCharacterId}`, { realm: identity.realm, region: identity.region })
+    : "";
   const existing = resolveGuildweaverCharacterIdentityInDatabase({
     db,
     memberId,

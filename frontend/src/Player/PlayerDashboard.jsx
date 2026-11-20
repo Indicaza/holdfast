@@ -28,6 +28,7 @@ import PlayerProfessions from './PlayerProfessions.jsx'
 import PlayerShell from './PlayerShell.jsx'
 import PlayerSync from './PlayerSync.jsx'
 import {
+  ALL_SERVERS,
   DASHBOARD_VIEWS,
   MAP_VIEW,
   PLAYER_TOPICS,
@@ -35,6 +36,7 @@ import {
   readServerParam,
   relativeTime,
   resolveServer,
+  serverParamValue,
   storeServer,
   storedServer,
   withServer,
@@ -192,7 +194,10 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   const servers = useMemo(() => overview.data?.servers || [], [overview.data])
   const requested = useServerParam()
   const ready = overview.status === 'ready'
-  const server = ready ? resolveServer({ requested, stored: storedServer(userId), servers }) : requested
+  const server = ready ? resolveServer({ requested, stored: storedServer(userId), servers }) : (requested === ALL_SERVERS ? '' : requested)
+  // The URL always names the server shown ("all" for all servers) once the
+  // player has servers.
+  const urlServer = servers.length ? serverParamValue(server) : server
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useStoredFlag('guildweaver:dashboard:rail')
   const toggleCollapsed = useCallback(() => setCollapsed((value) => !value), [setCollapsed])
@@ -220,24 +225,25 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   useSearchShortcut(session.authenticated ? openSearch : noop)
 
   // Once the player's servers are known, the URL names the server shown: the
-  // remembered one, or none when the link named a server they do not have.
+  // remembered or most recent one, or "all" when that was chosen.
   useEffect(() => {
-    if (!ready || server === requested) return
-    window.history.replaceState(null, '', withServer(`${window.location.pathname}${window.location.search}${window.location.hash}`, server))
+    if (!ready || urlServer === requested) return
+    window.history.replaceState(null, '', withServer(`${window.location.pathname}${window.location.search}${window.location.hash}`, urlServer))
     window.dispatchEvent(new PopStateEvent('popstate'))
-  }, [ready, server, requested])
+  }, [ready, urlServer, requested])
 
+  // The choice is remembered, "All servers" included.
   function changeServer(next) {
-    storeServer(userId, next)
-    navigate(withServer(`${window.location.pathname}${window.location.search}${window.location.hash}`, next), { preserveScroll: true })
+    storeServer(userId, serverParamValue(next))
+    navigate(withServer(`${window.location.pathname}${window.location.search}${window.location.hash}`, serverParamValue(next)), { preserveScroll: true })
   }
 
   // The map sits with the community tools, after Drop rates.
   const views = useMemo(() => {
-    const linked = DASHBOARD_VIEWS.map((view) => ({ ...view, href: dashboardHref(view.id, server) }))
+    const linked = DASHBOARD_VIEWS.map((view) => ({ ...view, href: dashboardHref(view.id, urlServer) }))
     const at = linked.findIndex((view) => view.id === 'farming') + 1
     return [...linked.slice(0, at), MAP_VIEW, ...linked.slice(at)]
-  }, [server])
+  }, [urlServer])
   const characters = useMemo(() => overview.data?.characters || [], [overview.data])
 
   if (session.status === 'loading') return <PageLoading label="Checking your session…" />

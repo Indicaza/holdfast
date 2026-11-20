@@ -76,7 +76,15 @@ export function marketChoices(markets = [], server = '', faction = '') {
     .map((house) => ({ ...house, label: `${house.name} · ${count(house)}` }))
   const groups = [...servers.map((entry) => ({ label: entry.label, markets: order(entry.markets) })),
     ...(houses.length ? [{ label: 'Blizzard auction houses', markets: houses }] : [])]
-  return { groups, keys: groups.flatMap((group) => group.markets.map((market) => market.marketKey)), otherServers }
+  // What may be chosen without the player picking it: with a server, only
+  // that server's own houses and the API houses an administrator linked to
+  // it. Never another realm's, and nothing when the server has no auction
+  // data yet (the page says so; the picker still offers the rest).
+  const own = server && byServer.has(server)
+    ? [...order(byServer.get(server).markets), ...houses.filter((house) => serversOf.get(house.marketKey).has(server))]
+    : []
+  return { groups, keys: groups.flatMap((group) => group.markets.map((market) => market.marketKey)), otherServers,
+    autoKeys: server ? own.map((market) => market.marketKey) : null }
 }
 
 // Inspectors ------------------------------------------------------------------------

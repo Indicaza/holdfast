@@ -78,7 +78,7 @@ test('the last search is remembered and restored only for a blank visit', () => 
   assert.equal(isBlankState(''), true)
   assert.equal(isBlankState('market=api%3Aus%3Ahouse-113'), true, 'a market alone is still a blank visit')
   assert.equal(isBlankState('q=linen'), false)
-  storeAuctionQuery('server=us&q=linen&page=2', storage)
+  storeAuctionQuery('server=us&market=game%3Aus%3Arp-pvp%3Ahorde&q=linen&page=2', storage)
   assert.equal(storedAuctionQuery(storage), 'q=linen&page=2', 'the server is not remembered with the search')
 })
 
