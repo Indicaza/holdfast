@@ -44,10 +44,10 @@ refuses the file if more than one in a thousand disagree.
 | File | Written by | What |
 | --- | --- | --- |
 | `data/sources/wago-forever-items.json` | `scripts/fetchLootSources.mjs` | The Forever client's facts for the 4,101 items the atlas needs (4,098 found; 2,796 the client does not name) |
-| `data/sources/foreverdb-items.json` | same | ForeverDB's gear facts and names for those items (2,695), the files' SHA-256 |
-| `data/sources/foreverdb-loot.json` | same | ForeverDB's loot rows for the atlas's 30 instances it covers (4,733), with rates, kills and seen counts (used by PR 2) |
-| `data/item-definitions.json` | `scripts/importDungeonAtlas.mjs` | The canonical definitions (4,098 items), their sources and a report |
-| `data/reference-loot.json` | same | As before, its item facts now from the definitions; `itemFactSources` names them, each item's `factSources` says which it used |
+| `data/foreverdb/foreverdb-items.json` | same | ForeverDB's gear facts and names for those items (2,695), the files' SHA-256 (GPL-3.0, see Licensing) |
+| `data/foreverdb/foreverdb-loot.json` | same | ForeverDB's loot rows for the atlas's 30 instances it covers (4,733), with rates, kills and seen counts (GPL-3.0) |
+| `data/item-definitions.json`, `data/reference-loot.json` | `scripts/importDungeonAtlas.mjs` | The MIT base: definitions and reference loot from the Forever and Classic clients only (2,227 items, 170 gaps) |
+| `data/foreverdb/item-definitions.json`, `data/foreverdb/reference-loot.json` | same | The same with ForeverDB's facts (2,367 items, 8 gaps; GPL-3.0); served when present |
 
 Refresh: `node scripts/fetchLootSources.mjs [--build <wowf version>] [--cache <dir>]`,
 then `node scripts/importDungeonAtlas.mjs`. `--from <cache>` reruns offline;
@@ -84,18 +84,78 @@ Disagreements between sources: 1,302 items, mostly stats (ForeverDB's
 Forever values against Classic's: Forever changed many items' stats),
 armour, DPS and required level. Each is kept in `item-definitions.json`.
 
-## Not settled
+## Licensing
 
-- **Licensing.** ForeverDB's data is GPL-3.0 with an attribution term;
-  Holdfast is MIT and already carries AzerothCore (GPL-2.0) facts. Whether
-  copyleft data in these files is acceptable is the maintainers' call; the
-  credit is shown wherever its data is (PR 4).
+ForeverDB's add-on ships `LICENSE.txt`, `NOTICE.txt` and `COPYING.txt`
+(copied unchanged into `backend/src/Atlas/data/foreverdb/`). What they say:
+
+- **Licence**: GPL-3.0 with an additional term under section 7(b): anyone
+  who copies, modifies or conveys the add-on, "any of its files, or data
+  taken from them, in any form (another addon, a website, an app, ...)" must
+  keep the line starting `-- Data: ForeverDB.net (https://foreverdb.net)` in
+  every file taken, and show "Data from ForeverDB.net
+  (https://foreverdb.net)" in the work's Appropriate Legal Notices (its
+  credits, about text, or wherever it lists licences and sources).
+- **What it covers**: "ForeverDB.net's own material": its code; data its
+  players recorded in WoW Forever ("drop rates measured over players' kills,
+  where items dropped ..., items players revealed", and more), which it
+  claims as "Copyright (C) 2026 ForeverDB.net"; and its own work (gear
+  scoring, guides, ...).
+- **What it does not claim**: "The WoW Forever client: names and numbers read
+  from the game's own tables ... are Blizzard Entertainment's; ForeverDB.net
+  claims nothing in them beyond its selection and arrangement."
+- **Classic rows**: its Classic data (the `c` rows in `Loot.lua`, entries in
+  `GearSources.lua` and others) derive from CMaNGOS classic-db, GPL-3.0.
+- Its website and keyed API have separate terms (credit with a link; don't
+  resell); Holdfast uses neither.
+
+What Holdfast takes, classified:
+
+| Taken | From | Classification |
+| --- | --- | --- |
+| Drop rates, kill counts, drops seen, which item a boss dropped in Forever | `Loot.lua` | ForeverDB's own claimed material (its players' records); Classic rows CMaNGOS GPL-3.0. Covered by its licence. |
+| Item names, slots, class, levels, stats, armour, DPS | `Gear.lua`, `GearSources.lua` | Mostly client facts ForeverDB disclaims, but for items the Forever client does not name they may be "items players revealed", which it claims. Treated as covered. |
+
+Individual facts (a name, a percentage) are generally not protected by
+copyright in the US, and the GPL only governs what is; but ForeverDB claims
+copyright in the compilation, the extract takes most of it for the atlas's
+dungeons, and some jurisdictions protect databases themselves. Rather than
+rely on that, Holdfast **complies with the licence and keeps the data
+apart**:
+
+- Everything taken from ForeverDB, and everything built with it, lives in
+  `backend/src/Atlas/data/foreverdb/` under GPL-3.0 with ForeverDB's term,
+  with the GPL text, ForeverDB's licence and notice, a README, and each
+  file's `notice` field holding ForeverDB's notice line.
+- The MIT tree keeps base sets built without it (`item-definitions.json`,
+  `reference-loot.json`), and `NOTICE.md` lists the separately licensed
+  data. Holdfast's code reads the ForeverDB set at runtime when present
+  (`HOLDFAST_FOREVERDB_DATA=off` serves the base); deleting the directory
+  removes ForeverDB entirely. Data a program merely reads is not part of the
+  program, so the code stays MIT.
+- Serving data on a website is not "conveying" under the GPL ("mere
+  interaction with a user through a computer network"), but the attribution
+  term names websites too: the credit, linked, is shown under every loot
+  list holding ForeverDB data.
+- The Guildweaver add-on does convey a copy: it keeps ForeverDB's data in a
+  separate file under the same licence (Guildweaver, `docs/dungeon-guide.md`).
+
+Still open:
+
+- A permission request to ForeverDB (drafted for the maintainers) asking
+  whether reusing its loot data in Holdfast and Guildweaver under these
+  terms is fine with it, or whether it would grant a separate permission;
+  and which of its item facts are client facts.
+- AzerothCore's data (GPL-2.0) in the MIT tree is the same kind of question
+  and was not changed here.
+- Rebuilding the drop rates from permitted sources: Guildweaver's own
+  observations (PR 3) replace ForeverDB's as samples grow.
 - Quality and item level for Forever's own items the client does not name.
 - ForeverDB's API (keyed) was not used.
 
 ## Boss loot relationships and reference drop rates (PR 2)
 
-`src/Atlas/lootRelationships.js` writes `data/loot-relationships.json`
+`src/Atlas/lootRelationships.js` writes `data/foreverdb/loot-relationships.json` (GPL-3.0, see Licensing)
 (`scripts/importDungeonAtlas.mjs`): for each atlas boss, every item a source
 places on it, who lists it, and each source's own rate.
 

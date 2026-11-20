@@ -101,18 +101,29 @@ test("the checked-in reference loot is current, sourced and free of drop chances
   const { atlas } = loadAtlas();
   const reference = loadReferenceData();
   assert.deepEqual(referenceLootProblems(reference, atlas), []);
-  const inputs = () => referenceItemInputs({ classic: readSource("wago-classic-era-items.json"), forever: readSource("wago-forever-items.json"),
-    foreverdb: readSource("foreverdb-items.json") });
-  const { factItems, sources } = inputs();
-  const regenerated = normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: factItems, sources,
-    planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt });
-  assert.deepEqual(JSON.parse(JSON.stringify(regenerated)), reference, "run node scripts/importDungeonAtlas.mjs");
-  const again = inputs();
-  assert.deepEqual(normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: again.factItems, sources: again.sources,
-    planner: readSource("dungeonplanner-loot.json"), generatedAt: reference.generatedAt }), regenerated, "idempotent");
+  // Two sets (docs/loot-sources.md, "Licensing"): the MIT base from the Forever
+  // and Classic clients, and the one with ForeverDB's facts, kept in
+  // data/foreverdb/ under ForeverDB's licence. The served one is the latter.
+  const foreverDb = JSON.parse(readFileSync(new URL("foreverdb/foreverdb-items.json", DATA), "utf8"));
+  const inputs = (withForeverDb) => referenceItemInputs({ classic: readSource("wago-classic-era-items.json"), forever: readSource("wago-forever-items.json"),
+    foreverdb: withForeverDb ? foreverDb : null });
+  const regenerate = (withForeverDb, generatedAt) => {
+    const { factItems, sources } = inputs(withForeverDb);
+    return JSON.parse(JSON.stringify(normalizeReferenceLoot({ atlas, loot: readSource("azerothcore-loot.json"), items: factItems, sources,
+      planner: readSource("dungeonplanner-loot.json"), generatedAt })));
+  };
+  const base = JSON.parse(readFileSync(new URL("reference-loot.json", DATA), "utf8"));
+  assert.deepEqual(regenerate(false, base.generatedAt), base, "the MIT base: run node scripts/importDungeonAtlas.mjs");
+  assert.deepEqual(regenerate(false, base.generatedAt), regenerate(false, base.generatedAt), "idempotent");
+  assert.ok(!JSON.stringify(base).includes("foreverdb"), "the base holds nothing from ForeverDB");
+  const { notice, license, ...withForeverDb } = reference;
+  assert.ok(notice.startsWith("-- Data: ForeverDB.net (https://foreverdb.net)"), "ForeverDB's notice line kept");
+  assert.match(license, /GPL-3\.0/);
+  assert.deepEqual(regenerate(true, reference.generatedAt), withForeverDb, "the ForeverDB set: run node scripts/importDungeonAtlas.mjs");
   // The item facts' own sources, apart from the drops' provenance.
   assert.deepEqual(reference.itemFactSources.map((line) => line.source), ["wago-forever", "foreverdb", "wago-classic-era"]);
   assert.equal(reference.itemFactSources[1].attribution, "Data from ForeverDB.net");
+  assert.deepEqual(base.itemFactSources.map((line) => line.source), ["wago-forever", "wago-classic-era"]);
   // No drop chance anywhere: no key that names one, in the data or its extract.
   const chanceKeys = (text) => [...text.matchAll(/"([^"]*chance[^"]*)"\s*:/gi)].map((match) => match[1]);
   assert.deepEqual(chanceKeys(readFileSync(new URL("reference-loot.json", DATA), "utf8")), []);
