@@ -131,3 +131,42 @@ chance-free.
 | Relationships | 4,726: 2,219 listed by both, 527 by the reference only, 78 by ForeverDB only (boss), 1,253 seen on a corpse or shared, 649 world drops |
 | Rates | 1,839 observed in Forever (1,479 with a kill count), 2,360 Classic |
 | Boss loot with an observed Forever rate | 279 of 2,824 boss-scope relationships, on 82 of 298 bosses |
+
+## Guildweaver's observed drop rates (PR 3)
+
+What one Guildweaver player's add-on saw is one **loot window**; what counts
+for a rate is one **loot opportunity**: one physical corpse of an atlas boss
+or rare (`loot_opportunities`, `Loot/lootObservationRepository.js`).
+
+- **Identity**: the corpse's GUID on its realm and game build. The key holds
+  no locale or account, so several Guildweaver players in one group, with any
+  client language, count one corpse once; each extra observer only raises
+  `observers`. A corpse looted again, or an upload retried, changes nothing.
+- **Complete or partial** (the add-on's `capture.inspection`, Guildweaver
+  `Systems/MobLootCapture.lua`): complete when every item slot of the window
+  was tied to its corpse (`GetLootSourceInfo`) and nobody could have taken
+  items first (not free-for-all in a group). Only complete windows are a
+  rate's denominator. Partial windows, and those from add-ons too old to say
+  (`legacy`), count as sightings: proof an item drops, no denominator.
+- **No items**: a boss's or rare's window holding only coins is reported
+  (complete windows only), so kills without an item drop are in the
+  denominator. A corpse with nothing at all never opens a window: those
+  kills are missed, so rates lean slightly high. Trash corpses are not
+  opportunities.
+- **Rate**: per NPC, on the newest game build with complete windows (other
+  builds are listed, never mixed in): drops in complete windows over complete
+  windows, with the 95% **Wilson score interval** (sound for small samples and
+  zero drops). No complete windows: sightings only, no percentage. An item
+  never seen gets `noDropUpper`, the interval's upper bound for 0 drops.
+- **Privacy**: observers are stored as a hash; the served aggregate names no
+  player, character or contributor.
+- **Rebuild**: rates are computed from the opportunity rows on request; there
+  is no stored aggregate to drift.
+
+Served as `observedLoot` on the dungeon detail's bosses and rares
+(`GET /api/player/loot/dungeons/:id`): `{ build, eligibleKills,
+partialWindows, lastObservedAt, noDropUpper, builds: [...], items: [{ itemId,
+drops, sightings, percent, low, high }] }`.
+
+Not verified in the real client: whether `GetLootSourceInfo` maps every
+slot on Forever, and how group loot shows a corpse to the second looter.
