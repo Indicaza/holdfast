@@ -485,6 +485,8 @@ export function observedLootOf(creature) {
   const raw = creature?.observedLoot
   if (!raw || typeof raw !== 'object') return null
   return { eligibleKills: int(raw.eligibleKills) ?? 0, noDropUpper: finite(raw.noDropUpper), build: raw.build || null,
+    // Preliminary until the loot-window coverage is verified in game (the server says so).
+    preliminary: raw.status !== 'verified', reason: typeof raw.reason === 'string' ? raw.reason : null,
     items: new Map((Array.isArray(raw.items) ? raw.items : []).filter((item) => int(item?.itemId)).map((item) => [int(item.itemId), item])) }
 }
 
@@ -495,11 +497,12 @@ export function observedRateOf(observed, itemId) {
   if (!observed) return null
   const item = observed.items.get(int(itemId))
   const kills = observed.eligibleKills
+  const status = { preliminary: observed.preliminary !== false, reason: observed.reason ?? null }
   if (item && kills > 0) {
-    return { drops: int(item.drops) ?? 0, kills, percent: finite(item.percent), low: finite(item.low), high: finite(item.high), sightings: int(item.sightings) ?? 0 }
+    return { ...status, drops: int(item.drops) ?? 0, kills, percent: finite(item.percent), low: finite(item.low), high: finite(item.high), sightings: int(item.sightings) ?? 0 }
   }
-  if (item) return { drops: 0, kills: 0, percent: null, low: null, high: null, sightings: int(item.sightings) ?? 0 }
-  if (kills > 0) return { drops: 0, kills, percent: 0, low: 0, high: observed.noDropUpper, sightings: 0 }
+  if (item) return { ...status, drops: 0, kills: 0, percent: null, low: null, high: null, sightings: int(item.sightings) ?? 0 }
+  if (kills > 0) return { ...status, drops: 0, kills, percent: 0, low: 0, high: observed.noDropUpper, sightings: 0 }
   return null
 }
 

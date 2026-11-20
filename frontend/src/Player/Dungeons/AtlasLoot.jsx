@@ -38,7 +38,9 @@ function Rates({ row }) {
     <span className="gw-atlas-loot__rates gw-muted">
       {reference.length ? <>Reference: {reference.join('; ')}</> : null}
       {reference.length && observed ? ' · ' : null}
-      {observed ? <>Guildweaver: {observed}</> : null}
+      {observed ? (
+        <span title={row.observedRate?.reason || undefined}>Guildweaver{row.observedRate?.preliminary ? ' (preliminary)' : ''}: {observed}</span>
+      ) : null}
     </span>
   )
 }

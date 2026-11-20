@@ -21,7 +21,7 @@ const WITHERFANG = {
   ],
   foreverLoot: [{ itemId: 286978, itemKey: 'i:286978', name: 'Lordaeron Relic', qualityId: 2, kind: 'gear', source: 'foreverdb', attribution: 'Data from ForeverDB.net',
     factSources: ['wago-forever', 'foreverdb'], observed: false, verifiedForForever: false, referenceRates: [rate(11.76, 17)] }],
-  observedLoot: { build: '70959', eligibleKills: 72, noDropUpper: 5.1, items: [{ itemId: 271201, drops: 12, sightings: 1, percent: 16.7, low: 9.8, high: 26.9 }] },
+  observedLoot: { status: 'preliminary', reason: 'Loot-window coverage on WoW Forever has not been verified in game yet; these rates may change.', build: '70959', eligibleKills: 72, noDropUpper: 5.1, items: [{ itemId: 271201, drops: 12, sightings: 1, percent: 16.7, low: 9.8, high: 26.9 }] },
 }
 
 afterEach(() => cleanup())
@@ -50,7 +50,9 @@ describe('the loot list', () => {
     expect(rows.map((row) => row.item.itemId)).toEqual([271201, 275443, 5191, 286978])
     render(<LootList rows={rows} wishes={new Map()} character={null} onToggle={() => {}} />)
     const girdle = document.querySelector('[data-item="i:271201"]')
-    expect(within(girdle).getByText('Reference: 23.5% · ForeverDB, 17 kills · Guildweaver: 16.7% (12 of 72 kills, 9.8%–26.9%)')).toBeTruthy()
+    const rates = girdle.querySelector('.gw-atlas-loot__rates')
+    expect(rates.textContent).toBe('Reference: 23.5% · ForeverDB, 17 kills · Guildweaver (preliminary): 16.7% (12 of 72 kills, 9.8%–26.9%)')
+    expect(rates.querySelector('[title]').getAttribute('title')).toMatch(/not been verified in game/)
     expect(within(girdle).getByText('WoW Forever item')).toBeTruthy()
     expect(girdle.textContent).toContain('quality unknown')
     const strain = document.querySelector('[data-item="i:275443"]')

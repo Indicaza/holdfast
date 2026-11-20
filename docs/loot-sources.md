@@ -240,8 +240,9 @@ slot on Forever, and how group loot shows a corpse to the second looter.
 
 Website (dungeon modal, boss loot): each row shows its reference rate and
 Guildweaver's observed rate side by side, each with its count, for example
-"Reference: 23.5% · ForeverDB, 17 kills · Guildweaver: 16.7% (12 of 72 kills,
-9.8%–26.9%)"; "not seen in 72 kills (under 5.1%)" for an item Guildweaver
+"Reference: 23.5% · ForeverDB, 17 kills · Guildweaver (preliminary): 16.7%
+(12 of 72 kills, 9.8%–26.9%)" (the reason it is preliminary on hover, until
+the loot-window coverage is verified in game); "not seen in 72 kills (under 5.1%)" for an item Guildweaver
 has never seen; "seen 2×, no full loot count yet" without complete windows.
 Classic-data rates say so. A boss's ForeverDB-only drops are labelled "WoW
 Forever (ForeverDB)", WoW Forever's own items "WoW Forever item", quest items
