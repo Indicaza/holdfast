@@ -1,9 +1,10 @@
 {
+ "notice": "-- Data: ForeverDB.net (https://foreverdb.net), build 1.60.1.70959. Reuse requires this credit: see NOTICE.txt (GPL-3.0 section 7(b)).",
  "source": "foreverdb",
  "url": "https://foreverdb.net",
  "revision": "2026-11-20.9e9bed81 (client 1.60.1.70959)",
- "retrievedAt": "2026-11-20T09:53:01.077Z",
- "license": "ForeverDB.net add-on data, GPL-3.0 with an attribution term (section 7(b)): credit \"Data from ForeverDB.net\" with a link to https://foreverdb.net wherever it is shown.",
+ "retrievedAt": "2026-11-20T19:56:08.910Z",
+ "license": "ForeverDB.net add-on data, GPL-3.0 with an attribution term (section 7(b)): keep ForeverDB's notice line and credit \"Data from ForeverDB.net (https://foreverdb.net)\" (data/foreverdb/FOREVERDB-LICENSE.txt). Not MIT.",
  "attribution": "Data from ForeverDB.net",
  "files": {"Gear.lua":"f879df446c47f4d529bb6d5278c3c97dc5dae3b2effdffe863ef78f69027956e","GearSources.lua":"3127011da95817c9d6c7439843ac4fec653df65799568960dba804898c877252"},
  "note": "Gear.lua layout checked against the Forever client: 485 items agree, 0 disagree.",

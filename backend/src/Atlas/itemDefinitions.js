@@ -69,7 +69,8 @@ export function buildItemDefinitions({ rows, itemIds = null }) {
   const bySource = Object.fromEntries(SOURCES.map((source) => [source, new Map((rows[source] || []).map((row) => [row.id, row]))]));
   const ids = itemIds ? [...new Set(itemIds)] : [...new Set(SOURCES.flatMap((source) => [...bySource[source].keys()]))];
   const items = [];
-  const report = { items: 0, bySource: Object.fromEntries(SOURCES.map((source) => [source, 0])), foreverClient: 0, hiddenInClient: 0,
+  // Only the sources given (a set built without ForeverDB names nothing of it).
+  const report = { items: 0, bySource: Object.fromEntries(SOURCES.filter((source) => rows[source]).map((source) => [source, 0])), foreverClient: 0, hiddenInClient: 0,
     unknownName: 0, unknownQuality: 0, conflicts: 0, conflictFields: {} };
   for (const itemId of ids.sort((a, b) => a - b)) {
     const claims = Object.fromEntries(SOURCES.map((source) => [source, claimsOf(source, bySource[source].get(itemId))]));

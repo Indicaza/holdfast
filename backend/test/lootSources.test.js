@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -134,16 +135,22 @@ test("definitions: precedence per field, conflicts kept, unknowns stay unknown",
 });
 
 test("the checked-in definitions and the served loot: Witherfang, Hall of Thanes, VanCleef", () => {
-  const definitions = read("item-definitions.json");
+  // The ForeverDB set (data/foreverdb/, its licence) and the MIT base.
+  const definitions = read("foreverdb/item-definitions.json");
+  assert.ok(definitions.notice.startsWith("-- Data: ForeverDB.net (https://foreverdb.net)"));
   assert.deepEqual(definitions.precedence, ["wago-forever", "foreverdb", "wago-classic-era"]);
   assert.deepEqual(definitions.sources.map((source) => source.source), ["wago-forever", "foreverdb", "wago-classic-era"]);
+  const base = read("item-definitions.json");
+  assert.deepEqual(base.precedence, ["wago-forever", "wago-classic-era"]);
+  assert.ok(!JSON.stringify(base).includes("foreverdb"), "the base holds nothing from ForeverDB");
+  assert.equal(base.items.find((item) => item.itemId === 271201).name, undefined, "without ForeverDB the client does not name it");
   assert.ok(definitions.sources.every((source) => source.revision && source.license));
   const byId = new Map(definitions.items.map((item) => [item.itemId, item]));
   for (const id of [271201, 271202, 271203, 275443]) assert.ok(byId.get(id)?.name, `Witherfang's ${id} is named`);
   assert.equal(byId.get(275443).category, "quest");
   // The same ids in each run (the importer's --check covers the bytes).
   const again = referenceItemInputs({ classic: read("sources/wago-classic-era-items.json"), forever: read("sources/wago-forever-items.json"),
-    foreverdb: read("sources/foreverdb-items.json") });
+    foreverdb: read("foreverdb/foreverdb-items.json") });
   assert.deepEqual(again.definitions.items.map((item) => item.itemId), definitions.items.map((item) => item.itemId));
 
   // Served: Witherfang's drops have names, slots and stats; the strain is a quest item.
@@ -160,4 +167,16 @@ test("the checked-in definitions and the served loot: Witherfang, Hall of Thanes
   const barb = vancleef.referenceLoot.find((entry) => entry.itemId === 5191);
   assert.equal(barb.name, "Cruel Barb");
   assert.ok(barb.factSources.includes("wago-classic-era"));
+});
+
+test("without ForeverDB's data the site serves the MIT base", () => {
+  // A fresh process: the data is read once per process.
+  const script = `import("./src/Atlas/atlasRepository.js").then(({ atlasDetail }) => {
+    const boss = atlasDetail(2999, []).bosses.find((entry) => entry.name === "Witherfang");
+    console.log(JSON.stringify({ named: boss.referenceLoot.filter((item) => item.itemId === 271201).length, unresolved: boss.unresolvedLoot.length }));
+  })`;
+  const run = (value) => JSON.parse(execFileSync(process.execPath, ["-e", script], { cwd: new URL("..", import.meta.url),
+    env: { ...process.env, HOLDFAST_FOREVERDB_DATA: value }, encoding: "utf8" }).trim());
+  assert.deepEqual(run("off"), { named: 0, unresolved: 3 }, "the girdle, bracers and staff known by id only");
+  assert.deepEqual(run(""), { named: 1, unresolved: 0 }, "with ForeverDB's data (the default when present)");
 });
