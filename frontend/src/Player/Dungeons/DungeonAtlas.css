@@ -400,3 +400,7 @@
 .gw-atlas-rquest__where, .gw-atlas-rquest__chain, .gw-atlas-rquest__why { margin: 0; font-size: 12px; }
 .gw-atlas-rquest__step--missing { color: var(--gw-bad); }
 .gw-atlas-rquest__step--done { color: var(--gw-ok); }
+
+/* Drop rates (loot intelligence): reference and Guildweaver, each with its count. */
+.gw-atlas-loot__rates { grid-column: 1 / -1; font-size: 12px; }
+.gw-atlas-credit { font-size: 12px; margin: 0.4rem 0 0; }

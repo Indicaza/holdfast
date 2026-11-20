@@ -1,0 +1,78 @@
+name: Loot sources refresh
+
+# Weekly: fetch the WoW Forever client's item tables (wago.tools, latest wowf
+# build) and ForeverDB's add-on data, regenerate the item definitions, the
+# reference loot and the loot relationships, run their tests, and open a pull
+# request when anything changed. Nothing is published without review: a bad
+# import fails here (fetchLootSources.mjs refuses partial or inconsistent
+# sources, the importer checks the atlas invariants, the tests check the
+# data), and a good one waits in a PR. docs/loot-sources.md.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: loot-sources-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh loot sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Fetch sources
+        working-directory: backend
+        run: node scripts/fetchLootSources.mjs --cache "$RUNNER_TEMP/loot-sources"
+
+      - name: Regenerate the atlas data
+        working-directory: backend
+        run: node scripts/importDungeonAtlas.mjs
+
+      - name: Test the data
+        working-directory: backend
+        run: node --test test/lootSources.test.js test/lootRelationships.test.js test/dungeonAtlasReferenceLoot.test.js test/dungeonAtlasLootSources.test.js test/dungeonForever.test.js
+
+      - name: Open a pull request when anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- backend/src/Atlas/data; then
+            echo "No changes."
+            exit 0
+          fi
+          branch="loot-sources/$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add backend/src/Atlas/data
+          git commit -m "Loot sources refresh $(date -u +%Y-%m-%d)"
+          git push origin "$branch"
+          summary=$(cd backend && node scripts/importDungeonAtlas.mjs --check 2>&1 | tail -4)
+          gh pr create --base main --head "$branch" --title "Loot sources refresh $(date -u +%Y-%m-%d)" \
+            --body "Scheduled refresh of the WoW Forever client's item tables and ForeverDB's data (docs/loot-sources.md). Review the diff of backend/src/Atlas/data before merging; regenerate the add-on's atlas from main after.
+
+          \`\`\`
+          $summary
+          \`\`\`"
