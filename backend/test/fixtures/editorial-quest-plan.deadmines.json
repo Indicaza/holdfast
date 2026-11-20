@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "note": "SYNTHETIC test fixture: shapes only. The ids and NPC names are the catalog's own Deadmines quests; the turn-in, steps and instructions are made up for tests and are not verified game facts.",
+  "instanceId": 36,
+  "revision": null,
+  "instructions": [
+    { "section": "enter", "text": "Synthetic: gather the group at the entrance.", "verified": false, "source": "test fixture" }
+  ],
+  "quests": [
+    {
+      "questId": 166,
+      "shareable": "no",
+      "turnIn": { "name": "Gryan Stoutmantle", "location": { "mapId": 1436, "x": 0.5633, "y": 0.4752, "zoneName": "Westfall" } },
+      "steps": [ { "text": "Synthetic step: bring the head back." } ],
+      "verified": false,
+      "source": "test fixture"
+    },
+    { "questId": 214, "shareable": "yes", "verified": false, "source": "test fixture" }
+  ]
+}
