@@ -25,7 +25,7 @@ import { VANILLA_INSTANCE_IDS } from "./atlasSources.js";
 
 export const REFERENCE_LOOT_SCHEMA_VERSION = 1;
 export const REFERENCE_LOOT_DATASET = "atlas-reference-loot";
-export const REFERENCE_KINDS = Object.freeze(["gear", "set", "rare", "boe", "material", "quest-reward", "other"]);
+export const REFERENCE_KINDS = Object.freeze(["gear", "set", "rare", "boe", "material", "quest-reward", "quest-item", "other"]);
 // Who lists a reference drop (a boss's or rare's `sources`).
 const EMULATOR = "azerothcore";
 const PLANNER = "dungeon-planner";
@@ -47,7 +47,10 @@ const GAMEOBJECT_CHEST = "3";
 // ItemSparse.Bonding.
 const BIND = Object.freeze({ 1: "BoP", 2: "BoE", 3: "BoU", 4: "Quest" });
 // ItemSparse.StatModifier_bonusStat (ITEM_MOD_*) values a Classic item carries.
-const STAT = Object.freeze({ 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "Intellect", 6: "Spirit", 7: "Stamina" });
+// 38, 39 and 45 (ITEM_MOD_ATTACK_POWER, _RANGED_ATTACK_POWER, _SPELL_POWER):
+// ForeverDB's gear facts carry them; the Classic client puts them in spells.
+const STAT = Object.freeze({ 0: "Mana", 1: "Health", 3: "Agility", 4: "Strength", 5: "Intellect", 6: "Spirit", 7: "Stamina",
+  38: "Attack Power", 39: "Ranged Attack Power", 45: "Spell Power" });
 // ItemSparse.Resistances_1..6 (Resistances_0 is armour).
 const RESISTANCES = Object.freeze(["Holy Resistance", "Fire Resistance", "Nature Resistance", "Frost Resistance", "Shadow Resistance", "Arcane Resistance"]);
 // AllowableClass bits of the nine Classic classes.
@@ -106,6 +109,10 @@ export function extractItemFacts({ tables, itemIds = null }) {
 export function curateItem(item) {
   if (!item?.name) return null;
   const equipment = [CLASS.weapon, CLASS.armor].includes(item.classId) && item.inventoryType > 0;
+  // A quality no source states (an item the Forever client does not name):
+  // equipment is kept, as gear of unknown quality.
+  if (equipment && (item.quality === null || item.quality === undefined)) return item.itemSet ? "set" : "gear";
+  if (item.classId === CLASS.quest && !item.startQuestId) return "quest-item";
   if (item.itemSet) return "set";
   if (equipment && item.quality >= 2) return item.bonding === 2 ? "boe" : "gear";
   if ([CLASS.container, CLASS.quiver].includes(item.classId) && item.quality >= 2) return "other";
@@ -323,7 +330,7 @@ export function referenceItemOf(item, { classNames = new Map(), subclassNames = 
   // Stats a random suffix decides ("of the Monkey"), or of a kind this
   // reader does not name, are not known: null rather than a partial list.
   const unknownStat = item.stats.some(([stat]) => !STAT[stat]);
-  const stats = item.randomStats || unknownStat ? null : [
+  const stats = item.randomStats || unknownStat || item.statsKnown === false ? null : [
     ...item.stats.filter(([stat]) => STAT[stat]).map(([stat, value]) => ({ stat: STAT[stat], value })),
     ...item.resistances.map((value, index) => (value ? { stat: RESISTANCES[index], value } : null)).filter(Boolean),
   ];
@@ -343,6 +350,9 @@ export function referenceItemOf(item, { classNames = new Map(), subclassNames = 
     stats,
     setName: item.setName ?? null,
     kind: kind ?? curateItem(item) ?? "other",
+    // Where its facts come from (Atlas/itemDefinitions.js), and whether the
+    // Forever client names it ("visible"), knows it unnamed ("hidden") or not.
+    ...(item.factSources ? { factSources: item.factSources, foreverClient: item.foreverClient ?? null, category: item.category ?? null } : {}),
   };
 }
 
@@ -366,7 +376,7 @@ const NAME_ALIASES = Object.freeze({ geilhast: "gelihast" });
 // union of both; every item keeps the sources that list it. An item either
 // source places on a boss is that boss's, never shared trash; an item the
 // emulator says drops in the open world is left out whoever lists it.
-export function normalizeReferenceLoot({ atlas, loot, items, planner = null, generatedAt = null }) {
+export function normalizeReferenceLoot({ atlas, loot, items, planner = null, sources: itemSources = null, generatedAt = null }) {
   const lootProv = loot ? { source: loot.source, revision: loot.revision ?? null, confidence: "medium", tier: "community-unverified",
     retrievedAt: loot.retrievedAt ?? null, url: loot.url ?? null, note: "creature_loot_template / reference_loot_template: which creature drops it (no drop chances)" } : null;
   const itemProv = items ? { source: items.source, revision: items.revision ?? null, confidence: "high", tier: "classic-reference",
@@ -403,7 +413,9 @@ export function normalizeReferenceLoot({ atlas, loot, items, planner = null, gen
     const fact = facts.get(itemId);
     // Kept only what the Classic client knows, worth listing, not a world drop.
     let reason = null;
-    if (!fact) reason = forever ? "forever-item-without-client-facts" : "not-in-client";
+    // A fact without a name: the item is known by id only (the Forever
+    // client does not name it and no source does): still a gap.
+    if (!fact || !fact.name) reason = forever ? "forever-item-without-client-facts" : "not-in-client";
     else if (!curateItem(fact)) reason = "filtered-by-curation";
     else if (worldDrops.has(itemId)) reason = "world-drop";
     if (reason) {
@@ -540,6 +552,11 @@ export function normalizeReferenceLoot({ atlas, loot, items, planner = null, gen
   // each item when served (Atlas/referenceLoot.js).
   const plannerProv = planner ? { source: planner.source, revision: planner.revision ?? null, confidence: "medium", tier: "community-unverified",
     retrievedAt: planner.retrievedAt ?? null, url: planner.url ?? null, note: "DungeonPlanner boss drop lists (from Wowhead Classic and warcraft.wiki.gg, facts only; no drop chances)" } : null;
+  // `provenance` is the drops' (Classic reference: who lists which drop). The
+  // item facts' own sources (Atlas/itemDefinitions.js) are listed apart, in
+  // `itemFactSources`; an item's `factSources` says which it took.
+  const itemFactSources = (itemSources || []).map((source) => ({ source: source.source, revision: source.revision ?? null,
+    retrievedAt: source.retrievedAt ?? null, url: source.url ?? null, ...(source.attribution ? { attribution: source.attribution } : {}) }));
   const provenance = [itemProv, lootProv, plannerProv].filter(Boolean);
   const out = {};
   for (const itemId of [...used.keys()].sort((a, b) => a - b)) {
@@ -548,9 +565,11 @@ export function normalizeReferenceLoot({ atlas, loot, items, planner = null, gen
   const revision = [items?.revision, loot?.revision, planner?.revision && `dungeon-planner ${planner.revision.slice(0, 12)}`].filter(Boolean).join(" + ") || null;
   return {
     schemaVersion: REFERENCE_LOOT_SCHEMA_VERSION, dataset: REFERENCE_LOOT_DATASET, revision, generatedAt, provenance,
+    ...(itemFactSources.length ? { itemFactSources } : {}),
     filter: "Dungeon-only drops of creatures and chests (nothing outside the vanilla dungeons drops them): uncommon+ weapons, armour, bags and quivers, set items, rare+ items, uncommon+ trade goods, reagents and recipes, quest starters; plus the atlas quests' reward items. No drop chances.",
-    sources: [items, loot, planner].filter(Boolean).map((extract) => ({ source: extract.source, revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null,
-      url: extract.url ?? null, license: extract.license ?? null })),
+    sources: [...(itemSources || []).filter((source) => source.source !== items?.source), items, loot, planner].filter(Boolean)
+      .map((extract) => ({ source: extract.source, revision: extract.revision ?? null, retrievedAt: extract.retrievedAt ?? null,
+        url: extract.url ?? null, license: extract.license ?? null })),
     gaps: gaps.sort((a, b) => a.instanceId - b.instanceId || a.npcId - b.npcId || a.itemId - b.itemId),
     excluded: Object.fromEntries(Object.entries(excluded).sort()),
     items: out, dungeons,

@@ -91,11 +91,13 @@ test("served: cards, detail with unknown loot by id, quests and readiness", () =
   assert.deepEqual(resolveDungeonId("the-hall-of-thanes"), { instanceId: 3065, wingKey: null });
   const hall = atlasDetail(3065, []);
   assert.equal(hall.origin, "forever");
-  assert.ok(hall.unresolvedLoot.length > 0, "the guide's drop list, kept by item id");
-  assert.ok(hall.unresolvedLoot.every((entry) => entry.factsKnown === false && entry.verifiedForForever === false && entry.itemKey === `i:${entry.itemId}`));
-  const onBosses = hall.bosses.flatMap((boss) => boss.unresolvedLoot);
-  assert.ok(onBosses.length > 0 && onBosses.length <= hall.unresolvedLoot.length, "a boss shows its own; unmatched ones stay on the dungeon");
-  assert.ok(hall.bosses.every((boss) => boss.referenceLoot.length === 0), "no Classic item facts claimed");
+  // The guide's drop list now has its items' facts (the Forever client's
+  // Item table and ForeverDB, docs/loot-sources.md): on each boss, none left by id.
+  assert.equal(hall.unresolvedLoot.length, 0, "every listed drop resolved");
+  const hallLoot = hall.bosses.flatMap((boss) => boss.referenceLoot);
+  assert.ok(hallLoot.length >= 10, `Hall of Thanes boss loot: ${hallLoot.length}`);
+  assert.ok(hallLoot.every((entry) => entry.name && entry.factSources.includes("wago-forever") && !entry.factSources.includes("wago-classic-era")),
+    "Forever items: no Classic facts claimed");
   assert.ok(hall.quests.length >= 5 && hall.quests.every((quest) => quest.prerequisitesKnown === false));
   // Blackmaw Hold: no curated quest list: not "no quests".
   const blackmaw = atlasQuests(2974);
