@@ -157,7 +157,7 @@ smoke_http
 smoke_atlas
 probe_state | tee "$FIRST_STATE_FILE"
 
-grep -q '"schemaVersion":24' "$FIRST_STATE_FILE"
+grep -q '"schemaVersion":25' "$FIRST_STATE_FILE"
 grep -q '"members":3' "$FIRST_STATE_FILE"
 grep -q '"quests":1' "$FIRST_STATE_FILE"
 grep -q '"objectives":2' "$FIRST_STATE_FILE"
