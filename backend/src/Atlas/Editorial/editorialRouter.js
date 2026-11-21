@@ -12,6 +12,7 @@ import { atlasDungeon } from "../atlasRepository.js";
 import { loadQuestCatalog } from "../atlasData.js";
 import { atlasQuestPlanFromState } from "../atlasQuestPlanRepository.js";
 import { editorialQuestPlanOf } from "../editorialQuestPlan.js";
+import { exportableEditorialQuestPlan } from "../atlasQuestPlan.js";
 import { createMediaInDatabase, deleteMediaInDatabase, listMediaInDatabase, MEDIA_ASPECTS, MEDIA_LIMITS, MEDIA_PURPOSES, mediaFileInDatabase, mediaUsageInDatabase, readMediaBytes, updateMediaInDatabase } from "./atlasMedia.js";
 import { addonArtPlan, buildAddonArt } from "./addonArt.js";
 import { previewInDatabase } from "./editorialPreview.js";
@@ -89,7 +90,19 @@ export function readAddonBundle(db, { generatedFrom = null, withFiles = false } 
     entries.push(addonEditorialEntry(id, resolveEditorial(dungeon, doc.document), doc.revisionId));
   }
   const built = buildAddonArt(db, addonArtPlan([...active].filter(([id]) => atlasDungeon(id)), atlasDungeon));
-  const bundle = { ...addonEditorialBundle(entries, { generatedFrom }), art: built.art, artSkipped: built.skipped.map(({ instanceId, kind, key, mediaId, reason }) => ({ instanceId, kind, key, mediaId, reason })) };
+  // Published quest edits for the add-on's quest planner (contract schema 1,
+  // as the planner checked them). A part the checks dropped is listed in
+  // questPlanProblems: the add-on exporter refuses a bundle with any.
+  const questPlans = [];
+  const questPlanProblems = [];
+  for (const [id, doc] of [...active].sort(([a], [b]) => a - b)) {
+    if (!atlasDungeon(id)) continue;
+    const { document, problems } = exportableEditorialQuestPlan(editorialQuestPlanOf(id, doc.document, doc.revisionId), id);
+    if (document) questPlans.push(document);
+    for (const problem of problems) questPlanProblems.push({ instanceId: id, ...problem });
+  }
+  const bundle = { ...addonEditorialBundle(entries, { generatedFrom }), art: built.art, artSkipped: built.skipped.map(({ instanceId, kind, key, mediaId, reason }) => ({ instanceId, kind, key, mediaId, reason })),
+    questPlans, questPlanProblems };
   return withFiles ? { bundle, files: built.files } : bundle;
 }
 

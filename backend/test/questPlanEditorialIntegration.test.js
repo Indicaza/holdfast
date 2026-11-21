@@ -79,6 +79,18 @@ test("players plan over published quest edits only; editors preview drafts in th
   assert.ok(!sectionOf(hallAfter.json, "collect").some((step) => step.questId === 96394), "96394 now waits on the dungeon quest 96393");
   assert.equal(sectionOf(hallAfter.json, "turnIn").find((step) => step.questId === 96394).kind, "follow-up");
 
+  // The add-on export bundle carries the published quest edits, as the planner checked them.
+  const bundle = (await admin(`${STUDIO}/export/addon`)).json;
+  assert.deepEqual(bundle.questPlans.map((entry) => entry.instanceId), [DEADMINES, HALL]);
+  assert.deepEqual(bundle.questPlanProblems, []);
+  const exported = bundle.questPlans[0];
+  assert.equal(exported.revision, String(published.json.active.revision.id));
+  assert.deepEqual(exported.quests, [
+    { questId: 214, shareable: "no", verified: false, source: "test" },
+    { questId: 166, turnIn: WESTFALL_TURNIN, steps: [{ text: "Synthetic step." }], verified: false, source: "test" },
+  ]);
+  assert.deepEqual(bundle.questPlans[1].quests, [{ questId: 96394, prerequisites: [96393], verified: false, source: "test" }]);
+
   // Unpublished: back to the catalog alone.
   await admin(`${STUDIO}/dungeons/${DEADMINES}/unpublish`, { method: "POST", body: {} });
   assert.deepEqual((await player(DEADMINES, { state: state() })).json, before.json);

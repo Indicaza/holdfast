@@ -75,6 +75,6 @@ The studio shows each dungeon's add-on byte count against the per-dungeon budget
 - Wing detail pages do not show editorial content yet.
 - The boss order editor shows boss keys in the "imported" column.
 - In the add-on, the editorial boss order is exported but not applied: runs refer to bosses by position.
-- The add-on's quest planner checklist does not read editorial quest plans yet. Worktree B wires `publishedEditorialQuestPlan` on the website side.
+- Published quest edits reach the website's planner (`loadEditorialQuestPlan`, `docs/dungeon-quest-planner.md`) and the add-on: the export bundle's `questPlans` (with `questPlanProblems`) go into the add-on's quest data through `scripts/exportDungeonQuests.lua --editorial` (Indicaza/guildweaver). Drafts reach neither; the studio previews a draft plan at `POST /api/admin/atlas-studio/dungeons/:id/plan-preview`.
 - No GitHub Actions status in the CMS. The add-on export is a manual step, and the add-on release flow is unchanged.
 - Playwright e2e for the studio is not written (CI-only). The HTTP-level demo test is `backend/test/atlasStudioDemo.test.js`.

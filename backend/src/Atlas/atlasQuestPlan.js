@@ -114,6 +114,30 @@ export function readEditorialQuestPlan(raw, instanceId) {
   return { editorial, problems };
 }
 
+// The editorial document as the add-on packages it (contract schema 1, only
+// what the checks above kept): what the add-on's planner reads, so both
+// planners see the same document. { document | null, problems }.
+export function exportableEditorialQuestPlan(raw, instanceId) {
+  const { editorial, problems } = readEditorialQuestPlan(raw, instanceId);
+  if (!editorial) return { document: null, problems };
+  const person = (entry) => ({ ...(entry.name ? { name: entry.name } : {}), ...(entry.location ? { location: entry.location } : {}) });
+  const document = { schemaVersion: EDITORIAL_SCHEMA, instanceId, revision: editorial.revision === null ? null : String(editorial.revision) };
+  if (editorial.entrance) document.entrance = editorial.entrance;
+  if (editorial.instructions.length) document.instructions = editorial.instructions;
+  document.quests = [...editorial.quests.values()].map((quest) => ({
+    questId: quest.questId,
+    ...(quest.relevance ? { relevance: quest.relevance } : {}),
+    ...(quest.shareable ? { shareable: quest.shareable } : {}),
+    ...(quest.prerequisites ? { prerequisites: quest.prerequisites.map((entry) => (entry.mustBeActive ? -entry.questId : entry.questId)) } : {}),
+    ...(quest.giver ? { giver: person(quest.giver) } : {}),
+    ...(quest.turnIn ? { turnIn: person(quest.turnIn) } : {}),
+    ...(quest.steps ? { steps: quest.steps.map((step) => ({ text: step })) } : {}),
+    ...(quest.notes ? { notes: quest.notes } : {}),
+    verified: quest.verified, source: quest.source,
+  }));
+  return { document, problems };
+}
+
 // A catalog quest with its editorial entry laid over it (an absent field
 // inherits the catalog).
 function mergeQuest(quest, entry) {
