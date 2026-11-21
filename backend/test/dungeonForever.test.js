@@ -130,3 +130,26 @@ test("the API: a Forever dungeon by instance ID and by key", () => withHttpApp(a
   assert.ok(list.atlasDungeons.some((entry) => entry.instanceId === 2998 && entry.name === "Excavation Site: Wetlands"));
   assert.equal((await get("4000")).status, 404, "an instance no table lists");
 }));
+
+// The loot catalog names a creature it has seen only by ID "Creature <id>".
+// Joined to the atlas by NPC ID, the atlas's verified name stays the boss's
+// name; the catalog's goes to catalogName (The Hall of Thanes regression).
+test("a catalog placeholder never replaces a known boss name", () => {
+  const sources = [
+    { key: "creature:261306", kind: "creature", name: "Creature 261306", npcIds: [261306], encounterIds: [], items: [{ itemId: 818 }] },
+    { key: "creature:261319", kind: "creature", name: "Creature 261319", npcIds: [261319], encounterIds: [], items: [{ itemId: 2632 }] },
+    { key: "unknown", kind: "unknown", name: null, npcIds: [], encounterIds: [], items: [{ itemId: 5071 }] },
+  ];
+  const hall = atlasDetail(3065, sources);
+  const faldrim = hall.bosses.find((boss) => boss.npcId === 261306);
+  const durgen = hall.bosses.find((boss) => boss.npcId === 261319);
+  assert.equal(faldrim.name, "Faldrim Anvilmar");
+  assert.equal(faldrim.catalogName, "Creature 261306");
+  assert.deepEqual(faldrim.loot, ["i:818"]);
+  assert.equal(durgen.name, "Durgen Dirgehammer");
+  assert.equal(durgen.catalogName, "Creature 261319");
+  assert.ok(hall.bosses.every((boss) => !/^Creature \d+$/.test(boss.name)));
+  // A matching catalog name adds nothing.
+  const same = atlasDetail(3065, [{ key: "boss:faldrim anvilmar", kind: "boss", name: "Faldrim Anvilmar", npcIds: [261306], encounterIds: [], items: [] }]);
+  assert.equal(same.bosses.find((boss) => boss.npcId === 261306).catalogName, undefined);
+});
