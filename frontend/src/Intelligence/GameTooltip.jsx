@@ -121,7 +121,9 @@ function focusVisible(event) {
 // Hover (or keyboard focus) on the children shows the game's tooltip for
 // `item`, beside the first child, or beside the children's parent with
 // anchor="parent" (a whole row or card). The wrapper has no box of its own.
-export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child' }) {
+// touch={false}: a tap does not open it (the tapped control shows the item
+// its own way, as the dungeon loot slots do); mouse, pen and keyboard still do.
+export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child', touch = true }) {
   const tooltipId = useId()
   const [anchor, setAnchor] = useState(null)
   const shown = Boolean(anchor)
@@ -160,8 +162,10 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
     <span
       className="game-tooltip-hover"
       aria-describedby={anchor ? tooltipId : undefined}
-      onMouseEnter={show}
-      onMouseLeave={hide}
+      {...(touch ? { onMouseEnter: show, onMouseLeave: hide } : {
+        onPointerEnter: (event) => { if (event.pointerType !== 'touch') show(event) },
+        onPointerLeave: hide,
+      })}
       onFocus={showOnFocus}
       onBlur={hide}
     >

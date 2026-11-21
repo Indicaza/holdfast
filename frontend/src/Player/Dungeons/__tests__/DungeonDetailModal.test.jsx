@@ -17,6 +17,16 @@ const RUN = {
   dungeon: { name: 'The Deadmines', instanceId: 36 }, character: { id: 'char-1', name: 'Rook' },
 }
 
+// Loot is a grid of item slots: a slot is named by its item, and pressing it
+// opens the item's details (tooltip, sources, wishlist).
+const named = (name) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(,|$)`)
+const slot = (name, scope = document.body) => within(scope).getByRole('button', { name: named(name) })
+const findSlot = (name, scope = document.body) => within(scope).findByRole('button', { name: named(name) })
+function openItem(name, scope = document.body) {
+  fireEvent.click(slot(name, scope))
+  return screen.getByRole('group', { name: `${name} details` })
+}
+
 function api({ detail = FIXTURE_DEADMINES_DETAIL, wishlist = FIXTURE_WISHLIST, runs = [], put = null } = {}) {
   let current = structuredClone(wishlist)
   return mockApi([
@@ -180,13 +190,13 @@ describe('deep links and sections', () => {
   test('loot: gear targeting and the one Plan my gear button', async () => {
     api()
     renderWithSession(<Modal section="loot" />)
-    await screen.findByText('Cruel Barb')
+    await findSlot('Cruel Barb')
     expect(screen.getAllByRole('button', { name: /Plan my gear/ })).toHaveLength(1)
     const usable = screen.getByRole('checkbox', { name: /Only what Rook can use \(\d+\)/ })
     fireEvent.click(usable)
     // A Rogue cannot use the Emberstone Staff (staves): it is filtered out.
-    expect(screen.queryByText('Emberstone Staff')).toBeNull()
-    expect(screen.getByText('Cruel Barb')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: named('Emberstone Staff') })).toBeNull()
+    expect(slot('Cruel Barb')).toBeTruthy()
   })
 
   test('history lives in My runs', async () => {
@@ -207,25 +217,31 @@ describe('wishlist on boss loot', () => {
     const calls = api()
     renderWithSession(<Modal section="bosses" boss="2744" />)
     const boss = await screen.findByRole('article', { name: 'Captain Greenskin' })
-    const staff = await within(boss).findByRole('button', { name: 'Add Emberstone Staff to Rook\'s wishlist' })
-    const line = staff.closest('li')
+    await findSlot('Emberstone Staff', boss)
+    // Hovering never touches the wishlist: only the button in the item's details does.
+    const line = openItem('Emberstone Staff', boss)
     expect(within(line).getByText('Classic reference')).toBeTruthy()
+    const staff = within(line).getByRole('button', { name: 'Add Emberstone Staff to Rook\'s wishlist' })
     await act(async () => { fireEvent.click(staff) })
     const put = calls.find((call) => call.method === 'PUT')
     expect(put.path).toBe('/api/player/wishlists/char-1/items/i:5201')
     expect(put.body).toEqual({ sourceDungeon: 'The Deadmines', sourceInstanceId: 36 })
     await waitFor(() => expect(within(line).getByRole('button', { name: /Remove Emberstone Staff/ })).toHaveProperty('ariaPressed', 'true'))
+    // The slot shows it as wanted.
+    expect(slot('Emberstone Staff, on the wishlist', boss).className).toContain('is-wanted')
   })
 
   test('wanted items show as wanted and remove with DELETE; acquired ones show it', async () => {
     const wishlist = { ...FIXTURE_WISHLIST, items: [...FIXTURE_WISHLIST.items, { itemKey: 'i:872', itemId: 872, state: 'acquired', acquiredBasis: 'owned', sources: [] }] }
     const calls = api({ wishlist })
     renderWithSession(<Modal section="loot" />)
-    const cape = await screen.findByRole('button', { name: 'Remove Cape of the Brotherhood from Rook\'s wishlist' })
-    expect(cape).toHaveProperty('ariaPressed', 'true')
-    const rockslicer = screen.getByText('Rockslicer').closest('li')
+    expect(await findSlot('Cape of the Brotherhood, on the wishlist')).toBeTruthy()
+    expect(slot('Rockslicer, acquired').className).toContain('is-acquired')
+    const rockslicer = openItem('Rockslicer')
     expect(within(rockslicer).getByText('Acquired')).toBeTruthy()
     expect(within(rockslicer).queryByRole('button', { name: /wishlist/ })).toBeNull()
+    const cape = within(openItem('Cape of the Brotherhood')).getByRole('button', { name: 'Remove Cape of the Brotherhood from Rook\'s wishlist' })
+    expect(cape).toHaveProperty('ariaPressed', 'true')
     await act(async () => { fireEvent.click(cape) })
     expect(calls.find((call) => call.method === 'DELETE').path).toBe('/api/player/wishlists/char-1/items/i:5193')
   })
@@ -233,7 +249,8 @@ describe('wishlist on boss loot', () => {
   test('an item the backend does not know yet says so', async () => {
     api({ put: () => ({ status: 422, body: { error: 'unknown_item' } }) })
     renderWithSession(<Modal section="loot" />)
-    const button = await screen.findByRole('button', { name: 'Add Emberstone Staff to Rook\'s wishlist' })
+    await findSlot('Emberstone Staff')
+    const button = within(openItem('Emberstone Staff')).getByRole('button', { name: 'Add Emberstone Staff to Rook\'s wishlist' })
     await act(async () => { fireEvent.click(button) })
     expect((await screen.findByRole('alert')).textContent).toContain('does not know Emberstone Staff yet')
   })
@@ -242,7 +259,8 @@ describe('wishlist on boss loot', () => {
     api()
     const onNavigate = vi.fn()
     renderWithSession(<Modal section="loot" onNavigate={onNavigate} />)
-    const barb = (await screen.findByText('Cruel Barb')).closest('li')
+    await findSlot('Cruel Barb')
+    const barb = openItem('Cruel Barb')
     fireEvent.click(within(barb).getByText('Item facts'))
     expect(barb.textContent).toContain('30–57 damage, speed 2.80, 15.5 dps')
     expect(barb.textContent).toContain('One-Handed Swords')
@@ -250,7 +268,7 @@ describe('wishlist on boss loot', () => {
     expect(within(barb).getByText('Seen dropping')).toBeTruthy()
     fireEvent.click(within(barb).getByRole('button', { name: 'Edwin VanCleef' }))
     expect(onNavigate).toHaveBeenCalledWith({ section: 'overview', boss: '2747' })
-    const shirt = screen.getByText('Corsair\'s Overshirt').closest('li')
+    const shirt = openItem('Corsair\'s Overshirt')
     fireEvent.click(within(shirt).getByText('Item facts'))
     expect(shirt.textContent).toContain('Classic reference — not verified for Forever. Drop chances are not published.')
   })
@@ -258,10 +276,10 @@ describe('wishlist on boss loot', () => {
   test('the loot tab filters to Classic reference items and usable gear', async () => {
     api()
     renderWithSession(<Modal section="loot" />)
-    await screen.findByText('Cruel Barb')
+    await findSlot('Cruel Barb')
     fireEvent.change(screen.getByRole('combobox', { name: 'Which loot' }), { target: { value: 'reference' } })
-    expect(screen.queryByText('Cruel Barb')).toBeNull()
-    expect(screen.getByText('Corsair\'s Overshirt')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: named('Cruel Barb') })).toBeNull()
+    expect(slot('Corsair\'s Overshirt')).toBeTruthy()
   })
 
   test('switching character from the modal asks the host', async () => {
@@ -275,7 +293,8 @@ describe('wishlist on boss loot', () => {
   test('without a character, toggles are disabled and say why', async () => {
     api()
     renderWithSession(<Modal character={null} characters={[]} section="loot" />)
-    const button = await screen.findByRole('button', { name: 'Add Cruel Barb to the wishlist' })
+    await findSlot('Cruel Barb')
+    const button = within(openItem('Cruel Barb')).getByRole('button', { name: 'Add Cruel Barb to the wishlist' })
     expect(button).toHaveProperty('disabled', true)
     expect(screen.getByText('Choose a character to keep a wishlist.')).toBeTruthy()
   })
@@ -299,9 +318,9 @@ describe('missing data', () => {
   test('the sprint-1 backend (no reference loot, no quest details) still works', async () => {
     api({ detail: FIXTURE_DETAIL_SPRINT1 })
     renderWithSession(<Modal section="loot" />)
-    await screen.findByText('Cruel Barb')
+    await findSlot('Cruel Barb')
     expect(screen.queryByRole('combobox', { name: 'Which loot' })).toBeNull()
-    expect(screen.queryByText('Corsair\'s Overshirt')).toBeNull()
+    expect(screen.queryByRole('button', { name: named('Corsair\'s Overshirt') })).toBeNull()
     expect(screen.queryByText('Classic reference')).toBeNull()
   })
 
@@ -359,14 +378,14 @@ describe('loot by source', () => {
     // The atlas's name, not the catalog's placeholder.
     const pirate = screen.getByRole('region', { name: 'Defias Pirate loot' })
     expect(screen.queryByText(/Creature 657/)).toBeNull()
-    expect(within(boss).getByText('Cruel Barb')).toBeTruthy()
-    const line = within(pirate).getByText('Cruel Barb').closest('li')
+    expect(slot('Cruel Barb', boss)).toBeTruthy()
+    const line = openItem('Cruel Barb', pirate)
     expect(line.textContent).toContain('Also from Edwin VanCleef (boss)')
     fireEvent.click(within(line).getByRole('button', { name: 'Edwin VanCleef' }))
     expect(onNavigate).toHaveBeenLastCalledWith({ section: 'overview', boss: '2747' })
     expect(screen.getByRole('region', { name: 'Bosses' })).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Trash and adds' })).toBeTruthy()
-    expect(screen.getByRole('region', { name: 'Unknown source' }).textContent).toContain('Buzz Saw')
+    expect(slot('Buzz Saw', screen.getByRole('region', { name: 'Unknown source' }))).toBeTruthy()
   })
 
   test('a boss shows its own loot with its guide, and names other sources of the same item', async () => {
@@ -374,12 +393,29 @@ describe('loot by source', () => {
     renderWithSession(<Modal section="overview" boss="2747" />)
     const boss = await screen.findByRole('article', { name: 'Edwin VanCleef' })
     const loot = within(boss).getByRole('region', { name: 'Edwin VanCleef loot' })
-    expect(loot.textContent).toContain('Cruel Barb')
-    expect(loot.textContent).not.toContain('Rockslicer')
+    expect(slot('Cruel Barb', loot)).toBeTruthy()
+    expect(within(loot).queryByRole('button', { name: named('Rockslicer') })).toBeNull()
+    // The boss guide uses the same item slots and details.
+    expect(openItem('Cruel Barb', loot).textContent).toContain('From Edwin VanCleef')
     // Technical ids are folded away, not in the header.
     expect(within(boss).getByText('About this boss\'s data')).toBeTruthy()
     expect(boss.querySelector('.gw-atlas-boss__head').textContent).not.toMatch(/NPC|encounter/)
     expect(within(boss).getByRole('navigation', { name: 'Previous and next boss' })).toBeTruthy()
+  })
+})
+
+describe('quest rewards', () => {
+  test('rewards are item slots too, marked as a choice', async () => {
+    api()
+    renderWithSession(<Modal section="quests" character={null} characters={[]} />)
+    const quest = (await screen.findAllByText('The Defias Brotherhood')).find((element) => element.closest('.gw-atlas-quest'))
+    fireEvent.click(quest)
+    const block = quest.closest('.gw-atlas-quest')
+    expect(within(block).getByText('Rewards (choose one)')).toBeTruthy()
+    const rewards = within(block).getAllByRole('button', { name: /, choose one$/ })
+    expect(rewards.length).toBeGreaterThan(1)
+    fireEvent.click(rewards[0])
+    expect(screen.getByRole('group', { name: /details$/ }).textContent).toContain('Quest reward: choose one of the rewards.')
   })
 })
 

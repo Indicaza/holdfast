@@ -43,6 +43,15 @@ export const personas = {
   },
   // Dungeon planner journeys: its own account, so its synced character
   // never shows up in another spec's first-run checks.
+  lootBrowser: {
+    id: 'e2e-loot-browser',
+    username: 'e2e-loot-browser',
+    globalName: 'Lou Looter',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   planner: {
     id: 'e2e-planner',
     username: 'e2e-planner',
