@@ -2,8 +2,10 @@
 // way Guildweaver Bridge does: pair, approve as the player, exchange the
 // code for a device key, then post telemetry with that key. Runs in the page
 // so it uses the page's own session cookie and origin.
-export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], gathers = [], telemetry = [] } = {}) {
-  return page.evaluate(async ({ deviceName, characters, gathers, telemetry }) => {
+// Pass `deviceToken` (from an earlier call's result) to upload again from the
+// same computer without pairing another one.
+export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], gathers = [], telemetry = [], deviceToken = null } = {}) {
+  return page.evaluate(async ({ deviceName, characters, gathers, telemetry, deviceToken }) => {
     const headers = { 'Content-Type': 'application/json', 'X-Guildweaver-Release': 'forever-live' }
     async function json(url, options = {}) {
       const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
@@ -12,9 +14,12 @@ export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], g
       return body
     }
 
-    const pairing = await json('/api/bridge/pairing/start', { method: 'POST', body: JSON.stringify({ deviceName }) })
-    await json('/api/bridge/pairing/approve', { method: 'POST', body: JSON.stringify({ userCode: pairing.userCode }) })
-    const device = await json('/api/bridge/pairing/token', { method: 'POST', body: JSON.stringify({ deviceCode: pairing.deviceCode }) })
+    let device = deviceToken ? { deviceToken, deviceId: null } : null
+    if (!device) {
+      const pairing = await json('/api/bridge/pairing/start', { method: 'POST', body: JSON.stringify({ deviceName }) })
+      await json('/api/bridge/pairing/approve', { method: 'POST', body: JSON.stringify({ userCode: pairing.userCode }) })
+      device = await json('/api/bridge/pairing/token', { method: 'POST', body: JSON.stringify({ deviceCode: pairing.deviceCode }) })
+    }
     const auth = { Authorization: `Bearer ${device.deviceToken}` }
 
     let capturedAt = Math.floor(Date.now() / 1000) - 120
@@ -94,6 +99,6 @@ export function connectAndSync(page, { deviceName = 'E2E PC', characters = [], g
         body: JSON.stringify(record),
       })
     }
-    return { deviceId: device.deviceId }
-  }, { deviceName, characters, gathers, telemetry })
+    return { deviceId: device.deviceId, deviceToken: device.deviceToken }
+  }, { deviceName, characters, gathers, telemetry, deviceToken })
 }

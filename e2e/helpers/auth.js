@@ -52,6 +52,15 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  questPlanner: {
+    id: 'e2e-quest-planner',
+    username: 'e2e-quest-planner',
+    globalName: 'Quinn Quester',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   rival: {
     id: 'e2e-rival',
     username: 'e2e-rival',

@@ -175,6 +175,23 @@ gets, so a bad document gives `problems`, never a broken plan.
 publish (shareability, turn-in waypoint, instructions, an edited Hall of
 Thanes chain) and unpublish.
 
+## Website
+
+The dungeon page's **Quests** section (`frontend/src/Player/Dungeons/QuestPlan.jsx`,
+model `questPlanModel.js`) draws the selected character's plan from
+`GET /plan`, live on the `player` topic, so a new quest upload updates it in
+place. It mirrors the add-on's checklist: the readiness and how fresh the
+quest data is, the next step (the plan's `next`), then the sections with the
+add-on's titles. Collect quests are numbered and their parts lettered; a
+prerequisite chain is lettered under the dungeon quest that waits on it (found
+through the steps' `prerequisite:<id>` reasons, so the plan's zone-first order
+does not split it), and a second quest on the same chain points at it. Share
+steps are "or" alternatives. Optional and repeatable quests fold away, and
+long plans fold their done quests. Locations come only from the plan's
+waypoints; "View on map" opens `/map?zone=<UiMap id>&mark=<x>,<y>&label=`,
+which marks the spot. Without a plan (no quest list) the readiness groups
+stand in; without a character, the quest list alone.
+
 ## Add-on
 
 `Systems/DungeonQuestPlan.lua` (Indicaza/guildweaver) runs the same rules

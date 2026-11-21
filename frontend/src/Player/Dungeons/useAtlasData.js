@@ -128,3 +128,12 @@ export function useWishlistMutation() {
     reauthenticate: () => session.signIn(signInReturnTo()),
   })
 }
+
+// The selected character's quest preparation plan (docs/dungeon-quest-planner.md)
+// for a dungeon or wing, from the quest state the add-on last synced. A new
+// upload publishes the player topic, which refreshes it in place.
+export function useDungeonPlan(instanceId, characterId) {
+  const url = instanceId && characterId
+    ? `/api/player/loot/dungeons/${encodeURIComponent(instanceId)}/plan?character=${encodeURIComponent(characterId)}` : ''
+  return useLiveResource(url, { topics: TOPICS, enabled: Boolean(url) })
+}
