@@ -447,7 +447,7 @@ function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character,
         {boss.lootNotes?.length ? (
           <ul className="gw-atlas-plain gw-atlas-lootnotes">{boss.lootNotes.map((note) => <li key={note.itemId}><span className="gw-muted">Item {note.itemId}:</span> {note.note}</li>)}</ul>
         ) : null}
-        <LootList rows={rows} empty={bossLootEmpty(boss, atlas)} {...lootProps} />
+        <LootList rows={rows} empty={bossLootEmpty(boss, atlas)} label={`${boss.name} loot`} {...lootProps} />
         <UnresolvedLoot entries={boss.unresolvedLoot} owner={boss.name} />
       </section>
       {boss.npcId || boss.encounterId ? (
