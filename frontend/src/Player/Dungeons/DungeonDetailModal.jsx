@@ -38,6 +38,7 @@ import PlanMyGear from './PlanMyGear.jsx'
 import QuestPlan from './QuestPlan.jsx'
 import { useDungeonDetail, useDungeonPlan, useDungeonReadiness, useWishlist, useWishlistMutation } from './useAtlasData.js'
 import './DungeonAtlas.css'
+import './DungeonJournal.css'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
 
@@ -411,50 +412,70 @@ function bossLootEmpty(boss, atlas) {
 
 // One boss, as the add-on's journal shows it: portrait, mechanics and
 // guide, then its loot, with the next boss a click away.
+// One boss, as the add-on's creature page shows it: a framed header
+// (portrait, place in the dungeon, what matters at a glance), then its key
+// mechanics beside its loot, the other abilities folded, and the previous
+// and next boss a click away.
 function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character, lootProps, onBoss }) {
   const map = atlas.maps.find((entry) => entry.imageUrl && entry.floorId === boss.floorId) || atlas.maps.find((entry) => entry.imageUrl)
   const abilities = boss.abilities || []
   const guide = quickGuide(abilities, role)
   const previous = bosses[index - 1]
   const next = bosses[index + 1]
+  const high = abilities.filter((ability) => ability.priority === 'high').length + (boss.mechanics || []).filter((mechanic) => mechanic.priority === 'high').length
+  const interrupts = abilities.some((ability) => ability.interruptible === true) || (boss.mechanics || []).some((mechanic) => mechanic.type === 'interrupt')
+  const wanted = rows.filter((row) => lootProps.wishes?.get(row.item.itemKey) && lootProps.wishes.get(row.item.itemKey).state !== 'acquired').length
+  const hasGuide = abilities.length || boss.mechanics?.length || boss.description || boss.strategy || boss.positioning
   return (
-    <article className="gw-atlas-boss" aria-label={boss.name}>
-      <header className="gw-atlas-boss__head">
-        <Portrait boss={boss} size={64} />
-        <div>
-          <p className="gw-muted gw-atlas-boss__eyebrow">Boss {index + 1} of {bosses.length}</p>
+    <article className="gw-journal-boss gw-atlas-boss" aria-label={boss.name}>
+      <header className="gw-journal-boss__hero gw-atlas-boss__head">
+        <Portrait boss={boss} size={72} />
+        <div className="gw-journal-boss__title">
+          <p className="gw-journal-boss__eyebrow gw-atlas-boss__eyebrow">Boss {index + 1} of {bosses.length}</p>
           <h3>{boss.name}</h3>
+          <p className="gw-journal-boss__facts">
+            {high ? <span className="gw-journal-tag gw-journal-tag--bad">{high} high priority</span> : null}
+            {interrupts ? <span className="gw-journal-tag gw-journal-tag--info">Interrupts</span> : null}
+            <span className="gw-journal-tag">{rows.length} drop{rows.length === 1 ? '' : 's'}</span>
+            {wanted ? <span className="gw-journal-tag gw-journal-tag--wish">{wanted} on the wishlist</span> : null}
+          </p>
         </div>
       </header>
-      {abilities.length ? (
-        <>
-          <RoleSelect role={role} onRole={onRole} character={character} />
-          <QuickGuide abilities={abilities} role={role} />
-        </>
-      ) : null}
-      {boss.description ? <p className="gw-atlas-description">{boss.description}</p> : null}
-      <Mechanics mechanics={boss.mechanics} />
-      <Strategy boss={boss} />
-      {abilities.length ? (
-        <details className="gw-atlas-allabilities" open={!guide.length}>
-          <summary><h4 className="gw-atlas-subhead">All abilities ({abilities.length})</h4></summary>
-          <Abilities abilities={abilities} />
-        </details>
-      ) : !boss.mechanics?.length ? <p className="gw-muted">No abilities recorded for this boss yet.</p> : null}
-      {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
-      <section className="gw-atlas-boss__loot" aria-label={`${boss.name} loot`}>
-        <h4 className="gw-atlas-subhead">Loot</h4>
-        {boss.lootNotes?.length ? (
-          <ul className="gw-atlas-plain gw-atlas-lootnotes">{boss.lootNotes.map((note) => <li key={note.itemId}><span className="gw-muted">Item {note.itemId}:</span> {note.note}</li>)}</ul>
-        ) : null}
-        <LootList rows={rows} empty={bossLootEmpty(boss, atlas)} label={`${boss.name} loot`} {...lootProps} />
-        <UnresolvedLoot entries={boss.unresolvedLoot} owner={boss.name} />
-      </section>
+      <div className="gw-journal-boss__body">
+        <div className="gw-journal-boss__guide">
+          {boss.description ? <p className="gw-atlas-description">{boss.description}</p> : null}
+          {abilities.length || boss.mechanics?.length ? <h4 className="gw-journal-subhead">Key mechanics</h4> : null}
+          {abilities.length ? (
+            <>
+              <RoleSelect role={role} onRole={onRole} character={character} />
+              <QuickGuide abilities={abilities} role={role} />
+            </>
+          ) : null}
+          <Mechanics mechanics={boss.mechanics} />
+          <Strategy boss={boss} />
+          {abilities.length ? (
+            <details className="gw-atlas-allabilities" open={!guide.length}>
+              <summary><h4 className="gw-atlas-subhead">All abilities ({abilities.length})</h4></summary>
+              <Abilities abilities={abilities} />
+            </details>
+          ) : null}
+          {!hasGuide ? <p className="gw-muted gw-journal-empty">No abilities in the atlas for {boss.name}. That does not mean it has none.</p> : null}
+          {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
+        </div>
+        <section className="gw-atlas-boss__loot gw-journal-boss__loot" aria-label={`${boss.name} loot`}>
+          <h4 className="gw-atlas-subhead">Loot{rows.length ? ` (${rows.length})` : ''}</h4>
+          {boss.lootNotes?.length ? (
+            <ul className="gw-atlas-plain gw-atlas-lootnotes">{boss.lootNotes.map((note) => <li key={note.itemId}><span className="gw-muted">Item {note.itemId}:</span> {note.note}</li>)}</ul>
+          ) : null}
+          <LootList rows={rows} empty={bossLootEmpty(boss, atlas)} label={`${boss.name} loot`} {...lootProps} />
+          <UnresolvedLoot entries={boss.unresolvedLoot} owner={boss.name} />
+        </section>
+      </div>
       {boss.npcId || boss.encounterId ? (
         <details className="gw-atlas-about">
           <summary>About this boss's data</summary>
           <p className="gw-muted gw-atlas-provenance">
-            {[boss.npcId ? `NPC ${boss.npcId}` : null, boss.encounterId ? `encounter ${boss.encounterId}` : null].filter(Boolean).join(' · ')}
+            {[boss.npcId ? `NPC ${boss.npcId}` : null, boss.encounterId ? `encounter ${boss.encounterId}` : null, boss.catalogName ? `loot catalog: ${boss.catalogName}` : null].filter(Boolean).join(' · ')}
             {Array.isArray(boss.provenance) && boss.provenance.length ? ` · ${boss.provenance.map((line) => provenanceCopy(line).label).join(', ')}` : ''}
           </p>
         </details>
@@ -471,7 +492,7 @@ function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character,
 
 // The boss list beside the guide, always in reach: the dungeon first, then
 // each boss in order.
-function BossRail({ bosses, selected, onBoss, onOverview }) {
+function BossRail({ bosses, selected, onBoss, onOverview, sourceRows = () => [], wishes = null }) {
   const listRef = useRef(null)
   // On a phone the rail is a row: keep the chosen boss in sight.
   useEffect(() => {
@@ -489,13 +510,18 @@ function BossRail({ bosses, selected, onBoss, onOverview }) {
           </button>
         </li>
         {bosses.map((boss, index) => {
-          const high = (boss.abilities || []).filter((ability) => ability.priority === 'high').length
+          const high = (boss.abilities || []).filter((ability) => ability.priority === 'high').length + (boss.mechanics || []).filter((mechanic) => mechanic.priority === 'high').length
+          const rows = sourceRows(boss)
+          const wanted = wishes ? rows.filter((row) => wishes.get(row.item.itemKey) && wishes.get(row.item.itemKey).state !== 'acquired').length : 0
           return (
             <li key={bossKey(boss)}>
-              <button type="button" aria-current={boss === selected ? 'true' : undefined} onClick={() => onBoss(boss)}>
-                <Portrait boss={boss} size={28} />
-                <span className="gw-atlas-rail__name"><span className="gw-atlas-rail__num" aria-hidden="true">{index + 1}</span>{boss.name}</span>
-                {high ? <span className="gw-atlas-rail__flag" title={`${high} high-priority abilit${high === 1 ? 'y' : 'ies'}`}>{high}<span className="gw-sr-only"> high priority</span></span> : null}
+              <button type="button" className="gw-journal-rail__boss" aria-current={boss === selected ? 'true' : undefined} onClick={() => onBoss(boss)}>
+                <Portrait boss={boss} size={36} />
+                <span className="gw-atlas-rail__name">
+                  <span className="gw-journal-rail__line"><span className="gw-atlas-rail__num" aria-hidden="true">{index + 1}</span>{boss.name}</span>
+                  <span className="gw-journal-rail__sub">{rows.length ? `${rows.length} drop${rows.length === 1 ? '' : 's'}` : 'No loot known'}{wanted ? <span className="gw-journal-rail__wish"> · {wanted} wanted</span> : null}</span>
+                </span>
+                {high ? <span className="gw-atlas-rail__flag" title={`${high} high-priority mechanic${high === 1 ? '' : 's'}`}>{high}<span className="gw-sr-only"> high priority</span></span> : null}
               </button>
             </li>
           )
@@ -518,7 +544,7 @@ function OverviewSection({ atlas, boss, onBoss, onOverview, sourceRows, overview
   if (!atlas.bosses.length) return overview
   return (
     <div className="gw-atlas-split">
-      <BossRail bosses={atlas.bosses} selected={selected} onBoss={onBoss} onOverview={onOverview} />
+      <BossRail bosses={atlas.bosses} selected={selected} onBoss={onBoss} onOverview={onOverview} sourceRows={sourceRows} wishes={bossProps.lootProps?.wishes} />
       <div className="gw-atlas-split__main" ref={mainRef}>
         {selected ? <BossDetail key={bossKey(selected)} boss={selected} index={index} bosses={atlas.bosses} atlas={atlas} rows={sourceRows(selected)} onBoss={onBoss} {...bossProps} /> : overview}
       </div>
