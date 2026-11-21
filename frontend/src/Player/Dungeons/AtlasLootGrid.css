@@ -160,6 +160,8 @@
 .gw-itempop:focus { outline: none; }
 .gw-itempop:focus-visible { box-shadow: 0 0 0 2px #ffd100, 0 12px 32px rgba(0, 0, 0, 0.6); }
 .gw-itempop--sheet {
+  background: #0b0a09;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.75), 0 0 0 100vmax rgba(0, 0, 0, 0.35);
   right: 0;
   bottom: 0;
   left: 0;

@@ -922,7 +922,9 @@ export function referenceTooltip(item = {}, { reference = false } = {}) {
   const bind = bindText(item.bindType)
   if (item.kind === 'quest-item') lines.push({ left: 'Quest Item' })
   else if (bind) lines.push({ left: bind })
-  if (item.slot || item.itemSubclass) lines.push({ left: item.slot || '', right: item.itemSubclass && item.itemSubclass !== item.slot ? item.itemSubclass : '' })
+  // Slot left and type right, as the game draws them; a type alone (a recipe's profession) sits on the left.
+  if (item.slot) lines.push({ left: item.slot, right: item.itemSubclass && item.itemSubclass !== item.slot ? item.itemSubclass : '' })
+  else if (item.itemSubclass) lines.push({ left: item.itemSubclass })
   const weapon = item.weapon && typeof item.weapon === 'object' ? item.weapon : null
   const min = finite(weapon?.minDamage)
   const max = finite(weapon?.maxDamage)
