@@ -7,8 +7,9 @@ import {
   FIXTURE_DUNGEON_LIST_SPRINT1,
   FIXTURE_WISHLIST,
 } from '../__fixtures__/atlas.js'
-import AtlasModalHost from '../AtlasModalHost.jsx'
+import AtlasModalHost, { AtlasPageSwitch } from '../AtlasModalHost.jsx'
 import DungeonExplore from '../DungeonExplore.jsx'
+import { navigate } from '../../../Navigation/navigation.js'
 import { BRICK, ROOK, Routed, mockApi, renderWithSession, resetHarness } from './harness.jsx'
 
 const RUNS = [
@@ -52,8 +53,8 @@ describe('character-aware discovery', () => {
     const deadmines = card('The Deadmines')
     // 2 wishlist items list Deadmines as a source; Corsair's Overshirt
     // matches by its reference item id.
-    await waitFor(() => expect(deadmines.textContent).toContain('3 wishlist targets'))
-    await waitFor(() => expect(deadmines.textContent).toMatch(/\d+ drops for Rogue/))
+    await waitFor(() => expect(deadmines.textContent).toContain('3 wishlist items'))
+    await waitFor(() => expect(deadmines.textContent).toMatch(/\d+ drops a Rogue can use/))
     await waitFor(() => expect(deadmines.textContent).toContain('Run 2×'))
     expect(deadmines.textContent).toContain('best 28:20')
     expect(card('Wailing Caverns').textContent).toContain('Not run yet')
@@ -91,7 +92,7 @@ describe('character-aware discovery', () => {
     api({ list: FIXTURE_DUNGEON_LIST_SPRINT1, wishlists: { 'char-1': FIXTURE_WISHLIST } })
     renderWithSession(<Page />)
     await screen.findByRole('link', { name: /^The Deadmines/ })
-    await waitFor(() => expect(card('The Deadmines').textContent).toContain('2 wishlist targets'))
+    await waitFor(() => expect(card('The Deadmines').textContent).toContain('2 wishlist items'))
     expect(card('The Deadmines').textContent).not.toContain('reference')
   })
 
@@ -136,6 +137,53 @@ describe('the modal from the URL', () => {
     fireEvent.change(within(dialog).getByRole('combobox', { name: 'Character' }), { target: { value: 'char-2' } })
     await waitFor(() => expect(window.location.search).toBe('?character=char-2&open=36'))
     expect(screen.getByRole('dialog')).toBeTruthy()
+  })
+})
+
+// The Dungeons page: an open dungeon is a page in place of the grid.
+function Dungeons({ characters = [ROOK, BRICK] }) {
+  return (
+    <Routed>
+      {(query) => (
+        <AtlasPageSwitch queryString={query} characters={characters}>
+          <DungeonExplore queryString={query} characters={characters} />
+        </AtlasPageSwitch>
+      )}
+    </Routed>
+  )
+}
+
+describe('the dungeon page', () => {
+  test('?open= shows the dungeon as its own page; an old boss link still opens that boss', async () => {
+    api()
+    resetHarness('?character=char-1&kind=dungeon&open=36&section=bosses&boss=2747')
+    renderWithSession(<Dungeons />)
+    const page = await screen.findByRole('region', { name: 'The Deadmines' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('link', { name: /^Wailing Caverns/ })).toBeNull()
+    expect(await within(page).findByRole('article', { name: 'Edwin VanCleef' })).toBeTruthy()
+    expect(within(page).getByRole('navigation', { name: 'Bosses' }).textContent).toContain('Rhahk\'Zor')
+    // A page is not dismissed by Escape.
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.getByRole('region', { name: 'The Deadmines' })).toBeTruthy()
+    const back = within(page).getByRole('link', { name: /All dungeons/ })
+    expect(back.getAttribute('href')).toBe('/dashboard/dungeons?character=char-1&kind=dungeon')
+    await act(async () => { navigate(back.getAttribute('href')) })
+    expect(await screen.findByRole('link', { name: /^The Deadmines/ })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'The Deadmines' })).toBeNull()
+  })
+
+  test('sections and bosses change the URL in place, so the page can be linked', async () => {
+    api()
+    resetHarness('?character=char-1&open=36')
+    renderWithSession(<Dungeons />)
+    const page = await screen.findByRole('region', { name: 'The Deadmines' })
+    fireEvent.click(within(within(page).getByRole('navigation', { name: 'Bosses' })).getByRole('button', { name: /Cookie/ }))
+    await waitFor(() => expect(window.location.search).toBe('?character=char-1&open=36&boss=2746'))
+    expect(await screen.findByRole('article', { name: 'Cookie' })).toBeTruthy()
+    fireEvent.click(within(page).getByRole('button', { name: 'Loot' }))
+    await waitFor(() => expect(window.location.search).toBe('?character=char-1&open=36&section=loot'))
+    expect(await screen.findByRole('region', { name: 'Edwin VanCleef loot' })).toBeTruthy()
   })
 })
 

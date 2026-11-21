@@ -11,8 +11,14 @@ import {
   FIXTURE_WISHLIST,
 } from '../src/Player/Dungeons/__fixtures__/atlas.js'
 import {
+  FIT_COPY,
+  atlasSection,
   bindText,
   bossLoot,
+  fitText,
+  lootBySource,
+  sourceDisplayName,
+  withCanonicalSources,
   defaultRole,
   dungeonItems,
   gearTargets,
@@ -61,10 +67,16 @@ test('the Dungeons page opens on Explore; old run links still land on My runs', 
 
 test('explore filters and the open dungeon round-trip through the URL', () => {
   const href = exploreHref({ server: 'us:fixture', character: 'char-1', filters: { find: 'dead', fit: '1' }, open: 36, section: 'bosses', boss: '2746' })
-  assert.equal(href, '/dashboard/dungeons?server=us%3Afixture&character=char-1&find=dead&fit=1&open=36&section=bosses&boss=2746')
+  // Bosses are chosen on the Overview now: an old "bosses" section is written as the Overview.
+  assert.equal(href, '/dashboard/dungeons?server=us%3Afixture&character=char-1&find=dead&fit=1&open=36&boss=2746')
   const query = readAtlasQuery(href.split('?')[1])
   assert.equal(query.open, 36)
-  assert.equal(query.section, 'bosses')
+  assert.equal(query.section, 'overview')
+  // Old links keep working: a boss link opens that boss, Prepare opens Quests.
+  assert.equal(readAtlasQuery('open=36&section=bosses&boss=2746').section, 'overview')
+  assert.equal(readAtlasQuery('open=36&section=bosses&boss=2746').boss, '2746')
+  assert.equal(readAtlasQuery('open=36&section=prepare').section, 'quests')
+  assert.equal(withAtlasOpen('/dashboard/dungeons', { open: 36, section: 'prepare' }), '/dashboard/dungeons?open=36&section=quests')
   assert.equal(query.boss, '2746')
   assert.equal(query.filters.find, 'dead')
   assert.equal(readAtlasQuery('open=abc&section=bogus').open, null)
@@ -394,4 +406,118 @@ test('published editorial content reaches the explore card: subtitle and art foc
   const plain = cardModel({ instanceId: 36, name: 'Deadmines', atlas: { artFocus: { x: 'a' } } })
   assert.equal(plain.artPosition, '')
   assert.equal(plain.subtitle, '')
+})
+
+// ------------------------------------------------------------ UX phase 1
+
+test('level fit copy is about the character, never "too high" for an under-levelled one', () => {
+  const atlas = { levelMin: 13, levelMax: 20 }
+  const low = { name: 'Rook', level: 8 }
+  assert.equal(levelFit(atlas, low), 'under')
+  assert.equal(fitText('under', low), 'Rook is under-levelled')
+  assert.doesNotMatch(FIT_COPY.under.label, /too high/i)
+  assert.equal(fitText(levelFit(atlas, { name: 'Rook', level: 16 }), { name: 'Rook' }), 'Good for Rook')
+  assert.equal(fitText(levelFit(atlas, { name: 'Brick', level: 40 }), { name: 'Brick' }), 'Brick has outlevelled it')
+  // Within one level of the band still fits.
+  assert.equal(levelFit(atlas, { level: 12 }), 'fit')
+  assert.equal(levelFit(atlas, { level: 21 }), 'fit')
+  assert.equal(fitText(null, low), null)
+  assert.equal(atlasSection('bogus'), 'overview')
+})
+
+// The Hall of Thanes: the add-on knows Faldrim Anvilmar (NPC 261306); the
+// loot catalog, having seen the creature only by ID, calls it "Creature 261306".
+const THANES = {
+  instance: { instanceId: 3065, name: 'The Hall of Thanes' },
+  sources: [
+    { key: 'creature:261306', kind: 'creature', boss: false, name: 'Creature 261306', npcIds: [261306], items: [{ itemKey: 'i:818', itemId: 818, name: 'Tigerseye', qualityId: 2, sightings: 3 }] },
+    { key: 'creature:999001', kind: 'creature', boss: false, name: 'Creature 999001', npcIds: [999001], items: [{ itemKey: 'i:2632', itemId: 2632, name: 'Curved Dagger', qualityId: 1, sightings: 1 }] },
+  ],
+  atlas: {
+    levelMin: 13, levelMax: 20,
+    bosses: [
+      { npcId: 261306, name: 'Faldrim Anvilmar', referenceLoot: [{ itemId: 818, name: 'Tigerseye' }, { itemId: 5071, name: 'Shadow Wand' }] },
+      { npcId: null, name: 'Infurnus' },
+    ],
+  },
+}
+
+test('a creature the catalog knows only by ID takes the atlas boss\'s verified name', () => {
+  const named = withCanonicalSources(THANES)
+  assert.equal(named.sources[0].name, 'Faldrim Anvilmar')
+  assert.equal(named.sources[0].boss, true)
+  assert.equal(named.sources[0].catalogName, 'Creature 261306')
+  // A creature the atlas does not know is never renamed.
+  assert.equal(named.sources[1].name, 'Creature 999001')
+  assert.equal(sourceDisplayName(named.sources[1].name), 'Unidentified creature (NPC 999001)')
+  // A real catalog name is kept even when it differs.
+  const kept = withCanonicalSources({ ...THANES, sources: [{ ...THANES.sources[0], name: 'Faldrim' }] })
+  assert.equal(kept.sources[0].name, 'Faldrim')
+  // The boss's loot matches by NPC ID too: observed and reference merge on one row.
+  const rows = bossLoot(THANES.atlas.bosses[0], THANES)
+  const tigerseye = rows.find((row) => row.item.itemId === 818)
+  assert.equal(tigerseye.observed, true)
+  assert.equal(tigerseye.reference, true)
+  assert.equal(tigerseye.source, 'Faldrim Anvilmar')
+  assert.equal(rows.find((row) => row.item.itemId === 5071).observed, false)
+})
+
+test('loot groups by source; an item with several sources stays under each', () => {
+  const detail = {
+    sources: [
+      // Observed: Cruel Barb from VanCleef, and also from a Defias Pirate (trash).
+      { key: 'boss:edwin vancleef', kind: 'boss', boss: true, name: 'Edwin VanCleef', npcIds: [639], items: [{ itemKey: 'i:5191', itemId: 5191, name: 'Cruel Barb', qualityId: 3 }] },
+      { key: 'creature:657', kind: 'creature', boss: false, name: 'Defias Pirate', npcIds: [657], items: [{ itemKey: 'i:5191', itemId: 5191, name: 'Cruel Barb', qualityId: 3 }] },
+      { key: 'unknown', kind: 'unknown', boss: false, name: null, npcIds: [], items: [{ itemKey: 'i:1', itemId: 1, name: 'Mystery Ring' }] },
+    ],
+  }
+  const atlas = {
+    bosses: [{ encounterId: 2747, npcId: 639, name: 'Edwin VanCleef', referenceLoot: [{ itemId: 5202, name: 'Corsair\'s Overshirt' }] }, { encounterId: 2741, npcId: 644, name: 'Rhahk\'Zor' }],
+    rares: [{ npcId: 3586, name: 'Miner Johnson', referenceLoot: [{ itemId: 5443, name: 'Gold-plated Buckler' }] }],
+    creatures: [{ npcId: 657, name: 'Defias Pirate' }],
+    dungeonLoot: [
+      { itemId: 1930, name: 'Stonemason Cloak', npcId: 598, sourceName: 'Defias Miner' },
+      { itemId: 2000, name: 'Chest Ring', npcId: null, sourceName: 'Chest of The Seven' },
+      { itemId: 1951, name: 'Blackwater Cutlass', npcId: null, sourceName: null },
+      // Reference also lists the Overshirt as a quest reward: a second, real source.
+    ],
+    quests: [{ questId: 166, name: 'The Defias Brotherhood', rewards: [{ itemId: 5202, name: 'Corsair\'s Overshirt', choice: true }] }],
+  }
+  const groups = lootBySource(detail, atlas)
+  assert.deepEqual(groups.map((group) => group.kind), ['boss', 'rare', 'trash', 'shared', 'quest', 'unknown'])
+  const source = (key) => groups.flatMap((group) => group.sources).find((entry) => entry.key === key)
+  const vancleef = source('boss:2747')
+  assert.deepEqual(vancleef.rows.map((row) => row.item.itemId), [5191, 5202])
+  // No source invented for a boss nothing names.
+  assert.equal(source('boss:2741'), undefined)
+  // Cruel Barb: under the boss and the trash creature, each naming the other.
+  const barbBoss = vancleef.rows.find((row) => row.item.itemId === 5191)
+  const barbTrash = source('trash:657').rows.find((row) => row.item.itemId === 5191)
+  assert.equal(barbBoss.observed, true)
+  assert.equal(barbTrash.observed, true)
+  assert.deepEqual(barbBoss.alsoFrom.map((other) => other.name), ['Defias Pirate'])
+  assert.deepEqual(barbTrash.alsoFrom.map((other) => other.name), ['Edwin VanCleef'])
+  // The Overshirt: a boss drop and a quest reward.
+  const shirt = source('quest:166').rows[0]
+  assert.equal(shirt.choice, true)
+  assert.deepEqual(shirt.alsoFrom.map((other) => other.key), ['boss:2747'])
+  // Rare, trash creature, chest and several-source drops each where the data puts them.
+  assert.equal(source('rare:3586').rows[0].item.itemId, 5443)
+  assert.equal(source('trash:598').name, 'Defias Miner')
+  assert.equal(source('chest:chest of the seven').kind, 'shared')
+  assert.equal(source('shared:trash and shared drops').rows[0].item.itemId, 1951)
+  assert.equal(source('unknown').rows[0].item.name, 'Mystery Ring')
+  // Every row links back to its own source.
+  for (const group of groups) for (const entry of group.sources) for (const row of entry.rows) assert.equal(row.sourceKey, entry.key)
+})
+
+test('a reference boss drop the catalog saw from another source is not "seen" from the boss', () => {
+  const detail = { sources: [{ key: 'creature:657', kind: 'creature', name: 'Defias Pirate', npcIds: [657], items: [{ itemKey: 'i:5202', itemId: 5202, name: 'Corsair\'s Overshirt', iconFileDataId: 42 }] }] }
+  const boss = { npcId: 639, name: 'Edwin VanCleef', referenceLoot: [{ itemId: 5202 }] }
+  const [row] = bossLoot(boss, detail)
+  assert.equal(row.observed, false)
+  assert.equal(row.reference, true)
+  // Its facts (name, icon) still come from the catalog.
+  assert.equal(row.item.name, 'Corsair\'s Overshirt')
+  assert.equal(row.item.iconFileDataId, 42)
 })

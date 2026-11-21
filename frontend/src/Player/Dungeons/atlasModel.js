@@ -5,12 +5,21 @@
 
 export const ATLAS_SECTIONS = Object.freeze([
   ['overview', 'Overview'],
-  ['prepare', 'Prepare'],
-  ['bosses', 'Bosses'],
-  ['loot', 'Loot'],
   ['quests', 'Quests'],
+  ['loot', 'Loot'],
   ['runs', 'My runs'],
 ])
+
+// Sections older links name: a boss (?section=bosses&boss=) is now chosen on
+// the Overview, and Prepare's quests and readiness are the Quests section.
+const LEGACY_SECTIONS = Object.freeze({ bosses: 'overview', prepare: 'quests' })
+
+// A section id from a URL or a caller, old names included; anything else is
+// the Overview.
+export function atlasSection(value) {
+  const id = LEGACY_SECTIONS[value] || value
+  return ATLAS_SECTIONS.some(([known]) => known === id) ? id : 'overview'
+}
 
 export const ABILITY_CATEGORIES = Object.freeze([
   ['interrupt', 'Interrupts'],
@@ -79,11 +88,10 @@ export function dungeonsView(queryString = '') {
 // The explore filters and the open dungeon (?open=36&section=bosses&boss=…).
 export function readAtlasQuery(queryString = '') {
   const params = new URLSearchParams(queryString)
-  const section = params.get('section')
   return {
     character: params.get('character') || '',
     open: openId(params.get('open')),
-    section: ATLAS_SECTIONS.some(([id]) => id === section) ? section : 'overview',
+    section: atlasSection(params.get('section')),
     boss: params.get('boss') || '',
     filters: Object.fromEntries(EXPLORE_FILTER_KEYS.map((key) => [key, params.get(key) || ''])),
   }
@@ -95,7 +103,7 @@ export function exploreHref({ server = '', character = '', filters = {}, open = 
   if (character) params.set('character', character)
   for (const key of EXPLORE_FILTER_KEYS) if (filters[key]) params.set(key, filters[key])
   if (open) params.set('open', String(open))
-  if (open && section && section !== 'overview') params.set('section', section)
+  if (open && section && atlasSection(section) !== 'overview') params.set('section', atlasSection(section))
   if (open && boss) params.set('boss', String(boss))
   const query = params.toString()
   return `/dashboard/dungeons${query ? `?${query}` : ''}`
@@ -109,7 +117,7 @@ export function withAtlasOpen(href, { open = null, section = '', boss = '' } = {
   for (const key of ['open', 'section', 'boss']) url.searchParams.delete(key)
   if (open) {
     url.searchParams.set('open', String(open))
-    if (section && section !== 'overview') url.searchParams.set('section', section)
+    if (section && atlasSection(section) !== 'overview') url.searchParams.set('section', atlasSection(section))
     if (boss) url.searchParams.set('boss', String(boss))
   }
   return `${url.pathname}${url.search}${url.hash}`
@@ -266,9 +274,27 @@ export function levelFit(atlasInput, character) {
 
 export const FIT_COPY = Object.freeze({
   fit: { label: 'Good for', tone: 'ok' },
-  under: { label: 'Too high for', tone: 'warn' },
-  over: { label: 'Outlevelled by', tone: 'quiet' },
+  under: { label: 'Under-levelled', tone: 'warn' },
+  over: { label: 'Outlevelled', tone: 'quiet' },
 })
+
+// The fit in words, always about the character: "Good for Rook", "Rook is
+// under-levelled", "Rook has outlevelled it". Null when the fit is unknown.
+export function fitText(fit, character) {
+  const name = character?.name || 'This character'
+  if (fit === 'fit') return `Good for ${name}`
+  if (fit === 'under') return `${name} is under-levelled`
+  if (fit === 'over') return `${name} has outlevelled it`
+  return null
+}
+
+// The levels behind the fit: "Rook is level 10; Levels 13–20".
+export function fitDetail(atlasInput, character) {
+  const level = finite(character?.level)
+  const range = levelText(atlasInput)
+  if (!level || !range) return ''
+  return `${character.name || 'This character'} is level ${level}; ${range.charAt(0).toLowerCase()}${range.slice(1)}`
+}
 
 // instanceId → wanted wishlist items known to drop there.
 export function wishlistCounts(items = []) {
@@ -419,7 +445,10 @@ function normalizedName(value) {
 export function lootRows(detail = {}) {
   const rows = []
   for (const source of detail?.sources || []) {
-    for (const item of source.items || []) rows.push({ item, source: source.name || null, sourceKey: source.key, boss: Boolean(source.boss) })
+    for (const item of source.items || []) {
+      rows.push({ item, source: source.name || null, sourceKey: source.key, boss: Boolean(source.boss), catalogKind: source.kind || (source.boss ? 'boss' : null),
+        npcIds: Array.isArray(source.npcIds) ? source.npcIds.map(int).filter(Boolean) : [] })
+    }
   }
   return rows
 }
@@ -441,15 +470,30 @@ function referenceItem(entry) {
   return { ...entry, itemId, itemKey: entry.itemKey || `i:${itemId}` }
 }
 
-// A boss's loot: the catalog source with its name, plus any atlas item
-// keys or item objects the boss lists that the catalog does not, plus its
-// Classic reference loot (`referenceLoot`, sprint 2). Each row says
-// whether it was observed (Guildweaver telemetry) and/or is reference.
+// Whether a catalog row is a boss's: by the boss's name, or its NPC ID (a
+// creature the catalog has only seen by ID still belongs to its boss).
+function isBossRow(row, boss) {
+  const name = normalizedName(boss.name)
+  const npcId = int(boss.npcId)
+  return Boolean((name && normalizedName(row.source) === name) || (npcId && (row.npcIds || []).includes(npcId)))
+}
+
+// A boss's loot: the catalog source with its name (or NPC ID), plus any atlas
+// item keys or item objects the boss lists that the catalog does not, plus its
+// Classic reference loot (`referenceLoot`, sprint 2). Each row says whether it
+// was observed (Guildweaver telemetry from this boss) and/or is reference. An
+// item the catalog saw from another source lends its facts (name, icon), not
+// its evidence: it is not "seen" from this boss.
 export function bossLoot(boss = {}, detail = {}) {
   const name = normalizedName(boss.name)
   const rows = lootRows(detail)
-  const mine = rows.filter((row) => name && normalizedName(row.source) === name).map((row) => ({ ...row, observed: true, reference: false }))
-  const have = new Set(mine.map((row) => row.item.itemKey))
+  const mine = []
+  const have = new Set()
+  for (const row of rows) {
+    if (!isBossRow(row, boss) || have.has(row.item.itemKey)) continue
+    mine.push({ ...row, source: boss.name || row.source, observed: true, reference: false })
+    have.add(row.item.itemKey)
+  }
   const byKey = new Map(rows.map((row) => [row.item.itemKey, row]))
   for (const entry of boss.loot || []) {
     const key = typeof entry === 'string' ? entry : entry?.itemKey
@@ -468,10 +512,8 @@ export function bossLoot(boss = {}, detail = {}) {
       mine[index] = { ...mine[index], item: mergeItem(mine[index].item, ref), reference: true }
       continue
     }
-    const observedRow = byKey.get(ref.itemKey)
-    mine.push(observedRow
-      ? { ...observedRow, item: mergeItem(observedRow.item, ref), source: boss.name, observed: true, reference: true }
-      : { item: ref, source: boss.name, sourceKey: `boss:${name}`, boss: true, observed: ref.observed === true, reference: true })
+    const elsewhere = byKey.get(ref.itemKey)
+    mine.push({ item: elsewhere ? mergeItem(elsewhere.item, ref) : ref, source: boss.name, sourceKey: `boss:${name}`, boss: true, observed: ref.observed === true, reference: true })
     have.add(ref.itemKey)
   }
   // The boss's own drops only ForeverDB lists (a WoW Forever source, not Classic reference).
@@ -483,6 +525,176 @@ export function bossLoot(boss = {}, detail = {}) {
   }
   const observed = observedLootOf(boss)
   return mine.map((row) => ({ ...row, bossKey: bossKey(boss), sourceKind: 'boss', observedRate: observed ? observedRateOf(observed, row.item.itemId) : null }))
+}
+
+// ------------------------------------------------------------ Source names
+
+// The catalog's name for a creature it has seen only by NPC ID.
+const PLACEHOLDER_NAME = /^creature \d+$/i
+
+// NPC ID → the atlas's own name and role for it (boss, rare or trash): the
+// verified boss, rare and creature data the add-on's journal uses too.
+export function atlasCreatures(atlasInput) {
+  const atlas = normalizeAtlas(atlasInput)
+  const byNpc = new Map()
+  const put = (entry, kind) => {
+    const id = int(entry?.npcId)
+    if (id && entry.name && !byNpc.has(id)) byNpc.set(id, { name: entry.name, kind, entry })
+  }
+  for (const boss of atlas.bosses) put(boss, 'boss')
+  for (const rare of atlas.rares) put(rare, 'rare')
+  for (const creature of atlas.creatures) put(creature, 'trash')
+  return byNpc
+}
+
+// The detail with the atlas's names on the catalog's loot sources: a source
+// named only "Creature 261306" takes the name of the atlas boss, rare or
+// creature with that NPC ID, and an atlas boss is a boss. A real name the
+// catalog has is kept, and a creature the atlas does not know keeps its
+// placeholder: nothing is renamed by guesswork.
+export function withCanonicalSources(detail, atlasInput = null) {
+  if (!detail || !Array.isArray(detail.sources)) return detail
+  const known = atlasCreatures(atlasInput ?? detail.atlas)
+  if (!known.size) return detail
+  let changed = false
+  const sources = detail.sources.map((source) => {
+    if (!source || source.kind === 'unknown') return source
+    const match = (Array.isArray(source.npcIds) ? source.npcIds : []).map((id) => known.get(int(id))).find(Boolean)
+    if (!match) return source
+    const placeholder = !source.name || PLACEHOLDER_NAME.test(source.name)
+    const promote = match.kind === 'boss' && !source.boss
+    if (!placeholder && !promote) return source
+    changed = true
+    return { ...source, name: placeholder ? match.name : source.name, catalogName: source.name || null, ...(promote ? { boss: true, kind: 'boss' } : {}) }
+  })
+  return changed ? { ...detail, sources } : detail
+}
+
+// A loot source's name for display: an unnamed creature says what is known.
+export function sourceDisplayName(name, npcId = null) {
+  if (name && !PLACEHOLDER_NAME.test(name)) return name
+  const id = int(npcId) || int(String(name || '').replace(/\D+/g, ''))
+  return id ? `Unidentified creature (NPC ${id})` : 'Unidentified creature'
+}
+
+// ------------------------------------------------------------ Loot by source
+
+export const LOOT_GROUPS = Object.freeze([
+  ['boss', 'Bosses'],
+  ['rare', 'Rares'],
+  ['trash', 'Trash and adds'],
+  ['shared', 'Shared drops and chests'],
+  ['quest', 'Quest rewards'],
+  ['unknown', 'Unknown source'],
+])
+
+// A dungeon's loot grouped by where it comes from: each boss (atlas order),
+// rares, trash and adds (by creature), shared drops and chests, quest
+// rewards, and loot nobody could tie to a source. An item stays under every
+// source known to give it (each row lists the others in `alsoFrom`); within
+// one source it is listed once, its observed and reference facts together.
+// Nothing is assigned to a source no data names.
+export function lootBySource(detailInput = {}, atlasInput = null) {
+  const atlas = normalizeAtlas(atlasInput ?? detailInput?.atlas)
+  const detail = withCanonicalSources(detailInput, atlas) || {}
+  const known = atlasCreatures(atlas)
+  const sources = new Map()
+  // source key → item key → the row's index in that source.
+  const positions = new Map()
+  const open = (key, fields) => {
+    if (!sources.has(key)) {
+      sources.set(key, { key, rows: [], ...fields })
+      positions.set(key, new Map())
+    }
+    return sources.get(key)
+  }
+  const add = (source, row) => {
+    const at = positions.get(source.key).get(row.item.itemKey)
+    if (at !== undefined) {
+      const prior = source.rows[at]
+      source.rows[at] = { ...prior, item: prior.observed ? mergeItem(prior.item, row.item) : mergeItem(row.item, prior.item),
+        observed: prior.observed || row.observed, reference: prior.reference || row.reference, observedRate: prior.observedRate ?? row.observedRate ?? null }
+      return
+    }
+    positions.get(source.key).set(row.item.itemKey, source.rows.length)
+    source.rows.push({ ...row, source: source.name, sourceKey: source.key, sourceKind: source.kind, bossKey: source.bossKey || null,
+      questId: source.questId ?? row.questId ?? null, hideSource: true })
+  }
+  const catalog = lootRows(detail)
+  // Facts (name, icon, quality) the catalog has for an item, whatever its source.
+  const facts = new Map(catalog.map((row) => [row.item.itemKey, row.item]))
+  const withFacts = (ref) => (facts.has(ref.itemKey) ? mergeItem(facts.get(ref.itemKey), ref) : ref)
+  const bossSource = (boss) => open(`boss:${bossKey(boss)}`, { kind: 'boss', name: boss.name || 'Unnamed boss', bossKey: bossKey(boss), npcId: int(boss.npcId), portraitUrl: boss.portraitUrl || '' })
+
+  const claimed = new Set()
+  for (const boss of atlas.bosses) {
+    const source = bossSource(boss)
+    for (const row of bossLoot(boss, detail)) add(source, row)
+    for (const row of catalog) if (isBossRow(row, boss)) claimed.add(row.sourceKey)
+  }
+  for (const rare of atlas.rares) {
+    const npcId = int(rare.npcId)
+    const source = open(`rare:${npcId || normalizedName(rare.name)}`, { kind: 'rare', name: rare.name || 'Rare spawn', npcId })
+    const observed = observedLootOf(rare)
+    for (const raw of Array.isArray(rare.referenceLoot) ? rare.referenceLoot : []) {
+      const ref = referenceItem(raw)
+      if (ref) add(source, { item: withFacts(ref), observed: ref.observed === true, reference: true, observedRate: observed ? observedRateOf(observed, ref.itemId) : null })
+    }
+  }
+  const creatureSource = (npcId, name) => {
+    const match = known.get(npcId)
+    if (match?.kind === 'boss') return bossSource(match.entry)
+    if (match?.kind === 'rare') return open(`rare:${npcId}`, { kind: 'rare', name: match.name, npcId })
+    return open(`trash:${npcId}`, { kind: 'trash', name: match?.name || sourceDisplayName(name, npcId), npcId })
+  }
+  // The catalog's other sources: bosses the atlas does not list, rares and
+  // trash (by NPC ID), and loot seen with no source.
+  for (const row of catalog) {
+    if (claimed.has(row.sourceKey)) continue
+    const npcId = row.npcIds[0] || null
+    let source
+    if (row.catalogKind === 'unknown' || (!row.source && !npcId)) source = open('unknown', { kind: 'unknown', name: 'Source not identified' })
+    else if (row.boss) source = open(`boss:${normalizedName(row.source) || row.sourceKey}`, { kind: 'boss', name: row.source, bossKey: null, npcId })
+    else if (npcId) source = creatureSource(npcId, row.source)
+    else source = open(`trash:${row.sourceKey}`, { kind: 'trash', name: sourceDisplayName(row.source) })
+    add(source, { ...row, observed: true, reference: false })
+  }
+  // Trash and shared drops from the reference: one creature (an NPC ID), a
+  // chest (a name, no NPC), or several sources (neither).
+  for (const raw of atlas.dungeonLoot) {
+    const ref = referenceItem(raw)
+    if (!ref) continue
+    const npcId = int(raw.npcId)
+    let source
+    if (npcId) source = creatureSource(npcId, raw.sourceName)
+    else if (raw.sourceName) source = open(`chest:${normalizedName(raw.sourceName)}`, { kind: 'shared', name: raw.sourceName, chest: true })
+    else {
+      const label = sharedSourceLabel(raw)
+      source = open(`shared:${normalizedName(label)}`, { kind: 'shared', name: label })
+    }
+    add(source, { item: withFacts(ref), observed: false, reference: true })
+  }
+  for (const quest of atlas.quests) {
+    const rewards = Array.isArray(quest?.rewards) ? quest.rewards : []
+    if (!rewards.length) continue
+    const source = open(`quest:${quest.questId ?? normalizedName(quest.name)}`, { kind: 'quest', name: quest.name || 'Unnamed quest', questId: quest.questId ?? null })
+    for (const raw of rewards) {
+      const ref = referenceItem(raw)
+      if (ref) add(source, { item: withFacts(ref), observed: ref.observed === true, reference: true, choice: raw?.choice === true })
+    }
+  }
+
+  const filled = [...sources.values()].filter((source) => source.rows.length)
+  const where = new Map()
+  for (const source of filled) {
+    for (const row of source.rows) {
+      const list = where.get(row.item.itemKey) || []
+      list.push({ key: source.key, name: source.name, kind: source.kind, bossKey: source.bossKey || null, questId: source.questId ?? null })
+      where.set(row.item.itemKey, list)
+    }
+  }
+  const out = filled.map((source) => ({ ...source, rows: source.rows.map((row) => ({ ...row, alsoFrom: where.get(row.item.itemKey).filter((other) => other.key !== source.key) })) }))
+  return LOOT_GROUPS.map(([kind, label]) => ({ kind, label, sources: out.filter((source) => source.kind === kind) })).filter((group) => group.sources.length)
 }
 
 // ------------------------------------------------------------ Drop rates
@@ -546,8 +758,9 @@ export function sharedSourceLabel(raw = {}) {
   return names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ')
 }
 
-export function dungeonItems(detail = {}, atlasInput = null) {
-  const atlas = normalizeAtlas(atlasInput ?? detail?.atlas)
+export function dungeonItems(detailInput = {}, atlasInput = null) {
+  const atlas = normalizeAtlas(atlasInput ?? detailInput?.atlas)
+  const detail = withCanonicalSources(detailInput, atlas) || {}
   const rows = []
   const seen = new Set()
   const add = (row) => {
@@ -1070,4 +1283,18 @@ export function readinessLine(model) {
     counts.blocked ? `${counts.blocked} waiting on an earlier quest` : null,
     counts.unknown ? `${counts.unknown} not known` : null,
   ].filter(Boolean).join(' · ')
+}
+
+// The id a loot source's block has in the page, for "jump to" links.
+export function sourceAnchor(key) {
+  return `atlas-src-${String(key).replace(/[^a-z0-9_-]+/gi, '-')}`
+}
+
+// Scrolls a loot source (or group) block into view and moves focus to it.
+export function revealSource(key) {
+  const target = typeof document === 'undefined' ? null : document.getElementById(sourceAnchor(key))
+  if (!target) return false
+  target.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+  target.focus({ preventScroll: true })
+  return true
 }

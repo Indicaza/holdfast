@@ -58,52 +58,92 @@ test('explore recommends dungeons for the character and says why', async ({ page
   }
 })
 
-test('the dungeon modal: deep link, quick guide, prepare view, keyboard', async ({ page, context }) => {
+const dungeonPage = (page, name) => page.getByRole('region', { name, exact: true })
+
+test('the dungeon page: deep link, quick guide, quests, keyboard', async ({ page, context }) => {
   await signIn(page, context)
   await page.goto('/dashboard/dungeons')
   const opener = page.getByRole('link', { name: /^Deadmines/ })
   await opener.focus()
   await page.keyboard.press('Enter')
-  const dialog = page.getByRole('dialog', { name: 'Deadmines' })
-  await expect(dialog).toBeVisible()
+  const dungeon = dungeonPage(page, 'Deadmines')
+  await expect(dungeon).toBeVisible()
   await expect(page).toHaveURL(/open=36/)
+  // A page, not a dialog: the grid is replaced and keyboard focus lands on its heading.
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.locator('.gw-atlas-grid')).toHaveCount(0)
+  await expect(dungeon.getByRole('heading', { name: 'Deadmines', exact: true })).toBeFocused()
+  // Level 20 suits Deadmines (15–28).
+  await expect(dungeon).toContainText('Good for Plannerine')
+  // The overview's practical guide.
+  await expect(dungeon.getByRole('region', { name: 'Dangerous trash' })).toContainText('Defias Wizard')
+  await expect(dungeon.getByRole('navigation', { name: 'Bosses' })).toContainText('Edwin VanCleef')
 
-  await dialog.getByRole('button', { name: 'Prepare', exact: true }).click()
-  await expect(page).toHaveURL(/section=prepare/)
-  const danger = dialog.locator('[data-block="danger"]')
-  await expect(danger).toContainText('Defias Wizard')
-  // A Warrior can tank or deal damage: no role is assumed until one is picked.
-  await expect(danger.getByRole('button', { name: 'All roles' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(danger.getByText('Classic reference — not verified for Forever').first()).toBeVisible()
-  await expect(dialog.locator('[data-block="quests"]')).toContainText('The Defias Brotherhood')
+  await dungeon.getByRole('button', { name: 'Quests', exact: true }).click()
+  await expect(page).toHaveURL(/section=quests/)
+  await expect(dungeon).toContainText('The Defias Brotherhood')
 
-  // Deep link straight to a boss.
+  // An old deep link straight to a boss still opens it, on the Overview.
   await page.goto('/dashboard/dungeons?open=36&section=bosses&boss=2746')
   const cookie = page.getByRole('article', { name: 'Cookie' })
+  // A character whose role is not known: no role is assumed until one is picked.
+  await expect(cookie.getByRole('button', { name: 'All roles' })).toHaveAttribute('aria-pressed', 'true')
   await cookie.getByRole('button', { name: 'Healer' }).click()
   const guide = cookie.getByRole('region', { name: 'Quick guide for healer' })
   await expect(guide.getByRole('listitem').first()).toContainText('Healer danger')
   await expect(cookie.getByText(/^All abilities/)).toBeVisible()
-
+  await expect(cookie.getByRole('region', { name: 'Cookie loot' })).toBeVisible()
+  // Escape does not dismiss a page.
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(page).not.toHaveURL(/open=/)
+  await expect(dungeonPage(page, 'Deadmines')).toBeVisible()
 })
 
-test('closing the modal returns focus to the card that opened it', async ({ page, context }) => {
+test('Back returns to the grid, with focus on the card that opened the page', async ({ page, context }) => {
   await signIn(page, context)
-  await page.goto('/dashboard/dungeons')
+  await page.goto('/dashboard/dungeons?kind=dungeon')
   const opener = page.getByRole('link', { name: /^Deadmines/ })
   await opener.focus()
   await page.keyboard.press('Enter')
-  const dialog = page.getByRole('dialog', { name: 'Deadmines' })
-  await expect(dialog.getByRole('button', { name: 'Close' })).toBeFocused()
-  // Tab stays inside the dialog.
-  for (let step = 0; step < 40; step += 1) await page.keyboard.press('Tab')
-  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
-  await page.keyboard.press('Escape')
-  await expect(dialog).toHaveCount(0)
+  const dungeon = dungeonPage(page, 'Deadmines')
+  await expect(dungeon).toBeVisible()
+  await dungeon.getByRole('link', { name: 'All dungeons' }).click()
+  await expect(dungeon).toHaveCount(0)
+  await expect(page).toHaveURL(/kind=dungeon/)
+  await expect(page).not.toHaveURL(/open=/)
   await expect(opener).toBeFocused()
+  // The browser's Back works the same way.
+  await opener.click()
+  await expect(dungeon).toBeVisible()
+  await page.goBack()
+  await expect(dungeon).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /^Deadmines/ })).toBeVisible()
+})
+
+test('The Hall of Thanes: known boss names, level fit and loot by source', async ({ page, context }) => {
+  await signIn(page, context)
+  await page.goto('/dashboard/dungeons?open=3065')
+  const thanes = dungeonPage(page, 'The Hall of Thanes')
+  await expect(thanes).toContainText('Levels 13–20')
+  await expect(thanes).toContainText('Good for Plannerine')
+  const rail = thanes.getByRole('navigation', { name: 'Bosses' })
+  for (const name of ['Faldrim Anvilmar', 'Infurnus', 'Plunder', 'Durgen Dirgehammer']) await expect(rail).toContainText(name)
+  await expect(thanes).not.toContainText(/Creature \d+/)
+  await thanes.getByRole('button', { name: 'Loot', exact: true }).click()
+  const bosses = thanes.getByRole('region', { name: 'Bosses', exact: true })
+  await expect(bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' })).toBeVisible()
+  await bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' }).getByRole('button', { name: 'Boss guide' }).click()
+  await expect(page.getByRole('article', { name: 'Faldrim Anvilmar' })).toBeVisible()
+  await expect(page).toHaveURL(/boss=261306/)
+})
+
+test('the world map still opens a dungeon over the map', async ({ page, context }) => {
+  await signIn(page, context)
+  await page.goto('/map?open=36')
+  const dialog = page.getByRole('dialog', { name: 'Deadmines' })
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/open=/)
 })
 
 test('one-click wishlist on Classic reference boss loot', async ({ page, context }) => {
@@ -133,32 +173,33 @@ test('one-click wishlist on Classic reference boss loot', async ({ page, context
 
 test('Plan my gear checks pasted JSON before anything is saved', async ({ page, context }) => {
   await signIn(page, context)
-  await page.goto('/dashboard/dungeons?open=36')
-  const dialog = page.getByRole('dialog', { name: 'Deadmines' })
-  await dialog.getByRole('button', { name: 'Plan my gear' }).click()
-  await dialog.getByRole('radio', { name: 'Choose dungeons' }).click()
-  await expect(dialog.getByRole('list', { name: 'Dungeons to plan' }).getByRole('checkbox', { name: /Deadmines/ })).toBeChecked()
+  await page.goto('/dashboard/dungeons?open=36&section=loot')
+  const dungeon = dungeonPage(page, 'Deadmines')
+  // One Plan my gear on the page, with the loot it plans from.
+  await expect(dungeon.getByRole('button', { name: 'Plan my gear' })).toHaveCount(1)
+  await dungeon.getByRole('button', { name: 'Plan my gear' }).click()
+  await dungeon.getByRole('radio', { name: 'Choose dungeons' }).click()
+  await expect(dungeon.getByRole('list', { name: 'Dungeons to plan' }).getByRole('checkbox', { name: /Deadmines/ })).toBeChecked()
   const prompt = page.waitForRequest((request) => request.url().includes('/ai-prompt'))
-  await dialog.getByRole('button', { name: 'Copy AI planning prompt' }).click()
+  await dungeon.getByRole('button', { name: 'Copy AI planning prompt' }).click()
   expect(new URL((await prompt).url()).searchParams.get('dungeons')).toBe('36')
-  await dialog.getByRole('textbox', { name: 'AI wishlist JSON' }).fill(JSON.stringify({ schemaVersion: 1, character: 'Plannerine', items: [{ itemId: 999999, name: 'Imaginary Blade', priority: 'high' }] }))
-  await dialog.getByRole('button', { name: 'Check the JSON' }).click()
-  await expect(dialog.getByText(/Not imported: \d+ problems? found/)).toBeVisible()
-  await expect(dialog.getByRole('button', { name: 'Copy repair prompt' })).toBeVisible()
+  await dungeon.getByRole('textbox', { name: 'AI wishlist JSON' }).fill(JSON.stringify({ schemaVersion: 1, character: 'Plannerine', items: [{ itemId: 999999, name: 'Imaginary Blade', priority: 'high' }] }))
+  await dungeon.getByRole('button', { name: 'Check the JSON' }).click()
+  await expect(dungeon.getByText(/Not imported: \d+ problems? found/)).toBeVisible()
+  await expect(dungeon.getByRole('button', { name: 'Copy repair prompt' })).toBeVisible()
 })
 
-test('on a phone the modal is a full-screen sheet', async ({ page, context }) => {
+test('on a phone the dungeon page fits the screen', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, context)
-  await page.goto('/dashboard/dungeons?open=36&section=prepare')
-  const panel = page.locator('.gw-atlas-modal__panel')
-  await expect(panel).toBeVisible()
-  const box = await panel.boundingBox()
-  expect(box.width).toBeGreaterThanOrEqual(388)
-  expect(box.x).toBeLessThanOrEqual(1)
-  // Nothing in the sheet is wider than the screen.
-  const overflow = await panel.evaluate((element) => element.scrollWidth - element.clientWidth)
-  expect(overflow).toBeLessThanOrEqual(1)
-  await page.getByRole('button', { name: 'Close' }).click()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.goto('/dashboard/dungeons?open=36&boss=2747')
+  const dungeon = dungeonPage(page, 'Deadmines')
+  await expect(dungeon).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Edwin VanCleef' })).toBeVisible()
+  // Nothing on the page is wider than the screen.
+  expect(await dungeon.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
+  await dungeon.getByRole('button', { name: 'Loot', exact: true }).click()
+  await expect(dungeon.getByRole('region', { name: 'Edwin VanCleef loot' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
 })

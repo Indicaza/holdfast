@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import { navigate } from '../../Navigation/navigation.js'
 import { resolveCharacter } from '../lootModel.js'
@@ -15,6 +15,7 @@ import {
   exploreOptions,
   filterDungeons,
   FIT_COPY,
+  fitText,
   gearTargets,
   levelFit,
   loadFailureDetail,
@@ -38,39 +39,55 @@ function runLine(history) {
   return parts.join(' · ')
 }
 
+// "15–28" for the art's corner badge.
+function levelBadge(text) {
+  return String(text || '').replace(/^(Levels?|Up to level) /, (match) => (match.startsWith('Up') ? '≤ ' : ''))
+}
+
+// The card a dungeon opens from, remembered while its page is open so Back
+// lands on it again: the scroll position and the card to focus.
+let returnTo = null
+
 function DungeonCard({ card, character, href, gear = null, history, historyKnown = false, recommendation = null }) {
-  const fit = card.fit && character ? FIT_COPY[card.fit] : null
+  const fit = card.fit && character ? card.fit : null
+  const rewards = character ? [
+    card.wishlistDrops ? { key: 'wish', className: 'gw-atlas-card__wish', text: `${card.wishlistDrops} wishlist drop${card.wishlistDrops === 1 ? '' : 's'}` } : null,
+    gear?.gear ? { key: 'gear', text: `${gear.gear} for ${character.className || character.name}${gear.rewards ? ` · ${gear.rewards} quest reward${gear.rewards === 1 ? '' : 's'}` : ''}` } : null,
+  ].filter(Boolean) : []
+  const loot = card.itemCount ? { label: 'Loot observed', title: `${card.itemCount} item${card.itemCount === 1 ? '' : 's'} seen dropping by Guildweaver players`, tone: 'observed' }
+    : card.referenceLootCount ? { label: 'Reference loot', title: `${card.referenceLootCount} item${card.referenceLootCount === 1 ? '' : 's'} from Classic or ForeverDB reference data, not yet seen by Guildweaver`, tone: 'reference' }
+      : null
+  const art = card.artworkUrl ? { backgroundImage: `url("${card.artworkUrl}")`, ...(card.artPosition ? { backgroundPosition: card.artPosition } : {}) } : undefined
   return (
-    <li className={`gw-atlas-card${card.fit === 'fit' ? ' is-fit' : ''}${recommendation?.recommended ? ' is-recommended' : ''}`} data-dungeon={card.id}>
-      <a className="gw-atlas-card__link" href={href}
+    <li className={`gw-atlas-card${fit === 'fit' ? ' is-fit' : ''}${fit === 'under' ? ' is-under' : ''}${recommendation?.recommended ? ' is-recommended' : ''}`} data-dungeon={card.id}>
+      <a className="gw-atlas-card__link" href={href} onClick={() => { returnTo = { id: String(card.id), scrollY: window.scrollY } }}
         aria-label={`${card.name}${card.levels ? `, ${card.levels}` : ''}${card.zone ? `, ${card.zone}` : ''}${recommendation?.recommended ? ', recommended' : ''}`}>
-        <span className="gw-atlas-card__art" style={card.artworkUrl ? { backgroundImage: `url("${card.artworkUrl}")`, ...(card.artPosition ? { backgroundPosition: card.artPosition } : {}) } : undefined} aria-hidden="true">
-          {card.artworkUrl ? null : <Icon name="dungeon" size={28} />}
+        <span className={`gw-atlas-card__art${art ? '' : ' gw-atlas-card__art--blank'}`} style={art} aria-hidden="true">
+          {art ? null : <span className="gw-atlas-card__glyph"><Icon name="dungeon" size={26} /></span>}
+          {card.levels ? <span className="gw-atlas-card__levels">{levelBadge(card.levels)}</span> : null}
           {card.kind === 'raid' ? <span className="gw-tag gw-atlas-card__kind">Raid</span> : null}
         </span>
         <span className="gw-atlas-card__body">
+          {card.zone ? <span className="gw-atlas-card__zone">{card.zone}</span> : null}
           <strong className="gw-atlas-card__name">{card.name}</strong>
           {card.subtitle ? <span className="gw-muted gw-atlas-card__subtitle">{card.subtitle}</span> : null}
-          <span className="gw-muted">{[card.levels, card.zone].filter(Boolean).join(' · ') || 'Level and zone not known yet'}</span>
-          <span className="gw-atlas-card__stats">
-            {card.bossCount ? <span>{card.bossCount} boss{card.bossCount === 1 ? '' : 'es'}</span> : null}
-            {card.questCount ? <span>{card.questCount} quest{card.questCount === 1 ? '' : 's'}</span> : null}
-            <span>{card.itemCount} item{card.itemCount === 1 ? '' : 's'} seen</span>
-            {card.referenceLootCount ? <span title="Classic reference — not verified for Forever">{card.referenceLootCount} reference</span> : null}
-          </span>
-          {character ? (
-            <span className="gw-atlas-card__mine">
-              {card.wishlistDrops ? <span className="gw-atlas-card__wish"><Icon name="loot" size={12} /> {card.wishlistDrops} wishlist target{card.wishlistDrops === 1 ? '' : 's'}</span> : null}
-              {gear?.gear ? <span>{gear.gear} drop{gear.gear === 1 ? '' : 's'} for {character.className || character.name}{gear.rewards ? ` · ${gear.rewards} quest reward${gear.rewards === 1 ? '' : 's'}` : ''}</span> : null}
-              {historyKnown ? <span className="gw-muted">{runLine(history)}</span> : null}
-            </span>
-          ) : null}
+          {!card.levels && !card.zone ? <span className="gw-muted">Level and zone not known yet</span> : null}
           {recommendation?.recommended ? (
             <span className="gw-atlas-card__why">
               <span className="gw-tag gw-tag--ok"><Icon name="check" size={12} /> Recommended</span>
               <span className="gw-muted">Why: {recommendation.reasons.join(' · ')}</span>
             </span>
-          ) : fit ? <span className={`gw-tag gw-tag--${fit.tone} gw-atlas-card__fit`}>{card.fit === 'fit' ? <Icon name="check" size={12} /> : null} {fit.label} {character.name}</span> : null}
+          ) : fit ? <span className={`gw-tag gw-tag--${FIT_COPY[fit].tone} gw-atlas-card__fit`}>{fit === 'fit' ? <Icon name="check" size={12} /> : null} {fitText(fit, character)}</span> : null}
+          {rewards.length && !recommendation?.recommended ? (
+            <span className="gw-atlas-card__rewards">
+              {rewards.map((entry) => <span key={entry.key} className={entry.className}>{entry.key === 'wish' ? <Icon name="loot" size={12} /> : null} {entry.text}</span>)}
+            </span>
+          ) : null}
+          <span className="gw-atlas-card__foot">
+            {character && historyKnown ? <span className={history ? 'gw-atlas-card__runs' : 'gw-muted'}>{runLine(history)}</span> : null}
+            {card.bossCount ? <span className="gw-muted">{card.bossCount} boss{card.bossCount === 1 ? '' : 'es'}</span> : null}
+            {loot ? <span className={`gw-atlas-card__loot gw-atlas-card__loot--${loot.tone}`} title={loot.title}>{loot.label}</span> : null}
+          </span>
         </span>
       </a>
     </li>
@@ -189,6 +206,17 @@ export default function DungeonExplore({ server, queryString = '', characters = 
   const recommendedCount = useMemo(() => [...recommendations.values()].filter((entry) => entry.recommended).length, [recommendations])
   const options = useMemo(() => exploreOptions(list.dungeons), [list.dungeons])
   const shown = useMemo(() => filterDungeons(list.dungeons, query.filters, { character, wishCounts, recommendations }), [list.dungeons, query.filters, character, wishCounts, recommendations])
+
+  // Back from a dungeon's page: the grid where it was, focus on its card.
+  const listReady = list.status !== 'loading' && list.dungeons.length > 0
+  useLayoutEffect(() => {
+    if (!returnTo || !listReady || query.open) return
+    const target = returnTo
+    returnTo = null
+    window.scrollTo(0, target.scrollY)
+    const link = document.querySelector(`.gw-atlas-card[data-dungeon="${target.id}"] .gw-atlas-card__link`)
+    link?.focus({ preventScroll: true })
+  }, [listReady, query.open])
 
   const characterId = character?.id || ''
   const go = useCallback((next) => navigate(exploreHref({ server, character: characterId, filters: query.filters, open: query.open, section: query.section, boss: query.boss, ...next }),
