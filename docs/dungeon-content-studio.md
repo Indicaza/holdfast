@@ -53,7 +53,9 @@ It is an **override layer**. Imported data (`backend/src/Atlas/data/*.json`, wri
 Publishing in the studio changes the website immediately. The add-on only gets content through an add-on code release:
 
 1. `GET /api/admin/atlas-studio/export/addon` (or `node backend/scripts/exportEditorialBundle.mjs`) gives the published editorial bundle.
-2. The add-on's `scripts/exportDungeonAtlas.lua --editorial <bundle.json>` renders it into `Data/DungeonAtlas.generated.lua`. This step is deterministic and size-checked against the 480 KB file budget.
+2. The add-on's `scripts/exportDungeonAtlas.lua --editorial <bundle.json>` (Indicaza/guildweaver#80) renders it into `Data/DungeonAtlas.generated.lua`. This step is deterministic, size-checked against the 480 KB file budget, and refuses rather than cuts.
+
+   Parity is checked in both repositories with the same fixture (`backend/scripts/addonEditorialParity.mjs` writes it; `backend/test/addonEditorialParity.test.js` here, `test/dungeon_editorial_spec.lua` there). Use `--art Media/Atlas` to write the packaged textures into the add-on.
 3. The add-on is released as usual.
 
 The studio shows each dungeon's add-on byte count against the per-dungeon budget (6144 bytes). The total budget for all dungeons is 49152 bytes.
@@ -72,5 +74,7 @@ The studio shows each dungeon's add-on byte count against the per-dungeon budget
 - Migration version 26 may collide with other branches that add migrations; renumber on merge.
 - Wing detail pages do not show editorial content yet.
 - The boss order editor shows boss keys in the "imported" column.
+- In the add-on, the editorial boss order is exported but not applied: runs refer to bosses by position.
+- The add-on's quest planner checklist does not read editorial quest plans yet. Worktree B wires `publishedEditorialQuestPlan` on the website side.
 - No GitHub Actions status in the CMS. The add-on export is a manual step, and the add-on release flow is unchanged.
 - Playwright e2e for the studio is not written (CI-only). The HTTP-level demo test is `backend/test/atlasStudioDemo.test.js`.
