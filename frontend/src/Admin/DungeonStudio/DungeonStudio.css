@@ -116,3 +116,10 @@
 .sim-callout--high { border-left-color: #ff7b2e; }
 .sim-callout--low { border-left-color: #777; }
 .sim-loot { list-style: none; padding: 0 !important; display: grid; gap: 0.2rem; }
+
+/* The field grid follows the editor's own width (boss nav, preview aside). */
+.studio-main { container-type: inline-size; min-width: 0; }
+@container (max-width: 820px) {
+  .studio-field { grid-template-columns: 1fr; gap: 0.5rem; }
+  .studio-grid--3, .studio-grid--4 { grid-template-columns: 1fr 1fr; }
+}

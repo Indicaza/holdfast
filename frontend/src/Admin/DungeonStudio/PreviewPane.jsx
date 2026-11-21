@@ -19,7 +19,7 @@ function WebsitePreview({ instanceId, detail, bossKey }) {
     if (bossKey) setView({ section: 'bosses', boss: bossKey })
   }
   return (
-    <div className="gw-embed gw studio-preview-site">
+    <div className="gw-embed studio-preview-site">
       <DungeonDetailModal instanceId={String(instanceId)} previewDetail={detail} embedded section={view.section} boss={view.boss}
         onNavigate={({ section = '', boss = '' }) => setView({ section: section || 'overview', boss })} onClose={() => {}} showMapLink={false} />
     </div>
