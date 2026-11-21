@@ -115,7 +115,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem 0.75rem;
-  background: linear-gradient(180deg, rgba(8, 9, 12, 0.2), var(--gw-bg)), var(--art, none) center / cover no-repeat;
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.2), var(--gw-bg)), var(--art, none) var(--art-position, center) / cover no-repeat;
 }
 
 .gw-atlas-modal__title h2 { margin: 0; font-size: 1.35rem; }
@@ -404,3 +404,23 @@
 /* Drop rates (loot intelligence): reference and Guildweaver, each with its count. */
 .gw-atlas-loot__rates { grid-column: 1 / -1; font-size: 12px; }
 .gw-atlas-credit { font-size: 12px; margin: 0.4rem 0 0; }
+
+/* Dungeon Content Studio: editorial content, and the studio's in-place preview. */
+.gw-atlas-modal--embedded { position: static; inset: auto; z-index: auto; display: block; padding: 0; background: none; }
+.gw-atlas-modal--embedded .gw-atlas-modal__panel { width: 100%; max-height: none; }
+.gw-atlas-subtitle { margin: 0; color: var(--gw-dim); font-style: italic; }
+.gw-atlas-art { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; border-radius: var(--gw-radius); border: 1px solid var(--gw-line); }
+.gw-atlas-editorial { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
+.gw-atlas-editorial__block { padding: 0.6rem 0.8rem; border: 1px solid var(--gw-line); border-radius: var(--gw-radius); background: var(--gw-panel); }
+.gw-atlas-editorial__block h3 { margin: 0 0 0.3rem; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gw-dim); }
+.gw-atlas-editorial__block ul { margin: 0; padding-left: 1.1rem; }
+.gw-atlas-editorial__block p { margin: 0; white-space: pre-wrap; }
+.gw-atlas-editorial__block--warnings { border-color: rgba(230, 160, 70, 0.45); }
+.gw-atlas-editorial-note { white-space: pre-wrap; }
+.gw-atlas-mechanics ul { list-style: none; margin: 0 0 0.75rem; padding: 0; display: grid; gap: 0.45rem; }
+.gw-atlas-mechanic { padding: 0.55rem 0.75rem; border: 1px solid var(--gw-line); border-left-width: 3px; border-radius: var(--gw-radius); background: var(--gw-panel); }
+.gw-atlas-mechanic--high { border-left-color: #e0a04a; }
+.gw-atlas-mechanic--medium { border-left-color: #6e9bd1; }
+.gw-atlas-mechanic__head { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.gw-atlas-mechanic p { margin: 0.35rem 0 0; }
+.gw-atlas-lootnotes { margin-bottom: 0.5rem; }

@@ -55,7 +55,7 @@ export function MechanicsEditor({ value, schema, onChange }) {
   return (
     <div className="studio-mechanics">
       {list.map((mechanic, index) => (
-        <fieldset key={`${mechanic.id}-${index}`} className="studio-mechanic" aria-label={`Mechanic ${index + 1}${mechanic.ability ? `: ${mechanic.ability}` : ''}`}>
+        <fieldset key={index} className="studio-mechanic" aria-label={`Mechanic ${index + 1}${mechanic.ability ? `: ${mechanic.ability}` : ''}`}>
           <div className="studio-mechanic__head">
             <strong>{index + 1}. {mechanic.ability || 'New mechanic'}</strong>
             <span className="studio-muted">id {mechanic.id}</span>

@@ -204,6 +204,9 @@ export function normalizeAtlas(atlas) {
     dungeonLoot: list(source.dungeonLoot),
     referenceVersion: source.referenceVersion && typeof source.referenceVersion === 'object' ? source.referenceVersion : null,
     description: source.description || '',
+    // Dungeon Content Studio (optional): the published editorial layer.
+    subtitle: typeof source.subtitle === 'string' ? source.subtitle : '',
+    editorial: source.editorial && typeof source.editorial === 'object' ? source.editorial : null,
     // A map is either art (imageUrl) or a spawn layout the site draws (points).
     maps: list(source.maps).filter((map) => map && (map.imageUrl || (Array.isArray(map.points) && map.points.length))),
     bosses: list(source.bosses),
