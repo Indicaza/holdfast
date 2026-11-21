@@ -7,7 +7,7 @@ const DOMAINS = [
   [/^guildweaver_telemetry_|^guildweaver_character_aliases$/, 'telemetry_transport'],
   [/^character_|^characters$|^telemetry_(characters|professions|recipes|organizations)$|^talent_tree_definitions$/, 'character_state'],
   [/^economic_|^farming_|^game_loot_|^loot_roll_|^loot_opportunit/, 'economy_loot'],
-  [/^dungeon_/, 'dungeons'],
+  [/^dungeon_|^atlas_editorial_|^atlas_media$/, 'dungeons'],
   [/^public_game_|^game_data_catalog$|^game_icon_|^icon_/, 'game_definitions'],
   [/^guildweaver_(devices|pairings)$/, 'devices'],
   [/^(members|member_|guild|guilds|guild_|billets|rank_authority|assignments|quests?|quest_|objectives|contribution_|reward_items|notifications|audit_events)/, 'guild_operations'],
