@@ -55,20 +55,20 @@ test("the docker build context keeps every server source file, the atlas dataset
   assert.deepEqual(sources.filter(ignored), [], "no file the Dockerfile copies from backend/src is left out of the image");
 });
 
-test("the dungeon list serves the static atlas when the observed catalog or its slots cannot be read", () => {
+test("the dungeon list serves the static atlas when the observed catalog, its slots or the editorial layer cannot be read", () => {
   const errors = [];
   const original = console.error;
   console.error = (...args) => errors.push(args);
   try {
     const broken = () => { throw new Error("no such table: dungeon_loot_entries"); };
-    const list = readDungeonList({ readCatalog: broken, readSlots: broken });
-    assert.deepEqual(list.degraded, ["catalog", "lootSlots"]);
+    const list = readDungeonList({ readCatalog: broken, readSlots: broken, readEditorial: broken });
+    assert.deepEqual(list.degraded, ["catalog", "lootSlots", "editorial"]);
     assert.deepEqual(list.dungeons, []);
     assert.equal(list.atlasDungeons.length, 35, "all 35 atlas dungeons: 26 original, 9 WoW Forever");
     assert.ok(list.atlasDungeons.every((entry) => entry.atlas && entry.atlas.bossCount > 0));
-    assert.equal(errors.length, 2, "both failures are logged, not hidden");
+    assert.equal(errors.length, 3, "every failure is logged, not hidden");
 
-    const empty = readDungeonList({ readCatalog: () => ({ schemaVersion: 1, revision: 0, dungeons: [] }), readSlots: () => new Map() });
+    const empty = readDungeonList({ readCatalog: () => ({ schemaVersion: 1, revision: 0, dungeons: [] }), readSlots: () => new Map(), readEditorial: () => new Map() });
     assert.equal(empty.degraded, undefined, "an empty catalog is not a failure");
     assert.equal(empty.atlasDungeons.length, 35);
   } finally {

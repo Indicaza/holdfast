@@ -384,3 +384,14 @@ test('a failed dungeon request says what the server answered; a degraded list st
   const degraded = { schemaVersion: 1, revision: 0, dungeons: [], degraded: ['catalog', 'lootSlots'], atlasDungeons: [atlas(36), atlas(48)] }
   assert.deepEqual(listWithAtlasDungeonsForFailure(degraded).map((entry) => entry.instanceId), [36, 48])
 })
+
+test('published editorial content reaches the explore card: subtitle and art focal point', () => {
+  const card = cardModel({ instanceId: 3065, name: 'The Hall of Thanes', atlas: { levelMin: 13, levelMax: 20, artworkUrl: '/api/atlas-media/m_fixture0001/web',
+    subtitle: 'Fixture subtitle', artFocus: { x: 0.25, y: 0.5 }, editorial: { revision: '1' } } })
+  assert.equal(card.artworkUrl, '/api/atlas-media/m_fixture0001/web')
+  assert.equal(card.artPosition, '25% 50%')
+  assert.equal(card.subtitle, 'Fixture subtitle')
+  const plain = cardModel({ instanceId: 36, name: 'Deadmines', atlas: { artFocus: { x: 'a' } } })
+  assert.equal(plain.artPosition, '')
+  assert.equal(plain.subtitle, '')
+})

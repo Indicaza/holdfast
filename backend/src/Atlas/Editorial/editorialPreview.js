@@ -9,6 +9,7 @@ import { addonJournalModel } from "./addonJournalModel.js";
 import { addonEditorialEntry } from "./addonTransform.js";
 import { readMediaInDatabase } from "./atlasMedia.js";
 import { editorialView, withEditorialDetail } from "./editorialOverlay.js";
+import { readActiveDocumentsInDatabase, readActiveInDatabase } from "./editorialRepository.js";
 
 // { url, mime, focusX, focusY } of a media id, or null when it is gone.
 export function mediaArtInDatabase(db, id) {
@@ -40,4 +41,23 @@ export function previewInDatabase(db, instanceId, document, { revision = null } 
   }
   const addon = addonJournalModel(base, entry, { art: { card: cardId ? resolveMedia(cardId) : null, portraits }, importedName: imported?.name });
   return { website, addon, entry };
+}
+
+// The published editorial views the public routes lay over the atlas:
+// Map instanceId → view (editorialOverlay.js), active revisions only.
+export function publishedViewsInDatabase(db) {
+  const views = new Map();
+  for (const [id, active] of readActiveDocumentsInDatabase(db)) {
+    const imported = atlasDungeon(id);
+    if (!imported) continue;
+    views.set(id, editorialView(imported, active.document, { resolveMedia: (mediaId) => mediaArtInDatabase(db, mediaId), revision: active.revisionId, publishedAt: active.publishedAt }));
+  }
+  return views;
+}
+
+export function publishedViewInDatabase(db, instanceId) {
+  const active = readActiveInDatabase(db, instanceId);
+  const imported = atlasDungeon(instanceId);
+  if (!active || !imported) return null;
+  return editorialView(imported, active.document, { resolveMedia: (mediaId) => mediaArtInDatabase(db, mediaId), revision: active.revision.id, publishedAt: active.publishedAt });
 }
