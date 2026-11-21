@@ -613,7 +613,7 @@ function QuestsSection({ atlas, character, readiness, plan, lootProps }) {
     <div className="gw-atlas-section gw-atlas-quests-section">
       <EditorialNotes editorial={atlas.editorial} lists={['preparation']} />
       {character ? (
-        <QuestPlan resource={plan} character={character} fallback={<QuestReadiness resource={readiness} character={character} />} />
+        <QuestPlan resource={plan} character={character} readiness={readiness} fallback={<QuestReadiness resource={readiness} character={character} />} />
       ) : atlas.quests.length ? <p className="gw-muted">Choose a character to get a preparation checklist from its synced quests.</p> : null}
       {atlas.wing && atlas.quests.length ? <p className="gw-muted">These are the whole dungeon's quests: no source ties a quest to one wing.</p> : null}
       {character && atlas.quests.length ? (

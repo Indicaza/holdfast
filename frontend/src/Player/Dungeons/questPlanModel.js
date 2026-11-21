@@ -163,7 +163,7 @@ function itemStatus(item) {
 // not report. A quest is never "done" from a missing record: the plan says
 // unknown, and this says why.
 export function planFreshness(character, { now = Date.now() } = {}) {
-  if (!character || typeof character !== 'object') return { synced: false, capturedAt: null, stale: false, missing: [], partial: false }
+  if (!character || typeof character !== 'object') return { synced: false, capturedAt: null, receivedAt: null, stale: false, missing: [], partial: false }
   const capturedAt = character.capturedAt || character.receivedAt || null
   const time = capturedAt ? Date.parse(capturedAt) : NaN
   const ageHours = Number.isFinite(time) ? (now - time) / 3600000 : null
@@ -173,6 +173,7 @@ export function planFreshness(character, { now = Date.now() } = {}) {
   return {
     synced: true,
     capturedAt,
+    receivedAt: character.receivedAt || null,
     ageHours,
     stale: ageHours !== null && ageHours > STALE_HOURS,
     missing,
@@ -287,4 +288,16 @@ export function questPlanModel(data, { now = Date.now() } = {}) {
     questList: data.questList === 'unknown' ? 'unknown' : 'curated',
     long: (groups.find((group) => group.key === 'collect')?.items.length || 0) > LONG_PLAN,
   }
+}
+
+// Dungeon quests the character cannot take yet only because of its level
+// (readiness: state "ineligible", reason "level-below-minimum"), soonest
+// first: the plan leaves them out, the page lists them as coming later.
+export function laterQuests(readiness) {
+  const quests = [...list(readiness?.quests), ...list(readiness?.optional)]
+  return quests
+    .filter((quest) => quest?.state === 'ineligible' && list(quest.reasons).includes('level-below-minimum') && Number.isFinite(Number(quest.minLevel)))
+    .map((quest) => ({ questId: quest.questId, name: quest.name || `Quest ${quest.questId}`, minLevel: Number(quest.minLevel), relevance: quest.relevance || 'dungeon',
+      giver: quest.giver?.name || '' }))
+    .sort((a, b) => a.minLevel - b.minLevel || String(a.name).localeCompare(String(b.name)))
 }

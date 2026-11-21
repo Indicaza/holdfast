@@ -89,7 +89,7 @@ test('stale or incomplete quest data says so', () => {
   assert.deepEqual(partial.freshness.missing, ['which quests were completed'])
   assert.equal(partial.freshness.partial, true)
   assert.equal(partial.readiness.key, 'unknown', 'a missing record never counts as done')
-  assert.deepEqual(planFreshness(null), { synced: false, capturedAt: null, stale: false, missing: [], partial: false })
+  assert.deepEqual(planFreshness(null), { synced: false, capturedAt: null, receivedAt: null, stale: false, missing: [], partial: false })
 })
 
 test('published editorial edits: turn-in spot, instructions, shareability', () => {
