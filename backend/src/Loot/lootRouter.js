@@ -6,6 +6,8 @@ import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRep
 import { withGuildDatabase } from "../Data/database.js";
 import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
+import { publishedViewInDatabase, publishedViewsInDatabase } from "../Atlas/Editorial/editorialPreview.js";
+import { withEditorialDetail, withEditorialSummary } from "../Atlas/Editorial/editorialOverlay.js";
 import { readLootBridgeSnapshot } from "./lootBridge.js";
 import { lootCatalogRevisionInDatabase, lootSlotsByInstanceInDatabase, readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
 import { withObservedRates } from "./lootObservationRepository.js";
@@ -19,7 +21,8 @@ const WRITE_CODES = { invalid: 400, "not-found": 404, full: 409, "unknown-item":
 // in. The catalog and its item slots only enrich the atlas, so when either
 // cannot be read the atlas list is still served, the error is logged, and
 // `degraded` names what is missing. The atlas itself failing still throws.
-export function readDungeonList({ readCatalog = readLootDungeons, readSlots = () => withGuildDatabase((db) => lootSlotsByInstanceInDatabase(db)) } = {}) {
+export function readDungeonList({ readCatalog = readLootDungeons, readSlots = () => withGuildDatabase((db) => lootSlotsByInstanceInDatabase(db)),
+  readEditorial = () => withGuildDatabase((db) => publishedViewsInDatabase(db)) } = {}) {
   const degraded = [];
   let catalog = { schemaVersion: 1, revision: 0, dungeons: [] };
   try {
@@ -35,7 +38,18 @@ export function readDungeonList({ readCatalog = readLootDungeons, readSlots = ()
     console.error("Unable to read loot slots; serving the dungeon atlas without them", error);
     degraded.push("lootSlots");
   }
-  const list = withAtlasList(catalog, slots);
+  // Published Dungeon Content Studio content (names, levels, card art).
+  let editorial = new Map();
+  try {
+    editorial = readEditorial();
+  } catch (error) {
+    console.error("Unable to read published editorial content; serving the dungeon atlas without it", error);
+    degraded.push("editorial");
+  }
+  const atlasList = withAtlasList(catalog, slots);
+  const overlay = (entry) => withEditorialSummary(entry, editorial.get(Number(entry.instanceId)) || null);
+  const list = { ...atlasList, dungeons: (atlasList.dungeons || []).map(overlay),
+    ...(atlasList.atlasDungeons ? { atlasDungeons: atlasList.atlasDungeons.map(overlay) } : {}) };
   return degraded.length ? { ...list, degraded } : list;
 }
 
@@ -98,8 +112,10 @@ export function createPlayerLootRouter() {
       const detail = readLootDungeonInDatabase(db, target.instanceId, { wishlisted: wishlisted(db, req) });
       const revision = lootCatalogRevisionInDatabase(db);
       const served = target.wingKey ? withAtlasWingDetail(detail, target.wingKey, revision) : withAtlasDetail(detail, target.instanceId, revision);
-      // Guildweaver's own observed drop rates (aggregates only, no player named).
-      return withObservedRates(db, served);
+      // Guildweaver's own observed drop rates (aggregates only, no player named),
+      // then the published editorial layer (never the rates or telemetry).
+      const rated = withObservedRates(db, served);
+      return target.wingKey ? rated : withEditorialDetail(rated, publishedViewInDatabase(db, target.instanceId));
     });
   }));
   // A dungeon's quest catalog (?include=all adds the zone-only quests), and a

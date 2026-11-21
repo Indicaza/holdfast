@@ -11,6 +11,7 @@ import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js"
 import { atlasDungeon } from "../atlasRepository.js";
 import { loadQuestCatalog } from "../atlasData.js";
 import { createMediaInDatabase, deleteMediaInDatabase, listMediaInDatabase, MEDIA_ASPECTS, MEDIA_LIMITS, MEDIA_PURPOSES, mediaFileInDatabase, mediaUsageInDatabase, readMediaBytes, updateMediaInDatabase } from "./atlasMedia.js";
+import { addonArtPlan, buildAddonArt } from "./addonArt.js";
 import { previewInDatabase } from "./editorialPreview.js";
 import { addonEditorialBundle, addonEditorialEntry, ADDON_LIMITS } from "./addonTransform.js";
 import { bossKeyOf, resolveEditorial } from "./editorialResolve.js";
@@ -77,14 +78,17 @@ export function readStudioDungeon(db, instanceId) {
 
 // The add-on export bundle: every dungeon's active published revision, in
 // the shape scripts/exportDungeonAtlas.lua --editorial reads.
-export function readAddonBundle(db, { generatedFrom = null } = {}) {
+export function readAddonBundle(db, { generatedFrom = null, withFiles = false } = {}) {
   const entries = [];
-  for (const [id, active] of readActiveDocumentsInDatabase(db)) {
+  const active = readActiveDocumentsInDatabase(db);
+  for (const [id, doc] of active) {
     const dungeon = atlasDungeon(id);
     if (!dungeon) continue;
-    entries.push(addonEditorialEntry(id, resolveEditorial(dungeon, active.document), active.revisionId));
+    entries.push(addonEditorialEntry(id, resolveEditorial(dungeon, doc.document), doc.revisionId));
   }
-  return addonEditorialBundle(entries, { generatedFrom });
+  const built = buildAddonArt(db, addonArtPlan([...active].filter(([id]) => atlasDungeon(id)), atlasDungeon));
+  const bundle = { ...addonEditorialBundle(entries, { generatedFrom }), art: built.art, artSkipped: built.skipped.map(({ instanceId, kind, key, mediaId, reason }) => ({ instanceId, kind, key, mediaId, reason })) };
+  return withFiles ? { bundle, files: built.files } : bundle;
 }
 
 export function createAtlasStudioRouter() {

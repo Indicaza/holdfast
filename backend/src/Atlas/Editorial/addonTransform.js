@@ -130,7 +130,8 @@ function luaString(value) {
     if (byte === 0x5c) out += "\\\\";
     else if (byte === 0x22) out += '\\"';
     else if (byte === 0x0a) out += "\\n";
-    else if (byte < 0x20 || byte === 0x7f) out += `\\${byte}`;
+    // Three digits, as the add-on exporter's quote() writes them.
+    else if (byte < 0x20 || byte === 0x7f) out += `\\${String(byte).padStart(3, "0")}`;
     else out += String.fromCharCode(byte);
   }
   return `${out}"`;
