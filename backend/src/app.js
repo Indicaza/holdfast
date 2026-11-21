@@ -31,7 +31,7 @@ import { createQuestCompletionRouter } from "./Quest/questCompletionRouter.js";
 import { createQuestRouter } from "./Quest/questRouter.js";
 import { createGuildweaverQuestRouter } from "./Quest/guildweaverQuestRouter.js";
 import { createLootBridgeRouter } from "./Loot/lootRouter.js";
-import { createAtlasStudioRouter } from "./Atlas/Editorial/editorialRouter.js";
+import { createAtlasMediaRouter, createAtlasStudioRouter } from "./Atlas/Editorial/editorialRouter.js";
 import { readQuestsFromDatabase } from "./Quest/questRepository.js";
 import { guildDatabaseFile, withGuildDatabase } from "./Data/database.js";
 import { upsertGuildMember } from "./Guild/memberRepository.js";
@@ -270,6 +270,7 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
   app.use("/api/admin/guildweaver", createGuildweaverAdminRouter());
   // The Dungeon Content Studio (site.admin only): editorial overrides of the atlas.
   app.use("/api/admin/atlas-studio", createAtlasStudioRouter());
+  app.use("/api/atlas-media", createAtlasMediaRouter());
 
   app.get("/api/guildweaver/release", (req, res) => {
     res.set("Cache-Control", "public, max-age=300");

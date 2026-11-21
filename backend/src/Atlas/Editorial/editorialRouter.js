@@ -4,18 +4,20 @@
 // resolves it from the database, never from the session). Mutations also
 // pass the app-wide trusted-origin check.
 
-import { Router } from "express";
+import express, { Router } from "express";
 
 import { requirePermission } from "../../Auth/permissions.js";
 import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js";
 import { atlasDungeon } from "../atlasRepository.js";
 import { loadQuestCatalog } from "../atlasData.js";
+import { createMediaInDatabase, deleteMediaInDatabase, listMediaInDatabase, MEDIA_ASPECTS, MEDIA_LIMITS, MEDIA_PURPOSES, mediaFileInDatabase, mediaUsageInDatabase, readMediaBytes, updateMediaInDatabase } from "./atlasMedia.js";
+import { previewInDatabase } from "./editorialPreview.js";
 import { addonEditorialBundle, addonEditorialEntry, ADDON_LIMITS } from "./addonTransform.js";
 import { bossKeyOf, resolveEditorial } from "./editorialResolve.js";
 import {
   discardDraftInDatabase, publishDraftInDatabase, readActiveDocumentsInDatabase, readActiveInDatabase, readAuditInDatabase, readDraftInDatabase,
   readRevisionDocumentInDatabase, readRevisionsInDatabase, readStudioListInDatabase, rollbackInDatabase, saveDraftInDatabase, unpublishInDatabase,
-  validateDocumentInDatabase, workingDocumentInDatabase,
+  recordEditorialAudit, validateDocumentInDatabase, workingDocumentInDatabase,
 } from "./editorialRepository.js";
 import { BOSS_FIELDS, DUNGEON_FIELDS, EDITORIAL_SCHEMA_VERSION, MECHANIC_PRIORITIES, MECHANIC_TYPES, PROTECTED_KEYS, QUEST_RELEVANCE, QUEST_SECTIONS, QUEST_SHAREABLE, ROLES } from "./editorialSchema.js";
 
@@ -24,7 +26,7 @@ const STATUS = { invalid: 400, "not-found": 404, conflict: 409 };
 export const studioSchema = () => ({
   schemaVersion: EDITORIAL_SCHEMA_VERSION, dungeonFields: DUNGEON_FIELDS, bossFields: BOSS_FIELDS, mechanicTypes: MECHANIC_TYPES,
   mechanicPriorities: MECHANIC_PRIORITIES, roles: ROLES, questSections: QUEST_SECTIONS, questRelevance: QUEST_RELEVANCE, questShareable: QUEST_SHAREABLE,
-  protectedKeys: PROTECTED_KEYS, addonLimits: ADDON_LIMITS,
+  protectedKeys: PROTECTED_KEYS, addonLimits: ADDON_LIMITS, media: { limits: MEDIA_LIMITS, purposes: MEDIA_PURPOSES, aspects: MEDIA_ASPECTS, types: ["image/png", "image/jpeg", "image/webp"] },
 });
 
 // The imported facts the editor shows beside each editable value.
@@ -141,8 +143,75 @@ export function createAtlasStudioRouter() {
   router.post("/dungeons/:instanceId/unpublish", withDungeon("unpublish", (req, res, id) => {
     respond(res, withGuildTransaction((db) => unpublishInDatabase(db, id, { actor: actorOf(req) })));
   }));
+  // Previews of a draft (nothing stored): the website detail and the add-on
+  // journal simulation.
+  router.post("/dungeons/:instanceId/preview", withDungeon("preview", (req, res, id) => {
+    res.json(withGuildDatabase((db) => {
+      const validation = validateDocumentInDatabase(db, id, req.body?.document);
+      const preview = previewInDatabase(db, id, validation.document);
+      return { ...preview, errors: validation.errors, warnings: validation.warnings, luaBytes: validation.luaBytes };
+    }));
+  }));
+
+  // The media library. Uploads are the raw image bytes (Content-Type
+  // image/png, image/jpeg or image/webp); the type is checked from the bytes.
+  router.get("/media", handle("list media", (req, res) => res.json(withGuildDatabase((db) => {
+    const usage = mediaUsageInDatabase(db);
+    return { media: listMediaInDatabase(db).map((media) => ({ ...media, usedBy: usage.get(media.id) || [] })) };
+  }))));
+  router.post("/media", express.raw({ type: ["image/png", "image/jpeg", "image/webp"], limit: MEDIA_LIMITS.maxBytes + 1 }), handle("upload media", (req, res) => {
+    const query = req.query || {};
+    const result = withGuildTransaction((db) => createMediaInDatabase(db, Buffer.isBuffer(req.body) ? req.body : null, {
+      name: String(query.name || ""), purpose: String(query.purpose || "general"), attribution: String(query.attribution || ""), license: String(query.license || ""),
+      sourceUrl: String(query.sourceUrl || ""), provenance: String(query.provenance || ""), actor: actorOf(req),
+    }));
+    if (result.status === "ok") withGuildTransaction((db) => recordEditorialAudit(db, { action: "media.upload", actor: actorOf(req), detail: { id: result.media.id } }));
+    respond(res, result);
+  }));
+  router.patch("/media/:id", handle("update media", (req, res) => {
+    respond(res, withGuildTransaction((db) => updateMediaInDatabase(db, String(req.params.id), req.body || {})));
+  }));
+  router.delete("/media/:id", handle("remove media", (req, res) => {
+    const result = withGuildTransaction((db) => {
+      const removed = deleteMediaInDatabase(db, String(req.params.id));
+      if (removed.status === "ok") recordEditorialAudit(db, { action: "media.remove", actor: actorOf(req), detail: { id: String(req.params.id) } });
+      return removed;
+    });
+    respond(res, result);
+  }));
+  router.use((error, req, res, next) => {
+    if (error?.type === "entity.too.large") {
+      res.status(413).json({ error: "editorial_invalid", problems: [{ code: "too-large", message: `Images are at most ${MEDIA_LIMITS.maxBytes / 1024 / 1024} MB.` }] });
+      return;
+    }
+    next(error);
+  });
   router.get("/export/addon", handle("export", (req, res) => res.json(withGuildDatabase((db) => readAddonBundle(db, {
     generatedFrom: process.env.RENDER_GIT_COMMIT || process.env.HOLDFAST_RELEASE_SHA || null,
   })))));
+  return router;
+}
+
+// The library's image files, public by their unguessable id (pages that use
+// them are public once published). Immutable: an id's bytes never change.
+export function createAtlasMediaRouter() {
+  const router = Router();
+  router.get("/:id/:variant", (req, res) => {
+    const variant = ["original", "thumb", "web"].includes(req.params.variant) ? req.params.variant : null;
+    const id = /^m_[a-z0-9]{8,40}$/.test(req.params.id) ? req.params.id : null;
+    try {
+      const file = variant && id ? withGuildDatabase((db) => mediaFileInDatabase(db, id, variant)) : null;
+      if (!file) {
+        res.status(404).json({ error: "media_not_found" });
+        return;
+      }
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      res.set("X-Content-Type-Options", "nosniff");
+      res.type(file.mime).send(readMediaBytes(file.file));
+    } catch (error) {
+      console.error("Unable to serve atlas media", error);
+      res.status(500).json({ error: "media_unavailable" });
+    }
+  });
   return router;
 }
