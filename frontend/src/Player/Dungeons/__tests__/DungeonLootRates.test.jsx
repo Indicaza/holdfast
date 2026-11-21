@@ -47,7 +47,7 @@ describe('rate texts', () => {
 // Opens an item from its slot and returns its details.
 function inspect(itemKey) {
   fireEvent.click(document.querySelector(`button.gw-slot[data-item="${itemKey}"]`))
-  return document.querySelector(`.gw-iteminspect[data-item="${itemKey}"]`)
+  return document.querySelector(`.gw-itempop[data-item="${itemKey}"]`)
 }
 
 describe('the loot grid', () => {
@@ -86,36 +86,59 @@ describe('the loot grid', () => {
     expect(rockslicer.textContent).toContain('Drop chances are not published')
   })
 
-  test('tooltips: captured lines when the game gave them, the pending note otherwise, never made up', () => {
+  test('tooltips: captured lines when the game gave them, reference facts marked as such, the pending note only when nothing is known', () => {
     const captured = { itemKey: 'i:5191', itemId: 5191, name: 'Cruel Barb', qualityId: 3, slot: 'One-Hand',
       tooltip: { lines: [{ left: 'Cruel Barb' }, { left: 'Binds when picked up' }, { left: 'Requires Level 19' }] }, sellPrice: 3412 }
-    const reference = { itemKey: 'i:5202', itemId: 5202, name: 'Corsair\'s Overshirt', qualityId: 3, slot: 'Chest', itemLevel: 24, requiredLevel: 19, bindType: 'BoP' }
-    const rows = [{ item: captured, source: 'Edwin VanCleef', sourceKey: 'boss:2747', observed: true }, { item: reference, source: 'Edwin VanCleef', sourceKey: 'boss:2747', reference: true }]
-    render(<LootList rows={rows} wishes={new Map()} character={null} onToggle={() => {}} />)
-    // Hover (mouse) shows the game's tooltip, also for a reference-only item.
-    fireEvent.pointerEnter(document.querySelector('button.gw-slot[data-item="i:5202"]').parentElement, { pointerType: 'mouse' })
-    const pending = screen.getByRole('tooltip')
-    expect(pending.textContent).toContain('Corsair\'s Overshirt')
-    expect(pending.textContent).toContain('Full tooltip arrives once a Guildweaver player sees this item in game.')
-    expect(pending.textContent).not.toContain('Binds when picked up')
-    fireEvent.pointerLeave(document.querySelector('button.gw-slot[data-item="i:5202"]').parentElement)
+    const reference = { itemKey: 'i:5202', itemId: 5202, name: 'Corsair\'s Overshirt', qualityId: 3, slot: 'Chest', itemSubclass: 'Cloth', armor: 42, itemLevel: 24, requiredLevel: 19, bindType: 'BoP',
+      stats: [{ stat: 'Agility', value: 6 }], factSources: ['wago-classic-era'] }
+    const bare = { itemKey: 'i:9', itemId: 9, name: 'Mystery Ring', qualityId: null }
+    const rows = [
+      { item: captured, source: 'Edwin VanCleef', sourceKey: 'boss:2747', sourceKind: 'boss', observed: true },
+      { item: reference, source: 'Edwin VanCleef', sourceKey: 'boss:2747', sourceKind: 'boss', reference: true },
+      { item: bare, source: null, sourceKey: 'unknown', sourceKind: 'unknown', observed: true },
+    ]
+    render(<LootList rows={rows} wishes={new Map([['i:5191', { itemKey: 'i:5191', state: 'wanted', priority: 'high' }]])} character={null} onToggle={() => {}} />)
+    const wrapper = (key) => document.querySelector(`button.gw-slot[data-item="${key}"]`).parentElement
+    // Reference facts in the tooltip's frame, labelled; the journal's lines below.
+    fireEvent.pointerEnter(wrapper('i:5202'), { pointerType: 'mouse' })
+    let tooltip = screen.getByRole('tooltip')
+    expect(tooltip.textContent).toContain('Binds when picked up')
+    expect(tooltip.textContent).toContain('42 Armor')
+    expect(tooltip.textContent).toContain('+6 Agility')
+    expect(tooltip.textContent).toContain('Requires Level 19')
+    expect(tooltip.textContent).toContain('Classic reference facts, not the game\'s tooltip.')
+    expect(tooltip.textContent).not.toContain('Full tooltip arrives')
+    expect(tooltip.textContent).toContain('Drops from Edwin VanCleef')
+    expect(tooltip.querySelectorAll('.game-tooltip__reference').length).toBeGreaterThan(3)
+    // Moving within the slot does not remount it.
+    fireEvent.pointerMove(document.querySelector('button.gw-slot[data-item="i:5202"]'), { pointerType: 'mouse' })
+    expect(screen.getByRole('tooltip')).toBe(tooltip)
+    fireEvent.pointerLeave(wrapper('i:5202'))
     expect(screen.queryByRole('tooltip')).toBeNull()
+    // Captured lines stay the game's own, with the wishlist state under them.
+    fireEvent.pointerEnter(wrapper('i:5191'), { pointerType: 'mouse' })
+    tooltip = screen.getByRole('tooltip')
+    expect(tooltip.textContent).toContain('Requires Level 19')
+    expect(tooltip.querySelector('.game-tooltip__reference')).toBeNull()
+    expect(tooltip.textContent).toContain('On your wishlist (high)')
+    fireEvent.pointerLeave(wrapper('i:5191'))
+    // Nothing known: the pending note, and the quality is said to be unknown.
+    fireEvent.pointerEnter(wrapper('i:9'), { pointerType: 'mouse' })
+    tooltip = screen.getByRole('tooltip')
+    expect(tooltip.textContent).toContain('Full tooltip arrives once a Guildweaver player sees this item in game.')
+    expect(tooltip.textContent).toContain('Quality not known yet')
+    expect(tooltip.textContent).toContain('Source not identified')
+    fireEvent.pointerLeave(wrapper('i:9'))
     // A tap does not open the floating tooltip: the slot opens the item instead.
-    fireEvent.pointerEnter(document.querySelector('button.gw-slot[data-item="i:5191"]').parentElement, { pointerType: 'touch' })
+    fireEvent.pointerEnter(wrapper('i:5191'), { pointerType: 'touch' })
     expect(screen.queryByRole('tooltip')).toBeNull()
-    fireEvent.pointerEnter(document.querySelector('button.gw-slot[data-item="i:5191"]').parentElement, { pointerType: 'mouse' })
-    expect(screen.getByRole('tooltip').textContent).toContain('Requires Level 19')
-    fireEvent.pointerLeave(document.querySelector('button.gw-slot[data-item="i:5191"]').parentElement)
-    // The opened reference item: the pending card, and its facts apart from it.
+    // The opened item floats over the page, outside the grid.
     const shirt = inspect('i:5202')
-    expect(shirt.querySelector('.game-tooltip--card').textContent).toContain('Full tooltip arrives')
-    fireEvent.click(within(shirt).getByText('Item facts'))
-    expect(shirt.textContent).toContain('Reference data, not the game\'s tooltip.')
-    expect(shirt.textContent).toContain('Binds when picked up')
-    // The captured one: its lines, and no "reference data" note.
-    const barb = inspect('i:5191')
-    expect(barb.querySelector('.game-tooltip--card').textContent).toContain('Binds when picked up')
-    expect(barb.textContent).not.toContain('Reference data, not the game\'s tooltip.')
+    expect(shirt.closest('.gw-lootgrid')).toBeNull()
+    expect(shirt.querySelector('.game-tooltip--card').textContent).toContain('Classic reference facts')
+    // While it is open, its slot shows no floating tooltip over it.
+    fireEvent.pointerEnter(wrapper('i:5202'), { pointerType: 'mouse' })
+    expect(screen.queryByRole('tooltip')).toBeNull()
   })
 
   test('slots open and close from the keyboard; Escape returns focus to the slot', () => {
@@ -127,18 +150,18 @@ describe('the loot grid', () => {
     expect(slot.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(slot)
     expect(slot.getAttribute('aria-expanded')).toBe('true')
-    const panel = screen.getByRole('group', { name: 'Rockslicer details' })
+    const panel = screen.getByRole('dialog', { name: 'Rockslicer details' })
     expect(document.activeElement).toBe(panel)
     fireEvent.keyDown(panel, { key: 'Escape' })
-    expect(screen.queryByRole('group', { name: 'Rockslicer details' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'Rockslicer details' })).toBeNull()
     expect(document.activeElement).toBe(slot)
     // A press outside closes it too; pressing the slot again toggles it.
     fireEvent.click(slot)
     fireEvent.pointerDown(document.body)
-    expect(screen.queryByRole('group', { name: 'Rockslicer details' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'Rockslicer details' })).toBeNull()
     fireEvent.click(slot)
     fireEvent.click(slot)
-    expect(screen.queryByRole('group', { name: 'Rockslicer details' })).toBeNull()
+    expect(screen.queryByRole('dialog', { name: 'Rockslicer details' })).toBeNull()
   })
 
   test('one item, two sources: each source keeps its own rate and evidence', () => {
@@ -149,7 +172,7 @@ describe('the loot grid', () => {
       observedRate: { drops: 1, kills: 40, percent: 2.5, low: 0.1, high: 13.2, preliminary: true }, alsoFrom: [{ key: 'boss:2747', name: 'Edwin VanCleef', kind: 'boss', bossKey: '2747' }] }]
     render(<><LootList rows={boss} wishes={new Map()} character={null} onToggle={() => {}} label="boss" /><LootList rows={trash} wishes={new Map()} character={null} onToggle={() => {}} label="trash" /></>)
     fireEvent.click(within(screen.getByRole('list', { name: 'boss' })).getByRole('button'))
-    const fromBoss = screen.getByRole('group', { name: 'Cruel Barb details' })
+    const fromBoss = screen.getByRole('dialog', { name: 'Cruel Barb details' })
     expect(fromBoss.textContent).toContain('From Edwin VanCleef')
     expect(fromBoss.textContent).toContain('Reference: 22.2% · ForeverDB, 27 kills')
     expect(fromBoss.textContent).not.toContain('2.5%')
@@ -157,7 +180,7 @@ describe('the loot grid', () => {
     expect(within(fromBoss).getByText('Classic reference')).toBeTruthy()
     fireEvent.pointerDown(document.body)
     fireEvent.click(within(screen.getByRole('list', { name: 'trash' })).getByRole('button'))
-    const fromTrash = screen.getByRole('group', { name: 'Cruel Barb details' })
+    const fromTrash = screen.getByRole('dialog', { name: 'Cruel Barb details' })
     expect(fromTrash.textContent).toContain('From Defias Pirate')
     expect(fromTrash.textContent).toContain('2.5% (1 of 40 kills')
     expect(fromTrash.textContent).not.toContain('22.2%')

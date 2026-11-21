@@ -447,7 +447,8 @@ export function lootRows(detail = {}) {
   for (const source of detail?.sources || []) {
     for (const item of source.items || []) {
       rows.push({ item, source: source.name || null, sourceKey: source.key, boss: Boolean(source.boss), catalogKind: source.kind || (source.boss ? 'boss' : null),
-        npcIds: Array.isArray(source.npcIds) ? source.npcIds.map(int).filter(Boolean) : [] })
+        npcIds: Array.isArray(source.npcIds) ? source.npcIds.map(int).filter(Boolean) : [],
+        encounterIds: Array.isArray(source.encounterIds) ? source.encounterIds.map(int).filter(Boolean) : [] })
     }
   }
   return rows
@@ -473,9 +474,11 @@ function referenceItem(entry) {
 // Whether a catalog row is a boss's: by the boss's name, or its NPC ID (a
 // creature the catalog has only seen by ID still belongs to its boss).
 function isBossRow(row, boss) {
-  const name = normalizedName(boss.name)
+  const names = [boss.name, boss.catalogName].map(normalizedName).filter(Boolean)
   const npcId = int(boss.npcId)
-  return Boolean((name && normalizedName(row.source) === name) || (npcId && (row.npcIds || []).includes(npcId)))
+  const encounterId = int(boss.encounterId)
+  return Boolean(names.includes(normalizedName(row.source)) || (npcId && (row.npcIds || []).includes(npcId))
+    || (encounterId && (row.encounterIds || []).includes(encounterId)))
 }
 
 // A boss's loot: the catalog source with its name (or NPC ID), plus any atlas
@@ -906,6 +909,49 @@ export function itemFacts(item = {}) {
     ['Binds', bindText(item.bindType)],
     ['Set', item.setName || ''],
   ].filter(([, value]) => value !== '' && value !== null && value !== undefined)
+}
+
+// An item's known facts as tooltip lines, in the game's order (binding,
+// slot and type, damage, armor, stats, classes, required level), for an item
+// whose own tooltip Guildweaver has not captured. Only what the record
+// states: an unknown fact is left out, never filled in. The label says where
+// the facts come from, so they are never taken for the game's text.
+// Null when the record holds nothing to show.
+export function referenceTooltip(item = {}, { reference = false } = {}) {
+  const lines = []
+  const bind = bindText(item.bindType)
+  if (item.kind === 'quest-item') lines.push({ left: 'Quest Item' })
+  else if (bind) lines.push({ left: bind })
+  if (item.slot || item.itemSubclass) lines.push({ left: item.slot || '', right: item.itemSubclass && item.itemSubclass !== item.slot ? item.itemSubclass : '' })
+  const weapon = item.weapon && typeof item.weapon === 'object' ? item.weapon : null
+  const min = finite(weapon?.minDamage)
+  const max = finite(weapon?.maxDamage)
+  const speed = finite(weapon?.speed)
+  const dps = finite(weapon?.dps)
+  if (min !== null && max !== null) lines.push({ left: `${min} - ${max} Damage`, right: speed ? `Speed ${speed.toFixed(2)}` : '' })
+  else if (speed) lines.push({ left: '', right: `Speed ${speed.toFixed(2)}` })
+  if (dps) lines.push({ left: `(${dps.toFixed(1)} damage per second)` })
+  const armor = finite(item.armor)
+  if (armor) lines.push({ left: `${armor} Armor` })
+  for (const line of Array.isArray(item.stats) ? item.stats : []) {
+    const value = finite(line?.value)
+    if (line?.stat && value !== null) lines.push({ left: `${value > 0 ? '+' : ''}${value} ${line.stat}`, tone: 'stat' })
+  }
+  if (Array.isArray(item.classes) && item.classes.length) lines.push({ left: `Classes: ${item.classes.join(', ')}` })
+  const required = finite(item.requiredLevel)
+  if (required) lines.push({ left: `Requires Level ${required}`, tone: 'requirement' })
+  const level = finite(item.itemLevel)
+  if (level) lines.push({ left: `Item Level ${level}` })
+  if (item.setName) lines.push({ left: `Set: ${item.setName}`, tone: 'set' })
+  const shown = lines.filter((line) => line.left || line.right)
+  if (!shown.length) return null
+  const sources = Array.isArray(item.factSources) ? item.factSources : []
+  const label = sources.includes('wago-forever') && !sources.includes('wago-classic-era')
+    ? 'From the WoW Forever client and ForeverDB, not the game\'s tooltip.'
+    : reference || sources.includes('wago-classic-era') || item.verifiedForForever === false
+      ? 'Classic reference facts, not the game\'s tooltip.'
+      : 'Recorded facts; the game\'s full tooltip is not captured yet.'
+  return { lines: shown, label }
 }
 
 // The player's wishlist matched to dungeons: the item's known sources,
