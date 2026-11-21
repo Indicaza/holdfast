@@ -24,7 +24,7 @@ const slot = (name, scope = document.body) => within(scope).getByRole('button', 
 const findSlot = (name, scope = document.body) => within(scope).findByRole('button', { name: named(name) })
 function openItem(name, scope = document.body) {
   fireEvent.click(slot(name, scope))
-  return screen.getByRole('group', { name: `${name} details` })
+  return screen.getByRole('dialog', { name: `${name} details` })
 }
 
 function api({ detail = FIXTURE_DEADMINES_DETAIL, wishlist = FIXTURE_WISHLIST, runs = [], put = null } = {}) {
@@ -415,7 +415,7 @@ describe('quest rewards', () => {
     const rewards = within(block).getAllByRole('button', { name: /, choose one$/ })
     expect(rewards.length).toBeGreaterThan(1)
     fireEvent.click(rewards[0])
-    expect(screen.getByRole('group', { name: /details$/ }).textContent).toContain('Quest reward: choose one of the rewards.')
+    expect(screen.getByRole('dialog', { name: /details$/ }).textContent).toContain('Quest reward: choose one of the rewards.')
   })
 })
 

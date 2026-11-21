@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { GameTooltipCard, GameTooltipHover } from '../../Intelligence/GameTooltip.jsx'
-import { itemTooltipPending } from '../../Intelligence/gameTooltipModel.js'
+import { placeFloating } from '../../WowAssets/floatingPlacement.js'
 import { WowIcon } from '../../WowAssets/WowIcon.jsx'
 import { acquisitionCopy, confidenceCopy, evidenceText } from '../lootModel.js'
 import { Icon } from '../ui.jsx'
-import { UNVERIFIED_LABEL, itemFacts, observedRateText, referenceRateText, revealSource, sourceAnchor } from './atlasModel.js'
+import { UNVERIFIED_LABEL, itemFacts, observedRateText, referenceRateText, referenceTooltip, revealSource, sourceAnchor } from './atlasModel.js'
 import './AtlasLootGrid.css'
 
 export function UnverifiedBadge({ label = UNVERIFIED_LABEL }) {
@@ -72,36 +73,113 @@ function WishButton({ row, wish, character, busyKey, onToggle }) {
   )
 }
 
-// One item, opened from its slot: the game's tooltip (captured lines, or the
-// pending note: never one made up from metadata), then what Holdfast knows
-// about this item from this source: evidence and rates, other sources, the
-// wishlist, and the reference facts, kept apart from the game's text.
-export function ItemInspector({ row, wish, character, busyKey = '', onToggle, onSource, onClose }) {
+// What the journal knows about an item from this source, under the game's
+// tooltip (the add-on's lines below the client's): where it drops, other
+// sources, rates and evidence, and the character's wishlist state.
+export function ItemJournalLines({ row, wish, hint = false }) {
+  const { item } = row
+  const also = Array.isArray(row.alsoFrom) ? row.alsoFrom : []
+  const reference = (Array.isArray(item.referenceRates) ? item.referenceRates : []).map(referenceRateText).filter(Boolean)
+  const observed = observedRateText(row.observedRate)
+  const from = row.sourceKind === 'quest' ? `Quest reward: ${row.source}` : row.source ? `Drops from ${row.source}` : 'Source not identified'
+  const evidence = row.observed ? (item.confidence ? confidenceCopy(item.confidence).label : 'Seen by Guildweaver')
+    : row.foreverDb ? 'Listed by ForeverDB (seen in WoW Forever)' : 'Classic reference: not verified for Forever'
+  return (
+    <>
+      <p className="game-tooltip__extra-from">{from}</p>
+      {also.length ? <p>Also from {also.map((other) => other.name).join(', ')}</p> : null}
+      {reference.length ? <p>Drop rate: {reference.join('; ')}</p> : null}
+      {observed ? <p>Guildweaver{row.observedRate?.preliminary ? ' (preliminary)' : ''}: {observed}</p> : null}
+      <p className="game-tooltip__extra-faint">{evidence}</p>
+      {item.qualityId === null || item.qualityId === undefined ? <p className="game-tooltip__extra-faint">Quality not known yet</p> : null}
+      {row.choice ? <p>Quest reward: choose one</p> : null}
+      {row.usableNow === false && row.requiredLevel ? <p className="game-tooltip__extra-warn">Usable at level {row.requiredLevel}</p> : null}
+      {wish?.state === 'acquired' ? <p className="game-tooltip__extra-good">On your wishlist: acquired</p>
+        : wish ? <p className="game-tooltip__extra-wish">On your wishlist{wish.priority && wish.priority !== 'normal' ? ` (${wish.priority})` : ''}</p> : null}
+      {hint ? <p className="game-tooltip__extra-faint">Click for details and wishlist</p> : null}
+    </>
+  )
+}
+
+// One item, opened from its slot: a popover beside the slot (a sheet on a
+// phone) that floats over the page, so its card never grows. The game's
+// tooltip (or the reference facts, marked as such), then this source's
+// evidence, the other sources (linked), the wishlist button and every
+// recorded fact. Escape, the close button, a press elsewhere or the slot
+// scrolling away closes it; focus goes back to the slot.
+export function ItemInspector({ row, wish, character, busyKey = '', onToggle, onSource, onClose, anchor = null }) {
   const ref = useRef(null)
+  const [position, setPosition] = useState(null)
   const { item } = row
   const acquired = wish?.state === 'acquired'
   const facts = itemFacts(item)
-  const pending = itemTooltipPending(item)
   const evidence = row.observed ? evidenceText(item) : ''
   const own = row.sourceKey ? { key: row.sourceKey, name: row.source, kind: row.sourceKind, bossKey: row.bossKey || null, questId: row.questId ?? null } : null
   const linkable = onSource && own && (row.bossKey || row.sourceKind === 'quest' || row.alsoFrom)
   const also = Array.isArray(row.alsoFrom) ? row.alsoFrom : []
-  const quality = (item.qualityId === null || item.qualityId === undefined) ? 'Quality not known' : null
-  useEffect(() => { ref.current?.focus({ preventScroll: true }) }, [row])
-  return (
-    <section ref={ref} className="gw-iteminspect" role="group" aria-label={`${item.name || 'Item'} details`} tabIndex={-1} data-item={item.itemKey}
-      onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); onClose(true) } }}>
-      <button type="button" className="gw-icon-btn gw-icon-btn--quiet gw-iteminspect__close" aria-label="Close item details" onClick={() => onClose(true)}><Icon name="close" size={14} /></button>
-      <GameTooltipCard item={item} className="gw-iteminspect__tooltip" />
-      <div className="gw-iteminspect__side">
-        <p className="gw-iteminspect__source">
+  const reference = referenceTooltip(item, { reference: Boolean(row.reference && !row.observed) })
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+
+  // Placed beside its slot, kept there while the page scrolls; a sheet on narrow screens.
+  useLayoutEffect(() => {
+    const place = () => {
+      const panel = ref.current
+      if (!panel) return
+      if (!anchor || window.innerWidth <= 640) { setPosition({ sheet: true }); return }
+      if (!anchor.isConnected) { onCloseRef.current(false); return }
+      const rect = anchor.getBoundingClientRect()
+      if (rect.bottom < 0 || rect.top > window.innerHeight) { onCloseRef.current(false); return }
+      const { width, height } = panel.getBoundingClientRect()
+      setPosition(placeFloating(rect, width, height, 'right'))
+    }
+    place()
+    let frame = 0
+    const later = (event) => {
+      if (event?.target instanceof Node && ref.current?.contains(event.target)) return
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(place)
+    }
+    window.addEventListener('scroll', later, true)
+    window.addEventListener('resize', later)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', later, true)
+      window.removeEventListener('resize', later)
+    }
+  }, [anchor, row])
+  // Focus moves in once it is placed (a hidden box cannot take focus).
+  const placed = position !== null
+  useEffect(() => { if (placed) ref.current?.focus({ preventScroll: true }) }, [placed, row])
+  // Escape closes it wherever focus is (a mouse press leaves focus on the slot).
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      event.preventDefault()
+      onCloseRef.current(true)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  const style = position?.sheet ? undefined : position ? { left: position.left, top: position.top } : { left: 0, top: 0, visibility: 'hidden' }
+  return createPortal(
+    <section ref={ref} className={`gw-itempop${position?.sheet ? ' gw-itempop--sheet' : ''}`} role="dialog" aria-label={`${item.name || 'Item'} details`} tabIndex={-1}
+      data-item={item.itemKey} style={style}
+      onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(true) } }}>
+      <button type="button" className="gw-icon-btn gw-icon-btn--quiet gw-itempop__close" aria-label="Close item details" onClick={() => onClose(true)}><Icon name="close" size={14} /></button>
+      <GameTooltipCard item={item} reference={reference} className="gw-itempop__tooltip" />
+      <div className="gw-itempop__side">
+        <p className="gw-itempop__source">
           {row.source ? (linkable ? <>From <SourceLink source={own} onSource={onSource} /></> : <>From {row.source}</>) : 'Source not identified'}
           {' '}<Provenance row={row} />
         </p>
         <Rates row={row} />
-        {row.choice ? <p className="gw-iteminspect__note">Quest reward: choose one of the rewards.</p> : null}
-        {row.usableNow === false && row.requiredLevel ? <p className="gw-iteminspect__note gw-atlas-loot__later">Usable at level {row.requiredLevel}.</p> : null}
-        {item.kind === 'quest-item' || quality ? <p className="gw-iteminspect__note gw-muted">{[item.kind === 'quest-item' ? 'Quest item' : null, quality].filter(Boolean).join(' · ')}.</p> : null}
+        {row.choice ? <p className="gw-itempop__note">Quest reward: choose one of the rewards.</p> : null}
+        {row.usableNow === false && row.requiredLevel ? <p className="gw-itempop__note gw-atlas-loot__later">Usable at level {row.requiredLevel}.</p> : null}
+        {item.kind === 'quest-item' || item.qualityId === null || item.qualityId === undefined ? (
+          <p className="gw-itempop__note gw-muted">{[item.kind === 'quest-item' ? 'Quest item' : null, item.qualityId === null || item.qualityId === undefined ? 'Quality not known' : null].filter(Boolean).join(' · ')}.</p>
+        ) : null}
         {also.length ? (
           <p className="gw-atlas-loot__also gw-muted">
             Also from{' '}
@@ -110,12 +188,11 @@ export function ItemInspector({ row, wish, character, busyKey = '', onToggle, on
             ))}
           </p>
         ) : null}
-        <div className="gw-iteminspect__actions">
+        <div className="gw-itempop__actions">
           <WishButton row={row} wish={wish} character={character} busyKey={busyKey} onToggle={onToggle} />
         </div>
         <details className="gw-atlas-loot__more">
           <summary>Item facts</summary>
-          {pending ? <p className="gw-muted gw-iteminspect__factnote">Reference data, not the game's tooltip.</p> : null}
           {facts.length ? (
             <dl className="gw-atlas-itemfacts">{facts.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl>
           ) : <p className="gw-muted">No item facts recorded yet.</p>}
@@ -127,13 +204,15 @@ export function ItemInspector({ row, wish, character, busyKey = '', onToggle, on
           </p>
         </details>
       </div>
-    </section>
+    </section>,
+    document.body,
   )
 }
 
-// One inventory slot: the icon in its quality border, the game's tooltip on
-// hover or keyboard focus, and a press opens the item. Wanted and acquired
-// show as small marks; nothing is ever added by hovering.
+// One inventory slot: the icon in its quality border, the game's tooltip
+// with the journal's lines on hover or keyboard focus, and a press opens the
+// item. Wanted and acquired show as small marks; nothing is ever added by
+// hovering. The slot never moves or grows (see AtlasLootGrid.css).
 export function ItemSlot({ row, wish, open = false, onOpen }) {
   const { item } = row
   const wanted = Boolean(wish && wish.state !== 'acquired')
@@ -141,11 +220,12 @@ export function ItemSlot({ row, wish, open = false, onOpen }) {
   const quality = Number.isInteger(item.qualityId) ? item.qualityId : null
   const name = [item.name || 'Unknown item', wanted ? 'on the wishlist' : null, acquired ? 'acquired' : null, row.choice ? 'choose one' : null,
     row.usableNow === false && row.requiredLevel ? `usable at level ${row.requiredLevel}` : null].filter(Boolean).join(', ')
+  const reference = useMemo(() => referenceTooltip(item, { reference: Boolean(row.reference && !row.observed) }), [item, row.reference, row.observed])
   return (
     <li className="gw-slotcell">
-      <GameTooltipHover item={item} touch={false}>
+      <GameTooltipHover item={item} disabled={open} touch={false} reference={reference} extra={<ItemJournalLines row={row} wish={wish} hint />}>
         <button type="button" className={`gw-slot gw-slot--q${quality ?? 'x'}${wanted ? ' is-wanted' : ''}${acquired ? ' is-acquired' : ''}${row.usableNow === false ? ' is-later' : ''}${open ? ' is-open' : ''}`}
-          aria-label={name} aria-expanded={open} data-item={item.itemKey} onClick={() => onOpen(row)}>
+          aria-label={name} aria-expanded={open} aria-haspopup="dialog" data-item={item.itemKey} onClick={(event) => onOpen(row, event.currentTarget)}>
           <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} size={44} />
           {wanted ? <span className="gw-slot__mark gw-slot__mark--wanted" aria-hidden="true"><Icon name="check" size={10} /></span> : null}
           {acquired ? <span className="gw-slot__mark gw-slot__mark--acquired" aria-hidden="true"><Icon name="check" size={10} /></span> : null}
@@ -166,41 +246,41 @@ function ForeverDbCredit() {
   return <p className="gw-muted gw-atlas-credit"><a className="gw-link" href="https://foreverdb.net" target="_blank" rel="noreferrer">Data from ForeverDB.net</a></p>
 }
 
-// Items as an inventory: a wrapping grid of slots. Pressing one opens it
-// below the grid; Escape, the close button or a press elsewhere closes it.
+// Items as an inventory: a wrapping grid of slots. Pressing one opens it in
+// a popover over the page (ItemInspector); the grid and its card keep their
+// size. Escape, the close button or a press elsewhere closes it.
 export function LootList({ rows, wishes, empty = 'No loot recorded here yet.', credit = true, label = '', character = null, busyKey = '', onToggle, onSource }) {
-  const [openKey, setOpenKey] = useState('')
+  const [opened, setOpened] = useState({ key: '', anchor: null })
   const listRef = useRef(null)
-  const panelRef = useRef(null)
-  const open = rows.find((row) => row.item.itemKey === openKey) || null
+  const open = rows.find((row) => row.item.itemKey === opened.key) || null
   const close = (refocus = false) => {
-    const key = openKey
-    setOpenKey('')
-    if (refocus) listRef.current?.querySelector(`[data-item="${key}"]`)?.focus()
+    const anchor = opened.anchor
+    setOpened({ key: '', anchor: null })
+    if (refocus && anchor?.isConnected) anchor.focus()
   }
-  // A press outside the grid and the open item closes it.
+  // A press outside the slot and the open item closes it.
   useEffect(() => {
     if (!open) return undefined
     const onDown = (event) => {
-      const inside = [listRef.current, panelRef.current].some((element) => element?.contains(event.target))
-      if (!inside) setOpenKey('')
+      const popover = document.querySelector('.gw-itempop')
+      if (popover?.contains(event.target) || opened.anchor?.contains(event.target)) return
+      setOpened({ key: '', anchor: null })
     }
-    document.addEventListener('pointerdown', onDown)
-    return () => document.removeEventListener('pointerdown', onDown)
-  }, [open])
+    // Capture: a control that stops its own pointerdown still closes it.
+    document.addEventListener('pointerdown', onDown, true)
+    return () => document.removeEventListener('pointerdown', onDown, true)
+  }, [open, opened.anchor])
   if (!rows.length) return empty ? <p className="gw-muted">{empty}</p> : null
   return (
     <div className="gw-lootgrid">
       <ul ref={listRef} className="gw-lootgrid__slots" aria-label={label || undefined}>
         {rows.map((row) => (
-          <ItemSlot key={`${row.sourceKey}-${row.item.itemKey}`} row={row} wish={wishes.get(row.item.itemKey)} open={row.item.itemKey === openKey}
-            onOpen={(target) => setOpenKey((current) => (current === target.item.itemKey ? '' : target.item.itemKey))} />
+          <ItemSlot key={`${row.sourceKey}-${row.item.itemKey}`} row={row} wish={wishes.get(row.item.itemKey)} open={row.item.itemKey === opened.key}
+            onOpen={(target, anchor) => setOpened((current) => (current.key === target.item.itemKey ? { key: '', anchor: null } : { key: target.item.itemKey, anchor }))} />
         ))}
       </ul>
       {open ? (
-        <div ref={panelRef}>
-          <ItemInspector row={open} wish={wishes.get(open.item.itemKey)} character={character} busyKey={busyKey} onToggle={onToggle} onSource={onSource} onClose={close} />
-        </div>
+        <ItemInspector row={open} wish={wishes.get(open.item.itemKey)} character={character} busyKey={busyKey} onToggle={onToggle} onSource={onSource} onClose={close} anchor={opened.anchor} />
       ) : null}
       {credit && usesForeverDb(rows) ? <ForeverDbCredit /> : null}
     </div>

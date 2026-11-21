@@ -60,7 +60,6 @@
   border: 0;
   background: url("/inventory-art/slot.webp") center / var(--gw-slot) var(--gw-slot) no-repeat;
   cursor: pointer;
-  transition: filter 120ms ease, transform 120ms ease;
 }
 
 .gw-slot .wow-icon {
@@ -137,32 +136,81 @@
   pointer-events: none;
 }
 
-/* ---------------------------------------------------- The opened item */
-.gw-iteminspect {
-  position: relative;
+/* ------------------------------------------------- The opened item */
+/* A popover over the page, beside its slot (placeFloating): its card keeps
+   its size. On a phone it is a sheet along the bottom. */
+.gw-itempop {
+  position: fixed;
+  z-index: 9000;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 0.75rem;
+  width: min(34rem, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
   padding: 0.7rem;
   border: 1px solid var(--gw-gold-line);
   border-radius: 6px;
-  background: rgba(8, 8, 7, 0.88);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: rgba(8, 8, 7, 0.97);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  color: var(--gw-text, #e8e2d4);
+  overscroll-behavior: contain;
 }
-.gw-iteminspect:focus { outline: none; }
-.gw-iteminspect:focus-visible { box-shadow: 0 0 0 2px #ffd100; }
-.gw-iteminspect__close { position: absolute; top: 0.3rem; right: 0.3rem; }
-.gw-iteminspect__tooltip.game-tooltip--card { flex: 1 1 15rem; max-width: 20rem; margin: 0; }
-.gw-iteminspect__side { display: flex; flex: 1 1 13rem; flex-direction: column; gap: 0.4rem; min-width: 0; padding-right: 1.6rem; font-size: 13px; }
-.gw-iteminspect__side p { margin: 0; }
-.gw-iteminspect__source { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.45rem; }
-.gw-iteminspect__note { font-size: 12.5px; }
-.gw-iteminspect__actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.gw-iteminspect__factnote { margin: 0.35rem 0 !important; font-size: 12px; }
-.gw-iteminspect .gw-atlas-loot__rates { display: block; font-size: 12.5px; }
-.gw-iteminspect .gw-atlas-loot__more { font-size: 12px; }
-.gw-iteminspect .gw-atlas-loot__more > summary { width: fit-content; color: var(--gw-dim); cursor: pointer; }
+.gw-itempop:focus { outline: none; }
+.gw-itempop:focus-visible { box-shadow: 0 0 0 2px #ffd100, 0 12px 32px rgba(0, 0, 0, 0.6); }
+.gw-itempop--sheet {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  max-height: 72vh;
+  border-width: 1px 0 0;
+  border-radius: 10px 10px 0 0;
+  padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+}
+.gw-itempop__close { position: absolute; top: 0.3rem; right: 0.3rem; }
+.gw-itempop__tooltip.game-tooltip--card { flex: 1 1 14rem; max-width: 20rem; margin: 0; }
+.gw-itempop__side { display: flex; flex: 1 1 13rem; flex-direction: column; gap: 0.4rem; min-width: 0; padding-right: 1.6rem; font-size: 13px; }
+.gw-itempop__side p { margin: 0; }
+.gw-itempop__source { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.45rem; }
+.gw-itempop__note { font-size: 12.5px; }
+.gw-itempop__actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.gw-itempop .gw-atlas-loot__rates { display: block; font-size: 12.5px; }
+.gw-itempop .gw-atlas-loot__more { font-size: 12px; }
+.gw-itempop .gw-atlas-loot__more > summary { width: fit-content; color: var(--gw-dim); cursor: pointer; }
+.gw-itempop .gw-atlas-itemfacts { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.25rem 0.75rem; margin: 0.35rem 0; }
+.gw-itempop .gw-atlas-itemfacts dt { color: var(--gw-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.gw-itempop .gw-atlas-itemfacts dd { margin: 0; }
+.gw-itempop button.gw-link {
+  padding: 0; border: 0; background: none; box-shadow: none; color: var(--gw-gold); font: inherit;
+  text-decoration: underline; text-decoration-color: rgba(196, 166, 103, 0.4); text-underline-offset: 2px; cursor: pointer;
+}
+.gw-itempop button.gw-link:hover { color: #ffd100; }
+
+/* The journal's lines under the game's tooltip. */
+.game-tooltip__extra-from { color: #ffd100; }
+.game-tooltip__extra-faint { color: #8f8a80; }
+.game-tooltip__extra-warn { color: #ff8b6b; }
+.game-tooltip__extra-good { color: #49c46b; }
+.game-tooltip__extra-wish { color: #c08cff; }
+
+/* Geometry stays still: the site's global button motion (grow and lift on
+   hover, shrink and drop on press) would move a slot out from under the
+   pointer at its edge, and the tooltip would flicker. The variables are set
+   on each button by index.css, so they are reset on the journal's own
+   controls, not on a parent. */
+.gw-atlas-page button, .gw-atlas-modal button, .gw-itempop button, .gw-slot {
+  --interactive-hover-scale: 1;
+  --interactive-hover-lift: 0;
+  --interactive-press-scale: 1;
+}
+/* Specific enough to beat the global :where(button):not(…):hover/:active rules. */
+.gw-lootgrid .gw-slot, .gw-lootgrid .gw-slot:not(:disabled):hover, .gw-lootgrid .gw-slot:not(:disabled):active { scale: none; translate: none; filter: none; transition: none; }
+/* A square hit area: the global button radius would hand the rounded corners
+   to the cell around the slot, and the tooltip would drop at each corner.
+   The rounding stays drawn by ::before and ::after. */
+.gw-lootgrid .gw-slot { --interactive-radius: 0; }
 
 /* Phones: bigger slots for fingers. */
 @media (max-width: 640px), (pointer: coarse) {
@@ -199,16 +247,3 @@
   text-underline-offset: 2px;
 }
 .gw-atlas-source__guide:hover { color: #ffd100; }
-.gw-iteminspect button.gw-link {
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--gw-gold);
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-color: rgba(196, 166, 103, 0.4);
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-.gw-iteminspect button.gw-link:hover { color: #ffd100; }

@@ -113,9 +113,11 @@ function referenceList(itemIds, observed, sources = null) {
 }
 
 // A boss joined to the catalog's source groups for it (by npc id, encounter
-// id or name): the item keys the catalog lists under them, and the catalog's
-// spelling of the name, so the frontend can match boss.name to
-// sources[].name. atlasName keeps the atlas source's own spelling.
+// id or name): the item keys the catalog lists under them. The atlas's name
+// is the boss's name (the verified one the add-on packages too); the
+// catalog's own name for the group, when it differs, is kept apart as
+// `catalogName` for matching and debugging. A catalog name is telemetry: it
+// may be only "Creature <npcId>", and it never replaces a known name.
 // A boss's relationships entry (data/loot-relationships.json), by encounter,
 // npc id or name.
 function relationshipsOf(dungeonId, boss) {
@@ -160,7 +162,9 @@ function bossWithCatalog(boss, sources, reference = null, observed = new Map(), 
     }
   }
   const entry = reference?.bosses.find((candidate) => (boss.encounterId && candidate.encounterId === boss.encounterId) || (boss.npcId && candidate.npcId === boss.npcId));
-  return { ...boss, name: sourceName || boss.name, atlasName: boss.name, loot: [...keys],
+  const placeholder = !sourceName || /^creature \d+$/i.test(sourceName.trim());
+  return { ...boss, name: boss.name || (placeholder ? null : sourceName), atlasName: boss.name,
+    ...(sourceName && normalizedName(sourceName) !== name ? { catalogName: sourceName } : {}), loot: [...keys],
     ...withRates(dungeonId, boss, referenceList(entry?.itemIds || [], observed, entry?.sources)),
     unresolvedLoot: unresolved.filter((gap) => boss.npcId && gap.npcId === boss.npcId) };
 }
