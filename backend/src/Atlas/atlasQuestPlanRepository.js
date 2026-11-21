@@ -21,6 +21,24 @@ export function loadEditorialQuestPlan(_instanceId) {
   return null;
 }
 
+// A quest is the same quest in every dungeon that lists it, but a few
+// dungeon entries lack the giver another entry names (Blackrock Depths and
+// Blackrock Spire share the Windsor chain). Such an entry takes the first
+// named giver in catalog order; the add-on's exporter does the same.
+let giverCache = null;
+function namedGivers() {
+  if (!giverCache) {
+    giverCache = new Map();
+    for (const entry of loadQuestCatalog().catalog.dungeons) {
+      for (const quest of entry.quests) {
+        if (quest.relevance !== "zone" && quest.giver?.name && !giverCache.has(quest.questId)) giverCache.set(quest.questId, quest.giver);
+      }
+    }
+  }
+  return giverCache;
+}
+const withGiver = (quest) => (quest.giver?.name || !namedGivers().has(quest.questId) ? quest : { ...quest, giver: namedGivers().get(quest.questId) });
+
 // What the planner needs of the dungeon (or wing) an id names, or null.
 function planInput(id) {
   const target = resolveDungeonId(id);
@@ -33,7 +51,7 @@ function planInput(id) {
     target,
     dungeon: { instanceId: dungeon.instanceId, dungeonKey: wing?.dungeonKey || parentKeyFor(dungeon), name: wing?.name || dungeon.name,
       zoneName: dungeon.zoneName ?? null, entrance: dungeon.entrance ?? null },
-    quests: entry.quests,
+    quests: entry.quests.map(withGiver),
     questList: entry.curated ? "curated" : "unknown",
   };
 }

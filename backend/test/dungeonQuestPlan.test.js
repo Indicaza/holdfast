@@ -381,3 +381,12 @@ test("GET /plan: each realm's character has its own plan; others' answer 404", (
   assert.equal((await read(ash.cookie, 99999, rp)).status, 404);
   assert.equal((await read(ash.cookie, "blackrock-spire:lower", rp)).json.dungeon.dungeonKey, "blackrock-spire:lower");
 }));
+
+test("a dungeon entry without a giver takes the one another entry names (the Windsor chain)", () => {
+  const state = { schemaVersion: 1, faction: "alliance", race: "Human", classToken: "WARRIOR", level: 58,
+    completed: { coverage: "full", questIds: [4182, 4183, 4184, 4185, 4186, 4223, 4224] }, questLog: { coverage: "full", questIds: [] } };
+  assert.equal(loadQuestCatalog().byId.get(229).quests.find((quest) => quest.questId === 4241).giver, null, "Blackrock Spire's own entry has none");
+  const plan = atlasQuestPlanFromState("229", { state }).result;
+  const waypoint = plan.waypoints.find((entry) => entry.id === "wp:giver:4241");
+  assert.equal(waypoint.target, "Marshal Maxwell", "from Blackrock Depths' entry for the same quest");
+});
