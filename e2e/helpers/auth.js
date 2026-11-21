@@ -52,6 +52,15 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  journalTester: {
+    id: 'e2e-journal-tester',
+    username: 'e2e-journal-tester',
+    globalName: 'Jo Journal',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   planner: {
     id: 'e2e-planner',
     username: 'e2e-planner',
