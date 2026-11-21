@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from 'react'
 
 import { relativeTime } from '../playerModel.js'
 import { Icon, SkeletonRows } from '../ui.jsx'
-import { STEP_STATUS_COPY, coordsText, questPlanModel, waypointMapHref, waypointSourceText } from './questPlanModel.js'
+import { STEP_STATUS_COPY, coordsText, laterQuests, questPlanModel, waypointMapHref, waypointSourceText } from './questPlanModel.js'
 
 // The quest preparation checklist, as the add-on's Dungeon Journal shows it:
 // the readiness, the next action, then numbered steps with lettered parts.
@@ -76,11 +76,13 @@ function doneCopy(item) {
   return null
 }
 
-function PlanItem({ item, group, model, nextId, open, onToggle }) {
+function PlanItem({ item, group, model, nextId, open, onToggle, said = null }) {
   const bodyId = useId()
   const parts = item.chain.length + item.children.length
   // Said only when nothing in the item can be done yet.
-  const why = item.status === 'blocked' || item.status === 'unknown' || item.status === 'ineligible' ? model.explain(item.step) : ''
+  const explained = item.status === 'blocked' || item.status === 'unknown' || item.status === 'ineligible' ? model.explain(item.step) : ''
+  // A reason the group already states once is not repeated on each step.
+  const why = said?.has(explained) ? '' : explained
   const title = group === 'share' ? item.step.text.replace(/: shareable$/, '') : item.status === 'done' ? item.step.text.replace(/: (in your quest log|completed)$/, '') : item.step.text
   return (
     <li className={`gw-qplan__item gw-qplan__item--${item.status}${doneCopy(item)?.accepted ? ' is-accepted' : ''}${item.containsNext ? ' contains-next' : ''}`} data-step={item.key}>
@@ -123,7 +125,16 @@ function PlanGroup({ group, model, nextId, isOpen, onToggle }) {
   const fold = model.long && group.done > 0 && group.done < group.items.length
   const shown = fold ? group.items.filter((item) => item.status !== 'done') : group.items
   const done = fold ? group.items.filter((item) => item.status === 'done') : []
-  const render = (item) => <PlanItem key={item.key} item={item} group={group.key} model={model} nextId={nextId} open={isOpen(item)} onToggle={onToggle} />
+  // The same reason on several steps ("its quest chain is not known") is said
+  // once, above them, with how many it covers.
+  const reasons = new Map()
+  for (const item of group.items) {
+    if (item.status !== 'unknown' && item.status !== 'ineligible') continue
+    const why = model.explain(item.step)
+    if (why) reasons.set(why, (reasons.get(why) || 0) + 1)
+  }
+  const said = new Set([...reasons].filter(([, count]) => count > 1).map(([why]) => why))
+  const render = (item) => <PlanItem key={item.key} item={item} group={group.key} model={model} nextId={nextId} open={isOpen(item)} onToggle={onToggle} said={said} />
   return (
     <section className={`gw-qplan__group gw-qplan__group--${group.key}`} aria-labelledby={headingId}>
       <h4 id={headingId}>
@@ -131,6 +142,10 @@ function PlanGroup({ group, model, nextId, isOpen, onToggle }) {
         {group.items.length > 1 && group.key !== 'share' ? <span className="gw-muted gw-qplan__count"> {group.done} of {group.items.length} done</span> : null}
       </h4>
       {group.key === 'share' ? <p className="gw-muted gw-qplan__note">Only if someone in your group already has the quest: Guildweaver cannot see other players' quest logs.</p> : null}
+      {group.key === 'enter' ? <p className="gw-muted gw-qplan__note">These steps prepare quests: they are not what the game requires to enter. Any key or attunement the dungeon needs is not tracked here.</p> : null}
+      {[...said].map((why) => (
+        <p key={why} className="gw-qplan__note gw-qplan__note--unknown">{reasons.get(why)} steps · {why}</p>
+      ))}
       {group.notes.map((note) => (
         <p key={note.text} className="gw-qplan__note gw-qplan__note--editorial">
           {note.text}{note.verified ? null : <span className="gw-qplan__unverified" title="From the Guildweaver editors, not checked in game yet">unverified</span>}
@@ -151,7 +166,7 @@ function Freshness({ freshness, character }) {
   if (!freshness.synced) {
     return <p className="gw-qplan__fresh gw-qplan__fresh--warn">No quest data synced for {character.name} yet. Play with Guildweaver on, then <kbd>/reload</kbd>: until then no step can be marked done.</p>
   }
-  const parts = [`Quests as of ${relativeTime(freshness.capturedAt)}, from the last sync.`]
+  const parts = [`Quest log read in game ${relativeTime(freshness.capturedAt)}${freshness.receivedAt && freshness.receivedAt !== freshness.capturedAt ? `, uploaded ${relativeTime(freshness.receivedAt)}` : ''}.`]
   if (freshness.stale) parts.push('That may be out of date: /reload or log out in WoW to update.')
   if (freshness.missing.length) parts.push(`The game did not report ${freshness.missing.join(' or ')}, so those quests show as not known.`)
   else if (freshness.partial) parts.push('Only some completed quests were checked: the rest show as not known.')
@@ -171,16 +186,40 @@ function NextAction({ model, character, onJump }) {
   const { next } = model
   if (!next) return <p className={`gw-qplan__next gw-qplan__next--none${model.readiness.key === 'ready' ? ' is-ready' : ''}`} role="status">{noNextText(model, character)}</p>
   const context = next.owner !== next.step ? next.owner.text.replace(/^Prerequisite: /, '') : next.item.step !== next.step ? next.item.step.text : ''
+  // A next step from incomplete or old quest data is a suggestion, and says so.
+  const tentative = model.freshness.partial || model.freshness.stale || model.readiness.key === 'unknown'
   return (
-    <section className="gw-qplan__next" aria-label="Next step">
-      <span className="gw-qplan__nextlabel">Next · step {next.label}{next.sublabel}</span>
+    <section className={`gw-qplan__next${tentative ? ' gw-qplan__next--tentative' : ''}`} aria-label="Next step">
+      <span className="gw-qplan__nextlabel">{tentative ? 'Suggested next' : 'Next'} · step {next.label}{next.sublabel}</span>
       <strong className="gw-qplan__nexttext">{next.step.text}</strong>
       {context ? <span className="gw-muted gw-qplan__nextfor">For {context}</span> : null}
+      {tentative ? <span className="gw-qplan__nextfor gw-qplan__tentative">From incomplete quest data: check it in game before you travel.</span> : null}
       <span className="gw-qplan__nextactions">
         {next.waypoint ? <WaypointLink waypoint={next.waypoint} /> : null}
         <button type="button" className="gw-link" onClick={onJump}>Show in the checklist</button>
       </span>
     </section>
+  )
+}
+
+// Quests the character's level does not allow yet: not hidden, but said
+// with the level they open at.
+function LaterQuests({ quests, character }) {
+  if (!quests.length) return null
+  return (
+    <details className="gw-qplan__extra gw-qplan__later">
+      <summary><h4>Available at a higher level</h4><span className="gw-tag gw-tag--quiet">{quests.length}</span></summary>
+      <ul className="gw-qplan__subs gw-qplan__subs--plain">
+        {quests.map((quest) => (
+          <li key={quest.questId} className="gw-qplan__sub gw-qplan__sub--ineligible">
+            <span className="gw-qplan__label" />
+            <span className="gw-qplan__mark gw-qplan__mark--ineligible" aria-hidden="true">–</span>
+            <span className="gw-qplan__text">{quest.name}{quest.relevance === 'optional' ? <span className="gw-muted"> (optional)</span> : null}</span>
+            <span className="gw-qplan__where">From level {quest.minLevel}{character?.level ? ` · ${character.name} is ${character.level}` : ''}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
   )
 }
 
@@ -197,8 +236,9 @@ function ExtraGroup({ group, model }) {
 
 // The plan for one character: summary, next step, checklist, extras.
 // `fallback` is drawn when there is no plan (a dungeon without a quest list).
-export default function QuestPlan({ resource, character, fallback = null, now = undefined }) {
+export default function QuestPlan({ resource, character, fallback = null, now = undefined, readiness = null }) {
   const model = useMemo(() => questPlanModel(resource?.data, now === undefined ? {} : { now }), [resource?.data, now])
+  const later = useMemo(() => laterQuests(readiness?.data), [readiness?.data])
   // Open or closed, by item: what the player chose wins over the default
   // (the next step and short plans open, done steps closed).
   const [choices, setChoices] = useState(() => new Map())
@@ -234,8 +274,8 @@ export default function QuestPlan({ resource, character, fallback = null, now = 
           <span>{model.readiness.line}</span>
         </div>
         <Freshness freshness={model.freshness} character={character} />
-        {model.hiddenIneligible ? (
-          <p className="gw-muted gw-qplan__fresh">{model.hiddenIneligible} dungeon quest{model.hiddenIneligible === 1 ? ' is' : 's are'} not for {character.name} (faction, race, class or level) and {model.hiddenIneligible === 1 ? 'is' : 'are'} left out.</p>
+        {model.hiddenIneligible > later.length ? (
+          <p className="gw-muted gw-qplan__fresh">{model.hiddenIneligible - later.length} dungeon quest{model.hiddenIneligible - later.length === 1 ? ' is' : 's are'} not for {character.name} (faction, race or class) and {model.hiddenIneligible - later.length === 1 ? 'is' : 'are'} left out.</p>
         ) : null}
       </header>
       <NextAction model={model} character={character} onJump={jump} />
@@ -247,6 +287,7 @@ export default function QuestPlan({ resource, character, fallback = null, now = 
       ) : null}
       {model.groups.map((group) => <PlanGroup key={group.key} group={group} model={model} nextId={nextId} isOpen={isOpen} onToggle={onToggle} />)}
       {model.extras.map((group) => <ExtraGroup key={group.key} group={group} model={model} />)}
+      <LaterQuests quests={later} character={character} />
       <p className="gw-muted gw-qplan__source">
         Quest facts are Classic reference data unless marked otherwise{model.editorial ? '; this dungeon also has notes from the Guildweaver editors' : ''}. Locations marked unverified have not been checked on Forever.
       </p>
