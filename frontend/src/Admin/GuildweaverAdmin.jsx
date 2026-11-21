@@ -44,6 +44,7 @@ export default function GuildweaverAdmin() {
       <nav className="admin-nav" aria-label="Admin sections">
         <a href="/admin">Audit</a>
         <a href="/admin/guildweaver" aria-current="page">Guildweaver</a>
+        <a href="/admin/dungeons">Dungeon content</a>
       </nav>
       <GuildweaverConsole />
     </PageShell>

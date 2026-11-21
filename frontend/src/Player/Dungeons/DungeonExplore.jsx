@@ -44,12 +44,13 @@ function DungeonCard({ card, character, href, gear = null, history, historyKnown
     <li className={`gw-atlas-card${card.fit === 'fit' ? ' is-fit' : ''}${recommendation?.recommended ? ' is-recommended' : ''}`} data-dungeon={card.id}>
       <a className="gw-atlas-card__link" href={href}
         aria-label={`${card.name}${card.levels ? `, ${card.levels}` : ''}${card.zone ? `, ${card.zone}` : ''}${recommendation?.recommended ? ', recommended' : ''}`}>
-        <span className="gw-atlas-card__art" style={card.artworkUrl ? { backgroundImage: `url("${card.artworkUrl}")` } : undefined} aria-hidden="true">
+        <span className="gw-atlas-card__art" style={card.artworkUrl ? { backgroundImage: `url("${card.artworkUrl}")`, ...(card.artPosition ? { backgroundPosition: card.artPosition } : {}) } : undefined} aria-hidden="true">
           {card.artworkUrl ? null : <Icon name="dungeon" size={28} />}
           {card.kind === 'raid' ? <span className="gw-tag gw-atlas-card__kind">Raid</span> : null}
         </span>
         <span className="gw-atlas-card__body">
           <strong className="gw-atlas-card__name">{card.name}</strong>
+          {card.subtitle ? <span className="gw-muted gw-atlas-card__subtitle">{card.subtitle}</span> : null}
           <span className="gw-muted">{[card.levels, card.zone].filter(Boolean).join(' · ') || 'Level and zone not known yet'}</span>
           <span className="gw-atlas-card__stats">
             {card.bossCount ? <span>{card.bossCount} boss{card.bossCount === 1 ? '' : 'es'}</span> : null}

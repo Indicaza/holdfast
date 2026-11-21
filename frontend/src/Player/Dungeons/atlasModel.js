@@ -204,6 +204,11 @@ export function normalizeAtlas(atlas) {
     dungeonLoot: list(source.dungeonLoot),
     referenceVersion: source.referenceVersion && typeof source.referenceVersion === 'object' ? source.referenceVersion : null,
     description: source.description || '',
+    // Dungeon Content Studio (optional): the published editorial layer.
+    subtitle: typeof source.subtitle === 'string' ? source.subtitle : '',
+    editorial: source.editorial && typeof source.editorial === 'object' ? source.editorial : null,
+    // The card art's focal point (0–1), when the studio set one.
+    artFocus: source.artFocus && Number.isFinite(source.artFocus.x) && Number.isFinite(source.artFocus.y) ? { x: source.artFocus.x, y: source.artFocus.y } : null,
     // A map is either art (imageUrl) or a spawn layout the site draws (points).
     maps: list(source.maps).filter((map) => map && (map.imageUrl || (Array.isArray(map.points) && map.points.length))),
     bosses: list(source.bosses),
@@ -290,6 +295,8 @@ export function cardModel(dungeon = {}, { character = null, wishCounts = new Map
     wing: isWingEntry(dungeon) ? dungeon.wing || '' : '',
     name: dungeon.name || `Instance ${dungeon.instanceId}`,
     artworkUrl: atlas.artworkUrl,
+    artPosition: atlas.artFocus ? `${atlas.artFocus.x * 100}% ${atlas.artFocus.y * 100}%` : '',
+    subtitle: atlas.subtitle,
     levels: levelText(atlas),
     zone: atlas.zoneName,
     kind: dungeonKind(dungeon),

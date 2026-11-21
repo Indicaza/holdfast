@@ -98,6 +98,7 @@ function Admin() {
       <nav className="admin-nav" aria-label="Admin sections">
         <a href="/admin" aria-current="page">Audit</a>
         {session.hasPermission('site.admin') ? <a href="/admin/guildweaver">Guildweaver</a> : null}
+        {session.hasPermission('site.admin') ? <a href="/admin/dungeons">Dungeon content</a> : null}
       </nav>
       <AuditLog />
     </PageShell>

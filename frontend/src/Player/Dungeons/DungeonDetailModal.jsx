@@ -37,10 +37,11 @@ import './DungeonAtlas.css'
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
 
 // Escape closes, Tab stays inside, and focus goes back where it was.
-function useDialogFocus(panelRef, onClose) {
+function useDialogFocus(panelRef, onClose, enabled = true) {
   const onCloseRef = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose })
   useEffect(() => {
+    if (!enabled) return undefined
     const previous = document.activeElement
     const panel = panelRef.current
     const overflow = document.body.style.overflow
@@ -68,7 +69,7 @@ function useDialogFocus(panelRef, onClose) {
       document.body.style.overflow = overflow
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus()
     }
-  }, [panelRef])
+  }, [panelRef, enabled])
 }
 
 // A floor map with boss (and rare) markers where their positions are known.
@@ -170,8 +171,10 @@ function Abilities({ abilities }) {
   ))
 }
 
-function Strategy({ strategy }) {
-  const lines = [['summary', 'Summary'], ['tank', 'Tank'], ['healer', 'Healer'], ['dps', 'Damage']].filter(([key]) => strategy?.[key])
+// The boss's strategy lines: the atlas's strategy and the studio's notes.
+function Strategy({ boss }) {
+  const strategy = { ...(boss?.strategy || {}), positioning: boss?.positioning, interrupts: boss?.interrupts, dispels: boss?.dispels }
+  const lines = [['summary', 'Summary'], ['tank', 'Tank'], ['healer', 'Healer'], ['dps', 'Damage'], ['positioning', 'Positioning'], ['interrupts', 'Interrupts'], ['dispels', 'Dispels']].filter(([key]) => strategy[key])
   if (!lines.length) return null
   return <dl className="gw-atlas-strategy">{lines.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{strategy[key]}</dd></div>)}</dl>
 }
@@ -253,10 +256,67 @@ function UnresolvedLoot({ entries, owner }) {
   return <p className="gw-muted gw-atlas-provenance">{entries.length} more drop{entries.length === 1 ? ' is' : 's are'} listed{owner ? ` for ${owner}` : ''} without item details yet (item {ids}).</p>
 }
 
+// Editorial art, cropped around its focal point.
+function EditorialArt({ art, label }) {
+  if (!art?.url) return null
+  return <img className="gw-atlas-art" src={art.url} alt={label} loading="lazy" style={{ objectPosition: `${(art.focusX ?? 0.5) * 100}% ${(art.focusY ?? 0.5) * 100}%` }} />
+}
+
+// The studio's dungeon notes: warnings, preparation, tips, group and route.
+function EditorialNotes({ editorial }) {
+  if (!editorial) return null
+  const lists = [['warnings', 'Warnings'], ['preparation', 'Preparation'], ['tips', 'Tips']].filter(([key]) => editorial[key]?.length)
+  const texts = [['groupComposition', 'Group composition'], ['routeNotes', 'Route']].filter(([key]) => editorial[key])
+  if (!lists.length && !texts.length) return null
+  return (
+    <section className="gw-atlas-editorial" aria-label="Dungeon guide">
+      {lists.map(([key, label]) => (
+        <div key={key} className={`gw-atlas-editorial__block gw-atlas-editorial__block--${key}`}>
+          <h3>{label}</h3>
+          <ul>{editorial[key].map((line) => <li key={line}>{line}</li>)}</ul>
+        </div>
+      ))}
+      {texts.map(([key, label]) => (
+        <div key={key} className="gw-atlas-editorial__block"><h3>{label}</h3><p>{editorial[key]}</p></div>
+      ))}
+    </section>
+  )
+}
+
+const MECHANIC_LABELS = { interrupt: 'Interrupt', dispel: 'Dispel', positioning: 'Positioning', 'tank-danger': 'Tank danger', 'healer-danger': 'Healer danger', 'crowd-control': 'Crowd control', 'special-mechanic': 'Mechanic' }
+const ROLE_LABELS = { tank: 'Tank', healer: 'Healer', dps: 'Damage' }
+
+// The studio's mechanics callouts for a boss, in the editor's order.
+function Mechanics({ mechanics }) {
+  if (!mechanics?.length) return null
+  return (
+    <section className="gw-atlas-mechanics" aria-label="Mechanics">
+      <h4 className="gw-atlas-subhead">Mechanics</h4>
+      <ul>
+        {mechanics.map((mechanic) => (
+          <li key={mechanic.id} className={`gw-atlas-mechanic gw-atlas-mechanic--${mechanic.priority}`}>
+            <div className="gw-atlas-mechanic__head">
+              <strong>{mechanic.ability}</strong>
+              <span className="gw-tag gw-tag--info">{MECHANIC_LABELS[mechanic.type] || 'Mechanic'}</span>
+              {mechanic.priority === 'high' ? <span className="gw-tag gw-tag--warn">High priority</span> : null}
+              {(mechanic.roles || []).map((role) => <span key={role} className="gw-tag gw-tag--quiet">{ROLE_LABELS[role] || role}</span>)}
+              {mechanic.verified ? <span className="gw-tag gw-tag--ok">Verified on Forever</span> : <span className="gw-tag gw-tag--quiet">Not verified</span>}
+            </div>
+            {mechanic.instruction ? <p>{mechanic.instruction}</p> : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function Overview({ entry, atlas, character, onBoss, forCharacter }) {
   return (
     <div className="gw-atlas-section">
-      {atlas.description ? <p>{atlas.description}</p> : null}
+      {atlas.subtitle ? <p className="gw-atlas-subtitle">{atlas.subtitle}</p> : null}
+      <EditorialArt art={atlas.editorial?.art?.overview} label="Overview art" />
+      {atlas.description ? <p className="gw-atlas-description">{atlas.description}</p> : null}
+      <EditorialNotes editorial={atlas.editorial} />
       {atlas.origin === 'forever' ? (
         <p className="gw-muted">A WoW Forever dungeon: its bosses and level band come from the game client{atlas.floorNames.length ? ` (${atlas.floorNames.join(', ')})` : ''}. Maps, abilities and most item details are not known yet.</p>
       ) : null}
@@ -304,6 +364,7 @@ function Overview({ entry, atlas, character, onBoss, forCharacter }) {
             <span key={`${line.source}-${index}`}>{index ? ', ' : ''}{provenanceCopy(line).label}{line.revision ? ` (${line.revision})` : ''}{line.retrievedAt ? `, ${relativeTime(line.retrievedAt)}` : ''}</span>
           ))}
           {atlas.referenceVersion ? <span>; reference loot {atlas.referenceVersion.dataset} {atlas.referenceVersion.revision}</span> : null}
+          {atlas.editorial?.attribution ? <span>; {atlas.editorial.attribution}</span> : null}
         </p>
       ) : null}
     </div>
@@ -339,7 +400,9 @@ function BossDetail({ boss, atlas, detail, role, onRole, character, lootProps })
           <QuickGuide abilities={abilities} role={role} />
         </>
       ) : null}
-      <Strategy strategy={boss.strategy} />
+      {boss.description ? <p className="gw-atlas-description">{boss.description}</p> : null}
+      <Mechanics mechanics={boss.mechanics} />
+      <Strategy boss={boss} />
       {abilities.length ? (
         <details className="gw-atlas-allabilities" open={!guide.length}>
           <summary><h4 className="gw-atlas-subhead">All abilities ({abilities.length})</h4></summary>
@@ -348,6 +411,9 @@ function BossDetail({ boss, atlas, detail, role, onRole, character, lootProps })
       ) : <p className="gw-muted">No abilities recorded for this boss yet.</p>}
       {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
       <h4 className="gw-atlas-subhead">Loot</h4>
+      {boss.lootNotes?.length ? (
+        <ul className="gw-atlas-plain gw-atlas-lootnotes">{boss.lootNotes.map((note) => <li key={note.itemId}><span className="gw-muted">Item {note.itemId}:</span> {note.note}</li>)}</ul>
+      ) : null}
       <LootList rows={bossLoot(boss, detail)} empty={bossLootEmpty(boss, atlas)} {...lootProps} />
       <UnresolvedLoot entries={boss.unresolvedLoot} owner={boss.name} />
     </article>
@@ -420,11 +486,15 @@ function Loot({ items, character, atlas, lootProps }) {
 export default function DungeonDetailModal({
   instanceId, entry = null, dungeons = [], character = null, characters = [], onCharacter = null,
   server = '', section = 'overview', boss = '', onNavigate, onClose, showMapLink = true,
+  // The Dungeon Content Studio's website preview: a detail to show instead of
+  // fetching one, drawn in place instead of as a dialog.
+  previewDetail = null, embedded = false,
 }) {
   const panelRef = useRef(null)
   const titleId = useId()
-  useDialogFocus(panelRef, onClose)
-  const detail = useDungeonDetail(instanceId)
+  useDialogFocus(panelRef, onClose, !embedded)
+  const fetched = useDungeonDetail(previewDetail ? '' : instanceId)
+  const detail = useMemo(() => (previewDetail ? { status: 'ready', data: previewDetail, error: null, reload: () => {} } : fetched), [previewDetail, fetched])
   const wishlist = useWishlist(character?.id || '')
   const mutate = useWishlistMutation()
   const [busy, setBusy] = useState('')
@@ -488,9 +558,9 @@ export default function DungeonDetailModal({
   const openQuests = () => onNavigate({ section: 'quests', boss: '' })
 
   return (
-    <div className="gw-atlas-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section ref={panelRef} className="gw-atlas-modal__panel" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
-        <header className="gw-atlas-modal__head" style={atlas.artworkUrl ? { '--art': `url("${atlas.artworkUrl}")` } : undefined}>
+    <div className={`gw-atlas-modal${embedded ? ' gw-atlas-modal--embedded' : ''}`} role="presentation" onMouseDown={(event) => { if (!embedded && event.target === event.currentTarget) onClose() }}>
+      <section ref={panelRef} className="gw-atlas-modal__panel" role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : 'true'} aria-labelledby={titleId} tabIndex={-1}>
+        <header className="gw-atlas-modal__head" style={atlas.artworkUrl ? { '--art': `url("${atlas.artworkUrl}")`, ...(atlas.editorial?.art?.card ? { '--art-position': `${atlas.editorial.art.card.focusX * 100}% ${atlas.editorial.art.card.focusY * 100}%` } : {}) } : undefined}>
           <div className="gw-atlas-modal__title">
             <p className="gw-muted">{[dungeonKind(merged) === 'raid' ? 'Raid' : 'Dungeon', atlas.zoneName, levelText(atlas)].filter(Boolean).join(' · ')}</p>
             <h2 id={titleId}>{name}</h2>
@@ -552,6 +622,7 @@ export default function DungeonDetailModal({
                       <QuestList quests={atlas.quests} rewardProps={lootProps} />
                     </details>
                   ) : <QuestList quests={atlas.quests} rewardProps={lootProps} />}
+                  {atlas.editorial?.questNotes ? <p className="gw-atlas-editorial-note">{atlas.editorial.questNotes}</p> : null}
                 </div>
               ) : null}
               {section === 'runs' ? <Runs entry={merged} character={character} server={server} /> : null}

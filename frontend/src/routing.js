@@ -122,6 +122,10 @@ export function matchRoute(pathname) {
   }[normalized]
   if (platform) return { name: platform }
 
+  // The Dungeon Content Studio: the list, and one dungeon by instance ID.
+  const studio = normalized.match(/^\/admin\/dungeons(?:\/(\d{1,9}))?$/)
+  if (studio) return { name: 'admin-dungeons', instanceId: studio[1] ? Number(studio[1]) : null }
+
   const item = normalized.match(/^\/items(?:\/(\d+))?$/)
   if (item) return { name: 'items', itemId: item[1] || null }
 
