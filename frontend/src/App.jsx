@@ -23,6 +23,7 @@ import {
 const Account = lazy(() => import('./Account/Account.jsx'))
 const Admin = lazy(() => import('./Admin/Admin.jsx'))
 const GuildweaverAdmin = lazy(() => import('./Admin/GuildweaverAdmin.jsx'))
+const DungeonStudio = lazy(() => import('./Admin/DungeonStudio/DungeonStudioPage.jsx'))
 const Charter = lazy(() => import('./Charter/Charter.jsx'))
 const GuildIntelligence = lazy(() => import('./Intelligence/GuildIntelligence.jsx'))
 const Guildweaver = lazy(() => import('./Guildweaver/Guildweaver.jsx'))
@@ -139,6 +140,13 @@ const platformPages = {
     title: 'Guildweaver Sync Console | Guildweaver',
     description: 'Internal Guildweaver sync payload history and diagnostics.',
     robots: 'noindex,nofollow',
+  },
+  'admin-dungeons': {
+    component: DungeonStudio,
+    title: 'Dungeon Content Studio | Guildweaver',
+    description: 'Editorial content for the Dungeon Atlas.',
+    robots: 'noindex,nofollow',
+    props: (url, route) => ({ instanceId: route.instanceId }),
   },
 }
 

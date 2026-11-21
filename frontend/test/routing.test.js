@@ -31,6 +31,9 @@ test('the guild directory is the front page and platform pages stay top level', 
   assert.deepEqual(matchRoute('/privacy'), { name: 'privacy' })
   assert.deepEqual(matchRoute('/admin'), { name: 'admin' })
   assert.deepEqual(matchRoute('/admin/guildweaver'), { name: 'admin-guildweaver' })
+  assert.deepEqual(matchRoute('/admin/dungeons'), { name: 'admin-dungeons', instanceId: null })
+  assert.deepEqual(matchRoute('/admin/dungeons/3065'), { name: 'admin-dungeons', instanceId: 3065 })
+  assert.equal(matchRoute('/admin/dungeons/abc'), null)
   assert.deepEqual(matchRoute('/join'), { name: 'join' })
 })
 
