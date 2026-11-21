@@ -1,0 +1,71 @@
+/* Dungeon Content Studio: an admin editor on the site's design tokens. */
+.studio-page .page-shell__content,
+.studio-page { max-width: none; }
+.studio { display: grid; gap: var(--space-5, 1.25rem); text-align: left; }
+.studio-muted { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.studio-eyebrow { margin: 0 0 0.35rem; color: var(--color-text-muted); font-size: var(--font-size-xs); letter-spacing: 0.08em; text-transform: uppercase; }
+.studio-link { color: var(--color-accent-bright); text-decoration: underline; text-underline-offset: 3px; }
+.studio-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.4rem 0 0; }
+.studio-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; justify-content: space-between; }
+.studio-head h2 { margin: 0; font-family: var(--font-display); color: var(--color-text-strong); font-size: var(--font-size-xl); }
+.studio-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.studio-actions .ds-field { min-width: 14rem; }
+.studio-inline-error { margin: 0.35rem 0 0; color: #ff9a8b; font-size: var(--font-size-sm); }
+.studio-inline-warning { margin: 0.35rem 0 0; color: var(--color-accent-bright); font-size: var(--font-size-sm); }
+.studio-inline-ok { margin: 0; color: #9be3b5; }
+.studio-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid var(--color-border); border-radius: 8px; width: fit-content; background: var(--color-surface-strong); }
+.studio-tabs button { min-height: 2.5rem; padding: 0 1rem; border: 0; border-radius: 6px; background: transparent; color: var(--color-text-muted); font: inherit; cursor: pointer; }
+.studio-tabs button[aria-current="page"] { background: var(--color-blue-850); color: var(--color-text-strong); box-shadow: inset 0 0 0 1px var(--color-border-strong); }
+.studio-body { display: grid; gap: 1.25rem; }
+.studio-body--aside { grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); align-items: start; }
+.studio-aside { position: sticky; top: 5rem; max-height: calc(100vh - 6rem); overflow: auto; }
+@media (max-width: 1100px) { .studio-body--aside { grid-template-columns: 1fr; } .studio-aside { position: static; max-height: none; } }
+
+.studio-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.studio-table th, .studio-table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: middle; }
+.studio-table th { color: var(--color-text-muted); font-weight: 600; }
+
+.studio-field { display: grid; grid-template-columns: 11rem minmax(0, 1fr) minmax(0, 1.4fr); gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid var(--color-border); }
+.studio-field--override .studio-field__edit { border-left: 2px solid var(--color-accent); padding-left: 0.8rem; }
+.studio-field__label h4 { margin: 0 0 0.35rem; color: var(--color-text-strong); font-size: var(--font-size-body); }
+.studio-imported-value { margin: 0; white-space: pre-wrap; color: var(--color-text); overflow-wrap: anywhere; }
+.studio-field__meta { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; margin-top: 0.5rem; }
+.studio-field__meta .ds-field { flex: 1 1 14rem; }
+.studio-field__inherit { display: flex; gap: 0.75rem; align-items: center; justify-content: space-between; }
+@media (max-width: 900px) { .studio-field { grid-template-columns: 1fr; } }
+
+.studio-check { display: inline-flex; gap: 0.4rem; align-items: center; min-height: 2.75rem; font-size: var(--font-size-sm); }
+.studio-grid { display: grid; gap: 0.6rem; }
+.studio-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.studio-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.studio-grid--loot { grid-template-columns: 8rem minmax(0, 1fr) auto; align-items: end; }
+.studio-grid--instruction { grid-template-columns: 9rem minmax(0, 1fr) auto auto; align-items: end; }
+@media (max-width: 700px) { .studio-grid--3, .studio-grid--4, .studio-grid--instruction { grid-template-columns: 1fr; } }
+.studio-location { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+.studio-location .studio-inline-error { grid-column: 1 / -1; }
+.studio-order { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.25rem; }
+.studio-order li { display: flex; gap: 0.4rem; align-items: center; }
+.studio-order li span { flex: 1; }
+.studio-mechanics { display: grid; gap: 0.75rem; }
+.studio-mechanic { display: grid; gap: 0.5rem; margin: 0; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-overlay-soft); }
+.studio-mechanic__head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.studio-mechanic__head strong { flex: 1; color: var(--color-text-strong); }
+.studio-roles { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+.studio-npc { margin: 0; padding: 0.5rem 0.75rem; border: 1px dashed var(--color-border); border-radius: 8px; display: grid; gap: 0.5rem; }
+.studio-npc legend { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.studio-quests { display: grid; gap: 1.25rem; }
+.studio-quests h3 { margin: 0 0 0.5rem; }
+.studio-add-quest { display: flex; gap: 0.6rem; align-items: flex-end; margin-top: 0.75rem; }
+.studio-add-quest .ds-field { flex: 1; }
+
+.studio-bosses { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 800px) { .studio-bosses { grid-template-columns: 1fr; } }
+.studio-boss-nav ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.studio-boss-nav button { width: 100%; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--color-text); text-align: left; font: inherit; cursor: pointer; }
+.studio-boss-nav button[aria-current="true"] { border-color: var(--color-border-strong); background: var(--color-blue-850); color: var(--color-text-strong); }
+.studio-subhead { margin: 0.25rem 0 0.4rem; color: var(--color-text-muted); font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.06em; }
+.studio-abilities { margin: 0 0 0.75rem; padding-left: 1.1rem; display: grid; gap: 0.2rem; }
+.studio-history { display: grid; gap: 1rem; }
+.studio-revisions { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.5rem; }
+.studio-revisions li { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.studio-foot { margin: 0; }
