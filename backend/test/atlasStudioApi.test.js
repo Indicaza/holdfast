@@ -20,6 +20,7 @@ const WRITES = [
   ["POST", `${BASE}/dungeons/${HALL}/publish`, {}],
   ["POST", `${BASE}/dungeons/${HALL}/rollback`, { revisionId: 1 }],
   ["POST", `${BASE}/dungeons/${HALL}/unpublish`, {}],
+  ["POST", `${BASE}/dungeons/${HALL}/plan-preview`, {}],
 ];
 const READS = [`${BASE}/schema`, `${BASE}/dungeons`, `${BASE}/dungeons/${HALL}`, `${BASE}/dungeons/${HALL}/audit`, `${BASE}/export/addon`];
 

@@ -151,22 +151,29 @@ invalid field, dropped location/instruction/quest, duplicate, not in catalog).
   ownership and realm handling as `/readiness` (anyone else's character
   answers 404). Adds `characterId`, `character` (capture times and coverage,
   or null) and `questList`.
-- `POST /api/player/loot/dungeons/:id/plan` `{ state, editorial?, party? }` —
-  the state as `/readiness` takes it; `state.questLog.entries` (`{ questId,
-  isComplete }`) may stand in for `questIds`. `editorial` previews a document
-  without publishing it. 400 with `problems` for an invalid state.
+- `POST /api/player/loot/dungeons/:id/plan` `{ state, party? }` — the state
+  as `/readiness` takes it; `state.questLog.entries` (`{ questId,
+  isComplete }`) may stand in for `questIds`. 400 with `problems` for an
+  invalid state. A document sent in the body is ignored.
+- `POST /api/admin/atlas-studio/dungeons/:id/plan-preview`
+  `{ state?, document?, party? }` (site.admin) — the plan over the studio's
+  draft: the document sent, else the saved draft, else the published revision.
+  Answers `draft: true`. Without `state`, a character that reported nothing.
 
 `:id` is an instance id, a dungeon key or a wing key, as everywhere else.
 
 ## CMS integration
 
-Published editorial data is read through one hook,
+Player plans (GET and POST) read editorial data through one hook,
 `loadEditorialQuestPlan(instanceId)` in
-`backend/src/Atlas/atlasQuestPlanRepository.js`, which returns null for now.
-The CMS branch adds `publishedEditorialQuestPlan(instanceId)` in
-`backend/src/Atlas/editorialQuestPlan.js`; wiring it is one line in that
-hook. The planner validates whatever it returns, so a bad document gives
-`problems`, never a broken plan.
+`backend/src/Atlas/atlasQuestPlanRepository.js`, which returns the studio's
+active published revision (`publishedEditorialQuestPlan`,
+`backend/src/Atlas/editorialQuestPlan.js`) or null. Drafts reach a plan only
+through the studio's `plan-preview` route. The planner validates whatever it
+gets, so a bad document gives `problems`, never a broken plan.
+`test/questPlanEditorialIntegration.test.js` covers draft isolation, preview,
+publish (shareability, turn-in waypoint, instructions, an edited Hall of
+Thanes chain) and unpublish.
 
 ## Add-on
 

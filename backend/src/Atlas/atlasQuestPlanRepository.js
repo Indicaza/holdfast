@@ -9,16 +9,15 @@ import { buildQuestPlan } from "./atlasQuestPlan.js";
 import { readCharacterState } from "./atlasReadiness.js";
 import { resolveDungeonId } from "./atlasRepository.js";
 import { parentKeyFor, wingsOf } from "./atlasWings.js";
+import { publishedEditorialQuestPlan } from "./editorialQuestPlan.js";
 
-// The one place the planner reads published editorial quest data from.
-// Null for now: the Dungeon Content Studio (CMS branch) adds
-// `publishedEditorialQuestPlan(instanceId)` in Atlas/editorialQuestPlan.js,
-// and wiring it is this one line:
-//   return publishedEditorialQuestPlan(instanceId);
-// Its document follows docs/dungeon-quest-planner.md (schema 1); the
-// planner checks it and reports problems, so a bad document never breaks a plan.
-export function loadEditorialQuestPlan(_instanceId) {
-  return null;
+// The one place player plans read editorial quest data from: the Dungeon
+// Content Studio's active published revision (Atlas/editorialQuestPlan.js),
+// never a draft. Null when nothing is published. Its document follows
+// docs/dungeon-quest-planner.md (schema 1); the planner checks it and
+// reports problems, so a bad document never breaks a plan.
+export function loadEditorialQuestPlan(instanceId) {
+  return publishedEditorialQuestPlan(instanceId);
 }
 
 // A quest is the same quest in every dungeon that lists it, but a few
@@ -56,16 +55,20 @@ function planInput(id) {
   };
 }
 
+// editorial: undefined = the published revision; null = none (the catalog
+// alone); a document = that document (the studio's draft preview).
 function plan(input, { state, questLog, editorial, party }) {
   const result = buildQuestPlan({ dungeon: input.dungeon, quests: input.quests, state, questLog, wingKey: input.target.wingKey, party,
-    editorial: editorial === undefined || editorial === null ? loadEditorialQuestPlan(input.target.instanceId) : editorial });
+    editorial: editorial === undefined ? loadEditorialQuestPlan(input.target.instanceId) : editorial });
   return { ...result, questList: input.questList };
 }
 
 // A plan from the quest state the caller sends (docs/dungeon-quest-readiness.md).
 // The state may carry the quest log's entries ({ questId, isComplete }) as
 // the add-on reports them. { status: "ok", result } | { status: "invalid", problems } | null.
-export function atlasQuestPlanFromState(id, { state: rawState, editorial = null, party = null } = {}) {
+//   editorial: leave it out for the published revision (what players get);
+//   only the studio's draft preview passes a document, or null for none.
+export function atlasQuestPlanFromState(id, { state: rawState, editorial = undefined, party = null } = {}) {
   const input = planInput(id);
   if (!input) return null;
   const entries = Array.isArray(rawState?.questLog?.entries) ? rawState.questLog.entries : null;
@@ -73,7 +76,7 @@ export function atlasQuestPlanFromState(id, { state: rawState, editorial = null,
     ? { ...rawState, questLog: { ...rawState.questLog, questIds: entries.map((entry) => entry?.questId) } } : rawState;
   const { state, problems } = readCharacterState(normalized);
   if (!state) return { status: "invalid", problems };
-  if (editorial !== null && (typeof editorial !== "object" || Array.isArray(editorial))) return { status: "invalid", problems: ["editorial must be an object or null"] };
+  if (editorial !== undefined && editorial !== null && (typeof editorial !== "object" || Array.isArray(editorial))) return { status: "invalid", problems: ["editorial must be an object or null"] };
   if (party !== null && (typeof party !== "object" || Array.isArray(party))) return { status: "invalid", problems: ["party must be an object or null"] };
   return { status: "ok", result: plan(input, { state, questLog: entries ? { entries } : null, editorial, party }) };
 }
@@ -84,7 +87,7 @@ export function atlasQuestPlanFromState(id, { state: rawState, editorial = null,
 export function atlasCharacterQuestPlan(id, stored) {
   const input = planInput(id);
   if (!input) return null;
-  const result = plan(input, { state: stored?.state || null, questLog: stored?.questLog || null, editorial: null, party: null });
+  const result = plan(input, { state: stored?.state || null, questLog: stored?.questLog || null, editorial: undefined, party: null });
   return {
     ...result,
     character: stored ? { capturedAt: stored.capturedAt, receivedAt: stored.receivedAt,

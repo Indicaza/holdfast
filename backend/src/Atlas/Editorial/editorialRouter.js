@@ -10,6 +10,8 @@ import { requirePermission } from "../../Auth/permissions.js";
 import { withGuildDatabase, withGuildTransaction } from "../../Data/database.js";
 import { atlasDungeon } from "../atlasRepository.js";
 import { loadQuestCatalog } from "../atlasData.js";
+import { atlasQuestPlanFromState } from "../atlasQuestPlanRepository.js";
+import { editorialQuestPlanOf } from "../editorialQuestPlan.js";
 import { createMediaInDatabase, deleteMediaInDatabase, listMediaInDatabase, MEDIA_ASPECTS, MEDIA_LIMITS, MEDIA_PURPOSES, mediaFileInDatabase, mediaUsageInDatabase, readMediaBytes, updateMediaInDatabase } from "./atlasMedia.js";
 import { addonArtPlan, buildAddonArt } from "./addonArt.js";
 import { previewInDatabase } from "./editorialPreview.js";
@@ -155,6 +157,23 @@ export function createAtlasStudioRouter() {
       const preview = previewInDatabase(db, id, validation.document);
       return { ...preview, errors: validation.errors, warnings: validation.warnings, luaBytes: validation.luaBytes };
     }));
+  }));
+
+  // The quest planner over a draft (nothing stored): the document sent, else
+  // the saved draft, else the published revision. Only here, behind
+  // site.admin, does unpublished quest data reach a plan. `state` is a quest
+  // state (docs/dungeon-quest-readiness.md); without one, a character that
+  // reported nothing.
+  router.post("/dungeons/:instanceId/plan-preview", withDungeon("preview a plan", (req, res, id) => {
+    const editorial = withGuildDatabase((db) => {
+      const document = req.body?.document ? validateDocumentInDatabase(db, id, req.body.document).document : workingDocumentInDatabase(db, id);
+      return editorialQuestPlanOf(id, document, null);
+    });
+    const state = req.body?.state ?? { schemaVersion: 1, completed: { coverage: "none" }, questLog: { coverage: "none" } };
+    const outcome = atlasQuestPlanFromState(String(id), { state, editorial, party: req.body?.party ?? null });
+    if (!outcome) { res.status(404).json({ error: "dungeon_quests_not_found" }); return; }
+    if (outcome.status === "invalid") { res.status(400).json({ error: "invalid_quest_state", problems: outcome.problems }); return; }
+    res.json({ ...outcome.result, draft: true });
   }));
 
   // The media library. Uploads are the raw image bytes (Content-Type

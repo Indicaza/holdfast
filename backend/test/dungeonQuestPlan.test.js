@@ -309,7 +309,7 @@ test("editorial validation: wrong schema or dungeon is ignored; bad parts are dr
   assert.deepEqual(editorial.quests.get(166).turnIn, { name: "Someone", location: null });
   const plan = planFor(36, { state: stateOf(), editorial: { schemaVersion: 1, instanceId: 36, quests: [{ questId: 424242 }] } });
   assert.deepEqual(plan.problems, [{ code: "editorial-quest-not-in-catalog", questId: 424242 }]);
-  assert.equal(loadEditorialQuestPlan(36), null, "no published editorial data yet (CMS hook)");
+  assert.equal(loadEditorialQuestPlan(36), null, "nothing published in a fresh database");
 });
 
 test("POST /plan: from a sent state, checked like readiness", () => withHttpApp(async ({ request }) => {
@@ -323,13 +323,15 @@ test("POST /plan: from a sent state, checked like readiness", () => withHttpApp(
   assert.equal(ok.json.sections.find((entry) => entry.key === "turnIn").steps[0].kind, "finish-objectives");
   assert.deepEqual(ok.json, atlasQuestPlanFromState("36", { state, party: { size: 2 } }).result);
   assert.equal((await send(36, { state: { schemaVersion: 2 } })).status, 400);
-  assert.equal((await send(36, { state, editorial: "text" })).status, 400);
+  // A document in the body is ignored: players get the published revision only.
+  assert.equal((await send(36, { state, editorial: "text" })).status, 200);
   assert.equal((await send(99999, { state })).status, 404);
   const wing = await send("blackrock-spire:upper", { state });
   assert.equal(wing.status, 200);
   assert.equal(wing.json.dungeon.dungeonKey, "blackrock-spire:upper");
-  const preview = await send(36, { state, editorial: editorialFixture });
-  assert.equal(preview.json.editorial.used, true);
+  const ignored = await send(36, { state, editorial: editorialFixture });
+  assert.equal(ignored.json.editorial.used, false, "a sent document never reaches a player's plan");
+  assert.deepEqual(ignored.json, atlasQuestPlanFromState("36", { state }).result);
 }));
 
 // Realm isolation: the add-on keys a character by realm and name, so the same

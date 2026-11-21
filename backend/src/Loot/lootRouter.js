@@ -160,11 +160,13 @@ export function createPlayerLootRouter() {
     const result = atlasCharacterQuestPlan(req.params.instanceId, stored);
     return result && { ...result, characterId: character.id };
   })));
-  // A plan from a quest state the caller sends ({ state, editorial?, party? }).
-  // Nothing is stored; editorial here previews a document (CMS) without publishing it.
+  // A plan from a quest state the caller sends ({ state, party? }), over the
+  // published editorial revision. Nothing is stored. A document in the body
+  // is ignored: drafts are previewed only through the studio
+  // (/api/admin/atlas-studio/dungeons/:id/plan-preview, site.admin).
   router.post("/loot/dungeons/:instanceId/plan", (req, res) => {
     try {
-      const outcome = atlasQuestPlanFromState(req.params.instanceId, { state: req.body?.state, editorial: req.body?.editorial ?? null, party: req.body?.party ?? null });
+      const outcome = atlasQuestPlanFromState(req.params.instanceId, { state: req.body?.state, party: req.body?.party ?? null });
       if (!outcome) { res.status(404).json({ error: "dungeon_quests_not_found" }); return; }
       if (outcome.status === "invalid") { res.status(400).json({ error: "invalid_quest_state", problems: outcome.problems }); return; }
       res.json(outcome.result);
