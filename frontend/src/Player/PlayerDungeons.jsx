@@ -36,7 +36,7 @@ import {
   xpSummary,
 } from './dungeonRunModel.js'
 import DungeonLoot from './DungeonLoot.jsx'
-import AtlasModalHost from './Dungeons/AtlasModalHost.jsx'
+import AtlasModalHost, { AtlasPageSwitch } from './Dungeons/AtlasModalHost.jsx'
 import { dungeonsView, exploreHref, withAtlasOpen } from './Dungeons/atlasModel.js'
 import DungeonExplore from './Dungeons/DungeonExplore.jsx'
 import { lootHref, readLootQuery } from './lootModel.js'
@@ -543,13 +543,12 @@ function RunDetail({ runId, filters, server }) {
 // The Dungeons page: Explore (every dungeon as cards, the default), the
 // player's runs (?view=runs), and dungeon loot beside a character's
 // wishlist (?view=loot). An open run shows alone; an open dungeon
-// (?open=36) shows as a modal over whichever tab is on screen.
+// (?open=36) is a page of its own in place of the tab it was opened from.
 export default function PlayerDungeons({ server, queryString = '', characters = [] }) {
   const query = useMemo(() => readLootQuery(queryString), [queryString])
   const view = dungeonsView(queryString)
   const runOpen = useMemo(() => Boolean(readDungeonQuery(queryString).runId), [queryString])
-  const modal = <AtlasModalHost server={server} queryString={queryString} characters={characters} />
-  if (runOpen && view === 'runs') return <>{<DungeonRuns server={server} queryString={queryString} />}{modal}</>
+  if (runOpen && view === 'runs') return <>{<DungeonRuns server={server} queryString={queryString} />}<AtlasModalHost server={server} queryString={queryString} characters={characters} /></>
   return (
     <div className="gw-stack">
       <nav className="gw-seg gw-dcc-tabs" aria-label="Dungeon views">
@@ -557,10 +556,11 @@ export default function PlayerDungeons({ server, queryString = '', characters = 
         <a href={dungeonHref({ server })} aria-current={view === 'runs' ? 'page' : undefined}><Icon name="dungeon" size={14} /> My runs</a>
         <a href={lootHref({ server, character: query.character })} aria-current={view === 'loot' ? 'page' : undefined}><Icon name="loot" size={14} /> Wishlist</a>
       </nav>
-      {view === 'explore' ? <DungeonExplore server={server} queryString={queryString} characters={characters} /> : null}
-      {view === 'loot' ? <DungeonLoot server={server} query={query} characters={characters} /> : null}
-      {view === 'runs' ? <DungeonRuns server={server} queryString={queryString} /> : null}
-      {modal}
+      <AtlasPageSwitch server={server} queryString={queryString} characters={characters}>
+        {view === 'explore' ? <DungeonExplore server={server} queryString={queryString} characters={characters} /> : null}
+        {view === 'loot' ? <DungeonLoot server={server} query={query} characters={characters} /> : null}
+        {view === 'runs' ? <DungeonRuns server={server} queryString={queryString} /> : null}
+      </AtlasPageSwitch>
     </div>
   )
 }

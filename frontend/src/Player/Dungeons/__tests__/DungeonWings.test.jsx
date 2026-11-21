@@ -50,7 +50,8 @@ describe('dungeon wings', () => {
     expect(screen.queryByRole('link', { name: /^Scarlet Monastery$/ })).toBeNull()
     expect(library.getAttribute('href')).toContain('open=scarlet-monastery%3Alibrary')
     const card = library.closest('li')
-    expect(card.textContent).toContain('Levels 32–40')
+    expect(library.getAttribute('aria-label')).toContain('Levels 32–40')
+    expect(card.textContent).toContain('32–40')
     // The wing's own runs only: the run that proved no wing is not here.
     await waitFor(() => expect(card.textContent).toContain('Run 1×'))
   })

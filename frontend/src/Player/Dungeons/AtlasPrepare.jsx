@@ -4,11 +4,7 @@ import { dungeonHref, formatRunDuration } from '../dungeonRunModel.js'
 import { relativeTime } from '../playerModel.js'
 import { ErrorState, Icon, SkeletonRows } from '../ui.jsx'
 import {
-  bossKey,
-  dungeonItems,
-  gearTargets,
   isWingEntry,
-  needsUnverifiedBadge,
   QUEST_STATE_COPY,
   questModel,
   quickGuide,
@@ -143,68 +139,6 @@ export function Runs({ entry, character, server, compact = false }) {
       </ul>
       <a className="gw-link" href={all}>All runs here</a>
     </>
-  )
-}
-
-function Block({ title, count = null, open = true, children, id }) {
-  return (
-    <details className="gw-atlas-prep__block" open={open} data-block={id}>
-      <summary><h3>{title}</h3>{count !== null ? <span className="gw-tag gw-tag--quiet">{count}</span> : null}</summary>
-      <div className="gw-atlas-prep__body">{children}</div>
-    </details>
-  )
-}
-
-// What to know before going in, for the selected character: gear they can
-// use, quests, the dangerous encounters for their role, and their history.
-export function PrepareView({ entry, atlas, detail, character, server, role, onRole, wishes, lootProps, onBoss, onPlan, readiness = null, onQuests = null }) {
-  const items = useMemo(() => dungeonItems(detail || {}, atlas), [detail, atlas])
-  const targets = useMemo(() => gearTargets(items, character, atlas), [items, character, atlas])
-  const wanted = targets.filter((row) => wishes.has(row.item.itemKey))
-  const ordered = [...wanted, ...targets.filter((row) => !wishes.has(row.item.itemKey))]
-  const bosses = atlas.bosses.filter((boss) => (boss.abilities || []).length)
-  const trash = atlas.creatures.filter((creature) => (creature.abilities || []).length)
-  const unverified = [...bosses, ...trash].some((entry) => entry.abilities.some(needsUnverifiedBadge))
-  return (
-    <div className="gw-atlas-section gw-atlas-prep">
-      <Block id="gear" title="Gear targets" count={character ? targets.length : null}>
-        {!character ? <p className="gw-muted gw-atlas-empty">Choose a character to see the gear they can use from here.</p> : (
-          <>
-            <p className="gw-muted">
-              Items {character.name} ({[character.className, character.level ? `level ${character.level}` : null].filter(Boolean).join(', ') || 'class unknown'}) can use, from
-              {' '}{atlas.levelMax ? `now up to level ${atlas.levelMax}` : 'their current level'}: class restrictions, the class's armour and weapon types (Classic rules) and required level.
-              {wanted.length ? ` ${wanted.length} already on the wishlist.` : ''}
-            </p>
-            <LootList rows={ordered} limit={8} empty={items.length ? `Nothing here that ${character.name} can use.` : 'No loot known for this dungeon yet.'} {...lootProps} />
-            {onPlan ? <button type="button" className="gw-btn gw-btn--sm" onClick={onPlan}><Icon name="sparkle" size={14} /> Plan my gear with AI</button> : null}
-          </>
-        )}
-      </Block>
-      <Block id="quests" title="Quests" count={atlas.quests.length}>
-        {character && readiness ? <QuestReadiness resource={readiness} character={character} compact onOpen={onQuests} /> : null}
-        {!character || !readinessModel(readiness?.data) ? <QuestList quests={atlas.quests} rewardProps={lootProps} /> : null}
-      </Block>
-      <Block id="danger" title="Dangerous encounters" count={bosses.length + trash.length}>
-        <RoleSelect role={role} onRole={onRole} character={character} />
-        {!bosses.length && !trash.length ? <p className="gw-muted gw-atlas-empty">No boss or trash abilities in the atlas yet.</p> : null}
-        {bosses.map((boss) => (
-          <div key={bossKey(boss)} className="gw-atlas-prep__encounter">
-            <button type="button" className="gw-link gw-atlas-prep__boss" onClick={() => onBoss(boss)}>{boss.name}</button>
-            <QuickGuide abilities={boss.abilities} role={role} title="Key abilities" />
-          </div>
-        ))}
-        {trash.map((creature) => (
-          <div key={`trash-${creature.npcId || creature.name}`} className="gw-atlas-prep__encounter">
-            <strong>{creature.name} <span className="gw-muted">(trash{creature.count > 1 ? ` ×${creature.count}` : ''})</span></strong>
-            <QuickGuide abilities={creature.abilities} role={role} title="Key abilities" />
-          </div>
-        ))}
-        {unverified ? <p className="gw-muted gw-atlas-provenance">Abilities labelled Classic reference come from Classic data and have not been checked on Forever.</p> : null}
-      </Block>
-      <Block id="history" title="My history" open={false}>
-        <Runs entry={entry} character={character} server={server} compact />
-      </Block>
-    </div>
   )
 }
 

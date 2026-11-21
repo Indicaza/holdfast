@@ -100,7 +100,7 @@ describe('opening, closing and focus', () => {
     api()
     renderWithSession(<Modal />)
     const dialog = await screen.findByRole('dialog')
-    await screen.findByText('Prepare for this run')
+    await screen.findByText(/items? Rook can use/)
     const focusable = [...dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])')]
     const first = focusable[0]
     const last = focusable.at(-1)
@@ -132,7 +132,7 @@ describe('deep links and sections', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Loot' }))
     expect(onNavigate).toHaveBeenLastCalledWith({ section: 'loot', boss: '' })
     fireEvent.click(screen.getByRole('button', { name: /Rhahk'Zor/ }))
-    expect(onNavigate).toHaveBeenLastCalledWith({ section: 'bosses', boss: '2741' })
+    expect(onNavigate).toHaveBeenLastCalledWith({ section: 'overview', boss: '2741' })
   })
 
   test('the role selector reorders the guide; unverified Classic data is labelled', async () => {
@@ -150,28 +150,49 @@ describe('deep links and sections', () => {
     expect(second.textContent).not.toContain('not verified')
   })
 
-  test('Prepare: gear targets, quests, dangerous encounters and history', async () => {
+  test('old Prepare links land on Quests; the guide, gear and history each have their place', async () => {
     api({ runs: [RUN] })
-    renderWithSession(<Modal section="prepare" />)
-    const gear = await screen.findByText('Gear targets')
-    const gearBlock = gear.closest('details')
-    await waitFor(() => expect(within(gearBlock).getAllByRole('listitem').length).toBeGreaterThan(0))
-    // Mail is not filtered by armour type (no guessing), but the Westfall
-    // quest rewards and boss loot are listed with their source.
-    expect(gearBlock.textContent).toContain('Cruel Barb')
-    expect(gearBlock.textContent).toContain('already on the wishlist')
-    const block = (id) => document.querySelector(`[data-block="${id}"]`)
-    const quests = block('quests')
-    expect(quests.textContent).toContain('Gryan Stoutmantle')
-    expect(quests.textContent).toContain('Bring the head of Edwin VanCleef')
-    expect(quests.textContent).toContain('Westfall 56.5, 47.0')
-    expect(quests.textContent).toContain('Rewards (choose one)')
-    const danger = block('danger')
-    expect(danger.textContent).toContain('Defias Wizard')
-    expect(danger.textContent).toContain('Fireball')
-    const history = block('history')
-    fireEvent.click(within(history).getByText('My history'))
-    await waitFor(() => expect(history.textContent).toContain('1 run, 1 completed'))
+    const { unmount } = renderWithSession(<Modal section="prepare" />)
+    // Quests: preparation and readiness, with quest details.
+    const quests = (await screen.findAllByText('The Defias Brotherhood')).find((element) => element.closest('.gw-atlas-quest'))
+    expect(screen.getByRole('button', { name: 'Quests' })).toHaveProperty('ariaCurrent', 'page')
+    fireEvent.click(quests)
+    const list = quests.closest('.gw-atlas-quest')
+    expect(list.textContent).toContain('Gryan Stoutmantle')
+    expect(list.textContent).toContain('Bring the head of Edwin VanCleef')
+    expect(list.textContent).toContain('Westfall 56.5, 47.0')
+    expect(list.textContent).toContain('Rewards (choose one)')
+    unmount()
+
+    // Overview: the practical guide (dangerous trash) and the character's short answer.
+    renderWithSession(<Modal section="overview" />)
+    const trash = await screen.findByRole('region', { name: 'Dangerous trash' })
+    expect(trash.textContent).toContain('Defias Wizard')
+    expect(trash.textContent).toContain('Fireball')
+    const forRook = screen.getByRole('region', { name: 'For Rook' })
+    await waitFor(() => expect(forRook.textContent).toMatch(/\d+ items? Rook can use/))
+    expect(forRook.textContent).toContain('on the wishlist')
+    expect(screen.queryByRole('button', { name: 'Prepare' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Bosses' })).toBeNull()
+    unmount()
+  })
+
+  test('loot: gear targeting and the one Plan my gear button', async () => {
+    api()
+    renderWithSession(<Modal section="loot" />)
+    await screen.findByText('Cruel Barb')
+    expect(screen.getAllByRole('button', { name: /Plan my gear/ })).toHaveLength(1)
+    const usable = screen.getByRole('checkbox', { name: /Only what Rook can use \(\d+\)/ })
+    fireEvent.click(usable)
+    // A Rogue cannot use the Emberstone Staff (staves): it is filtered out.
+    expect(screen.queryByText('Emberstone Staff')).toBeNull()
+    expect(screen.getByText('Cruel Barb')).toBeTruthy()
+  })
+
+  test('history lives in My runs', async () => {
+    api({ runs: [RUN] })
+    renderWithSession(<Modal section="runs" />)
+    expect(await screen.findByText(/1 run, 1 completed/)).toBeTruthy()
   })
 
   test('history has a useful empty state', async () => {
@@ -228,7 +249,7 @@ describe('wishlist on boss loot', () => {
     expect(barb.textContent).toContain('Binds when picked up')
     expect(within(barb).getByText('Seen dropping')).toBeTruthy()
     fireEvent.click(within(barb).getByRole('button', { name: 'Edwin VanCleef' }))
-    expect(onNavigate).toHaveBeenCalledWith({ section: 'bosses', boss: '2747' })
+    expect(onNavigate).toHaveBeenCalledWith({ section: 'overview', boss: '2747' })
     const shirt = screen.getByText('Corsair\'s Overshirt').closest('li')
     fireEvent.click(within(shirt).getByText('Item facts'))
     expect(shirt.textContent).toContain('Classic reference — not verified for Forever. Drop chances are not published.')
@@ -267,7 +288,7 @@ describe('missing data', () => {
     const detail = (atlas) => ({ ...FIXTURE_DEADMINES_DETAIL, atlas: { ...FIXTURE_DEADMINES_DETAIL.atlas, bosses: [shredder], ...atlas } })
     api({ detail: detail({ dungeonLoot: [chest] }) })
     const { unmount } = renderWithSession(<Modal section="bosses" boss="9999" />)
-    expect(await screen.findByText('No loot linked to Event Boss. Chest loot (Chest of The Seven) is in the Loot tab.')).toBeTruthy()
+    expect(await screen.findByText('No loot linked to Event Boss. Chest loot (Chest of The Seven) is in the Loot section.')).toBeTruthy()
     unmount()
     resetHarness()
     api({ detail: detail({ dungeonLoot: [] }) })
@@ -321,3 +342,44 @@ describe('missing data', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy()
   })
 })
+
+describe('loot by source', () => {
+  test('drops sit under their source; an item from two sources is under both and links across', async () => {
+    const barb = FIXTURE_DEADMINES_DETAIL.sources[1].items[1]
+    const detail = {
+      ...FIXTURE_DEADMINES_DETAIL,
+      // The catalog saw Cruel Barb from a creature it knows only by ID.
+      sources: [...FIXTURE_DEADMINES_DETAIL.sources, { key: 'creature:657', kind: 'creature', boss: false, name: 'Creature 657', npcIds: [657], items: [barb] }],
+      atlas: { ...FIXTURE_DEADMINES_DETAIL.atlas, creatures: [...(FIXTURE_DEADMINES_DETAIL.atlas.creatures || []), { npcId: 657, name: 'Defias Pirate', abilities: [] }] },
+    }
+    api({ detail })
+    const onNavigate = vi.fn()
+    renderWithSession(<Modal section="loot" onNavigate={onNavigate} />)
+    const boss = await screen.findByRole('region', { name: 'Edwin VanCleef loot' })
+    // The atlas's name, not the catalog's placeholder.
+    const pirate = screen.getByRole('region', { name: 'Defias Pirate loot' })
+    expect(screen.queryByText(/Creature 657/)).toBeNull()
+    expect(within(boss).getByText('Cruel Barb')).toBeTruthy()
+    const line = within(pirate).getByText('Cruel Barb').closest('li')
+    expect(line.textContent).toContain('Also from Edwin VanCleef (boss)')
+    fireEvent.click(within(line).getByRole('button', { name: 'Edwin VanCleef' }))
+    expect(onNavigate).toHaveBeenLastCalledWith({ section: 'overview', boss: '2747' })
+    expect(screen.getByRole('region', { name: 'Bosses' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Trash and adds' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Unknown source' }).textContent).toContain('Buzz Saw')
+  })
+
+  test('a boss shows its own loot with its guide, and names other sources of the same item', async () => {
+    api()
+    renderWithSession(<Modal section="overview" boss="2747" />)
+    const boss = await screen.findByRole('article', { name: 'Edwin VanCleef' })
+    const loot = within(boss).getByRole('region', { name: 'Edwin VanCleef loot' })
+    expect(loot.textContent).toContain('Cruel Barb')
+    expect(loot.textContent).not.toContain('Rockslicer')
+    // Technical ids are folded away, not in the header.
+    expect(within(boss).getByText('About this boss\'s data')).toBeTruthy()
+    expect(boss.querySelector('.gw-atlas-boss__head').textContent).not.toMatch(/NPC|encounter/)
+    expect(within(boss).getByRole('navigation', { name: 'Previous and next boss' })).toBeTruthy()
+  })
+})
+

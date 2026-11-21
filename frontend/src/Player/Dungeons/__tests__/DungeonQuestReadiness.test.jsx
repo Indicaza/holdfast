@@ -124,15 +124,12 @@ describe('the modal', () => {
     expect(screen.getByText('Quest details and rewards')).toBeTruthy()
   })
 
-  test('prepare: only what still needs doing, with a way to all quests', async () => {
-    const navigate = vi.fn()
+  test('an old Prepare link opens Quests, readiness first', async () => {
     api(MISSING)
-    renderWithSession(<Modal section="prepare" onNavigate={navigate} />)
+    renderWithSession(<Modal section="prepare" />)
     await screen.findByText('Pick up before you go')
-    expect(screen.queryByText('Completed')).toBeNull()
-    expect(screen.queryByText('Optional quests')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'See quests' }))
-    expect(navigate).toHaveBeenCalledWith({ section: 'quests', boss: '' })
+    expect(screen.getByRole('button', { name: 'Quests' })).toHaveProperty('ariaCurrent', 'page')
+    expect(screen.queryByRole('button', { name: 'Prepare' })).toBeNull()
   })
 
   test('no quest data synced: says so and is never ready', async () => {
