@@ -567,3 +567,105 @@
   .gw-atlas-lootbar__plan { margin-left: 0; }
   .gw-atlas-source__guide { margin-left: 0; }
 }
+
+/* ------------------------------------------- Quest preparation checklist */
+/* As the add-on's Dungeon Journal shows it: numbered steps, lettered parts,
+   the next step lit, done steps quiet. */
+.gw-qplan { display: flex; flex-direction: column; gap: 0.85rem; }
+.gw-qplan__summary { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.7rem 0.85rem; border: 1px solid var(--gw-line); border-left: 3px solid var(--gw-faint); border-radius: var(--gw-radius-sm); background: var(--gw-panel); }
+.gw-qplan__summary--ok { border-left-color: var(--gw-ok); }
+.gw-qplan__summary--warn { border-left-color: var(--gw-warn); }
+.gw-qplan__summary--bad { border-left-color: var(--gw-bad); }
+.gw-qplan__headline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem; font-size: 13.5px; }
+.gw-qplan__fresh { margin: 0; color: var(--gw-dim); font-size: 12px; }
+.gw-qplan__fresh--warn { color: var(--gw-warn); }
+
+.gw-qplan__next {
+  display: flex; flex-direction: column; gap: 0.25rem; margin: 0; padding: 0.7rem 0.85rem;
+  border: 1px solid var(--gw-accent-line); border-radius: var(--gw-radius-sm); background: var(--gw-accent-soft);
+}
+.gw-qplan__next--none { border-color: var(--gw-line); background: var(--gw-panel); color: var(--gw-dim); font-size: 13px; }
+.gw-qplan__next--none.is-ready { border-color: color-mix(in srgb, var(--gw-ok) 45%, transparent); color: var(--gw-ok); }
+.gw-qplan__nextlabel { color: var(--gw-accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.gw-qplan__nexttext { font-size: 15px; }
+.gw-qplan__nextfor { font-size: 12.5px; }
+.gw-qplan__nextactions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1rem; margin-top: 0.15rem; font-size: 13px; }
+
+.gw-qplan__tools { display: flex; gap: 0.35rem; justify-content: flex-end; margin-bottom: -0.4rem; }
+.gw-qplan__group { display: flex; flex-direction: column; gap: 0.4rem; }
+.gw-qplan__group > h4 { margin: 0.35rem 0 0; color: var(--gw-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.gw-qplan__count { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.gw-qplan__note { margin: 0; font-size: 12.5px; }
+.gw-qplan__note--editorial { padding-left: 0.6rem; border-left: 2px solid var(--gw-info); }
+.gw-qplan__note .gw-qplan__unverified { margin-left: 0.45rem; }
+
+.gw-qplan__list, .gw-qplan__subs, .gw-qplan__leaves { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.gw-qplan__list { gap: 0.35rem; }
+.gw-qplan__item { padding: 0.5rem 0.65rem; border: 1px solid var(--gw-line); border-radius: var(--gw-radius-sm); background: var(--gw-panel); }
+.gw-qplan__item.contains-next { border-color: var(--gw-accent-line); box-shadow: inset 3px 0 0 var(--gw-accent); }
+.gw-qplan__item--done { background: transparent; opacity: 0.62; }
+.gw-qplan__item--done .gw-qplan__title strong { font-weight: 500; text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--gw-dim) 60%, transparent); }
+.gw-qplan__item.is-accepted .gw-qplan__title strong { text-decoration: none; }
+.gw-qplan__item--blocked, .gw-qplan__item--unknown { background: color-mix(in srgb, var(--gw-panel) 55%, transparent); }
+
+.gw-qplan__row { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 0.3rem 0.55rem; }
+.gw-qplan__row > .gw-qplan__toggle { grid-column: 5; }
+.gw-qplan__label { flex: none; min-width: 1.4rem; color: var(--gw-faint); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+.gw-qplan__label--top { color: var(--gw-dim); font-size: 13px; font-weight: 700; }
+.gw-qplan__title { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem; min-width: 0; }
+.gw-qplan__title strong { font-size: 14px; }
+.gw-qplan__state { font-size: 11px; }
+
+.gw-qplan__mark { display: inline-grid; flex: none; place-items: center; width: 1rem; height: 1rem; border: 1.5px solid var(--gw-faint); border-radius: 50%; font-size: 10px; font-weight: 800; line-height: 1; }
+.gw-qplan__mark--done { border-color: var(--gw-ok); background: var(--gw-ok); color: #111; }
+.gw-qplan__mark--todo { border-color: var(--gw-warn); }
+.gw-qplan__mark--blocked { border-color: var(--gw-bad); border-style: dashed; }
+.gw-qplan__mark--unknown { border-style: dotted; color: var(--gw-faint); }
+.gw-qplan__mark--ineligible { color: var(--gw-faint); }
+
+.gw-qplan__where { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 12px; }
+.gw-qplan__map { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--gw-accent); text-decoration: none; font-variant-numeric: tabular-nums; }
+.gw-qplan__map:hover { text-decoration: underline; }
+.gw-qplan__map:focus-visible { outline: 2px solid var(--gw-accent); outline-offset: 2px; border-radius: 3px; }
+.gw-qplan__unverified { color: var(--gw-faint); font-size: 11px; border-bottom: 1px dotted var(--gw-faint); cursor: help; }
+.gw-qplan__toggle {
+  display: inline-flex; align-items: center; gap: 0.25rem; justify-self: end; padding: 0.15rem 0.45rem;
+  border: 1px solid var(--gw-line); border-radius: 999px; background: transparent; color: var(--gw-dim); font: inherit; font-size: 12px; cursor: pointer;
+}
+.gw-qplan__toggle:hover { border-color: var(--gw-accent-line); color: var(--gw-text); }
+.gw-qplan__toggle[aria-expanded='true'] svg { transform: rotate(90deg); }
+.gw-qplan__why { margin: 0.2rem 0 0 2.4rem; color: var(--gw-dim); font-size: 12.5px; }
+.gw-qplan__why--info { color: var(--gw-info); }
+
+.gw-qplan__subs { gap: 0.15rem; margin: 0.45rem 0 0 1.9rem; padding-left: 0.6rem; border-left: 1px solid var(--gw-line); }
+.gw-qplan__subs--plain { margin: 0.35rem 0 0; padding: 0; border: 0; }
+.gw-qplan__sub { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: 0.15rem 0.5rem; padding: 0.2rem 0.35rem; border-radius: 4px; font-size: 13px; }
+.gw-qplan__sub > .gw-qplan__why, .gw-qplan__sub > .gw-qplan__leaves { grid-column: 3 / -1; margin: 0; }
+.gw-qplan__sub--done { color: var(--gw-faint); }
+.gw-qplan__sub--done .gw-qplan__text { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--gw-faint) 60%, transparent); }
+.gw-qplan__sub--blocked .gw-qplan__text, .gw-qplan__sub--unknown .gw-qplan__text { color: var(--gw-dim); }
+.gw-qplan__sub.is-next { background: var(--gw-accent-soft); outline: 1px solid var(--gw-accent-line); }
+.gw-qplan__text { min-width: 0; }
+.gw-qplan__nexttag { margin-left: 0.4rem; font-size: 10.5px; }
+.gw-qplan__leaves { gap: 0.05rem; padding: 0.1rem 0 0.15rem; }
+.gw-qplan__leaves .gw-qplan__sub { font-size: 12.5px; padding: 0.1rem 0.3rem; }
+.gw-qplan__leaves .gw-qplan__label { min-width: 0; }
+
+.gw-qplan__done > summary, .gw-qplan__extra > summary { width: fit-content; color: var(--gw-dim); font-size: 13px; cursor: pointer; }
+.gw-qplan__done[open] > summary { margin-bottom: 0.35rem; }
+.gw-qplan__extra { padding: 0.5rem 0.7rem; border: 1px solid var(--gw-line); border-radius: var(--gw-radius-sm); }
+.gw-qplan__extra > summary { display: flex; align-items: center; gap: 0.5rem; }
+.gw-qplan__extra > summary h4 { display: inline; margin: 0; font-size: 13.5px; color: var(--gw-text); }
+.gw-qplan__source { margin: 0; font-size: 11.5px; }
+
+@media (max-width: 640px) {
+  .gw-qplan__row { grid-template-columns: auto auto minmax(0, 1fr); }
+  .gw-qplan__row > .gw-qplan__where, .gw-qplan__row > .gw-qplan__toggle { grid-column: 3; justify-self: start; }
+  .gw-qplan__sub > .gw-qplan__where { grid-column: 3 / -1; }
+  .gw-qplan__subs { margin-left: 0.6rem; }
+  .gw-qplan__why { margin-left: 0.6rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gw-qplan__toggle svg { transition: transform 0.15s; }
+}

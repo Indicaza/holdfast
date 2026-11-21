@@ -35,7 +35,8 @@ import {
 import { LootList, SourceGroups, UnverifiedBadge } from './AtlasLoot.jsx'
 import { QuestList, QuestReadiness, QuickGuide, ReadinessSummary, RoleSelect, Runs } from './AtlasPrepare.jsx'
 import PlanMyGear from './PlanMyGear.jsx'
-import { useDungeonDetail, useDungeonReadiness, useWishlist, useWishlistMutation } from './useAtlasData.js'
+import QuestPlan from './QuestPlan.jsx'
+import { useDungeonDetail, useDungeonPlan, useDungeonReadiness, useWishlist, useWishlistMutation } from './useAtlasData.js'
 import './DungeonAtlas.css'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
@@ -577,18 +578,24 @@ function LootSection({ groups, items, character, atlas, lootProps, focus = '', o
 }
 
 // Quests: what to do before going in, and the character's readiness.
-function QuestsSection({ atlas, character, readiness, readinessSummary, lootProps }) {
+// Quests: the preparation checklist for the character (the planner's plan,
+// as in the add-on), then the quest facts and rewards on demand. Without a
+// plan (no quest list for this dungeon) the readiness groups stand in.
+function QuestsSection({ atlas, character, readiness, plan, lootProps }) {
+  const details = <QuestList quests={atlas.quests} rewardProps={lootProps} />
   return (
-    <div className="gw-atlas-section">
+    <div className="gw-atlas-section gw-atlas-quests-section">
       <EditorialNotes editorial={atlas.editorial} lists={['preparation']} />
-      {character ? <QuestReadiness resource={readiness} character={character} /> : null}
+      {character ? (
+        <QuestPlan resource={plan} character={character} fallback={<QuestReadiness resource={readiness} character={character} />} />
+      ) : atlas.quests.length ? <p className="gw-muted">Choose a character to get a preparation checklist from its synced quests.</p> : null}
       {atlas.wing && atlas.quests.length ? <p className="gw-muted">These are the whole dungeon's quests: no source ties a quest to one wing.</p> : null}
-      {character && readinessSummary ? (
+      {character && atlas.quests.length ? (
         <details className="gw-atlas-rgroup" data-group="details">
           <summary><h4>Quest details and rewards</h4><span className="gw-tag gw-tag--quiet">{atlas.quests.length}</span></summary>
-          <QuestList quests={atlas.quests} rewardProps={lootProps} />
+          {details}
         </details>
-      ) : <QuestList quests={atlas.quests} rewardProps={lootProps} />}
+      ) : details}
       {atlas.editorial?.questNotes ? <p className="gw-atlas-editorial-note">{atlas.editorial.questNotes}</p> : null}
     </div>
   )
@@ -700,6 +707,8 @@ export default function DungeonDetailModal({
   const lootProps = { wishes, character, busyKey: busy, onToggle: toggle, onSource }
   // The character's quest readiness (instanceId is a dungeon or a wing key).
   const readiness = useDungeonReadiness(character ? instanceId : '', character?.id || '')
+  // The preparation plan, only while Quests is open; it follows new uploads live.
+  const plan = useDungeonPlan(character && section === 'quests' ? instanceId : '', character?.id || '')
   const readinessSummary = useMemo(() => readinessModel(readiness.data), [readiness.data])
   const fit = character ? levelFit(atlas, character) : null
   const ready = Boolean(detail.data || (listEntry && (section === 'overview' || detail.status !== 'loading')))
@@ -754,7 +763,7 @@ export default function DungeonDetailModal({
                 overview={<DungeonOverview entry={merged} atlas={atlas} onBoss={openBoss}
                   forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} readiness={readinessSummary} onLoot={openLoot} onQuests={openQuests} />} />} />
             ) : null}
-            {section === 'quests' ? <QuestsSection atlas={atlas} character={character} readiness={readiness} readinessSummary={readinessSummary} lootProps={lootProps} /> : null}
+            {section === 'quests' ? <QuestsSection atlas={atlas} character={character} readiness={readiness} plan={plan} lootProps={lootProps} /> : null}
             {section === 'loot' ? (
               <LootSection groups={groups} items={items} character={character} atlas={atlas} lootProps={lootProps} focus={focusSource} onFocused={() => setFocusSource('')}
                 wishCount={wishCount} planning={planning} onPlan={character ? () => setPlanning((open) => !open) : null}

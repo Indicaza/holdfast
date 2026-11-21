@@ -4,6 +4,7 @@ import { disciplineLabel } from '../Intelligence/Farming/farmingModel.js'
 import { navigate } from '../Navigation/navigation.js'
 import AtlasModalHost from './Dungeons/AtlasModalHost.jsx'
 import { entranceMarkers, withAtlasOpen } from './Dungeons/atlasModel.js'
+import { readMapMark } from './Dungeons/questPlanModel.js'
 import { useDungeonList } from './Dungeons/useAtlasData.js'
 import { atlasZone } from './Map/atlas.js'
 import ResourceMap from './Map/ResourceMap.jsx'
@@ -19,6 +20,10 @@ function readMapParams(queryString) {
     item: params.get('item') || '',
     discipline: params.get('discipline') || '',
     resource: params.get('resource') || '',
+    // A spot to mark (?zone=1436&mark=0.5633,0.4752&label=Gryan Stoutmantle):
+    // a quest giver, turn-in or entrance from the dungeon quest checklist.
+    mark: zone ? readMapMark(params.get('mark')) : null,
+    label: (params.get('label') || '').slice(0, 60),
   }
 }
 
@@ -57,7 +62,20 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
   const onFocusZone = useCallback((mapId) => replaceParam('zone', mapId), [])
   const onDetailsChange = useCallback((sourceKey) => replaceParam('resource', sourceKey), [])
   const entrances = useEntrancePins(queryString)
-  const onPin = useCallback((pin) => navigate(withAtlasOpen(`${window.location.pathname}${window.location.search}`, { open: pin.open ?? pin.instanceId }), { preserveScroll: true }), [])
+  const onPin = useCallback((pin) => {
+    if (!pin.open && !pin.instanceId) return
+    navigate(withAtlasOpen(`${window.location.pathname}${window.location.search}`, { open: pin.open ?? pin.instanceId }), { preserveScroll: true })
+  }, [])
+  // The marked spot, placed with the zone's own map rectangle (the game's map
+  // id and 0–1 coordinates, as the plan's waypoints give them).
+  const marked = useMemo(() => {
+    const zone = initial.mark && initial.zone ? atlasZone(initial.zone) : null
+    if (!zone?.rect) return null
+    const label = initial.label || 'Marked spot'
+    return { key: 'mark', kind: 'waypoint', icon: 'pin', label, ariaLabel: `${label} (marked spot)`,
+      world: { x: zone.rect.x + initial.mark.x * zone.rect.width, y: zone.rect.y + initial.mark.y * zone.rect.height } }
+  }, [initial])
+  const pins = useMemo(() => (marked ? [...entrances.pins, marked] : entrances.pins), [entrances.pins, marked])
 
   return (
     <div className="gw-mapview">
@@ -88,7 +106,7 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
         legendHost={legendHost}
         legendRail={railed}
         label="Resource map of Azeroth"
-        pins={entrances.pins}
+        pins={pins}
         onPin={onPin}
       />
     </div>

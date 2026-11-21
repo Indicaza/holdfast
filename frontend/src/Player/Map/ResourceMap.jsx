@@ -1110,11 +1110,11 @@ export default function ResourceMap({
             <div className="gw-rmap__overlay gw-rmap__pins">
               {pinMarkers.map(({ pin, at }) => (
                 <button key={pin.key} type="button" className={`gw-rmap__pin gw-rmap__pin--${pin.kind || 'dungeon'}`} style={{ '--x': `${at.x}px`, '--y': `${at.y}px` }}
-                  aria-label={`${pin.label} entrance`} title={pin.label}
+                  aria-label={pin.ariaLabel || `${pin.label} entrance`} title={pin.label}
                   onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => event.stopPropagation()}
                   onDoubleClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}
                   onClick={(event) => { event.stopPropagation(); onPin?.(pin) }}>
-                  <Icon name="dungeon" size={14} />
+                  <Icon name={pin.icon || 'dungeon'} size={14} />
                 </button>
               ))}
             </div>

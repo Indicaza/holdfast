@@ -142,8 +142,10 @@ describe('the modal', () => {
 
   test('a new upload refreshes it (the player topic)', async () => {
     let reply = MISSING
-    let listener = () => {}
-    const live = { status: 'open', subscribe: (next) => { listener = next; return () => {} } }
+    // Every live resource on the page subscribes; the stub keeps them all.
+    const listeners = new Set()
+    const listener = (event) => listeners.forEach((next) => next(event))
+    const live = { status: 'open', subscribe: (next) => { listeners.add(next); return () => listeners.delete(next) } }
     api(() => reply)
     renderWithSession(<LiveUpdatesContext.Provider value={live}><Modal section="overview" /></LiveUpdatesContext.Provider>)
     await screen.findByText(/2 to pick up/)
