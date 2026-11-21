@@ -60,7 +60,25 @@ function CapturedRows({ lines, quality }) {
   })
 }
 
-export function GameTooltipBody({ item: value }) {
+// Facts a page already holds about an item the game has not described to
+// Guildweaver yet (`reference`: { lines: [{ left, right?, tone? }], label }).
+// Drawn in the tooltip's frame but marked as reference, never as the game's
+// own text.
+function ReferenceRows({ reference }) {
+  return (
+    <>
+      {reference.lines.map((line, index) => (
+        <div key={`${index}:${line.left}`} className={`game-tooltip__line game-tooltip__reference${line.tone ? ` game-tooltip__reference--${line.tone}` : ''}`}>
+          <span>{line.left}</span>
+          {line.right ? <span className="game-tooltip__right">{line.right}</span> : null}
+        </div>
+      ))}
+      <div className="game-tooltip__line game-tooltip__pending game-tooltip__reference-label"><span>{reference.label || 'Reference facts, not the game\'s tooltip.'}</span></div>
+    </>
+  )
+}
+
+export function GameTooltipBody({ item: value, reference = null }) {
   const item = gameTooltipItem(value) || {}
   const lines = capturedLines(item)
   const quality = item.qualityId ?? item.quality ?? null
@@ -70,13 +88,14 @@ export function GameTooltipBody({ item: value }) {
   // no captured lines shows only what is known for certain: its name and
   // quality (see itemTooltipPending).
   if (itemTooltipPending(item)) {
+    const facts = reference && Array.isArray(reference.lines) && reference.lines.length ? reference : null
     return (
       <>
         <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
           <span>{item.name || `Item ${item.itemId || ''}`.trim()}</span>
         </div>
         {QUALITY_NAMES[quality] ? <div className="game-tooltip__line game-tooltip__quality"><span>{QUALITY_NAMES[quality]}</span></div> : null}
-        <div className="game-tooltip__line game-tooltip__pending"><span>{PENDING_NOTE}</span></div>
+        {facts ? <ReferenceRows reference={facts} /> : <div className="game-tooltip__line game-tooltip__pending"><span>{PENDING_NOTE}</span></div>}
       </>
     )
   }
@@ -121,58 +140,84 @@ function focusVisible(event) {
 // Hover (or keyboard focus) on the children shows the game's tooltip for
 // `item`, beside the first child, or beside the children's parent with
 // anchor="parent" (a whole row or card). The wrapper has no box of its own.
+// disabled: keeps the wrapper (and so the children's identity) but shows
+// nothing, for a control whose own popover is open.
 // touch={false}: a tap does not open it (the tapped control shows the item
 // its own way, as the dungeon loot slots do); mouse, pen and keyboard still do.
-export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child', touch = true }) {
+//
+// extra: lines a page adds under the game's tooltip (the dungeon journal's
+// source, rate and wishlist state), in the same frame. reference: facts to
+// show, marked as such, when the game's lines are not captured yet.
+export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child', touch = true, extra = null, reference = null, disabled = false }) {
   const tooltipId = useId()
-  const [anchor, setAnchor] = useState(null)
-  const shown = Boolean(anchor)
-  // A tooltip is placed once, against where its item was; scrolling would
-  // leave it floating over something else. A press means the reader is
+  // { rect, element, by: 'pointer' | 'focus' } while shown.
+  const [shownAt, setShownAt] = useState(null)
+  const anchor = shownAt?.rect || null
+  const shown = Boolean(shownAt)
+  // A pointer tooltip is placed once, against where its item was: a scroll
+  // hides it (the next move over the item brings it back). A keyboard one
+  // follows its focused item through the scroll that focusing often causes,
+  // and goes when the item leaves the window. A press means the reader is
   // acting on the item, and Escape asks it to go, as in the app's other
   // tooltips.
   useEffect(() => {
     if (!shown) return undefined
-    const hide = () => setAnchor(null)
+    const hide = () => setShownAt(null)
+    let frame = 0
+    const onScroll = () => {
+      if (shownAt.by !== 'focus' || !shownAt.element?.isConnected) { hide(); return }
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const rect = shownAt.element.getBoundingClientRect()
+        if (rect.bottom < 0 || rect.top > window.innerHeight) hide()
+        else setShownAt((current) => (current ? { ...current, rect } : current))
+      })
+    }
     const onKey = (event) => { if (event.key === 'Escape') hide() }
-    window.addEventListener('scroll', hide, true)
+    window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', hide)
     document.addEventListener('pointerdown', hide, true)
     document.addEventListener('keydown', onKey)
     return () => {
-      window.removeEventListener('scroll', hide, true)
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll, true)
       window.removeEventListener('resize', hide)
       document.removeEventListener('pointerdown', hide, true)
       document.removeEventListener('keydown', onKey)
     }
-  }, [shown])
+  }, [shown, shownAt?.by, shownAt?.element])
   const normalized = gameTooltipItem(item)
   if (!normalized) return children
-  const measure = (event) => {
+  const at = (event, by) => {
     const wrapper = event.currentTarget
-    const target = anchorTo === 'parent' ? wrapper.parentElement : wrapper.firstElementChild
-    return (target || wrapper).getBoundingClientRect()
+    const element = (anchorTo === 'parent' ? wrapper.parentElement : wrapper.firstElementChild) || wrapper
+    return { rect: element.getBoundingClientRect(), element, by }
   }
-  const show = (event) => setAnchor(measure(event))
+  // Only a change of state renders: moving within the item, or entering it
+  // again while shown, does nothing.
+  const show = (event) => { if (!shown && !disabled) setShownAt(at(event, 'pointer')) }
   const showOnFocus = (event) => {
-    if (focusVisible(event)) setAnchor(measure(event))
+    if (!disabled && focusVisible(event)) setShownAt(at(event, 'focus'))
   }
-  const hide = () => setAnchor(null)
+  const hide = () => setShownAt(null)
   return (
     <span
       className="game-tooltip-hover"
       aria-describedby={anchor ? tooltipId : undefined}
       {...(touch ? { onMouseEnter: show, onMouseLeave: hide } : {
         onPointerEnter: (event) => { if (event.pointerType !== 'touch') show(event) },
+        // After a scroll hid it, the next move over the item brings it back.
+        onPointerMove: (event) => { if (event.pointerType !== 'touch') show(event) },
         onPointerLeave: hide,
       })}
       onFocus={showOnFocus}
       onBlur={hide}
     >
       {children}
-      {anchor && typeof document !== 'undefined' ? (
+      {anchor && !disabled && typeof document !== 'undefined' ? (
         <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={`game-tooltip${className ? ` ${className}` : ''}`}>
-          <GameTooltipBody item={normalized} />
+          <GameTooltipBody item={normalized} reference={reference} />
+          {extra ? <div className="game-tooltip__extra">{extra}</div> : null}
         </FloatingTooltip>
       ) : null}
     </span>
@@ -181,12 +226,13 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
 
 // The game's tooltip as a card in the page (the item catalog's description),
 // the same frame and lines as on hover, nothing floating.
-export function GameTooltipCard({ item, className = '' }) {
+export function GameTooltipCard({ item, className = '', extra = null, reference = null }) {
   const normalized = gameTooltipItem(item)
   if (!normalized) return null
   return (
     <div className={`game-tooltip game-tooltip--card${className ? ` ${className}` : ''}`}>
-      <GameTooltipBody item={normalized} />
+      <GameTooltipBody item={normalized} reference={reference} />
+      {extra ? <div className="game-tooltip__extra">{extra}</div> : null}
     </div>
   )
 }

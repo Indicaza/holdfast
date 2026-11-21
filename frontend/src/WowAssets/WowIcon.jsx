@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { wowAssetDescriptor } from './assetResolver.js'
+import { placeFloating } from './floatingPlacement.js'
 import './WowIcon.css'
 
 function fallbackText(label, descriptor) {
@@ -196,11 +197,8 @@ function StatLines({ item }) {
   )
 }
 
-const TOOLTIP_GAP = 10
-const VIEWPORT_MARGIN = 12
 
-// Places a tooltip beside its anchor on the preferred side, flips when that
-// side has no room, and clamps it inside the viewport. Rendered into
+// Places a tooltip beside its anchor (placeFloating). Rendered into
 // document.body so no scrolling or clipping ancestor can cut it off. Item
 // tooltips come from GameTooltipHover (Intelligence/GameTooltip.jsx), the
 // game's own lines; this is the frame they and the stat tooltips share.
@@ -212,26 +210,7 @@ export function FloatingTooltip({ anchor, side = 'right', id, className = '', ch
     const element = ref.current
     if (!element) return
     const { width, height } = element.getBoundingClientRect()
-    const maxLeft = window.innerWidth - width - VIEWPORT_MARGIN
-    const maxTop = window.innerHeight - height - VIEWPORT_MARGIN
-    let left
-    let top
-    if (side === 'top') {
-      left = anchor.left + anchor.width / 2 - width / 2
-      top = anchor.top - height - TOOLTIP_GAP
-      if (top < VIEWPORT_MARGIN) top = anchor.bottom + TOOLTIP_GAP
-    } else {
-      const right = anchor.right + TOOLTIP_GAP
-      const leftSide = anchor.left - width - TOOLTIP_GAP
-      const fitsRight = right + width <= window.innerWidth - VIEWPORT_MARGIN
-      const fitsLeft = leftSide >= VIEWPORT_MARGIN
-      left = side === 'left' ? (fitsLeft || !fitsRight ? leftSide : right) : (fitsRight || !fitsLeft ? right : leftSide)
-      top = anchor.top
-    }
-    setPosition({
-      left: Math.max(VIEWPORT_MARGIN, Math.min(left, maxLeft)),
-      top: Math.max(VIEWPORT_MARGIN, Math.min(top, maxTop)),
-    })
+    setPosition(placeFloating(anchor, width, height, side))
   }, [anchor, side])
 
   return createPortal(
