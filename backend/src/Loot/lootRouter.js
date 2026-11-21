@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { atlasCharacterQuestPlan, atlasQuestPlanFromState } from "../Atlas/atlasQuestPlanRepository.js";
 import { atlasCharacterReadiness, atlasQuests, atlasReadiness, resolveDungeonId, withAtlasDetail, withAtlasList, withAtlasWingDetail } from "../Atlas/atlasRepository.js";
 import { readCharacterQuestStateInDatabase } from "../Character/characterQuestStateRepository.js";
 import { authenticateGuildweaverDevice } from "../Character/guildweaverDeviceRepository.js";
@@ -144,6 +145,34 @@ export function createPlayerLootRouter() {
     } catch (error) {
       console.error("Unable to evaluate dungeon readiness", error);
       res.status(500).json({ error: "dungeon_readiness_failed" });
+    }
+  });
+  // The quest preparation plan (docs/dungeon-quest-planner.md): the ordered
+  // checklist for one of the caller's characters, from the quest state the
+  // add-on last synced for it. Same ownership and realm handling as
+  // readiness: ?character= is a per-realm character id of the caller's own,
+  // and anyone else's answers 404 like a missing one.
+  router.get("/loot/dungeons/:instanceId/plan", read("dungeon_plan", (req) => withGuildDatabase((db) => {
+    const character = req.query?.character ? ownedCharacterInDatabase(db, owner(req), req.query.character) : null;
+    if (!character) return null;
+    const stored = readCharacterQuestStateInDatabase(db, { memberId: owner(req), characterId: character.id,
+      rawCharacterIds: rawCharacterIdsInDatabase(db, owner(req), character.id) });
+    const result = atlasCharacterQuestPlan(req.params.instanceId, stored);
+    return result && { ...result, characterId: character.id };
+  })));
+  // A plan from a quest state the caller sends ({ state, party? }), over the
+  // published editorial revision. Nothing is stored. A document in the body
+  // is ignored: drafts are previewed only through the studio
+  // (/api/admin/atlas-studio/dungeons/:id/plan-preview, site.admin).
+  router.post("/loot/dungeons/:instanceId/plan", (req, res) => {
+    try {
+      const outcome = atlasQuestPlanFromState(req.params.instanceId, { state: req.body?.state, party: req.body?.party ?? null });
+      if (!outcome) { res.status(404).json({ error: "dungeon_quests_not_found" }); return; }
+      if (outcome.status === "invalid") { res.status(400).json({ error: "invalid_quest_state", problems: outcome.problems }); return; }
+      res.json(outcome.result);
+    } catch (error) {
+      console.error("Unable to build dungeon quest plan", error);
+      res.status(500).json({ error: "dungeon_plan_failed" });
     }
   });
   router.get("/loot/items", read("loot_items", (req) => withGuildDatabase((db) =>

@@ -38,6 +38,7 @@ const VANILLA_RACE_MASK = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128;
 const ALL_CLASS_MASK = CLASSES.reduce((mask, [bit]) => mask | bit, 0);
 const REPEATABLE = 1; // quest_template_addon.SpecialFlags
 const DAILY = 0x1000; // quest_template.Flags
+const SHARABLE = 0x8; // quest_template.Flags QUEST_FLAGS_SHARABLE
 const SIDE = Object.freeze({ a: "alliance", h: "horde", b: "both" });
 
 // Who may take it, from AllowableRaces: faction, and races when narrower.
@@ -112,6 +113,10 @@ export function buildQuestCatalog({ atlas, quests: source, planner = null, areaT
       faction, races,
       classes: row ? classRule(row.classes) : null,
       repeatable: repeatable(row),
+      // Whether a party member can share it: AzerothCore's SHARABLE flag
+      // (Classic reference, not confirmed on Forever); "unknown" without a
+      // quest record.
+      shareable: row ? (row.flags & SHARABLE ? "yes" : "no") : "unknown",
       prerequisites: prerequisitesOf(row),
       prerequisitesKnown: Boolean(row),
       exclusiveGroup: row?.group || null,
@@ -189,6 +194,7 @@ export function questCatalogProblems(catalog, atlas) {
       if (!QUEST_RELEVANCE.includes(quest.relevance)) problems.push(`${where} relevance ${quest.relevance}`);
       if (!Number.isSafeInteger(quest.questId) || quest.questId < 1) problems.push(`${where} id`);
       if (quest.faction !== null && !["alliance", "horde", "both"].includes(quest.faction)) problems.push(`${where} faction ${quest.faction}`);
+      if (!["yes", "no", "unknown"].includes(quest.shareable)) problems.push(`${where} shareable ${quest.shareable}`);
       for (const prerequisite of quest.prerequisites) if (!Number.isSafeInteger(prerequisite.questId)) problems.push(`${where} prerequisite`);
       if (!quest.sources.length) problems.push(`${where} has no source`);
       if ("verifiedForForever" in quest && quest.verifiedForForever) problems.push(`${where} claims Forever`);
