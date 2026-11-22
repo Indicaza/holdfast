@@ -1,4 +1,8 @@
+import { referenceItemIdsForIcon } from "../Atlas/referenceLoot.js";
 import { blizzardGameDataConfig } from "./blizzardGameDataProvider.js";
+
+// Items tried per icon when the media search has no answer.
+const MAX_ITEM_LOOKUPS = 3;
 
 function positiveInteger(value) {
   const number = Number(value);
@@ -47,6 +51,7 @@ export function createBlizzardIconMediaResolver({
   env = process.env,
   fetchImpl = globalThis.fetch,
   now = () => Date.now(),
+  itemIdsForIcon = referenceItemIdsForIcon,
 } = {}) {
   const config = blizzardGameDataConfig(env);
   const namespaces = mediaNamespaces(env, config);
@@ -93,15 +98,30 @@ export function createBlizzardIconMediaResolver({
     }
   }
 
-  async function requestNamespace(id, namespace, retryAuth = true) {
-    const bearer = await accessToken();
+  async function requestNamespace(id, namespace) {
     const url = new URL(`${config.apiBaseUrl}/data/wow/search/media`);
     url.searchParams.set("namespace", namespace);
     url.searchParams.set("locale", config.locale);
     url.searchParams.set("assets.file_data_id", String(id));
     url.searchParams.set("_page", "1");
     url.searchParams.set("orderby", "id");
+    const payload = await requestJson(url);
+    return payload ? mediaUrlFromSearch(payload, id) : "";
+  }
 
+  // An item's own media record, used only if it names this exact icon.
+  async function requestItemMedia(id, itemId, namespace) {
+    const url = new URL(`${config.apiBaseUrl}/data/wow/media/item/${itemId}`);
+    url.searchParams.set("namespace", namespace);
+    url.searchParams.set("locale", config.locale);
+    const payload = await requestJson(url);
+    const assets = Array.isArray(payload?.assets) ? payload.assets : [];
+    const exact = assets.find((asset) => Number(asset?.file_data_id ?? asset?.fileDataId) === id);
+    return httpsUrl(exact?.value);
+  }
+
+  async function requestJson(url, retryAuth = true) {
+    const bearer = await accessToken();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), config.timeoutMs);
     try {
@@ -113,10 +133,10 @@ export function createBlizzardIconMediaResolver({
         token = "";
         tokenExpiresAt = 0;
         await accessToken(true);
-        return requestNamespace(id, namespace, false);
+        return requestJson(url, false);
       }
-      if (!response.ok) return "";
-      return mediaUrlFromSearch(await response.json(), id);
+      if (!response.ok) return null;
+      return await response.json();
     } finally {
       clearTimeout(timer);
     }
@@ -126,6 +146,12 @@ export function createBlizzardIconMediaResolver({
     for (const namespace of namespaces) {
       const mediaUrl = await requestNamespace(id, namespace);
       if (mediaUrl) return mediaUrl;
+    }
+    for (const itemId of itemIdsForIcon(id).slice(0, MAX_ITEM_LOOKUPS)) {
+      for (const namespace of namespaces) {
+        const mediaUrl = await requestItemMedia(id, itemId, namespace);
+        if (mediaUrl) return mediaUrl;
+      }
     }
     return "";
   }

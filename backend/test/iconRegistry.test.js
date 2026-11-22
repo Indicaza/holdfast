@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { referenceItemIdsForIcon } from "../src/Atlas/referenceLoot.js";
 import { closeGuildDatabase, withGuildDatabase, withGuildTransaction } from "../src/Data/database.js";
 import { upsertGameDataEntityInDatabase } from "../src/GameData/gameDataCatalog.js";
 import { readIconInDatabase, resolveIcon, storeIcons } from "../src/GameData/iconRegistry.js";
@@ -71,3 +72,20 @@ test("copies of icons go to object storage, verified, and are served from there"
   assert.deepEqual(await resolveIcon(132889, { storage, now: NOW }), { kind: "redirect", url: "https://cdn.example/icons-bucket/icons/132889.jpg", source: "stored" });
   assert.equal((await storeIcons({ storage: null })).skipped, true, "nothing happens without storage");
 }));
+
+test("the public route serves atlas reference icons and still refuses any other", () => {
+  const asked = [];
+  const url = "https://render.worldofwarcraft.com/classic-us/icons/56/reference.jpg";
+  const iconMediaResolver = { resolve: async (id) => { asked.push(id); return url; } };
+  return withHttpApp(async ({ request }) => {
+    const [reference] = referenceItemIdsForIcon(466975);
+    assert.ok(reference, "the reference data holds this icon");
+    const served = await request("/api/game-data/v1/icons/466975");
+    assert.equal(served.status, 302);
+    assert.equal(served.headers.get("location"), url);
+    const refused = await request("/api/game-data/v1/icons/999999");
+    assert.equal(refused.status, 404);
+    assert.equal(refused.json.error, "icon_not_observed");
+    assert.deepEqual(asked, [466975], "a refused icon is never looked up");
+  }, { publicGameDataOptions: { iconMediaResolver } });
+});
