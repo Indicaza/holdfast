@@ -911,20 +911,31 @@ export function itemFacts(item = {}) {
   ].filter(([, value]) => value !== '' && value !== null && value !== undefined)
 }
 
-// An item's known facts as tooltip lines, in the game's order (binding,
-// slot and type, damage, armor, stats, classes, required level), for an item
-// whose own tooltip Guildweaver has not captured. Only what the record
-// states: an unknown fact is left out, never filled in. The label says where
-// the facts come from, so they are never taken for the game's text.
-// Null when the record holds nothing to show.
+// The client's one-word weapon types, for the right of the slot line.
+const WEAPON_WORD = {
+  'one-handed axes': 'Axe', 'two-handed axes': 'Axe', 'one-handed maces': 'Mace', 'two-handed maces': 'Mace',
+  'one-handed swords': 'Sword', 'two-handed swords': 'Sword', polearms: 'Polearm', staves: 'Staff', daggers: 'Dagger',
+  'fist weapons': 'Fist Weapon', bows: 'Bow', guns: 'Gun', crossbows: 'Crossbow', thrown: 'Thrown', wands: 'Wand',
+}
+const BASE_STATS = new Set(['strength', 'agility', 'stamina', 'intellect', 'spirit'])
+
+// An item's known facts as tooltip lines, in the order the client draws them
+// (item level, binding, slot and type, damage, armor, stats, classes, required
+// level), for an item whose own tooltip Guildweaver has not captured. Only
+// what the record states: an unknown fact is left out, never filled in. The
+// short label keeps them from being taken for the game's text; the full
+// provenance is in the item inspector. Null when there is nothing to show.
 export function referenceTooltip(item = {}, { reference = false } = {}) {
   const lines = []
+  const level = finite(item.itemLevel)
+  if (level) lines.push({ left: `Item Level ${level}` })
   const bind = bindText(item.bindType)
   if (item.kind === 'quest-item') lines.push({ left: 'Quest Item' })
   else if (bind) lines.push({ left: bind })
-  // Slot left and type right, as the game draws them; a type alone (a recipe's profession) sits on the left.
-  if (item.slot) lines.push({ left: item.slot, right: item.itemSubclass && item.itemSubclass !== item.slot ? item.itemSubclass : '' })
-  else if (item.itemSubclass) lines.push({ left: item.itemSubclass })
+  const subclass = String(item.itemSubclass || '')
+  const type = /^miscellaneous$/i.test(subclass) || subclass === item.slot ? '' : WEAPON_WORD[subclass.toLowerCase()] || subclass
+  if (item.slot) lines.push({ left: item.slot, right: type })
+  else if (type) lines.push({ left: type })
   const weapon = item.weapon && typeof item.weapon === 'object' ? item.weapon : null
   const min = finite(weapon?.minDamage)
   const max = finite(weapon?.maxDamage)
@@ -937,22 +948,17 @@ export function referenceTooltip(item = {}, { reference = false } = {}) {
   if (armor) lines.push({ left: `${armor} Armor` })
   for (const line of Array.isArray(item.stats) ? item.stats : []) {
     const value = finite(line?.value)
-    if (line?.stat && value !== null) lines.push({ left: `${value > 0 ? '+' : ''}${value} ${line.stat}`, tone: 'stat' })
+    if (line?.stat && value !== null) lines.push({ left: `${value > 0 ? '+' : ''}${value} ${line.stat}`, tone: BASE_STATS.has(String(line.stat).toLowerCase()) ? 'stat' : 'bonus' })
   }
   if (Array.isArray(item.classes) && item.classes.length) lines.push({ left: `Classes: ${item.classes.join(', ')}` })
   const required = finite(item.requiredLevel)
   if (required) lines.push({ left: `Requires Level ${required}`, tone: 'requirement' })
-  const level = finite(item.itemLevel)
-  if (level) lines.push({ left: `Item Level ${level}` })
   if (item.setName) lines.push({ left: `Set: ${item.setName}`, tone: 'set' })
   const shown = lines.filter((line) => line.left || line.right)
   if (!shown.length) return null
   const sources = Array.isArray(item.factSources) ? item.factSources : []
-  const label = sources.includes('wago-forever') && !sources.includes('wago-classic-era')
-    ? 'From the WoW Forever client and ForeverDB, not the game\'s tooltip.'
-    : reference || sources.includes('wago-classic-era') || item.verifiedForForever === false
-      ? 'Classic reference facts, not the game\'s tooltip.'
-      : 'Recorded facts; the game\'s full tooltip is not captured yet.'
+  const label = sources.includes('wago-forever') && !sources.includes('wago-classic-era') ? 'WoW Forever reference'
+    : reference || sources.includes('wago-classic-era') || item.verifiedForForever === false ? 'Classic reference' : 'Recorded facts'
   return { lines: shown, label }
 }
 

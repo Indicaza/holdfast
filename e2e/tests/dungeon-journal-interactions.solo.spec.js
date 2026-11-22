@@ -200,7 +200,11 @@ test('switching bosses while a tooltip is shown leaves none behind', async ({ pa
   await slots.first().focus()
   await page.keyboard.press('Tab')
   await expect(slots.nth(1)).toBeFocused()
+  // Focus may scroll the slot into view: the tooltip waits for it, beside it.
   await expect(page.getByRole('tooltip')).toBeVisible()
+  await settle(page)
+  const tip = await page.getByRole('tooltip').boundingBox()
+  expect(overlaps(tip, await slots.nth(1).boundingBox())).toBe(false)
   // The next boss, without moving the pointer.
   await page.getByRole('navigation', { name: 'Bosses' }).getByRole('button', { name: /Rhahk'Zor/ }).evaluate((button) => button.click())
   await expect(page.getByRole('article', { name: 'Rhahk\'Zor' })).toBeVisible()
@@ -240,4 +244,18 @@ test.describe('on a phone', () => {
     await expect(sheet).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
   })
+})
+
+test('the Studio preview, a narrow column on a wide screen, keeps the phone layout', async ({ page, context }) => {
+  await authenticate(context, 'commander')
+  await page.goto('/admin/dungeons/3065')
+  await page.getByRole('button', { name: 'Website preview' }).click()
+  const site = page.locator('.studio-preview-site')
+  await site.locator('.gw-atlas-rail button', { hasText: 'Faldrim' }).click()
+  const slots = site.locator('button.gw-slot')
+  await expect(slots).toHaveCount(3)
+  // The slots share a row and nothing is wider than the preview.
+  const tops = await slots.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().top))
+  expect(new Set(tops).size).toBe(1)
+  expect(await site.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
 })

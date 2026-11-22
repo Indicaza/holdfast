@@ -68,11 +68,12 @@ describe('the loot grid', () => {
     expect(girdle.textContent).toContain('Quality not known')
     expect(inspect('i:275443').textContent).toContain('Quest item')
     const barb = inspect('i:5191')
-    expect(within(barb).getByText('Classic reference')).toBeTruthy()
+    expect(within(barb.querySelector('.gw-itempop__source')).getByText('Classic reference')).toBeTruthy()
     expect(barb.textContent).toContain('20% · ForeverDB, Classic data')
     expect(barb.textContent).toContain('not seen in 72 kills')
     expect(within(inspect('i:286978')).getByText('WoW Forever (ForeverDB)')).toBeTruthy()
-    const credit = screen.getByRole('link', { name: 'Data from ForeverDB.net' })
+    const credit = document.querySelector('.gw-lootgrid > .gw-atlas-credit a')
+    expect(credit.textContent).toBe('Data from ForeverDB.net')
     expect(credit.getAttribute('href')).toBe('https://foreverdb.net')
   })
 
@@ -86,56 +87,53 @@ describe('the loot grid', () => {
     expect(rockslicer.textContent).toContain('Drop chances are not published')
   })
 
-  test('tooltips: captured lines when the game gave them, reference facts marked as such, the pending note only when nothing is known', () => {
+  test('tooltips: only the game\'s lines, or reference facts in its order; everything else is in the inspector', () => {
     const captured = { itemKey: 'i:5191', itemId: 5191, name: 'Cruel Barb', qualityId: 3, slot: 'One-Hand',
       tooltip: { lines: [{ left: 'Cruel Barb' }, { left: 'Binds when picked up' }, { left: 'Requires Level 19' }] }, sellPrice: 3412 }
     const reference = { itemKey: 'i:5202', itemId: 5202, name: 'Corsair\'s Overshirt', qualityId: 3, slot: 'Chest', itemSubclass: 'Cloth', armor: 42, itemLevel: 24, requiredLevel: 19, bindType: 'BoP',
-      stats: [{ stat: 'Agility', value: 6 }], factSources: ['wago-classic-era'] }
+      stats: [{ stat: 'Agility', value: 6 }], factSources: ['wago-classic-era'], referenceRates: [rate(22.2, 27)] }
     const bare = { itemKey: 'i:9', itemId: 9, name: 'Mystery Ring', qualityId: null }
     const rows = [
       { item: captured, source: 'Edwin VanCleef', sourceKey: 'boss:2747', sourceKind: 'boss', observed: true },
-      { item: reference, source: 'Edwin VanCleef', sourceKey: 'boss:2747', sourceKind: 'boss', reference: true },
+      { item: reference, source: 'Edwin VanCleef', sourceKey: 'boss:2747', sourceKind: 'boss', reference: true, alsoFrom: [{ key: 'trash:657', name: 'Defias Pirate', kind: 'trash' }] },
       { item: bare, source: null, sourceKey: 'unknown', sourceKind: 'unknown', observed: true },
     ]
     render(<LootList rows={rows} wishes={new Map([['i:5191', { itemKey: 'i:5191', state: 'wanted', priority: 'high' }]])} character={null} onToggle={() => {}} />)
     const wrapper = (key) => document.querySelector(`button.gw-slot[data-item="${key}"]`).parentElement
-    // Reference facts in the tooltip's frame, labelled; the journal's lines below.
+    const WEB_TEXT = /Drops from|Also from|Click for|On your wishlist|ForeverDB|Drop rate|Source not identified|Quality not known|NPC \d/
+    // Reference facts in the game's order, with one short label and nothing of the website's.
     fireEvent.pointerEnter(wrapper('i:5202'), { pointerType: 'mouse' })
     let tooltip = screen.getByRole('tooltip')
-    expect(tooltip.textContent).toContain('Binds when picked up')
-    expect(tooltip.textContent).toContain('42 Armor')
-    expect(tooltip.textContent).toContain('+6 Agility')
-    expect(tooltip.textContent).toContain('Requires Level 19')
-    expect(tooltip.textContent).toContain('Classic reference facts, not the game\'s tooltip.')
-    expect(tooltip.textContent).not.toContain('Full tooltip arrives')
-    expect(tooltip.textContent).toContain('Drops from Edwin VanCleef')
-    expect(tooltip.querySelectorAll('.game-tooltip__reference').length).toBeGreaterThan(3)
+    expect([...tooltip.querySelectorAll('.game-tooltip__line')].map((line) => line.textContent)).toEqual([
+      'Corsair\'s Overshirt', 'Item Level 24', 'Binds when picked up', 'ChestCloth', '42 Armor', '+6 Agility', 'Requires Level 19', 'Classic reference',
+    ])
+    expect(tooltip.textContent).not.toMatch(WEB_TEXT)
     // Moving within the slot does not remount it.
     fireEvent.pointerMove(document.querySelector('button.gw-slot[data-item="i:5202"]'), { pointerType: 'mouse' })
     expect(screen.getByRole('tooltip')).toBe(tooltip)
     fireEvent.pointerLeave(wrapper('i:5202'))
     expect(screen.queryByRole('tooltip')).toBeNull()
-    // Captured lines stay the game's own, with the wishlist state under them.
+    // Captured lines stay the game's own.
     fireEvent.pointerEnter(wrapper('i:5191'), { pointerType: 'mouse' })
     tooltip = screen.getByRole('tooltip')
     expect(tooltip.textContent).toContain('Requires Level 19')
     expect(tooltip.querySelector('.game-tooltip__reference')).toBeNull()
-    expect(tooltip.textContent).toContain('On your wishlist (high)')
+    expect(tooltip.textContent).not.toMatch(WEB_TEXT)
     fireEvent.pointerLeave(wrapper('i:5191'))
-    // Nothing known: the pending note, and the quality is said to be unknown.
+    // Nothing known: the pending note.
     fireEvent.pointerEnter(wrapper('i:9'), { pointerType: 'mouse' })
-    tooltip = screen.getByRole('tooltip')
-    expect(tooltip.textContent).toContain('Full tooltip arrives once a Guildweaver player sees this item in game.')
-    expect(tooltip.textContent).toContain('Quality not known yet')
-    expect(tooltip.textContent).toContain('Source not identified')
+    expect(screen.getByRole('tooltip').textContent).toContain('Full tooltip arrives once a Guildweaver player sees this item in game.')
     fireEvent.pointerLeave(wrapper('i:9'))
     // A tap does not open the floating tooltip: the slot opens the item instead.
     fireEvent.pointerEnter(wrapper('i:5191'), { pointerType: 'touch' })
     expect(screen.queryByRole('tooltip')).toBeNull()
-    // The opened item floats over the page, outside the grid.
+    // The inspector floats outside the grid and holds the source, rates, other sources and credit.
     const shirt = inspect('i:5202')
     expect(shirt.closest('.gw-lootgrid')).toBeNull()
-    expect(shirt.querySelector('.game-tooltip--card').textContent).toContain('Classic reference facts')
+    expect(shirt.textContent).toContain('From Edwin VanCleef')
+    expect(shirt.textContent).toContain('Reference: 22.2% · ForeverDB, 27 kills')
+    expect(shirt.textContent).toContain('Also from Defias Pirate (trash)')
+    expect(within(shirt).getByRole('link', { name: 'Data from ForeverDB.net' })).toBeTruthy()
     // While it is open, its slot shows no floating tooltip over it.
     fireEvent.pointerEnter(wrapper('i:5202'), { pointerType: 'mouse' })
     expect(screen.queryByRole('tooltip')).toBeNull()
@@ -177,7 +175,7 @@ describe('the loot grid', () => {
     expect(fromBoss.textContent).toContain('Reference: 22.2% · ForeverDB, 27 kills')
     expect(fromBoss.textContent).not.toContain('2.5%')
     // Seen elsewhere is not seen from the boss.
-    expect(within(fromBoss).getByText('Classic reference')).toBeTruthy()
+    expect(within(fromBoss.querySelector('.gw-itempop__source')).getByText('Classic reference')).toBeTruthy()
     fireEvent.pointerDown(document.body)
     fireEvent.click(within(screen.getByRole('list', { name: 'trash' })).getByRole('button'))
     const fromTrash = screen.getByRole('dialog', { name: 'Cruel Barb details' })

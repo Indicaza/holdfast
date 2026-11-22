@@ -156,11 +156,13 @@ test('one-click wishlist on Classic reference boss loot', async ({ page, context
   // Hover shows the tooltip: no captured lines, so the reference facts, labelled as such.
   await slot.hover()
   await expect(page.getByRole('tooltip')).toContainText('Binds when picked up')
-  await expect(page.getByRole('tooltip')).toContainText('not the game\'s tooltip')
-  await expect(page.getByRole('tooltip')).toContainText('Drops from Edwin VanCleef')
+  await expect(page.getByRole('tooltip')).toContainText('Classic reference')
+  // Where it drops belongs to the inspector, not the game's tooltip.
+  await expect(page.getByRole('tooltip')).not.toContainText('Drops from')
   await slot.click()
   const shirt = page.getByRole('dialog', { name: "Corsair's Overshirt details" })
-  await expect(shirt.getByText('Classic reference', { exact: true })).toBeVisible()
+  await expect(shirt.locator('.gw-itempop__source').getByText('Classic reference', { exact: true })).toBeVisible()
+  await expect(shirt).toContainText('From Edwin VanCleef')
   await shirt.getByText('Item facts').click()
   await expect(shirt).toContainText('Binds when picked up')
   await expect(shirt).toContainText('not verified for Forever')

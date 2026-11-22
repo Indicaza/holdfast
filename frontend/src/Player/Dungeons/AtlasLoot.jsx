@@ -7,7 +7,8 @@ import { WowIcon } from '../../WowAssets/WowIcon.jsx'
 import { acquisitionCopy, confidenceCopy, evidenceText } from '../lootModel.js'
 import { Icon } from '../ui.jsx'
 import { UNVERIFIED_LABEL, itemFacts, observedRateText, referenceRateText, referenceTooltip, revealSource, sourceAnchor } from './atlasModel.js'
-import './AtlasLootGrid.css'
+import './DungeonAtlas.css'
+import './DungeonJournal.css'
 
 export function UnverifiedBadge({ label = UNVERIFIED_LABEL }) {
   return <span className="gw-tag gw-tag--quiet gw-atlas-unverified" title="From Classic reference data; not yet checked on WoW Forever">{label}</span>
@@ -70,34 +71,6 @@ function WishButton({ row, wish, character, busyKey, onToggle }) {
       title={character ? undefined : 'Choose a character to keep a wishlist'} aria-label={label} onClick={() => onToggle(item, wanted, row)}>
       <Icon name={wanted ? 'check' : 'plus'} size={14} /> {wanted ? 'On wishlist' : 'Add to wishlist'}
     </button>
-  )
-}
-
-// What the journal knows about an item from this source, under the game's
-// tooltip (the add-on's lines below the client's): where it drops, other
-// sources, rates and evidence, and the character's wishlist state.
-export function ItemJournalLines({ row, wish, hint = false }) {
-  const { item } = row
-  const also = Array.isArray(row.alsoFrom) ? row.alsoFrom : []
-  const reference = (Array.isArray(item.referenceRates) ? item.referenceRates : []).map(referenceRateText).filter(Boolean)
-  const observed = observedRateText(row.observedRate)
-  const from = row.sourceKind === 'quest' ? `Quest reward: ${row.source}` : row.source ? `Drops from ${row.source}` : 'Source not identified'
-  const evidence = row.observed ? (item.confidence ? confidenceCopy(item.confidence).label : 'Seen by Guildweaver')
-    : row.foreverDb ? 'Listed by ForeverDB (seen in WoW Forever)' : 'Classic reference: not verified for Forever'
-  return (
-    <>
-      <p className="game-tooltip__extra-from">{from}</p>
-      {also.length ? <p>Also from {also.map((other) => other.name).join(', ')}</p> : null}
-      {reference.length ? <p>Drop rate: {reference.join('; ')}</p> : null}
-      {observed ? <p>Guildweaver{row.observedRate?.preliminary ? ' (preliminary)' : ''}: {observed}</p> : null}
-      <p className="game-tooltip__extra-faint">{evidence}</p>
-      {item.qualityId === null || item.qualityId === undefined ? <p className="game-tooltip__extra-faint">Quality not known yet</p> : null}
-      {row.choice ? <p>Quest reward: choose one</p> : null}
-      {row.usableNow === false && row.requiredLevel ? <p className="game-tooltip__extra-warn">Usable at level {row.requiredLevel}</p> : null}
-      {wish?.state === 'acquired' ? <p className="game-tooltip__extra-good">On your wishlist: acquired</p>
-        : wish ? <p className="game-tooltip__extra-wish">On your wishlist{wish.priority && wish.priority !== 'normal' ? ` (${wish.priority})` : ''}</p> : null}
-      {hint ? <p className="game-tooltip__extra-faint">Click for details and wishlist</p> : null}
-    </>
   )
 }
 
@@ -168,7 +141,7 @@ export function ItemInspector({ row, wish, character, busyKey = '', onToggle, on
       data-item={item.itemKey} style={style}
       onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(true) } }}>
       <button type="button" className="gw-icon-btn gw-icon-btn--quiet gw-itempop__close" aria-label="Close item details" onClick={() => onClose(true)}><Icon name="close" size={14} /></button>
-      <GameTooltipCard item={item} reference={reference} className="gw-itempop__tooltip" />
+      <GameTooltipCard item={item} reference={reference} className="gw-journal-tooltip gw-itempop__tooltip" />
       <div className="gw-itempop__side">
         <p className="gw-itempop__source">
           {row.source ? (linkable ? <>From <SourceLink source={own} onSource={onSource} /></> : <>From {row.source}</>) : 'Source not identified'}
@@ -191,6 +164,7 @@ export function ItemInspector({ row, wish, character, busyKey = '', onToggle, on
         <div className="gw-itempop__actions">
           <WishButton row={row} wish={wish} character={character} busyKey={busyKey} onToggle={onToggle} />
         </div>
+        {usesForeverDb([row]) ? <ForeverDbCredit /> : null}
         <details className="gw-atlas-loot__more">
           <summary>Item facts</summary>
           {facts.length ? (
@@ -223,11 +197,11 @@ export function ItemSlot({ row, wish, open = false, onOpen }) {
   const reference = useMemo(() => referenceTooltip(item, { reference: Boolean(row.reference && !row.observed) }), [item, row.reference, row.observed])
   return (
     <li className="gw-slotcell">
-      <GameTooltipHover item={item} disabled={open} touch={false} reference={reference} extra={<ItemJournalLines row={row} wish={wish} hint />}>
+      <GameTooltipHover item={item} disabled={open} touch={false} reference={reference} className="gw-journal-tooltip">
         <button type="button" className={`gw-slot gw-slot--q${quality ?? 'x'}${wanted ? ' is-wanted' : ''}${acquired ? ' is-acquired' : ''}${row.usableNow === false ? ' is-later' : ''}${open ? ' is-open' : ''}`}
           aria-label={name} aria-expanded={open} aria-haspopup="dialog" data-item={item.itemKey} onClick={(event) => onOpen(row, event.currentTarget)}>
           <WowIcon iconFileId={item.iconFileDataId} itemId={item.itemId} label={item.name} size={44} />
-          {wanted ? <span className="gw-slot__mark gw-slot__mark--wanted" aria-hidden="true"><Icon name="check" size={10} /></span> : null}
+          {wanted ? <span className="gw-slot__mark gw-slot__mark--wanted" aria-hidden="true" /> : null}
           {acquired ? <span className="gw-slot__mark gw-slot__mark--acquired" aria-hidden="true"><Icon name="check" size={10} /></span> : null}
           {row.choice ? <span className="gw-slot__corner" aria-hidden="true">or</span> : null}
         </button>
