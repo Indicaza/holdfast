@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
+import { referenceItemIdsForIcon } from "../Atlas/referenceLoot.js";
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 
 // What the website knows about each icon (a FileDataID): where its image
@@ -13,7 +14,8 @@ import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 // Where an icon's image comes from, in order:
 //   1. a stored copy (ICON_STORAGE_* configured and the copy verified)
 //   2. the image URL Blizzard's item API gave for an item with this icon
-//   3. Blizzard's media search for the FileDataID
+//   3. Blizzard's media search for the FileDataID, then the media record of
+//      a reference item using this icon (only on an exact FileDataID match)
 // and otherwise nothing: the page shows the game's question mark.
 
 const RETRY_BASE_SECONDS = 3600;
@@ -54,7 +56,8 @@ export function iconStorageConfig(env = process.env) {
 // An icon the website has a reason to show: one an item it knows uses.
 // Keeps the icon routes from being a proxy for anything.
 export function iconKnownInDatabase(db, fileDataId) {
-  return Boolean(db.prepare("SELECT 1 FROM game_icon_assets WHERE file_data_id = ?").get(fileDataId)
+  return Boolean(referenceItemIdsForIcon(fileDataId).length
+    || db.prepare("SELECT 1 FROM game_icon_assets WHERE file_data_id = ?").get(fileDataId)
     || db.prepare("SELECT 1 FROM public_game_items WHERE icon_file_id = ? LIMIT 1").get(fileDataId)
     || db.prepare("SELECT 1 FROM market_item_meta WHERE icon_file_id = ? LIMIT 1").get(fileDataId)
     || db.prepare("SELECT 1 FROM game_data_catalog WHERE icon_file_id = ? LIMIT 1").get(fileDataId));

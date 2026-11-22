@@ -51,7 +51,13 @@ function build() {
       }
     }
   }
-  return { data, items, dungeons, byName, sources };
+  const byIcon = new Map();
+  for (const item of items.values()) {
+    if (!item.iconFileDataId) continue;
+    if (!byIcon.has(item.iconFileDataId)) byIcon.set(item.iconFileDataId, []);
+    byIcon.get(item.iconFileDataId).push(item.itemId);
+  }
+  return { data, items, dungeons, byName, sources, byIcon };
 }
 
 function referenceIndex() {
@@ -108,6 +114,12 @@ export function referenceSummary(instanceId) {
 // Where the reference data says an item comes from (wishlist `sources`).
 export function referenceSourcesOf(itemId) {
   return referenceIndex().sources.get(Number(itemId)) || [];
+}
+
+// The reference items that use this icon (a FileDataID); empty for any
+// other icon, so the icon routes stay limited to items the atlas shows.
+export function referenceItemIdsForIcon(fileDataId) {
+  return referenceIndex().byIcon.get(Number(fileDataId)) || [];
 }
 
 // Reference items of exactly this name (case ignored).

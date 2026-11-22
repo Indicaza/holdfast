@@ -12,6 +12,7 @@ import {
   DEADMINES_PLAN_READY,
   DEADMINES_PLAN_START,
   DEADMINES_PLAN_UNSYNCED,
+  PLAN_CAPTURED_AT,
   ULDAMAN_PLAN,
 } from '../__fixtures__/questPlans.js'
 import AtlasModalHost from '../AtlasModalHost.jsx'
@@ -22,10 +23,18 @@ import { BRICK, ROOK, Routed, mockApi, renderWithSession, resetHarness } from '.
 // (GET /api/player/loot/dungeons/:id/plan). Plans in the fixtures come from
 // the real planner over the checked-in catalog, for synthetic characters.
 
+// The fixtures carry a fixed capture time; a test that is not about stale
+// data gets a plan synced just now, whatever day it runs.
+function synced(plan) {
+  if (plan?.character?.capturedAt !== PLAN_CAPTURED_AT) return plan
+  const now = new Date().toISOString()
+  return { ...plan, character: { ...plan.character, capturedAt: now, receivedAt: now } }
+}
+
 function api({ plan = DEADMINES_PLAN_START, detail = FIXTURE_DEADMINES_DETAIL, readiness = null } = {}) {
   return mockApi([
     { path: '/api/player/loot/dungeons/36', reply: () => detail },
-    { path: '/api/player/loot/dungeons/36/plan', reply: (request) => (typeof plan === 'function' ? plan(request) : plan) },
+    { path: '/api/player/loot/dungeons/36/plan', reply: (request) => synced(typeof plan === 'function' ? plan(request) : plan) },
     { path: '/api/player/loot/dungeons/36/readiness', reply: () => readiness || { status: 404, body: { error: 'not_found' } } },
     { path: /^\/api\/player\/wishlists\//, reply: () => FIXTURE_WISHLIST },
     { path: '/api/player/dungeon-runs', reply: () => ({ runs: [], comparisons: [], filters: {} }) },
