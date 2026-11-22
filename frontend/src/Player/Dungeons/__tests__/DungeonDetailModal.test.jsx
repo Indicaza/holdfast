@@ -220,7 +220,7 @@ describe('wishlist on boss loot', () => {
     await findSlot('Emberstone Staff', boss)
     // Hovering never touches the wishlist: only the button in the item's details does.
     const line = openItem('Emberstone Staff', boss)
-    expect(within(line).getByText('Classic reference')).toBeTruthy()
+    expect(within(line.querySelector('.gw-itempop__source')).getByText('Classic reference')).toBeTruthy()
     const staff = within(line).getByRole('button', { name: 'Add Emberstone Staff to Rook\'s wishlist' })
     await act(async () => { fireEvent.click(staff) })
     const put = calls.find((call) => call.method === 'PUT')
@@ -398,8 +398,8 @@ describe('loot by source', () => {
     // The boss guide uses the same item slots and details.
     expect(openItem('Cruel Barb', loot).textContent).toContain('From Edwin VanCleef')
     // Technical ids are folded away, not in the header.
-    expect(within(boss).getByText('About this boss\'s data')).toBeTruthy()
-    expect(boss.querySelector('.gw-atlas-boss__head').textContent).not.toMatch(/NPC|encounter/)
+    expect(within(boss).getByText('About this data')).toBeTruthy()
+    expect(boss.querySelector('.gw-journal-boss__hero').textContent).not.toMatch(/NPC|encounter/)
     expect(within(boss).getByRole('navigation', { name: 'Previous and next boss' })).toBeTruthy()
   })
 })

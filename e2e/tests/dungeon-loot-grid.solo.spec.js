@@ -90,8 +90,8 @@ test('The Hall of Thanes: a boss\'s drops as slots, the pending tooltip, the wis
   await slot.hover()
   // No captured tooltip for these Forever items: their known facts, labelled, or the pending note; never invented lines.
   await expect(page.getByRole('tooltip')).toContainText(name)
-  await expect(page.getByRole('tooltip')).toContainText(/not the game's tooltip|Full tooltip arrives once a Guildweaver player sees this item in game/)
-  await expect(page.getByRole('tooltip')).toContainText('Drops from Faldrim Anvilmar')
+  await expect(page.getByRole('tooltip')).toContainText(/WoW Forever reference|Classic reference|Full tooltip arrives once a Guildweaver player sees this item in game/)
+  await expect(page.getByRole('tooltip')).not.toContainText(/Drops from|Click for|ForeverDB/)
   await slot.click()
   const details = page.getByRole('dialog', { name: `${name} details` })
   const add = details.getByRole('button', { name: `Add ${name} to Lootine's wishlist` })
