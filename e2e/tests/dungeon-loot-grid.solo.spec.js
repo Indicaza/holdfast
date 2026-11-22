@@ -51,7 +51,7 @@ test('Deadmines loot: slots per source, tooltip on hover and focus, details on p
   await page.keyboard.press('Shift+Tab')
   await expect(page.getByRole('tooltip')).toBeVisible()
   await page.keyboard.press('Enter')
-  const details = page.getByRole('group', { name: /details$/ })
+  const details = page.getByRole('dialog', { name: /details$/ })
   await expect(details).toBeVisible()
   await expect(details.locator('.game-tooltip--card')).toBeVisible()
   await expect(details.getByRole('button', { name: /wishlist/ })).toBeVisible()
@@ -88,11 +88,12 @@ test('The Hall of Thanes: a boss\'s drops as slots, the pending tooltip, the wis
   await expect(slot).toBeVisible()
   const name = (await slot.getAttribute('aria-label')).split(',')[0]
   await slot.hover()
-  // No captured tooltip for these Forever items: the pending note, never invented lines.
+  // No captured tooltip for these Forever items: their known facts, labelled, or the pending note; never invented lines.
   await expect(page.getByRole('tooltip')).toContainText(name)
-  await expect(page.getByRole('tooltip')).toContainText('Full tooltip arrives once a Guildweaver player sees this item in game.')
+  await expect(page.getByRole('tooltip')).toContainText(/not the game's tooltip|Full tooltip arrives once a Guildweaver player sees this item in game/)
+  await expect(page.getByRole('tooltip')).toContainText('Drops from Faldrim Anvilmar')
   await slot.click()
-  const details = page.getByRole('group', { name: `${name} details` })
+  const details = page.getByRole('dialog', { name: `${name} details` })
   const add = details.getByRole('button', { name: `Add ${name} to Lootine's wishlist` })
   const put = page.waitForResponse((response) => response.request().method() === 'PUT' && response.url().includes('/wishlists/'))
   await add.click()
@@ -118,7 +119,7 @@ test.describe('on a phone', () => {
     const box = await slot.boundingBox()
     expect(box.width).toBeGreaterThanOrEqual(44)
     await slot.tap()
-    await expect(page.getByRole('group', { name: /details$/ })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: /details$/ })).toBeVisible()
     // The floating tooltip does not open on a tap: the details already show it.
     await expect(page.getByRole('tooltip')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)

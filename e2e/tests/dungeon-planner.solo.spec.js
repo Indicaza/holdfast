@@ -152,11 +152,13 @@ test('one-click wishlist on Classic reference boss loot', async ({ page, context
   await page.goto('/dashboard/dungeons?open=36&section=bosses&boss=2747')
   const boss = page.getByRole('article', { name: 'Edwin VanCleef' })
   const slot = boss.getByRole('button', { name: /^Corsair's Overshirt/ })
-  // Hover shows the game's tooltip; with no captured lines, the pending note.
+  // Hover shows the tooltip: no captured lines, so the reference facts, labelled as such.
   await slot.hover()
-  await expect(page.getByRole('tooltip')).toContainText('Full tooltip arrives once a Guildweaver player sees this item in game.')
+  await expect(page.getByRole('tooltip')).toContainText('Binds when picked up')
+  await expect(page.getByRole('tooltip')).toContainText('not the game\'s tooltip')
+  await expect(page.getByRole('tooltip')).toContainText('Drops from Edwin VanCleef')
   await slot.click()
-  const shirt = page.getByRole('group', { name: "Corsair's Overshirt details" })
+  const shirt = page.getByRole('dialog', { name: "Corsair's Overshirt details" })
   await expect(shirt.getByText('Classic reference', { exact: true })).toBeVisible()
   await shirt.getByText('Item facts').click()
   await expect(shirt).toContainText('Binds when picked up')

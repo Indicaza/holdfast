@@ -101,3 +101,26 @@
   width: 1.05em;
   height: 1.05em;
 }
+
+/* Facts from reference data, for an item whose own tooltip is not captured:
+   in the tooltip's frame, but a touch dimmer than the game's white and
+   labelled as reference underneath. */
+.game-tooltip__reference > span { color: #d9d4c7; }
+.game-tooltip__reference--stat > span { color: #e8e8e8; }
+.game-tooltip__reference--set > span { color: #ffd100; }
+.game-tooltip__reference--requirement > span { color: #e8e8e8; }
+.game-tooltip__reference-label { margin-top: .3rem; }
+
+/* What the page adds under the game's lines (as the add-on does below the
+   client's tooltip): a hairline, then its own small lines. */
+.game-tooltip__extra {
+  display: grid;
+  gap: .08rem;
+  margin-top: .4rem;
+  padding-top: .35rem;
+  border-top: 1px solid rgba(160, 172, 196, .22);
+  color: #c9c4b8;
+  font-size: .74rem;
+}
+.game-tooltip__extra p { margin: 0; }
+.item-tooltip--floating, .item-tooltip--floating * { pointer-events: none !important; user-select: none; }
