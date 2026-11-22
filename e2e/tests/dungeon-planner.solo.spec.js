@@ -131,7 +131,8 @@ test('The Hall of Thanes: known boss names, level fit and loot by source', async
   await thanes.getByRole('button', { name: 'Loot', exact: true }).click()
   const bosses = thanes.getByRole('region', { name: 'Bosses', exact: true })
   await expect(bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' })).toBeVisible()
-  await bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' }).getByRole('button', { name: 'Boss guide' }).click()
+  // The boss's name opens its guide.
+  await bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' }).getByRole('button', { name: 'Faldrim Anvilmar' }).click()
   await expect(page.getByRole('article', { name: 'Faldrim Anvilmar' })).toBeVisible()
   await expect(page).toHaveURL(/boss=261306/)
 })

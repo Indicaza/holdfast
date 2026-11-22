@@ -1,0 +1,114 @@
+/* The Dungeon Journal's presentation, after the add-on's (UI/DungeonGuide.lua):
+   the encounter list beside a creature page, key mechanics beside the loot,
+   and loot sources weighted by what they are. See docs/dungeon-journal-ux.md. */
+
+/* ----------------------------------------------------- The encounter list */
+.gw-atlas-rail .gw-journal-rail__boss { min-height: 46px; padding: 0.3rem 0.5rem 0.3rem 0.35rem; }
+.gw-atlas-rail .gw-journal-rail__boss .gw-atlas-portrait { box-shadow: 0 0 0 1px rgba(196, 166, 103, 0.35); }
+.gw-atlas-rail .gw-journal-rail__boss[aria-current='true'] {
+  border-color: rgba(255, 209, 0, 0.55);
+  background: linear-gradient(90deg, rgba(255, 209, 0, 0.14), rgba(255, 209, 0, 0.03));
+  box-shadow: inset 3px 0 0 #ffd100;
+}
+.gw-atlas-rail .gw-journal-rail__boss[aria-current='true'] .gw-atlas-portrait { box-shadow: 0 0 0 2px #ffd100; }
+.gw-atlas-rail .gw-journal-rail__boss[aria-current='true'] .gw-journal-rail__line { color: #ffd100; }
+.gw-atlas-rail__name { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+.gw-journal-rail__line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gw-journal-rail__sub { color: var(--gw-faint); font-size: 11px; white-space: nowrap; }
+.gw-journal-rail__wish { color: #c08cff; }
+
+/* ------------------------------------------------------- A boss's page */
+.gw-journal-boss { gap: 0.9rem; }
+.gw-journal-boss__hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(196, 166, 103, 0.3);
+  border-radius: 6px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(196, 166, 103, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(20, 18, 14, 0.95), rgba(10, 9, 8, 0.95));
+}
+.gw-journal-boss__hero .gw-atlas-portrait { box-shadow: 0 0 0 2px #c4a667, 0 4px 14px rgba(0, 0, 0, 0.5); }
+.gw-journal-boss__title { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.gw-journal-boss__title h3 { margin: 0; color: #ffd100; font-size: 1.35rem; line-height: 1.15; }
+.gw-journal-boss__eyebrow { margin: 0; color: var(--gw-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.gw-journal-boss__facts { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.2rem 0 0; }
+.gw-journal-tag {
+  display: inline-flex; align-items: center; padding: 0.05rem 0.45rem; border: 1px solid var(--gw-line); border-radius: 999px;
+  color: var(--gw-dim); font-size: 11.5px;
+}
+.gw-journal-tag--bad { border-color: color-mix(in srgb, var(--gw-bad) 45%, transparent); color: var(--gw-bad); }
+.gw-journal-tag--info { border-color: color-mix(in srgb, var(--gw-info) 45%, transparent); color: var(--gw-info); }
+.gw-journal-tag--wish { border-color: rgba(192, 140, 255, 0.5); color: #c08cff; }
+
+/* Mechanics beside the loot when there is room; stacked when there is not. */
+.gw-atlas-split__main { container-type: inline-size; }
+.gw-journal-boss__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
+@container (min-width: 44rem) {
+  .gw-journal-boss__body { grid-template-columns: minmax(0, 1fr) minmax(15rem, 18.5rem); }
+  .gw-journal-boss__loot { position: sticky; top: calc(var(--gw-top-height, 0px) + 4rem); }
+}
+.gw-journal-boss__guide { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
+.gw-journal-subhead { margin: 0; color: #ffd100; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.gw-journal-empty { margin: 0; }
+/* The loot window holds only what it has: no tall empty frame. */
+.gw-journal-boss__loot { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* ----------------------------------------------- Loot sources, weighted */
+/* Bosses: the framed panels (AtlasLootGrid.css). Their name opens the guide. */
+.gw-journal-sourcename {
+  padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.gw-journal-sourcename:hover, .gw-journal-sourcename:focus-visible { text-decoration-color: currentColor; }
+
+/* Rares: their own purple, a step down from bosses. */
+.gw-atlas-lootgroup--rare .gw-atlas-source__head h4 { color: #c08cff; }
+
+/* Trash, shared drops, quest rewards: one compact row each, name and slots. */
+.gw-atlas-lootgroup__sources--compact { display: flex; flex-direction: column; align-items: stretch; gap: 0.3rem; }
+.gw-atlas-lootgroup .gw-atlas-source--compact {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--gw-line);
+  border-radius: 4px;
+  background: rgba(14, 13, 11, 0.6);
+  box-shadow: none;
+}
+.gw-atlas-source--compact .gw-atlas-source__head { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.gw-atlas-source--compact .gw-atlas-source__head h4 { color: var(--gw-text, #e8e2d4); font-family: inherit; font-size: 13px; font-weight: 600; }
+.gw-atlas-source--compact .gw-atlas-source__count { font-size: 11px; }
+.gw-atlas-source--compact .gw-lootgrid { gap: 0.25rem; }
+.gw-atlas-lootgroup--quest .gw-atlas-source--compact .gw-atlas-source__head h4 { color: #ffd100; }
+/* A creature known only by its ID: plain and grey, never a named boss's gold. */
+.gw-atlas-source.is-unidentified .gw-atlas-source__head h4 { color: var(--gw-faint) !important; font-style: italic; font-weight: 500; }
+.gw-journal-groupcount { font-size: 12px; text-transform: none; letter-spacing: 0; }
+
+/* Unknown sources: folded, with what is inside said on the fold. */
+.gw-journal-unknown > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; cursor: pointer; }
+.gw-journal-unknown > summary h3 { display: inline; margin: 0; }
+.gw-journal-unknown[open] > summary { margin-bottom: 0.5rem; }
+
+@media (max-width: 640px) {
+  .gw-atlas-lootgroup .gw-atlas-source--compact { grid-template-columns: minmax(0, 1fr); }
+  .gw-journal-boss__hero { padding: 0.7rem; gap: 0.75rem; }
+  .gw-journal-boss__hero .gw-atlas-portrait { width: 56px !important; height: 56px !important; }
+}
+
+/* -------------------------------------------- Quest preparation polish */
+/* One line for a reason several steps share; a suggested next step looks
+   less certain than a confirmed one. */
+.gw-qplan__note--unknown { padding-left: 0.6rem; border-left: 2px dotted var(--gw-faint); color: var(--gw-dim); }
+.gw-qplan__next--tentative { border-style: dashed; background: rgba(255, 209, 0, 0.04); }
+.gw-qplan__next--tentative .gw-qplan__nextlabel { color: var(--gw-dim); }
+.gw-qplan__tentative { color: var(--gw-warn) !important; }
+.gw-qplan__later .gw-qplan__where { color: var(--gw-faint); }
+
+/* The dungeon's title takes focus when its page opens (so screen readers
+   start there); it is not a control, so it shows no focus ring. */
+.gw-atlas-hero__title h2:focus-visible { outline: none; }

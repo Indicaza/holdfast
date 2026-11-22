@@ -289,26 +289,39 @@ export function LootList({ rows, wishes, empty = 'No loot recorded here yet.', c
 
 const SOURCE_ICON = { boss: 'dungeon', rare: 'sparkle', trash: 'target', shared: 'loot', quest: 'pin', unknown: 'info' }
 
-function SourceBadge({ source }) {
-  if (source.portraitUrl) return <img className="gw-atlas-portrait" src={source.portraitUrl} alt="" width={32} height={32} />
+function SourceBadge({ source, size = 32 }) {
+  if (source.portraitUrl) return <img className="gw-atlas-portrait" src={source.portraitUrl} alt="" width={size} height={size} />
+  if (source.kind === 'boss') return <span className="gw-atlas-portrait gw-atlas-portrait--blank" style={{ width: size, height: size }} aria-hidden="true">{String(source.name || '?').slice(0, 1)}</span>
   return <span className={`gw-atlas-source__badge gw-atlas-source__badge--${source.kind}`} aria-hidden="true"><Icon name={SOURCE_ICON[source.kind] || 'loot'} size={16} /></span>
 }
 
+// A name the data does not know beyond an ID: said plainly, never in a
+// named boss's gold.
+const unidentified = (source) => /^Unidentified creature/.test(source.name || '') || source.kind === 'unknown'
+
 // One source's drops under its name: the link between a drop and where it
-// comes from is the block it sits in.
-function SourceBlock({ source, rows, lootProps, onSource, guideLabel }) {
+// comes from is the block it sits in. Bosses and rares are framed panels;
+// trash, shared drops, quests and unknown sources are compact rows.
+function SourceBlock({ source, rows, lootProps, onSource, compact = false }) {
+  const guide = onSource && ((source.kind === 'boss' && source.bossKey) || source.kind === 'quest')
+  const name = guide ? (
+    <button type="button" className="gw-journal-sourcename" onClick={() => onSource(source)}
+      title={source.kind === 'boss' ? `${source.name}: open the boss guide` : `${source.name}: open the quest`}>{source.name}</button>
+  ) : source.name
   return (
-    <section id={sourceAnchor(source.key)} className={`gw-atlas-source gw-atlas-source--${source.kind}`} aria-label={`${source.name} loot`} tabIndex={-1} data-source={source.key}>
+    <section id={sourceAnchor(source.key)} className={`gw-atlas-source gw-atlas-source--${source.kind}${compact ? ' gw-atlas-source--compact' : ''}${unidentified(source) ? ' is-unidentified' : ''}`}
+      aria-label={`${source.name} loot`} tabIndex={-1} data-source={source.key}>
       <header className="gw-atlas-source__head">
-        <SourceBadge source={source} />
-        <h4>{source.name}</h4>
+        {compact ? null : <SourceBadge source={source} />}
+        <h4>{name}</h4>
         <span className="gw-muted gw-atlas-source__count">{rows.length} drop{rows.length === 1 ? '' : 's'}</span>
-        {guideLabel && onSource ? <button type="button" className="gw-link gw-atlas-source__guide" onClick={() => onSource(source)}>{guideLabel}</button> : null}
       </header>
       <LootList rows={rows} credit={false} label={`${source.name} loot`} {...lootProps} onSource={onSource} />
     </section>
   )
 }
+
+const COMPACT_KINDS = new Set(['trash', 'shared', 'quest', 'unknown'])
 
 // A dungeon's loot grouped by source (lootBySource): bosses, rares, trash
 // and adds, shared drops and chests, quest rewards, unknown. `filter` keeps
@@ -329,17 +342,33 @@ export function SourceGroups({ groups, filter = null, lootProps, onSource }) {
           ))}
         </nav>
       ) : null}
-      {shown.map((group) => (
-        <section key={group.kind} id={sourceAnchor(`group-${group.kind}`)} className="gw-atlas-lootgroup" aria-label={group.label} tabIndex={-1}>
-          <h3>{group.label}</h3>
-          <div className="gw-atlas-lootgroup__sources">
+      {shown.map((group) => {
+        const compact = COMPACT_KINDS.has(group.kind)
+        const total = group.sources.reduce((sum, entry) => sum + entry.rows.length, 0)
+        const blocks = (
+          <div className={`gw-atlas-lootgroup__sources${compact ? ' gw-atlas-lootgroup__sources--compact' : ''}`}>
             {group.sources.map(({ source, rows: sourceRows }) => (
-              <SourceBlock key={source.key} source={source} rows={sourceRows} lootProps={lootProps} onSource={onSource}
-                guideLabel={source.kind === 'boss' && source.bossKey ? 'Boss guide' : source.kind === 'quest' ? 'Quest details' : ''} />
+              <SourceBlock key={source.key} source={source} rows={sourceRows} lootProps={lootProps} onSource={onSource} compact={compact} />
             ))}
           </div>
-        </section>
-      ))}
+        )
+        return (
+          <section key={group.kind} id={sourceAnchor(`group-${group.kind}`)} className={`gw-atlas-lootgroup gw-atlas-lootgroup--${group.kind}`} aria-label={group.label} tabIndex={-1}>
+            {group.kind === 'unknown' ? (
+              // Loot nobody could tie to a source: there, but folded away.
+              <details className="gw-journal-unknown">
+                <summary><h3>{group.label}</h3><span className="gw-muted">{total} drop{total === 1 ? '' : 's'} · no source recorded</span></summary>
+                {blocks}
+              </details>
+            ) : (
+              <>
+                <h3>{group.label}{compact ? <span className="gw-muted gw-journal-groupcount"> · {total}</span> : null}</h3>
+                {blocks}
+              </>
+            )}
+          </section>
+        )
+      })}
       {usesForeverDb(rows) ? <ForeverDbCredit /> : null}
     </>
   )

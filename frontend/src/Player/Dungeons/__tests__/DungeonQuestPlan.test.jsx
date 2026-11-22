@@ -6,6 +6,7 @@ import { invalidateResources } from '../../../Api/resourceCache.js'
 import { LiveUpdatesContext } from '../../../Live/liveUpdatesContext.js'
 import { FIXTURE_DEADMINES_DETAIL, FIXTURE_DUNGEON_LIST, FIXTURE_WISHLIST } from '../__fixtures__/atlas.js'
 import {
+  THANES_PLAN,
   DEADMINES_PLAN_PROGRESS,
   DEADMINES_PLAN_PUBLISHED,
   DEADMINES_PLAN_READY,
@@ -21,11 +22,11 @@ import { BRICK, ROOK, Routed, mockApi, renderWithSession, resetHarness } from '.
 // (GET /api/player/loot/dungeons/:id/plan). Plans in the fixtures come from
 // the real planner over the checked-in catalog, for synthetic characters.
 
-function api({ plan = DEADMINES_PLAN_START, detail = FIXTURE_DEADMINES_DETAIL } = {}) {
+function api({ plan = DEADMINES_PLAN_START, detail = FIXTURE_DEADMINES_DETAIL, readiness = null } = {}) {
   return mockApi([
     { path: '/api/player/loot/dungeons/36', reply: () => detail },
     { path: '/api/player/loot/dungeons/36/plan', reply: (request) => (typeof plan === 'function' ? plan(request) : plan) },
-    { path: '/api/player/loot/dungeons/36/readiness', reply: () => ({ status: 404, body: { error: 'not_found' } }) },
+    { path: '/api/player/loot/dungeons/36/readiness', reply: () => readiness || { status: 404, body: { error: 'not_found' } } },
     { path: /^\/api\/player\/wishlists\//, reply: () => FIXTURE_WISHLIST },
     { path: '/api/player/dungeon-runs', reply: () => ({ runs: [], comparisons: [], filters: {} }) },
   ])
@@ -234,3 +235,56 @@ describe('realm isolation', () => {
     expect(calls.filter((call) => call.path.endsWith('/plan')).map((call) => call.query.get('character'))).toEqual(['char-1'])
   })
 })
+
+describe('presentation polish', () => {
+  test('a reason many steps share is said once, above them', async () => {
+    api({ plan: THANES_PLAN })
+    renderWithSession(<Quests />)
+    await checklist()
+    const collect = screen.getByRole('region', { name: /^Collect before you go/ })
+    expect(collect.querySelectorAll('.gw-qplan__note--unknown')).toHaveLength(1)
+    expect(collect.querySelector('.gw-qplan__note--unknown').textContent).toBe('5 steps · Not known: its quest chain is not known.')
+    expect(collect.querySelectorAll('.gw-qplan__item > .gw-qplan__why')).toHaveLength(0)
+  })
+
+  test('a next step from old or incomplete data is a suggestion, and says so', async () => {
+    const old = new Date(Date.now() - 40 * 3600 * 1000).toISOString()
+    api({ plan: { ...DEADMINES_PLAN_START, character: { capturedAt: old, receivedAt: old, completedCoverage: 'full', questLogCoverage: 'full' } } })
+    renderWithSession(<Quests />)
+    const next = await screen.findByRole('region', { name: 'Next step' })
+    expect(next.textContent).toContain('Suggested next · step 1a')
+    expect(next.textContent).toContain('From incomplete quest data')
+    resetHarness()
+    api()
+    renderWithSession(<Quests />)
+    const confirmed = await screen.findByRole('region', { name: 'Next step' })
+    expect(confirmed.textContent).toContain('Next · step 1a')
+    expect(confirmed.textContent).not.toContain('Suggested')
+  })
+
+  test('quests a higher level opens are listed with that level, not hidden', async () => {
+    const readiness = { readiness: 'missing', required: 5, counts: {}, quests: [
+      { questId: 2040, name: 'Underground Assault', state: 'ineligible', reasons: ['level-below-minimum'], minLevel: 22, relevance: 'dungeon' },
+      { questId: 9, name: 'Other faction', state: 'ineligible', reasons: ['faction'], minLevel: 10, relevance: 'dungeon' },
+    ], optional: [], prerequisites: [], repeatable: [], questList: 'curated', character: null }
+    api({ readiness })
+    renderWithSession(<Quests />)
+    await checklist()
+    const later = await screen.findByText('Available at a higher level')
+    const block = later.closest('details')
+    expect(block.textContent).toContain('Underground Assault')
+    expect(block.textContent).toContain('From level 22 · Rook is 20')
+    expect(block.textContent).not.toContain('Other faction')
+  })
+
+  test('entering is not a quest requirement, and the times read clearly', async () => {
+    const read = new Date(Date.now() - 3 * 3600 * 1000).toISOString()
+    const sent = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    api({ plan: { ...DEADMINES_PLAN_START, character: { capturedAt: read, receivedAt: sent, completedCoverage: 'full', questLogCoverage: 'full' } } })
+    renderWithSession(<Quests />)
+    const plan = await checklist()
+    expect(screen.getByRole('region', { name: /^Enter/ }).textContent).toContain('not what the game requires to enter')
+    expect(plan.textContent).toMatch(/Quest log read in game 3h ago, uploaded 5m ago\./)
+  })
+})
+
