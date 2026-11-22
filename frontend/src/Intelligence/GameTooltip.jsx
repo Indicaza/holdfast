@@ -73,7 +73,7 @@ function ReferenceRows({ reference }) {
           {line.right ? <span className="game-tooltip__right">{line.right}</span> : null}
         </div>
       ))}
-      <div className="game-tooltip__line game-tooltip__pending game-tooltip__reference-label"><span>{reference.label || 'Reference facts, not the game\'s tooltip.'}</span></div>
+      <div className="game-tooltip__line game-tooltip__pending game-tooltip__reference-label"><span>{reference.label || 'Reference data'}</span></div>
     </>
   )
 }
@@ -94,7 +94,7 @@ export function GameTooltipBody({ item: value, reference = null }) {
         <div className={`game-tooltip__line game-tooltip__title item-quality-${quality}`}>
           <span>{item.name || `Item ${item.itemId || ''}`.trim()}</span>
         </div>
-        {QUALITY_NAMES[quality] ? <div className="game-tooltip__line game-tooltip__quality"><span>{QUALITY_NAMES[quality]}</span></div> : null}
+        {!facts && QUALITY_NAMES[quality] ? <div className="game-tooltip__line game-tooltip__quality"><span>{QUALITY_NAMES[quality]}</span></div> : null}
         {facts ? <ReferenceRows reference={facts} /> : <div className="game-tooltip__line game-tooltip__pending"><span>{PENDING_NOTE}</span></div>}
       </>
     )
@@ -145,10 +145,9 @@ function focusVisible(event) {
 // touch={false}: a tap does not open it (the tapped control shows the item
 // its own way, as the dungeon loot slots do); mouse, pen and keyboard still do.
 //
-// extra: lines a page adds under the game's tooltip (the dungeon journal's
-// source, rate and wishlist state), in the same frame. reference: facts to
-// show, marked as such, when the game's lines are not captured yet.
-export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child', touch = true, extra = null, reference = null, disabled = false }) {
+// reference: facts to show, marked as such, when the game's lines are not
+// captured yet.
+export function GameTooltipHover({ item, children, side = 'right', className = '', anchor: anchorTo = 'child', touch = true, reference = null, disabled = false }) {
   const tooltipId = useId()
   // { rect, element, by: 'pointer' | 'focus' } while shown.
   const [shownAt, setShownAt] = useState(null)
@@ -157,7 +156,7 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
   // A pointer tooltip is placed once, against where its item was: a scroll
   // hides it (the next move over the item brings it back). A keyboard one
   // follows its focused item through the scroll that focusing often causes,
-  // and goes when the item leaves the window. A press means the reader is
+  // drawn only while the item is in the window. A press means the reader is
   // acting on the item, and Escape asks it to go, as in the app's other
   // tooltips.
   useEffect(() => {
@@ -169,8 +168,8 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const rect = shownAt.element.getBoundingClientRect()
-        if (rect.bottom < 0 || rect.top > window.innerHeight) hide()
-        else setShownAt((current) => (current ? { ...current, rect } : current))
+        const away = rect.bottom < 0 || rect.top > window.innerHeight
+        setShownAt((current) => (current ? { ...current, rect, away } : current))
       })
     }
     const onKey = (event) => { if (event.key === 'Escape') hide() }
@@ -203,7 +202,7 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
   return (
     <span
       className="game-tooltip-hover"
-      aria-describedby={anchor ? tooltipId : undefined}
+      aria-describedby={anchor && !shownAt.away ? tooltipId : undefined}
       {...(touch ? { onMouseEnter: show, onMouseLeave: hide } : {
         onPointerEnter: (event) => { if (event.pointerType !== 'touch') show(event) },
         // After a scroll hid it, the next move over the item brings it back.
@@ -214,10 +213,9 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
       onBlur={hide}
     >
       {children}
-      {anchor && !disabled && typeof document !== 'undefined' ? (
+      {anchor && !shownAt.away && !disabled && typeof document !== 'undefined' ? (
         <FloatingTooltip anchor={anchor} side={side} id={tooltipId} className={`game-tooltip${className ? ` ${className}` : ''}`}>
           <GameTooltipBody item={normalized} reference={reference} />
-          {extra ? <div className="game-tooltip__extra">{extra}</div> : null}
         </FloatingTooltip>
       ) : null}
     </span>
@@ -226,13 +224,12 @@ export function GameTooltipHover({ item, children, side = 'right', className = '
 
 // The game's tooltip as a card in the page (the item catalog's description),
 // the same frame and lines as on hover, nothing floating.
-export function GameTooltipCard({ item, className = '', extra = null, reference = null }) {
+export function GameTooltipCard({ item, className = '', reference = null }) {
   const normalized = gameTooltipItem(item)
   if (!normalized) return null
   return (
     <div className={`game-tooltip game-tooltip--card${className ? ` ${className}` : ''}`}>
       <GameTooltipBody item={normalized} reference={reference} />
-      {extra ? <div className="game-tooltip__extra">{extra}</div> : null}
     </div>
   )
 }

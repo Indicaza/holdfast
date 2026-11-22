@@ -7,15 +7,21 @@ import { placeFloating } from '../src/WowAssets/floatingPlacement.js'
 test('reference facts read like a tooltip, in the game\'s order, and say where they come from', () => {
   const facts = referenceTooltip({ name: 'Cruel Barb', bindType: 'BoP', slot: 'One-Hand', itemSubclass: 'One-Handed Swords',
     weapon: { minDamage: 30, maxDamage: 57, speed: 2.8, dps: 15.5 }, stats: [{ stat: 'Agility', value: 4 }], requiredLevel: 19, itemLevel: 24, factSources: ['wago-classic-era'] })
+  // The client's order and words: item level first, a one-word weapon type.
   assert.deepEqual(facts.lines.map((line) => [line.left, line.right || '']), [
-    ['Binds when picked up', ''], ['One-Hand', 'One-Handed Swords'], ['30 - 57 Damage', 'Speed 2.80'], ['(15.5 damage per second)', ''],
-    ['+4 Agility', ''], ['Requires Level 19', ''], ['Item Level 24', ''],
+    ['Item Level 24', ''], ['Binds when picked up', ''], ['One-Hand', 'Sword'], ['30 - 57 Damage', 'Speed 2.80'], ['(15.5 damage per second)', ''],
+    ['+4 Agility', ''], ['Requires Level 19', ''],
   ])
-  assert.equal(facts.label, 'Classic reference facts, not the game\'s tooltip.')
+  assert.equal(facts.label, 'Classic reference')
+  // A neck has no armor type; a stat that is not a base stat is the game's green.
+  const neck = referenceTooltip({ slot: 'Neck', itemSubclass: 'Miscellaneous', stats: [{ stat: 'Spirit', value: 5 }, { stat: 'Spell Power', value: 3 }] })
+  assert.deepEqual(neck.lines.map((line) => [line.left, line.right, line.tone]), [['Neck', '', undefined], ['+5 Spirit', undefined, 'stat'], ['+3 Spell Power', undefined, 'bonus']])
+  // A recipe has a type and no slot: it stays on the left.
+  assert.equal(referenceTooltip({ itemSubclass: 'Blacksmithing' }).lines[0].left, 'Blacksmithing')
   // Forever items say so; unknown facts are left out, never filled in.
   const forever = referenceTooltip({ name: 'Aetherwisp Bracers', slot: 'Wrist', armor: 45, factSources: ['wago-forever', 'foreverdb'] })
   assert.deepEqual(forever.lines.map((line) => line.left), ['Wrist', '45 Armor'])
-  assert.match(forever.label, /WoW Forever client/)
+  assert.equal(forever.label, 'WoW Forever reference')
   assert.equal(referenceTooltip({ name: 'Mystery Ring' }), null)
   assert.equal(referenceTooltip({ name: 'Strain', kind: 'quest-item', bindType: 'BoP' }).lines[0].left, 'Quest Item')
 })
