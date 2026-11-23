@@ -62,8 +62,10 @@ function DungeonCard({ card, character, href, gear = null, history, historyKnown
     <li className={`gw-atlas-card${fit === 'fit' ? ' is-fit' : ''}${fit === 'under' ? ' is-under' : ''}${recommendation?.recommended ? ' is-recommended' : ''}`} data-dungeon={card.id}>
       <a className="gw-atlas-card__link" href={href} onClick={() => { returnTo = { id: String(card.id), scrollY: window.scrollY } }}
         aria-label={`${card.name}${card.levels ? `, ${card.levels}` : ''}${card.zone ? `, ${card.zone}` : ''}${recommendation?.recommended ? ', recommended' : ''}`}>
-        <span className={`gw-atlas-card__art${art ? '' : ' gw-atlas-card__art--blank'}`} style={art} aria-hidden="true">
-          {art ? null : <span className="gw-atlas-card__glyph"><Icon name="dungeon" size={26} /></span>}
+        <span className={`gw-atlas-card__art${art ? '' : ` gw-atlas-card__art--blank gw-atlas-card__art--${card.artFallback}`}`} style={art} aria-hidden="true">
+          {art ? null : card.artFallback === 'forever'
+            ? <span className="gw-atlas-card__forever">WoW <b>Forever</b></span>
+            : <img className="gw-atlas-card__skull" src="/wow-art/boss-skull.png" alt="" width="40" height="40" />}
           {card.levels ? <span className="gw-atlas-card__levels">{levelBadge(card.levels)}</span> : null}
           {card.kind === 'raid' ? <span className="gw-tag gw-atlas-card__kind">Raid</span> : null}
         </span>
