@@ -1,0 +1,2883 @@
+{
+ "schemaVersion": 1,
+ "source": "SetPortraitTextureFromCreatureDisplayID, WoW Forever client, local capture",
+ "totals": {
+  "bosses": 261,
+  "withDisplayId": 246,
+  "captured": 0,
+  "missing": 261
+ },
+ "bosses": [
+  {
+   "npcId": 639,
+   "name": "Edwin VanCleef",
+   "displayId": 2029,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 643,
+   "name": "Sneed",
+   "displayId": null,
+   "instanceIds": [
+    36
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 644,
+   "name": "Rhahk'Zor",
+   "displayId": 14403,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 645,
+   "name": "Cookie",
+   "displayId": 1305,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 646,
+   "name": "Mr. Smite",
+   "displayId": 2026,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 647,
+   "name": "Captain Greenskin",
+   "displayId": 7113,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1663,
+   "name": "Dextren Ward",
+   "displayId": 2149,
+   "instanceIds": [
+    34
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1666,
+   "name": "Kam Deepfury",
+   "displayId": 825,
+   "instanceIds": [
+    34
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1696,
+   "name": "Targorr the Dread",
+   "displayId": 517,
+   "instanceIds": [
+    34
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1716,
+   "name": "Bazil Thredd",
+   "displayId": 1621,
+   "instanceIds": [
+    34
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1717,
+   "name": "Hamhock",
+   "displayId": 3250,
+   "instanceIds": [
+    34
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1763,
+   "name": "Gilnid",
+   "displayId": 7124,
+   "instanceIds": [
+    36
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 1853,
+   "name": "Darkmaster Gandling",
+   "displayId": 11070,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 2748,
+   "name": "Archaedas",
+   "displayId": 5988,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3653,
+   "name": "Kresh",
+   "displayId": 5126,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3654,
+   "name": "Mutanus the Devourer",
+   "displayId": 4088,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3669,
+   "name": "Lord Cobrahn",
+   "displayId": 4213,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3670,
+   "name": "Lord Pythas",
+   "displayId": 4214,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3671,
+   "name": "Lady Anacondra",
+   "displayId": 4313,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3673,
+   "name": "Lord Serpentis",
+   "displayId": 4215,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3674,
+   "name": "Skum",
+   "displayId": 4203,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3886,
+   "name": "Razorclaw the Butcher",
+   "displayId": 524,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3887,
+   "name": "Baron Silverlaine",
+   "displayId": 3222,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3914,
+   "name": "Rethilgore",
+   "displayId": 524,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3927,
+   "name": "Wolf Master Nandos",
+   "displayId": 11179,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3974,
+   "name": "Houndmaster Loksey",
+   "displayId": 2040,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3975,
+   "name": "Herod",
+   "displayId": 2041,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3977,
+   "name": "High Inquisitor Whitemane",
+   "displayId": 2043,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 3983,
+   "name": "Interrogator Vishas",
+   "displayId": 2044,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4274,
+   "name": "Fenrus the Devourer",
+   "displayId": 2352,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4275,
+   "name": "Archmage Arugal",
+   "displayId": 2353,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4278,
+   "name": "Commander Springvale",
+   "displayId": 3223,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4279,
+   "name": "Odo the Blindwatcher",
+   "displayId": 522,
+   "instanceIds": [
+    33
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4420,
+   "name": "Overlord Ramtusk",
+   "displayId": 4652,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4421,
+   "name": "Charlga Razorflank",
+   "displayId": 4642,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4422,
+   "name": "Agathelos the Raging",
+   "displayId": 2450,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4424,
+   "name": "Aggem Thorncurse",
+   "displayId": 6097,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4428,
+   "name": "Death Speaker Jargba",
+   "displayId": 4644,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4542,
+   "name": "High Inquisitor Fairbanks",
+   "displayId": 2605,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4543,
+   "name": "Bloodmage Thalnos",
+   "displayId": 11396,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4829,
+   "name": "Aku'mai",
+   "displayId": 2837,
+   "instanceIds": [
+    48
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4830,
+   "name": "Old Serra'kis",
+   "displayId": 1816,
+   "instanceIds": [
+    48
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4831,
+   "name": "Lady Sarevess",
+   "displayId": 4979,
+   "instanceIds": [
+    48
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4832,
+   "name": "Twilight Lord Kelris",
+   "displayId": 4939,
+   "instanceIds": [
+    48
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4854,
+   "name": "Grimlok",
+   "displayId": 11165,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 4887,
+   "name": "Ghamoo-ra",
+   "displayId": 5027,
+   "instanceIds": [
+    48
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5709,
+   "name": "Shade of Eranikus",
+   "displayId": 7806,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5710,
+   "name": "Jammal'an the Prophet",
+   "displayId": 6708,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5719,
+   "name": "Morphaz",
+   "displayId": 7975,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5720,
+   "name": "Weaver",
+   "displayId": 6375,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5721,
+   "name": "Dreamscythe",
+   "displayId": 7553,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5722,
+   "name": "Hazzas",
+   "displayId": 9584,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 5775,
+   "name": "Verdan the Everliving",
+   "displayId": 4256,
+   "instanceIds": [
+    43
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 6168,
+   "name": "Roogug",
+   "displayId": 6110,
+   "instanceIds": [
+    47
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 6229,
+   "name": "Crowd Pummeler 9-60",
+   "displayId": 6774,
+   "instanceIds": [
+    90
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 6235,
+   "name": "Electrocutioner 6000",
+   "displayId": 6915,
+   "instanceIds": [
+    90
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 6487,
+   "name": "Arcanist Doan",
+   "displayId": 5266,
+   "instanceIds": [
+    189
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 6910,
+   "name": "Revelosh",
+   "displayId": 5945,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7023,
+   "name": "Obsidian Sentinel",
+   "displayId": 5285,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7079,
+   "name": "Viscous Fallout",
+   "displayId": 5497,
+   "instanceIds": [
+    90
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7206,
+   "name": "Ancient Stone Keeper",
+   "displayId": 10798,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7228,
+   "name": "Ironaya",
+   "displayId": 6089,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7267,
+   "name": "Chief Ukorz Sandscalp",
+   "displayId": 6439,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7271,
+   "name": "Witch Doctor Zum'rah",
+   "displayId": 6434,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7272,
+   "name": "Theka the Martyr",
+   "displayId": 6696,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7273,
+   "name": "Gahz'rilla",
+   "displayId": 7271,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7275,
+   "name": "Shadowpriest Sezz'ziz",
+   "displayId": 6441,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7291,
+   "name": "Galgann Firehammer",
+   "displayId": 6059,
+   "instanceIds": [
+    70
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7354,
+   "name": "Ragglesnout",
+   "displayId": null,
+   "instanceIds": [
+    129
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7355,
+   "name": "Tuten'kash",
+   "displayId": 7845,
+   "instanceIds": [
+    129
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7356,
+   "name": "Plaguemaw the Rotting",
+   "displayId": null,
+   "instanceIds": [
+    129
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7357,
+   "name": "Mordresh Fire Eye",
+   "displayId": 8055,
+   "instanceIds": [
+    129
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7358,
+   "name": "Amnennar the Coldbringer",
+   "displayId": 7971,
+   "instanceIds": [
+    129
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7795,
+   "name": "Hydromancer Velratha",
+   "displayId": 6685,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7796,
+   "name": "Nekrum Gutchewer",
+   "displayId": 6690,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 7800,
+   "name": "Mekgineer Thermaplugg",
+   "displayId": 6980,
+   "instanceIds": [
+    90
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 8127,
+   "name": "Antu'sul",
+   "displayId": 7353,
+   "instanceIds": [
+    209
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 8567,
+   "name": "Glutton",
+   "displayId": 7864,
+   "instanceIds": [
+    129
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 8580,
+   "name": "Atal'alarion",
+   "displayId": 7873,
+   "instanceIds": [
+    109
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 8929,
+   "name": "Princess Moira Bronzebeard",
+   "displayId": 8705,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 8983,
+   "name": "Golem Lord Argelmach",
+   "displayId": 8759,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9016,
+   "name": "Bael'Gar",
+   "displayId": 12162,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9017,
+   "name": "Lord Incendius",
+   "displayId": 1204,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9018,
+   "name": "High Interrogator Gerstahn",
+   "displayId": 8761,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9019,
+   "name": "Emperor Dagran Thaurissan",
+   "displayId": 8807,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9024,
+   "name": "Pyromancer Loregrain",
+   "displayId": 8762,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9025,
+   "name": "Lord Roccor",
+   "displayId": 5781,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9033,
+   "name": "General Angerforge",
+   "displayId": 8756,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9041,
+   "name": "Warder Stilgiss",
+   "displayId": 9089,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9056,
+   "name": "Fineous Darkvire",
+   "displayId": 8704,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9156,
+   "name": "Ambassador Flamelash",
+   "displayId": 8329,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9196,
+   "name": "Highlord Omokk",
+   "displayId": 11565,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9236,
+   "name": "Shadow Hunter Vosh'gajin",
+   "displayId": 9732,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9237,
+   "name": "War Master Voone",
+   "displayId": 9733,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9319,
+   "name": "Houndmaster Grebmar",
+   "displayId": 9212,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9499,
+   "name": "Plugger Spazzring",
+   "displayId": 8652,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9502,
+   "name": "Phalanx",
+   "displayId": 8177,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9537,
+   "name": "Hurley Blackbreath",
+   "displayId": 8658,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9543,
+   "name": "Ribbly Screwspigot",
+   "displayId": 8667,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9568,
+   "name": "Overlord Wyrmthalak",
+   "displayId": 8711,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9736,
+   "name": "Quartermaster Zigris",
+   "displayId": 9738,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9816,
+   "name": "Pyroguard Emberseer",
+   "displayId": 2172,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 9938,
+   "name": "Magmus",
+   "displayId": 12162,
+   "instanceIds": [
+    230
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10184,
+   "name": "Onyxia",
+   "displayId": 8570,
+   "instanceIds": [
+    249
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10220,
+   "name": "Halycon",
+   "displayId": 9567,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10268,
+   "name": "Gizrul the Slavener",
+   "displayId": 9564,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10363,
+   "name": "General Drakkisath",
+   "displayId": 10115,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10393,
+   "name": "Skul",
+   "displayId": null,
+   "instanceIds": [
+    329
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10429,
+   "name": "Warchief Rend Blackhand",
+   "displayId": 9778,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10430,
+   "name": "The Beast",
+   "displayId": 10193,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10432,
+   "name": "Vectus",
+   "displayId": 2606,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10433,
+   "name": "Marduk Blackpool",
+   "displayId": 10248,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10435,
+   "name": "Magistrate Barthilas",
+   "displayId": 10433,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10436,
+   "name": "Baroness Anastari",
+   "displayId": 10698,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10437,
+   "name": "Nerub'enkan",
+   "displayId": 9793,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10438,
+   "name": "Maleki the Pallid",
+   "displayId": 10546,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10439,
+   "name": "Ramstein the Gorger",
+   "displayId": 12818,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10440,
+   "name": "Baron Rivendare",
+   "displayId": 10729,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10502,
+   "name": "Lady Illucia Barov",
+   "displayId": 11835,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10503,
+   "name": "Jandice Barov",
+   "displayId": 11073,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10504,
+   "name": "Lord Alexei Barov",
+   "displayId": 11072,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10505,
+   "name": "Instructor Malicia",
+   "displayId": 11069,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10507,
+   "name": "The Ravenian",
+   "displayId": 10433,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10516,
+   "name": "The Unforgiven",
+   "displayId": 10771,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10558,
+   "name": "Hearthsinger Forresten",
+   "displayId": 10482,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10584,
+   "name": "Urok Doomhowl",
+   "displayId": 11583,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10596,
+   "name": "Mother Smolderweb",
+   "displayId": 9929,
+   "instanceIds": [
+    229
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10808,
+   "name": "Timmy the Cruel",
+   "displayId": 571,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10809,
+   "name": "Stonespine",
+   "displayId": null,
+   "instanceIds": [
+    329
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10811,
+   "name": "Archivist Galford",
+   "displayId": 10544,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10813,
+   "name": "Balnazzar",
+   "displayId": 10691,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10901,
+   "name": "Lorekeeper Polkelt",
+   "displayId": 11492,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 10997,
+   "name": "Cannon Master Willey",
+   "displayId": 10674,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11032,
+   "name": "Malor the Zealous",
+   "displayId": 10458,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11120,
+   "name": "Crimson Hammersmith",
+   "displayId": null,
+   "instanceIds": [
+    329
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11121,
+   "name": "Black Guard Swordsmith",
+   "displayId": null,
+   "instanceIds": [
+    329
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11143,
+   "name": "Postmaster Malown",
+   "displayId": 10669,
+   "instanceIds": [
+    329
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11261,
+   "name": "Doctor Theolen Krastinov",
+   "displayId": 10901,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11380,
+   "name": "Jin'do the Hexxer",
+   "displayId": 11311,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11382,
+   "name": "Bloodlord Mandokir",
+   "displayId": 11288,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11467,
+   "name": "Tsu'zee",
+   "displayId": null,
+   "instanceIds": [
+    429
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11486,
+   "name": "Prince Tortheldrin",
+   "displayId": 11256,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11487,
+   "name": "Magister Kalendris",
+   "displayId": 14384,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11488,
+   "name": "Illyanna Ravenoak",
+   "displayId": 11270,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11489,
+   "name": "Tendris Warpwood",
+   "displayId": 14383,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11490,
+   "name": "Zevrim Thornhoof",
+   "displayId": 11335,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11492,
+   "name": "Alzzin the Wildshaper",
+   "displayId": 14416,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11496,
+   "name": "Immol'thar",
+   "displayId": 14173,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11501,
+   "name": "King Gordok",
+   "displayId": 11583,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11502,
+   "name": "Ragnaros",
+   "displayId": 11121,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11517,
+   "name": "Oggleflint",
+   "displayId": 11611,
+   "instanceIds": [
+    389
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11518,
+   "name": "Jergosh the Invoker",
+   "displayId": 11429,
+   "instanceIds": [
+    389
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11519,
+   "name": "Bazzalan",
+   "displayId": 2007,
+   "instanceIds": [
+    389
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11520,
+   "name": "Taragaman the Hungerer",
+   "displayId": 7970,
+   "instanceIds": [
+    389
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11583,
+   "name": "Nefarian",
+   "displayId": 11380,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11622,
+   "name": "Rattlegore",
+   "displayId": 12073,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11981,
+   "name": "Flamegor",
+   "displayId": 6377,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11982,
+   "name": "Magmadar",
+   "displayId": 10193,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11983,
+   "name": "Firemaw",
+   "displayId": 6377,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 11988,
+   "name": "Golemagg the Incinerator",
+   "displayId": 11986,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12017,
+   "name": "Broodlord Lashlayer",
+   "displayId": 14308,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12018,
+   "name": "Majordomo Executus",
+   "displayId": 12029,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12056,
+   "name": "Baron Geddon",
+   "displayId": 12129,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12057,
+   "name": "Garr",
+   "displayId": 12110,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12098,
+   "name": "Sulfuron Harbinger",
+   "displayId": 13030,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12118,
+   "name": "Lucifron",
+   "displayId": 13031,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12201,
+   "name": "Princess Theradras",
+   "displayId": 12292,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12203,
+   "name": "Landslide",
+   "displayId": 12293,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12225,
+   "name": "Celebras the Cursed",
+   "displayId": 12350,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12236,
+   "name": "Lord Vyletongue",
+   "displayId": 12334,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12258,
+   "name": "Razorlash",
+   "displayId": 12389,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12259,
+   "name": "Gehennas",
+   "displayId": 13030,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12264,
+   "name": "Shazzrah",
+   "displayId": 13032,
+   "instanceIds": [
+    409
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12435,
+   "name": "Razorgore the Untamed",
+   "displayId": 10115,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 12902,
+   "name": "Lorgus Jett",
+   "displayId": null,
+   "instanceIds": [
+    48
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 13020,
+   "name": "Vaelastrasz the Corrupt",
+   "displayId": 13992,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 13280,
+   "name": "Hydrospawn",
+   "displayId": 5489,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 13282,
+   "name": "Noxxion",
+   "displayId": 11172,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 13596,
+   "name": "Rotgrip",
+   "displayId": 13589,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 13601,
+   "name": "Tinkerer Gizlock",
+   "displayId": 7125,
+   "instanceIds": [
+    349
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14020,
+   "name": "Chromaggus",
+   "displayId": 14367,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14321,
+   "name": "Guard Fengus",
+   "displayId": 11561,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14322,
+   "name": "Stomper Kreeg",
+   "displayId": 11545,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14323,
+   "name": "Guard Slip'kik",
+   "displayId": 11561,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14324,
+   "name": "Cho'Rush the Observer",
+   "displayId": 11537,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14325,
+   "name": "Captain Kromcrush",
+   "displayId": 11564,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14326,
+   "name": "Guard Mol'dar",
+   "displayId": 11561,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14327,
+   "name": "Lethtendris",
+   "displayId": 14378,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14354,
+   "name": "Pusillin",
+   "displayId": 7552,
+   "instanceIds": [
+    429
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14506,
+   "name": "Lord Hel'nurath",
+   "displayId": null,
+   "instanceIds": [
+    429
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14507,
+   "name": "High Priest Venoxis",
+   "displayId": 15217,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14509,
+   "name": "High Priest Thekal",
+   "displayId": 15216,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14510,
+   "name": "High Priestess Mar'li",
+   "displayId": 15220,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14515,
+   "name": "High Priestess Arlokk",
+   "displayId": 15218,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14517,
+   "name": "High Priestess Jeklik",
+   "displayId": 15219,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14601,
+   "name": "Ebonroc",
+   "displayId": 6377,
+   "instanceIds": [
+    469
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 14834,
+   "name": "Hakkar",
+   "displayId": 15295,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15114,
+   "name": "Gahz'ranka",
+   "displayId": 15288,
+   "instanceIds": [
+    309
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15263,
+   "name": "The Prophet Skeram",
+   "displayId": 15345,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15299,
+   "name": "Viscidus",
+   "displayId": 15686,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15339,
+   "name": "Ossirian the Unscarred",
+   "displayId": 15432,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15340,
+   "name": "Moam",
+   "displayId": 15392,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15341,
+   "name": "General Rajaxx",
+   "displayId": 15376,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15348,
+   "name": "Kurinnaxx",
+   "displayId": 15742,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15369,
+   "name": "Ayamiss the Hunter",
+   "displayId": 15431,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15370,
+   "name": "Buru the Gorger",
+   "displayId": 15654,
+   "instanceIds": [
+    509
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15509,
+   "name": "Princess Huhuran",
+   "displayId": 15739,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15510,
+   "name": "Fankriss the Unyielding",
+   "displayId": 125331,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15516,
+   "name": "Battleguard Sartura",
+   "displayId": 15583,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15517,
+   "name": "Ouro",
+   "displayId": 15509,
+   "instanceIds": [
+    531
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15928,
+   "name": "Thaddius",
+   "displayId": 16137,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15931,
+   "name": "Grobbulus",
+   "displayId": 16035,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15932,
+   "name": "Gluth",
+   "displayId": 16064,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15936,
+   "name": "Heigan the Unclean",
+   "displayId": 16309,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15952,
+   "name": "Maexxna",
+   "displayId": 15928,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15953,
+   "name": "Grand Widow Faerlina",
+   "displayId": 15940,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15954,
+   "name": "Noth the Plaguebringer",
+   "displayId": 16590,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15956,
+   "name": "Anub'Rekhan",
+   "displayId": 15931,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15989,
+   "name": "Sapphiron",
+   "displayId": 16033,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 15990,
+   "name": "Kel'Thuzad",
+   "displayId": 15945,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16011,
+   "name": "Loatheb",
+   "displayId": 16110,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16028,
+   "name": "Patchwerk",
+   "displayId": 16174,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16042,
+   "name": "Lord Valthalak",
+   "displayId": null,
+   "instanceIds": [
+    229
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16060,
+   "name": "Gothik the Harvester",
+   "displayId": 16279,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16061,
+   "name": "Instructor Razuvious",
+   "displayId": 16582,
+   "instanceIds": [
+    533
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 16118,
+   "name": "Kormok",
+   "displayId": 16020,
+   "instanceIds": [
+    289
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 76389,
+   "name": "Thunderhoof",
+   "displayId": null,
+   "instanceIds": [
+    3001
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 245999,
+   "name": "Arcane Anomaly",
+   "displayId": 129891,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 246003,
+   "name": "Fel Ancient",
+   "displayId": 129894,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 246008,
+   "name": "Mana Devourer",
+   "displayId": 129895,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 246017,
+   "name": "Unstable Sentinel",
+   "displayId": 129954,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 246020,
+   "name": "Shade of the Archmage",
+   "displayId": 130061,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 247032,
+   "name": "Lyn the Ignored",
+   "displayId": 130235,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 247126,
+   "name": "Atrexis the Grave Knight",
+   "displayId": 145787,
+   "instanceIds": [
+    2959
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 250483,
+   "name": "Witherfang",
+   "displayId": 144189,
+   "instanceIds": [
+    2999
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 250631,
+   "name": "The Abandoned",
+   "displayId": 138667,
+   "instanceIds": [
+    2999
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 250657,
+   "name": "Rath'mael",
+   "displayId": 144175,
+   "instanceIds": [
+    2999
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 255391,
+   "name": "Overseer Wrex",
+   "displayId": 7914,
+   "instanceIds": [
+    2994
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 255707,
+   "name": "Blazeroar",
+   "displayId": 139053,
+   "instanceIds": [
+    2994
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 255997,
+   "name": "Tidemistress Ca'zass",
+   "displayId": 4973,
+   "instanceIds": [
+    2994
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 256035,
+   "name": "Viktor the Vile",
+   "displayId": 139455,
+   "instanceIds": [
+    2999
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 256097,
+   "name": "Bjork",
+   "displayId": 144170,
+   "instanceIds": [
+    2999
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 256236,
+   "name": "The Questioner",
+   "displayId": 140092,
+   "instanceIds": [
+    2994
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 257016,
+   "name": "Katerina the Cleaner",
+   "displayId": 2317,
+   "instanceIds": [
+    2994
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 258905,
+   "name": "Zul'Alai",
+   "displayId": 144475,
+   "instanceIds": [
+    2970
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 258924,
+   "name": "Var'Taka",
+   "displayId": 144487,
+   "instanceIds": [
+    2970
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 258964,
+   "name": "Nar'gurk",
+   "displayId": 141215,
+   "instanceIds": [
+    3039
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 258966,
+   "name": "Slavecrusher Grox",
+   "displayId": 141217,
+   "instanceIds": [
+    3039
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 258972,
+   "name": "Twilight Commander Zarmok",
+   "displayId": 141219,
+   "instanceIds": [
+    3039
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260042,
+   "name": "Captain Dreadrise",
+   "displayId": 142144,
+   "instanceIds": [
+    2970
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260243,
+   "name": "Min'loth the Serpent",
+   "displayId": 142286,
+   "instanceIds": [
+    2970
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260322,
+   "name": "Saltspine",
+   "displayId": 144209,
+   "instanceIds": [
+    2998
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260325,
+   "name": "Shadetooth",
+   "displayId": 144210,
+   "instanceIds": [
+    2998
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260326,
+   "name": "Relic Guardian",
+   "displayId": 144224,
+   "instanceIds": [
+    2998
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 260808,
+   "name": "Highland Horror",
+   "displayId": null,
+   "instanceIds": [
+    2998
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 261306,
+   "name": "Faldrim Anvilmar",
+   "displayId": 142826,
+   "instanceIds": [
+    3065
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 261311,
+   "name": "Plunder",
+   "displayId": 142840,
+   "instanceIds": [
+    3065
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 261319,
+   "name": "Durgen Dirgehammer",
+   "displayId": 142837,
+   "instanceIds": [
+    3065
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 262297,
+   "name": "Snowtalon",
+   "displayId": null,
+   "instanceIds": [
+    3001
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 263886,
+   "name": "Primeval Elemental",
+   "displayId": 143898,
+   "instanceIds": [
+    2970
+   ],
+   "status": "not-captured",
+   "image": null,
+   "sha256": null
+  },
+  {
+   "npcId": 272561,
+   "name": "Vitrix",
+   "displayId": null,
+   "instanceIds": [
+    3001
+   ],
+   "status": "no-display-id",
+   "image": null,
+   "sha256": null
+  }
+ ]
+}
