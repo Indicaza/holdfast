@@ -3,9 +3,10 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
 import { withGuildDatabase, withGuildTransaction } from '../src/Data/database.js'
-import { createStorageObservatory } from '../src/Production/storageObservatory.js'
+import { createStorageObservatory, nextHeavyDelayMs } from '../src/Production/storageObservatory.js'
 import { domainOf } from '../src/Production/storageDomains.js'
 import { withHttpApp } from '../testSupport/httpHarness.js'
+import { createPacer } from '../src/Production/storagePacing.js'
 
 const quiet = { info() {}, error() {} }
 let observatory
@@ -92,3 +93,28 @@ test('every table maps to a storage domain', () => withHttpApp(async () => {
   const unmapped = tables.filter((name) => domainOf(name) === 'system' && !['schema_migrations', 'app_meta', 'character_read_model_meta'].includes(name))
   assert.deepEqual(unmapped, [])
 }))
+
+test('a restart does not make a heavy collection due', () => {
+  const now = Date.parse('2026-11-23T12:00:00Z')
+  const hour = 60 * 60 * 1000
+  assert.equal(nextHeavyDelayMs(null, now), 5 * 60 * 1000)
+  assert.equal(nextHeavyDelayMs('not a date', now), 5 * 60 * 1000)
+  assert.equal(nextHeavyDelayMs(new Date(now - hour).toISOString(), now), 5 * hour)
+  assert.equal(nextHeavyDelayMs(new Date(now - 7 * hour).toISOString(), now), 5 * 60 * 1000)
+  assert.equal(nextHeavyDelayMs(new Date(now + hour).toISOString(), now), 6 * hour)
+})
+
+test('the statistics worker rests between short bursts', () => {
+  let time = 0
+  const rests = []
+  const pace = createPacer({ workMs: 20, restMs: 40, everyRows: 2, now: () => time, sleep: (ms) => { rests.push(ms); time += ms } })
+  pace()
+  time += 30
+  pace()
+  assert.deepEqual(rests, [40])
+  pace()
+  pace()
+  assert.deepEqual(rests, [40], 'under the burst limit: no rest')
+  pace.rest()
+  assert.deepEqual(rests, [40, 40])
+})
