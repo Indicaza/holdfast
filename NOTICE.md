@@ -7,7 +7,7 @@ comes from others, under their own terms:
 | --- | --- | --- |
 | ForeverDB.net's add-on data (item facts, loot, drop rates its players measured) and everything built with it | `backend/src/Atlas/data/foreverdb/` only | **GPL-3.0 with ForeverDB.net's attribution term** (that directory's `COPYING.txt` and `FOREVERDB-LICENSE.txt`), not MIT. Data from ForeverDB.net (https://foreverdb.net) |
 | World of Warcraft and WoW Forever client tables (via wago.tools) | `backend/src/Atlas/data/sources/wago-*.json` and the data built from them | Factual game data; Blizzard Entertainment's. World of Warcraft is a trademark of Blizzard Entertainment, Inc.; Holdfast is not affiliated with or endorsed by Blizzard |
-| Dungeon map floor and boss-pin IDs (via Guildweaver, from OpenMap) | `backend/src/Atlas/data/sources/journal-maps.json` | OpenMap, MIT. File IDs and positions only; no game art is in this repository |
+| Dungeon map floor and boss-pin IDs (via Guildweaver, from OpenMap) | `backend/src/Atlas/data/sources/journal-maps.json` | OpenMap, MIT. File IDs and positions only; the map images are Blizzard Entertainment's, kept in Content Studio media and not in this repository |
 | AzerothCore world database extracts | `backend/src/Atlas/data/sources/azerothcore*.json` | GPL-2.0 (https://github.com/azerothcore/azerothcore-wotlk) |
 | DungeonPlanner drop and quest lists | `backend/src/Atlas/data/sources/dungeonplanner-loot.json` | See docs/dungeon-atlas-sources.md |
 | OpenMap's Forever place tables | `backend/src/Atlas/data/sources/forever-instances.json` | MIT (https://github.com/openmap-world/openmap) |

@@ -37,8 +37,11 @@ const json = (value) => `${JSON.stringify(value, null, 1)}\n`;
 
 async function downloadTile(id, version, file) {
   const response = await fetch(`https://wago.tools/api/casc/${id}?version=${encodeURIComponent(version)}`, { headers: { "User-Agent": "dungeon-map-pipeline/1.0" } });
+  await new Promise((resolve) => setTimeout(resolve, 200));
   if (!response.ok) return false;
-  writeFileSync(file, Buffer.from(await response.arrayBuffer()));
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.toString("latin1", 0, 4) !== "BLP2") return false;
+  writeFileSync(file, bytes);
   return true;
 }
 

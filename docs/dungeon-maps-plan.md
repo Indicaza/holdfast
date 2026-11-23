@@ -1,21 +1,15 @@
 # Dungeon maps for the website
 
-Status: the pipeline and website integration are built and tested with
-synthetic tiles. **No real map art has been downloaded or published.**
-See [coverage](dungeon-maps-coverage.md).
+Status: the pipeline and website integration are built. On 2026-11-22 the
+owner confirmed the right to obtain and publish this art. All 63 floors of
+25 dungeons were built from wago.tools `wowf` build 1.60.1.71037; see
+`backend/src/Atlas/data/sources/journal-maps-manifest.json` and the
+[coverage report](dungeon-maps-coverage.md). The images are not in Git. They
+reach a site only through the `import` step, which has not been run in
+production.
 
-## Blocker: rights to the art
-
-The floors are Blizzard's textures. Before any real run, the owner must
-confirm the right to obtain and publish them:
-
-- Blizzard's EULA (revised March 21, 2024) bars copying or mining the game
-  client, so the local client is not used.
-- Blizzard's legal FAQ allows limited non-commercial fan-site use of material
-  downloaded from its site. It does not address client textures or mirrors,
-  and the fan site policy it may depend on could not be read.
-- wago.tools' `robots.txt` and `llms.txt` allow its `/api/casc/` route, but it
-  publishes no licence for reusing the files.
+The game client was not used, because Blizzard's EULA bars copying or mining
+it. The art remains Blizzard's and keeps that attribution in Content Studio.
 
 ## Pipeline (`scripts/buildDungeonMaps.mjs`)
 
@@ -24,7 +18,7 @@ confirm the right to obtain and publish them:
 2. `build`: decodes `<fileDataId>.blp` tiles, assembles 4 x 3 tiles row by row,
    crops to 1002 x 668, writes PNGs and a versioned manifest. An incomplete
    floor is reported and not made. Downloading needs `--download-wago <build>
-   --confirm-asset-rights`.
+   --confirm-asset-rights`; tiles are fetched one at a time and cached.
 3. `import`: adds the floors to Content Studio media (purpose `map`, on the
    `/data` volume) with attribution and provenance. Existing floors are kept.
 4. `coverage`: writes `docs/dungeon-maps-coverage.md`.
