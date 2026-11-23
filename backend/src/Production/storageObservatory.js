@@ -11,8 +11,9 @@ import { offsiteBackupHealth } from '../Data/offsiteBackup.js'
 // - Light figures (disk, files, page and free-page counts) are read on
 //   demand and cached for a minute: a few stat calls and pragmas.
 // - Heavy figures (per-table and per-index bytes from dbstat, ingestion
-//   counts) are collected every few hours in a worker thread with its own
-//   read-only connection, never on the request thread.
+//   counts) are collected every few hours in a paced worker thread with its
+//   own read-only connection, never on the request thread. A restart does
+//   not trigger one if a recent sample exists.
 // - Each heavy collection appends a growth sample to
 //   observatory/samples.jsonl in the data directory (bounded).
 //
@@ -24,6 +25,14 @@ const LIGHT_TTL_MS = 60_000
 export const HEAVY_INTERVAL_MS = 6 * 60 * 60 * 1000
 const MAX_SAMPLES = 1000
 const FIRST_HEAVY_DELAY_MS = 5 * 60 * 1000
+
+// When the next collection is due. A restart does not make one due: a deploy
+// waits out what is left of the interval since the last saved sample.
+export function nextHeavyDelayMs(lastSampleAt, now) {
+  const last = Date.parse(lastSampleAt ?? '')
+  if (!Number.isFinite(last)) return FIRST_HEAVY_DELAY_MS
+  return Math.max(FIRST_HEAVY_DELAY_MS, Math.min(HEAVY_INTERVAL_MS, last + HEAVY_INTERVAL_MS - now))
+}
 
 // Disk and growth alerts, from the cheap disk figures and the growth
 // samples. Pure, so it is tested without a disk.
@@ -148,7 +157,6 @@ export function createStorageObservatory({
   let heavyRunning = null
   let lastHeavyError = null
   const samplesFile = path.join(dataDir, 'observatory', 'samples.jsonl')
-  const timers = []
 
   async function lightReport() {
     if (light && clock() - light.at < LIGHT_TTL_MS) return light.value
@@ -292,12 +300,21 @@ export function createStorageObservatory({
     refresh,
     health,
     start() {
-      const first = setTimeout(refresh, FIRST_HEAVY_DELAY_MS)
-      const every = setInterval(refresh, HEAVY_INTERVAL_MS)
-      first.unref?.()
-      every.unref?.()
-      timers.push(first, every)
-      return () => timers.forEach((timer) => clearTimeout(timer))
+      let stopped = false
+      let timer = null
+      const schedule = (delay) => {
+        if (stopped) return
+        timer = setTimeout(() => {
+          refresh()
+          schedule(HEAVY_INTERVAL_MS)
+        }, delay)
+        timer.unref?.()
+      }
+      readSamples().then((samples) => schedule(nextHeavyDelayMs(samples.at(-1)?.at, clock())))
+      return () => {
+        stopped = true
+        clearTimeout(timer)
+      }
     },
   }
 }
