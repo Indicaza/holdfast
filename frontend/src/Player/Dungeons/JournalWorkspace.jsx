@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 import { Icon } from '../ui.jsx'
 import { bossKey, journalMapProps } from './atlasModel.js'
@@ -12,9 +12,9 @@ const PANES = {
 }
 
 // A dungeon's interior map, or one quiet line where it has none.
-function MapPanel({ name, map, floorId, onFloor, selectedKey, onPin }) {
+function MapPanel({ name, map, floorId, onFloor, selectedKey, onPin, inactive = false }) {
   return (
-    <section className={`gw-jw-map${map ? '' : ' gw-jw-map--none'}`} aria-label="Map">
+    <section className={`gw-jw-map${map ? '' : ' gw-jw-map--none'}`} aria-label="Map" aria-hidden={inactive || undefined} inert={inactive ? '' : undefined}>
       <DungeonMapPanel dungeonName={name} floors={map?.floors} pins={map?.pins} floorId={floorId} onFloorChange={onFloor} selectedKey={selectedKey} onSelectPin={onPin}
         empty={<p className="gw-jw-nomap"><Icon name="map" size={16} /><span><strong>No map of {name} yet.</strong> Its bosses are in the list.</span></p>} />
     </section>
@@ -38,17 +38,30 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
   const [floorId, setFloorId] = useJournalFloor(map, selectedKey)
   const [journalPane, setJournalPane] = useState(boss || allLoot ? 'details' : 'map')
   const [questPane, setQuestPane] = useState('checklist')
+  const [lootJump, setLootJump] = useState(null)
+  const lootScrollRef = useRef(null)
+  useLayoutEffect(() => {
+    if (!allLoot || !lootJump || selectedKey !== lootJump.key) return
+    const scroll = lootScrollRef.current
+    const source = [...(scroll?.querySelectorAll('.gw-atlas-source[data-source]') || [])]
+      .find((node) => node.dataset.source === `boss:${lootJump.key}`)
+    if (!source || !scroll) return
+    const top = scroll.scrollTop + source.getBoundingClientRect().top - scroll.getBoundingClientRect().top - 64
+    scroll.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+  }, [allLoot, selectedKey, lootJump])
   if (section === 'runs') return <div className="gw-jw gw-jw--runs"><div className="gw-jw-scroll gw-atlas-section">{runs}</div></div>
 
   const quest = section === 'quests'
   const pane = quest ? questPane : journalPane
   const setPane = quest ? setQuestPane : setJournalPane
   const chooseBoss = (target) => {
+    if (!target) return
     setOverviewChosen(false)
     setJournalPane('details')
+    if (allLoot) setLootJump({ key: bossKey(target) })
     onBoss(target)
   }
-  const mapPanel = <MapPanel name={name} map={map} floorId={floorId} onFloor={setFloorId} selectedKey={selectedKey} onPin={(key) => chooseBoss(atlas.bosses.find((entry) => bossKey(entry) === key))} />
+  const mapPanel = <MapPanel name={name} map={map} floorId={floorId} onFloor={setFloorId} selectedKey={selectedKey} onPin={(key) => chooseBoss(atlas.bosses.find((entry) => bossKey(entry) === key))} inactive={allLoot && !quest} />
   const paneBar = (
     <div className="gw-jw-panes" role="group" aria-label="Show">
       {PANES[section].map(([id, label]) => <button key={id} type="button" aria-pressed={pane === id} onClick={() => setPane(id)}>{label}</button>)}
@@ -67,7 +80,7 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
 
   const index = selected ? atlas.bosses.indexOf(selected) : -1
   return (
-    <div className={`gw-jw gw-jw--journal${map ? '' : ' gw-jw--nomap'}${atlas.bosses.length ? '' : ' gw-jw--norail'}`} data-pane={pane}>
+    <div className={`gw-jw gw-jw--journal${map ? '' : ' gw-jw--nomap'}${atlas.bosses.length ? '' : ' gw-jw--norail'}${allLoot ? ' gw-jw--expanded' : ''}`} data-pane={pane}>
       {paneBar}
       {atlas.bosses.length ? (
         <div className="gw-jw-panel gw-jw-encounters">
@@ -75,13 +88,32 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
         </div>
       ) : null}
       {mapPanel}
-      <section className="gw-jw-panel gw-jw-details" aria-label="Encounter details">
+      <section className="gw-jw-panel gw-jw-details" aria-label={allLoot ? 'All dungeon loot' : 'Encounter details'}
+        onKeyDown={(event) => {
+          if (allLoot && event.key === 'Escape') {
+            event.stopPropagation()
+            setJournalPane('map')
+            onAllLoot(false)
+          }
+        }}>
         <div className="gw-jw-dock">
-          {allLoot ? <div className="gw-jw-scroll"><h3 className="gw-jw-dock__title">All loot in {name}</h3>{loot}</div>
-            : selected ? <BossDetail key={selectedKey} boss={selected} index={index} bosses={atlas.bosses} atlas={atlas} rows={sourceRows(selected)} onBoss={chooseBoss} role={role} onRole={onRole} character={character} lootProps={lootProps} mechanicsOpen={mechanicsOpen} onMechanics={setMechanicsOpen} />
-              : <div className="gw-jw-scroll">{overview}</div>}
+          {allLoot ? (
+            <>
+              <header className="gw-jw-dockbar">
+                <div className="gw-jw-dockbar__title">
+                  <h3><Icon name="loot" size={16} /> All Dungeon Loot</h3>
+                  <span>{selected ? `${selected.name} selected · Choose a boss on the left to jump to its drops` : `Browse drops in ${name} by source`}</span>
+                </div>
+                <button type="button" className="gw-jw-dockbar__map" onClick={() => { setJournalPane('map'); onAllLoot(false) }}>
+                  <Icon name="map" size={15} /> Show Map <Icon name="chevron-down" size={13} />
+                </button>
+              </header>
+              <div className="gw-jw-scroll gw-jw-lootbrowser" ref={lootScrollRef} aria-label="Loot grouped by source">{loot}</div>
+            </>
+          ) : selected ? <BossDetail key={selectedKey} boss={selected} index={index} bosses={atlas.bosses} atlas={atlas} rows={sourceRows(selected)} onBoss={chooseBoss} role={role} onRole={onRole} character={character} lootProps={lootProps} mechanicsOpen={mechanicsOpen} onMechanics={setMechanicsOpen} />
+            : <div className="gw-jw-scroll">{overview}</div>}
         </div>
-        <button type="button" className="gw-jw-lootswitch" aria-pressed={allLoot} onClick={() => onAllLoot(!allLoot)}><Icon name="loot" size={13} /> All loot</button>
+        {!allLoot ? <button type="button" className="gw-jw-lootswitch" aria-expanded={false} onClick={() => { setJournalPane('details'); setLootJump(null); onAllLoot(true) }}><Icon name="loot" size={13} /> All loot <Icon name="chevron-up" size={13} /></button> : null}
       </section>
     </div>
   )
