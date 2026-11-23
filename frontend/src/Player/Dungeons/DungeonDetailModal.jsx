@@ -35,6 +35,7 @@ import {
 import { LootList, SourceGroups, UnverifiedBadge } from './AtlasLoot.jsx'
 import { QuestList, QuestReadiness, QuickGuide, ReadinessSummary, RoleSelect, Runs } from './AtlasPrepare.jsx'
 import PlanMyGear from './PlanMyGear.jsx'
+import { JournalMap } from './DungeonMapPanel.jsx'
 import QuestPlan from './QuestPlan.jsx'
 import { useDungeonDetail, useDungeonPlan, useDungeonReadiness, useWishlist, useWishlistMutation } from './useAtlasData.js'
 import './DungeonAtlas.css'
@@ -130,9 +131,16 @@ function DungeonMaps({ atlas, onBoss }) {
   const drawn = atlas.maps.filter((map) => map.imageUrl)
   const plots = atlas.maps.filter((map) => !map.imageUrl)
   const art = atlas.editorial?.art?.map
-  if (!drawn.length && !art?.url && !plots.length) return null
+  const journal = !drawn.length && !art?.url && atlas.journalMap?.floors?.length
   return (
     <>
+      {journal ? (
+        <section className="gw-atlas-maps" aria-label="Map">
+          <h3>Map</h3>
+          <JournalMap atlas={atlas} onBoss={onBoss} />
+        </section>
+      ) : null}
+      {!journal && !drawn.length && !art?.url ? <p className="gw-muted gw-dmap__none">No map of this dungeon is available yet. Its bosses are in the list.</p> : null}
       {drawn.length || art?.url ? (
         <section className="gw-atlas-maps" aria-label="Map">
           <h3>Map</h3>
@@ -418,6 +426,7 @@ function bossLootEmpty(boss, atlas) {
 // known mechanics is just its header and its loot, with one quiet line.
 function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character, lootProps, onBoss }) {
   const map = atlas.maps.find((entry) => entry.imageUrl && entry.floorId === boss.floorId) || atlas.maps.find((entry) => entry.imageUrl)
+  const journalPin = atlas.journalMap?.pins?.some((pin) => pin.bossKey === bossKey(boss))
   const abilities = boss.abilities || []
   const guide = quickGuide(abilities, role)
   const previous = bosses[index - 1]
@@ -427,7 +436,7 @@ function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character,
   const wanted = rows.filter((row) => lootProps.wishes?.get(row.item.itemKey) && lootProps.wishes.get(row.item.itemKey).state !== 'acquired').length
   const strategy = boss.strategy && Object.values(boss.strategy).some(Boolean)
   const hasGuide = Boolean(abilities.length || boss.mechanics?.length || boss.description || strategy || boss.positioning || boss.interrupts || boss.dispels
-    || (map && markerPosition(boss.mapPosition)))
+    || (map && markerPosition(boss.mapPosition)) || journalPin)
   const loot = (
     <section className="gw-atlas-boss__loot gw-journal-boss__loot" aria-label={`${boss.name} loot`}>
       <h4 className="gw-journal-subhead">Loot{rows.length ? <span> {rows.length}</span> : null}</h4>
@@ -479,7 +488,7 @@ function BossDetail({ boss, index, bosses, atlas, rows, role, onRole, character,
                 <Abilities abilities={abilities} />
               </details>
             ) : null}
-            {map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
+            {journalPin ? <section aria-label={`${boss.name} on the map`}><h4 className="gw-journal-subhead">Location</h4><JournalMap atlas={atlas} selectedKey={bossKey(boss)} onBoss={onBoss} /></section> : map && markerPosition(boss.mapPosition) ? <FloorMap map={map} bosses={[boss]} highlight={bossKey(boss)} /> : null}
           </div>
           {loot}
         </div>

@@ -219,6 +219,8 @@ export function normalizeAtlas(atlas) {
     artFocus: source.artFocus && Number.isFinite(source.artFocus.x) && Number.isFinite(source.artFocus.y) ? { x: source.artFocus.x, y: source.artFocus.y } : null,
     // A map is either art (imageUrl) or a spawn layout the site draws (points).
     maps: list(source.maps).filter((map) => map && (map.imageUrl || (Array.isArray(map.points) && map.points.length))),
+    // The real dungeon map (floors and boss pins); never the spawn layout.
+    journalMap: source.journalMap && Array.isArray(source.journalMap.floors) ? { floors: source.journalMap.floors.filter((floor) => floor?.floorId && floor.imageUrl), pins: list(source.journalMap.pins) } : null,
     bosses: list(source.bosses),
     creatures: list(source.creatures),
     rares: list(source.rares),
@@ -435,6 +437,18 @@ export function markerPosition(position) {
 
 export function bossKey(boss = {}) {
   return String(boss.encounterId || boss.npcId || boss.name || '')
+}
+
+// The panel's props for a dungeon: pins numbered as in the encounter list.
+export function journalMapProps(atlas) {
+  const map = atlas?.journalMap
+  if (!map?.floors?.length) return null
+  const order = new Map((atlas.bosses || []).map((boss, index) => [bossKey(boss), { boss, number: index + 1 }]))
+  const pins = (map.pins || []).flatMap((pin) => {
+    const entry = order.get(pin.bossKey)
+    return entry ? [{ ...pin, name: entry.boss.name, number: entry.number }] : []
+  })
+  return { floors: map.floors, pins }
 }
 
 function normalizedName(value) {
