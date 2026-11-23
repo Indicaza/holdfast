@@ -47,7 +47,7 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
       .find((node) => node.dataset.source === `boss:${lootJump.key}`)
     if (!source || !scroll) return
     const top = scroll.scrollTop + source.getBoundingClientRect().top - scroll.getBoundingClientRect().top - 64
-    scroll.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+    scroll.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }, [allLoot, selectedKey, lootJump])
   if (section === 'runs') return <div className="gw-jw gw-jw--runs"><div className="gw-jw-scroll gw-atlas-section">{runs}</div></div>
 
