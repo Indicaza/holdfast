@@ -123,8 +123,8 @@
 /* All loot, in the dock's width. */
 .gw-jw-details .gw-atlas-lootbar { flex-wrap: wrap; padding-right: 6rem; }
 
-/* A boss with no portrait: the same ring, the Journal's rock, a plain helm. */
-.gw-atlas-portrait__helm { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+/* A boss with no portrait: the same ring and the game's skull. */
+.gw-atlas-portrait__skull { display: block; object-fit: contain; }
 .gw-atlas-portrait--blank { display: inline-grid; place-items: center; background: radial-gradient(circle at 35% 30%, #2e2a22, #12100c 72%); color: var(--gwj-gold-dim, #8d7548); }
 .gw-jw .gw-atlas-rail button.gw-journal-rail__boss { min-height: 62px; padding: 0.2rem 0.35rem 0.2rem 0.3rem; gap: 0.5rem; }
 .gw-jw .gw-atlas-rail .gw-journal-rail__line { white-space: normal; overflow: visible; line-height: 1.15; overflow-wrap: anywhere; }

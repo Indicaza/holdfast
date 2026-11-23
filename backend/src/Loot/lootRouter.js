@@ -9,6 +9,7 @@ import { publishPlayerChanged } from "../Live/playerChangeEvents.js";
 import { createRateLimiter } from "../Security/httpSecurity.js";
 import { publishedViewInDatabase, publishedViewsInDatabase } from "../Atlas/Editorial/editorialPreview.js";
 import { withEditorialDetail, withEditorialSummary } from "../Atlas/Editorial/editorialOverlay.js";
+import { withBossPortraits } from "../Atlas/bossPortraits.js";
 import { withJournalMap } from "../Atlas/journalMaps.js";
 import { readLootBridgeSnapshot } from "./lootBridge.js";
 import { lootCatalogRevisionInDatabase, lootSlotsByInstanceInDatabase, readLootChanges, readLootDungeonInDatabase, readLootDungeons, searchLootItemsInDatabase } from "./lootCatalogRepository.js";
@@ -118,7 +119,7 @@ export function createPlayerLootRouter() {
       // then the published editorial layer (never the rates or telemetry).
       const rated = withObservedRates(db, served);
       const edited = target.wingKey ? rated : withEditorialDetail(rated, publishedViewInDatabase(db, target.instanceId));
-      return withJournalMap(db, edited, target.instanceId);
+      return withBossPortraits(db, withJournalMap(db, edited, target.instanceId));
     });
   }));
   // A dungeon's quest catalog (?include=all adds the zone-only quests), and a
