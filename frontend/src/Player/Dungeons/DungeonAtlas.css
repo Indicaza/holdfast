@@ -1,5 +1,8 @@
 /* Dungeon Atlas: the Explore grid and the dungeon modal. */
 
+/* Adapt columns to the available content area, not the full browser viewport. */
+.gw-atlas { container-type: inline-size; }
+
 .gw-atlas__bar {
   display: flex;
   flex-wrap: wrap;
@@ -24,11 +27,23 @@
 
 .gw-atlas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.9rem;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@container (max-width: 1050px) {
+  .gw-atlas-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@container (max-width: 760px) {
+  .gw-atlas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 520px) {
+  .gw-atlas-grid { grid-template-columns: 1fr; }
 }
 
 .gw-atlas-card__link {
