@@ -3,6 +3,8 @@
 // focus trap. Every `atlas` field is optional: a dungeon the catalog knows
 // only from loot still gets a card, a modal and a loot list.
 
+import { DUNGEON_CARD_ART } from './dungeonCardArt.js'
+
 export const ATLAS_SECTIONS = Object.freeze([
   ['journal', 'Journal'],
   ['quests', 'Quests'],
@@ -333,7 +335,9 @@ export function cardModel(dungeon = {}, { character = null, wishCounts = new Map
     id: entryKey(dungeon),
     wing: isWingEntry(dungeon) ? dungeon.wing || '' : '',
     name: dungeon.name || `Instance ${dungeon.instanceId}`,
-    artworkUrl: atlas.artworkUrl,
+    // Published studio art first, then the bundled art for this instance.
+    artworkUrl: atlas.artworkUrl || DUNGEON_CARD_ART[dungeon.instanceId]?.file || '',
+    artFallback: atlas.origin === 'forever' || Number(dungeon.instanceId) >= 2900 ? 'forever' : 'classic',
     artPosition: atlas.artFocus ? `${atlas.artFocus.x * 100}% ${atlas.artFocus.y * 100}%` : '',
     subtitle: atlas.subtitle,
     levels: levelText(atlas),

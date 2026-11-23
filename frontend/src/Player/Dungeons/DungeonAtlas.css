@@ -54,10 +54,16 @@
   position: relative;
   display: grid;
   place-items: center;
-  height: 7rem;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--gw-raise), var(--gw-bg)) center / cover no-repeat;
   color: var(--gw-faint);
 }
+.gw-atlas-card__art::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 7, 10, 0.28) 0%, transparent 34%, transparent 52%, rgba(6, 7, 10, 0.86) 100%); content: ''; pointer-events: none; }
+.gw-atlas-card__art > * { z-index: 1; }
+.gw-atlas-card__forever { color: rgba(217, 182, 110, 0.5); font-family: "Friz Quadrata TT", Georgia, "Times New Roman", serif; font-size: 1.15rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.gw-atlas-card__forever b { font-weight: 400; }
+.gw-atlas-card__skull { opacity: 0.55; }
 
 /* No artwork yet: a quiet, deliberate panel instead of an empty box. */
 .gw-atlas-card__art--blank {
@@ -65,17 +71,6 @@
     radial-gradient(120% 90% at 85% 10%, color-mix(in srgb, var(--gw-accent) 14%, transparent), transparent 60%),
     repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--gw-line) 45%, transparent) 14px 15px),
     linear-gradient(160deg, var(--gw-raise), var(--gw-bg));
-}
-
-.gw-atlas-card__glyph {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid var(--gw-line);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--gw-bg) 70%, transparent);
-  color: var(--gw-dim);
 }
 
 .gw-atlas-card__levels {
