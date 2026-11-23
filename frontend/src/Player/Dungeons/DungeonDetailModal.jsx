@@ -161,7 +161,7 @@ export default function DungeonDetailModal({
     }
   }
 
-  const openBoss = (target) => onNavigate({ section: 'journal', boss: bossKey(target) })
+  const openBoss = (target) => onNavigate({ section: 'journal', boss: bossKey(target), ...(allLoot ? { allLoot: true } : {}) })
   const openOverview = () => onNavigate({ section: 'journal', boss: '' })
   const openQuests = () => onNavigate({ section: 'quests', boss })
   const openLoot = () => onNavigate({ section: 'journal', boss, allLoot: true })
@@ -169,7 +169,7 @@ export default function DungeonDetailModal({
   // block in the loot list.
   const onSource = (source) => {
     if (!source) return
-    if ((source.kind === 'boss' || source.sourceKind === 'boss') && source.bossKey) onNavigate({ section: 'journal', boss: source.bossKey })
+    if ((source.kind === 'boss' || source.sourceKind === 'boss') && source.bossKey) onNavigate({ section: 'journal', boss: source.bossKey, ...(allLoot ? { allLoot: true } : {}) })
     else if (source.kind === 'quest' || source.sourceKind === 'quest') openQuests()
     else if (source.key) {
       setFocusSource(source.key)
@@ -228,7 +228,7 @@ export default function DungeonDetailModal({
           overview={<DungeonOverview entry={merged} atlas={atlas}
             forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} readiness={readinessSummary} onLoot={openLoot} onQuests={openQuests} />} />}
           loot={(
-            <LootSection groups={groups} items={items} character={character} atlas={atlas} lootProps={lootProps} focus={focusSource} onFocused={() => setFocusSource('')}
+            <LootSection groups={groups} items={items} character={character} atlas={atlas} lootProps={lootProps} selectedBossKey={boss} focus={focusSource} onFocused={() => setFocusSource('')}
               wishCount={wishCount} planning={planning} onPlan={character ? () => setPlanning((open) => !open) : null}
               planner={planning && character ? (
                 <PlanMyGear character={character} characters={characters} onCharacter={onCharacter} dungeon={{ instanceId: gameInstanceId, name }} dungeons={dungeons}

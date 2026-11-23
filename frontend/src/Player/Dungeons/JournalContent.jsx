@@ -422,13 +422,14 @@ export function BossRail({ bosses, selected, onBoss, onOverview, sourceRows = ()
 const LOOT_KINDS = [['', 'All loot'], ['observed', 'Seen by Guildweaver'], ['reference', 'Reference only']]
 
 // Loot, by source, with the character's gear and wishlist in the bar.
-export function LootSection({ groups, items, character, atlas, lootProps, focus = '', onFocused, wishCount = 0, planner = null, planning = false, onPlan = null }) {
+export function LootSection({ groups, items, character, atlas, lootProps, selectedBossKey = '', focus = '', onFocused, wishCount = 0, planner = null, planning = false, onPlan = null }) {
   const [kind, setKind] = useState('')
   const [usable, setUsable] = useState(false)
+  const [wantedOnly, setWantedOnly] = useState(false)
   const usableKeys = useMemo(() => new Set(gearTargets(items, character, atlas).map((row) => row.item.itemKey)), [items, character, atlas])
   const all = groups.flatMap((group) => group.sources.flatMap((source) => source.rows))
   const hasReference = all.some((row) => row.reference && !row.observed)
-  const filter = (row) => (kind === 'observed' ? row.observed : kind === 'reference' ? !row.observed : true) && (!usable || usableKeys.has(row.item.itemKey))
+  const filter = (row) => (kind === 'observed' ? row.observed : kind === 'reference' ? !row.observed : true) && (!usable || usableKeys.has(row.item.itemKey)) && (!wantedOnly || (lootProps.wishes?.has(row.item.itemKey) && lootProps.wishes.get(row.item.itemKey).state !== 'acquired'))
   const matching = all.filter(filter).length
   const silent = atlas.bosses.filter((boss) => !groups.some((group) => group.sources.some((source) => source.key === `boss:${bossKey(boss)}`)))
   useEffect(() => {
@@ -446,7 +447,7 @@ export function LootSection({ groups, items, character, atlas, lootProps, focus 
           </label>
         ) : null}
         {character ? <label className="gw-loot__check"><input type="checkbox" checked={usable} onChange={(event) => setUsable(event.target.checked)} /> Only what {character.name} can use ({usableKeys.size})</label> : null}
-        {character && wishCount ? <span className="gw-atlas-lootbar__wish"><Icon name="loot" size={13} /> {wishCount} on {character.name}'s wishlist</span> : null}
+        {character && wishCount ? <label className="gw-loot__check gw-atlas-lootbar__wish"><input type="checkbox" checked={wantedOnly} onChange={(event) => setWantedOnly(event.target.checked)} /> Wishlist only ({wishCount})</label> : null}
         {onPlan ? (
           <button type="button" className="gw-btn gw-btn--sm gw-atlas-lootbar__plan" aria-expanded={planning} onClick={onPlan}><Icon name="sparkle" size={14} /> Plan my gear</button>
         ) : null}
@@ -454,7 +455,7 @@ export function LootSection({ groups, items, character, atlas, lootProps, focus 
       {planner}
       {!character ? <p className="gw-muted">Choose a character to keep a wishlist.</p> : null}
       {!all.length ? <p className="gw-muted">No loot recorded here yet.</p> : !matching ? <p className="gw-muted">No loot matches.</p> : (
-        <SourceGroups groups={groups} filter={filter} lootProps={lootProps} onSource={lootProps.onSource} />
+        <SourceGroups groups={groups} filter={filter} lootProps={lootProps} onSource={lootProps.onSource} activeSourceKey={selectedBossKey ? `boss:${selectedBossKey}` : ''} />
       )}
       {all.length && silent.length ? (
         <p className="gw-muted gw-atlas-provenance">No loot known yet for {silent.map((boss) => boss.name).join(', ')}. That does not mean {silent.length === 1 ? 'it drops' : 'they drop'} nothing.</p>

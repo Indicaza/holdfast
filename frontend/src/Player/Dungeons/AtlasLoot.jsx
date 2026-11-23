@@ -276,14 +276,14 @@ const unidentified = (source) => /^Unidentified creature/.test(source.name || ''
 // One source's drops under its name: the link between a drop and where it
 // comes from is the block it sits in. Bosses and rares are framed panels;
 // trash, shared drops, quests and unknown sources are compact rows.
-function SourceBlock({ source, rows, lootProps, onSource, compact = false }) {
+function SourceBlock({ source, rows, lootProps, onSource, compact = false, activeSourceKey = '' }) {
   const guide = onSource && ((source.kind === 'boss' && source.bossKey) || source.kind === 'quest')
   const name = guide ? (
     <button type="button" className="gw-journal-sourcename" onClick={() => onSource(source)}
       title={source.kind === 'boss' ? `${source.name}: open the boss guide` : `${source.name}: open the quest`}>{source.name}</button>
   ) : source.name
   return (
-    <section id={sourceAnchor(source.key)} className={`gw-atlas-source gw-atlas-source--${source.kind}${compact ? ' gw-atlas-source--compact' : ''}${unidentified(source) ? ' is-unidentified' : ''}`}
+    <section id={sourceAnchor(source.key)} className={`gw-atlas-source gw-atlas-source--${source.kind}${compact ? ' gw-atlas-source--compact' : ''}${unidentified(source) ? ' is-unidentified' : ''}${activeSourceKey === source.key ? ' is-active' : ''}`}
       aria-label={`${source.name} loot`} tabIndex={-1} data-source={source.key}>
       <header className="gw-atlas-source__head">
         {compact ? null : <SourceBadge source={source} />}
@@ -300,7 +300,7 @@ const COMPACT_KINDS = new Set(['trash', 'shared', 'quest', 'unknown'])
 // A dungeon's loot grouped by source (lootBySource): bosses, rares, trash
 // and adds, shared drops and chests, quest rewards, unknown. `filter` keeps
 // some rows; a source left with none is not shown.
-export function SourceGroups({ groups, filter = null, lootProps, onSource }) {
+export function SourceGroups({ groups, filter = null, lootProps, onSource, activeSourceKey = '' }) {
   const shown = groups.map((group) => ({ ...group, sources: group.sources.map((source) => ({ source, rows: filter ? source.rows.filter(filter) : source.rows })).filter((entry) => entry.rows.length) }))
     .filter((group) => group.sources.length)
   const rows = shown.flatMap((group) => group.sources.flatMap((entry) => entry.rows))
@@ -322,7 +322,7 @@ export function SourceGroups({ groups, filter = null, lootProps, onSource }) {
         const blocks = (
           <div className={`gw-atlas-lootgroup__sources${compact ? ' gw-atlas-lootgroup__sources--compact' : ''}`}>
             {group.sources.map(({ source, rows: sourceRows }) => (
-              <SourceBlock key={source.key} source={source} rows={sourceRows} lootProps={lootProps} onSource={onSource} compact={compact} />
+              <SourceBlock key={source.key} source={source} rows={sourceRows} lootProps={lootProps} onSource={onSource} compact={compact} activeSourceKey={activeSourceKey} />
             ))}
           </div>
         )

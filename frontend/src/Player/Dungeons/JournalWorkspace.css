@@ -97,7 +97,22 @@
 /* ------------------------------------------------------- The loot dock */
 .gw-jw-details { position: relative; border-color: var(--gwj-border-gold); background: linear-gradient(180deg, var(--gwj-raised), var(--gwj-bg)); --gw-slot: 62px; --gw-slot-small: 48px; }
 .gw-jw-dock { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.gw-jw-dock__title { margin: 0 6.5rem 0.4rem 0; color: var(--gwj-gold); font-family: var(--gwj-title); font-size: 14px; font-weight: 400; }
+.gw-jw--journal.gw-jw--expanded > .gw-jw-details { grid-column: 2; grid-row: 1 / 3; z-index: 5; box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.55); animation: gw-jw-loot-rise 240ms cubic-bezier(0.18, 0.8, 0.2, 1) both; }
+.gw-jw--journal.gw-jw--expanded.gw-jw--norail > .gw-jw-details { grid-column: 1; }
+@keyframes gw-jw-loot-rise { from { clip-path: inset(71% 0 0); } to { clip-path: inset(0 0 0); } }
+.gw-jw-dockbar { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: 3.1rem; padding: 0.35rem 0.75rem; border-bottom: 1px solid var(--gwj-border-gold); background: linear-gradient(180deg, var(--gwj-active), var(--gwj-raised)); }
+.gw-jw-dockbar__title { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.gw-jw-dockbar__title h3 { display: flex; align-items: center; gap: 0.4rem; margin: 0; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 16px; font-weight: 400; }
+.gw-jw-dockbar__title span { color: var(--gwj-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gw-jw .gw-jw-dockbar__map { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 0.35rem; min-height: 32px; padding: 0.2rem 0.75rem; border: 1px solid var(--gwj-border-gold); border-radius: 4px; background: var(--gwj-bg); color: var(--gwj-gold-bright); font-size: 12.5px; cursor: pointer; }
+.gw-jw .gw-jw-dockbar__map:hover { background: var(--gwj-active); }
+.gw-jw .gw-jw-dockbar__map:focus-visible { outline: 2px solid var(--gwj-gold-bright); outline-offset: 2px; }
+.gw-jw-lootbrowser { padding: 0.7rem 0.85rem 1rem; }
+.gw-jw-lootbrowser .gw-atlas-lootbar { position: sticky; top: -0.7rem; z-index: 2; flex-wrap: wrap; padding: 0.45rem 0.55rem; border: 1px solid var(--gwj-border); border-radius: 3px; background: var(--gwj-raised); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+.gw-jw-lootbrowser .gw-atlas-lootgroup__sources { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
+.gw-jw-lootbrowser .gw-atlas-source.is-active { border-color: var(--gwj-border-gold); box-shadow: inset 0 0 0 1px rgba(217, 182, 110, 0.16), 0 0 10px rgba(217, 182, 110, 0.12); background-color: var(--gwj-active); }
+.gw-jw-lootbrowser .gw-atlas-source { scroll-margin-top: 4rem; }
+.gw-jw-lootbrowser .gw-slot { scroll-margin-top: 5.5rem; scroll-margin-bottom: 0.75rem; }
 .gw-jw .gw-jw-lootswitch { position: absolute; top: 0.4rem; right: 0.55rem; z-index: 4; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 28px; padding: 0.1rem 0.6rem; border: 1px solid var(--gwj-border-strong); border-radius: 3px; background: var(--gwj-bg); color: var(--gwj-muted); font-size: 12px; cursor: pointer; }
 .gw-jw .gw-jw-lootswitch:hover { color: var(--gwj-text); }
 .gw-jw .gw-jw-lootswitch[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
@@ -120,8 +135,6 @@
 .gw-jw-mechanics__count { color: var(--gwj-muted); font-family: var(--font-body); font-size: 11.5px; }
 .gw-jw-boss__guide { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.2rem 0 0.4rem; }
 
-/* All loot, in the dock's width. */
-.gw-jw-details .gw-atlas-lootbar { flex-wrap: wrap; padding-right: 6rem; }
 
 /* A boss with no portrait: the same ring and the game's skull. */
 .gw-atlas-portrait__skull { display: block; object-fit: contain; }
@@ -146,6 +159,8 @@
 
 /* One panel at a time, map first. */
 @container gw-journal (max-width: 46rem) {
+  .gw-jw--journal.gw-jw--expanded > .gw-jw-details { grid-column: auto; grid-row: auto; animation: none; }
+  .gw-jw-dockbar__title span { display: none; }
   .gw-jw-head { flex-wrap: wrap; padding: 0.3rem 0.5rem; }
   .gw-jw-head__title { flex: 1 1 8rem; }
   .gw-jw-head__actions { order: 2; }
@@ -178,6 +193,7 @@
 /* The Studio's preview is a column in its page: it takes the height of its
    content, shows every panel, and never asks for the viewport. */
 .gw-atlas-page--embedded.gw-jw-shell { height: auto; }
+.gw-atlas-page--embedded .gw-jw--expanded > .gw-jw-details { grid-column: auto; grid-row: auto; animation: none; }
 .gw-atlas-page--embedded .gw-jw { display: flex !important; flex-direction: column; }
 .gw-atlas-page--embedded .gw-jw-panes { display: none !important; }
 .gw-atlas-page--embedded .gw-jw > .gw-jw-panel, .gw-atlas-page--embedded .gw-jw > .gw-jw-map { display: flex !important; flex: none; overflow: visible; }
@@ -191,3 +207,5 @@
 /* The Studio's page does not load the dashboard's helpers. */
 .gw-jw .gw-atlas-rail__flag { flex: none; margin-left: auto; }
 .gw-jw .gw-atlas-rail__flag .gw-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { .gw-jw--journal.gw-jw--expanded > .gw-jw-details { animation: none; } }
