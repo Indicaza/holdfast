@@ -19,15 +19,18 @@ async function withMaps(page) {
   await page.route(/\/api\/player\/loot\/dungeons\/(\d+)(\?.*)?$/, async (route) => {
     const id = Number(/dungeons\/(\d+)/.exec(route.request().url())[1])
     const instance = metadata.instances.find((entry) => entry.instanceId === id)
-    const response = await route.fetch()
-    if (!instance || !response.ok()) return route.fulfill({ response })
-    const detail = await response.json()
+    // The page may close while this is in flight, as a test ends.
+    const response = await route.fetch().catch(() => null)
+    if (!response) return undefined
+    if (!instance || !response.ok()) return route.fulfill({ response }).catch(() => {})
+    const detail = await response.json().catch(() => null)
+    if (!detail?.atlas) return route.fulfill({ response }).catch(() => {})
     const byName = new Map(detail.atlas.bosses.map((boss) => [boss.name, boss]))
     detail.atlas.journalMap = {
       floors: instance.floors.map((floor) => ({ floorId: floor.floorId, index: floor.index, name: floor.name, imageUrl: PIXEL, width: 1002, height: 668, attribution: 'Test placeholder' })),
       pins: instance.pins.filter((pin) => byName.has(pin.name)).map((pin) => ({ bossKey: String(byName.get(pin.name).encounterId || byName.get(pin.name).npcId), name: pin.name, floorId: `journal-${id}-${pin.floor}`, x: pin.x, y: pin.y })),
     }
-    return route.fulfill({ response, json: detail })
+    return route.fulfill({ response, json: detail }).catch(() => {})
   })
 }
 
@@ -40,6 +43,10 @@ async function signIn(page, context) {
     paired = true
   }
 }
+
+test.afterEach(async ({ page }) => {
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+})
 
 const noPageScroll = (page) => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1 && document.documentElement.scrollWidth <= window.innerWidth + 1)
 const inView = async (page, locator) => {
