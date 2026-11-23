@@ -161,7 +161,7 @@ export default function DungeonDetailModal({
     }
   }
 
-  const openBoss = (target) => onNavigate({ section: 'journal', boss: bossKey(target), allLoot })
+  const openBoss = (target) => onNavigate({ section: 'journal', boss: bossKey(target), ...(allLoot ? { allLoot: true } : {}) })
   const openOverview = () => onNavigate({ section: 'journal', boss: '' })
   const openQuests = () => onNavigate({ section: 'quests', boss })
   const openLoot = () => onNavigate({ section: 'journal', boss, allLoot: true })
@@ -169,7 +169,7 @@ export default function DungeonDetailModal({
   // block in the loot list.
   const onSource = (source) => {
     if (!source) return
-    if ((source.kind === 'boss' || source.sourceKind === 'boss') && source.bossKey) onNavigate({ section: 'journal', boss: source.bossKey, allLoot })
+    if ((source.kind === 'boss' || source.sourceKind === 'boss') && source.bossKey) onNavigate({ section: 'journal', boss: source.bossKey, ...(allLoot ? { allLoot: true } : {}) })
     else if (source.kind === 'quest' || source.sourceKind === 'quest') openQuests()
     else if (source.key) {
       setFocusSource(source.key)
