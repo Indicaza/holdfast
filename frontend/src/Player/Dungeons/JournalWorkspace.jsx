@@ -25,12 +25,18 @@ function MapPanel({ name, map, floorId, onFloor, selectedKey, onPin }) {
 // world map and the Studio's preview: encounters, the map and the chosen
 // encounter; the map and the quest checklist; or the run history. On a narrow
 // screen one panel shows at a time.
-export default function JournalWorkspace({ name, section, atlas, boss, allLoot, onBoss, onOverview, onAllLoot, sourceRows, overview, loot, quests, runs, role, onRole, character, lootProps }) {
-  const selected = atlas.bosses.find((entry) => bossKey(entry) === boss) || null
+export default function JournalWorkspace({ name, section, atlas, boss, allLoot, onBoss, onOverview, onAllLoot, sourceRows, overview, loot, quests, runs, role, onRole, character, lootProps, startOnFirstBoss = true }) {
+  // The dock always has a boss's loot to show, until the player asks for the
+  // dungeon's overview. The Studio's preview starts on the overview.
+  const [overviewChosen, setOverviewChosen] = useState(!startOnFirstBoss)
+  const [mechanicsOpen, setMechanicsOpen] = useState(false)
+  // A dungeon played as wings opens on its overview, where the wings are.
+  const startsOnOverview = overviewChosen || (atlas.wingEntries?.length > 0 && !atlas.wing)
+  const selected = atlas.bosses.find((entry) => bossKey(entry) === boss) || (startsOnOverview ? null : atlas.bosses[0] || null)
   const selectedKey = selected ? bossKey(selected) : ''
   const map = journalMapProps(atlas)
   const [floorId, setFloorId] = useJournalFloor(map, selectedKey)
-  const [journalPane, setJournalPane] = useState(selected || allLoot ? 'details' : 'map')
+  const [journalPane, setJournalPane] = useState(boss || allLoot ? 'details' : 'map')
   const [questPane, setQuestPane] = useState('checklist')
   if (section === 'runs') return <div className="gw-jw gw-jw--runs"><div className="gw-jw-scroll gw-atlas-section">{runs}</div></div>
 
@@ -38,6 +44,7 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
   const pane = quest ? questPane : journalPane
   const setPane = quest ? setQuestPane : setJournalPane
   const chooseBoss = (target) => {
+    setOverviewChosen(false)
     setJournalPane('details')
     onBoss(target)
   }
@@ -64,18 +71,17 @@ export default function JournalWorkspace({ name, section, atlas, boss, allLoot, 
       {paneBar}
       {atlas.bosses.length ? (
         <div className="gw-jw-panel gw-jw-encounters">
-          <BossRail bosses={atlas.bosses} selected={selected} onBoss={chooseBoss} onOverview={() => { setJournalPane('details'); onOverview() }} sourceRows={sourceRows} wishes={lootProps?.wishes} numbered={Boolean(map?.pins.length)} />
+          <BossRail bosses={atlas.bosses} selected={selected} onBoss={chooseBoss} onOverview={() => { setOverviewChosen(true); setJournalPane('details'); onOverview() }} sourceRows={sourceRows} wishes={lootProps?.wishes} numbered={Boolean(map?.pins.length)} />
         </div>
       ) : null}
       {mapPanel}
       <section className="gw-jw-panel gw-jw-details" aria-label="Encounter details">
-        <div className="gw-jw-details__bar">
-          <h3>{allLoot ? `All loot in ${name}` : selected ? 'Encounter' : 'Dungeon'}</h3>
-          <button type="button" className="gw-jw-lootswitch" aria-pressed={allLoot} onClick={() => onAllLoot(!allLoot)}><Icon name="loot" size={13} /> All loot</button>
+        <div className="gw-jw-dock">
+          {allLoot ? <div className="gw-jw-scroll"><h3 className="gw-jw-dock__title">All loot in {name}</h3>{loot}</div>
+            : selected ? <BossDetail key={selectedKey} boss={selected} index={index} bosses={atlas.bosses} atlas={atlas} rows={sourceRows(selected)} onBoss={chooseBoss} role={role} onRole={onRole} character={character} lootProps={lootProps} mechanicsOpen={mechanicsOpen} onMechanics={setMechanicsOpen} />
+              : <div className="gw-jw-scroll">{overview}</div>}
         </div>
-        {allLoot ? <div className="gw-jw-scroll">{loot}</div>
-          : selected ? <BossDetail key={selectedKey} boss={selected} index={index} bosses={atlas.bosses} atlas={atlas} rows={sourceRows(selected)} onBoss={chooseBoss} role={role} onRole={onRole} character={character} lootProps={lootProps} />
-            : <div className="gw-jw-scroll">{overview}</div>}
+        <button type="button" className="gw-jw-lootswitch" aria-pressed={allLoot} onClick={() => onAllLoot(!allLoot)}><Icon name="loot" size={13} /> All loot</button>
       </section>
     </div>
   )

@@ -76,6 +76,7 @@ test('the dungeon page: deep link, quick guide, quests, keyboard', async ({ page
   // Level 20 suits Deadmines (15–28).
   await expect(dungeon).toContainText('Good for Plannerine')
   // The overview's practical guide.
+  await dungeon.getByRole('button', { name: 'Dungeon overview' }).click()
   await expect(dungeon.getByRole('region', { name: 'Dangerous trash' })).toContainText('Defias Wizard')
   await expect(dungeon.getByRole('navigation', { name: 'Bosses' })).toContainText('Edwin VanCleef')
 
@@ -87,6 +88,7 @@ test('the dungeon page: deep link, quick guide, quests, keyboard', async ({ page
   await page.goto('/dashboard/dungeons?open=36&section=bosses&boss=2746')
   const cookie = page.getByRole('article', { name: 'Cookie' })
   // A character whose role is not known: no role is assumed until one is picked.
+  await cookie.locator('.gw-jw-mechanics > summary').click()
   await expect(cookie.getByRole('button', { name: 'All roles' })).toHaveAttribute('aria-pressed', 'true')
   await cookie.getByRole('button', { name: 'Healer' }).click()
   const guide = cookie.getByRole('region', { name: 'Quick guide for healer' })

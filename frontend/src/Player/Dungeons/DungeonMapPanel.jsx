@@ -12,16 +12,23 @@ export function DungeonMapPanel({ dungeonName = '', floors = [], pins = [], floo
   const placed = pins.filter((pin) => pin.floorId === floor.floorId)
   return (
     <figure className="gw-dmap" data-floor={floor.floorId}>
-      {floors.length > 1 ? (
-        <div className="gw-dmap__floors" role="group" aria-label={`${dungeonName || 'Dungeon'} floors`}>
-          {floors.map((entry, index) => (
-            <button key={entry.floorId} type="button" aria-pressed={entry.floorId === floor.floorId} onClick={() => onFloorChange?.(entry.floorId)}>{floorName(entry, index)}</button>
-          ))}
-        </div>
-      ) : null}
       <div className="gw-dmap__stage">
       <div className="gw-dmap__frame" style={{ '--map-ratio': (floor.width || 1002) / (floor.height || 668), aspectRatio: `${floor.width || 1002} / ${floor.height || 668}` }}>
         <img src={floor.imageUrl} alt={`Map of ${floorName(floor, floors.indexOf(floor))}`} draggable="false" />
+        {floors.length > 3 ? (
+          <label className="gw-dmap__floors gw-dmap__floors--select">
+            <span className="gw-dmap__sr">{dungeonName || 'Dungeon'} floor</span>
+            <select value={floor.floorId} onChange={(event) => onFloorChange?.(event.target.value)}>
+              {floors.map((entry, index) => <option key={entry.floorId} value={entry.floorId}>{index + 1}. {floorName(entry, index)}</option>)}
+            </select>
+          </label>
+        ) : floors.length > 1 ? (
+          <div className="gw-dmap__floors" role="group" aria-label={`${dungeonName || 'Dungeon'} floors`}>
+            {floors.map((entry, index) => (
+              <button key={entry.floorId} type="button" aria-pressed={entry.floorId === floor.floorId} onClick={() => onFloorChange?.(entry.floorId)}>{floorName(entry, index)}</button>
+            ))}
+          </div>
+        ) : null}
         {placed.map((pin) => (
           <button key={pin.bossKey} type="button" className={`gw-atlas-floor__marker gw-dmap__pin${pin.bossKey === selectedKey ? ' is-active' : ''}`}
             style={{ left: `${(pin.x * 100).toFixed(2)}%`, top: `${(pin.y * 100).toFixed(2)}%` }} aria-label={`${pin.name}, boss ${pin.number}, on the map`}
@@ -29,13 +36,13 @@ export function DungeonMapPanel({ dungeonName = '', floors = [], pins = [], floo
             {pin.number}
           </button>
         ))}
+        <figcaption className="gw-dmap__credit">
+          {floors.length === 1 && floor.name ? `${floor.name}. ` : ''}
+          {placed.length ? '' : 'No boss is placed on this floor. '}
+          {floor.attribution ? `Map: ${floor.attribution}` : ''}
+        </figcaption>
       </div>
       </div>
-      <figcaption className="gw-muted">
-        {floors.length === 1 && floor.name ? `${floor.name}. ` : ''}
-        {placed.length ? '' : 'No boss is placed on this floor. '}
-        {floor.attribution ? `Map: ${floor.attribution}` : ''}
-      </figcaption>
     </figure>
   )
 }

@@ -99,6 +99,7 @@ describe('the modal', () => {
   test('overview: a short readiness summary with when the data was captured', async () => {
     const calls = api(MISSING)
     renderWithSession(<Modal section="overview" />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     const summary = await screen.findByText('1 of 5 required done · 1 in the quest log · 2 to pick up · 1 waiting on an earlier quest')
     expect(summary.closest('[data-readiness]').dataset.readiness).toBe('missing')
     expect(screen.getByText(/^Quests as of .+, from the last sync: \/reload or log out in WoW to update\.$/)).toBeTruthy()
@@ -148,6 +149,7 @@ describe('the modal', () => {
     const live = { status: 'open', subscribe: (next) => { listeners.add(next); return () => listeners.delete(next) } }
     api(() => reply)
     renderWithSession(<LiveUpdatesContext.Provider value={live}><Modal section="overview" /></LiveUpdatesContext.Provider>)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     await screen.findByText(/2 to pick up/)
     reply = READY
     act(() => {
@@ -165,6 +167,7 @@ describe('the modal', () => {
       return <Modal section="overview" character={character} onCharacter={(id) => setCharacter(id === 'char-2' ? BRICK : ROOK)} />
     }
     renderWithSession(<Switcher />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     await screen.findByText(/2 to pick up/)
     fireEvent.change(screen.getByRole('combobox', { name: 'Character' }), { target: { value: 'char-2' } })
     expect(await screen.findByText(/No quest data synced for Brick yet/)).toBeTruthy()

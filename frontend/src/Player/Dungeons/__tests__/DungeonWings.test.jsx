@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { FIXTURE_DUNGEON_LIST } from '../__fixtures__/atlas.js'
@@ -64,6 +64,7 @@ describe('dungeon wings', () => {
     await waitFor(() => expect(calls.some((call) => /scarlet-monastery(%3A|:)library$/.test(call.path))).toBe(true))
     await waitFor(() => expect(within(dialog).getByText('Arcanist Doan')).toBeTruthy())
     expect(within(dialog).queryByText('Interrogator Vishas')).toBeNull()
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     expect(within(dialog).getByText(/Floors: Library/)).toBeTruthy()
 
     resetHarness('?open=scarlet-monastery%3Alibrary&section=quests')

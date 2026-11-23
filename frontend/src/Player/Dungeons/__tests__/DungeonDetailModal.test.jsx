@@ -110,6 +110,7 @@ describe('opening, closing and focus', () => {
     api()
     renderWithSession(<Modal />)
     const dialog = await screen.findByRole('dialog')
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     await screen.findByText(/items? Rook can use/)
     const focusable = [...dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])')]
     const first = focusable[0]
@@ -176,6 +177,7 @@ describe('deep links and sections', () => {
 
     // Overview: the practical guide (dangerous trash) and the character's short answer.
     renderWithSession(<Modal section="overview" />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     const trash = await screen.findByRole('region', { name: 'Dangerous trash' })
     expect(trash.textContent).toContain('Defias Wizard')
     expect(trash.textContent).toContain('Fireball')
@@ -340,6 +342,7 @@ describe('missing data', () => {
       unresolvedLoot: [drop(273805, 261306), drop(273806, null)] }
     api({ detail: { ...FIXTURE_DEADMINES_DETAIL, sources: [], atlas } })
     const { unmount } = renderWithSession(<Modal />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Dungeon overview' }))
     expect(await screen.findByText(/A WoW Forever dungeon: its bosses and level band come from the game client \(The Hall of Thanes\)/)).toBeTruthy()
     unmount()
     resetHarness()
