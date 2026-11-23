@@ -35,7 +35,7 @@ test('Deadmines loot: slots per source, tooltip on hover and focus, details on p
   await expect(edwin.locator('.gw-atlas-loot__rates')).toHaveCount(0)
   const box = await slots.first().boundingBox()
   expect(box.width).toBeGreaterThanOrEqual(40)
-  expect(box.width).toBeLessThanOrEqual(52)
+  expect(box.width).toBeLessThanOrEqual(64)
 
   // Hover: the game's tooltip, inside the viewport.
   await slots.first().hover()

@@ -14,9 +14,9 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: 0.4rem 1rem;
-  min-height: 3.1rem;
-  padding: 0.3rem 0.75rem;
+  gap: 0.4rem 0.9rem;
+  min-height: 2.75rem;
+  padding: 0.2rem 0.65rem;
   border-bottom: 1px solid var(--gwj-border-gold);
   background: linear-gradient(180deg, var(--gwj-raised), var(--gwj-bg));
 }
@@ -27,7 +27,7 @@
 }
 .gw-jw-head .gw-atlas-back { display: inline-flex; flex: none; align-items: center; gap: 0.3rem; color: var(--gwj-muted); font-size: 12.5px; text-decoration: none; }
 .gw-jw-head .gw-atlas-back:hover { color: var(--gwj-gold-bright); }
-.gw-jw-head__title { flex: 0 1 auto; min-width: 7rem; }
+.gw-jw-head .gw-jw-head__title { display: flex; flex: 0 1 auto; flex-direction: row; align-items: baseline; gap: 0.65rem; min-width: 7rem; }
 .gw-jw-head__title h2 { overflow: hidden; margin: 0; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 1.2rem; font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
 .gw-jw-head__title h2:focus { outline: none; }
 .gw-jw-head__meta { display: flex; align-items: center; gap: 0.5rem; margin: 0; overflow: hidden; color: var(--gwj-muted); font-size: 11.5px; white-space: nowrap; }
@@ -40,12 +40,12 @@
 .gw-jw-status { flex: 1; min-height: 0; padding: 1rem; overflow: auto; }
 
 /* ---------------------------------------------------------- The panels */
-.gw-jw { display: grid; flex: 1; gap: 0.5rem; min-width: 0; min-height: 0; padding: 0.5rem; background: var(--gwj-inset); }
-.gw-jw--journal { grid-template: 'rail map details' minmax(0, 1fr) / clamp(11rem, 14%, 13rem) minmax(0, 1fr) clamp(19.5rem, 25%, 25rem); }
-.gw-jw--journal.gw-jw--nomap { grid-template: 'rail map' auto 'rail details' minmax(0, 1fr) / clamp(11.5rem, 15%, 14rem) minmax(0, 1fr); }
-.gw-jw--journal.gw-jw--norail { grid-template: 'map details' minmax(0, 1fr) / minmax(0, 1fr) clamp(20rem, 32%, 30rem); }
+.gw-jw { display: grid; flex: 1; gap: 0.3rem; min-width: 0; min-height: 0; padding: 0.3rem; background: var(--gwj-inset); }
+.gw-jw--journal { grid-template: 'rail map' minmax(0, 1fr) 'rail details' minmax(min(12.5rem, 40%), 28%) / clamp(12.5rem, 16%, 14.375rem) minmax(0, 1fr); }
+.gw-jw--journal.gw-jw--nomap { grid-template: 'rail map' auto 'rail details' minmax(0, 1fr) / clamp(12.5rem, 16%, 14.375rem) minmax(0, 1fr); }
+.gw-jw--journal.gw-jw--norail { grid-template: 'map' minmax(0, 1fr) 'details' minmax(min(12.5rem, 40%), 28%) / minmax(0, 1fr); }
 .gw-jw--journal.gw-jw--nomap.gw-jw--norail { grid-template: 'map' auto 'details' minmax(0, 1fr) / minmax(0, 1fr); }
-.gw-jw--quests { grid-template: 'map checklist' minmax(0, 1fr) / minmax(0, 1fr) clamp(24rem, 40%, 36rem); }
+.gw-jw--quests { grid-template: 'map checklist' minmax(0, 1fr) / minmax(0, 1fr) clamp(23rem, 34%, 31rem); }
 .gw-jw--quests.gw-jw--nomap { grid-template: 'map' auto 'checklist' minmax(0, 1fr) / minmax(0, 1fr); }
 .gw-jw--runs { display: flex; }
 .gw-jw-encounters { grid-area: rail; }
@@ -71,15 +71,22 @@
 .gw-jw .gw-atlas-rail { position: static; flex: 1; min-height: 0; max-height: none; padding: 0.25rem; overflow-y: auto; overscroll-behavior: contain; }
 
 /* ------------------------------------------------------------- The map */
-.gw-jw-map { padding: 0.4rem; background: linear-gradient(rgba(8, 9, 13, 0.84), rgba(8, 9, 13, 0.84)), var(--gwj-rock) center / 256px; }
-.gw-jw-map .gw-dmap { flex: 1; min-height: 0; gap: 0.3rem; }
-.gw-jw-map .gw-dmap__floors { flex: none; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
-.gw-jw-map .gw-dmap__floors button { flex: none; white-space: nowrap; }
-.gw-jw-map .gw-dmap__floors button[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
+.gw-jw-map { padding: 0; background: radial-gradient(circle at center, rgba(70, 49, 22, 0.5), rgba(18, 13, 8, 0.92) 72%), var(--gwj-rock) center / 256px; }
+.gw-jw-map .gw-dmap { flex: 1; min-height: 0; gap: 0; }
 .gw-jw-map .gw-dmap__stage { display: grid; flex: 1; place-items: center; min-height: 0; container-type: size; }
-.gw-jw-map .gw-dmap__frame { width: min(100cqw, calc(100cqh * var(--map-ratio, 1.5))); border-color: var(--gwj-border-gold); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55); }
-.gw-jw-map figcaption { flex: none; overflow: hidden; color: var(--gwj-muted); font-size: 11px; line-height: 1.2; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
-.gw-dmap__pin.gw-atlas-floor__marker { --interactive-radius: 50%; width: 24px; height: 24px; border-radius: 50%; border-color: var(--gwj-gold, #d9b66e); background: rgba(8, 9, 13, 0.92); color: var(--gwj-gold-bright, #fbda90); }
+.gw-jw-map .gw-dmap__frame { width: min(100cqw, calc(100cqh * var(--map-ratio, 1.5))); border: 0; border-radius: 0; box-shadow: 0 0 22px rgba(0, 0, 0, 0.6); }
+
+/* What floats on the map. */
+.gw-dmap__frame .gw-dmap__floors { position: absolute; top: 0.4rem; left: 0.4rem; z-index: 3; flex-wrap: nowrap; gap: 2px; max-width: calc(100% - 0.8rem); padding: 2px; overflow-x: auto; border: 1px solid rgba(217, 182, 110, 0.4); border-radius: 4px; background: rgba(10, 9, 8, 0.78); scrollbar-width: none; }
+.gw-dmap__frame .gw-dmap__floors button { flex: none; min-height: 26px; padding: 0.05rem 0.55rem; border: 0; border-radius: 3px; background: transparent; color: #d8d2c4; font-size: 12px; white-space: nowrap; }
+.gw-dmap__frame .gw-dmap__floors button:hover { color: #fff; }
+.gw-dmap__frame .gw-dmap__floors button[aria-pressed='true'] { background: rgba(217, 182, 110, 0.24); color: #fbda90; }
+.gw-dmap__floors--select select { max-width: min(16rem, 100%); min-height: 26px; padding: 0 0.3rem; border: 0; background: transparent; color: #fbda90; font-size: 12px; cursor: pointer; }
+.gw-dmap__floors--select option { background: #14161d; color: #e7e4dc; }
+.gw-dmap__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.gw-dmap__credit { position: absolute; right: 0; bottom: 0; z-index: 1; max-width: 100%; padding: 0.05rem 0.4rem; overflow: hidden; border-top-left-radius: 3px; background: rgba(10, 9, 8, 0.58); color: rgba(231, 228, 220, 0.72); font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.gw-dmap__credit:empty { display: none; }
+.gw-dmap__pin.gw-atlas-floor__marker { z-index: 2; --interactive-radius: 50%; width: 24px; height: 24px; border-radius: 50%; border-color: var(--gwj-gold, #d9b66e); background: rgba(8, 9, 13, 0.92); color: var(--gwj-gold-bright, #fbda90); }
 .gw-dmap__pin.gw-atlas-floor__marker:hover { background: var(--gwj-active, #231f19); color: var(--gwj-gold-bright, #fbda90); }
 .gw-dmap__pin.gw-atlas-floor__marker.is-active { z-index: 2; width: 30px; height: 30px; border-color: #fff4cf; background: var(--gwj-gold-bright, #fbda90); color: #16120a; box-shadow: 0 0 0 3px rgba(251, 218, 144, 0.35), 0 0 14px rgba(251, 218, 144, 0.65); }
 .gw-jw-map--none { padding: 0; background: var(--gwj-bg); }
@@ -87,28 +94,45 @@
 .gw-jw-nomap .gw-icon { color: var(--gwj-gold-dim); }
 .gw-jw-nomap strong { color: var(--gwj-text); font-weight: 600; }
 
-/* ------------------------------------------------- The chosen encounter */
-.gw-jw-details__bar { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.25rem; padding: 0.2rem 0.4rem 0.2rem 0.75rem; border-bottom: 1px solid var(--gwj-border); background: var(--gwj-raised); }
-.gw-jw-details__bar h3 { overflow: hidden; margin: 0; color: var(--gwj-gold); font-family: var(--gwj-title); font-size: 13px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
-.gw-jw .gw-jw-lootswitch { display: inline-flex; flex: none; align-items: center; gap: 0.3rem; min-height: 28px; padding: 0.1rem 0.6rem; border: 1px solid var(--gwj-border-strong); border-radius: 3px; background: transparent; color: var(--gwj-muted); font-size: 12px; cursor: pointer; }
+/* ------------------------------------------------------- The loot dock */
+.gw-jw-details { position: relative; border-color: var(--gwj-border-gold); background: linear-gradient(180deg, var(--gwj-raised), var(--gwj-bg)); --gw-slot: 62px; --gw-slot-small: 48px; }
+.gw-jw-dock { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.gw-jw-dock__title { margin: 0 6.5rem 0.4rem 0; color: var(--gwj-gold); font-family: var(--gwj-title); font-size: 14px; font-weight: 400; }
+.gw-jw .gw-jw-lootswitch { position: absolute; top: 0.4rem; right: 0.55rem; z-index: 4; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 28px; padding: 0.1rem 0.6rem; border: 1px solid var(--gwj-border-strong); border-radius: 3px; background: var(--gwj-bg); color: var(--gwj-muted); font-size: 12px; cursor: pointer; }
 .gw-jw .gw-jw-lootswitch:hover { color: var(--gwj-text); }
 .gw-jw .gw-jw-lootswitch[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
 
-.gw-jw-boss.gw-journal-boss { display: flex; flex: 1; flex-direction: column; gap: 0; min-height: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
-.gw-jw-boss__head { display: flex; flex: none; align-items: center; gap: 0.6rem; padding: 0.5rem 0.65rem; border-bottom: 1px solid var(--gwj-border); }
-.gw-jw-boss__head .gw-atlas-boss__pager { margin-left: auto; }
-.gw-jw-boss__title { min-width: 0; }
-.gw-jw-boss__title h3 { margin: 0; overflow: hidden; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 1.05rem; font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.gw-jw-boss.gw-journal-boss { display: grid; flex: 1; grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); align-content: start; align-items: start; gap: 0 0.9rem; min-height: 0; padding: 0.55rem 0.7rem; overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.gw-jw-boss__head { position: sticky; top: 0; display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.gw-jw-boss__head .gw-atlas-portrait { box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--gwj-gold), 0 3px 10px rgba(0, 0, 0, 0.55); }
+.gw-jw-boss__title { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.gw-jw-boss__title h3 { margin: 0; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 1.15rem; font-weight: 400; line-height: 1.15; overflow-wrap: anywhere; }
 .gw-jw-boss__eyebrow { margin: 0; color: var(--gwj-muted); font-size: 11px; }
-.gw-jw-boss__head .gw-journal-boss__facts { margin: 0.15rem 0 0; }
-.gw-jw-boss__guide { display: flex; flex: 1 1 auto; flex-direction: column; gap: 0.5rem; min-height: 3rem; padding: 0.55rem 0.7rem; overflow-y: auto; overscroll-behavior: contain; }
-.gw-jw-boss--sparse .gw-jw-boss__guide { flex: 0 0 auto; }
-.gw-jw-boss__loot { display: flex; flex: 0 1 auto; flex-direction: column; gap: 0.35rem; max-height: 55%; padding: 0.5rem 0.7rem 0.6rem; overflow-y: auto; border-top: 1px solid var(--gwj-border-gold); background: var(--gwj-inset); }
-.gw-jw-boss--sparse .gw-jw-boss__loot { flex: 1 1 auto; max-height: none; }
+.gw-jw-boss__head .gw-journal-boss__facts { margin: 0.1rem 0 0; }
+.gw-jw-boss__head .gw-atlas-boss__pager { display: flex; gap: 2px; margin: 0.2rem 0 0; }
+.gw-jw-boss__head .gw-atlas-boss__pager button { width: 26px; height: 24px; }
+.gw-jw-boss__body { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; padding-right: 6.25rem; }
+.gw-jw-boss__loot { display: flex; flex-direction: column; gap: 0.3rem; }
+.gw-jw-boss__loot .gw-lootgrid ul.gw-lootgrid__slots { gap: 6px; }
+.gw-jw-mechanics { border-top: 1px solid var(--gwj-border); }
+.gw-jw-mechanics > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; min-height: 28px; color: var(--gwj-gold); font-family: var(--gwj-title); font-size: 13px; cursor: pointer; }
+.gw-jw-mechanics > summary .gw-journal-tag { font-family: var(--font-body); }
+.gw-jw-mechanics__count { color: var(--gwj-muted); font-family: var(--font-body); font-size: 11.5px; }
+.gw-jw-boss__guide { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.2rem 0 0.4rem; }
 
-/* All loot, in the details panel's width. */
-.gw-jw-details .gw-atlas-lootbar { flex-wrap: wrap; }
-.gw-jw-details .gw-atlas-lootgroup .gw-atlas-source--compact { grid-template-columns: minmax(0, 1fr); }
+/* All loot, in the dock's width. */
+.gw-jw-details .gw-atlas-lootbar { flex-wrap: wrap; padding-right: 6rem; }
+
+/* A boss with no portrait: the same ring, the Journal's rock, a plain helm. */
+.gw-atlas-portrait__helm { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+.gw-atlas-portrait--blank { display: inline-grid; place-items: center; background: radial-gradient(circle at 35% 30%, #2e2a22, #12100c 72%); color: var(--gwj-gold-dim, #8d7548); }
+.gw-jw .gw-atlas-rail button.gw-journal-rail__boss { min-height: 62px; padding: 0.2rem 0.35rem 0.2rem 0.3rem; gap: 0.5rem; }
+.gw-jw .gw-atlas-rail .gw-journal-rail__line { white-space: normal; overflow: visible; line-height: 1.15; overflow-wrap: anywhere; }
+
+/* The checklist's width: a step's place goes under its name. */
+.gw-jw-checklist .gw-qplan__row { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+.gw-jw-checklist .gw-qplan__row > .gw-qplan__toggle { grid-column: 4; grid-row: 1 / span 2; justify-self: end; }
+.gw-jw-checklist .gw-qplan__row > .gw-qplan__where { grid-column: 3; grid-row: 2; justify-self: start; }
 
 /* ---------------------------------------------- A narrower application */
 @container gw-journal (max-width: 74rem) {
@@ -116,8 +140,7 @@
   .gw-jw-head .gw-atlas-back span { display: none; }
 }
 @container gw-journal (max-width: 64rem) {
-  .gw-jw--journal { grid-template: 'rail map' minmax(0, 1.1fr) 'rail details' minmax(0, 1fr) / 11.5rem minmax(0, 1fr); }
-  .gw-jw--journal.gw-jw--norail { grid-template: 'map' minmax(0, 1.1fr) 'details' minmax(0, 1fr) / minmax(0, 1fr); }
+  .gw-jw-boss.gw-journal-boss { grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr); }
   .gw-jw--quests { grid-template: 'map' minmax(0, 0.8fr) 'checklist' minmax(0, 1fr) / minmax(0, 1fr); }
 }
 
@@ -138,12 +161,18 @@
   .gw-jw .gw-jw-panes button { min-height: 38px; padding: 0.2rem; border: 0; border-radius: 3px; background: transparent; color: var(--gwj-muted); font-size: 13px; cursor: pointer; }
   .gw-jw .gw-jw-panes button[aria-pressed='true'] { background: var(--gwj-active); color: var(--gwj-gold-bright); }
   .gw-jw > .gw-jw-panel, .gw-jw > .gw-jw-map { display: none; flex: 1; }
+  .gw-jw--journal[data-pane='map'] > .gw-jw-details { display: flex; }
+  .gw-jw--journal[data-pane='map'] > .gw-jw-map:not(.gw-jw-map--none) { flex: none; aspect-ratio: 1002 / 668; }
   .gw-jw[data-pane='map'] > .gw-jw-map, .gw-jw[data-pane='encounters'] > .gw-jw-encounters, .gw-jw[data-pane='details'] > .gw-jw-details, .gw-jw[data-pane='checklist'] > .gw-jw-checklist { display: flex; }
   .gw-jw .gw-atlas-rail ol { flex-direction: column; overflow: visible; padding: 0; }
   .gw-jw .gw-atlas-rail button { width: 100%; white-space: normal; }
-  .gw-jw-boss__guide { flex: 0 0 auto; overflow: visible; }
-  .gw-jw-boss.gw-journal-boss { overflow-y: auto; overscroll-behavior: contain; }
-  .gw-jw-boss__loot { flex: 0 0 auto; max-height: none; overflow: visible; }
+  .gw-jw-details { --gw-slot: 56px; --gw-slot-small: 46px; }
+  .gw-jw-map .gw-dmap__stage { place-items: start center; }
+  .gw-dmap__credit { font-size: 9px; }
+  .gw-jw-boss.gw-journal-boss { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .gw-jw-boss__head { position: static; padding-right: 5.75rem; }
+  .gw-jw-boss__body { padding-right: 0; }
+  .gw-dmap__frame .gw-dmap__floors button, .gw-dmap__floors--select select { min-height: 32px; }
 }
 
 /* The Studio's preview is a column in its page: it takes the height of its
@@ -152,8 +181,10 @@
 .gw-atlas-page--embedded .gw-jw { display: flex !important; flex-direction: column; }
 .gw-atlas-page--embedded .gw-jw-panes { display: none !important; }
 .gw-atlas-page--embedded .gw-jw > .gw-jw-panel, .gw-atlas-page--embedded .gw-jw > .gw-jw-map { display: flex !important; flex: none; overflow: visible; }
-.gw-atlas-page--embedded .gw-jw-scroll, .gw-atlas-page--embedded .gw-jw-boss__guide, .gw-atlas-page--embedded .gw-jw-boss__loot, .gw-atlas-page--embedded .gw-atlas-rail { flex: none; max-height: none; overflow: visible; }
-.gw-atlas-page--embedded .gw-jw-boss.gw-journal-boss { flex: none; }
+.gw-atlas-page--embedded .gw-jw-scroll, .gw-atlas-page--embedded .gw-jw-dock, .gw-atlas-page--embedded .gw-atlas-rail { flex: none; max-height: none; overflow: visible; }
+.gw-atlas-page--embedded .gw-jw-boss.gw-journal-boss { flex: none; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+.gw-atlas-page--embedded .gw-jw-boss__head { position: static; padding-right: 5.75rem; }
+.gw-atlas-page--embedded .gw-jw-boss__body { padding-right: 0; }
 .gw-atlas-page--embedded .gw-dmap__stage { display: block !important; container-type: normal !important; }
 .gw-atlas-page--embedded .gw-dmap__frame { width: 100% !important; }
 

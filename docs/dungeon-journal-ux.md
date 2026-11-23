@@ -13,9 +13,11 @@ where it fills the space under the app header and the document does not
 scroll; a dialog over the Resource Map, which stays mounted; and the Studio's
 preview, which takes its content's height and never the viewport's.
 
-- **Journal**: encounters, the map, and the chosen encounter (mechanics above
-  its loot). **All loot** swaps that loot for the dungeon's source groups
-  without moving the map.
+- **Journal**: the encounter rail, the map filling the space above, and the
+  loot dock below it: portrait, name, large slots, then mechanics in one
+  accordion, closed by default. **All loot** swaps the dock's content for the
+  dungeon's source groups without moving the map. The first boss is chosen on
+  opening, except for a dungeon played as wings, which opens on its overview.
 - **Quests**: the map beside the preparation checklist.
 - **My runs**: the run history, full width.
 - Panels scroll; the page does not. Under 46rem one panel shows at a time,
@@ -41,9 +43,10 @@ on a dungeon floor.
 
 ## A boss's page
 
-Header (portrait, place in the dungeon, high priority, interrupts, wishlist),
-then **key mechanics** over the **loot**, which stays in view. Other abilities
-fold away. Missing data is said in one line.
+The dock shows the portrait, place in the dungeon, drop count and wishlist
+count beside the **loot**. **Mechanics** sit under it in one accordion, with
+their count and high-priority mark, and scroll inside the dock. Missing data
+is said in one line.
 
 ## Item slots
 

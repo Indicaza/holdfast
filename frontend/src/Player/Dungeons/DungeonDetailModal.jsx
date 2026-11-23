@@ -223,7 +223,7 @@ export default function DungeonDetailModal({
       {(detail.status === 'error' || detail.status === 'missing') && !detail.data ? <div className="gw-jw-status"><ErrorState onRetry={detail.reload}>This dungeon could not be loaded{loadFailureDetail(detail.error)}.</ErrorState></div> : null}
       {/* While the detail loads, only the Journal can draw from the list entry: other sections would show empty states. */}
       {ready ? (
-        <JournalWorkspace key={section === 'runs' ? 'runs' : 'map'} name={name} section={section} atlas={atlas} boss={boss} allLoot={allLoot} onBoss={openBoss} onOverview={openOverview} onAllLoot={showAllLoot}
+        <JournalWorkspace key={section === 'runs' ? 'runs' : 'map'} startOnFirstBoss={layout !== 'embedded'} name={name} section={section} atlas={atlas} boss={boss} allLoot={allLoot} onBoss={openBoss} onOverview={openOverview} onAllLoot={showAllLoot}
           sourceRows={(target) => bySource.get(`boss:${bossKey(target)}`) || []} role={role} onRole={setRole} character={character} lootProps={lootProps}
           overview={<DungeonOverview entry={merged} atlas={atlas}
             forCharacter={<ForCharacter character={character} gearCount={gearCount} wishCount={wishCount} readiness={readinessSummary} onLoot={openLoot} onQuests={openQuests} />} />}

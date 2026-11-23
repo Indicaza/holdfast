@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { GameTooltipCard, GameTooltipHover } from '../../Intelligence/GameTooltip.jsx'
 import { placeFloating } from '../../WowAssets/floatingPlacement.js'
 import { WowIcon } from '../../WowAssets/WowIcon.jsx'
+import BossPortrait from './BossPortrait.jsx'
 import { acquisitionCopy, confidenceCopy, evidenceText } from '../lootModel.js'
 import { Icon } from '../ui.jsx'
 import { UNVERIFIED_LABEL, itemFacts, observedRateText, referenceRateText, referenceTooltip, revealSource, sourceAnchor } from './atlasModel.js'
@@ -264,8 +265,7 @@ export function LootList({ rows, wishes, empty = 'No loot recorded here yet.', c
 const SOURCE_ICON = { boss: 'dungeon', rare: 'sparkle', trash: 'target', shared: 'loot', quest: 'pin', unknown: 'info' }
 
 function SourceBadge({ source, size = 32 }) {
-  if (source.portraitUrl) return <img className="gw-atlas-portrait" src={source.portraitUrl} alt="" width={size} height={size} />
-  if (source.kind === 'boss') return <span className="gw-atlas-portrait gw-atlas-portrait--blank" style={{ width: size, height: size }} aria-hidden="true">{String(source.name || '?').slice(0, 1)}</span>
+  if (source.portraitUrl || source.kind === 'boss') return <BossPortrait boss={{ name: source.name, portraitUrl: source.portraitUrl }} size={size} />
   return <span className={`gw-atlas-source__badge gw-atlas-source__badge--${source.kind}`} aria-hidden="true"><Icon name={SOURCE_ICON[source.kind] || 'loot'} size={16} /></span>
 }
 
