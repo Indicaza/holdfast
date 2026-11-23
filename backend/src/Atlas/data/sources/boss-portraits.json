@@ -4,8 +4,8 @@
  "totals": {
   "bosses": 261,
   "withDisplayId": 246,
-  "captured": 0,
-  "missing": 261
+  "captured": 246,
+  "missing": 15
  },
  "bosses": [
   {
@@ -15,9 +15,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2029.png",
+   "sha256": "a877b34216c4df1ed87f65dca8007d860d5015c093f48eb69c36b06cb7db45b7",
+   "sharedModel": false
   },
   {
    "npcId": 643,
@@ -28,7 +29,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 644,
@@ -37,9 +39,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14403.png",
+   "sha256": "4e807221c6e32121be0a8ba34231269056b8d93add490e0f999ee8a0fd29dcd3",
+   "sharedModel": true
   },
   {
    "npcId": 645,
@@ -48,9 +51,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d1305.png",
+   "sha256": "3ee1805e1124a810029673e202555c099bfc48403afdcf65fbeff40abe190bea",
+   "sharedModel": false
   },
   {
    "npcId": 646,
@@ -59,9 +63,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2026.png",
+   "sha256": "58534265892d62659d2199755efc5bbe9f727f97893d18e7bdeb42769463b829",
+   "sharedModel": false
   },
   {
    "npcId": 647,
@@ -70,9 +75,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7113.png",
+   "sha256": "ef50fe2651a79e0bf97732bc83fc185de4e450c34cc5ec48dc299535aa177585",
+   "sharedModel": false
   },
   {
    "npcId": 1663,
@@ -81,9 +87,10 @@
    "instanceIds": [
     34
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2149.png",
+   "sha256": "1a9dcf8424c4ec9cd1ec604d34d7139018d58c359532504c9393450f0ddc209b",
+   "sharedModel": false
   },
   {
    "npcId": 1666,
@@ -92,9 +99,10 @@
    "instanceIds": [
     34
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d825.png",
+   "sha256": "065652bc7eb2ace5de86528d1b4eb85ce8483fd260d2b234ff1f87b613a5968e",
+   "sharedModel": false
   },
   {
    "npcId": 1696,
@@ -103,9 +111,10 @@
    "instanceIds": [
     34
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d517.png",
+   "sha256": "a527e9e1b1b1f1fd3f82e6f5e7161b03369bee0eb5b87658b4b2127dbc250165",
+   "sharedModel": false
   },
   {
    "npcId": 1716,
@@ -114,9 +123,10 @@
    "instanceIds": [
     34
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d1621.png",
+   "sha256": "f432638a7b6734c186b3ff5a1112c31f62ec57b86d22f4d4b48245fc25be5174",
+   "sharedModel": false
   },
   {
    "npcId": 1717,
@@ -125,9 +135,10 @@
    "instanceIds": [
     34
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d3250.png",
+   "sha256": "7553ad289e3ca66ee15d3db9a519c61c2bc0fd5cf26e08005a985596a175e345",
+   "sharedModel": false
   },
   {
    "npcId": 1763,
@@ -136,9 +147,10 @@
    "instanceIds": [
     36
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7124.png",
+   "sha256": "22af00461a786eabe78fa61d038926da6fcb730d0c7c48c5ada4060e1b1ed5b5",
+   "sharedModel": false
   },
   {
    "npcId": 1853,
@@ -147,9 +159,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11070.png",
+   "sha256": "2a3d3f78528cd63f9aefe396e75c75e03be580f57ba0fec880c27787664d86fa",
+   "sharedModel": false
   },
   {
    "npcId": 2748,
@@ -158,9 +171,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5988.png",
+   "sha256": "528db6ad4f8a2f4cf7cedd4e4d43dfae3d6c975e3f4a4dd43442900069151278",
+   "sharedModel": false
   },
   {
    "npcId": 3653,
@@ -169,9 +183,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5126.png",
+   "sha256": "a132a818ff28a00baa23906976695db727754c005c1a9f6c4b7bc8ce48c19861",
+   "sharedModel": false
   },
   {
    "npcId": 3654,
@@ -180,9 +195,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4088.png",
+   "sha256": "e3a5e260ec3740326306bebeef541513480d49fa6b65be0fc5c2ad0fab550c71",
+   "sharedModel": false
   },
   {
    "npcId": 3669,
@@ -191,9 +207,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4213.png",
+   "sha256": "51d6e2b3476d936a83323b2e9ba19e0db1fe792a7ac9d201ec4eee3c62910b63",
+   "sharedModel": false
   },
   {
    "npcId": 3670,
@@ -202,9 +219,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4214.png",
+   "sha256": "5f4466c733069dc02001811af68b1614e46aba11096892e55bf9d39306c8a20f",
+   "sharedModel": false
   },
   {
    "npcId": 3671,
@@ -213,9 +231,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4313.png",
+   "sha256": "ef5a74fd2b5162827db1d3dc234e31cc7f096f741b0a2cb8a1c41d1e32b75de6",
+   "sharedModel": false
   },
   {
    "npcId": 3673,
@@ -224,9 +243,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4215.png",
+   "sha256": "ee4f9f687927965f023a077c52997d65efe8bd22c9c2a55e20cb40d923f60ca2",
+   "sharedModel": false
   },
   {
    "npcId": 3674,
@@ -235,9 +255,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4203.png",
+   "sha256": "1a3eb23be4fbfae9e161d4d414e642adbe58119e5905303559c7641368630a3c",
+   "sharedModel": false
   },
   {
    "npcId": 3886,
@@ -246,9 +267,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d524.png",
+   "sha256": "2da1a9144d46c1aeaf991227f3ed84ba537a67b65fe431240564e518030c1f6c",
+   "sharedModel": true
   },
   {
    "npcId": 3887,
@@ -257,9 +279,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d3222.png",
+   "sha256": "5e50ffc86b7152c52cf7bc3ff655a7863d9d409e15ab9937d7ff2a156cf6ce2a",
+   "sharedModel": false
   },
   {
    "npcId": 3914,
@@ -268,9 +291,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d524.png",
+   "sha256": "2da1a9144d46c1aeaf991227f3ed84ba537a67b65fe431240564e518030c1f6c",
+   "sharedModel": true
   },
   {
    "npcId": 3927,
@@ -279,9 +303,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11179.png",
+   "sha256": "2da1a9144d46c1aeaf991227f3ed84ba537a67b65fe431240564e518030c1f6c",
+   "sharedModel": true
   },
   {
    "npcId": 3974,
@@ -290,9 +315,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2040.png",
+   "sha256": "6506a599e4cbe46ac5d0c4d25959958052b27d3f5ecf2af6e8d4316abeb6d608",
+   "sharedModel": false
   },
   {
    "npcId": 3975,
@@ -301,9 +327,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2041.png",
+   "sha256": "45156f20a8ae1a3403d7cff1f6ad768cc31e71308d2442d04defc1917156d8d5",
+   "sharedModel": false
   },
   {
    "npcId": 3977,
@@ -312,9 +339,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2043.png",
+   "sha256": "05d379d76bc902af3f837a84448fe2d6e13b363f556c3150c292112e90e9ce67",
+   "sharedModel": false
   },
   {
    "npcId": 3983,
@@ -323,9 +351,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2044.png",
+   "sha256": "615f65d5808378d86fa60745693ebbe3d5f70d8f4c26e3a9b125680d8038997e",
+   "sharedModel": false
   },
   {
    "npcId": 4274,
@@ -334,9 +363,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2352.png",
+   "sha256": "00ef1f7764af6e71a6b1806cd5a754d36ba1e8f4897a98b274d7529ac63eb4e0",
+   "sharedModel": false
   },
   {
    "npcId": 4275,
@@ -345,9 +375,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2353.png",
+   "sha256": "3aaf15b4752c94dc8dff14b19b564743e72e3456df8d2b7054ffdc216cd3f59f",
+   "sharedModel": false
   },
   {
    "npcId": 4278,
@@ -356,9 +387,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d3223.png",
+   "sha256": "eb8f02699131717377016da44d8e5da87c7fd49e188bc6267145ba107097a4e9",
+   "sharedModel": false
   },
   {
    "npcId": 4279,
@@ -367,9 +399,10 @@
    "instanceIds": [
     33
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d522.png",
+   "sha256": "d864db5b5ccf9f1318dbe5b20f9aca0b410aad6a6903ea9b77e215d0ef7a96ed",
+   "sharedModel": false
   },
   {
    "npcId": 4420,
@@ -378,9 +411,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4652.png",
+   "sha256": "defc9014e0c0f29cf280aaf53aa68e599888f16a5d8ca02e2e79f98ad9420fae",
+   "sharedModel": false
   },
   {
    "npcId": 4421,
@@ -389,9 +423,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4642.png",
+   "sha256": "36c524b0e2ba563dfb1b57edeb2229b1b56597dac18e0c9fcbcea6d2e70cbb9b",
+   "sharedModel": false
   },
   {
    "npcId": 4422,
@@ -400,9 +435,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2450.png",
+   "sha256": "879e8cb95cd9dc18aa56e55d1b63bab34748495ecc8f94a6a4c6ec91beba1439",
+   "sharedModel": false
   },
   {
    "npcId": 4424,
@@ -411,9 +447,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6097.png",
+   "sha256": "7eb3920140b49b1e05dc61ab0ccdebce07bf05d0e4747d9724cab3888910c54b",
+   "sharedModel": false
   },
   {
    "npcId": 4428,
@@ -422,9 +459,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4644.png",
+   "sha256": "f0169c1046ecac5458540b94084a67cf4d85ad307adbfdad435651a6241b1fc3",
+   "sharedModel": false
   },
   {
    "npcId": 4542,
@@ -433,9 +471,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2605.png",
+   "sha256": "93180ff54a79d970a93ded175f66643a1c81a01fd6ce69d8beab448f3e481cdf",
+   "sharedModel": false
   },
   {
    "npcId": 4543,
@@ -444,9 +483,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11396.png",
+   "sha256": "9ff3f6c60a29518dcfec35e9b0a7fea21ce78adb6b0ff1ace58e667cb594847d",
+   "sharedModel": true
   },
   {
    "npcId": 4829,
@@ -455,9 +495,10 @@
    "instanceIds": [
     48
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2837.png",
+   "sha256": "9d7d6438dd11f821f64513c8cc7e742c98e126e18011f06c184b28b05f384a20",
+   "sharedModel": false
   },
   {
    "npcId": 4830,
@@ -466,9 +507,10 @@
    "instanceIds": [
     48
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d1816.png",
+   "sha256": "f98cdf802c7f34a65e81f054ab8be5ebfed33e08b0ba031a820f35a902a3f652",
+   "sharedModel": false
   },
   {
    "npcId": 4831,
@@ -477,9 +519,10 @@
    "instanceIds": [
     48
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4979.png",
+   "sha256": "224b35eb0b78dfec04d6c5008585b59eecadacd2e8365af33a4d02b033a8bb85",
+   "sharedModel": false
   },
   {
    "npcId": 4832,
@@ -488,9 +531,10 @@
    "instanceIds": [
     48
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4939.png",
+   "sha256": "618b31b4f32a2e2f429240b3801b6b3c24f6fe0f0db8b0a08ef509ce6106a3b0",
+   "sharedModel": false
   },
   {
    "npcId": 4854,
@@ -499,9 +543,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11165.png",
+   "sha256": "547cc6c51a21378fe3b7bedfab4adffd21e804a082cc0551fbe844ed8207230c",
+   "sharedModel": true
   },
   {
    "npcId": 4887,
@@ -510,9 +555,10 @@
    "instanceIds": [
     48
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5027.png",
+   "sha256": "76b6506e34c8b26fc518f70b6c70423f98edf00da312d3700c4e8a84aac802fe",
+   "sharedModel": false
   },
   {
    "npcId": 5709,
@@ -521,9 +567,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7806.png",
+   "sha256": "317431b347a08ca899a7ed31e268301d536138ce7435225a5cc99d89335af41d",
+   "sharedModel": false
   },
   {
    "npcId": 5710,
@@ -532,9 +579,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6708.png",
+   "sha256": "e53ec1d45ce51803afbc97bd5f41cd963b550c00de34e70aaebbd03e91a4f5dc",
+   "sharedModel": false
   },
   {
    "npcId": 5719,
@@ -543,9 +591,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7975.png",
+   "sha256": "05196f71e87a83e4a1c3b1e54123de5f6e0672a4453549777bb3cda57e86c609",
+   "sharedModel": true
   },
   {
    "npcId": 5720,
@@ -554,9 +603,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6375.png",
+   "sha256": "05196f71e87a83e4a1c3b1e54123de5f6e0672a4453549777bb3cda57e86c609",
+   "sharedModel": true
   },
   {
    "npcId": 5721,
@@ -565,9 +615,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7553.png",
+   "sha256": "05196f71e87a83e4a1c3b1e54123de5f6e0672a4453549777bb3cda57e86c609",
+   "sharedModel": true
   },
   {
    "npcId": 5722,
@@ -576,9 +627,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9584.png",
+   "sha256": "05196f71e87a83e4a1c3b1e54123de5f6e0672a4453549777bb3cda57e86c609",
+   "sharedModel": true
   },
   {
    "npcId": 5775,
@@ -587,9 +639,10 @@
    "instanceIds": [
     43
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4256.png",
+   "sha256": "a3e513447034db7cb4054aa8bdee02be7e8400a00dddcadb661df926b83e8e7a",
+   "sharedModel": false
   },
   {
    "npcId": 6168,
@@ -598,9 +651,10 @@
    "instanceIds": [
     47
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6110.png",
+   "sha256": "3a1b7deea53ca8495c432e7156c3316ec582e0e299d70432997d746368885e3b",
+   "sharedModel": false
   },
   {
    "npcId": 6229,
@@ -609,9 +663,10 @@
    "instanceIds": [
     90
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6774.png",
+   "sha256": "bf65ed90413541b1a0d4b3eac20eff2a3873b2c39c0816d90744e40ca402fe02",
+   "sharedModel": false
   },
   {
    "npcId": 6235,
@@ -620,9 +675,10 @@
    "instanceIds": [
     90
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6915.png",
+   "sha256": "a2d98a3093fe0ae5d855059ec5339afa64bf6b3308e306981eb8d9d46e3644fe",
+   "sharedModel": false
   },
   {
    "npcId": 6487,
@@ -631,9 +687,10 @@
    "instanceIds": [
     189
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5266.png",
+   "sha256": "098b384f6ca90bac19fe916f0b319b1fe03f2fd5842fa7f83d1285b9e57bcf0a",
+   "sharedModel": false
   },
   {
    "npcId": 6910,
@@ -642,9 +699,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5945.png",
+   "sha256": "547cc6c51a21378fe3b7bedfab4adffd21e804a082cc0551fbe844ed8207230c",
+   "sharedModel": true
   },
   {
    "npcId": 7023,
@@ -653,9 +711,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5285.png",
+   "sha256": "95a7747c70454933d2c6533e73a491ce9eed3be4a595e315902203e99999940b",
+   "sharedModel": false
   },
   {
    "npcId": 7079,
@@ -664,9 +723,10 @@
    "instanceIds": [
     90
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5497.png",
+   "sha256": "d24e4dcd3cef699f692c8c6cc84c2c9b04ed0de490f67e18d38818ad8d4bf320",
+   "sharedModel": false
   },
   {
    "npcId": 7206,
@@ -675,9 +735,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10798.png",
+   "sha256": "0c962c4ab35e4da66cd09e28f2de732147247614feb0e610f56b631b71fc0661",
+   "sharedModel": false
   },
   {
    "npcId": 7228,
@@ -686,9 +747,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6089.png",
+   "sha256": "12bffb4830f3fb3df00d46c7a332bcc0f38d7f00c4327d30d31de55fb80eee33",
+   "sharedModel": false
   },
   {
    "npcId": 7267,
@@ -697,9 +759,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6439.png",
+   "sha256": "87669391e1cb41c42cbb60dec4f8493173c49ebe32bfcda8c7b050aac513c37d",
+   "sharedModel": false
   },
   {
    "npcId": 7271,
@@ -708,9 +771,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6434.png",
+   "sha256": "df6640b7509323d8f603b8a26a0bd7af4cfb38cce4a8fcc1fb2bae9dfb73c164",
+   "sharedModel": false
   },
   {
    "npcId": 7272,
@@ -719,9 +783,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6696.png",
+   "sha256": "37ede330986b0c03cf39047addd3b0475e661aef4d29bbd8590fbb0796841981",
+   "sharedModel": false
   },
   {
    "npcId": 7273,
@@ -730,9 +795,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7271.png",
+   "sha256": "0be1f8bd9bb4c80df863cf7baba75bd3033ccebdadeb481838b6a16f82248f35",
+   "sharedModel": false
   },
   {
    "npcId": 7275,
@@ -741,9 +807,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6441.png",
+   "sha256": "e61693a9a4345c8080b2ebc21c8836b246f1bfe5a7a1082df6ee9c8a78f94e31",
+   "sharedModel": false
   },
   {
    "npcId": 7291,
@@ -752,9 +819,10 @@
    "instanceIds": [
     70
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6059.png",
+   "sha256": "58aef82988f32205f4c81287a86ebe83087d106c700195c37e731e0df63f9431",
+   "sharedModel": false
   },
   {
    "npcId": 7354,
@@ -765,7 +833,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 7355,
@@ -774,9 +843,10 @@
    "instanceIds": [
     129
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7845.png",
+   "sha256": "f7348436549bc17a5ee2e2ae05904720236ecd449fd8671d53b2314d8c16a1db",
+   "sharedModel": true
   },
   {
    "npcId": 7356,
@@ -787,7 +857,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 7357,
@@ -796,9 +867,10 @@
    "instanceIds": [
     129
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8055.png",
+   "sha256": "6e39ae84943c610c9f8108a0db379422858274a55827e5bb7678b91429bee7c3",
+   "sharedModel": false
   },
   {
    "npcId": 7358,
@@ -807,9 +879,10 @@
    "instanceIds": [
     129
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7971.png",
+   "sha256": "b4d3fe2c3e6676ed3b0e638ac9f5cdf825bd4860fa488e2226ddcc73d6f7ca2d",
+   "sharedModel": false
   },
   {
    "npcId": 7795,
@@ -818,9 +891,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6685.png",
+   "sha256": "125faae3d2db9efc541074b4f9019d936e36a32374c8ddc0f024ee7ac6d8decc",
+   "sharedModel": false
   },
   {
    "npcId": 7796,
@@ -829,9 +903,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6690.png",
+   "sha256": "007db110fe834449c07c23a6329cb30f89206fdd2438c3ad7c563b90eed8e55a",
+   "sharedModel": false
   },
   {
    "npcId": 7800,
@@ -840,9 +915,10 @@
    "instanceIds": [
     90
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6980.png",
+   "sha256": "0f2c9da23ffa15c16a1979fe2c88a7e1124bbafa1ed2086d4c69a9bc52d94f56",
+   "sharedModel": false
   },
   {
    "npcId": 8127,
@@ -851,9 +927,10 @@
    "instanceIds": [
     209
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7353.png",
+   "sha256": "798e67efe07062f602cc94e3be94c872fb9f328217ad42a2cd578b2e29449931",
+   "sharedModel": false
   },
   {
    "npcId": 8567,
@@ -862,9 +939,10 @@
    "instanceIds": [
     129
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7864.png",
+   "sha256": "a6043f326859930133fc7a5c058aec58c7afaa5ec544f6d1b273ec9e75fc07d0",
+   "sharedModel": false
   },
   {
    "npcId": 8580,
@@ -873,9 +951,10 @@
    "instanceIds": [
     109
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7873.png",
+   "sha256": "f03398d82b77b04797866550372816410f0a2e37bee6275b47e8fd5cfc6be27b",
+   "sharedModel": false
   },
   {
    "npcId": 8929,
@@ -884,9 +963,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8705.png",
+   "sha256": "3c159b7aa2068a6e608aa5d42b32cda555012121b31a343cf28a0b6614de157d",
+   "sharedModel": false
   },
   {
    "npcId": 8983,
@@ -895,9 +975,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8759.png",
+   "sha256": "e9a6042080f807e34bd92530d524b5c94ee76223c034a87e93cd8d987889e099",
+   "sharedModel": false
   },
   {
    "npcId": 9016,
@@ -906,9 +987,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12162.png",
+   "sha256": "c93036ba3efd7a453c7d26c54457f837b271bd7a0d5024e7ff8368facda4358e",
+   "sharedModel": true
   },
   {
    "npcId": 9017,
@@ -917,9 +999,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d1204.png",
+   "sha256": "34dbf1d6f3e68918220cd37f601fd368a33e61dd5f37e0a812f255f32cdb376d",
+   "sharedModel": false
   },
   {
    "npcId": 9018,
@@ -928,9 +1011,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8761.png",
+   "sha256": "154d3aacdefe6a8d0d2de6d205b141ad4f5516dfe4f3ebdba25d0146d7b599f9",
+   "sharedModel": false
   },
   {
    "npcId": 9019,
@@ -939,9 +1023,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8807.png",
+   "sha256": "e0f608a88a90cdae35b12535e1f9e1489cec6129a808a458faeb1f0bb3bee818",
+   "sharedModel": false
   },
   {
    "npcId": 9024,
@@ -950,9 +1035,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8762.png",
+   "sha256": "ab128688e83dce7be3dc540fbe481d27afb8ee6f5475b655a7bcd8ad14de3025",
+   "sharedModel": false
   },
   {
    "npcId": 9025,
@@ -961,9 +1047,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5781.png",
+   "sha256": "90c2ea7c7bace0458fd43150225bfea9f2cf1651ef4cdad1cafee48c1678e235",
+   "sharedModel": true
   },
   {
    "npcId": 9033,
@@ -972,9 +1059,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8756.png",
+   "sha256": "af25e5bb588ea4ff714667a7965adabff8dc1e45ce84ee5ebed456f225d2a54f",
+   "sharedModel": false
   },
   {
    "npcId": 9041,
@@ -983,9 +1071,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9089.png",
+   "sha256": "cdacda5a0cd948090d912ea0dd69c2f82c6fc9309e364eedaf8a7eada5d49967",
+   "sharedModel": false
   },
   {
    "npcId": 9056,
@@ -994,9 +1083,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8704.png",
+   "sha256": "d7275d0cc98f59aa7c48060d0ce49cafff4940b3e3ec174ebc00eaa6af756691",
+   "sharedModel": false
   },
   {
    "npcId": 9156,
@@ -1005,9 +1095,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8329.png",
+   "sha256": "d1b2249c210040f6018d101f03632c40d7efae8b5551b89c8ff810e8a3402411",
+   "sharedModel": false
   },
   {
    "npcId": 9196,
@@ -1016,9 +1107,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11565.png",
+   "sha256": "7db31ce1b411e25cdb2d1a8ea9104dd74e6842599e72eff12e10c6efca573f90",
+   "sharedModel": true
   },
   {
    "npcId": 9236,
@@ -1027,9 +1119,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9732.png",
+   "sha256": "7daba030d8405ec1a72ce96f037903284ac0be0b4d166df443900c80c2720103",
+   "sharedModel": false
   },
   {
    "npcId": 9237,
@@ -1038,9 +1131,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9733.png",
+   "sha256": "47f052044797a1dbc5d13f37dfafb5ad8d2d3596603157a9fe084d9f2e83b7a4",
+   "sharedModel": false
   },
   {
    "npcId": 9319,
@@ -1049,9 +1143,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9212.png",
+   "sha256": "80c75aef0001b5f8221b83c12c5636e347e34a58293e5993d75aa68464fc6b8a",
+   "sharedModel": false
   },
   {
    "npcId": 9499,
@@ -1060,9 +1155,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8652.png",
+   "sha256": "9c9c39812ac9d6eb89133d9fccda0e83b25d96d0aa272e71768dc227d239fc35",
+   "sharedModel": false
   },
   {
    "npcId": 9502,
@@ -1071,9 +1167,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8177.png",
+   "sha256": "4d96dd122679df18e98786be5b00fd6af64bbde08eded506d4aca791d6921b20",
+   "sharedModel": false
   },
   {
    "npcId": 9537,
@@ -1082,9 +1179,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8658.png",
+   "sha256": "d95cb70d4fe5a2ed179d00c20ce98a2fe97c01250e4c167e111ad2e90c15f48f",
+   "sharedModel": false
   },
   {
    "npcId": 9543,
@@ -1093,9 +1191,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8667.png",
+   "sha256": "e3c64f8f002bc540e6ca7fe7ab3608dacafc1797037c836f3a6aac85c7c311b1",
+   "sharedModel": false
   },
   {
    "npcId": 9568,
@@ -1104,9 +1203,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8711.png",
+   "sha256": "19f26767d1f856e64f2ec1ce491ecd171ed6ffca0693eabaaa9fe4c3e11eb870",
+   "sharedModel": false
   },
   {
    "npcId": 9736,
@@ -1115,9 +1215,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9738.png",
+   "sha256": "1bea0fd79eb14c7ccff94191d1e88213c8a2f725860e396a154cc9fe23086a81",
+   "sharedModel": false
   },
   {
    "npcId": 9816,
@@ -1126,9 +1227,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2172.png",
+   "sha256": "5a9955dd60e2f5e8dfcc8bb611343d6eb26e8928dba71c9870f11f3e7786cf71",
+   "sharedModel": true
   },
   {
    "npcId": 9938,
@@ -1137,9 +1239,10 @@
    "instanceIds": [
     230
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12162.png",
+   "sha256": "c93036ba3efd7a453c7d26c54457f837b271bd7a0d5024e7ff8368facda4358e",
+   "sharedModel": true
   },
   {
    "npcId": 10184,
@@ -1148,9 +1251,10 @@
    "instanceIds": [
     249
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d8570.png",
+   "sha256": "ce2ab905f6767776c067f25a845ebbf142f4dcaa6f1fb5877bc3e64742c97b62",
+   "sharedModel": false
   },
   {
    "npcId": 10220,
@@ -1159,9 +1263,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9567.png",
+   "sha256": "387c5af0fe2c50763879fb3cf78008d5e7abb3aa0e4fca5ca009ee6e839cfafa",
+   "sharedModel": false
   },
   {
    "npcId": 10268,
@@ -1170,9 +1275,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9564.png",
+   "sha256": "4bcbedbdd54243522dd66393eeca07703b0ff5e2d66aaee495898f54feac64c7",
+   "sharedModel": false
   },
   {
    "npcId": 10363,
@@ -1181,9 +1287,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10115.png",
+   "sha256": "83867082d21a33c939eccffc30841089dacdf4f78d425791dd104a127135713c",
+   "sharedModel": false
   },
   {
    "npcId": 10393,
@@ -1194,7 +1301,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 10429,
@@ -1203,9 +1311,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9778.png",
+   "sha256": "d0434867651ebf29dadba475921623bed359edb6777e9ea81525176c874fea5b",
+   "sharedModel": false
   },
   {
    "npcId": 10430,
@@ -1214,9 +1323,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10193.png",
+   "sha256": "3ed13760f67817fb87b1053c64541f3b98a896d79086bb65885237186d6b186f",
+   "sharedModel": false
   },
   {
    "npcId": 10432,
@@ -1225,9 +1335,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2606.png",
+   "sha256": "9ff3f6c60a29518dcfec35e9b0a7fea21ce78adb6b0ff1ace58e667cb594847d",
+   "sharedModel": true
   },
   {
    "npcId": 10433,
@@ -1236,9 +1347,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10248.png",
+   "sha256": "a72f12ac26094e779da852b6f5d3a7d21a7c0a6ea092d37dd170750c8d932eeb",
+   "sharedModel": false
   },
   {
    "npcId": 10435,
@@ -1247,9 +1359,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10433.png",
+   "sha256": "ad9ada3e85997c0a01365c29b9d047654349a33e06eb30e0731522025f983e22",
+   "sharedModel": false
   },
   {
    "npcId": 10436,
@@ -1258,9 +1371,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10698.png",
+   "sha256": "fab4afcea1682283b678e51159f03aebdf9056964aa716067921c8530b50fc5f",
+   "sharedModel": false
   },
   {
    "npcId": 10437,
@@ -1269,9 +1383,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9793.png",
+   "sha256": "f7348436549bc17a5ee2e2ae05904720236ecd449fd8671d53b2314d8c16a1db",
+   "sharedModel": true
   },
   {
    "npcId": 10438,
@@ -1280,9 +1395,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10546.png",
+   "sha256": "0386814575a05d83f2fd7ffd2576e429788e58dde4f137691a6a480edee6f781",
+   "sharedModel": false
   },
   {
    "npcId": 10439,
@@ -1291,9 +1407,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12818.png",
+   "sha256": "975eeafda143c27433578ccc510be3df199f5579b1ee9cd8ab692b698782da52",
+   "sharedModel": false
   },
   {
    "npcId": 10440,
@@ -1302,9 +1419,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10729.png",
+   "sha256": "69c1e108e03c46449788f68515db596a15dd64f9fcceb7bb9173c419d5d8d99e",
+   "sharedModel": false
   },
   {
    "npcId": 10502,
@@ -1313,9 +1431,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11835.png",
+   "sha256": "bc7ecc27d3e3f512bdda0c825d4c0d03808db63244c0cfa503468407a733ced2",
+   "sharedModel": false
   },
   {
    "npcId": 10503,
@@ -1324,9 +1443,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11073.png",
+   "sha256": "0e9210f2645666257df8573b4061dbac2a03556757b721f2f34d8a73d884db26",
+   "sharedModel": false
   },
   {
    "npcId": 10504,
@@ -1335,9 +1455,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11072.png",
+   "sha256": "2d0148a3e9a6dda48dda7195fb5bc053bfb4f23bef418b8abdd71bcd2ee831d5",
+   "sharedModel": false
   },
   {
    "npcId": 10505,
@@ -1346,9 +1467,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11069.png",
+   "sha256": "74ceda0096bbb8765325476b29219ee6e74c928176cc8e1f03034249415d5210",
+   "sharedModel": false
   },
   {
    "npcId": 10507,
@@ -1357,9 +1479,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10433.png",
+   "sha256": "ad9ada3e85997c0a01365c29b9d047654349a33e06eb30e0731522025f983e22",
+   "sharedModel": false
   },
   {
    "npcId": 10516,
@@ -1368,9 +1491,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10771.png",
+   "sha256": "8c8815144245442edd1de2fcce794f3015f1eec681231eb8be16c610dc1daedd",
+   "sharedModel": false
   },
   {
    "npcId": 10558,
@@ -1379,9 +1503,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10482.png",
+   "sha256": "a3df5736943162180e55dbcb38f1af4dc3a3f6e9f662952078d882a1f967345a",
+   "sharedModel": false
   },
   {
    "npcId": 10584,
@@ -1390,9 +1515,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11583.png",
+   "sha256": "7db31ce1b411e25cdb2d1a8ea9104dd74e6842599e72eff12e10c6efca573f90",
+   "sharedModel": true
   },
   {
    "npcId": 10596,
@@ -1401,9 +1527,10 @@
    "instanceIds": [
     229
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d9929.png",
+   "sha256": "031bc21c62358b7def79fc2b3f28da0cfd3cf1e2e460abf152172cd261546a5e",
+   "sharedModel": false
   },
   {
    "npcId": 10808,
@@ -1412,9 +1539,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d571.png",
+   "sha256": "5948b8e9d194919802f29e936cfc8c7dff6d229eead4d880e64e9615aa01ae38",
+   "sharedModel": false
   },
   {
    "npcId": 10809,
@@ -1425,7 +1553,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 10811,
@@ -1434,9 +1563,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10544.png",
+   "sha256": "9877d5e1c9a03fe098a38ebe0efc8766cc78b0320416aec4d676ff3eb74799fc",
+   "sharedModel": false
   },
   {
    "npcId": 10813,
@@ -1445,9 +1575,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10691.png",
+   "sha256": "d029b3eecbdcaecd9f6687f3e93a6d11f987c55d6dbf13613bb014883e32aac4",
+   "sharedModel": false
   },
   {
    "npcId": 10901,
@@ -1456,9 +1587,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11492.png",
+   "sha256": "ab6c0b9282a3ea97f135fd8c5f7dff62d89b89cb4015d020ef95ca789030848f",
+   "sharedModel": false
   },
   {
    "npcId": 10997,
@@ -1467,9 +1599,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10674.png",
+   "sha256": "8c9fa9b33025e2b70e0eb9f2df1e5804e85a0e2493e51cc28a765fca6b25dfd3",
+   "sharedModel": false
   },
   {
    "npcId": 11032,
@@ -1478,9 +1611,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10458.png",
+   "sha256": "582ef5a68d86d48f08c3442b74d08e55038f3c3d3dde2c823e4ed43a182401f9",
+   "sharedModel": false
   },
   {
    "npcId": 11120,
@@ -1491,7 +1625,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 11121,
@@ -1502,7 +1637,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 11143,
@@ -1511,9 +1647,10 @@
    "instanceIds": [
     329
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10669.png",
+   "sha256": "bb2b08277b0da707259a7be8d8c8a4eabc9d6c407f78d65ddb7e7a2a0d20cfef",
+   "sharedModel": false
   },
   {
    "npcId": 11261,
@@ -1522,9 +1659,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10901.png",
+   "sha256": "22b2852ead27ae92e01cff63e59b7c1c47e2e29727ed29da3833bbba6fc12b7d",
+   "sharedModel": false
   },
   {
    "npcId": 11380,
@@ -1533,9 +1671,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11311.png",
+   "sha256": "2f6e36592d1c57a61227505d1acdaf36686297f5a8fdf1a82b2cb8b1999fb1dc",
+   "sharedModel": false
   },
   {
    "npcId": 11382,
@@ -1544,9 +1683,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11288.png",
+   "sha256": "9b4a32b5b91b530d681e6e6d161d296f33f0d9a9632b22931da96632002317bb",
+   "sharedModel": false
   },
   {
    "npcId": 11467,
@@ -1557,7 +1697,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 11486,
@@ -1566,9 +1707,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11256.png",
+   "sha256": "a62d07448fa36119530e163d06459216d56408416772916406e1bfdaafd71fe3",
+   "sharedModel": false
   },
   {
    "npcId": 11487,
@@ -1577,9 +1719,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14384.png",
+   "sha256": "1c012065c74b00bf6e50b4ab71f78c93710b12aee011ad3fa2809f0fe3ddaab0",
+   "sharedModel": false
   },
   {
    "npcId": 11488,
@@ -1588,9 +1731,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11270.png",
+   "sha256": "95be36cb76509712897763afe4b73f5c6b4a7a12338cb5f25a08eb751028dcff",
+   "sharedModel": false
   },
   {
    "npcId": 11489,
@@ -1599,9 +1743,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14383.png",
+   "sha256": "5e83e7231e171d96833cd4608911612d3dd978598669ec260f200a8ad30da67d",
+   "sharedModel": false
   },
   {
    "npcId": 11490,
@@ -1610,9 +1755,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11335.png",
+   "sha256": "3bc37b45afd4989c4a21b4a2a1bbbfa978b7a6368694c07c557750fdb5e92abb",
+   "sharedModel": false
   },
   {
    "npcId": 11492,
@@ -1621,9 +1767,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14416.png",
+   "sha256": "00231d4117544ba50baeea548c6fb05770ad5ba78bcaf36f6a3f0d6fd3d0bd36",
+   "sharedModel": false
   },
   {
    "npcId": 11496,
@@ -1632,9 +1779,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14173.png",
+   "sha256": "b811807cc461abb21dd8a47cc2dda17e687e81f7dcbbe1b8c1b98c611880d9b8",
+   "sharedModel": false
   },
   {
    "npcId": 11501,
@@ -1643,9 +1791,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11583.png",
+   "sha256": "7db31ce1b411e25cdb2d1a8ea9104dd74e6842599e72eff12e10c6efca573f90",
+   "sharedModel": true
   },
   {
    "npcId": 11502,
@@ -1654,9 +1803,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11121.png",
+   "sha256": "0cfefd39664acb3ded5f417d26be3c1fc1d1926d20fe7da2c5108af65449b584",
+   "sharedModel": false
   },
   {
    "npcId": 11517,
@@ -1665,9 +1815,10 @@
    "instanceIds": [
     389
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11611.png",
+   "sha256": "3ea6f114409ef014acb03cd16b6acd649c642e516db87186cc3e59853e1ebb9c",
+   "sharedModel": false
   },
   {
    "npcId": 11518,
@@ -1676,9 +1827,10 @@
    "instanceIds": [
     389
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11429.png",
+   "sha256": "1e8ea70554f81e9d0abb31987918d0a39eb4a32177b36bb174273bce9a32063f",
+   "sharedModel": false
   },
   {
    "npcId": 11519,
@@ -1687,9 +1839,10 @@
    "instanceIds": [
     389
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2007.png",
+   "sha256": "71315d2db1c6cb3ad3861e6726029dd77034d17f008b1dc85e2eb26f91577f4e",
+   "sharedModel": false
   },
   {
    "npcId": 11520,
@@ -1698,9 +1851,10 @@
    "instanceIds": [
     389
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7970.png",
+   "sha256": "4d98db06e3570fee08d5cd6b4a0c86bc8cec733518415b083c357be872a2d692",
+   "sharedModel": false
   },
   {
    "npcId": 11583,
@@ -1709,9 +1863,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11380.png",
+   "sha256": "c572af160c17ef583b1b2fb11309e0fe37a60956d6331fb1f39b841e91118c3b",
+   "sharedModel": false
   },
   {
    "npcId": 11622,
@@ -1720,9 +1875,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12073.png",
+   "sha256": "f150f09760c6fd196a9edffd8826c70ae7c7118a75f06102373da613bb2271e5",
+   "sharedModel": false
   },
   {
    "npcId": 11981,
@@ -1731,9 +1887,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6377.png",
+   "sha256": "43eb0a3eeb18d0d65070f0f2a41469df416f282563425417235aaeb8e1a3b084",
+   "sharedModel": false
   },
   {
    "npcId": 11982,
@@ -1742,9 +1899,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10193.png",
+   "sha256": "3ed13760f67817fb87b1053c64541f3b98a896d79086bb65885237186d6b186f",
+   "sharedModel": false
   },
   {
    "npcId": 11983,
@@ -1753,9 +1911,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6377.png",
+   "sha256": "43eb0a3eeb18d0d65070f0f2a41469df416f282563425417235aaeb8e1a3b084",
+   "sharedModel": false
   },
   {
    "npcId": 11988,
@@ -1764,9 +1923,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11986.png",
+   "sha256": "c93036ba3efd7a453c7d26c54457f837b271bd7a0d5024e7ff8368facda4358e",
+   "sharedModel": true
   },
   {
    "npcId": 12017,
@@ -1775,9 +1935,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14308.png",
+   "sha256": "e5a071bb0f50f386dcdaab14cf25f9120d1c82a513a231bf3e8a5e6023f20c11",
+   "sharedModel": false
   },
   {
    "npcId": 12018,
@@ -1786,9 +1947,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12029.png",
+   "sha256": "786079f128148b57b8c1e8865023d6f7b7dade21854c10c74569b44d95bdb676",
+   "sharedModel": true
   },
   {
    "npcId": 12056,
@@ -1797,9 +1959,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12129.png",
+   "sha256": "5a9955dd60e2f5e8dfcc8bb611343d6eb26e8928dba71c9870f11f3e7786cf71",
+   "sharedModel": true
   },
   {
    "npcId": 12057,
@@ -1808,9 +1971,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12110.png",
+   "sha256": "90c2ea7c7bace0458fd43150225bfea9f2cf1651ef4cdad1cafee48c1678e235",
+   "sharedModel": true
   },
   {
    "npcId": 12098,
@@ -1819,9 +1983,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13030.png",
+   "sha256": "ce2d7fc52f1d03a41a849d2f7e6000ae366c9e13eaeead1b36c0eb30ae469bb4",
+   "sharedModel": false
   },
   {
    "npcId": 12118,
@@ -1830,9 +1995,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13031.png",
+   "sha256": "786079f128148b57b8c1e8865023d6f7b7dade21854c10c74569b44d95bdb676",
+   "sharedModel": true
   },
   {
    "npcId": 12201,
@@ -1841,9 +2007,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12292.png",
+   "sha256": "f92a0fa8eae60008ec98799e14bb255e6332da188af75bc064ca07c4b06c56d7",
+   "sharedModel": false
   },
   {
    "npcId": 12203,
@@ -1852,9 +2019,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12293.png",
+   "sha256": "0dcb00ef04b2bd2a895bec71a8e4da3bfa1121c75c3e79b52afe75e53088bf11",
+   "sharedModel": false
   },
   {
    "npcId": 12225,
@@ -1863,9 +2031,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12350.png",
+   "sha256": "107f2a01907976491df9d40e895ce143a6adfb241703dc2f113d88bf7803c9e2",
+   "sharedModel": false
   },
   {
    "npcId": 12236,
@@ -1874,9 +2043,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12334.png",
+   "sha256": "bc9229b70c3e27a9012415f2094bd81f8da87018e61f81f21d7f679c887e7509",
+   "sharedModel": false
   },
   {
    "npcId": 12258,
@@ -1885,9 +2055,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d12389.png",
+   "sha256": "0d57a4362fce0d0bd4163cc4149c9323067ff454e7e338d9ffe879168e22320c",
+   "sharedModel": false
   },
   {
    "npcId": 12259,
@@ -1896,9 +2067,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13030.png",
+   "sha256": "ce2d7fc52f1d03a41a849d2f7e6000ae366c9e13eaeead1b36c0eb30ae469bb4",
+   "sharedModel": false
   },
   {
    "npcId": 12264,
@@ -1907,9 +2079,10 @@
    "instanceIds": [
     409
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13032.png",
+   "sha256": "96b547eaecdb5d63999622527432f640bd810bdcc4b9bcb4d77188ae91c369cb",
+   "sharedModel": false
   },
   {
    "npcId": 12435,
@@ -1918,9 +2091,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d10115.png",
+   "sha256": "83867082d21a33c939eccffc30841089dacdf4f78d425791dd104a127135713c",
+   "sharedModel": false
   },
   {
    "npcId": 12902,
@@ -1931,7 +2105,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 13020,
@@ -1940,9 +2115,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13992.png",
+   "sha256": "3576b49f30984493b8e1202f29491c444dda1f446acd9e48282cd2703f723f33",
+   "sharedModel": false
   },
   {
    "npcId": 13280,
@@ -1951,9 +2127,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d5489.png",
+   "sha256": "60591b1ce339c3f627e4540033df05dfd9f8ec8fb28c012861f479aff4bb6255",
+   "sharedModel": false
   },
   {
    "npcId": 13282,
@@ -1962,9 +2139,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11172.png",
+   "sha256": "245fd3d5f69468f98f5bb0a142ed555199b74f79d73c1fbb5696b0b868dfc7d6",
+   "sharedModel": false
   },
   {
    "npcId": 13596,
@@ -1973,9 +2151,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d13589.png",
+   "sha256": "032bc882e7cd23a0b471af8a3bf67c47ff92edaa496f5a12a60fc79ad980d5da",
+   "sharedModel": true
   },
   {
    "npcId": 13601,
@@ -1984,9 +2163,10 @@
    "instanceIds": [
     349
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7125.png",
+   "sha256": "b97d454e669a8f0723af1d12bb81c55d210f03e61532628223c91dfa93e7cb0c",
+   "sharedModel": false
   },
   {
    "npcId": 14020,
@@ -1995,9 +2175,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14367.png",
+   "sha256": "cc61df02c8df2087020363e71721e970371c3747b33ae9c95872f9b0e0a94bbb",
+   "sharedModel": false
   },
   {
    "npcId": 14321,
@@ -2006,9 +2187,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11561.png",
+   "sha256": "585df1930060d9b7fe3e3a6e4d17aeb26cf131187108d7fa231cb11cd7442b77",
+   "sharedModel": true
   },
   {
    "npcId": 14322,
@@ -2017,9 +2199,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11545.png",
+   "sha256": "4e807221c6e32121be0a8ba34231269056b8d93add490e0f999ee8a0fd29dcd3",
+   "sharedModel": true
   },
   {
    "npcId": 14323,
@@ -2028,9 +2211,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11561.png",
+   "sha256": "585df1930060d9b7fe3e3a6e4d17aeb26cf131187108d7fa231cb11cd7442b77",
+   "sharedModel": true
   },
   {
    "npcId": 14324,
@@ -2039,9 +2223,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11537.png",
+   "sha256": "ccd83c0e6db14fec49e005062b4329adb7e61f47f55ad38fe75a2859bd87227b",
+   "sharedModel": false
   },
   {
    "npcId": 14325,
@@ -2050,9 +2235,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11564.png",
+   "sha256": "585df1930060d9b7fe3e3a6e4d17aeb26cf131187108d7fa231cb11cd7442b77",
+   "sharedModel": true
   },
   {
    "npcId": 14326,
@@ -2061,9 +2247,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d11561.png",
+   "sha256": "585df1930060d9b7fe3e3a6e4d17aeb26cf131187108d7fa231cb11cd7442b77",
+   "sharedModel": true
   },
   {
    "npcId": 14327,
@@ -2072,9 +2259,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d14378.png",
+   "sha256": "c21b85e393987f7309326bc60a99b5b5bb8682172ec5f6c3211dcbe2c73f5706",
+   "sharedModel": false
   },
   {
    "npcId": 14354,
@@ -2083,9 +2271,10 @@
    "instanceIds": [
     429
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7552.png",
+   "sha256": "1877a65b095972f4a29b0e41cd1a14e6682d968eaa4071ceaec9e6d86f38ecdc",
+   "sharedModel": false
   },
   {
    "npcId": 14506,
@@ -2096,7 +2285,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 14507,
@@ -2105,9 +2295,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15217.png",
+   "sha256": "69c3e136fab9f31b805cd42892ca57e5a1e45b466ec11a3adfb0bf17a1681e64",
+   "sharedModel": false
   },
   {
    "npcId": 14509,
@@ -2116,9 +2307,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15216.png",
+   "sha256": "aaae4e3570e34c96f7c3ce6783896e2300d73a7d6e2eec07fbaafbe57ecae296",
+   "sharedModel": false
   },
   {
    "npcId": 14510,
@@ -2127,9 +2319,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15220.png",
+   "sha256": "e370e37665693bc6637a0c757e6794f221285383fb657a22f3c3b30cb39b0e4d",
+   "sharedModel": false
   },
   {
    "npcId": 14515,
@@ -2138,9 +2331,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15218.png",
+   "sha256": "fd9164b77462db66603b27296b2338fee91f2f05f7f43f0a22eb462cdddcd091",
+   "sharedModel": false
   },
   {
    "npcId": 14517,
@@ -2149,9 +2343,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15219.png",
+   "sha256": "7dc83abde018556195816c6321cdf05e210201f71172bb914f4b7e6a04969a06",
+   "sharedModel": false
   },
   {
    "npcId": 14601,
@@ -2160,9 +2355,10 @@
    "instanceIds": [
     469
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d6377.png",
+   "sha256": "43eb0a3eeb18d0d65070f0f2a41469df416f282563425417235aaeb8e1a3b084",
+   "sharedModel": false
   },
   {
    "npcId": 14834,
@@ -2171,9 +2367,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15295.png",
+   "sha256": "f9aad81ecda3b295639d927e26e161549e278957af8d5e26b06eb80bd4eddd74",
+   "sharedModel": false
   },
   {
    "npcId": 15114,
@@ -2182,9 +2379,10 @@
    "instanceIds": [
     309
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15288.png",
+   "sha256": "4ab9035c0a31064c8b4fc210d93f68f9a7e9224a40842377bd05a451e731b4e4",
+   "sharedModel": false
   },
   {
    "npcId": 15263,
@@ -2193,9 +2391,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15345.png",
+   "sha256": "9f7e33cb6859bf256de663aabfae27c0f3f88a95f6e1ffa68717dcc3b48afe01",
+   "sharedModel": false
   },
   {
    "npcId": 15299,
@@ -2204,9 +2403,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15686.png",
+   "sha256": "8b45ddc3f0c3c5100e3bfbcaddfa5e3975ae292cb26d355d69a2f0a291e548c4",
+   "sharedModel": false
   },
   {
    "npcId": 15339,
@@ -2215,9 +2415,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15432.png",
+   "sha256": "46d75ee017e4927fda6853f1f4c5b05eeb957a0f84b8e68c9a8ba0d63988e0f5",
+   "sharedModel": false
   },
   {
    "npcId": 15340,
@@ -2226,9 +2427,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15392.png",
+   "sha256": "d9858ef4c0edfc186b709f3829e9be93c61f43f4408c08282740eb2da95c87fc",
+   "sharedModel": false
   },
   {
    "npcId": 15341,
@@ -2237,9 +2439,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15376.png",
+   "sha256": "4ca2adaaec742c4e32c5d9d194d0600af2b376d50181f5ee9bff80951fb37821",
+   "sharedModel": false
   },
   {
    "npcId": 15348,
@@ -2248,9 +2451,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15742.png",
+   "sha256": "b5e42008415adcdd0bca33c7eed224fd1b328861e1ad50c383dcb8b9efe7568d",
+   "sharedModel": false
   },
   {
    "npcId": 15369,
@@ -2259,9 +2463,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15431.png",
+   "sha256": "4701f60810e1e2f500b6fed5ed72a02a36a3dc28c919f7ff7a6d7e4c9091753b",
+   "sharedModel": false
   },
   {
    "npcId": 15370,
@@ -2270,9 +2475,10 @@
    "instanceIds": [
     509
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15654.png",
+   "sha256": "4261cc2593edd3f6b171e03fa3fb87aa3c9ec76c317b10e08e9e90919a412879",
+   "sharedModel": false
   },
   {
    "npcId": 15509,
@@ -2281,9 +2487,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15739.png",
+   "sha256": "94735e4dd797091937e769c21b9385441281c4e3a11301896130202cc95a5d58",
+   "sharedModel": false
   },
   {
    "npcId": 15510,
@@ -2292,9 +2499,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d125331.png",
+   "sha256": "c52c3138e553fd70565ecbb2dec3cb467b744b471ad43bdbb592d192d9d73d18",
+   "sharedModel": false
   },
   {
    "npcId": 15516,
@@ -2303,9 +2511,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15583.png",
+   "sha256": "dce11452cbdcda1adb0e2748f4f66782b605696ce35c4108882d8a5e19d9ee26",
+   "sharedModel": false
   },
   {
    "npcId": 15517,
@@ -2314,9 +2523,10 @@
    "instanceIds": [
     531
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15509.png",
+   "sha256": "6b470856aa36a3e19af1c205e7020f923d667785d52aff8ef09905e511edd0d4",
+   "sharedModel": false
   },
   {
    "npcId": 15928,
@@ -2325,9 +2535,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16137.png",
+   "sha256": "d5ac2b390a8cafb062bf4670ba90c9ace90f7029a0ef8f49e7ee18c240a05c2d",
+   "sharedModel": false
   },
   {
    "npcId": 15931,
@@ -2336,9 +2547,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16035.png",
+   "sha256": "3b0be649078690b89e95ee9e872b7a06fd2d2a795cfc9d036745751a82c2701e",
+   "sharedModel": false
   },
   {
    "npcId": 15932,
@@ -2347,9 +2559,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16064.png",
+   "sha256": "d0299b3652f2b297ae6a2b80c4ed5f64bfca5c9f61fdeacf60bbe150b02f61fe",
+   "sharedModel": false
   },
   {
    "npcId": 15936,
@@ -2358,9 +2571,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16309.png",
+   "sha256": "32df7ad25866cdd9830c453eb9b9f83df0ac4441ae2ed7ffe4ed418c743c2548",
+   "sharedModel": false
   },
   {
    "npcId": 15952,
@@ -2369,9 +2583,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15928.png",
+   "sha256": "13d41572204ff34fb269106b21609d46b98a89276b8593c7f69b92993a9f9bb5",
+   "sharedModel": false
   },
   {
    "npcId": 15953,
@@ -2380,9 +2595,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15940.png",
+   "sha256": "e560850d9841c7793831e0ff478c95be6afd9519cf177d9ee6d59247afae4674",
+   "sharedModel": false
   },
   {
    "npcId": 15954,
@@ -2391,9 +2607,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16590.png",
+   "sha256": "53c31b5721a5bcccc309ca70167a850ffd0b29c1c7e273cbfd02c43404b98bd6",
+   "sharedModel": false
   },
   {
    "npcId": 15956,
@@ -2402,9 +2619,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15931.png",
+   "sha256": "f245cfbfb5c3b962bdb1c45a593bda982071cdd3077484c6d1cb90ab21c5af1d",
+   "sharedModel": false
   },
   {
    "npcId": 15989,
@@ -2413,9 +2631,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16033.png",
+   "sha256": "0fddb616a2b8bd20aad777ee0a99e45ddb62ddd17e77fb5d2351ce165e6a9efe",
+   "sharedModel": false
   },
   {
    "npcId": 15990,
@@ -2424,9 +2643,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d15945.png",
+   "sha256": "b2bdd801b2dd3194eccd8132153629a4439f8d4ec9bd65afe4fdcff5add38539",
+   "sharedModel": false
   },
   {
    "npcId": 16011,
@@ -2435,9 +2655,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16110.png",
+   "sha256": "e0c378c64d147a3221755edad07dff18abdf0f29a84587bda34fd8bc8aff3834",
+   "sharedModel": false
   },
   {
    "npcId": 16028,
@@ -2446,9 +2667,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16174.png",
+   "sha256": "69427993d712aa905140dcf69d5b9ab8d8934197f2c4d725178401bec6b69e73",
+   "sharedModel": false
   },
   {
    "npcId": 16042,
@@ -2459,7 +2681,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 16060,
@@ -2468,9 +2691,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16279.png",
+   "sha256": "03d6ad032b4062874d6153e83964dcf0f154faa2aa6ae12cd5b928806844a401",
+   "sharedModel": false
   },
   {
    "npcId": 16061,
@@ -2479,9 +2703,10 @@
    "instanceIds": [
     533
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16582.png",
+   "sha256": "b04b57e7edd05ed6c2e0bb868ccd29323b2647eebd2806e7be1998db39171e68",
+   "sharedModel": false
   },
   {
    "npcId": 16118,
@@ -2490,9 +2715,10 @@
    "instanceIds": [
     289
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d16020.png",
+   "sha256": "6f9f1950a51c8a25b242ef5b492481838f84dd53d6f6d4b70e6f39a56a9721df",
+   "sharedModel": false
   },
   {
    "npcId": 76389,
@@ -2503,7 +2729,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 245999,
@@ -2512,9 +2739,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d129891.png",
+   "sha256": "da7f4687185ebd626711b87a5eee8b88424da9bc44b98729ed662e830b45bf59",
+   "sharedModel": false
   },
   {
    "npcId": 246003,
@@ -2523,9 +2751,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d129894.png",
+   "sha256": "3a90a5988a0f3416ede80a46e81a0b922ca0c67012a6d609cb4f7c1bad1b3a7e",
+   "sharedModel": false
   },
   {
    "npcId": 246008,
@@ -2534,9 +2763,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d129895.png",
+   "sha256": "2de5760453c44c5792e08a79e6b993d5a95ca7f20aa6f600501e24c62555c4fd",
+   "sharedModel": false
   },
   {
    "npcId": 246017,
@@ -2545,9 +2775,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d129954.png",
+   "sha256": "2e59f692c5acef268d57e811282ad7efcdf22c3f17f72039eec8276aed6924fd",
+   "sharedModel": false
   },
   {
    "npcId": 246020,
@@ -2556,9 +2787,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d130061.png",
+   "sha256": "1e1e899be7ab4dc6102ae790f4fcb06d0ac5e5aabbe000eb64537a74fcf159e6",
+   "sharedModel": false
   },
   {
    "npcId": 247032,
@@ -2567,9 +2799,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d130235.png",
+   "sha256": "d49f38c92a18c9ee5ac9812888be80dd085e60af9c01e198affd62d2070be351",
+   "sharedModel": false
   },
   {
    "npcId": 247126,
@@ -2578,9 +2811,10 @@
    "instanceIds": [
     2959
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d145787.png",
+   "sha256": "90c5788d812dae2d286eb0b90910f535009e332edf639a7a55bd46d59e2ee0d0",
+   "sharedModel": false
   },
   {
    "npcId": 250483,
@@ -2589,9 +2823,10 @@
    "instanceIds": [
     2999
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144189.png",
+   "sha256": "27f7713ad405a3d4d597a66e5bae8242869d5265f07ff054369dec298d6cf2cb",
+   "sharedModel": false
   },
   {
    "npcId": 250631,
@@ -2600,9 +2835,10 @@
    "instanceIds": [
     2999
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d138667.png",
+   "sha256": "bd2a065f0ad49a4ac7a87f48bcfad40c59c196d48bbeb4ef83a2dde252f8460e",
+   "sharedModel": false
   },
   {
    "npcId": 250657,
@@ -2611,9 +2847,10 @@
    "instanceIds": [
     2999
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144175.png",
+   "sha256": "e4900f2e00a0f7f9cdbe2f8394fd76274a5cfb8b2c601954df43da58060e984c",
+   "sharedModel": false
   },
   {
    "npcId": 255391,
@@ -2622,9 +2859,10 @@
    "instanceIds": [
     2994
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d7914.png",
+   "sha256": "466c853204758bbfe0ec4192c0a3b6bafcf4127276a7b5198954c873b9bcccf5",
+   "sharedModel": false
   },
   {
    "npcId": 255707,
@@ -2633,9 +2871,10 @@
    "instanceIds": [
     2994
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d139053.png",
+   "sha256": "153e616024218b6cae92b9161af1b45f65959257b4d64c2b148f89de4a71ba7b",
+   "sharedModel": false
   },
   {
    "npcId": 255997,
@@ -2644,9 +2883,10 @@
    "instanceIds": [
     2994
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d4973.png",
+   "sha256": "7ca6a78d7ba54fc313dd74f9ee9ef5e4daf9f7b7d2de40f75d64c135399a67b5",
+   "sharedModel": false
   },
   {
    "npcId": 256035,
@@ -2655,9 +2895,10 @@
    "instanceIds": [
     2999
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d139455.png",
+   "sha256": "b115ad4160b166c909eb66645d72b06db09c05b1250ba50f55e56b1c0dc107e8",
+   "sharedModel": false
   },
   {
    "npcId": 256097,
@@ -2666,9 +2907,10 @@
    "instanceIds": [
     2999
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144170.png",
+   "sha256": "166c79d39ce841a500082209c304dd82b62310e0ee05dbe1418717a8dc86a3bb",
+   "sharedModel": false
   },
   {
    "npcId": 256236,
@@ -2677,9 +2919,10 @@
    "instanceIds": [
     2994
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d140092.png",
+   "sha256": "6c79af25f96868aed411548d3f615e17f769b067bfa7a176fa6a058e730b7200",
+   "sharedModel": false
   },
   {
    "npcId": 257016,
@@ -2688,9 +2931,10 @@
    "instanceIds": [
     2994
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d2317.png",
+   "sha256": "40fd0f10b89badda3d7142307369d6c1ecdfe16671cca06e085f2f9b1f2c3143",
+   "sharedModel": false
   },
   {
    "npcId": 258905,
@@ -2699,9 +2943,10 @@
    "instanceIds": [
     2970
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144475.png",
+   "sha256": "2321b1e2efbdf0cf43d1a53caddf0e10066912d9a79fdf9c8874246cbdb14662",
+   "sharedModel": false
   },
   {
    "npcId": 258924,
@@ -2710,9 +2955,10 @@
    "instanceIds": [
     2970
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144487.png",
+   "sha256": "93422b6b93b8c1bea557cd57a35ddf9d2ad167e505c3de857940652159eccc05",
+   "sharedModel": false
   },
   {
    "npcId": 258964,
@@ -2721,9 +2967,10 @@
    "instanceIds": [
     3039
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d141215.png",
+   "sha256": "853626e9d839cef132aa1a1798f7e2447498f7e50a4afffad9b38b73ebbfa358",
+   "sharedModel": false
   },
   {
    "npcId": 258966,
@@ -2732,9 +2979,10 @@
    "instanceIds": [
     3039
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d141217.png",
+   "sha256": "972c9b9bd3030f9c08233378501705bbb1329a650bc16e84ebefc33a0a428b7f",
+   "sharedModel": false
   },
   {
    "npcId": 258972,
@@ -2743,9 +2991,10 @@
    "instanceIds": [
     3039
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d141219.png",
+   "sha256": "6bda3124c248bc0c042983fbf9205078b5db4b7140566134f66a49a1c7502403",
+   "sharedModel": false
   },
   {
    "npcId": 260042,
@@ -2754,9 +3003,10 @@
    "instanceIds": [
     2970
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d142144.png",
+   "sha256": "e31f97c711dae2aa72b7d6676463ec5105ceea9acb5f6ee23cafc2501325d646",
+   "sharedModel": false
   },
   {
    "npcId": 260243,
@@ -2765,9 +3015,10 @@
    "instanceIds": [
     2970
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d142286.png",
+   "sha256": "506243280c13215cd011df6fe7ebf9916b3e310849b69d9746f8ab796e94e8c9",
+   "sharedModel": false
   },
   {
    "npcId": 260322,
@@ -2776,9 +3027,10 @@
    "instanceIds": [
     2998
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144209.png",
+   "sha256": "032bc882e7cd23a0b471af8a3bf67c47ff92edaa496f5a12a60fc79ad980d5da",
+   "sharedModel": true
   },
   {
    "npcId": 260325,
@@ -2787,9 +3039,10 @@
    "instanceIds": [
     2998
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144210.png",
+   "sha256": "4acf8cef0f1301be43a17c4137b8ede52e3bc6773805ce84f93fa9b468a63c62",
+   "sharedModel": false
   },
   {
    "npcId": 260326,
@@ -2798,9 +3051,10 @@
    "instanceIds": [
     2998
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d144224.png",
+   "sha256": "b282b97f0de4ff753b86052d0c79e6ee0a82d69a68c1ed3dec18721b5af8c549",
+   "sharedModel": false
   },
   {
    "npcId": 260808,
@@ -2811,7 +3065,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 261306,
@@ -2820,9 +3075,10 @@
    "instanceIds": [
     3065
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d142826.png",
+   "sha256": "77aca915d3592025121443814b66751a014216dbcc1e02b5f61be737947260a8",
+   "sharedModel": false
   },
   {
    "npcId": 261311,
@@ -2831,9 +3087,10 @@
    "instanceIds": [
     3065
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d142840.png",
+   "sha256": "4ea2a802fc60e6faf617f2f3c1aacce3263167fb7e31ce0e3d010ded0f681d6c",
+   "sharedModel": false
   },
   {
    "npcId": 261319,
@@ -2842,9 +3099,10 @@
    "instanceIds": [
     3065
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d142837.png",
+   "sha256": "e1af11d3325ae1f37e4e989682453700f0c255cd56e28450ab0ae169cffb1a78",
+   "sharedModel": false
   },
   {
    "npcId": 262297,
@@ -2855,7 +3113,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   },
   {
    "npcId": 263886,
@@ -2864,9 +3123,10 @@
    "instanceIds": [
     2970
    ],
-   "status": "not-captured",
-   "image": null,
-   "sha256": null
+   "status": "captured",
+   "image": "boss-portrait-d143898.png",
+   "sha256": "b3eab83c566c26b877af8d48c9a5421b77d40c7d1220bab0ba360cb05c6bdb28",
+   "sharedModel": false
   },
   {
    "npcId": 272561,
@@ -2877,7 +3137,8 @@
    ],
    "status": "no-display-id",
    "image": null,
-   "sha256": null
+   "sha256": null,
+   "sharedModel": false
   }
  ]
 }

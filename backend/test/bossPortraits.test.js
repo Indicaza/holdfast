@@ -59,15 +59,22 @@ test("each cell crops to its own 256 x 256 face with transparent corners; blanks
   assert.equal(portraitProblem(flat), "flat");
 });
 
-test("the manifest tracks every boss, shares a display, and refuses repeated faces", () => {
-  const catalog = [
-    { npcId: 1, name: "A", displayId: 10, instanceIds: [36] }, { npcId: 2, name: "B", displayId: 10, instanceIds: [36] },
-    { npcId: 3, name: "C", displayId: null, instanceIds: [36] }, { npcId: 4, name: "D", displayId: 20, instanceIds: [36] },
-    { npcId: 5, name: "E", displayId: 30, instanceIds: [36] }, { npcId: 6, name: "F", displayId: 40, instanceIds: [36] },
-    { npcId: 7, name: "G", displayId: 50, instanceIds: [36] },
-  ];
+test("a purple face stays opaque inside the mask", () => {
+  const image = sheet(0, 1, (set, x0, y0) => { for (let y = 60; y < 200; y += 1) for (let x = 60; x < 200; x += 1) set(x0 + 4 + x, y0 + 4 + y, [230, 10, 230]); });
+  const crop = cropPortrait(image, readSheet(image, 1), 0);
+  assert.equal(crop.pixels[(128 * 256 + 128) * 4 + 3], 255);
+  assert.equal(crop.pixels[(128 * 256 + 128) * 4], 230);
+});
+
+test("the manifest tracks every boss; a shared model is kept, a placeholder is refused", () => {
+  const entry = (npcId, displayId) => ({ npcId, name: `N${npcId}`, displayId, instanceIds: [36] });
+  const catalog = [entry(1, 10), entry(2, 10), entry(3, null), entry(4, 20), entry(5, 30), entry(6, 40), entry(7, 50)];
   const manifest = portraitManifest(catalog, { 10: { status: "captured", sha256: "a" }, 20: { status: "blank" }, 30: { status: "captured", sha256: "same" }, 40: { status: "captured", sha256: "same" } }, { source: "test" });
-  assert.deepEqual(manifest.bosses.map((boss) => boss.status), ["captured", "captured", "no-display-id", "blank", "duplicate-image", "duplicate-image", "not-captured"]);
+  assert.deepEqual(manifest.bosses.map((boss) => boss.status), ["captured", "captured", "no-display-id", "blank", "captured", "captured", "not-captured"]);
   assert.equal(manifest.bosses[0].image, "boss-portrait-d10.png");
-  assert.deepEqual(manifest.totals, { bosses: 7, withDisplayId: 6, captured: 2, missing: 5 });
+  assert.equal(manifest.bosses[4].sharedModel, true);
+  assert.deepEqual(manifest.totals, { bosses: 7, withDisplayId: 6, captured: 4, missing: 3 });
+  const many = Array.from({ length: 9 }, (_, index) => entry(index + 1, index + 100));
+  const faces = Object.fromEntries(many.map((boss) => [boss.displayId, { status: "captured", sha256: "placeholder" }]));
+  assert.ok(portraitManifest(many, faces, { source: "test" }).bosses.every((boss) => boss.status === "duplicate-image"));
 });

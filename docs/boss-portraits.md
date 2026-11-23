@@ -17,7 +17,8 @@ node scripts/buildBossPortraits.mjs ingest --screens "/Applications/World of War
 ```
 
 `ingest` reads each sheet's corner marks and number, crops 256 x 256 PNGs with
-transparent corners, rejects blank or flat images and duplicate faces, and
+transparent corners, rejects blank or flat images and placeholder-like repeats (identical faces on
+more than 8 displays; a few bosses really do share one model), and
 updates `backend/src/Atlas/data/sources/boss-portraits.json`. Running `addon`
 again captures only what is missing. Delete the
 `GuildweaverPortraitCapture` add-on folder afterwards.

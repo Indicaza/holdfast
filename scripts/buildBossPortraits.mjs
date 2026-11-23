@@ -6,6 +6,8 @@
 //   (in game: /gwportraits, then wait for "done")
 //   ingest  crops and checks the screenshots taken since, updates the manifest
 //     node scripts/buildBossPortraits.mjs ingest --screens "<WoW>/_forever_/Screenshots" --out DIR
+//   import  adds the faces to Content Studio media (uses GUILD_DATA_DIR)
+//     node scripts/buildBossPortraits.mjs import --out DIR
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -170,6 +172,26 @@ function ingest() {
   console.log(JSON.stringify({ screenshots: files.length, sheets, ...manifest.totals }));
 }
 
-const commands = { addon, ingest };
+// Adds captured faces to Content Studio media (GUILD_DATA_DIR); a face already there is kept.
+async function importMedia() {
+  const out = path.resolve(need("out"));
+  const manifest = JSON.parse(readFileSync(MANIFEST, "utf8"));
+  const { withGuildTransaction } = await import("../backend/src/Data/database.js");
+  const { createMediaInDatabase } = await import("../backend/src/Atlas/Editorial/atlasMedia.js");
+  const faces = new Map(manifest.bosses.filter((boss) => boss.image).map((boss) => [boss.image, boss]));
+  const result = withGuildTransaction((db) => {
+    const counts = { imported: 0, kept: 0 };
+    for (const [name, boss] of faces) {
+      if (db.prepare("SELECT 1 FROM atlas_media WHERE purpose = 'portrait' AND original_name = ?").get(name)) { counts.kept += 1; continue; }
+      const created = createMediaInDatabase(db, readFileSync(path.join(out, name)), { name, purpose: "portrait", attribution: "World of Warcraft creature portrait, Blizzard Entertainment", license: "Blizzard Entertainment; used at the owner's direction", provenance: `${manifest.source}; display ${boss.displayId}; sha256 ${boss.sha256}`, actor: { name: "boss-portrait-pipeline" } });
+      if (created.status !== "ok") throw new Error(`${name}: ${JSON.stringify(created.problems)}`);
+      counts.imported += 1;
+    }
+    return counts;
+  });
+  console.log(JSON.stringify(result));
+}
+
+const commands = { addon, ingest, import: importMedia };
 if (!commands[command]) { console.error("Usage: buildBossPortraits.mjs addon|ingest"); process.exit(2); }
-try { commands[command](); } catch (error) { console.error(error.message); process.exit(1); }
+Promise.resolve().then(commands[command]).catch((error) => { console.error(error.message); process.exit(1); });

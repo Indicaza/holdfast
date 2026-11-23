@@ -13,6 +13,10 @@ export const ROWS = 3;
 export const PER_PAGE = COLS * ROWS;
 export const MARKER = 12;
 export const PORTRAIT_SIZE = 256;
+const RIM = 6;
+// More displays than this with one identical image is a placeholder, not a
+// model several creatures share.
+const MAX_SHARED_FACE = 8;
 export const mediaNameOf = (displayId) => `boss-portrait-d${displayId}.png`;
 
 // The add-on's creature table: { npcId: displayId }.
@@ -95,12 +99,18 @@ export function cropPortrait(sheet, grid, index) {
       const from = ((top + y) * sheet.width + left + x) * 4;
       const to = (y * size + x) * 4;
       const [r, g, b] = [sheet.pixels[from], sheet.pixels[from + 1], sheet.pixels[from + 2]];
-      const key = Math.min(r, b) - g;
-      const alpha = key >= 190 ? 0 : key <= 90 ? 255 : Math.round(255 * (190 - key) / 100);
-      pixels[to] = alpha ? Math.min(r, g + 70) : 0;
-      pixels[to + 1] = alpha ? g : 0;
-      pixels[to + 2] = alpha ? Math.min(b, g + 70) : 0;
-      pixels[to + 3] = alpha;
+      // Inside the game's round mask every pixel is the creature, purple ones
+      // included. Only the mask's soft rim blends with the sheet's magenta.
+      const distance = Math.hypot(x + 0.5 - size / 2, y + 0.5 - size / 2);
+      if (r > 245 && g < 10 && b > 245) continue; // The bare sheet: nothing was drawn here.
+      if (distance <= size / 2 - RIM) {
+        pixels[to] = r; pixels[to + 1] = g; pixels[to + 2] = b; pixels[to + 3] = 255;
+        continue;
+      }
+      const alpha = Math.max(0, 255 - Math.max(0, Math.min(r, b) - g));
+      if (alpha < 8) continue;
+      const unmix = (value) => Math.max(0, Math.min(255, Math.round((value - (255 - alpha)) * 255 / alpha)));
+      pixels[to] = unmix(r); pixels[to + 1] = Math.min(255, Math.round(g * 255 / alpha)); pixels[to + 2] = unmix(b); pixels[to + 3] = alpha;
     }
   }
   const image = { width: size, height: size, pixels };
@@ -134,12 +144,13 @@ export function portraitManifest(catalog, captured, { source }) {
   const faces = new Map(Object.entries(captured).map(([id, value]) => [Number(id), value]));
   const seen = new Map();
   for (const [id, face] of faces) if (face.sha256) seen.set(face.sha256, [...(seen.get(face.sha256) || []), id]);
-  const repeated = new Set([...seen.values()].filter((ids) => ids.length > 1).flat());
+  const repeated = new Set([...seen.values()].filter((ids) => ids.length > MAX_SHARED_FACE).flat());
   const bosses = catalog.map((entry) => {
     const face = entry.displayId ? faces.get(entry.displayId) : null;
     const status = !entry.displayId ? "no-display-id" : repeated.has(entry.displayId) ? "duplicate-image" : face?.status || "not-captured";
     return { npcId: entry.npcId, name: entry.name, displayId: entry.displayId, instanceIds: entry.instanceIds, status,
-      image: status === "captured" ? mediaNameOf(entry.displayId) : null, sha256: status === "captured" ? face.sha256 : null };
+      image: status === "captured" ? mediaNameOf(entry.displayId) : null, sha256: status === "captured" ? face.sha256 : null,
+      sharedModel: status === "captured" && seen.get(face.sha256).length > 1 };
   }).sort((a, b) => a.npcId - b.npcId);
   const count = (status) => bosses.filter((boss) => boss.status === status).length;
   return { schemaVersion: 1, source, totals: { bosses: bosses.length, withDisplayId: bosses.filter((boss) => boss.displayId).length, captured: count("captured"), missing: bosses.length - count("captured") }, bosses };
