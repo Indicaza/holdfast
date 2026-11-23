@@ -526,7 +526,7 @@ test('card art: published art wins, a wing uses its dungeon art, a Forever dunge
   assert.equal(cardModel({ instanceId: 36, name: 'Deadmines', atlas: { artworkUrl: '/api/atlas-media/m_1/web' } }).artworkUrl, '/api/atlas-media/m_1/web')
   assert.equal(cardModel({ instanceId: 36, name: 'Deadmines', atlas: {} }).artworkUrl, '/wow-art/dungeons/36.webp')
   assert.equal(cardModel({ instanceId: 189, dungeonKey: 'scarlet-monastery:library', name: 'Library', atlas: {} }).artworkUrl, '/wow-art/dungeons/189.webp')
-  const missing = cardModel({ instanceId: 2970, name: 'The Drowned City', atlas: { origin: 'forever' } })
+  const missing = cardModel({ instanceId: 9999, name: 'A new Forever dungeon', atlas: { origin: 'forever' } })
   assert.equal(missing.artworkUrl, '')
   assert.equal(missing.artFallback, 'forever')
 })

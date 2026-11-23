@@ -1,7 +1,8 @@
 // Bundled dungeon card art by game instance ID (a wing shares its dungeon's).
 // Published Content Studio art takes precedence. Images are Blizzard
-// Entertainment's World of Warcraft art, from the BuildsForge WoW Forever gallery.
-export const DUNGEON_CARD_ART_SOURCE = Object.freeze({ gallery: 'https://buildsforge.com/en/wow-forever/gallery/', attribution: 'World of Warcraft art, Blizzard Entertainment; via BuildsForge' })
+// Entertainment's World of Warcraft art, from the BuildsForge WoW Forever gallery and
+// the loading screens published by forever.rexas.tools. Review before public launch.
+export const DUNGEON_CARD_ART_SOURCE = Object.freeze({ gallery: 'https://buildsforge.com/en/wow-forever/gallery/', attribution: 'World of Warcraft art, Blizzard Entertainment; via BuildsForge and forever.rexas.tools' })
 
 export const DUNGEON_CARD_ART = Object.freeze({
   "33": {
@@ -139,6 +140,24 @@ export const DUNGEON_CARD_ART = Object.freeze({
     "title": "City of Dalaran",
     "sourceUrl": "https://img.buildsforge.com/wowf-art/wallpapers/647.webp"
   },
+  "2970": {
+    "file": "/wow-art/dungeons/2970.webp",
+    "title": "The Drowned City",
+    "sourceUrl": "https://forever.rexas.tools/static/news/five-new-dungeons/art-2970.jpg",
+    "sourcePage": "https://forever.rexas.tools/news/five-new-dungeons-wow-forever"
+  },
+  "2974": {
+    "file": "/wow-art/dungeons/2974.webp",
+    "title": "Blackmaw Hold",
+    "sourceUrl": "https://forever.rexas.tools/static/news/five-new-dungeons/art-2974.jpg",
+    "sourcePage": "https://forever.rexas.tools/news/five-new-dungeons-wow-forever"
+  },
+  "2994": {
+    "file": "/wow-art/dungeons/2994.webp",
+    "title": "Alcaz Prison",
+    "sourceUrl": "https://forever.rexas.tools/static/news/five-new-dungeons/art-2994.jpg",
+    "sourcePage": "https://forever.rexas.tools/news/five-new-dungeons-wow-forever"
+  },
   "2998": {
     "file": "/wow-art/dungeons/2998.webp",
     "title": "Excavation Site: Wetlands",
@@ -149,6 +168,18 @@ export const DUNGEON_CARD_ART = Object.freeze({
     "title": "Ruins of Lordaeron",
     "sourceUrl": "https://img.buildsforge.com/wowf-art/wallpapers/650.webp"
   },
+  "3001": {
+    "file": "/wow-art/dungeons/3001.webp",
+    "title": "Shaper's Terrace",
+    "sourceUrl": "https://forever.rexas.tools/static/news/five-new-dungeons/art-3001.jpg",
+    "sourcePage": "https://forever.rexas.tools/news/five-new-dungeons-wow-forever"
+  },
+  "3039": {
+    "file": "/wow-art/dungeons/3039.webp",
+    "title": "Krol'dok Stronghold",
+    "sourceUrl": "https://forever.rexas.tools/static/news/five-new-dungeons/art-3039.jpg",
+    "sourcePage": "https://forever.rexas.tools/news/five-new-dungeons-wow-forever"
+  },
   "3065": {
     "file": "/wow-art/dungeons/3065.webp",
     "title": "The Hall of Thanes",
@@ -156,30 +187,4 @@ export const DUNGEON_CARD_ART = Object.freeze({
   }
 })
 
-export const DUNGEON_CARD_ART_MISSING = Object.freeze([
-  {
-    "instanceId": 2970,
-    "name": "The Drowned City",
-    "reason": "no matching gallery image"
-  },
-  {
-    "instanceId": 2974,
-    "name": "Blackmaw Hold",
-    "reason": "no matching gallery image"
-  },
-  {
-    "instanceId": 2994,
-    "name": "Alcaz Prison",
-    "reason": "no matching gallery image"
-  },
-  {
-    "instanceId": 3001,
-    "name": "Shaper's Terrace",
-    "reason": "no matching gallery image"
-  },
-  {
-    "instanceId": 3039,
-    "name": "Krol'dok Stronghold",
-    "reason": "no matching gallery image"
-  }
-])
+export const DUNGEON_CARD_ART_MISSING = Object.freeze([])
