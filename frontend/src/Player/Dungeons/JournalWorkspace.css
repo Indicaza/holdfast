@@ -112,6 +112,7 @@
 .gw-jw-lootbrowser .gw-atlas-lootgroup__sources { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
 .gw-jw-lootbrowser .gw-atlas-source.is-active { border-color: var(--gwj-border-gold); box-shadow: inset 0 0 0 1px rgba(217, 182, 110, 0.16), 0 0 10px rgba(217, 182, 110, 0.12); background-color: var(--gwj-active); }
 .gw-jw-lootbrowser .gw-atlas-source { scroll-margin-top: 4rem; }
+.gw-jw-lootbrowser .gw-slot { scroll-margin-top: 5.5rem; scroll-margin-bottom: 0.75rem; }
 .gw-jw .gw-jw-lootswitch { position: absolute; top: 0.4rem; right: 0.55rem; z-index: 4; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 28px; padding: 0.1rem 0.6rem; border: 1px solid var(--gwj-border-strong); border-radius: 3px; background: var(--gwj-bg); color: var(--gwj-muted); font-size: 12px; cursor: pointer; }
 .gw-jw .gw-jw-lootswitch:hover { color: var(--gwj-text); }
 .gw-jw .gw-jw-lootswitch[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
