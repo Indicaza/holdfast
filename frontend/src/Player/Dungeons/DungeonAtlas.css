@@ -1,7 +1,7 @@
 /* Dungeon Atlas: the Explore grid and the dungeon modal. */
 
-/* Adapt columns to the available content area, not the full browser viewport. */
-.gw-atlas { container-type: inline-size; }
+/* The Explore workspace fills the dashboard; other player views keep their width limit. */
+.gw-content:has(.gw-atlas) { max-width: none; }
 
 .gw-atlas__bar {
   display: flex;
@@ -11,6 +11,10 @@
 }
 
 .gw-atlas__bar > .gw-atlas-filters { flex: 1; min-width: 0; }
+.gw-atlas-filters__search { flex: 1 1 16rem; min-width: min(100%, 12rem); }
+.gw-atlas-filters__search input { width: 100%; min-width: 0; flex: 1; text-align: left; }
+.gw-atlas-filters > label.gw-filter:not(.gw-atlas-filters__search) { flex: 1 1 11rem; max-width: 20rem; }
+.gw-atlas-filters > .gw-filter select { flex: 1; min-width: 0; max-width: none; }
 .gw-atlas__count { margin: 0; font-size: 13px; }
 
 .gw-atlas-filters__levels {
@@ -27,23 +31,11 @@
 
 .gw-atlas-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: 0.9rem;
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-@container (max-width: 1050px) {
-  .gw-atlas-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-@container (max-width: 760px) {
-  .gw-atlas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@container (max-width: 520px) {
-  .gw-atlas-grid { grid-template-columns: 1fr; }
 }
 
 .gw-atlas-card__link {
