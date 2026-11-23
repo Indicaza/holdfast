@@ -37,7 +37,7 @@ import {
 } from './dungeonRunModel.js'
 import DungeonLoot from './DungeonLoot.jsx'
 import AtlasModalHost, { AtlasPageSwitch } from './Dungeons/AtlasModalHost.jsx'
-import { dungeonsView, exploreHref, withAtlasOpen } from './Dungeons/atlasModel.js'
+import { journalFillsPage, dungeonsView, exploreHref, withAtlasOpen } from './Dungeons/atlasModel.js'
 import DungeonExplore from './Dungeons/DungeonExplore.jsx'
 import { lootHref, readLootQuery } from './lootModel.js'
 import { playerApiUrl, relativeTime } from './playerModel.js'
@@ -549,6 +549,8 @@ export default function PlayerDungeons({ server, queryString = '', characters = 
   const view = dungeonsView(queryString)
   const runOpen = useMemo(() => Boolean(readDungeonQuery(queryString).runId), [queryString])
   if (runOpen && view === 'runs') return <>{<DungeonRuns server={server} queryString={queryString} />}<AtlasModalHost server={server} queryString={queryString} characters={characters} /></>
+  // An open dungeon is the whole workspace, with no page tabs above it.
+  if (journalFillsPage(queryString)) return <AtlasPageSwitch server={server} queryString={queryString} characters={characters} />
   return (
     <div className="gw-stack">
       <nav className="gw-seg gw-dcc-tabs" aria-label="Dungeon views">

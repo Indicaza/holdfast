@@ -1,0 +1,162 @@
+/* The Dungeon Journal as a small application: a one-line header over panels
+   that share the space they are given. The page, the dialog and the Studio's
+   preview differ only in who gives it. Panels scroll, the document does not. */
+
+.gw-content.gw-content--fill:has(> .gw-jw-shell--fill) { min-height: 0; overflow: hidden; }
+.gw-jw-shell--fill.gw-atlas-page { flex: 1; min-height: 0; border-width: 0; border-radius: 0; }
+.gw-atlas-modal__panel.gw-jw-shell { width: min(100rem, 100%); height: 100%; max-height: 100%; border-color: var(--gwj-border-gold); }
+.gw-atlas-modal:has(> .gw-jw-shell) { padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left)); }
+.gw-jw-shell { display: flex; flex-direction: column; min-height: 0; }
+
+/* ------------------------------------------------------------ The header */
+.gw-jw-head {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  min-height: 3.1rem;
+  padding: 0.3rem 0.75rem;
+  border-bottom: 1px solid var(--gwj-border-gold);
+  background: linear-gradient(180deg, var(--gwj-raised), var(--gwj-bg));
+}
+.gw-jw-head--art {
+  background:
+    linear-gradient(90deg, rgba(8, 9, 13, 0.95) 0%, rgba(8, 9, 13, 0.82) 55%, rgba(8, 9, 13, 0.7) 100%),
+    var(--art) var(--art-position, center) / cover no-repeat;
+}
+.gw-jw-head .gw-atlas-back { display: inline-flex; flex: none; align-items: center; gap: 0.3rem; color: var(--gwj-muted); font-size: 12.5px; text-decoration: none; }
+.gw-jw-head .gw-atlas-back:hover { color: var(--gwj-gold-bright); }
+.gw-jw-head__title { flex: 0 1 auto; min-width: 7rem; }
+.gw-jw-head__title h2 { overflow: hidden; margin: 0; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 1.2rem; font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.gw-jw-head__title h2:focus { outline: none; }
+.gw-jw-head__meta { display: flex; align-items: center; gap: 0.5rem; margin: 0; overflow: hidden; color: var(--gwj-muted); font-size: 11.5px; white-space: nowrap; }
+.gw-jw-head__meta > span { overflow: hidden; text-overflow: ellipsis; }
+.gw-jw-head .gw-jw-tabs.gw-seg { position: static; flex: none; width: auto; margin: 0 auto; padding: 0; border: 0; background: transparent; }
+.gw-jw-head__actions { display: flex; flex: none; align-items: center; gap: 0.5rem; }
+.gw-jw-head__actions .gw-atlas-maplink { white-space: nowrap; }
+.gw-jw-head__actions .gw-atlas-modal__who { color: var(--gwj-muted); white-space: nowrap; }
+.gw-jw-error { flex: none; margin: 0.4rem 0.75rem 0; }
+.gw-jw-status { flex: 1; min-height: 0; padding: 1rem; overflow: auto; }
+
+/* ---------------------------------------------------------- The panels */
+.gw-jw { display: grid; flex: 1; gap: 0.5rem; min-width: 0; min-height: 0; padding: 0.5rem; background: var(--gwj-inset); }
+.gw-jw--journal { grid-template: 'rail map details' minmax(0, 1fr) / clamp(11rem, 14%, 13rem) minmax(0, 1fr) clamp(19.5rem, 25%, 25rem); }
+.gw-jw--journal.gw-jw--nomap { grid-template: 'rail map' auto 'rail details' minmax(0, 1fr) / clamp(11.5rem, 15%, 14rem) minmax(0, 1fr); }
+.gw-jw--journal.gw-jw--norail { grid-template: 'map details' minmax(0, 1fr) / minmax(0, 1fr) clamp(20rem, 32%, 30rem); }
+.gw-jw--journal.gw-jw--nomap.gw-jw--norail { grid-template: 'map' auto 'details' minmax(0, 1fr) / minmax(0, 1fr); }
+.gw-jw--quests { grid-template: 'map checklist' minmax(0, 1fr) / minmax(0, 1fr) clamp(24rem, 40%, 36rem); }
+.gw-jw--quests.gw-jw--nomap { grid-template: 'map' auto 'checklist' minmax(0, 1fr) / minmax(0, 1fr); }
+.gw-jw--runs { display: flex; }
+.gw-jw-encounters { grid-area: rail; }
+.gw-jw-map { grid-area: map; }
+.gw-jw-details { grid-area: details; }
+.gw-jw-checklist { grid-area: checklist; }
+.gw-jw-panes { display: none; }
+
+.gw-jw-panel, .gw-jw-map {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--gwj-border);
+  border-radius: 4px;
+  background: var(--gwj-bg);
+}
+.gw-jw-scroll { flex: 1; min-height: 0; padding: 0.65rem 0.75rem; overflow-y: auto; overscroll-behavior: contain; }
+.gw-jw--runs > .gw-jw-scroll { min-width: 0; border: 1px solid var(--gwj-border); border-radius: 4px; background: var(--gwj-bg); }
+
+/* The encounter list keeps its own scroll. */
+.gw-jw .gw-atlas-rail { position: static; flex: 1; min-height: 0; max-height: none; padding: 0.25rem; overflow-y: auto; overscroll-behavior: contain; }
+
+/* ------------------------------------------------------------- The map */
+.gw-jw-map { padding: 0.4rem; background: linear-gradient(rgba(8, 9, 13, 0.84), rgba(8, 9, 13, 0.84)), var(--gwj-rock) center / 256px; }
+.gw-jw-map .gw-dmap { flex: 1; min-height: 0; gap: 0.3rem; }
+.gw-jw-map .gw-dmap__floors { flex: none; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.gw-jw-map .gw-dmap__floors button { flex: none; white-space: nowrap; }
+.gw-jw-map .gw-dmap__floors button[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
+.gw-jw-map .gw-dmap__stage { display: grid; flex: 1; place-items: center; min-height: 0; container-type: size; }
+.gw-jw-map .gw-dmap__frame { width: min(100cqw, calc(100cqh * var(--map-ratio, 1.5))); border-color: var(--gwj-border-gold); box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55); }
+.gw-jw-map figcaption { flex: none; overflow: hidden; color: var(--gwj-muted); font-size: 11px; line-height: 1.2; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.gw-dmap__pin.gw-atlas-floor__marker { --interactive-radius: 50%; width: 24px; height: 24px; border-radius: 50%; border-color: var(--gwj-gold, #d9b66e); background: rgba(8, 9, 13, 0.92); color: var(--gwj-gold-bright, #fbda90); }
+.gw-dmap__pin.gw-atlas-floor__marker:hover { background: var(--gwj-active, #231f19); color: var(--gwj-gold-bright, #fbda90); }
+.gw-dmap__pin.gw-atlas-floor__marker.is-active { z-index: 2; width: 30px; height: 30px; border-color: #fff4cf; background: var(--gwj-gold-bright, #fbda90); color: #16120a; box-shadow: 0 0 0 3px rgba(251, 218, 144, 0.35), 0 0 14px rgba(251, 218, 144, 0.65); }
+.gw-jw-map--none { padding: 0; background: var(--gwj-bg); }
+.gw-jw-nomap { display: flex; align-items: center; gap: 0.5rem; margin: 0; padding: 0.5rem 0.75rem; color: var(--gwj-muted); font-size: 12.5px; }
+.gw-jw-nomap .gw-icon { color: var(--gwj-gold-dim); }
+.gw-jw-nomap strong { color: var(--gwj-text); font-weight: 600; }
+
+/* ------------------------------------------------- The chosen encounter */
+.gw-jw-details__bar { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.25rem; padding: 0.2rem 0.4rem 0.2rem 0.75rem; border-bottom: 1px solid var(--gwj-border); background: var(--gwj-raised); }
+.gw-jw-details__bar h3 { overflow: hidden; margin: 0; color: var(--gwj-gold); font-family: var(--gwj-title); font-size: 13px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.gw-jw .gw-jw-lootswitch { display: inline-flex; flex: none; align-items: center; gap: 0.3rem; min-height: 28px; padding: 0.1rem 0.6rem; border: 1px solid var(--gwj-border-strong); border-radius: 3px; background: transparent; color: var(--gwj-muted); font-size: 12px; cursor: pointer; }
+.gw-jw .gw-jw-lootswitch:hover { color: var(--gwj-text); }
+.gw-jw .gw-jw-lootswitch[aria-pressed='true'] { border-color: var(--gwj-border-gold); background: var(--gwj-active); color: var(--gwj-gold-bright); }
+
+.gw-jw-boss.gw-journal-boss { display: flex; flex: 1; flex-direction: column; gap: 0; min-height: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.gw-jw-boss__head { display: flex; flex: none; align-items: center; gap: 0.6rem; padding: 0.5rem 0.65rem; border-bottom: 1px solid var(--gwj-border); }
+.gw-jw-boss__head .gw-atlas-boss__pager { margin-left: auto; }
+.gw-jw-boss__title { min-width: 0; }
+.gw-jw-boss__title h3 { margin: 0; overflow: hidden; color: var(--gwj-gold-bright); font-family: var(--gwj-title); font-size: 1.05rem; font-weight: 400; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.gw-jw-boss__eyebrow { margin: 0; color: var(--gwj-muted); font-size: 11px; }
+.gw-jw-boss__head .gw-journal-boss__facts { margin: 0.15rem 0 0; }
+.gw-jw-boss__guide { display: flex; flex: 1 1 auto; flex-direction: column; gap: 0.5rem; min-height: 3rem; padding: 0.55rem 0.7rem; overflow-y: auto; overscroll-behavior: contain; }
+.gw-jw-boss--sparse .gw-jw-boss__guide { flex: 0 0 auto; }
+.gw-jw-boss__loot { display: flex; flex: 0 1 auto; flex-direction: column; gap: 0.35rem; max-height: 55%; padding: 0.5rem 0.7rem 0.6rem; overflow-y: auto; border-top: 1px solid var(--gwj-border-gold); background: var(--gwj-inset); }
+.gw-jw-boss--sparse .gw-jw-boss__loot { flex: 1 1 auto; max-height: none; }
+
+/* All loot, in the details panel's width. */
+.gw-jw-details .gw-atlas-lootbar { flex-wrap: wrap; }
+.gw-jw-details .gw-atlas-lootgroup .gw-atlas-source--compact { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------------------------------------------- A narrower application */
+@container gw-journal (max-width: 74rem) {
+  .gw-jw-head__meta { display: none; }
+  .gw-jw-head .gw-atlas-back span { display: none; }
+}
+@container gw-journal (max-width: 64rem) {
+  .gw-jw--journal { grid-template: 'rail map' minmax(0, 1.1fr) 'rail details' minmax(0, 1fr) / 11.5rem minmax(0, 1fr); }
+  .gw-jw--journal.gw-jw--norail { grid-template: 'map' minmax(0, 1.1fr) 'details' minmax(0, 1fr) / minmax(0, 1fr); }
+  .gw-jw--quests { grid-template: 'map' minmax(0, 0.8fr) 'checklist' minmax(0, 1fr) / minmax(0, 1fr); }
+}
+
+/* One panel at a time, map first. */
+@container gw-journal (max-width: 46rem) {
+  .gw-jw-head { flex-wrap: wrap; padding: 0.3rem 0.5rem; }
+  .gw-jw-head__title { flex: 1 1 8rem; }
+  .gw-jw-head__actions { order: 2; }
+  .gw-jw-head .gw-jw-tabs.gw-seg { order: 3; flex: 1 1 100%; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0; }
+  .gw-jw-head .gw-jw-tabs.gw-seg button { justify-content: center; min-height: 36px; padding: 0.2rem 0.3rem; text-align: center; }
+  .gw-jw-head__actions .gw-atlas-maplink { font-size: 0; gap: 0; }
+  .gw-jw-head__actions .gw-atlas-modal__character select { max-width: 8rem; }
+  .gw-jw, .gw-jw--journal, .gw-jw--journal.gw-jw--nomap, .gw-jw--journal.gw-jw--norail, .gw-jw--journal.gw-jw--nomap.gw-jw--norail, .gw-jw--quests, .gw-jw--quests.gw-jw--nomap {
+    display: flex; flex-direction: column; gap: 0.35rem; padding: 0.35rem;
+  }
+  .gw-jw--runs { flex-direction: row; }
+  .gw-jw-panes { display: grid; flex: none; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 2px; padding: 2px; border: 1px solid var(--gwj-border); border-radius: 4px; background: var(--gwj-bg); }
+  .gw-jw .gw-jw-panes button { min-height: 38px; padding: 0.2rem; border: 0; border-radius: 3px; background: transparent; color: var(--gwj-muted); font-size: 13px; cursor: pointer; }
+  .gw-jw .gw-jw-panes button[aria-pressed='true'] { background: var(--gwj-active); color: var(--gwj-gold-bright); }
+  .gw-jw > .gw-jw-panel, .gw-jw > .gw-jw-map { display: none; flex: 1; }
+  .gw-jw[data-pane='map'] > .gw-jw-map, .gw-jw[data-pane='encounters'] > .gw-jw-encounters, .gw-jw[data-pane='details'] > .gw-jw-details, .gw-jw[data-pane='checklist'] > .gw-jw-checklist { display: flex; }
+  .gw-jw .gw-atlas-rail ol { flex-direction: column; overflow: visible; padding: 0; }
+  .gw-jw .gw-atlas-rail button { width: 100%; white-space: normal; }
+  .gw-jw-boss__guide { flex: 0 0 auto; overflow: visible; }
+  .gw-jw-boss.gw-journal-boss { overflow-y: auto; overscroll-behavior: contain; }
+  .gw-jw-boss__loot { flex: 0 0 auto; max-height: none; overflow: visible; }
+}
+
+/* The Studio's preview is a column in its page: it takes the height of its
+   content, shows every panel, and never asks for the viewport. */
+.gw-atlas-page--embedded.gw-jw-shell { height: auto; }
+.gw-atlas-page--embedded .gw-jw { display: flex !important; flex-direction: column; }
+.gw-atlas-page--embedded .gw-jw-panes { display: none !important; }
+.gw-atlas-page--embedded .gw-jw > .gw-jw-panel, .gw-atlas-page--embedded .gw-jw > .gw-jw-map { display: flex !important; flex: none; overflow: visible; }
+.gw-atlas-page--embedded .gw-jw-scroll, .gw-atlas-page--embedded .gw-jw-boss__guide, .gw-atlas-page--embedded .gw-jw-boss__loot, .gw-atlas-page--embedded .gw-atlas-rail { flex: none; max-height: none; overflow: visible; }
+.gw-atlas-page--embedded .gw-jw-boss.gw-journal-boss { flex: none; }
+.gw-atlas-page--embedded .gw-dmap__stage { display: block !important; container-type: normal !important; }
+.gw-atlas-page--embedded .gw-dmap__frame { width: 100% !important; }
+
+/* The Studio's page does not load the dashboard's helpers. */
+.gw-jw .gw-atlas-rail__flag { flex: none; margin-left: auto; }
+.gw-jw .gw-atlas-rail__flag .gw-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

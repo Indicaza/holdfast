@@ -11,17 +11,17 @@ const TYPE_LABEL = { interrupt: 'Interrupt', dispel: 'Dispel', positioning: 'Pos
 
 // The website's real dungeon view, drawn in place from the draft's detail.
 function WebsitePreview({ instanceId, detail, bossKey }) {
-  const [view, setView] = useState({ section: 'overview', boss: '' })
+  const [view, setView] = useState({ section: 'journal', boss: '', allLoot: false })
   const [followed, setFollowed] = useState(bossKey)
   // Follow the boss being edited.
   if (bossKey !== followed) {
     setFollowed(bossKey)
-    if (bossKey) setView({ section: 'bosses', boss: bossKey })
+    if (bossKey) setView({ section: 'journal', boss: bossKey, allLoot: false })
   }
   return (
     <div className="gw-embed studio-preview-site">
-      <DungeonDetailModal instanceId={String(instanceId)} previewDetail={detail} embedded section={view.section} boss={view.boss}
-        onNavigate={({ section = '', boss = '' }) => setView({ section: section || 'overview', boss })} onClose={() => {}} showMapLink={false} />
+      <DungeonDetailModal instanceId={String(instanceId)} previewDetail={detail} embedded section={view.section} boss={view.boss} allLoot={view.allLoot}
+        onNavigate={({ section = '', boss = '', allLoot = false }) => setView({ section: section || 'journal', boss, allLoot })} onClose={() => {}} showMapLink={false} />
     </div>
   )
 }

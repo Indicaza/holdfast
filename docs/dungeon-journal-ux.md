@@ -6,29 +6,44 @@ change to `frontend/src/Player/Dungeons/` keeps. Tests that hold them:
 `e2e/tests/dungeon-journal-interactions.solo.spec.js`,
 `src/Player/Dungeons/__tests__/`, `frontend/test/journalTooltips.test.js`.
 
+## The workspace
+
+One workspace (`JournalWorkspace.jsx`) in three places: the Dungeons page,
+where it fills the space under the app header and the document does not
+scroll; a dialog over the Resource Map, which stays mounted; and the Studio's
+preview, which takes its content's height and never the viewport's.
+
+- **Journal**: encounters, the map, and the chosen encounter (mechanics above
+  its loot). **All loot** swaps that loot for the dungeon's source groups
+  without moving the map.
+- **Quests**: the map beside the preparation checklist.
+- **My runs**: the run history, full width.
+- Panels scroll; the page does not. Under 46rem one panel shows at a time,
+  map first.
+
 ## Navigation
 
-- Dungeon → encounter → boss. A dungeon is a page (`?open=<id>`), with
-  Overview, Quests, Loot and My runs. `?boss=<key>` selects a boss on the
-  Overview; old `section=bosses|prepare` links still land.
-- The encounter list stays beside the page (a row on phones): the dungeon
-  first, then each boss in order, with its portrait (or initial), number,
-  drop count, wanted count and high-priority marks. The selected row is
-  framed as a whole (dark-gold plate, gold hairline, portrait ring, gold
-  name); no edge stripes. Hover, selected and keyboard focus look different,
-  and none changes a row's size. Previous and next boss sit under a boss's page.
+- A dungeon is `?open=<id>`, with `section=quests|runs`, `boss=<key>` and
+  `loot=all`. Old `section=overview|bosses|loot|prepare` links are rewritten
+  to what they now are. Sections replace history, so Back leaves the dungeon.
+- The encounter list starts with the dungeon, then each boss in order with
+  its portrait (or initial), number, drop count, wanted count and
+  high-priority marks.
 - "All dungeons" (or the browser's Back) returns to the grid where it was.
-- The Loot tab does not repeat boss navigation: a boss panel's name opens
-  that boss's guide.
+
+## The map
+
+Real floors and pins only (`DungeonMapPanel`). Choosing a boss turns to its
+floor and highlights its pin; a pin selects its boss; the floor can be turned
+by hand and is kept across Journal and Quests. A dungeon with no map gets one
+line. Spawn layouts are never a map, and world-map coordinates are never drawn
+on a dungeon floor.
 
 ## A boss's page
 
-One framed encounter: portrait, "Encounter n of m", the name, previous and
-next arrows, and tags only for what matters (high priority, interrupts,
-wishlist). **Key mechanics** sit beside the **loot window** when the content
-is at least 44rem wide, stacked when not; other abilities fold away. A boss
-with no known mechanics is its header, its loot and one quiet line: no empty
-column, no extra frame. Identifiers stay under "About this data".
+Header (portrait, place in the dungeon, high priority, interrupts, wishlist),
+then **key mechanics** over the **loot**, which stays in view. Other abilities
+fold away. Missing data is said in one line.
 
 ## Item slots
 
@@ -37,7 +52,7 @@ column, no extra frame. Identifiers stay under "About this data".
   and "choose one" are small marks.
 - **A slot never moves or changes size**: no hover lift or scale, no press
   shrink, a square hit area (the global button rules are reset on the
-  journal's controls in `AtlasLootGrid.css`).
+  journal's controls in `DungeonJournal.css`).
 - **Hover or keyboard focus** shows the tooltip beside the slot, never
   over it, always inside the window (`placeFloating`): right, else left,
   else below or above. It mounts once per hover; moving within the slot

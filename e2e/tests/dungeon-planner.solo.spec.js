@@ -128,7 +128,7 @@ test('The Hall of Thanes: known boss names, level fit and loot by source', async
   const rail = thanes.getByRole('navigation', { name: 'Bosses' })
   for (const name of ['Faldrim Anvilmar', 'Infurnus', 'Plunder', 'Durgen Dirgehammer']) await expect(rail).toContainText(name)
   await expect(thanes).not.toContainText(/Creature \d+/)
-  await thanes.getByRole('button', { name: 'Loot', exact: true }).click()
+  await thanes.getByRole('button', { name: 'All loot' }).click()
   const bosses = thanes.getByRole('region', { name: 'Bosses', exact: true })
   await expect(bosses.getByRole('region', { name: 'Faldrim Anvilmar loot' })).toBeVisible()
   // The boss's name opens its guide.
@@ -209,7 +209,7 @@ test('on a phone the dungeon page fits the screen', async ({ page, context }) =>
   // Nothing on the page is wider than the screen.
   expect(await dungeon.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
-  await dungeon.getByRole('button', { name: 'Loot', exact: true }).click()
+  await dungeon.getByRole('button', { name: 'All loot' }).click()
   await expect(dungeon.getByRole('region', { name: 'Edwin VanCleef loot' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
 })

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { journalMapProps } from '../atlasModel.js'
+import { atlasSection, journalFillsPage, journalMapProps, readAtlasQuery, withAtlasOpen } from '../atlasModel.js'
 import { DungeonMapPanel, JournalMap } from '../DungeonMapPanel.jsx'
 
 const floor = (index, name) => ({ floorId: `journal-36-${index}`, index, name, imageUrl: `/map-${index}.png`, width: 1002, height: 668, attribution: 'Fixture' })
@@ -63,5 +63,30 @@ describe('the dungeon map', () => {
     expect(screen.getByText('No map')).toBeTruthy()
     expect(screen.queryByRole('img')).toBeNull()
     expect(journalMapProps({ bosses: [] })).toBeNull()
+  })
+})
+
+describe('the Journal\'s links', () => {
+  test('old sections land on what they now are', () => {
+    expect(['overview', 'bosses', 'loot', 'nonsense'].map(atlasSection)).toEqual(['journal', 'journal', 'journal', 'journal'])
+    expect(atlasSection('prepare')).toBe('quests')
+    expect(readAtlasQuery('?open=36&section=loot')).toMatchObject({ section: 'journal', allLoot: true, legacySection: true })
+    expect(readAtlasQuery('?open=36&section=quests')).toMatchObject({ section: 'quests', allLoot: false, legacySection: false })
+    expect(withAtlasOpen('/dashboard/dungeons?open=36&section=loot&server=a', { open: 36, section: 'journal', allLoot: true })).toBe('/dashboard/dungeons?server=a&open=36&loot=all')
+    expect(withAtlasOpen('/map?zone=1436&open=36&loot=all', { open: null })).toBe('/map?zone=1436')
+  })
+
+  test('an open dungeon fills the page, except over an open run', () => {
+    expect(journalFillsPage('?open=36')).toBe(true)
+    expect(journalFillsPage('?view=runs&run=9&open=36')).toBe(false)
+    expect(journalFillsPage('')).toBe(false)
+  })
+
+  test('a spawn layout is never a map, and editor art carries no guessed pins', () => {
+    const boss = { encounterId: 1, name: 'A', floorId: 'layout', mapPosition: { x: 0.5, y: 0.5 } }
+    expect(journalMapProps({ bosses: [boss], maps: [{ floorId: 'layout', points: [[0.1, 0.2]] }] })).toBeNull()
+    const art = journalMapProps({ bosses: [boss], maps: [{ floorId: 'layout', points: [[0.1, 0.2]] }, { floorId: 'editorial-map', imageUrl: '/a.png' }] })
+    expect(art.floors.map((floor) => floor.floorId)).toEqual(['editorial-map'])
+    expect(art.pins).toEqual([])
   })
 })

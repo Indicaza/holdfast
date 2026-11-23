@@ -55,7 +55,7 @@ test('Deadmines: floors switch, pins sit at their coordinates and open their bos
   const boss = page.getByRole('article', { name: 'Edwin VanCleef' })
   await expect(boss).toBeVisible()
   await expect(page).toHaveURL(/boss=2747/)
-  const location = boss.getByRole('region', { name: 'Edwin VanCleef on the map' })
+  const location = mapRegion(page)
   await expect(location.getByRole('img', { name: 'Map of Ironclad Cove' })).toBeVisible()
   await expect(location.getByRole('button', { name: /Edwin VanCleef/ })).toHaveAttribute('aria-current', 'true')
 })
@@ -63,7 +63,8 @@ test('Deadmines: floors switch, pins sit at their coordinates and open their bos
 test('choosing a boss in the encounter list turns to its floor and highlights its pin', async ({ page, context }) => {
   await open(page, context, '/dashboard/dungeons?open=36&boss=2747')
   await page.getByRole('navigation', { name: 'Bosses' }).getByRole('button', { name: /Sneed/ }).click()
-  const location = page.getByRole('article', { name: 'Sneed' }).getByRole('region', { name: 'Sneed on the map' })
+  await expect(page.getByRole('article', { name: 'Sneed' })).toBeVisible()
+  const location = mapRegion(page)
   await expect(location.getByRole('img', { name: 'Map of The Deadmines' })).toBeVisible()
   await expect(location.getByRole('button', { name: /Sneed/ })).toHaveAttribute('aria-current', 'true')
 })

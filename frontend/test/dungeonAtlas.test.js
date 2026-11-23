@@ -71,22 +71,22 @@ test('explore filters and the open dungeon round-trip through the URL', () => {
   assert.equal(href, '/dashboard/dungeons?server=us%3Afixture&character=char-1&find=dead&fit=1&open=36&boss=2746')
   const query = readAtlasQuery(href.split('?')[1])
   assert.equal(query.open, 36)
-  assert.equal(query.section, 'overview')
+  assert.equal(query.section, 'journal')
   // Old links keep working: a boss link opens that boss, Prepare opens Quests.
-  assert.equal(readAtlasQuery('open=36&section=bosses&boss=2746').section, 'overview')
+  assert.equal(readAtlasQuery('open=36&section=bosses&boss=2746').section, 'journal')
   assert.equal(readAtlasQuery('open=36&section=bosses&boss=2746').boss, '2746')
   assert.equal(readAtlasQuery('open=36&section=prepare').section, 'quests')
   assert.equal(withAtlasOpen('/dashboard/dungeons', { open: 36, section: 'prepare' }), '/dashboard/dungeons?open=36&section=quests')
   assert.equal(query.boss, '2746')
   assert.equal(query.filters.find, 'dead')
   assert.equal(readAtlasQuery('open=abc&section=bogus').open, null)
-  assert.equal(readAtlasQuery('open=36&section=bogus').section, 'overview')
+  assert.equal(readAtlasQuery('open=36&section=bogus').section, 'journal')
 })
 
 test('opening and closing the modal keeps server, character and tab', () => {
   const base = '/dashboard/dungeons?server=us%3Afixture&view=loot&character=char-1&dungeon=36'
   const opened = withAtlasOpen(base, { open: 43, section: 'loot' })
-  assert.equal(opened, `${base}&open=43&section=loot`)
+  assert.equal(opened, `${base}&open=43&loot=all`)
   assert.equal(withAtlasOpen(opened, { open: null }), base)
   assert.equal(withAtlasOpen('/map?zone=1436&dungeons=1', { open: 36 }), '/map?zone=1436&dungeons=1&open=36')
 })
@@ -422,7 +422,7 @@ test('level fit copy is about the character, never "too high" for an under-level
   assert.equal(levelFit(atlas, { level: 12 }), 'fit')
   assert.equal(levelFit(atlas, { level: 21 }), 'fit')
   assert.equal(fitText(null, low), null)
-  assert.equal(atlasSection('bogus'), 'overview')
+  assert.equal(atlasSection('bogus'), 'journal')
 })
 
 // The Hall of Thanes: the add-on knows Faldrim Anvilmar (NPC 261306); the
