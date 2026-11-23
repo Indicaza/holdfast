@@ -5,6 +5,7 @@
 import { readLootDungeonInDatabase, lootCatalogRevisionInDatabase } from "../../Loot/lootCatalogRepository.js";
 import { withObservedRates } from "../../Loot/lootObservationRepository.js";
 import { atlasDungeon, withAtlasDetail } from "../atlasRepository.js";
+import { withJournalMap } from "../journalMaps.js";
 import { addonJournalModel } from "./addonJournalModel.js";
 import { addonEditorialEntry } from "./addonTransform.js";
 import { readMediaInDatabase } from "./atlasMedia.js";
@@ -28,7 +29,7 @@ export function previewInDatabase(db, instanceId, document, { revision = null } 
   const resolveMedia = (id) => mediaArtInDatabase(db, id);
   const view = editorialView(imported, document, { resolveMedia, revision, preview: true });
   const base = baseDetailInDatabase(db, instanceId);
-  const website = withEditorialDetail(base, view);
+  const website = withJournalMap(db, withEditorialDetail(base, view), instanceId);
   const entry = addonEditorialEntry(instanceId, view.resolution, revision);
   const cardId = view.resolution.dungeon.cardArt.winner === "editorial" ? view.resolution.dungeon.cardArt.effective : null;
   const portraits = new Map();

@@ -5,8 +5,8 @@ owner confirmed the right to obtain and publish this art. All 63 floors of
 25 dungeons were built from wago.tools `wowf` build 1.60.1.71037; see
 `backend/src/Atlas/data/sources/journal-maps-manifest.json` and the
 [coverage report](dungeon-maps-coverage.md). The images are not in Git. They
-reach a site only through the `import` step, which has not been run in
-production.
+reach a site through Content Studio media; production's were uploaded on
+2026-11-23.
 
 The game client was not used, because Blizzard's EULA bars copying or mining
 it. The art remains Blizzard's and keeps that attribution in Content Studio.

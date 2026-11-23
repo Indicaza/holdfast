@@ -24,7 +24,7 @@ const detail = {
 }
 
 function Preview() {
-  const [view, setView] = useState({ section: 'overview', boss: '' })
+  const [view, setView] = useState({ section: 'journal', boss: '' })
   return <DungeonDetailModal instanceId="3065" previewDetail={detail} embedded section={view.section || 'overview'} boss={view.boss} onNavigate={setView} onClose={() => {}} showMapLink={false} />
 }
 

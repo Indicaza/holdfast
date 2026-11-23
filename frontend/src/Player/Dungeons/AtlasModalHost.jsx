@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 import { navigate } from '../../Navigation/navigation.js'
 import { resolveCharacter } from '../lootModel.js'
@@ -22,14 +22,18 @@ export default function AtlasModalHost({ server = '', queryString = '', characte
   const mine = useMemo(() => characters.filter((entry) => onServerKey(entry, server)), [characters, server])
   const character = resolveCharacter(mine, query.character)
   const list = useDungeonList()
-  const onNavigate = useCallback(({ section = '', boss = '' }) => navigate(withAtlasOpen(here(), { open: query.open, section, boss }), { preserveScroll: true, replace: true }), [query.open])
+  const onNavigate = useCallback(({ section = '', boss = '', allLoot = false }) => navigate(withAtlasOpen(here(), { open: query.open, section, boss, allLoot }), { preserveScroll: true, replace: true }), [query.open])
+  // An old link (section=loot, prepare, bosses) lands on what it now is.
+  useEffect(() => {
+    if (query.open && query.legacySection) navigate(withAtlasOpen(here(), { open: query.open, section: query.section, boss: query.boss, allLoot: query.allLoot }), { preserveScroll: true, replace: true })
+  }, [query])
   const onClose = useCallback(() => navigate(withAtlasOpen(here(), { open: null }), { preserveScroll: true }), [])
   const onCharacter = useCallback((id) => navigate(withCharacter(here(), id), { preserveScroll: true, replace: true }), [])
   if (!query.open) return null
   const backHref = layout === 'page' && typeof window !== 'undefined' ? withAtlasOpen(here(), { open: null }) : ''
   return (
     <DungeonDetailModal key={query.open} instanceId={query.open} dungeons={list.dungeons} character={character} characters={mine} onCharacter={onCharacter} server={server}
-      section={query.section} boss={query.boss} onNavigate={onNavigate} onClose={onClose} showMapLink={showMapLink}
+      section={query.section} boss={query.boss} allLoot={query.allLoot} onNavigate={onNavigate} onClose={onClose} showMapLink={showMapLink}
       layout={layout} backHref={backHref} backLabel={BACK_LABELS[dungeonsView(queryString)] || BACK_LABELS.explore} />
   )
 }

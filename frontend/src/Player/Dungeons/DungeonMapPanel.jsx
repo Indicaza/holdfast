@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
-
 import { bossKey, journalMapProps } from './atlasModel.js'
+import { useJournalFloor } from './useJournalFloor.js'
 
 // One dungeon's real map: its floors, boss pins and the selected encounter.
 // Fully controlled and free of page layout, so it can sit in any panel.
@@ -20,7 +19,8 @@ export function DungeonMapPanel({ dungeonName = '', floors = [], pins = [], floo
           ))}
         </div>
       ) : null}
-      <div className="gw-dmap__frame" style={{ aspectRatio: `${floor.width || 1002} / ${floor.height || 668}` }}>
+      <div className="gw-dmap__stage">
+      <div className="gw-dmap__frame" style={{ '--map-ratio': (floor.width || 1002) / (floor.height || 668), aspectRatio: `${floor.width || 1002} / ${floor.height || 668}` }}>
         <img src={floor.imageUrl} alt={`Map of ${floorName(floor, floors.indexOf(floor))}`} draggable="false" />
         {placed.map((pin) => (
           <button key={pin.bossKey} type="button" className={`gw-atlas-floor__marker gw-dmap__pin${pin.bossKey === selectedKey ? ' is-active' : ''}`}
@@ -29,6 +29,7 @@ export function DungeonMapPanel({ dungeonName = '', floors = [], pins = [], floo
             {pin.number}
           </button>
         ))}
+      </div>
       </div>
       <figcaption className="gw-muted">
         {floors.length === 1 && floor.name ? `${floor.name}. ` : ''}
@@ -42,11 +43,7 @@ export function DungeonMapPanel({ dungeonName = '', floors = [], pins = [], floo
 // Holds the floor; choosing an encounter turns to the floor its pin is on.
 export function JournalMap({ atlas, selectedKey = '', onBoss }) {
   const map = journalMapProps(atlas)
-  const pinFloor = map?.pins.find((pin) => pin.bossKey === selectedKey)?.floorId
-  const [floorId, setFloorId] = useState(pinFloor || map?.floors[0]?.floorId)
-  useEffect(() => {
-    if (pinFloor) setFloorId(pinFloor)
-  }, [pinFloor])
+  const [floorId, setFloorId] = useJournalFloor(map, selectedKey)
   if (!map) return null
   const select = (key) => {
     const boss = atlas.bosses.find((entry) => bossKey(entry) === key)

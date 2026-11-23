@@ -19,6 +19,7 @@ import { accountMenuLinks } from '../navigation.js'
 import CommandPalette from './CommandPalette.jsx'
 import PlayerCharacters from './PlayerCharacters.jsx'
 import PlayerAuctions from '../Market/PlayerAuctions.jsx'
+import { journalFillsPage } from './Dungeons/atlasModel.js'
 import PlayerDungeons from './PlayerDungeons.jsx'
 import PlayerFarming from './PlayerFarming.jsx'
 import PlayerGathering from './PlayerGathering.jsx'
@@ -268,7 +269,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
         sidebar={section === 'map' ? <div ref={setLegendHost} className="gw-side__slot" /> : null}
         onToggleMobile={setMobileOpen}
         onOpenSearch={openSearch}
-        fill={current.id === 'map' || current.id === 'auctions'}
+        fill={current.id === 'map' || current.id === 'auctions' || (current.id === 'dungeons' && journalFillsPage(queryString))}
       >
         {overview.status === 'loading' ? <SkeletonRows rows={8} label="Loading your dashboard" /> : null}
         {overview.status === 'error' || overview.status === 'missing' ? (

@@ -4,21 +4,20 @@
 // only from loot still gets a card, a modal and a loot list.
 
 export const ATLAS_SECTIONS = Object.freeze([
-  ['overview', 'Overview'],
+  ['journal', 'Journal'],
   ['quests', 'Quests'],
-  ['loot', 'Loot'],
   ['runs', 'My runs'],
 ])
 
-// Sections older links name: a boss (?section=bosses&boss=) is now chosen on
-// the Overview, and Prepare's quests and readiness are the Quests section.
-const LEGACY_SECTIONS = Object.freeze({ bosses: 'overview', prepare: 'quests' })
+// Sections older links name. Overview and the boss pages are the Journal,
+// Prepare is Quests, and Loot is the Journal with All loot on.
+const LEGACY_SECTIONS = Object.freeze({ overview: 'journal', bosses: 'journal', loot: 'journal', prepare: 'quests' })
 
 // A section id from a URL or a caller, old names included; anything else is
-// the Overview.
+// the Journal.
 export function atlasSection(value) {
   const id = LEGACY_SECTIONS[value] || value
-  return ATLAS_SECTIONS.some(([known]) => known === id) ? id : 'overview'
+  return ATLAS_SECTIONS.some(([known]) => known === id) ? id : 'journal'
 }
 
 export const ABILITY_CATEGORIES = Object.freeze([
@@ -85,7 +84,14 @@ export function dungeonsView(queryString = '') {
   return 'explore'
 }
 
-// The explore filters and the open dungeon (?open=36&section=bosses&boss=…).
+// Whether the Dungeons page is showing a dungeon's Journal in its workspace
+// (an open run keeps its page, with the dungeon over it as a dialog).
+export function journalFillsPage(queryString = '') {
+  const params = new URLSearchParams(queryString)
+  return Boolean(openId(params.get('open'))) && !(params.get('run') && dungeonsView(queryString) === 'runs')
+}
+
+// The explore filters and the open dungeon (?open=36&section=quests&boss=…).
 export function readAtlasQuery(queryString = '') {
   const params = new URLSearchParams(queryString)
   return {
@@ -93,18 +99,22 @@ export function readAtlasQuery(queryString = '') {
     open: openId(params.get('open')),
     section: atlasSection(params.get('section')),
     boss: params.get('boss') || '',
+    allLoot: params.get('loot') === 'all' || params.get('section') === 'loot',
+    // An old section name, or the default spelled out: the URL is tidied.
+    legacySection: Boolean(LEGACY_SECTIONS[params.get('section')]) || params.get('section') === 'journal',
     filters: Object.fromEntries(EXPLORE_FILTER_KEYS.map((key) => [key, params.get(key) || ''])),
   }
 }
 
-export function exploreHref({ server = '', character = '', filters = {}, open = null, section = '', boss = '' } = {}) {
+export function exploreHref({ server = '', character = '', filters = {}, open = null, section = '', boss = '', allLoot = false } = {}) {
   const params = new URLSearchParams()
   if (server) params.set('server', server)
   if (character) params.set('character', character)
   for (const key of EXPLORE_FILTER_KEYS) if (filters[key]) params.set(key, filters[key])
   if (open) params.set('open', String(open))
-  if (open && section && atlasSection(section) !== 'overview') params.set('section', atlasSection(section))
+  if (open && section && atlasSection(section) !== 'journal') params.set('section', atlasSection(section))
   if (open && boss) params.set('boss', String(boss))
+  if (open && (allLoot || section === 'loot')) params.set('loot', 'all')
   const query = params.toString()
   return `/dashboard/dungeons${query ? `?${query}` : ''}`
 }
@@ -112,13 +122,14 @@ export function exploreHref({ server = '', character = '', filters = {}, open = 
 // The current URL with a dungeon opened (or closed, open = null). Every
 // other param (server, character, view, filters) is kept, so the modal can
 // open over any tab or the world map and close back to it.
-export function withAtlasOpen(href, { open = null, section = '', boss = '' } = {}) {
+export function withAtlasOpen(href, { open = null, section = '', boss = '', allLoot = false } = {}) {
   const url = new URL(href, 'https://guildweaver.local')
-  for (const key of ['open', 'section', 'boss']) url.searchParams.delete(key)
+  for (const key of ['open', 'section', 'boss', 'loot']) url.searchParams.delete(key)
   if (open) {
     url.searchParams.set('open', String(open))
-    if (section && atlasSection(section) !== 'overview') url.searchParams.set('section', atlasSection(section))
+    if (section && atlasSection(section) !== 'journal') url.searchParams.set('section', atlasSection(section))
     if (boss) url.searchParams.set('boss', String(boss))
+    if (allLoot || section === 'loot') url.searchParams.set('loot', 'all')
   }
   return `${url.pathname}${url.search}${url.hash}`
 }
@@ -439,16 +450,32 @@ export function bossKey(boss = {}) {
   return String(boss.encounterId || boss.npcId || boss.name || '')
 }
 
-// The panel's props for a dungeon: pins numbered as in the encounter list.
+// The map panel's floors and pins: the real journal floors, else art an
+// editor published. Pins are numbered as in the encounter list. A spawn
+// layout is never a floor, and no position is ever guessed.
 export function journalMapProps(atlas) {
+  const order = new Map((atlas?.bosses || []).map((boss, index) => [bossKey(boss), { boss, number: index + 1 }]))
   const map = atlas?.journalMap
-  if (!map?.floors?.length) return null
-  const order = new Map((atlas.bosses || []).map((boss, index) => [bossKey(boss), { boss, number: index + 1 }]))
-  const pins = (map.pins || []).flatMap((pin) => {
-    const entry = order.get(pin.bossKey)
-    return entry ? [{ ...pin, name: entry.boss.name, number: entry.number }] : []
+  if (map?.floors?.length) {
+    const pins = (map.pins || []).flatMap((pin) => {
+      const entry = order.get(pin.bossKey)
+      return entry ? [{ ...pin, name: entry.boss.name, number: entry.number }] : []
+    })
+    return { floors: map.floors, pins }
+  }
+  const drawn = (atlas?.maps || []).filter((entry) => entry?.imageUrl)
+  const art = atlas?.editorial?.art?.map?.url
+  const floors = drawn.length
+    ? drawn.map((entry) => ({ floorId: entry.floorId ?? entry.imageUrl, name: entry.name || '', imageUrl: entry.imageUrl, width: entry.width || null, height: entry.height || null }))
+    : art ? [{ floorId: 'editorial-map', name: '', imageUrl: art, width: null, height: null }] : []
+  if (!floors.length) return null
+  const pins = (atlas.bosses || []).flatMap((boss) => {
+    const floor = floors.find((entry) => entry.floorId === boss.floorId)
+    return floor && markerPosition(boss.mapPosition)
+      ? [{ bossKey: bossKey(boss), name: boss.name, number: order.get(bossKey(boss)).number, floorId: floor.floorId, x: boss.mapPosition.x, y: boss.mapPosition.y }]
+      : []
   })
-  return { floors: map.floors, pins }
+  return { floors, pins }
 }
 
 function normalizedName(value) {
