@@ -13,6 +13,34 @@
   white-space: nowrap;
 }
 
+.gw-dcc-tabs {
+  align-self: flex-start;
+}
+
+.gw-dcc-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.85rem;
+  border-radius: 7px;
+  color: var(--gw-dim);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gw-dcc-tabs a:hover {
+  color: var(--gw-text);
+}
+
+.gw-dcc-tabs a[aria-current="page"] {
+  background: var(--gw-raise);
+  color: var(--gw-text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
 .gw-loot__bar {
   display: flex;
   flex-wrap: wrap;
