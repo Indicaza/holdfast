@@ -54,7 +54,7 @@ describe('Wishlist tab', () => {
     expect(screen.queryByRole('combobox', { name: 'Dungeon' })).toBeNull()
     expect(screen.queryByRole('group', { name: 'Filter loot' })).toBeNull()
     expect(screen.getByRole('link', { name: 'Browse dungeons' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Journal' })).toBeTruthy()
+    expect(within(screen.getByRole('list', { name: 'Wanted items' })).getByRole('link', { name: 'Journal' })).toBeTruthy()
   })
 
   test('item editors remain optional and acquired entries start collapsed', () => {
