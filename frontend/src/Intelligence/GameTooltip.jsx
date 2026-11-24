@@ -41,11 +41,16 @@ function color(value) {
 }
 
 function sellPriceAlreadyCaptured(lines) {
-  return lines.some((line) => line.sellPrice || /^sell\s+price\s*:/i.test(String(line.left || '').trim()))
+  return lines.some((line) => /^sell\s+price\s*:/i.test(String(line.left || '').trim()))
 }
 
-function CapturedRows({ lines, quality }) {
+function CapturedRows({ lines, quality, price }) {
   return lines.map((line, index) => {
+    if (line.sellPrice && price) {
+      return <div key={`price-${index}`} className="game-tooltip__line game-tooltip__price">
+        <span>Sell Price: <Money money={price} /></span>
+      </div>
+    }
     if (line.blank || line.sellPrice) {
       return <div key={`blank-${index}`} className="game-tooltip__blank" aria-hidden="true" />
     }
@@ -116,11 +121,12 @@ export function GameTooltipBody({ item: value, reference = null }) {
   const price = actualItem && Number(item.sellPrice) > 0 && !sellPriceAlreadyCaptured(lines)
     ? coins(item.sellPrice)
     : null
+  const hasPriceMarker = lines.some((line) => line.sellPrice)
 
   return (
     <>
-      <CapturedRows lines={lines} quality={quality} />
-      {price ? (
+      <CapturedRows lines={lines} quality={quality} price={price} />
+      {price && !hasPriceMarker ? (
         <div className="game-tooltip__line game-tooltip__price">
           <span>Sell Price: <Money money={price} /></span>
         </div>
