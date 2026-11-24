@@ -7,6 +7,28 @@ function itemFromRow(row) {
     iconFileDataId: row.icon_file_id, gameBuild: row.game_build, locale: row.locale };
 }
 
+// A batch lookup for base-item definitions uploaded by Forever clients.
+// The Journal must not depend on the independently refreshed AH index.
+// Each item comes from one capture: never merge lines from different builds.
+export function observedItemDefinitionsInDatabase(db, itemIds) {
+  const ids = [...new Set(itemIds.filter((id) => Number.isSafeInteger(id) && id > 0))];
+  const definitions = new Map();
+  for (let start = 0; start < ids.length; start += 200) {
+    const chunk = ids.slice(start, start + 200);
+    const sql = "SELECT item_id, game_build, locale, definition_json FROM public_game_items WHERE item_id IN (" +
+      chunk.map(() => "?").join(",") + ") AND definition_json <> '{}' ORDER BY (locale = 'en_US') DESC, captured_at DESC";
+    for (const row of db.prepare(sql).all(...chunk)) {
+      if (definitions.has(row.item_id)) continue;
+      let parsed;
+      try { parsed = JSON.parse(row.definition_json); } catch { continue; }
+      const item = publicItemDefinition(parsed, { base: true });
+      if (!item) continue;
+      definitions.set(row.item_id, { ...item, gameBuild: row.game_build, locale: row.locale });
+    }
+  }
+  return definitions;
+}
+
 export function publicGameScopes() {
   return withGuildDatabase((db) => ({ schemaVersion: 1, scopes: db.prepare(`SELECT game_build AS gameBuild, locale, COUNT(*) AS itemCount
     FROM public_game_items GROUP BY game_build, locale ORDER BY MAX(captured_at) DESC, game_build DESC, locale LIMIT 100`).all() }));
