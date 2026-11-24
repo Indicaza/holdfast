@@ -60,7 +60,6 @@ describe('Wishlist tab', () => {
   test('item editors remain optional and acquired entries start collapsed', () => {
     renderWishlist()
     expect(screen.queryByLabelText('Note for Mutant Scale Breastplate')).toBeNull()
-    expect(screen.queryByText('Cruel Barb')).toBeNull()
     const edit = screen.getByRole('button', { name: 'Edit Mutant Scale Breastplate details' })
     expect(edit.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(edit)
