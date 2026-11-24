@@ -23,6 +23,58 @@ export function gameContext(envelope) {
   return { gameBuild: gameBuildKey(envelope?.gameBuild), locale: gameLocale(envelope?.locale) };
 }
 
+function tooltipColor(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const channels = ["r", "g", "b"].map((key) => Number(value[key]));
+  if (!channels.every(Number.isFinite)) return null;
+  const color = Object.fromEntries(["r", "g", "b"].map((key, index) => [key, Math.max(0, Math.min(1, channels[index]))]));
+  if (value.a !== undefined && Number.isFinite(Number(value.a))) color.a = Math.max(0, Math.min(1, Number(value.a)));
+  return color;
+}
+
+// Only a base-item hyperlink render becomes public item knowledge. Other
+// add-ons can decorate that tooltip, so keep game facts but not their footer,
+// transmog replacement, vendor estimates or inventory/character listings.
+function publicTooltipLines(raw) {
+  const source = Array.isArray(raw?.tooltip?.lines) ? raw.tooltip.lines : Array.isArray(raw?.tooltipLines) ? raw.tooltipLines : [];
+  const lines = [];
+  let skipTransmogName = false;
+  for (const line of source.slice(0, 40)) {
+    if (!line || typeof line !== "object") continue;
+    const left = gameText(line.left ?? line.leftText ?? line.text, 600);
+    const right = gameText(line.right ?? line.rightText, 300);
+    if (/^transmogrified to:?\s*$/i.test(left)) {
+      skipTransmogName = true;
+      continue;
+    }
+    if (skipTransmogName && (left || right)) {
+      skipTransmogName = false;
+      continue;
+    }
+    if (/^(?:vendor\s*x\s*\d+|inventory\b|total:\s*\d+)/i.test(left)) break;
+    if (line.sellPrice === true || (/^sell price:\s*$/i.test(left) && !right)) {
+      lines.push({ sellPrice: true });
+      continue;
+    }
+    if (line.blank === true && !left && !right) {
+      lines.push({ blank: true });
+      continue;
+    }
+    if (!left && !right) continue;
+    const row = { left, right };
+    const leftColor = tooltipColor(line.leftColor ?? line.color);
+    const rightColor = tooltipColor(line.rightColor);
+    if (leftColor) row.leftColor = leftColor;
+    if (rightColor) row.rightColor = rightColor;
+    const offset = gameInteger(line.offset ?? line.leftOffset, 1, 64);
+    if (offset !== null) row.offset = offset;
+    lines.push(row);
+  }
+  while (lines[0]?.blank) lines.shift();
+  while (lines.at(-1)?.blank) lines.pop();
+  return lines;
+}
+
 export function publicItemDefinition(raw = {}, { base = false } = {}) {
   const itemId = gameInteger(raw?.itemId, 1);
   if (!itemId) return null;
@@ -36,9 +88,7 @@ export function publicItemDefinition(raw = {}, { base = false } = {}) {
   item.equipLocation = gameText(raw.equipLocation, 48);
   for (const key of ["itemClass", "itemSubclass"]) item[key] = { id: gameInteger(raw[key]?.id), name: gameText(raw[key]?.name, 80) };
   item.stats = Object.fromEntries(Object.entries(raw.stats || {}).filter(([key, value]) => /^ITEM_MOD_[A-Z_]+$/.test(key) && Number.isFinite(value)).slice(0, 32));
-  item.tooltipLines = (Array.isArray(raw.tooltip?.lines) ? raw.tooltip.lines : Array.isArray(raw.tooltipLines) ? raw.tooltipLines : [])
-    .slice(0, 40).map((line) => ({ left: gameText(line?.left ?? line?.leftText, 600), right: gameText(line?.right ?? line?.rightText, 300) }))
-    .filter((line) => line.left || line.right);
+  item.tooltipLines = publicTooltipLines(raw);
   item.descriptionBasis = "base_item_id";
   return item;
 }
