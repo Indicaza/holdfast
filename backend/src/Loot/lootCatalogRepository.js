@@ -16,7 +16,9 @@ import { withGuildDatabase } from "../Data/database.js";
 import { gameBuildKey } from "../GameData/gameDataCatalog.js";
 import { gameContext, gameInteger, gameText } from "../GameData/publicGameDataModel.js";
 import { learnPublicItemInDatabase } from "../GameData/publicGameDataProjection.js";
+import { observedItemDefinitionsInDatabase } from "../GameData/publicGameDataRepository.js";
 import { itemsInDatabase } from "../Market/marketRepository.js";
+import { inventoryTypeIndex } from "../Market/marketCategories.js";
 import { referenceItemFacts, referenceSourcesOf } from "../Atlas/referenceLoot.js";
 import { bestConfidence, compareBuilds, CONFIDENCE_ORDER, dungeonInstance, isObject, listOf, normalizedName, slotLabel, sourceConfidence,
   wishlistItemKey } from "./lootModel.js";
@@ -255,6 +257,7 @@ export function lootItemFactsInDatabase(db, itemIds) {
   const ids = [...new Set(itemIds.filter((id) => Number.isSafeInteger(id) && id > 0))];
   const facts = new Map();
   const slots = new Map();
+  const observedDefinitions = observedItemDefinitionsInDatabase(db, ids);
   for (let start = 0; start < ids.length; start += 200) {
     const chunk = ids.slice(start, start + 200);
     const item = itemsInDatabase(db, chunk);
@@ -265,20 +268,33 @@ export function lootItemFactsInDatabase(db, itemIds) {
   }
   return (itemId) => {
     const known = facts.get(itemId) || { name: `Item ${itemId}`, nameKnown: false };
-    if (!known.nameKnown) {
+    const client = observedDefinitions.get(itemId);
+    if (!client && !known.nameKnown) {
       const reference = referenceItemFacts(itemId);
       if (reference) return reference;
     }
-    const inventoryType = slots.get(itemId) ?? null;
-    const lines = known.tooltipLines || [];
+    const clientName = client?.name && !/^Item [0-9]+$/.test(client.name) ? client.name : null;
+    const itemClass = client?.itemClass?.name || known.itemClass || null;
+    const itemSubclass = client?.itemSubclass?.name || known.itemSubclass || null;
+    const inventoryType = inventoryTypeIndex(client?.equipLocation) ?? slots.get(itemId) ?? null;
+    const captured = (client?.tooltipLines || []).filter((line) => line.left || line.right);
+    const clientTooltip = captured.length > 1;
+    const lines = clientTooltip ? client.tooltipLines : known.tooltipLines || [];
     return {
-      itemId, itemKey: `i:${itemId}`, name: known.name, nameKnown: Boolean(known.nameKnown), qualityId: known.qualityId ?? null,
-      iconFileDataId: known.iconFileDataId ?? null, itemLevel: known.itemLevel ?? null, requiredLevel: known.requiredLevel ?? null,
-      itemClass: known.itemClass ?? null, itemSubclass: known.itemSubclass ?? null,
+      itemId, itemKey: `i:${itemId}`, name: clientName || known.name, nameKnown: Boolean(clientName || known.nameKnown),
+      qualityId: client?.qualityId ?? known.qualityId ?? null,
+      iconFileDataId: client?.iconFileDataId ?? known.iconFileDataId ?? null,
+      itemLevel: client?.itemLevel ?? known.itemLevel ?? null,
+      requiredLevel: client?.requiredLevel ?? known.requiredLevel ?? null,
+      itemClass, itemSubclass,
       slot: known.slotName || slotLabel(inventoryType) || null,
-      equippable: Boolean(inventoryType) || ["Weapon", "Armor"].includes(known.itemClass),
-      bindType: known.bindType ?? null, classes: classesFromTooltip(lines),
-      tooltip: { lines, source: known.tooltipSource || null, gameBuild: known.tooltipBuild || null },
+      equippable: Boolean(inventoryType) || ["Weapon", "Armor"].includes(itemClass),
+      bindType: client?.bindType ?? known.bindType ?? null,
+      sellPrice: client?.sellPrice ?? known.sellPrice ?? null,
+      classes: classesFromTooltip(lines),
+      ...(client ? { itemDefinition: { source: "game_item_definition", gameBuild: client.gameBuild, locale: client.locale } } : {}),
+      tooltip: { lines, source: clientTooltip ? "game" : known.tooltipSource || null,
+        gameBuild: clientTooltip ? client.gameBuild : known.tooltipBuild || null },
     };
   };
 }
