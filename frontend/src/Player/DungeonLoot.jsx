@@ -65,7 +65,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
             <button type="button" className="gw-btn gw-btn--sm gw-btn--ghost" aria-expanded={open}
               aria-label={(open ? 'Close' : 'Edit') + ' ' + entry.item.name + ' details'}
               onClick={() => setExpandedKey(open ? null : entry.itemKey)}>
-              <Icon name={open ? 'chevronUp' : 'chevronDown'} size={13} /> {open ? 'Less' : 'Edit'}
+              <Icon name="edit" size={13} /> {open ? 'Less' : 'Edit'}
             </button>
           </div>
         </div>
