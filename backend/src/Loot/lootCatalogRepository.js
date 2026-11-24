@@ -273,7 +273,7 @@ export function lootItemFactsInDatabase(db, itemIds) {
       const reference = referenceItemFacts(itemId);
       if (reference) return reference;
     }
-    const clientName = client?.name && !/^Item \\d+$/.test(client.name) ? client.name : null;
+    const clientName = client?.name && !/^Item [0-9]+$/.test(client.name) ? client.name : null;
     const itemClass = client?.itemClass?.name || known.itemClass || null;
     const itemSubclass = client?.itemSubclass?.name || known.itemSubclass || null;
     const inventoryType = inventoryTypeIndex(client?.equipLocation) ?? slots.get(itemId) ?? null;
