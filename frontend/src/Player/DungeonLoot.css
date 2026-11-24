@@ -1,5 +1,8 @@
-/* Dungeon loot and the character wishlist: loot on the left, the list on
-   the right; one column on narrow screens. */
+/* Wishlist is the whole workspace. Discovery belongs in Dungeon Journal. */
+
+.gw-content:has(.gw-loot) {
+  max-width: none;
+}
 
 .gw-sr-only {
   position: absolute;
@@ -10,250 +13,44 @@
   white-space: nowrap;
 }
 
-.gw-dcc-tabs {
-  align-self: flex-start;
-}
-
-.gw-dcc-tabs a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 2rem;
-  padding: 0 0.85rem;
-  border-radius: 7px;
-  color: var(--gw-dim);
-  font-size: 12.5px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.gw-dcc-tabs a:hover {
-  color: var(--gw-text);
-}
-
-.gw-dcc-tabs a[aria-current="page"] {
-  background: var(--gw-raise);
-  color: var(--gw-text);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-
 .gw-loot__bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .gw-loot__bar-space {
   flex: 1 1 auto;
 }
 
-.gw-loot__panes {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(19rem, 1fr);
-  gap: 1rem;
-  align-items: start;
+.gw-loot__bar .gw-select {
+  min-width: 14rem;
 }
 
-.gw-loot__browse,
-.gw-loot__side {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+.gw-wish {
+  width: 100%;
   min-width: 0;
 }
-
-.gw-loot__side {
-  position: sticky;
-  top: calc(var(--gw-top-height) + 0.75rem);
-  max-height: calc(100vh - var(--gw-top-height) - 1.5rem);
-  overflow-y: auto;
-}
-
-@media (max-width: 1100px) {
-  .gw-loot__panes {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .gw-loot__side {
-    position: static;
-    max-height: none;
-    order: -1;
-  }
-}
-
-.gw-loot__filters .gw-loot__search input {
-  width: 12rem;
-  text-align: left;
-}
-
-.gw-loot__check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--gw-dim);
-  font-size: 12.5px;
-  cursor: pointer;
-}
-
-.gw-loot__check input {
-  accent-color: var(--gw-accent);
-}
-
-.gw-loot-source h2 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.gw-loot-boss {
-  border-color: var(--gw-accent-line);
-  background: var(--gw-accent-soft);
-  color: var(--gw-accent);
-}
-
-.gw-loot-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.gw-loot-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.9rem;
-  border-top: 1px solid var(--gw-line);
-}
-
-.gw-loot-row:hover {
-  background: var(--gw-hover);
-}
-
-.gw-loot-row.is-wanted {
-  box-shadow: inset 2px 0 0 var(--gw-loot);
-  background: color-mix(in srgb, var(--gw-loot) 6%, transparent);
-}
-
-.gw-loot-row.is-unusable .gw-loot-row__item {
-  opacity: 0.6;
-}
-
-.gw-loot-row__item {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.gw-loot-row__facts {
-  padding-left: calc(26px + 0.5rem);
-  color: var(--gw-faint);
-  font-size: 12px;
-}
-
-.gw-loot-row__facts em {
-  color: var(--gw-warn);
-  font-style: normal;
-}
-
-.gw-loot-conf {
-  flex: 0 0 auto;
-}
-
-.gw-loot-conf--ok {
-  border-color: rgba(90, 209, 154, 0.35);
-  background: rgba(90, 209, 154, 0.08);
-  color: var(--gw-ok);
-}
-
-.gw-loot-conf--info {
-  border-color: color-mix(in srgb, var(--gw-info) 40%, transparent);
-  color: var(--gw-info);
-}
-
-.gw-loot-conf--quiet {
-  border-color: var(--gw-line);
-  color: var(--gw-faint);
-}
-
-.gw-loot-conf--warn {
-  border-color: color-mix(in srgb, var(--gw-warn) 45%, transparent);
-  color: var(--gw-warn);
-}
-
-.gw-loot-row__toggle {
-  flex: 0 0 auto;
-  min-width: 5.4rem;
-  justify-content: center;
-}
-
-.gw-loot-row__toggle.is-on {
-  border-color: color-mix(in srgb, var(--gw-loot) 55%, transparent);
-  background: color-mix(in srgb, var(--gw-loot) 16%, transparent);
-  color: var(--gw-loot);
-}
-
-.gw-loot__evidence {
-  margin: 0;
-  font-size: 12px;
-}
-
-.gw-loot__changes {
-  border: 1px solid var(--gw-line);
-  border-radius: var(--gw-radius);
-  background: var(--gw-panel);
-  font-size: 13px;
-}
-
-.gw-loot__changes summary {
-  padding: 0.6rem 0.9rem;
-  color: var(--gw-dim);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.gw-loot__changes ul {
-  margin: 0;
-  padding: 0 0.9rem 0.6rem;
-  list-style: none;
-}
-
-.gw-loot__changes li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.3rem 0;
-  border-top: 1px solid var(--gw-line);
-}
-
-/* The wishlist ------------------------------------------------------------ */
 
 .gw-wish__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 31rem), 1fr));
+  gap: 0.75rem;
   margin: 0;
-  padding: 0;
+  padding: 0.9rem;
   list-style: none;
-}
-
-.gw-wish__sub {
-  margin: 0;
-  padding: 0.7rem 0.9rem 0.3rem;
-  border-top: 1px solid var(--gw-line);
-  color: var(--gw-faint);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .gw-wish-row {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.6rem 0.9rem;
-  border-top: 1px solid var(--gw-line);
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--gw-line);
+  border-radius: var(--gw-radius);
+  background: var(--gw-panel);
 }
 
 .gw-wish-row.is-acquired {
@@ -262,40 +59,94 @@
 
 .gw-wish-row__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.75rem;
   min-width: 0;
 }
 
-.gw-wish-row__tools {
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 0.1rem;
+.gw-wish-row__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.gw-wish-row__tools .gw-icon-btn {
-  width: 1.6rem;
-  height: 1.6rem;
+.gw-wish-row__identity > .gw-item {
+  min-width: 0;
 }
 
-.gw-wish-row__sources {
+.gw-wish-row__identity .gw-item__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gw-wish-row__sources,
+.gw-wish-row__note-preview {
   margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.gw-wish-row__note-preview {
+  color: var(--gw-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.gw-wish-row__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gw-wish-row__priority-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--gw-line);
+  border-radius: var(--gw-radius-sm);
+  color: var(--gw-dim);
   font-size: 12px;
 }
 
-.gw-wish-row__controls {
+.gw-wish-row__priority-tag--high {
+  color: var(--gw-warn);
+  border-color: color-mix(in srgb, var(--gw-warn) 40%, transparent);
+}
+
+.gw-wish-row__editor {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
+  align-items: end;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--gw-line);
+}
+
+.gw-wish-row__priority,
+.gw-wish-row__note-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--gw-dim);
   font-size: 12px;
+}
+
+.gw-wish-row__note-field {
+  flex: 1 1 13rem;
 }
 
 .gw-wish-row__priority select,
 .gw-wish-row__note {
-  height: 1.9rem;
-  padding: 0 0.5rem;
+  height: 2rem;
+  padding: 0 0.55rem;
   border: 1px solid var(--gw-line);
   border-radius: var(--gw-radius-sm);
   background: var(--gw-bg);
@@ -305,27 +156,67 @@
 }
 
 .gw-wish-row__note {
-  flex: 1 1 8rem;
-  min-width: 0;
+  width: 100%;
 }
 
 .gw-wish-row__priority select:focus-visible,
 .gw-wish-row__note:focus-visible,
 .gw-import__text:focus-visible {
   border-color: var(--gw-accent-line);
-  outline: none;
+  outline: 2px solid var(--gw-accent-line);
+  outline-offset: 2px;
 }
 
 .gw-wish-row__status {
   flex: 1 1 100%;
-  order: 5;
+}
+
+.gw-wish-row__remove {
+  margin-left: auto;
+}
+
+.gw-wish__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 1.5rem;
+}
+
+.gw-wish__empty p {
+  margin: 0;
+}
+
+.gw-wish__acquired {
+  margin: 0.5rem 0 0;
+  border-top: 1px solid var(--gw-line);
+}
+
+.gw-wish__acquired summary {
+  padding: 0.9rem;
+  color: var(--gw-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gw-wish__acquired summary:hover {
+  color: var(--gw-text);
 }
 
 .gw-wish__note {
   margin: 0;
-  padding: 0.7rem 0.9rem;
+  padding: 0.8rem 0.9rem;
   border-top: 1px solid var(--gw-line);
   font-size: 12px;
+}
+
+@media (max-width: 620px) {
+  .gw-wish__list { padding: 0.5rem; gap: 0.5rem; }
+  .gw-wish-row { padding: 0.7rem; }
+  .gw-wish-row__head { flex-wrap: wrap; }
+  .gw-wish-row__actions { width: 100%; justify-content: flex-end; }
+  .gw-loot__bar .gw-select { min-width: min(100%, 14rem); }
 }
 
 /* The AI wishlist builder --------------------------------------------------- */
