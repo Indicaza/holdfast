@@ -253,6 +253,24 @@
   max-width: calc(100% - 80px);
 }
 
+.gw-rmap--full .gw-rmap__topleft {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.gw-rmap__scope {
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--rmap-glass-line);
+  border-radius: 8px;
+  background: var(--rmap-glass);
+  color: var(--gw-dim);
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
 .gw-rmap__crumbs {
   display: flex;
   align-items: center;
