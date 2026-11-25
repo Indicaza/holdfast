@@ -282,6 +282,9 @@ function resolveCharacterInDatabase(db, { memberId, deviceId, rawCharacterId, id
     characterName: identity.name,
     realm: identity.realm,
     region: identity.region,
+    realmUnavailable: identity.realmUnavailable,
+    firstName: identity.firstName,
+    lastName: identity.lastName,
   });
   let characterId = existing?.id || "";
   if (!characterId) {

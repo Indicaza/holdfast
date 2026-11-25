@@ -117,6 +117,29 @@ export function realmCharacterIdInDatabase(db, memberId, preferredId, { realm = 
   return `${id}~${server}`.slice(0, 400);
 }
 
+// Forever's November 20 hotfix removes realm names. Only the explicit
+// realm-free identity contract may use regional two-part names, and only
+// when exactly one existing character of this owner fits. Legacy uploads
+// with a missing realm retain their previous isolation behavior.
+function characterByRegionalFullName(db, { memberId, characterName, region, firstName, lastName }) {
+  const name = text(characterName, 96);
+  const normalizedRegion = text(region, 32);
+  const first = text(firstName, 40);
+  const last = text(lastName, 40);
+  if (!first || !last || !normalizedRegion || name.toLowerCase() !== `${first} ${last}`.toLowerCase()) return null;
+  const rows = db.prepare(`
+      SELECT c.id, c.is_main, c.sort_order
+      FROM characters c
+      JOIN telemetry_characters t ON t.character_id = c.id
+      WHERE c.member_id = ?
+        AND c.name = ? COLLATE NOCASE
+        AND LOWER(TRIM(COALESCE(t.region, ''))) = LOWER(?)
+      ORDER BY c.sort_order, c.id
+      LIMIT 2
+  `).all(text(memberId, 160), name, normalizedRegion);
+  return rows.length === 1 ? rows[0] : null;
+}
+
 export function resolveGuildweaverCharacterIdentityInDatabase({
   db,
   memberId,
@@ -126,6 +149,9 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
   characterName = "",
   realm = "",
   region = "",
+  realmUnavailable = false,
+  firstName = "",
+  lastName = "",
 }) {
 
   const aliased = readGuildweaverCharacterAliasInDatabase({
@@ -151,6 +177,11 @@ export function resolveGuildweaverCharacterIdentityInDatabase({
     region,
   });
   if (stable) return stable;
+
+  if (realmUnavailable && !text(realm, 120)) {
+    const regional = characterByRegionalFullName(db, { memberId, characterName, region, firstName, lastName });
+    if (regional) return regional;
+  }
 
   // Keep GUID/legacy/direct IDs working for characters that predate the alias
   // ledger or whose name/realm is temporarily unavailable.
