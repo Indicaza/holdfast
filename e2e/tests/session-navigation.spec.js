@@ -75,7 +75,7 @@ test('concurrent refreshes are shared and a late response cannot reverse sign-ou
   let requests = 0
   await page.route('**/api/me', async (route) => {
     requests += 1
-    const response = await route.fetch()
+    const response = await route.fetch({ maxRetries: 2 })
     fetched()
     await gate
     await route.fulfill({ response })

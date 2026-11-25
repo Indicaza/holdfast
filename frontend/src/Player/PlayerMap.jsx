@@ -41,17 +41,23 @@ function replaceParam(name, value) {
 // The Dungeon Entrances layer: a toggle (kept in ?dungeons=1) and a pin
 // for every dungeon whose entrance the atlas knows.
 function useEntrancePins(queryString) {
-  const [on, setOn] = useState(() => new URLSearchParams(queryString).get('dungeons') === '1')
+  const [on, setOn] = useState(() => {
+    const explicit = new URLSearchParams(queryString).get('dungeons')
+    if (explicit === '1') return true
+    if (explicit === '0') return false
+    try { return globalThis.localStorage?.getItem('guildweaver:map:entrances') === '1' } catch { return false }
+  })
   const list = useDungeonList()
   const all = useMemo(() => entranceMarkers(list.dungeons, (mapId) => atlasZone(mapId)), [list.dungeons])
   const toggle = useCallback(() => {
     replaceParam('dungeons', on ? '' : '1')
+    try { globalThis.localStorage?.setItem('guildweaver:map:entrances', on ? '0' : '1') } catch { /* optional preference */ }
     setOn(!on)
   }, [on])
   return { on, pins: on ? all : [], toggle, known: all.length }
 }
 
-function MapView({ queryString, legendHost, railed, openRequest }) {
+function MapView({ queryString, openRequest }) {
   const [initial] = useState(() => readMapParams(queryString))
   const filter = useMemo(() => ({ sources: initial.sources, item: initial.item, discipline: initial.discipline }), [initial])
   const focus = useMemo(() => (initial.zone ? { mapId: initial.zone } : null), [initial])
@@ -90,12 +96,6 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
           <a href="/map" className="gw-link">Show every resource</a>
         </div>
       ) : null}
-      <div className="gw-mapview__layers">
-        <button type="button" className={`gw-btn gw-btn--sm${entrances.on ? ' gw-btn--primary' : ''}`} aria-pressed={entrances.on} onClick={entrances.toggle}>
-          <Icon name="dungeon" size={14} /> Dungeon entrances{entrances.on ? ` (${entrances.pins.length})` : ''}
-        </button>
-        {entrances.on && !entrances.known ? <span className="gw-muted" role="status">No dungeon entrance positions are known yet.</span> : null}
-      </div>
       <ResourceMap
         variant="full"
         filter={filter}
@@ -103,8 +103,7 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
         onFocusZone={onFocusZone}
         onDetailsChange={onDetailsChange}
         openRequest={request}
-        legendHost={legendHost}
-        legendRail={railed}
+        entranceLayer={entrances}
         label="Resource map of Azeroth"
         pins={pins}
         onPin={onPin}
@@ -115,12 +114,12 @@ function MapView({ queryString, legendHost, railed, openRequest }) {
 
 // A new filter in the URL (a link from elsewhere, or "Show every resource")
 // starts the map afresh.
-export default function PlayerMap({ queryString = '', legendHost = null, railed = false, openRequest = null, server = '', characters = [] }) {
+export default function PlayerMap({ queryString = '', openRequest = null, server = '', characters = [] }) {
   const params = new URLSearchParams(queryString)
   const key = ['source', 'item', 'discipline'].map((name) => params.get(name) || '').join('|')
   return (
     <>
-      <MapView key={key} queryString={queryString} legendHost={legendHost} railed={railed} openRequest={openRequest} />
+      <MapView key={key} queryString={queryString} openRequest={openRequest} />
       <AtlasModalHost server={server} queryString={queryString} characters={characters} showMapLink={false} />
     </>
   )

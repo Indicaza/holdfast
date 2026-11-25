@@ -1,5 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { apiJson } from '../../Api/apiClient.js'
 import { disciplineLabel, formatCount } from '../../Intelligence/Farming/farmingModel.js'
@@ -271,7 +270,7 @@ function SourceIcon({ source, size = 18 }) {
 
 const Legend = memo(function Legend({
   mode, onMode, groups, colors, hidden, onToggle, onSolo, onGroup, onAll, onDetails, query, onQuery,
-  totalSources, shownSources, spots, spotZone, onSpot, sourcesByKey, unplaced, variant, art,
+  totalSources, shownSources, spots, spotZone, onSpot, sourcesByKey, unplaced, variant, art, entranceLayer = null,
 }) {
   if (mode === 'hidden') return null
   // The folded sidebar: one icon per resource, each a toggle.
@@ -303,10 +302,10 @@ const Legend = memo(function Legend({
     )
   }
   const docked = mode === 'sidebar'
-  const expanded = mode === 'expanded' || docked
+  const expanded = mode === 'expanded' || docked || mode === 'popover'
   return (
     <aside className={`gw-rmap__legend gw-rmap__legend--${mode}`} aria-label="Map legend">
-      <header className="gw-rmap__legend-head">
+      {mode === 'popover' ? null : <header className="gw-rmap__legend-head">
         <div>
           <strong>Resources</strong>
           <span>{shownSources} of {totalSources} shown</span>
@@ -328,7 +327,19 @@ const Legend = memo(function Legend({
             </button>
           </Tip>
         </div>}
-      </header>
+      </header>}
+
+      {entranceLayer ? (
+        <div className="gw-rmap__legend-entrance">
+          <label>
+            <input type="checkbox" checked={entranceLayer.on} onChange={entranceLayer.toggle} />
+            <Icon name="dungeon" size={17} />
+            <span>Dungeon entrances</span>
+            <small>{formatCount(entranceLayer.known)}</small>
+          </label>
+          {entranceLayer.on && !entranceLayer.known ? <p role="status">No dungeon entrance positions are known yet.</p> : null}
+        </div>
+      ) : null}
 
       {expanded && totalSources > 6 ? (
         <label className="gw-rmap__legend-search">
@@ -430,8 +441,7 @@ export default function ResourceMap({
   fullHref = '',
   label = 'Resource map',
   onFocusZone,
-  legendHost = null,
-  legendRail = false,
+  entranceLayer = null,
   openRequest = null,
   onDetailsChange,
   // Extra clickable pins over the map (the Dungeon Entrances layer):
@@ -447,6 +457,9 @@ export default function ResourceMap({
   const { status, data, retry } = useMapData(url)
 
   const rootRef = useRef(null)
+  const layersRef = useRef(null)
+  const layersTriggerRef = useRef(null)
+  const layersId = useId()
   const stageRef = useRef(null)
   const canvasRef = useRef(null)
   const size = useSize(stageRef)
@@ -473,12 +486,39 @@ export default function ResourceMap({
   }, [])
   useEffect(() => () => cancelAnimationFrame(viewFrame.current), [])
 
-  // On a phone the legend would cover the map, so it starts tucked away.
   const [legend, setLegend] = useState(() => {
-    if (globalThis.matchMedia?.('(max-width: 860px)').matches) return 'hidden'
-    return defaultLegend || (variant === 'card' ? 'compact' : 'expanded')
+    if (variant === 'full' || globalThis.matchMedia?.('(max-width: 860px)').matches) return 'hidden'
+    return defaultLegend || 'compact'
   })
-  const [hidden, setHidden] = useState(() => new Set())
+  const [hidden, setHidden] = useState(() => {
+    try {
+      const saved = JSON.parse(globalThis.localStorage?.getItem('guildweaver:map:hidden') || '[]')
+      return new Set(Array.isArray(saved) ? saved.filter((key) => typeof key === 'string') : [])
+    } catch {
+      return new Set()
+    }
+  })
+  useEffect(() => {
+    try { globalThis.localStorage?.setItem('guildweaver:map:hidden', JSON.stringify([...hidden])) } catch { /* preferences are optional */ }
+  }, [hidden])
+  useEffect(() => {
+    if (variant !== 'full' || legend === 'hidden') return undefined
+    const onPointer = (event) => {
+      if (!layersRef.current?.contains(event.target)) setLegend('hidden')
+    }
+    const onEscape = (event) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setLegend('hidden')
+      layersTriggerRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onEscape)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onEscape)
+    }
+  }, [legend, variant])
   const [query, setQuery] = useState('')
   const [display, setDisplay] = useState('heat')
   const [hover, setHover] = useState(null)
@@ -956,12 +996,10 @@ export default function ResourceMap({
     }
     : null
 
-  // On the full map page the legend lives in the dashboard's sidebar: open,
-  // it is the whole legend; folded to a rail, one icon per resource.
-  const legendMode = legendHost ? (legendRail ? 'rail' : 'sidebar') : legend
+  const expandedLayers = legend !== 'hidden'
   const legendNode = (
     <Legend
-      mode={legendMode}
+      mode={variant === 'full' ? 'popover' : legend}
       onMode={setLegend}
       groups={groups}
       colors={colors}
@@ -982,16 +1020,31 @@ export default function ResourceMap({
       unplaced={unplaced}
       variant={variant}
       art={art}
+      entranceLayer={variant === 'full' ? entranceLayer : null}
     />
   )
 
   return (
     <div
       ref={rootRef}
-      className={`gw-rmap gw-rmap--${variant} gw-rmap--legend-${legendHost ? 'external' : legend}${fullscreen ? ' is-fullscreen' : ''}${art ? ' has-art' : ''}`}
+      className={`gw-rmap gw-rmap--${variant} gw-rmap--legend-${legend}${fullscreen ? ' is-fullscreen' : ''}${art ? ' has-art' : ''}`}
       data-level={level}
     >
-      {legendHost ? createPortal(legendNode, legendHost) : legendNode}
+      {variant === 'full' ? (
+        <section ref={layersRef} className={`gw-rmap__layers${expandedLayers ? ' is-open' : ''}`} aria-label="Map layer controls">
+          <button ref={layersTriggerRef} type="button" className="gw-rmap__layers-trigger"
+            aria-expanded={expandedLayers} aria-controls={layersId}
+            onClick={() => setLegend(expandedLayers ? 'hidden' : 'expanded')}>
+            <Icon name="map" size={21} />
+            <span>Map layers</span>
+            <small>{shownSources}/{sources.length}</small>
+            <Icon name="chevron" className="gw-rmap__layers-caret" size={14} />
+          </button>
+          <div id={layersId} className="gw-rmap__layers-content" inert={!expandedLayers} aria-hidden={!expandedLayers}>
+            {legendNode}
+          </div>
+        </section>
+      ) : legendNode}
 
       <div className="gw-rmap__viewport">
         <div
@@ -1147,7 +1200,7 @@ export default function ResourceMap({
 
         {/* Chrome over the stage: legend toggle, breadcrumb, controls, readout. */}
         <div className="gw-rmap__topleft">
-          {!legendHost && legend === 'hidden' ? (
+          {variant === 'card' && legend === 'hidden' ? (
             <button type="button" className="gw-rmap__legend-toggle" onClick={() => setLegend(variant === 'card' ? 'compact' : 'expanded')}>
               <Icon name="layers" size={15} />
               Legend

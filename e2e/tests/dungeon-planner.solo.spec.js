@@ -30,7 +30,7 @@ async function signIn(page, context) {
 async function withReferenceLoot(page) {
   const byName = new Map(FIXTURE_DEADMINES_DETAIL.atlas.bosses.map((boss) => [boss.name.toLowerCase(), boss.referenceLoot || []]))
   await page.route(/\/api\/player\/loot\/dungeons\/36$/, async (route) => {
-    const response = await route.fetch()
+    const response = await route.fetch({ maxRetries: 2 })
     const body = await response.json()
     for (const boss of body.atlas?.bosses || []) boss.referenceLoot = byName.get(String(boss.name).toLowerCase()) || []
     await route.fulfill({ response, json: body })

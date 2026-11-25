@@ -203,8 +203,6 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
   const [collapsed, setCollapsed] = useStoredFlag('guildweaver:dashboard:rail')
   const toggleCollapsed = useCallback(() => setCollapsed((value) => !value), [setCollapsed])
   useSidebarShortcut(toggleCollapsed)
-  // On the map, the sidebar holds the map's legend: the map draws it here.
-  const [legendHost, setLegendHost] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const openSearch = useCallback(() => setSearchOpen(true), [])
   const closeSearch = useCallback(() => setSearchOpen(false), [])
@@ -266,7 +264,6 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onToggleCollapsed={toggleCollapsed}
-        sidebar={section === 'map' ? <div ref={setLegendHost} className="gw-side__slot" /> : null}
         onToggleMobile={setMobileOpen}
         onOpenSearch={openSearch}
         fill={current.id === 'map' || current.id === 'auctions' || (current.id === 'dungeons' && journalFillsPage(queryString))}
@@ -288,7 +285,7 @@ export default function PlayerDashboard({ section = 'overview', queryString = ''
             {section === 'overview' ? <PlayerOverview data={overview.data} server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'farming' ? <PlayerFarming server={server} queryString={queryString} /> : null}
             {section === 'auctions' ? <PlayerAuctions server={server} queryString={queryString} characters={characters} /> : null}
-            {section === 'map' ? <PlayerMap queryString={queryString} legendHost={legendHost} railed={collapsed} openRequest={mapRequest} server={server} characters={characters} /> : null}
+            {section === 'map' ? <PlayerMap queryString={queryString} openRequest={mapRequest} server={server} characters={characters} /> : null}
             {section === 'characters' ? <PlayerCharacters server={server} servers={servers} onOpenCharacter={openCharacter} /> : null}
             {section === 'professions' ? <PlayerProfessions server={server} onOpenCharacter={openCharacter} /> : null}
             {section === 'gathering' ? <PlayerGathering server={server} /> : null}

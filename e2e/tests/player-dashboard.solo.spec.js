@@ -84,26 +84,30 @@ test('a new player follows the first-run checklist to their first sync, then see
   await page.goBack()
   await expect(sources).toBeVisible()
 
-  // The resource map is a section like the others; its legend takes the
-  // sidebar, which folds to a rail of resource toggles, and the sections stay
-  // a row of icons above it.
+  // Resource Map keeps the permanent navigation and offers a local,
+  // expandable Layers panel instead of taking over the dashboard sidebar.
   await rail(page).getByRole('link', { name: /^Resource map/ }).click()
   await expect(page).toHaveURL(/\/map(\?|$)/)
   await expect(heading(page)).toHaveText('Resource map')
   await expect(rail(page).getByRole('link')).toHaveCount(10)
   await expect(rail(page).getByRole('link', { name: 'Resource map' })).toHaveAttribute('aria-current', 'page')
-  const legend = page.getByRole('complementary', { name: 'Map legend' })
-  await expect(legend).toContainText('1 of 1 shown')
+  await expect(rail(page).getByRole('link', { name: 'Gathering' })).toBeVisible()
+  const layers = page.getByRole('region', { name: 'Map layer controls' })
+  const trigger = layers.getByRole('button', { name: /Map layers/ })
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  await expect(trigger).toContainText('1/1')
+  await trigger.click()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  const legend = layers.getByRole('complementary', { name: 'Map legend' })
+  await expect(legend).toBeVisible()
   await legend.getByRole('checkbox', { name: /Peacebloom/ }).uncheck()
-  await expect(legend).toContainText('0 of 1 shown')
+  await expect(trigger).toContainText('0/1')
   await legend.getByRole('button', { name: 'Show all' }).click()
-  await page.getByRole('button', { name: 'Collapse the sidebar' }).first().click()
-  await expect(legend.getByRole('button', { name: 'Hide Peacebloom' })).toBeVisible()
-  // Icon-only controls name themselves on hover.
-  await legend.getByRole('button', { name: 'Hide Peacebloom' }).hover()
-  await expect(page.getByRole('tooltip')).toHaveText(/^Hide Peacebloom/)
-  await page.getByRole('button', { name: 'Expand the sidebar' }).first().click()
-  await expect(legend).toContainText('1 of 1 shown')
+  await expect(trigger).toContainText('1/1')
+  await trigger.click()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  await expect(rail(page).getByRole('link', { name: 'Gathering' })).toBeVisible()
+  await trigger.click()
   // A resource opens its details over the map, and everything in them is a
   // place on the map: nobody has to leave it.
   await legend.getByRole('button', { name: 'Peacebloom details' }).click()

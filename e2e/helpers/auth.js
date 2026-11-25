@@ -70,6 +70,15 @@ export const personas = {
     guildJoinedAt: null,
     homeServer: false,
   },
+  mapLayers: {
+    id: 'e2e-map-layers',
+    username: 'e2e-map-layers',
+    globalName: 'Map Layers Tester',
+    guildNickname: null,
+    avatarUrl: null,
+    guildJoinedAt: null,
+    homeServer: false,
+  },
   planner: {
     id: 'e2e-planner',
     username: 'e2e-planner',
