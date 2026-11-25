@@ -112,7 +112,7 @@ describe('Wishlist tab', () => {
       }],
     }
     renderWishlist()
-    const firstSource = screen.getByRole('link', { name: /Mutanus the Devourer/ })
+    const firstSource = screen.getAllByRole('link', { name: /Mutanus the Devourer/ })[0]
     expect(firstSource.getAttribute('href')).toContain('open=43')
     const summary = screen.getByText('All 4 drop sources')
     fireEvent.click(summary)
