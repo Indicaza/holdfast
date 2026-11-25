@@ -67,11 +67,12 @@ function MapView({ queryString, openRequest }) {
   const filtered = Boolean(params.sources.length || params.item || params.discipline)
   const linked = useMemo(() => (params.resource ? { sourceKey: params.resource } : null), [params.resource])
   const request = openRequest || linked
-  const clearFilters = useMemo(() => {
-    const next = new URLSearchParams(queryString)
-    for (const key of ['source', 'item', 'discipline']) next.delete(key)
-    return '/map' + (next.size ? '?' + next.toString() : '')
-  }, [queryString])
+  const clearFilters = useCallback((event) => {
+    event.preventDefault()
+    const url = new URL(window.location.href)
+    for (const key of ['source', 'item', 'discipline']) url.searchParams.delete(key)
+    navigate(url.pathname + url.search + url.hash, { preserveScroll: true })
+  }, [])
 
   const onFocusZone = useCallback((mapId) => replaceParam('zone', mapId), [])
   const onDetailsChange = useCallback((sourceKey) => replaceParam('resource', sourceKey), [])
@@ -102,7 +103,7 @@ function MapView({ queryString, openRequest }) {
             {params.discipline ? `${disciplineLabel(params.discipline)} only` : null}
             {params.item ? `${params.sources.length || params.discipline ? ', ' : ''}sources of one drop` : null}
           </span>
-          <a href={clearFilters} className="gw-link">Clear resource filters</a>
+          <a href="/map" onClick={clearFilters} className="gw-link">Clear resource filters</a>
         </div>
       ) : null}
       <ResourceMap
