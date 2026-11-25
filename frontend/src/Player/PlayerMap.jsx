@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { disciplineLabel } from '../Intelligence/Farming/farmingModel.js'
 import { navigate } from '../Navigation/navigation.js'
@@ -47,6 +47,10 @@ function useEntrancePins(queryString) {
     if (explicit === '0') return false
     try { return globalThis.localStorage?.getItem('guildweaver:map:entrances') === '1' } catch { return false }
   })
+  useEffect(() => {
+    const explicit = new URLSearchParams(queryString).get('dungeons')
+    if (explicit === '1' || explicit === '0') setOn(explicit === '1')
+  }, [queryString])
   const list = useDungeonList()
   const all = useMemo(() => entranceMarkers(list.dungeons, (mapId) => atlasZone(mapId)), [list.dungeons])
   const toggle = useCallback(() => {
@@ -58,12 +62,16 @@ function useEntrancePins(queryString) {
 }
 
 function MapView({ queryString, openRequest }) {
-  const [initial] = useState(() => readMapParams(queryString))
-  const filter = useMemo(() => ({ sources: initial.sources, item: initial.item, discipline: initial.discipline }), [initial])
-  const focus = useMemo(() => (initial.zone ? { mapId: initial.zone } : null), [initial])
-  const filtered = Boolean(initial.sources.length || initial.item || initial.discipline)
-  const [linked] = useState(() => (initial.resource ? { sourceKey: initial.resource } : null))
+  const params = useMemo(() => readMapParams(queryString), [queryString])
+  const filter = useMemo(() => ({ sources: params.sources, item: params.item, discipline: params.discipline }), [params])
+  const filtered = Boolean(params.sources.length || params.item || params.discipline)
+  const linked = useMemo(() => (params.resource ? { sourceKey: params.resource } : null), [params.resource])
   const request = openRequest || linked
+  const clearFilters = useMemo(() => {
+    const next = new URLSearchParams(queryString)
+    for (const key of ['source', 'item', 'discipline']) next.delete(key)
+    return '/map' + (next.size ? '?' + next.toString() : '')
+  }, [queryString])
 
   const onFocusZone = useCallback((mapId) => replaceParam('zone', mapId), [])
   const onDetailsChange = useCallback((sourceKey) => replaceParam('resource', sourceKey), [])
@@ -75,12 +83,13 @@ function MapView({ queryString, openRequest }) {
   // The marked spot, placed with the zone's own map rectangle (the game's map
   // id and 0–1 coordinates, as the plan's waypoints give them).
   const marked = useMemo(() => {
-    const zone = initial.mark && initial.zone ? atlasZone(initial.zone) : null
+    const zone = params.mark && params.zone ? atlasZone(params.zone) : null
     if (!zone?.rect) return null
-    const label = initial.label || 'Marked spot'
+    const label = params.label || 'Marked spot'
     return { key: 'mark', kind: 'waypoint', icon: 'pin', label, ariaLabel: `${label} (marked spot)`,
-      world: { x: zone.rect.x + initial.mark.x * zone.rect.width, y: zone.rect.y + initial.mark.y * zone.rect.height } }
-  }, [initial])
+      world: { x: zone.rect.x + params.mark.x * zone.rect.width, y: zone.rect.y + params.mark.y * zone.rect.height } }
+  }, [params.zone, params.mark?.x, params.mark?.y, params.label])
+  const focus = useMemo(() => (params.zone ? { mapId: params.zone, point: marked?.world || null } : null), [params.zone, marked?.world])
   const pins = useMemo(() => (marked ? [...entrances.pins, marked] : entrances.pins), [entrances.pins, marked])
 
   return (
@@ -89,11 +98,11 @@ function MapView({ queryString, openRequest }) {
         <div className="gw-mapview__filter" role="status">
           <Icon name="layers" size={14} />
           <span>
-            Showing {initial.sources.length ? `${initial.sources.length} chosen source${initial.sources.length === 1 ? '' : 's'}` : null}
-            {initial.discipline ? `${disciplineLabel(initial.discipline)} only` : null}
-            {initial.item ? `${initial.sources.length || initial.discipline ? ', ' : ''}sources of one drop` : null}
+            Showing {params.sources.length ? `${params.sources.length} chosen source${params.sources.length === 1 ? '' : 's'}` : null}
+            {params.discipline ? `${disciplineLabel(params.discipline)} only` : null}
+            {params.item ? `${params.sources.length || params.discipline ? ', ' : ''}sources of one drop` : null}
           </span>
-          <a href="/map" className="gw-link">Show every resource</a>
+          <a href={clearFilters} className="gw-link">Clear resource filters</a>
         </div>
       ) : null}
       <ResourceMap
@@ -112,14 +121,12 @@ function MapView({ queryString, openRequest }) {
   )
 }
 
-// A new filter in the URL (a link from elsewhere, or "Show every resource")
-// starts the map afresh.
+// Map links and browser history update the live map, retaining its camera
+// unless the requested destination changes.
 export default function PlayerMap({ queryString = '', openRequest = null, server = '', characters = [] }) {
-  const params = new URLSearchParams(queryString)
-  const key = ['source', 'item', 'discipline'].map((name) => params.get(name) || '').join('|')
   return (
     <>
-      <MapView key={key} queryString={queryString} openRequest={openRequest} />
+      <MapView queryString={queryString} openRequest={openRequest} />
       <AtlasModalHost server={server} queryString={queryString} characters={characters} showMapLink={false} />
     </>
   )
