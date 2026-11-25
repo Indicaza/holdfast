@@ -188,7 +188,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
                 <p>{groups.acquired.length ? 'All caught up — every wishlisted item is acquired.' : 'No items on your wishlist yet.'}</p>
                 <a className="gw-btn gw-btn--sm gw-btn--primary" href={exploreUrl}><Icon name="dungeon" size={14} /> Browse dungeons</a>
                 <p className="gw-muted">{groups.acquired.length ? 'Your collected gear is in Acquired below. Browse dungeons to find your next upgrade.' : 'Open a dungeon and wishlist items from its loot.'}</p>
-              </div>
+              </div>}
           {groups.acquired.length ? (
             <details className="gw-wish__acquired">
               <summary>Acquired ({groups.acquired.length})</summary>
