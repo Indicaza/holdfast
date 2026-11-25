@@ -644,8 +644,11 @@ export default function ResourceMap({
 
   // Where the camera goes: a named zone, the busiest zone, or the extent of
   // the data. It flies again whenever the focus asked for changes.
-  const focusKey = focus && typeof focus === 'object' ? `zone:${focus.mapId || ''}` : String(focus || '')
   const focusMapId = focus && typeof focus === 'object' ? focus.mapId : null
+  const focusPoint = focus && typeof focus === 'object' ? focus.point : null
+  const focusKey = focusMapId
+    ? `zone:${focusMapId}${focusPoint ? `:mark:${focusPoint.x},${focusPoint.y}` : ''}`
+    : String(focus || '')
   const appliedFocus = useRef(null)
   useEffect(() => {
     if (!ready || status !== 'ready' || appliedFocus.current === focusKey) return
@@ -654,7 +657,12 @@ export default function ResourceMap({
     let target = null
     if (focusMapId) {
       const zone = atlasZone(focusMapId)
-      if (zone) target = fitBounds(zone.rect, size, 0.9)
+      if (zone) {
+        target = fitBounds(zone.rect, size, 0.9)
+        if (Number.isFinite(focusPoint?.x) && Number.isFinite(focusPoint?.y)) {
+          target = { ...target, x: focusPoint.x, y: focusPoint.y }
+        }
+      }
     } else if (focus === 'busiest' && totals[0]) {
       target = fitBounds(totals[0].zone.rect, size, 0.9)
     } else if (focus === 'data' && placed.length) {
@@ -672,7 +680,7 @@ export default function ResourceMap({
     if (!target) return
     if (first) setViewNow(target)
     else flyTo(target)
-  }, [ready, status, focus, focusKey, focusMapId, totals, placed, size, flyTo, setViewNow])
+  }, [ready, status, focus, focusKey, focusMapId, focusPoint, totals, placed, size, flyTo, setViewNow])
 
   useEffect(() => {
     if (!onFocusZone) return undefined
@@ -690,7 +698,15 @@ export default function ResourceMap({
   // map knows its resources; one it has no positions for still opens.
   const handledRequest = useRef(null)
   useEffect(() => {
-    if (!openRequest?.sourceKey || status !== 'ready' || handledRequest.current === openRequest) return
+    if (status !== 'ready') return
+    if (!openRequest?.sourceKey) {
+      if (handledRequest.current) {
+        handledRequest.current = null
+        setDetails(null)
+      }
+      return
+    }
+    if (handledRequest.current === openRequest) return
     handledRequest.current = openRequest
     setDetails({ sourceKey: openRequest.sourceKey, spot: null, fallback: openRequest })
   }, [openRequest, status])
@@ -1215,6 +1231,7 @@ export default function ResourceMap({
               </span>
             ))}
           </nav>
+          {variant === 'full' ? <span className="gw-rmap__scope">Community gathering · All realms</span> : null}
         </div>
 
         <div className="gw-rmap__controls">
