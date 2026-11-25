@@ -39,9 +39,9 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
   const draftsRef = useRef({})
   const savingRef = useRef(new Set())
   const activeCharacterRef = useRef(character.id)
-  activeCharacterRef.current = character.id
 
   useEffect(() => {
+    activeCharacterRef.current = character.id
     setNotes({})
     draftsRef.current = {}
     savingRef.current.clear()
@@ -118,7 +118,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
             {noteSave ? (
               <div className={`gw-wish-row__save-state is-${noteSave}`} role={noteSave === 'error' ? 'alert' : 'status'}>
                 {noteSave === 'saving' ? 'Saving note…' : noteSave === 'saved' ? 'Note saved' : noteSave === 'error' ? 'Note not saved.' : 'Unsaved note'}
-                {(noteSave === 'error' || noteSave === 'unsaved') && !savingRef.current.has(entry.itemKey) ? (
+                {(noteSave === 'error' || noteSave === 'unsaved') ? (
                   <button type="button" className="gw-wish-row__retry" onClick={() => saveNote(entry)}>{noteSave === 'error' ? 'Retry save' : 'Save note'}</button>
                 ) : null}
               </div>
