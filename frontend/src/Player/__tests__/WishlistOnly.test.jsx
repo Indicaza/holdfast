@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import DungeonLoot from '../DungeonLoot.jsx'
@@ -6,6 +6,7 @@ import DungeonLoot from '../DungeonLoot.jsx'
 const mocks = vi.hoisted(() => ({
   urls: [],
   mutations: [],
+  failNext: false,
   wishlist: {
     ownershipKnown: true,
     items: [
@@ -19,10 +20,16 @@ const mocks = vi.hoisted(() => ({
   },
 }))
 
+const originalWishlist = mocks.wishlist
+
 vi.mock('../../Auth/sessionContext.js', () => ({ useSession: () => ({ refresh: vi.fn(), signIn: vi.fn() }) }))
 vi.mock('../../Auth/authenticatedMutation.js', () => ({
   runAuthenticatedMutation: async (args) => {
     mocks.mutations.push(args)
+    if (mocks.failNext) {
+      mocks.failNext = false
+      throw new Error('A simulated network failure')
+    }
     return mocks.wishlist
   },
 }))
@@ -38,6 +45,8 @@ afterEach(() => {
   cleanup()
   mocks.urls.length = 0
   mocks.mutations.length = 0
+  mocks.failNext = false
+  mocks.wishlist = originalWishlist
 })
 
 describe('Wishlist tab', () => {
@@ -54,7 +63,7 @@ describe('Wishlist tab', () => {
     expect(screen.queryByRole('combobox', { name: 'Dungeon' })).toBeNull()
     expect(screen.queryByRole('group', { name: 'Filter loot' })).toBeNull()
     expect(screen.getByRole('link', { name: 'Browse dungeons' })).toBeTruthy()
-    expect(within(screen.getByRole('list', { name: 'Wanted items' })).getByRole('link', { name: 'Journal' })).toBeTruthy()
+    expect(within(screen.getByRole('list', { name: 'Wanted items' })).getByRole('link', { name: /Mutanus the Devourer/ })).toBeTruthy()
   })
 
   test('item editors remain optional and acquired entries start collapsed', () => {
@@ -71,5 +80,52 @@ describe('Wishlist tab', () => {
     expect(acquired.open).toBe(false)
     fireEvent.click(within(acquired).getByText('Acquired (1)'))
     expect(within(acquired).getByText('Cruel Barb')).toBeTruthy()
+  })
+
+  test('a failed note save leaves the draft and offers an inline retry', async () => {
+    mocks.failNext = true
+    renderWishlist()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Mutant Scale Breastplate details' }))
+    const field = screen.getByLabelText('Note for Mutant Scale Breastplate')
+    fireEvent.change(field, { target: { value: 'Need this for tanking' } })
+    expect(screen.getByText('Unsaved note')).toBeTruthy()
+    fireEvent.blur(field)
+    await waitFor(() => expect(screen.getByText('Note not saved.')).toBeTruthy())
+    expect(field.value).toBe('Need this for tanking')
+    expect(screen.getByRole('button', { name: 'Retry save' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry save' }))
+    await waitFor(() => expect(screen.getByText('Note saved')).toBeTruthy())
+    expect(mocks.mutations).toHaveLength(2)
+  })
+
+  test('multiple drop sources can all open their dungeon journal', () => {
+    mocks.wishlist = {
+      ...originalWishlist,
+      items: [{
+        ...originalWishlist.items[0],
+        sources: [
+          originalWishlist.items[0].sources[0],
+          { source: 'Cavern Creeper', dungeon: 'Wailing Caverns', instanceId: 43 },
+          { source: 'Defias Pirate', dungeon: 'Deadmines', instanceId: 36 },
+          { source: 'Unknown', dungeon: 'Unmapped' },
+        ],
+      }],
+    }
+    renderWishlist()
+    const firstSource = screen.getAllByRole('link', { name: /Mutanus the Devourer/ })[0]
+    expect(firstSource.getAttribute('href')).toContain('open=43')
+    const summary = screen.getByText('All 4 drop sources')
+    fireEvent.click(summary)
+    const sourceList = summary.closest('details')
+    expect(within(sourceList).getByRole('link', { name: /Defias Pirate/ }).getAttribute('href')).toContain('open=36')
+    expect(within(sourceList).getByText('Unknown · Unmapped')).toBeTruthy()
+  })
+
+  test('completed wishlists acknowledge acquired items instead of claiming to be empty', () => {
+    mocks.wishlist = { ...originalWishlist, items: [originalWishlist.items[1]] }
+    renderWishlist()
+    expect(screen.getByText('All caught up — every wishlisted item is acquired.')).toBeTruthy()
+    expect(screen.queryByText('No items on your wishlist yet.')).toBeNull()
+    expect(screen.getByText('Acquired (1)')).toBeTruthy()
   })
 })

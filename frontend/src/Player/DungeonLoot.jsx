@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { apiJson } from '../Api/apiClient.js'
 import { runAuthenticatedMutation } from '../Auth/authenticatedMutation.js'
@@ -6,7 +6,7 @@ import { signInReturnTo } from '../Auth/returnTo.js'
 import { useSession } from '../Auth/sessionContext.js'
 import { useLiveResource } from '../Live/useLiveResource.js'
 import { navigate } from '../Navigation/navigation.js'
-import { MAX_NOTE, PRIORITIES, acquisitionCopy, lootHref, resolveCharacter, sourcesText, wishlistGroups } from './lootModel.js'
+import { MAX_NOTE, PRIORITIES, acquisitionCopy, lootHref, resolveCharacter, wishlistGroups } from './lootModel.js'
 import { onServerKey } from './playerModel.js'
 import { EmptyState, Icon, ItemLabel, Panel, SkeletonRows, Tip } from './ui.jsx'
 import WishlistImport from './WishlistImport.jsx'
@@ -14,6 +14,12 @@ import { exploreHref, withAtlasOpen } from './Dungeons/atlasModel.js'
 import './DungeonLoot.css'
 
 const TOPICS = ['player']
+
+function sourceLabel(source) {
+  const creature = source.source || source.bossName || source.sourceName || ''
+  const dungeon = source.dungeon || (source.instanceId ? `Dungeon ${source.instanceId}` : '')
+  return [creature, dungeon].filter(Boolean).join(' · ') || 'Drop source not identified'
+}
 
 function useWishlistMutation() {
   const session = useSession()
@@ -29,34 +35,94 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
   const groups = useMemo(() => wishlistGroups(data?.items || []), [data])
   const [expandedKey, setExpandedKey] = useState(null)
   const [notes, setNotes] = useState({})
+  const [noteStatus, setNoteStatus] = useState({})
+  const draftsRef = useRef({})
+  const savingRef = useRef(new Set())
+  const activeCharacterRef = useRef(character.id)
 
   useEffect(() => {
+    activeCharacterRef.current = character.id
     setNotes({})
+    draftsRef.current = {}
+    savingRef.current.clear()
+    setNoteStatus({})
     setExpandedKey(null)
   }, [character.id])
 
   const path = (entry) => '/api/player/wishlists/' + encodeURIComponent(character.id) + '/items/' + encodeURIComponent(entry.itemKey)
 
-  function saveNote(entry) {
-    const draft = notes[entry.itemKey]
-    if (draft === undefined || draft.trim() === entry.note) return
-    run(path(entry), 'PATCH', { note: draft.trim() })
+  function editNote(key, value) {
+    draftsRef.current[key] = value
+    setNotes((current) => ({ ...current, [key]: value }))
+    setNoteStatus((current) => ({ ...current, [key]: 'unsaved' }))
+  }
+
+  async function saveNote(entry) {
+    const key = entry.itemKey
+    const draft = draftsRef.current[key]
+    if (draft === undefined || savingRef.current.has(key)) return
+    const submitted = draft.trim()
+    if (submitted === (entry.note || '')) {
+      setNoteStatus((current) => ({ ...current, [key]: 'saved' }))
+      return
+    }
+    savingRef.current.add(key)
+    const characterId = character.id
+    setNoteStatus((current) => ({ ...current, [key]: 'saving' }))
+    const saved = await run(path(entry), 'PATCH', { note: submitted }, { inline: true })
+    savingRef.current.delete(key)
+    if (activeCharacterRef.current !== characterId) return
+    if (saved && draftsRef.current[key] === draft) {
+      delete draftsRef.current[key]
+      setNotes((current) => {
+        if (current[key] !== draft) return current
+        const next = { ...current }
+        delete next[key]
+        return next
+      })
+    }
+    setNoteStatus((current) => ({
+      ...current,
+      [key]: saved ? (draftsRef.current[key] === undefined ? 'saved' : 'unsaved') : 'error',
+    }))
   }
 
   function row(entry, index, list) {
     const acquired = entry.state === 'acquired'
     const open = expandedKey === entry.itemKey
     const status = acquisitionCopy(entry)
+    const sources = entry.sources || []
+    const noteSave = noteStatus[entry.itemKey]
     return (
       <li key={entry.itemKey} className={'gw-wish-row' + (acquired ? ' is-acquired' : '')}>
         <div className="gw-wish-row__head">
           <div className="gw-wish-row__identity">
             <ItemLabel item={{ ...entry.item, itemId: entry.itemId }} size={40} muted={acquired} />
             <p className="gw-wish-row__sources gw-muted">
-              {[entry.item.slot, entry.itemKey !== 'i:' + entry.itemId ? 'Variant' : null, sourcesText(entry.sources)].filter(Boolean).join(' · ')}
-              {entry.sources?.[0]?.instanceId ? <> · <a className="gw-link" href={guideHref(entry.sources[0].instanceId)}>Journal</a></> : null}
+              {[entry.item.slot, entry.itemKey !== 'i:' + entry.itemId ? 'Variant' : null].filter(Boolean).join(' · ')}
+              {sources.length ? <> · {sources[0].instanceId
+                ? <a className="gw-link" href={guideHref(sources[0].instanceId)}>{sourceLabel(sources[0])}</a>
+                : sourceLabel(sources[0])}{sources.length > 1 ? ` · +${sources.length - 1} more` : null}</> : ' · No dungeon source known yet'}
             </p>
-            {!open && entry.note ? <p className="gw-wish-row__note-preview gw-muted">{entry.note}</p> : null}
+            {sources.length > 1 ? (
+              <details className="gw-wish-row__source-list">
+                <summary>All {sources.length} drop sources</summary>
+                <ul>{sources.map((source, sourceIndex) => (
+                  <li key={`${source.instanceId || 'unknown'}:${source.source || source.sourceName || sourceIndex}:${sourceIndex}`}>
+                    {source.instanceId ? <a className="gw-link" href={guideHref(source.instanceId)}>{sourceLabel(source)}</a> : <span>{sourceLabel(source)}</span>}
+                  </li>
+                ))}</ul>
+              </details>
+            ) : null}
+            {!open && (notes[entry.itemKey] ?? entry.note) ? <p className="gw-wish-row__note-preview gw-muted">{notes[entry.itemKey] ?? entry.note}</p> : null}
+            {noteSave ? (
+              <div className={`gw-wish-row__save-state is-${noteSave}`} role={noteSave === 'error' ? 'alert' : 'status'}>
+                {noteSave === 'saving' ? 'Saving note…' : noteSave === 'saved' ? 'Note saved' : noteSave === 'error' ? 'Note not saved.' : 'Unsaved note'}
+                {(noteSave === 'error' || noteSave === 'unsaved') ? (
+                  <button type="button" className="gw-wish-row__retry" onClick={() => saveNote(entry)}>{noteSave === 'error' ? 'Retry save' : 'Save note'}</button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div className="gw-wish-row__actions">
             {acquired
@@ -87,7 +153,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
                 <label className="gw-wish-row__note-field">
                   <span>Note for in-game alerts</span>
                   <input className="gw-wish-row__note" value={notes[entry.itemKey] ?? entry.note ?? ''} maxLength={MAX_NOTE}
-                    aria-label={'Note for ' + entry.item.name} placeholder="Optional note" onChange={(event) => setNotes({ ...notes, [entry.itemKey]: event.target.value })}
+                    aria-label={'Note for ' + entry.item.name} placeholder="Optional note" onChange={(event) => editNote(entry.itemKey, event.target.value)}
                     onBlur={() => saveNote(entry)}
                     onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur() }} />
                 </label>
@@ -119,9 +185,9 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
         <>
           {groups.wanted.length ? <ol className="gw-wish__list" aria-label="Wanted items">{groups.wanted.map(row)}</ol>
             : <div className="gw-wish__empty">
-                <p>No items on your wishlist yet.</p>
+                <p>{groups.acquired.length ? 'All caught up — every wishlisted item is acquired.' : 'No items on your wishlist yet.'}</p>
                 <a className="gw-btn gw-btn--sm gw-btn--primary" href={exploreUrl}><Icon name="dungeon" size={14} /> Browse dungeons</a>
-                <p className="gw-muted">Open a dungeon and wishlist items from its loot.</p>
+                <p className="gw-muted">{groups.acquired.length ? 'Your collected gear is in Acquired below. Browse dungeons to find your next upgrade.' : 'Open a dungeon and wishlist items from its loot.'}</p>
               </div>}
           {groups.acquired.length ? (
             <details className="gw-wish__acquired">
@@ -131,7 +197,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
           ) : null}
           {error ? <p className="gw-objectives__error" role="alert">{error}</p> : null}
           <p className="gw-muted gw-wish__note">
-            Saved automatically. Your bridge syncs wanted items to WoW; use <kbd>/reload</kbd> for updated in-game drop alerts.
+            Saved wishlist changes sync through your bridge to WoW. Use <kbd>/reload</kbd> after the bridge updates for new in-game drop alerts.
             {data.ownershipKnown ? '' : ' Bags and equipment have not synced for this character yet.'}
           </p>
         </>
@@ -157,15 +223,15 @@ export default function DungeonLoot({ server, query, characters = [] }) {
     navigate(lootHref({ server, character: id }), { preserveScroll: true })
   }
 
-  async function run(path, method, body) {
+  async function run(path, method, body, { inline = false } = {}) {
     setBusy(true)
-    setError('')
+    if (!inline) setError('')
     try {
       const result = await mutate(path, method, body)
       if (result?.items) wishlist.mutate(result)
       return true
     } catch (failure) {
-      setError(failure?.status === 409 ? 'This wishlist is full.' : failure?.status === 422 ? 'Guildweaver does not know that item yet.' : 'That change was not saved. Try again.')
+      if (!inline) setError(failure?.status === 409 ? 'This wishlist is full.' : failure?.status === 422 ? 'Guildweaver does not know that item yet.' : 'That change was not saved. Try again.')
       return false
     } finally {
       setBusy(false)
