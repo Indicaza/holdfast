@@ -27,6 +27,7 @@ const IDENTITY_FIELDS = [
   "fullName",
   "realm",
   "realmName",
+  "realmUnavailable",
   "region",
   "level",
   "sex",
@@ -136,5 +137,8 @@ export function identityFromTelemetry(eventType, payload) {
     realm: String(source.realm ?? source.realmName ?? "").trim(),
     region: String(source.region ?? "").trim(),
     characterKey: String(source.characterKey ?? "").trim(),
+    realmUnavailable: source.realmUnavailable === true,
+    firstName: String(source.firstName ?? "").trim(),
+    lastName: String(source.lastName ?? "").trim(),
   };
 }
