@@ -49,3 +49,12 @@ Authentication will be a dedicated, revocable read-only token scoped to `/api/ad
 Growth alerts need a baseline of **at least 4 samples spanning 48 hours** within the last 7 days. Samples come from the 6-hourly statistics collection, so a new or restarted service reports `growth.baseline: "insufficient_data"` and raises no growth alerts until then. Disk-share alerts apply at once.
 
 `/api/health/ready` includes only `storage: { status, alerts }`, with no sizes. The hourly **Production monitor** (`CHECK_STORAGE=true`) fails on any alert, which opens or updates the existing incident issue, and the issue points to `/api/admin/storage/health` for the numbers. The evaluation reads cached disk figures and the samples file, so it's cheap enough for readiness.
+
+
+## Auction House storage incident containment
+
+Production defaults to paused new Auction House ingestion from both sources. The independent switches are `MARKET_BLIZZARD_ENABLED` (Blizzard API polling) and `MARKET_ADDON_INGEST_ENABLED` (client scans). Set both to `false` in the running Render service during a storage incident. The Render blueprint also specifies these values. Existing market history, item data, and scheduled market retention remain readable; no rows are deleted by the switches. Other character telemetry continues normally.
+
+The telemetry endpoint returns HTTP 503 with `auction_ingestion_paused` and Retry-After for client auction scans before any raw record or market write. A compatible bridge keeps those records unacknowledged and delays further auction attempts. The addon's normal bounded queue can still prune older events during prolonged offline/paused operation; this is not an indefinite archival guarantee.
+
+Check storage overview, growth, ingestion and backup reports after deploying. Compare market tables, raw telemetry domains, database free pages, WAL and local backup sizes before attributing growth to any source. Verify a recoverable backup before reclaiming space. Do not run a full VACUUM on a nearly full disk. Re-enable only the source that has a verified storage budget and market scope, using explicit `true` for that switch.
