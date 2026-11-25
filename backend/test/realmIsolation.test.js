@@ -235,3 +235,42 @@ test("auction scans and prices are kept per realm and faction, and a scan withou
   assert.equal(detail.variants[0].minUnitBuyout, 30);
   assert.ok(detail.evidence.every((row) => row.marketKey === undefined || row.marketKey === "game:us:forever-pvp:horde"));
 }));
+
+
+function realmFreeIdentity(characterId, { name = "Rook Smith", firstName = "Rook", lastName = "Smith", region = "US", capturedAt = 1793340000 } = {}) {
+  nonce += 1;
+  return ingestTelemetry({
+    deviceId: "device-laptop",
+    memberId: memberIds.member,
+    idempotencyKey: `realm-free-${nonce}`,
+    body: { kind: "state", revision: capturedAt, streamKey: `character:${characterId}`, envelope: {
+      schemaVersion: 1, eventType: "character", capturedAt, characterId, region, payloadSchemaVersion: 1,
+      payload: { schemaVersion: 1, name, fullName: name, firstName, lastName, region, realmUnavailable: true, level: 18 },
+    } },
+    receivedAt: new Date(capturedAt * 1000 + 500).toISOString(),
+  });
+}
+
+test("explicit Forever realm-free identity reconnects a unique regional full name", () => withHttpApp(async () => {
+  identity("old-smith", PVP, { name: "Rook Smith" });
+  const old = idOn(PVP_KEY);
+  const result = realmFreeIdentity("new-smith");
+  assert.equal(result.canonicalCharacterId, old);
+  assert.equal(characters().characters.length, 1);
+  assert.equal(characters().characters[0].level, 18);
+  assert.equal(idOn(PVP_KEY), old, "historical server grouping retained until ruleset assignment");
+}));
+
+test("realm-free identity never merges ambiguous or different-region names", () => withHttpApp(async () => {
+  identity("old-smith-rp", RP, { name: "Rook Smith" });
+  identity("old-smith-pvp", PVP, { name: "Rook Smith" });
+  const oldIds = characters().characters.map((entry) => entry.id);
+  const result = realmFreeIdentity("new-smith");
+  assert.ok(result.canonicalCharacterId);
+  assert.ok(!oldIds.includes(result.canonicalCharacterId));
+  assert.equal(characters().characters.length, 3);
+  identity("old-fern", PVP, { name: "Fern Oak", region: "EU" });
+  const fern = characters().characters.find((entry) => entry.name === "Fern Oak");
+  const different = realmFreeIdentity("new-fern", { name: "Fern Oak", firstName: "Fern", lastName: "Oak" });
+  assert.notEqual(different.canonicalCharacterId, fern.id);
+}));
