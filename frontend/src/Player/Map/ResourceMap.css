@@ -1,5 +1,5 @@
-/* The resource map. "full" docks the legend as a sidebar beside the map;
-   "card" floats it over the map. Lives inside .gw, so it uses its tokens. */
+/* Resource maps use an in-map legend; the full view keeps the dashboard
+   navigation untouched. */
 
 .gw-rmap {
   /* Opaque enough to read without a backdrop blur, which re-blurred the
@@ -23,6 +23,8 @@
 
 .gw-rmap--full {
   height: 100%;
+  grid-template-areas: "viewport";
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .gw-rmap--card {
@@ -324,6 +326,10 @@
   z-index: 4;
   display: grid;
   gap: 0.45rem;
+}
+
+.gw-rmap--full .gw-rmap__controls {
+  top: 4.25rem;
 }
 
 .gw-rmap__control-group {
@@ -857,16 +863,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .gw-rmap--full .gw-rmap__legend {
-    position: absolute;
-    grid-area: auto;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    max-width: 86%;
-    box-shadow: 18px 0 40px rgba(0, 0, 0, 0.5);
-  }
-
   .gw-rmap__readout {
     display: none;
   }
@@ -986,6 +982,185 @@
   box-shadow: none;
   opacity: 0.4;
   filter: grayscale(1);
+}
+
+/* ---------------------------------------------------------------- Floating map layers */
+
+.gw-rmap__layers {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  width: min(12.75rem, calc(100% - 24px));
+  height: 3.1rem;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(205, 181, 125, 0.24);
+  border-radius: 12px;
+  background: rgba(11, 14, 19, 0.96);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  transition:
+    width 290ms cubic-bezier(0.2, 0.88, 0.26, 1),
+    height 330ms cubic-bezier(0.2, 0.88, 0.26, 1),
+    border-radius 250ms ease,
+    border-color 220ms ease,
+    box-shadow 290ms ease;
+}
+
+.gw-rmap__layers.is-open {
+  width: min(23rem, calc(100% - 24px));
+  height: min(42rem, calc(100% - 24px));
+  border-color: rgba(210, 179, 112, 0.42);
+  border-radius: 14px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(226, 189, 102, 0.05) inset;
+}
+
+.gw-rmap__layers-trigger {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 3.05rem;
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: 0 !important;
+  background: linear-gradient(125deg, rgba(53, 46, 32, 0.46), rgba(19, 22, 29, 0.4));
+  color: var(--gw-text);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gw-rmap__layers-trigger:hover {
+  background: linear-gradient(125deg, rgba(80, 63, 36, 0.5), rgba(32, 36, 44, 0.45));
+}
+
+.gw-rmap__layers-trigger:focus-visible {
+  outline: 2px solid var(--gw-accent-2);
+  outline-offset: -3px;
+}
+
+.gw-rmap__layers-trigger > .gw-icon:first-child {
+  color: var(--gw-accent-2);
+}
+
+.gw-rmap__layers-trigger > span {
+  flex: 1;
+  text-align: left;
+}
+
+.gw-rmap__layers-trigger > small {
+  color: var(--gw-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-rmap__layers-caret {
+  flex: none;
+  color: var(--gw-dim);
+  transform: rotate(90deg);
+  transition: transform 290ms cubic-bezier(0.2, 0.88, 0.26, 1);
+}
+
+.gw-rmap__layers.is-open .gw-rmap__layers-caret {
+  transform: rotate(-90deg);
+}
+
+.gw-rmap__layers-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 120ms ease, transform 210ms ease, visibility 0s linear 210ms;
+}
+
+.gw-rmap__layers.is-open .gw-rmap__layers-content {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 200ms ease 90ms, transform 280ms ease 60ms, visibility 0s;
+}
+
+.gw-rmap--full .gw-rmap__legend--popover {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  border: 0;
+  border-top: 1px solid var(--rmap-glass-line);
+  background: transparent;
+}
+
+.gw-rmap__legend-entrance {
+  flex: none;
+  margin: 0.35rem 0.65rem 0.65rem;
+  border: 1px solid var(--rmap-glass-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.gw-rmap__legend-entrance label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.7rem;
+  padding: 0.4rem 0.65rem;
+  color: var(--gw-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gw-rmap__legend-entrance input {
+  flex: none;
+  accent-color: var(--gw-accent);
+}
+
+.gw-rmap__legend-entrance label > .gw-icon {
+  color: var(--gw-accent-2);
+}
+
+.gw-rmap__legend-entrance label > span {
+  flex: 1;
+}
+
+.gw-rmap__legend-entrance small {
+  color: var(--gw-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-rmap__legend-entrance p {
+  margin: 0;
+  padding: 0 0.65rem 0.6rem 2.5rem;
+  color: var(--gw-dim);
+  font-size: 11px;
+}
+
+@media (max-width: 620px) {
+  .gw-rmap__layers.is-open {
+    height: calc(100% - 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gw-rmap__layers,
+  .gw-rmap__layers-caret,
+  .gw-rmap__layers-content,
+  .gw-rmap__layers.is-open .gw-rmap__layers-content {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* ---------------------------------------------------------------- Game map art */
