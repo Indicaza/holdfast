@@ -47,6 +47,40 @@ test('map layers expand in place while the main navigation and camera stay uncha
   await expect(page.getByRole('navigation', { name: 'Dashboard workspaces' }).getByRole('link', { name: 'Home' })).toBeVisible()
 })
 
+test('map links update waypoints, filtered resources and entrance pins without remounting', async ({ page, context }) => {
+  await openMap(page, context, '?zone=1436&mark=0.55,0.48&label=First+stop&discipline=herbalism&dungeons=0')
+  const map = page.locator('.gw-rmap--full')
+  await expect(map.getByRole('button', { name: 'First stop (marked spot)' })).toBeVisible()
+  await expect(map.getByText('Community gathering · All realms')).toBeVisible()
+  await map.evaluate((node) => { node.dataset.navigationProbe = 'retained' })
+
+  const layers = map.getByRole('region', { name: 'Map layer controls' })
+  const toggle = layers.getByRole('button', { name: /Map layers/ })
+  await toggle.click()
+  const hiddenResource = layers.getByRole('checkbox', { name: /Show .* on the map/ }).first()
+  await expect(hiddenResource).toBeVisible()
+  const resourceName = await hiddenResource.getAttribute('aria-label')
+  await hiddenResource.uncheck()
+
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/map?zone=1436&mark=0.57,0.50&label=Second+stop&discipline=herbalism&dungeons=1')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
+  await expect(map).toHaveAttribute('data-navigation-probe', 'retained')
+  await expect(map.getByRole('button', { name: 'Second stop (marked spot)' })).toBeVisible()
+  await expect(map.getByRole('button', { name: 'First stop (marked spot)' })).toHaveCount(0)
+  await expect(layers.getByRole('checkbox', { name: /Dungeon entrances/ })).toBeChecked()
+
+  await page.getByRole('link', { name: 'Clear resource filters' }).click()
+  await expect(page).not.toHaveURL(/discipline=/)
+  await expect(page).toHaveURL(/mark=0.57/)
+  await expect(page).toHaveURL(/dungeons=1/)
+  await expect(map).toHaveAttribute('data-navigation-probe', 'retained')
+  await expect(map.getByRole('button', { name: 'Second stop (marked spot)' })).toBeVisible()
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click()
+  await expect(layers.getByRole('checkbox', { name: resourceName, exact: true })).not.toBeChecked()
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
