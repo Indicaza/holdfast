@@ -81,6 +81,22 @@ test('map links update waypoints, filtered resources and entrance pins without r
   await expect(layers.getByRole('checkbox', { name: resourceName, exact: true })).not.toBeChecked()
 })
 
+test('clearing URL filters uses the latest zone after in-map navigation', async ({ page, context }) => {
+  await openMap(page, context, '?zone=1436&discipline=herbalism')
+  const map = page.locator('.gw-rmap--full')
+  await map.evaluate((node) => { node.dataset.cameraProbe = 'same-map' })
+
+  await page.evaluate(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('zone', '1438')
+    window.history.replaceState(window.history.state, '', url)
+  })
+  await page.getByRole('link', { name: 'Clear resource filters' }).click()
+  await expect(page).toHaveURL(/zone=1438/)
+  await expect(page).not.toHaveURL(/discipline=/)
+  await expect(map).toHaveAttribute('data-camera-probe', 'same-map')
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
