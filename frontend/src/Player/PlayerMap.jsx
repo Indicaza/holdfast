@@ -41,11 +41,17 @@ function replaceParam(name, value) {
 // The Dungeon Entrances layer: a toggle (kept in ?dungeons=1) and a pin
 // for every dungeon whose entrance the atlas knows.
 function useEntrancePins(queryString) {
-  const [on, setOn] = useState(() => new URLSearchParams(queryString).get('dungeons') === '1')
+  const [on, setOn] = useState(() => {
+    const explicit = new URLSearchParams(queryString).get('dungeons')
+    if (explicit === '1') return true
+    if (explicit === '0') return false
+    try { return globalThis.localStorage?.getItem('guildweaver:map:entrances') === '1' } catch { return false }
+  })
   const list = useDungeonList()
   const all = useMemo(() => entranceMarkers(list.dungeons, (mapId) => atlasZone(mapId)), [list.dungeons])
   const toggle = useCallback(() => {
     replaceParam('dungeons', on ? '' : '1')
+    try { globalThis.localStorage?.setItem('guildweaver:map:entrances', on ? '0' : '1') } catch { /* optional preference */ }
     setOn(!on)
   }, [on])
   return { on, pins: on ? all : [], toggle, known: all.length }
