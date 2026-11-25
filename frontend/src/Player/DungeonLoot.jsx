@@ -119,7 +119,7 @@ function Wishlist({ character, resource, run, busy, error, guideHref, exploreUrl
               <div className={`gw-wish-row__save-state is-${noteSave}`} role={noteSave === 'error' ? 'alert' : 'status'}>
                 {noteSave === 'saving' ? 'Saving note…' : noteSave === 'saved' ? 'Note saved' : noteSave === 'error' ? 'Note not saved.' : 'Unsaved note'}
                 {(noteSave === 'error' || noteSave === 'unsaved') && !savingRef.current.has(entry.itemKey) ? (
-                  <button type="button" className="gw-link" onClick={() => saveNote(entry)}>Retry save</button>
+                  <button type="button" className="gw-wish-row__retry" onClick={() => saveNote(entry)}>{noteSave === 'error' ? 'Retry save' : 'Save note'}</button>
                 ) : null}
               </div>
             ) : null}
