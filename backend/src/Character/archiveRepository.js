@@ -51,13 +51,15 @@ export function archiveEnabled(device) {
 
 export function archiveStatus(device) {
   const enabled = archiveEnabled(device);
+  const markets = enabled ? withGuildDatabase((db) => db.prepare("SELECT market_key AS key, name FROM market_markets ORDER BY market_key LIMIT 201").all()) : [];
   return {
     deviceId: device.id,
     name: device.name,
     enabled,
     datasets: enabled ? DATASETS : [],
     hold: enabled ? readMarketArchiveHold() : null,
-    markets: enabled ? withGuildDatabase((db) => db.prepare("SELECT market_key AS key, name FROM market_markets ORDER BY market_key LIMIT 200").all()) : [],
+    markets: markets.slice(0, 200),
+    marketsTruncated: markets.length > 200,
   };
 }
 
