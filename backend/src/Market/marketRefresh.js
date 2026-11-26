@@ -1,4 +1,5 @@
 import { Worker } from "node:worker_threads";
+import { beginMarketArchiveWriter, readMarketArchiveHold } from "./marketArchiveHold.js";
 
 import { guildDatabaseFile, withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 import { iconStorageConfig, storeIcons } from "../GameData/iconRegistry.js";
@@ -179,7 +180,9 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   }
 
   async function refreshOne() {
-    if (!enabled()) return { status: "paused" };
+    if (!enabled() || readMarketArchiveHold()) return { status: "paused" };
+    const endWriter = beginMarketArchiveWriter();
+    try {
     const next = nextMarket();
     if (!next) return { status: "idle" };
     const { row, priority } = next;
@@ -245,6 +248,9 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
     }
   }
 
+    finally { endWriter(); }
+  }
+
   async function tick() {
     if (running || !provider.configured()) return { status: "skipped" };
     if (!enabled()) return { status: "paused" };
@@ -285,6 +291,9 @@ export function measureMarketStorage({ databaseFile = guildDatabaseFile() } = {}
 
 export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000), batchRows = MAINTENANCE_BATCH_ROWS,
   yieldFn = yieldToRequests, clock = () => Date.now(), force = false, measure = measureMarketStorage } = {}) {
+  if (readMarketArchiveHold()) return null;
+  const endWriter = beginMarketArchiveWriter();
+  try {
   const last = withGuildDatabase((db) => lastMarketMaintenanceInDatabase(db, "rollup")) || 0;
   if (!force && now - last < MAINTENANCE_SECONDS) return null;
   const began = clock();
@@ -311,6 +320,7 @@ export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000)
     storage = { status: "unknown", error: String(error.message || error).slice(0, 200) };
   }
   return { ...next.value, storage, transactions, longestTransaction: longest, ms: Math.round(clock() - began) };
+  } finally { endWriter(); }
 }
 
 // Indexes new game data for Auction House search, yielding to requests
