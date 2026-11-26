@@ -1,6 +1,7 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { DatabaseSync } from "node:sqlite";
 import { readArchiveBatchInDatabase } from "./archiveRepository.js";
+import { archiveResultLimit } from "./archiveLimits.js";
 
 let db;
 try {
@@ -9,7 +10,7 @@ try {
   db.exec("BEGIN");
   const result = readArchiveBatchInDatabase(db, workerData.query);
   db.exec("COMMIT");
-  if (Buffer.byteLength(JSON.stringify(result)) > 256 * 1024) throw new Error("Archive result exceeds page budget");
+  if (Buffer.byteLength(JSON.stringify(result)) > archiveResultLimit(workerData.query)) throw new Error("Archive result exceeds page budget");
   parentPort.postMessage({ ok: true, result });
 } catch {
   parentPort.postMessage({ ok: false });
