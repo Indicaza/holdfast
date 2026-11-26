@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
@@ -324,4 +325,50 @@ test("pausing addon auction ingestion keeps raw scans out of storage while chara
     assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE event_type = 'auction_scan'").get().n), before);
     assert.ok([200, 201].includes((await syncCharacter(request, ash.token, "character-rook", PVP)).status));
   }
+}));
+
+
+test("archive permission belongs to an explicitly authorized admin computer; exports are bounded and read-only", () => withHttpApp(async ({ request }) => {
+  const owner = await connect(request, { id: memberIds.owner, username: "owner" });
+  const ordinary = await connect(request, ASH);
+  const adminRoute = "/api/admin/guildweaver/archive/devices";
+  const bridgeRoute = "/api/bridge/archive";
+  const ownerHeaders = { Authorization: `Bearer ${owner.token}` };
+  const ordinaryHeaders = { Authorization: `Bearer ${ordinary.token}` };
+  assert.equal((await request(adminRoute)).status, 401);
+  assert.equal((await request(adminRoute, { rawCookie: ordinary.cookie })).status, 403);
+  const devices = await request(adminRoute, { persona: "owner" });
+  assert.equal(devices.status, 200, devices.text);
+  const id = devices.json.devices[0].id;
+  assert.equal(devices.json.devices[0].archiveEnabled, false);
+  assert.equal((await request(bridgeRoute + "/status", { headers: ownerHeaders })).json.enabled, false);
+  assert.equal((await request(bridgeRoute + "/batch", { headers: ownerHeaders })).status, 403);
+  assert.equal((await request(adminRoute + "/" + id, { rawCookie: ordinary.cookie, method: "PUT", body: { enabled: true } })).status, 403);
+  assert.equal((await request(adminRoute + "/" + id, { persona: "owner", method: "PUT", body: { enabled: "true" } })).status, 400);
+  assert.equal((await request(adminRoute + "/unknown", { persona: "owner", method: "PUT", body: { enabled: true } })).status, 400);
+  const grant = await request(adminRoute + "/" + id, { persona: "owner", method: "PUT", body: { enabled: true } });
+  assert.equal(grant.status, 200, grant.text);
+  assert.equal((await request(bridgeRoute + "/status", { headers: ownerHeaders })).json.enabled, true);
+  assert.equal((await request(bridgeRoute + "/status", { headers: ordinaryHeaders })).json.enabled, false);
+  assert.equal((await request(bridgeRoute + "/batch", { headers: ordinaryHeaders })).status, 403);
+  withGuildDatabase((db) => {
+    db.prepare("INSERT INTO market_markets (market_key, kind, region, name, created_at) VALUES ('archive-test', 'api_house', 'us', 'Archive test', '2026-01-01')").run();
+    const insert = db.prepare("INSERT INTO market_series_monthly (market_key,item_key,source_type,month,days,samples,quantity_low,quantity_high,quantity_close,final) VALUES ('archive-test',?,'official_api','2026-01-01',1,1,1,2,2,?)");
+    for (let index = 0; index < 201; index++) insert.run("i:" + String(index).padStart(4, "0"), 1);
+    insert.run("i:unfinished", 0);
+  });
+  const query = bridgeRoute + "/batch?dataset=market-monthly&market=archive-test";
+  assert.equal((await request(query + "&cursor=bad", { headers: ownerHeaders })).status, 400);
+  const first = await request(query, { headers: ownerHeaders });
+  assert.equal(first.status, 200, first.text);
+  assert.equal(first.json.batch.rows.length, 200);
+  assert.equal(first.json.sha256, createHash("sha256").update(JSON.stringify(first.json.batch)).digest("hex"));
+  const second = await request(query + "&cursor=" + encodeURIComponent(first.json.batch.nextCursor), { headers: ownerHeaders });
+  assert.equal(second.status, 200, second.text);
+  assert.equal(second.json.batch.rows.length, 1);
+  assert.equal(second.json.batch.nextCursor, null);
+  assert.equal((await request(bridgeRoute + "/batch?dataset=market-current&market=archive-test", { headers: ownerHeaders })).status, 200);
+  assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_series_monthly WHERE market_key = 'archive-test'").get().n), 202);
+  assert.equal((await request(adminRoute + "/" + id, { persona: "owner", method: "PUT", body: { enabled: false } })).status, 200);
+  assert.equal((await request(query, { headers: ownerHeaders })).status, 403);
 }));
