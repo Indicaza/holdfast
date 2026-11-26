@@ -60,3 +60,18 @@ test("held exports traverse all hourly rows in key order and preserve nonfinal m
   assert.notEqual(newId, holdId);
   assert.equal(readArchiveBatch({ dataset: "market-hourly", market, holdId }), null);
 }));
+
+ test("production paused defaults can start a hold and persist paused controls atomically", () => withHttpApp(async () => {
+  const previous = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = "production";
+    withGuildDatabase(db => db.prepare("DELETE FROM app_meta WHERE key = 'market_ingestion_controls'").run());
+    const result = setMarketArchiveHold(true, memberIds.owner);
+    assert.equal(result.status, "ok");
+    const stored = withGuildDatabase(db => db.prepare("SELECT value FROM app_meta WHERE key = 'market_ingestion_controls'").get());
+    assert.deepEqual(JSON.parse(stored.value), { blizzard: false, addon: false, updatedBy: memberIds.owner });
+    assert.equal(writeMarketIngestionControls({ blizzard: true, addon: false }, memberIds.owner), null);
+  } finally {
+    if (previous === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previous;
+  }
+}));
