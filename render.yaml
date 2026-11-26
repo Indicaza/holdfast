@@ -27,10 +27,6 @@ services:
         value: "2592000"
       - key: DISCORD_PRUNE_MIN_AGE_DAYS
         value: "7"
-      - key: MARKET_BLIZZARD_ENABLED
-        value: "false"
-      - key: MARKET_ADDON_INGEST_ENABLED
-        value: "false"
       - key: BLIZZARD_REGION
         value: us
       - key: BLIZZARD_LOCALE
