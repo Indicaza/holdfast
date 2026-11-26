@@ -36,7 +36,7 @@ export function setArchiveDevice(memberId, deviceId, enabled) {
 
 export function archiveEnabled(device) {
   if (!resolveMemberAccess(device.memberId).authority.permissions.includes("site.admin")) return false;
-  return withGuildDatabase((db) => grantInDatabase(db, device.id));
+  return withGuildDatabase((db) => Boolean(db.prepare("SELECT 1 FROM guildweaver_devices WHERE id = ? AND member_id = ? AND revoked_at IS NULL").get(device.id, device.memberId)) && grantInDatabase(db, device.id));
 }
 
 export function archiveStatus(device) {
@@ -63,11 +63,21 @@ function decodeCursor(raw, dataset, market) {
   }
 }
 
-export function readArchiveBatch({ dataset, market, cursor }) {
+export function normalizeArchiveQuery({ dataset, market, cursor }) {
   if (!DATASETS.includes(dataset) || typeof market !== "string" || !market || market.length > 256) return null;
-  const key = decodeCursor(cursor, dataset, market);
-  if (!key) return null;
-  return withGuildDatabase((db) => {
+  if (!decodeCursor(cursor, dataset, market)) return null;
+  return { dataset, market, ...(cursor === undefined ? {} : { cursor }) };
+}
+
+export function readArchiveBatch(query) {
+  return withGuildDatabase((db) => readArchiveBatchInDatabase(db, query));
+}
+
+export function readArchiveBatchInDatabase(db, query) {
+    const normalized = normalizeArchiveQuery(query);
+    if (!normalized) return null;
+    const { dataset, market, cursor } = normalized;
+    const key = decodeCursor(cursor, dataset, market);
     if (!db.prepare("SELECT 1 FROM market_markets WHERE market_key = ?").get(market)) return null;
     const current = dataset === "market-current";
     const rows = current
@@ -86,5 +96,4 @@ export function readArchiveBatch({ dataset, market, cursor }) {
     const batch = { schemaVersion: 1, dataset, market, cursor: cursor ?? null,
       exportedAt: new Date().toISOString(), nextCursor, rows: page };
     return { batch, sha256: createHash("sha256").update(JSON.stringify(batch)).digest("hex") };
-  });
 }
