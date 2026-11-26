@@ -80,7 +80,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   const stats = { ticks: 0, refreshed: 0, unchanged: 0, failed: 0, skipped: 0 };
 
   async function discover() {
-    if (!enabled()) return [];
+    if (!enabled() || readMarketArchiveHold()) return [];
     const markets = [];
     for (const region of provider.config.regions) {
       if (!enabled()) break;
@@ -90,7 +90,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
         log.warn?.(`[market] ${provider.name} ${region}: could not list auction houses (${error.code || error.message})`);
       }
     }
-    if (markets.length && enabled()) {
+    if (markets.length && enabled() && !readMarketArchiveHold()) {
       withGuildTransaction((db) => {
         for (const market of markets) {
           ensureMarketInDatabase(db, market);
@@ -246,9 +246,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
       log.warn?.(`[market] ${row.market_key}: refresh failed (${error.code || error.message}), retry in ${Math.round(wait / 60)} min`);
       return { status: "failed", marketKey: row.market_key, error: error.code || error.message };
     }
-  }
-
-    finally { endWriter(); }
+    } finally { endWriter(); }
   }
 
   async function tick() {
