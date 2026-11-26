@@ -15,7 +15,10 @@ import {
   startGuildweaverPairing,
 } from "./guildweaverDeviceRepository.js";
 import { createTelemetryRouter } from "./telemetryRouter.js";
-import { archiveEnabled, archiveStatus, readArchiveBatch } from "./archiveRepository.js";
+import { archiveEnabled, archiveStatus, normalizeArchiveQuery } from "./archiveRepository.js";
+import { createArchiveQueue } from "./archiveQueue.js";
+import { guildDatabaseFile } from "../Data/database.js";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2, 3]);
 
@@ -67,27 +70,72 @@ export function createCharacterRouter() {
 
   router.use(createTelemetryRouter());
 
+  const archiveQueue = createArchiveQueue();
   const archiveLimit = createRateLimiter({ name: "guildweaver-archive", windowMs: 60_000, max: 30 });
-  router.get("/archive/status", archiveLimit, requireGuildweaverDevice, (req, res) => {
-    res.set("Cache-Control", "no-store");
+  const archivePollLimit = createRateLimiter({ name: "guildweaver-archive-poll", windowMs: 60_000, max: 60 });
+  const noStore = (req, res, next) => { res.set("Cache-Control", "no-store"); next(); };
+  function archiveAccess(req, res, next) {
     try {
-      res.json(archiveStatus(req.guildweaverDevice));
-    } catch (error) {
-      console.error("Archive status unavailable", error);
+      if (!archiveEnabled(req.guildweaverDevice)) return res.status(403).json({ error: "archive_device_not_enabled" });
+      next();
+    } catch {
+      res.status(503).json({ error: "archive_unavailable" });
+    }
+  }
+  function submitArchive(req, res, input) {
+    const query = normalizeArchiveQuery(input);
+    if (!query) { res.status(400).json({ error: "invalid_archive_query" }); return null; }
+    const device = req.guildweaverDevice;
+    const job = archiveQueue.submit({ owner: device.id, query, authorized: () => archiveEnabled(device), databaseFile: guildDatabaseFile() });
+    if (["full", "busy"].includes(job.status)) {
+      res.set("Retry-After", String(job.retryAfterSeconds));
+      res.status(503).json({ error: "archive_queue_" + job.status, retryAfterSeconds: job.retryAfterSeconds });
+      return null;
+    }
+    return job;
+  }
+  function replyJob(res, job) {
+    if (!job) return res.status(404).json({ error: "archive_ticket_expired" });
+    if (job.status === "failed") return res.status(job.error === "invalid_archive_query" ? 400 : 503).json({ error: job.error });
+    res.set("Retry-After", String(job.retryAfterSeconds));
+    return res.status(job.status === "ready" ? 200 : 202).json(job);
+  }
+  router.get("/archive/status", archiveLimit, requireGuildweaverDevice, noStore, (req, res) => {
+    try {
+      res.json({ ...archiveStatus(req.guildweaverDevice), queueProtocol: 1 });
+    } catch {
       res.status(503).json({ error: "archive_unavailable" });
     }
   });
-  router.get("/archive/batch", archiveLimit, requireGuildweaverDevice, (req, res) => {
-    res.set("Cache-Control", "no-store");
-    try {
-      if (!archiveEnabled(req.guildweaverDevice)) return res.status(403).json({ error: "archive_device_not_enabled" });
-      const result = readArchiveBatch(req.query);
-      if (!result) return res.status(400).json({ error: "invalid_archive_query" });
-      return res.json(result);
-    } catch (error) {
-      console.error("Archive batch unavailable", error);
-      return res.status(503).json({ error: "archive_unavailable" });
+  router.post("/archive/jobs", archiveLimit, requireGuildweaverDevice, noStore, archiveAccess, (req, res) => {
+    const job = submitArchive(req, res, req.body || {});
+    if (job) replyJob(res, job);
+  });
+  router.get("/archive/jobs/:ticket", archivePollLimit, requireGuildweaverDevice, noStore, archiveAccess, (req, res) => {
+    replyJob(res, archiveQueue.poll(req.guildweaverDevice.id, req.params.ticket));
+  });
+  router.delete("/archive/jobs/:ticket", archivePollLimit, requireGuildweaverDevice, noStore, archiveAccess, (req, res) => {
+    res.status(archiveQueue.cancel(req.guildweaverDevice.id, req.params.ticket) ? 204 : 409).end();
+  });
+  // Older bridges use the same queue, with a bounded wait and explicit backpressure.
+  router.get("/archive/batch", archiveLimit, requireGuildweaverDevice, noStore, archiveAccess, async (req, res) => {
+    const job = submitArchive(req, res, req.query);
+    if (!job) return;
+    const owner = req.guildweaverDevice.id;
+    const deadline = Date.now() + 9000;
+    let current = job;
+    while (["queued", "running"].includes(current?.status) && Date.now() < deadline && !res.destroyed) {
+      await sleep(100);
+      current = archiveQueue.poll(owner, job.ticket);
     }
+    if (res.destroyed) return;
+    if (current?.status === "ready") {
+      if (!archiveEnabled(req.guildweaverDevice)) return res.status(403).json({ error: "archive_device_not_enabled" });
+      return res.json(current.result);
+    }
+    if (current?.status === "failed") return replyJob(res, current);
+    res.set("Retry-After", "3");
+    return res.status(503).json({ error: "archive_busy", retryAfterSeconds: 3 });
   });
 
   router.post("/pairing/start", pairingStartRateLimit, (req, res) => {
