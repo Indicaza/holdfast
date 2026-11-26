@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { requirePermission } from "../Auth/permissions.js";
+import { readArchiveDevices, setArchiveDevice } from "./archiveRepository.js";
 import { readMarketIngestionControls, writeMarketIngestionControls } from "../Market/marketRepository.js";
 import { blizzardAuctionConfig } from "../Market/blizzardAuctionProvider.js";
 import {
@@ -19,6 +20,27 @@ export function createGuildweaverAdminRouter() {
   const router = Router();
 
   router.use(requirePermission("site.admin"));
+
+  router.get("/archive/devices", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      res.json({ devices: readArchiveDevices(req.auth.user.id) });
+    } catch (error) {
+      console.error("Archive device list unavailable", error);
+      res.status(503).json({ error: "archive_unavailable" });
+    }
+  });
+  router.put("/archive/devices/:id", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      const device = setArchiveDevice(req.auth.user.id, req.params.id, req.body?.enabled);
+      if (!device) return res.status(400).json({ error: "invalid_archive_device" });
+      return res.json({ device });
+    } catch (error) {
+      console.error("Archive device update unavailable", error);
+      return res.status(503).json({ error: "archive_unavailable" });
+    }
+  });
 
   router.get("/ingestion", (_req, res) => {
     try {

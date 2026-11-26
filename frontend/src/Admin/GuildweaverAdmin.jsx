@@ -117,6 +117,73 @@ function IngestionControls() {
   )
 }
 
+function ArchiveDevices() {
+  const [devices, setDevices] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function load() {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await apiJson('/api/admin/guildweaver/archive/devices')
+      setDevices(result.devices)
+    } catch {
+      setError('Could not load archive devices.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function change(device) {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await apiJson('/api/admin/guildweaver/archive/devices/' + encodeURIComponent(device.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !device.archiveEnabled }),
+      })
+      setDevices((current) => current.map((entry) => entry.id === result.device.id ? { ...entry, ...result.device } : entry))
+    } catch {
+      setError('Change could not be confirmed. Refresh to verify.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="admin-ingestion" aria-label="Archive devices">
+      <header className="admin-ingestion__header">
+        <div>
+          <h2>Archive devices</h2>
+          <p>Authorize your own paired computers to request manual market exports. Nothing is downloaded automatically.</p>
+        </div>
+        <button type="button" className="gw-admin-refresh" disabled={busy} onClick={load}>Refresh</button>
+      </header>
+      {error && <p role="alert" className="gw-admin-error">{error}</p>}
+      {!devices ? <p>Loading devices…</p> : devices.length === 0 ? <p>Pair a bridge with your administrator account to get started.</p> : (
+        <div className="admin-ingestion__sources">
+          {devices.map((device) => (
+            <label className="admin-ingestion__source" key={device.id}>
+              <span>
+                <strong>{device.name}</strong>
+                <small>Device ID: {device.id}</small>
+                <small>Last contact: {device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : 'Never'}</small>
+                <small>{device.archiveEnabled ? 'Manual archive access enabled' : 'Archive access disabled'}</small>
+              </span>
+              <input type="checkbox" aria-label={'Archive access for ' + device.name} checked={device.archiveEnabled} disabled={busy} onChange={() => change(device)} />
+            </label>
+          ))}
+        </div>
+      )}
+      <p>Enabling a device is permission only. Run an explicit archive command on that computer to export a batch.</p>
+    </section>
+  )
+}
+
 function Gate({ session }) {
   if (session.status === 'loading') {
     return <PageShell eyebrow="Guildweaver Admin" title="Checking credentials" intro="Verifying administrative access." centered className="admin-page admin-page--gate" />
@@ -161,6 +228,7 @@ export default function GuildweaverAdmin() {
         <a href="/admin/dungeons">Dungeon content</a>
       </nav>
       <IngestionControls />
+      <ArchiveDevices />
       <GuildweaverConsole />
     </PageShell>
   )

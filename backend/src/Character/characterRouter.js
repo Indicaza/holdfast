@@ -15,6 +15,7 @@ import {
   startGuildweaverPairing,
 } from "./guildweaverDeviceRepository.js";
 import { createTelemetryRouter } from "./telemetryRouter.js";
+import { archiveEnabled, archiveStatus, readArchiveBatch } from "./archiveRepository.js";
 
 const SUPPORTED_CHARACTER_SNAPSHOT_SCHEMAS = new Set([1, 2, 3]);
 
@@ -65,6 +66,29 @@ export function createCharacterRouter() {
   });
 
   router.use(createTelemetryRouter());
+
+  const archiveLimit = createRateLimiter({ name: "guildweaver-archive", windowMs: 60_000, max: 30 });
+  router.get("/archive/status", archiveLimit, requireGuildweaverDevice, (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      res.json(archiveStatus(req.guildweaverDevice));
+    } catch (error) {
+      console.error("Archive status unavailable", error);
+      res.status(503).json({ error: "archive_unavailable" });
+    }
+  });
+  router.get("/archive/batch", archiveLimit, requireGuildweaverDevice, (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      if (!archiveEnabled(req.guildweaverDevice)) return res.status(403).json({ error: "archive_device_not_enabled" });
+      const result = readArchiveBatch(req.query);
+      if (!result) return res.status(400).json({ error: "invalid_archive_query" });
+      return res.json(result);
+    } catch (error) {
+      console.error("Archive batch unavailable", error);
+      return res.status(503).json({ error: "archive_unavailable" });
+    }
+  });
 
   router.post("/pairing/start", pairingStartRateLimit, (req, res) => {
     try {
