@@ -55,6 +55,11 @@ export function createTelemetryRouter() {
         return;
       }
 
+      if (result.status === "conflict") {
+        res.status(409).json({ error: result.error });
+        return;
+      }
+
       const kind = req.body?.kind === "event" ? "event" : "state";
       const canonicalCharacterId = result.canonicalCharacterId;
 
@@ -89,6 +94,7 @@ export function createTelemetryRouter() {
       res.status(result.status === "created" ? 201 : 200).json({
         status: result.status,
         recordId: result.record?.id || null,
+        receiptKey: result.receiptKey,
         streamKey: result.record?.streamKey || String(req.body?.streamKey || "").trim(),
         revision: result.record?.revision || Number(req.body?.revision) || null,
         telemetryHandler: result.handlerName,
