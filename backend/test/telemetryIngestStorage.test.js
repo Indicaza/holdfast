@@ -104,3 +104,26 @@ test("startup removes payload copies from envelopes stored before", async () => 
     assert.equal(withGuildDatabase(compactStoredTelemetry), 0, "runs once");
   });
 });
+
+
+test("receipt identity cannot acknowledge another device or an older conflicting revision", () => withHttpApp(async () => {
+  const body = {
+    streamKey: "receipt:test", kind: "event", revision: 1,
+    envelope: { schemaVersion: 1, eventType: "receipt_test", capturedAt: 1791450000, payload: { test: true } },
+  };
+  const input = { deviceId: DEVICE, memberId: memberIds.member, idempotencyKey: "receipt-test-1", body };
+  const first = ingestTelemetry(input);
+  assert.equal(first.status, "created");
+  assert.equal(first.receiptKey, input.idempotencyKey);
+  const retry = ingestTelemetry(input);
+  assert.equal(retry.status, "duplicate");
+  assert.equal(retry.receiptKey, input.idempotencyKey);
+  assert.equal(retry.record.id, first.record.id);
+  const other = ingestTelemetry({ ...input, deviceId: "different-device", memberId: memberIds.officer });
+  assert.equal(other.status, "conflict");
+  assert.equal(other.record, undefined);
+  const older = ingestTelemetry({ ...input, idempotencyKey: "older-receipt", body: { ...body, envelope: { ...body.envelope, capturedAt: 1791440000 } } });
+  assert.equal(older.status, "conflict");
+  assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE stream_key = 'receipt:test'").get().n), 1);
+  assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_stream_heads WHERE device_id = 'different-device'").get().n), 0);
+}));
