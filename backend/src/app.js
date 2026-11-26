@@ -57,6 +57,7 @@ import {
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
 import { createStorageRouter } from "./Production/storageRouter.js";
+import { createBridgeAdmission } from "./Security/bridgeAdmission.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
 export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null, storageObservatory = null } = {}) {
@@ -74,6 +75,9 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       credentials: true,
     }),
   );
+  // Keep bulk bridge traffic from consuming every in-flight body/DB slot.
+  // Test harnesses exercise admission separately with injected limits.
+  if (process.env.NODE_ENV !== "test") app.use("/api/bridge", createBridgeAdmission());
   // Guildweaver uploads carry whole recipe books: one crafting profession is
   // several hundred KB of JSON. Only the device-authenticated ingest routes
   // accept large bodies; everything else keeps the small default.
