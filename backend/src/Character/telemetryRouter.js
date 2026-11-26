@@ -27,11 +27,26 @@ function requireGuildweaverDevice(req, res, next) {
   }
 }
 
+// During the storage incident, production must explicitly opt in to new
+// Auction House writes. Character, loot and other telemetry stay enabled.
+export function auctionIngestionEnabled(env = process.env) {
+  return env.MARKET_ADDON_INGEST_ENABLED === "true"
+    || (env.NODE_ENV !== "production" && env.MARKET_ADDON_INGEST_ENABLED !== "false");
+}
+
 export function createTelemetryRouter() {
   const router = Router();
 
   router.post("/telemetry", requireGuildweaverDevice, async (req, res) => {
     try {
+      if (req.body?.envelope?.eventType === "auction_scan" && !auctionIngestionEnabled()) {
+        // Check before raw telemetry is persisted. A temporary rejection
+        // must never acknowledge a record or create a market observation.
+        res.set("Retry-After", "300");
+        res.set("Cache-Control", "no-store");
+        res.status(503).json({ error: "auction_ingestion_paused" });
+        return;
+      }
       const idempotencyKey = String(req.get("Idempotency-Key") || "").trim();
       const result = ingestTelemetry({
         deviceId: req.guildweaverDevice.id,

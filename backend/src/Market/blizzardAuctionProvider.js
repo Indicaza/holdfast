@@ -27,7 +27,9 @@ export function blizzardAuctionConfig(env = process.env) {
   const regions = text(env.MARKET_BLIZZARD_REGIONS || env.BLIZZARD_REGION || "us", 40).split(",").map(normalizeRegion).filter(Boolean);
   const refresh = Math.max(MIN_REFRESH_MINUTES, Number(env.MARKET_BLIZZARD_REFRESH_MINUTES) || DEFAULT_REFRESH_MINUTES);
   return {
-    configured: Boolean(clientId && clientSecret) && env.MARKET_BLIZZARD_ENABLED !== "false",
+    configured: Boolean(clientId && clientSecret)
+      && (env.MARKET_BLIZZARD_ENABLED === "true"
+        || (env.NODE_ENV !== "production" && env.MARKET_BLIZZARD_ENABLED !== "false")),
     clientId, clientSecret,
     regions: regions.length ? [...new Set(regions)] : ["us"],
     namespace: (region) => text(env.MARKET_BLIZZARD_NAMESPACE, 80).replace("{region}", region) || `dynamic-forever-${region}`,

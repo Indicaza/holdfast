@@ -6,6 +6,8 @@ import { setSession } from "../src/Auth/session.js";
 import { syncGuildweaverCharacter } from "../src/Character/characterSyncRepository.js";
 import { readCharacterArmoryFromReadModel } from "../src/Character/ReadModel/readModelReader.js";
 import { ingestTelemetry } from "../src/Character/Telemetry/ingestTelemetry.js";
+import { auctionIngestionEnabled } from "../src/Character/telemetryRouter.js";
+import { blizzardAuctionConfig } from "../src/Market/blizzardAuctionProvider.js";
 import { withGuildDatabase } from "../src/Data/database.js";
 import { readItemMarket, readPrices } from "../src/Market/marketRepository.js";
 import { readPlayerCharacters } from "../src/Player/playerRepository.js";
@@ -273,4 +275,38 @@ test("realm-free identity never merges ambiguous or different-region names", () 
   const fern = characters().characters.find((entry) => entry.name === "Fern Oak");
   const different = realmFreeIdentity("new-fern", { name: "Fern Oak", firstName: "Fern", lastName: "Oak" });
   assert.notEqual(different.canonicalCharacterId, fern.id);
+}));
+
+
+test("production auction ingestion requires explicit opt-in independently for each source", () => {
+  assert.equal(auctionIngestionEnabled({ NODE_ENV: "production" }), false);
+  assert.equal(auctionIngestionEnabled({ NODE_ENV: "production", MARKET_ADDON_INGEST_ENABLED: "false" }), false);
+  assert.equal(auctionIngestionEnabled({ NODE_ENV: "production", MARKET_ADDON_INGEST_ENABLED: "true" }), true);
+  assert.equal(auctionIngestionEnabled({ NODE_ENV: "test" }), true);
+  assert.equal(auctionIngestionEnabled({ NODE_ENV: "test", MARKET_ADDON_INGEST_ENABLED: "false" }), false);
+  const env = { NODE_ENV: "production", BLIZZARD_CLIENT_ID: "id", BLIZZARD_CLIENT_SECRET: "secret" };
+  assert.equal(blizzardAuctionConfig(env).configured, false);
+  assert.equal(blizzardAuctionConfig({ ...env, MARKET_BLIZZARD_ENABLED: "true" }).configured, true);
+  assert.equal(blizzardAuctionConfig({ ...env, MARKET_BLIZZARD_ENABLED: "false" }).configured, false);
+  assert.equal(blizzardAuctionConfig({ ...env, NODE_ENV: "test" }).configured, true);
+});
+
+test("pausing addon auction ingestion keeps raw scans out of storage while character sync continues", () => withHttpApp(async ({ request }) => {
+  const previous = process.env.MARKET_ADDON_INGEST_ENABLED;
+  process.env.MARKET_ADDON_INGEST_ENABLED = "false";
+  try {
+    const ash = await connect(request, ASH);
+    const before = withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE event_type = 'auction_scan'").get().n);
+    const answer = await telemetry(request, ash.token, { streamKey: "auction_scan:paused", kind: "event", revision: 1,
+      envelope: { schemaVersion: 1, eventType: "auction_scan", capturedAt: 1793340000, realm: PVP, region: "US", installationId: "install-pause", characterId: "character-rook", payloadSchemaVersion: 1,
+        payload: { schemaVersion: 1, scanId: "paused-scan", observedAt: 1793340000, market: { faction: "alliance" }, query: { kind: "commodity" }, coverage: "items",
+          items: [{ itemId: 2589, quantity: 20, listings: 2, complete: true, prices: [[30, 20, 2]] }] } } });
+    assert.equal(answer.status, 503, answer.text);
+    assert.equal(answer.json.error, "auction_ingestion_paused");
+    assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE event_type = 'auction_scan'").get().n), before);
+    assert.ok([200, 201].includes((await syncCharacter(request, ash.token, "character-rook", PVP)).status));
+  } finally {
+    if (previous === undefined) delete process.env.MARKET_ADDON_INGEST_ENABLED;
+    else process.env.MARKET_ADDON_INGEST_ENABLED = previous;
+  }
 }));
