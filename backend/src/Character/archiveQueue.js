@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Worker } from "node:worker_threads";
 import { guildDatabaseFile } from "../Data/database.js";
+import { ARCHIVE_PAGE_BYTES, ARCHIVE_BULK_BYTES, archiveResultLimit } from "./archiveLimits.js";
 
 export function runArchiveWorker(query, databaseFile = guildDatabaseFile()) {
   return new Promise((resolve, reject) => {
@@ -20,8 +21,10 @@ export function runArchiveWorker(query, databaseFile = guildDatabaseFile()) {
   });
 }
 
-export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, capacity = 32, intervalMs = 750, ttlMs = 120000, maxResultBytes = 256 * 1024 } = {}) {
+export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, capacity = 32, intervalMs = 750, ttlMs = 120000, maxResultBytes = ARCHIVE_PAGE_BYTES, maxBulkResultBytes = ARCHIVE_BULK_BYTES, maxReservedBytes = capacity * maxResultBytes } = {}) {
   const jobs = new Map();
+  const reservation = query => archiveResultLimit(query) === ARCHIVE_BULK_BYTES ? maxBulkResultBytes : maxResultBytes;
+  const reservedBytes = () => [...jobs.values()].reduce((sum, job) => sum + (job.status === "failed" ? 0 : job.reservedBytes), 0);
   let active = null;
   let timer = null;
   const expire = () => {
@@ -49,7 +52,7 @@ export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, cap
         if (!job.authorized()) throw new Error("Archive authorization expired");
         const result = await run(job.query, job.databaseFile);
         if (!result) { job.status = "failed"; job.error = "invalid_archive_query"; }
-        else if (Buffer.byteLength(JSON.stringify(result)) > maxResultBytes) { job.status = "failed"; job.error = "archive_batch_too_large"; }
+        else if (Buffer.byteLength(JSON.stringify(result)) > job.reservedBytes) { job.status = "failed"; job.error = "archive_batch_too_large"; }
         else { job.status = "ready"; job.result = result; }
       } catch {
         job.status = "failed";
@@ -71,8 +74,9 @@ export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, cap
       if ([...jobs.values()].some(job => job.owner === owner && ["queued", "running"].includes(job.status))) return { status: "busy", retryAfterSeconds: 3 };
       // One retained result per owner. A new page supersedes completed pages.
       for (const [id, job] of jobs) if (job.owner === owner && job !== active) jobs.delete(id);
-      if (jobs.size >= capacity) return { status: "full", retryAfterSeconds: 5 };
-      const job = { id: randomUUID(), owner, query, key, authorized, databaseFile, status: "queued", createdAt: now(), touchedAt: now() };
+      const bytes = reservation(query);
+      if (jobs.size >= capacity || reservedBytes() + bytes > maxReservedBytes) return { status: "full", retryAfterSeconds: 5 };
+      const job = { id: randomUUID(), owner, query, key, authorized, databaseFile, reservedBytes: bytes, status: "queued", createdAt: now(), touchedAt: now() };
       jobs.set(job.id, job);
       schedule();
       return view(job);
