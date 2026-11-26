@@ -70,6 +70,36 @@ function json(value, fallback) {
   try { return JSON.parse(value); } catch { return fallback; }
 }
 
+const INGESTION_CONTROL_KEY = "market_ingestion_controls";
+
+export function readMarketIngestionControls() {
+  return withGuildDatabase((db) => {
+    const row = db.prepare("SELECT value, updated_at FROM app_meta WHERE key = ?").get(INGESTION_CONTROL_KEY);
+    const stored = json(row?.value, null);
+    const initial = !row && process.env.NODE_ENV !== "production";
+    return {
+      blizzard: stored?.blizzard === true || initial,
+      addon: stored?.addon === true || initial,
+      updatedAt: row?.updated_at || null,
+      updatedBy: text(stored?.updatedBy, 160) || null,
+    };
+  });
+}
+
+export function writeMarketIngestionControls(input, actor) {
+  if (!input || typeof input !== "object" || Array.isArray(input)
+      || Object.keys(input).length !== 2 || typeof input.blizzard !== "boolean"
+      || typeof input.addon !== "boolean") return null;
+  return withGuildTransaction((db) => {
+    const updatedAt = new Date().toISOString();
+    const value = { blizzard: input.blizzard, addon: input.addon, updatedBy: text(actor, 160) };
+    db.prepare(`INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`)
+      .run(INGESTION_CONTROL_KEY, JSON.stringify(value), updatedAt);
+    return { ...value, updatedAt };
+  });
+}
+
 export function ensureMarketInDatabase(db, market) {
   db.prepare(`INSERT INTO market_markets (market_key, kind, region, ruleset_id, house_id, realm, faction, name, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

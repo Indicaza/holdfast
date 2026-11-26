@@ -73,21 +73,23 @@ export function marketPriorityInDatabase(db, marketKey) {
         WHERE v.day >= date('now', '-7 day')) AS score`).get(marketKey, marketKey, marketKey).score;
 }
 
-export function createMarketRefresher({ provider, now = () => Date.now(), log = console } = {}) {
+export function createMarketRefresher({ provider, now = () => Date.now(), log = console, enabled = () => true } = {}) {
   let lastDiscovery = 0;
   let running = false;
   const stats = { ticks: 0, refreshed: 0, unchanged: 0, failed: 0, skipped: 0 };
 
   async function discover() {
+    if (!enabled()) return [];
     const markets = [];
     for (const region of provider.config.regions) {
+      if (!enabled()) break;
       try {
         markets.push(...await provider.discoverMarkets(region));
       } catch (error) {
         log.warn?.(`[market] ${provider.name} ${region}: could not list auction houses (${error.code || error.message})`);
       }
     }
-    if (markets.length) {
+    if (markets.length && enabled()) {
       withGuildTransaction((db) => {
         for (const market of markets) {
           ensureMarketInDatabase(db, market);
@@ -177,6 +179,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   }
 
   async function refreshOne() {
+    if (!enabled()) return { status: "paused" };
     const next = nextMarket();
     if (!next) return { status: "idle" };
     const { row, priority } = next;
@@ -190,7 +193,13 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
       const lastModified = Object.fromEntries([...previous.entries()].map(([endpoint, state]) => [endpoint, state.last_modified]));
       const fetched = await provider.fetchMarket(market, { lastModified });
       const outcomes = [];
-      for (const result of Object.values(fetched.endpoints)) outcomes.push(await storeEndpoint(market, result, previous.get(result.endpoint)));
+      for (const result of Object.values(fetched.endpoints)) {
+        if (!enabled()) {
+          finishRun(runId, { status: "paused" });
+          return { status: "paused", marketKey: row.market_key, endpoints: outcomes };
+        }
+        outcomes.push(await storeEndpoint(market, result, previous.get(result.endpoint)));
+      }
       const failures = outcomes.filter((outcome) => outcome.status === "failed");
       const anyChanged = outcomes.some((outcome) => outcome.status === "recorded");
       const status = failures.length === outcomes.length ? "failed" : anyChanged ? "recorded" : "unchanged";
@@ -238,6 +247,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
 
   async function tick() {
     if (running || !provider.configured()) return { status: "skipped" };
+    if (!enabled()) return { status: "paused" };
     running = true;
     stats.ticks += 1;
     try {
@@ -354,7 +364,7 @@ export async function resolveMarketItemNames({ itemProvider, batches = 10, batch
   return { looked, named };
 }
 
-export function startMarketRefresher({ provider, itemProvider = null, intervalMs = TICK_MS, log = console } = {}) {
+export function startMarketRefresher({ provider, itemProvider = null, intervalMs = TICK_MS, log = console, enabled = () => true } = {}) {
   let maintaining = false;
   const maintain = () => {
     if (maintaining) return;
@@ -409,7 +419,7 @@ export function startMarketRefresher({ provider, itemProvider = null, intervalMs
     log.info?.("[market] No auction data provider configured; markets fill from in-game scans only.");
     return { stop: stopMaintenance, refresher: null };
   }
-  const refresher = createMarketRefresher({ provider, log });
+  const refresher = createMarketRefresher({ provider, log, enabled });
   const timer = setInterval(() => { refresher.tick().catch((error) => log.error?.("[market] refresh tick failed", error)); }, intervalMs);
   timer.unref?.();
   return { stop: () => { clearInterval(timer); stopMaintenance(); }, refresher };

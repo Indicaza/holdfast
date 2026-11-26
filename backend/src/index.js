@@ -17,6 +17,7 @@ import { ensureCharacterReadModelCurrent } from "./Character/ReadModel/rebuildRe
 import { backfillEconomicObservationsInDatabase } from "./Economy/economicObservationRepository.js";
 import { createBlizzardAuctionProvider } from "./Market/blizzardAuctionProvider.js";
 import { marketItemDataEnv, startMarketRefresher } from "./Market/marketRefresh.js";
+import { readMarketIngestionControls } from "./Market/marketRepository.js";
 import { createBlizzardGameDataProvider } from "./GameData/blizzardGameDataProvider.js";
 import { createStartupLifecycle, notReadyHandler, startEventLoopStallMonitor } from "./Production/startupLifecycle.js";
 import { createStorageObservatory } from "./Production/storageObservatory.js";
@@ -175,7 +176,7 @@ try {
 
   // Background services start only after every migration has run. The
   // market refresher's first tick and maintenance wait a minute.
-  const marketRefresh = startMarketRefresher({ provider: auctionProvider, itemProvider: marketItemProvider });
+  const marketRefresh = startMarketRefresher({ provider: auctionProvider, itemProvider: marketItemProvider, enabled: () => readMarketIngestionControls().blizzard });
   stops.push(() => marketRefresh.stop());
   const storageObservatory = createStorageObservatory({ dataDir: runtimeDataDirectory(), databaseFile: guildDatabaseFile() });
   const app = await lifecycle.phase("application", () => createApp({
