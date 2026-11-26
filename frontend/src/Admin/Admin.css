@@ -205,3 +205,35 @@
 .admin-audit__state--error {
   color: #efb3a9;
 }
+
+.admin-ingestion {
+  display: grid;
+  gap: var(--space-4);
+  text-align: left;
+  border: 1px solid rgba(196, 166, 103, .3);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  background: rgba(0, 0, 0, .14);
+}
+.admin-ingestion h2, .admin-ingestion h3, .admin-ingestion p { margin: 0; }
+.admin-ingestion__header, .admin-ingestion__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.admin-ingestion__sources, .admin-ingestion__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-3);
+}
+.admin-ingestion__source, .admin-ingestion__metrics > div {
+  padding: var(--space-3);
+  border: 1px solid rgba(196, 166, 103, .2);
+}
+.admin-ingestion__source { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.admin-ingestion__source span, .admin-ingestion__metrics > div { display: grid; gap: var(--space-1); }
+.admin-ingestion small, .admin-ingestion__actions span, .admin-ingestion p { color: var(--color-text-muted); }
+.admin-ingestion__source input { width: 1.2rem; height: 1.2rem; accent-color: var(--color-accent); flex-shrink: 0; }
+.admin-ingestion__health { display: grid; gap: var(--space-3); }
