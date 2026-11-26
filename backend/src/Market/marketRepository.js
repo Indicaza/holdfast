@@ -1,3 +1,4 @@
+import { readMarketArchiveHoldInDatabase } from "./marketArchiveHold.js";
 import { createHash } from "node:crypto";
 
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
@@ -91,6 +92,7 @@ export function writeMarketIngestionControls(input, actor) {
       || Object.keys(input).length !== 2 || typeof input.blizzard !== "boolean"
       || typeof input.addon !== "boolean") return null;
   return withGuildTransaction((db) => {
+    if ((input.blizzard || input.addon) && readMarketArchiveHoldInDatabase(db)) return null;
     const updatedAt = new Date().toISOString();
     const value = { blizzard: input.blizzard, addon: input.addon, updatedBy: text(actor, 160) };
     db.prepare(`INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
