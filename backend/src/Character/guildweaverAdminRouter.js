@@ -1,6 +1,8 @@
 import { Router } from "express";
 
 import { requirePermission } from "../Auth/permissions.js";
+import { readMarketIngestionControls, writeMarketIngestionControls } from "../Market/marketRepository.js";
+import { blizzardAuctionConfig } from "../Market/blizzardAuctionProvider.js";
 import {
   readGuildweaverAdminSummary,
   readGuildweaverSnapshot,
@@ -17,6 +19,29 @@ export function createGuildweaverAdminRouter() {
   const router = Router();
 
   router.use(requirePermission("site.admin"));
+
+  router.get("/ingestion", (_req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      res.json({ controls: readMarketIngestionControls(), blizzardConfigured: blizzardAuctionConfig().configured });
+    } catch (error) {
+      console.error("Unable to read ingestion controls", error);
+      res.status(503).json({ error: "ingestion_controls_unavailable" });
+    }
+  });
+
+  router.put("/ingestion", (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      const controls = writeMarketIngestionControls(req.body, req.auth.user.id);
+      if (!controls) return res.status(400).json({ error: "invalid_ingestion_controls" });
+      console.info(JSON.stringify({ event: "market_ingestion_controls", ...controls }));
+      return res.json({ controls, blizzardConfigured: blizzardAuctionConfig().configured });
+    } catch (error) {
+      console.error("Unable to save ingestion controls", error);
+      return res.status(503).json({ error: "ingestion_controls_unavailable" });
+    }
+  });
 
   router.get("/summary", (req, res) => {
     try {
