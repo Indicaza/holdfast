@@ -1,4 +1,5 @@
 import { Worker } from "node:worker_threads";
+import { beginMarketArchiveWriter, readMarketArchiveHold } from "./marketArchiveHold.js";
 
 import { guildDatabaseFile, withGuildDatabase, withGuildTransaction } from "../Data/database.js";
 import { iconStorageConfig, storeIcons } from "../GameData/iconRegistry.js";
@@ -79,7 +80,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   const stats = { ticks: 0, refreshed: 0, unchanged: 0, failed: 0, skipped: 0 };
 
   async function discover() {
-    if (!enabled()) return [];
+    if (!enabled() || readMarketArchiveHold()) return [];
     const markets = [];
     for (const region of provider.config.regions) {
       if (!enabled()) break;
@@ -89,7 +90,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
         log.warn?.(`[market] ${provider.name} ${region}: could not list auction houses (${error.code || error.message})`);
       }
     }
-    if (markets.length && enabled()) {
+    if (markets.length && enabled() && !readMarketArchiveHold()) {
       withGuildTransaction((db) => {
         for (const market of markets) {
           ensureMarketInDatabase(db, market);
@@ -179,7 +180,9 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
   }
 
   async function refreshOne() {
-    if (!enabled()) return { status: "paused" };
+    if (!enabled() || readMarketArchiveHold()) return { status: "paused" };
+    const endWriter = beginMarketArchiveWriter();
+    try {
     const next = nextMarket();
     if (!next) return { status: "idle" };
     const { row, priority } = next;
@@ -243,6 +246,7 @@ export function createMarketRefresher({ provider, now = () => Date.now(), log = 
       log.warn?.(`[market] ${row.market_key}: refresh failed (${error.code || error.message}), retry in ${Math.round(wait / 60)} min`);
       return { status: "failed", marketKey: row.market_key, error: error.code || error.message };
     }
+    } finally { endWriter(); }
   }
 
   async function tick() {
@@ -285,6 +289,9 @@ export function measureMarketStorage({ databaseFile = guildDatabaseFile() } = {}
 
 export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000), batchRows = MAINTENANCE_BATCH_ROWS,
   yieldFn = yieldToRequests, clock = () => Date.now(), force = false, measure = measureMarketStorage } = {}) {
+  if (readMarketArchiveHold()) return null;
+  const endWriter = beginMarketArchiveWriter();
+  try {
   const last = withGuildDatabase((db) => lastMarketMaintenanceInDatabase(db, "rollup")) || 0;
   if (!force && now - last < MAINTENANCE_SECONDS) return null;
   const began = clock();
@@ -311,6 +318,7 @@ export async function maintainMarketsIfDue({ now = Math.floor(Date.now() / 1000)
     storage = { status: "unknown", error: String(error.message || error).slice(0, 200) };
   }
   return { ...next.value, storage, transactions, longestTransaction: longest, ms: Math.round(clock() - began) };
+  } finally { endWriter(); }
 }
 
 // Indexes new game data for Auction House search, yielding to requests

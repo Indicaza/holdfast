@@ -1,3 +1,4 @@
+import { readMarketArchiveHoldInDatabase } from "./marketArchiveHold.js";
 import { createHash } from "node:crypto";
 
 import { withGuildDatabase, withGuildTransaction } from "../Data/database.js";
@@ -91,6 +92,7 @@ export function writeMarketIngestionControls(input, actor) {
       || Object.keys(input).length !== 2 || typeof input.blizzard !== "boolean"
       || typeof input.addon !== "boolean") return null;
   return withGuildTransaction((db) => {
+    if ((input.blizzard || input.addon) && readMarketArchiveHoldInDatabase(db)) return null;
     const updatedAt = new Date().toISOString();
     const value = { blizzard: input.blizzard, addon: input.addon, updatedBy: text(actor, 160) };
     db.prepare(`INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)
@@ -1331,6 +1333,7 @@ export function noteItemInterest(itemId, now = nowSeconds()) {
 // administrator to check, never assumed.
 export function setMarketLink({ marketKey, linkedMarketKey, shared = false, now = nowSeconds() }) {
   return withGuildDatabase((db) => {
+    if (readMarketArchiveHoldInDatabase(db)) return { status: "conflict", reason: "archive_hold_active" };
     const market = db.prepare("SELECT * FROM market_markets WHERE market_key = ?").get(text(marketKey, 160));
     if (!market || market.kind !== "client_house") return { status: "not-found" };
     const before = marketGroupInDatabase(db, market.market_key);

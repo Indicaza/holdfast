@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { readMarketArchiveHold, setMarketArchiveHold } from "../Market/marketArchiveHold.js";
 
 import { requirePermission } from "../Auth/permissions.js";
 import { readArchiveDevices, setArchiveDevice } from "./archiveRepository.js";
@@ -20,6 +21,18 @@ export function createGuildweaverAdminRouter() {
   const router = Router();
 
   router.use(requirePermission("site.admin"));
+
+  router.get("/archive/hold", (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    try { res.json({ hold: readMarketArchiveHold() }); } catch { res.status(503).json({ error: "archive_hold_unavailable" }); }
+  });
+  router.put("/archive/hold", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      const result = setMarketArchiveHold(req.body?.enabled, req.auth.user.id);
+      return res.status(result.status === "ok" ? 200 : result.status === "invalid" ? 400 : 409).json(result);
+    } catch { res.status(503).json({ error: "archive_hold_unavailable" }); }
+  });
 
   router.get("/archive/devices", (req, res) => {
     res.set("Cache-Control", "no-store");
