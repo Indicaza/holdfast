@@ -8,6 +8,7 @@ export function createBridgeAdmission({ capacity = 16, burst = 24, perSecond = 1
     last = timestamp;
     if (active >= capacity || tokens < 1) {
       res.set("Retry-After", "3");
+      res.set("X-Guildweaver-Backpressure", "1");
       res.set("Cache-Control", "no-store");
       return res.status(503).json({ error: "bridge_busy", retryAfterSeconds: 3 });
     }
