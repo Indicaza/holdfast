@@ -51,7 +51,7 @@ function storeTelemetry({ deviceId, memberId, incoming, domainValidation, receiv
     return { status: "invalid", error: "invalid_telemetry_record" };
   }
 
-  if (result.status === "conflict") return result;
+  if (result.status === "conflict" || result.replacementDeviceReceipt) return result;
 
   const persistedEnvelope = result.record?.envelope || incoming.envelope;
   const rawCharacterId = String(persistedEnvelope?.characterId || "").trim();
