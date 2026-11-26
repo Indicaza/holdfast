@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { readMarketArchiveHold } from "../Market/marketArchiveHold.js";
 
 import { requireAuthenticated } from "../Auth/permissions.js";
 import { publicWebsiteUrl } from "../Config/environment.js";
@@ -85,6 +86,7 @@ export function createCharacterRouter() {
   function submitArchive(req, res, input) {
     const query = normalizeArchiveQuery(input);
     if (!query) { res.status(400).json({ error: "invalid_archive_query" }); return null; }
+    if (query.holdId && readMarketArchiveHold()?.id !== query.holdId) { res.status(409).json({ error: "archive_hold_changed" }); return null; }
     const device = req.guildweaverDevice;
     const job = archiveQueue.submit({ owner: device.id, query, authorized: () => archiveEnabled(device), databaseFile: guildDatabaseFile() });
     if (["full", "busy"].includes(job.status)) {
@@ -97,6 +99,7 @@ export function createCharacterRouter() {
   function replyJob(res, job) {
     if (!job) return res.status(404).json({ error: "archive_ticket_expired" });
     if (job.status === "failed") return res.status(job.error === "invalid_archive_query" ? 400 : 503).json({ error: job.error });
+    if (job.result?.batch?.holdId && readMarketArchiveHold()?.id !== job.result.batch.holdId) return res.status(409).json({ error: "archive_hold_changed" });
     res.set("Retry-After", String(job.retryAfterSeconds));
     return res.status(job.status === "ready" ? 200 : 202).json(job);
   }
@@ -131,6 +134,7 @@ export function createCharacterRouter() {
     if (res.destroyed) return;
     if (current?.status === "ready") {
       if (!archiveEnabled(req.guildweaverDevice)) return res.status(403).json({ error: "archive_device_not_enabled" });
+      if (current.result?.batch?.holdId && readMarketArchiveHold()?.id !== current.result.batch.holdId) return res.status(409).json({ error: "archive_hold_changed" });
       return res.json(current.result);
     }
     if (current?.status === "failed") return replyJob(res, current);
