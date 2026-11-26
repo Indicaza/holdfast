@@ -92,9 +92,9 @@ function IngestionControls() {
             ))}
           </div>
           <div className="admin-ingestion__actions">
-            <button type="button" className="gw-admin-refresh" disabled={busy || !dirty} onClick={() => save(draft)}>Save changes</button>
-            <button type="button" className="gw-admin-refresh" disabled={busy || (!saved.blizzard && !saved.addon && !dirty)} onClick={() => save({ blizzard: false, addon: false })}>Pause all auction ingestion</button>
-            <span role="status">{notice || (saved.updatedAt ? 'Last saved ' + new Date(saved.updatedAt).toLocaleString() : 'Initial defaults')}</span>
+            <button type="button" className="gw-admin-refresh" disabled={busy || (!dirty && saved.updatedAt != null)} onClick={() => save(draft)}>Save changes</button>
+            <button type="button" className="gw-admin-refresh" disabled={busy || (!saved.blizzard && !saved.addon && !dirty && saved.updatedAt != null)} onClick={() => save({ blizzard: false, addon: false })}>Pause all auction ingestion</button>
+            <span role="status">{notice || (saved.updatedAt ? 'Last saved ' + new Date(saved.updatedAt).toLocaleString() : 'Initial defaults · not yet saved')}</span>
           </div>
         </>
       ) : !error ? <p>Loading ingestion controls…</p> : null}
@@ -196,7 +196,7 @@ function ArchiveDevices() {
       )}
       <div className="admin-ingestion__health">
         <h3>Archive hold</h3>
-        <p>{hold === undefined ? 'Loading…' : hold ? 'History protected from scheduled retention. Keep this enabled until local verification is complete.' : 'Pause both ingestion sources, then protect history before exporting.'}</p>
+        <p>{hold === undefined ? 'Loading…' : hold ? 'History protected from scheduled retention. Keep this enabled until local verification is complete.' : 'Start the hold once both ingestion sources are paused. This protects retained history before exporting.'}</p>
         {hold && <p><strong>Hold ID:</strong> <code>{hold.id}</code></p>}
         <button type="button" className="gw-admin-refresh" disabled={busy || hold === undefined} onClick={() => changeHold(!hold)}>{hold ? 'Release archive hold' : 'Start archive hold'}</button>
       </div>
