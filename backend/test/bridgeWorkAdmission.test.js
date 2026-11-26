@@ -83,3 +83,18 @@ test("archive authorization is checked again before executing queued work", asyn
   assert.equal(queue.poll("device", job.ticket).status, "failed");
   assert.equal(calls, 0);
 });
+
+
+test("bulk jobs share the existing serialized-result budget without raising concurrency", async () => {
+  const queue = createArchiveQueue({ intervalMs: 1, run: async () => ({ ok: true }) });
+  const holdId = "00000000-0000-0000-0000-000000000001";
+  const submit = index => queue.submit({ owner: "bulk-" + index, query: { holdId, bulk: true }, authorized: () => true });
+  const jobs = Array.from({ length: 9 }, (_, index) => submit(index));
+  assert.equal(jobs.filter(job => job.status === "queued").length, 8);
+  assert.equal(jobs[8].status, "full");
+  assert.equal(queue.submit({ owner: "ordinary", query: {}, authorized: () => true }).status, "full");
+  assert.equal(queue.cancel("bulk-0", jobs[0].ticket), true);
+  assert.equal(queue.submit({ owner: "ordinary", query: {}, authorized: () => true }).status, "queued");
+  assert.equal(submit(8).status, "full");
+  for (let index = 1; index < 8; index++) queue.cancel("bulk-" + index, jobs[index].ticket);
+});
