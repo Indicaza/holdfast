@@ -4,7 +4,7 @@ import { guildDatabaseFile } from "../Data/database.js";
 
 export function runArchiveWorker(query, databaseFile = guildDatabaseFile()) {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL("./archiveWorker.js", import.meta.url), { workerData: { query, databaseFile } });
+    const worker = new Worker(new URL("./archiveWorker.js", import.meta.url), { workerData: { query, databaseFile }, resourceLimits: { maxOldGenerationSizeMb: 64, maxYoungGenerationSizeMb: 16 } });
     let value, failure;
     const timer = setTimeout(() => {
       failure = new Error("Archive worker exceeded its deadline");
@@ -26,7 +26,7 @@ export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, cap
   let timer = null;
   const expire = () => {
     for (const [id, job] of jobs) {
-      if (job !== active && now() - job.touchedAt >= ttlMs) jobs.delete(id);
+      if (job !== active && (now() - job.touchedAt >= ttlMs || now() - job.createdAt >= 600_000)) jobs.delete(id);
     }
   };
   const position = (job) => [...jobs.values()].filter(entry => entry.status === "queued").indexOf(job) + 1;
@@ -72,7 +72,7 @@ export function createArchiveQueue({ run = runArchiveWorker, now = Date.now, cap
       // One retained result per owner. A new page supersedes completed pages.
       for (const [id, job] of jobs) if (job.owner === owner && job !== active) jobs.delete(id);
       if (jobs.size >= capacity) return { status: "full", retryAfterSeconds: 5 };
-      const job = { id: randomUUID(), owner, query, key, authorized, databaseFile, status: "queued", touchedAt: now() };
+      const job = { id: randomUUID(), owner, query, key, authorized, databaseFile, status: "queued", createdAt: now(), touchedAt: now() };
       jobs.set(job.id, job);
       schedule();
       return view(job);
