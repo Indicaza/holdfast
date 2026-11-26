@@ -58,6 +58,7 @@ export function archiveStatus(device) {
     enabled,
     datasets: enabled ? DATASETS : [],
     hold: enabled ? readMarketArchiveHold() : null,
+    bulkProtocol: enabled ? 1 : 0,
     markets: markets.slice(0, 200),
     marketsTruncated: markets.length > 200,
   };
@@ -77,12 +78,13 @@ function decodeCursor(raw, dataset, market, holdId) {
   } catch { return null; }
 }
 
-export function normalizeArchiveQuery({ dataset, market, cursor, holdId }) {
+export function normalizeArchiveQuery({ dataset, market, cursor, holdId, bulk }) {
   if (!DATASETS.includes(dataset) || typeof market !== "string" || !market || market.length > 256) return null;
   if (holdId !== undefined && (typeof holdId !== "string" || !/^[a-f0-9-]{36}$/i.test(holdId))) return null;
   if (EXTENDED.has(dataset) && !holdId) return null;
+  if (bulk !== undefined && (bulk !== true || !holdId)) return null;
   if (!decodeCursor(cursor, dataset, market, holdId)) return null;
-  return { dataset, market, ...(holdId === undefined ? {} : { holdId }), ...(cursor === undefined ? {} : { cursor }) };
+  return { dataset, market, ...(holdId === undefined ? {} : { holdId }), ...(bulk === true ? { bulk: true } : {}), ...(cursor === undefined ? {} : { cursor }) };
 }
 
 export function readArchiveBatch(query) {
@@ -92,13 +94,14 @@ export function readArchiveBatch(query) {
 export function readArchiveBatchInDatabase(db, query) {
     const normalized = normalizeArchiveQuery(query);
     if (!normalized) return null;
-    const { dataset, market, cursor, holdId } = normalized;
+    const { dataset, market, cursor, holdId, bulk } = normalized;
     if (holdId && readMarketArchiveHoldInDatabase(db)?.id !== holdId) return null;
     const key = decodeCursor(cursor, dataset, market, holdId);
     if (!db.prepare("SELECT 1 FROM market_markets WHERE market_key = ?").get(market)) return null;
     const current = dataset === "market-current";
     const spec = HISTORY[dataset];
-    const limit = holdId ? 1000 : PAGE_SIZE;
+    const limit = bulk ? 4000 : holdId ? 1000 : PAGE_SIZE;
+    const maxBatchBytes = bulk ? 4 * MAX_BATCH_BYTES : MAX_BATCH_BYTES;
     const rows = current
       ? db.prepare(`SELECT market_key, item_key, item_id, source_type, complete, observed_at,
           min_unit_buyout, typical_unit_buyout, quantity, listings, selection_reason, conflict, change_24h_pct, updated_at
@@ -111,7 +114,7 @@ export function readArchiveBatchInDatabase(db, query) {
     let bytes = 0;
     for (const row of rows.slice(0, limit)) {
       const length = Buffer.byteLength(JSON.stringify(row)) + 1;
-      if (bytes + length > MAX_BATCH_BYTES) {
+      if (bytes + length > maxBatchBytes) {
         if (!page.length) throw new Error("Archive row exceeds page budget");
         break;
       }
