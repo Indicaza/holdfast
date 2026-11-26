@@ -369,6 +369,24 @@ test("archive permission belongs to an explicitly authorized admin computer; exp
   assert.equal(second.json.batch.nextCursor, null);
   assert.equal((await request(bridgeRoute + "/batch?dataset=market-current&market=archive-test", { headers: ownerHeaders })).status, 200);
   assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM market_series_monthly WHERE market_key = 'archive-test'").get().n), 202);
+  const queued = await request(bridgeRoute + "/jobs", { method: "POST", headers: ownerHeaders, body: { dataset: "market-monthly", market: "archive-test" } });
+  assert.ok([200, 202].includes(queued.status), queued.text);
+  const ticket = queued.json.ticket;
+  assert.equal(typeof ticket, "string");
+  assert.equal((await request(bridgeRoute + "/jobs/" + ticket, { headers: ordinaryHeaders })).status, 403);
+  let answer = queued;
+  const deadline = Date.now() + 9000;
+  while (answer.status === 202 && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    answer = await request(bridgeRoute + "/jobs/" + ticket, { headers: ownerHeaders });
+  }
+  assert.equal(answer.status, 200, answer.text);
+  assert.equal(answer.json.status, "ready");
+  assert.equal(answer.json.result.batch.rows.length, 200);
+  assert.equal(answer.json.result.sha256, createHash("sha256").update(JSON.stringify(answer.json.result.batch)).digest("hex"));
+  assert.equal((await request(bridgeRoute + "/jobs/" + ticket, { method: "DELETE", headers: ownerHeaders })).status, 204);
+  assert.equal((await request(bridgeRoute + "/jobs/" + ticket, { headers: ownerHeaders })).status, 404);
+
   assert.equal((await request(adminRoute + "/" + id, { persona: "owner", method: "PUT", body: { enabled: false } })).status, 200);
   assert.equal((await request(query, { headers: ownerHeaders })).status, 403);
 }));
