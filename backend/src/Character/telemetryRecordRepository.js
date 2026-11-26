@@ -159,6 +159,16 @@ export function recordTelemetry({
       return { status: "invalid" };
     }
 
+    const existing = db.prepare("SELECT * FROM guildweaver_telemetry_records WHERE idempotency_key = ?").get(normalizedIdempotencyKey);
+    if (existing) {
+      if (existing.device_id !== text(deviceId, 160) || existing.member_id !== text(memberId, 160)
+          || existing.stream_key !== normalizedStreamKey || existing.revision !== normalizedRevision
+          || existing.kind !== normalizedKind || existing.event_type !== eventType) {
+        return { status: "conflict", error: "telemetry_receipt_identity_conflict" };
+      }
+      return { status: "duplicate", record: rowDetail(existing), receiptKey: normalizedIdempotencyKey };
+    }
+
     // A device whose revision counter was reset (its SavedVariables were
     // wiped, or the stream was pruned and recreated) reuses revisions with
     // new content. The idempotency key covers the content, so a different key
@@ -168,7 +178,10 @@ export function recordTelemetry({
       SELECT id, captured_at FROM guildweaver_telemetry_records
       WHERE device_id = ? AND stream_key = ? AND revision = ? AND idempotency_key <> ?
     `).get(text(deviceId, 160), normalizedStreamKey, normalizedRevision, normalizedIdempotencyKey);
-    if (reused && capturedAt(sanitizedEnvelope?.capturedAt) >= reused.captured_at) {
+    if (reused) {
+      if (capturedAt(sanitizedEnvelope?.capturedAt) < reused.captured_at) {
+        return { status: "conflict", error: "telemetry_revision_conflict" };
+      }
       db.prepare("DELETE FROM guildweaver_telemetry_records WHERE id = ?").run(reused.id);
     }
 
@@ -207,13 +220,15 @@ export function recordTelemetry({
 
     const row = db.prepare(`
       SELECT * FROM guildweaver_telemetry_records
-      WHERE idempotency_key = ? OR (device_id = ? AND stream_key = ? AND revision = ?)
-      ORDER BY (idempotency_key = ?) DESC, id DESC LIMIT 1
-    `).get(normalizedIdempotencyKey, text(deviceId, 160), normalizedStreamKey, normalizedRevision, normalizedIdempotencyKey);
+      WHERE idempotency_key = ? AND device_id = ? AND member_id = ?
+    `).get(normalizedIdempotencyKey, text(deviceId, 160), text(memberId, 160));
+
+    if (!row) throw new Error("Telemetry insert did not persist the expected record");
 
     return {
       status: result.changes ? "created" : "duplicate",
       record: rowDetail(row),
+      receiptKey: normalizedIdempotencyKey,
     };
   });
 }
