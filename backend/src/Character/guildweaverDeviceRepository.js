@@ -183,11 +183,12 @@ export function exchangeGuildweaverPairing(deviceCode) {
 }
 
 export function authenticateGuildweaverDevice(deviceToken) {
-  return withGuildTransaction((db) => {
+  if (typeof deviceToken !== "string" || !deviceToken || deviceToken.length > 512) return null;
+  return withGuildDatabase((db) => {
     const row = db
       .prepare(
         `
-          SELECT d.id, d.member_id, d.name
+          SELECT d.id, d.member_id, d.name, d.last_seen_at
           FROM guildweaver_devices d
           JOIN members m ON m.id = d.member_id
           WHERE d.token_hash = ?
@@ -200,11 +201,11 @@ export function authenticateGuildweaverDevice(deviceToken) {
       return null;
     }
 
-    const now = new Date().toISOString();
-    db.prepare("UPDATE guildweaver_devices SET last_seen_at = ? WHERE id = ?").run(
-      now,
-      row.id,
-    );
+    const timestamp = Date.now();
+    const last = Date.parse(row.last_seen_at);
+    const update = !Number.isFinite(last) || timestamp - last >= 60_000;
+    const now = update ? new Date(timestamp).toISOString() : row.last_seen_at;
+    if (update) db.prepare("UPDATE guildweaver_devices SET last_seen_at = ? WHERE id = ?").run(now, row.id);
 
     return {
       id: row.id,

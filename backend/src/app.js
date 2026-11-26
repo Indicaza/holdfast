@@ -57,9 +57,10 @@ import {
 } from "./Security/httpSecurity.js";
 import { mountProductionFrontend } from "./Production/frontend.js";
 import { createStorageRouter } from "./Production/storageRouter.js";
+import { createBridgeAdmission } from "./Security/bridgeAdmission.js";
 import { redirectLegacyPaths } from "./Production/legacyRedirects.js";
 
-export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null, storageObservatory = null } = {}) {
+export function createApp({ discordAuthOptions, developmentAuthOptions, publicGameDataOptions, marketRefresher = null, marketProviderConfig = null, startupStatus = null, storageObservatory = null, bridgeAdmission = process.env.NODE_ENV !== "test" } = {}) {
   const app = express();
   const TRUST_PROXY = parseTrustProxy(process.env.TRUST_PROXY);
   if (TRUST_PROXY !== false) {
@@ -74,6 +75,21 @@ export function createApp({ discordAuthOptions, developmentAuthOptions, publicGa
       credentials: true,
     }),
   );
+  // Keep bulk bridge traffic from consuming every in-flight body/DB slot.
+  // Test harnesses exercise admission separately with injected limits.
+  if (bridgeAdmission) {
+    const archiveAdmission = createBridgeAdmission({ capacity: 3, burst: 8, perSecond: 3 });
+    const archivePollAdmission = createBridgeAdmission({ capacity: 4, burst: 16, perSecond: 8 });
+    const uploadAdmission = createBridgeAdmission({ capacity: 4, burst: 12, perSecond: 6 });
+    const readAdmission = createBridgeAdmission({ capacity: 6, burst: 16, perSecond: 10 });
+    app.use("/api/bridge", (req, res, next) => {
+      const route = req.path.toLowerCase().replace(/\/+$/, "");
+      if (route.startsWith("/archive/jobs/")) return archivePollAdmission(req, res, next);
+      if (route.startsWith("/archive/")) return archiveAdmission(req, res, next);
+      if (req.method === "POST" && ["/telemetry", "/characters/snapshot", "/quests/actions"].includes(route)) return uploadAdmission(req, res, next);
+      return readAdmission(req, res, next);
+    });
+  }
   // Guildweaver uploads carry whole recipe books: one crafting profession is
   // several hundred KB of JSON. Only the device-authenticated ingest routes
   // accept large bodies; everything else keeps the small default.
