@@ -127,3 +127,25 @@ test("receipt identity cannot acknowledge another device or an older conflicting
   assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE stream_key = 'receipt:test'").get().n), 1);
   assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_stream_heads WHERE device_id = 'different-device'").get().n), 0);
 }));
+
+
+test("a replacement device may acknowledge an exact same-account receipt without replaying writes", () => withHttpApp(async () => {
+  const body = {
+    streamKey: "receipt:replacement", kind: "event", revision: 1,
+    envelope: { schemaVersion: 1, eventType: "receipt_test", capturedAt: 1791450000, installationId: "installation-one", payload: { value: 1 } },
+  };
+  const input = { deviceId: DEVICE, memberId: memberIds.member, idempotencyKey: "receipt-replacement-1", body };
+  const first = ingestTelemetry(input);
+  assert.equal(first.status, "created");
+  const replacement = { ...input, deviceId: "replacement-device" };
+  const duplicate = ingestTelemetry(replacement);
+  assert.equal(duplicate.status, "duplicate");
+  assert.equal(duplicate.replacementDeviceReceipt, true);
+  assert.equal(duplicate.record.id, first.record.id);
+  assert.equal(duplicate.receiptKey, input.idempotencyKey);
+  const mismatch = ingestTelemetry({ ...replacement, body: { ...body, envelope: { ...body.envelope, payload: { value: 2 } } } });
+  assert.equal(mismatch.status, "conflict");
+  assert.equal(ingestTelemetry({ ...replacement, memberId: memberIds.officer }).status, "conflict");
+  assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_records WHERE stream_key = 'receipt:replacement'").get().n), 1);
+  assert.equal(withGuildDatabase((db) => db.prepare("SELECT COUNT(*) AS n FROM guildweaver_telemetry_stream_heads WHERE device_id = 'replacement-device'").get().n), 0);
+}));

@@ -86,7 +86,7 @@ export function createTelemetryRouter() {
       if (result.recordedEvent?.sessionChanged) {
         publishLiveUpdate({ topics: ["farming", "player"], source: "farming.session", memberId: req.guildweaverDevice.memberId });
       }
-      if (kind === "state") {
+      if (kind === "state" && !result.replacementDeviceReceipt) {
         publishCharacterChanged({ characterId: canonicalCharacterId, memberId: req.guildweaverDevice.memberId, sections: result.changedSections });
       }
 

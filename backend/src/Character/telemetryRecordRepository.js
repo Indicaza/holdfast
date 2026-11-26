@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { withGuildDatabase } from "../Data/database.js";
 import { applyTalentDefinitionInDatabase } from "./ReadModel/sectionStore.js";
 import { decodeTelemetryJson, encodeTelemetryJson, parseTelemetryJson } from "./Telemetry/telemetryJson.js";
@@ -161,12 +162,22 @@ export function recordTelemetry({
 
     const existing = db.prepare("SELECT * FROM guildweaver_telemetry_records WHERE idempotency_key = ?").get(normalizedIdempotencyKey);
     if (existing) {
-      if (existing.device_id !== text(deviceId, 160) || existing.member_id !== text(memberId, 160)
+      if (existing.member_id !== text(memberId, 160)
           || existing.stream_key !== normalizedStreamKey || existing.revision !== normalizedRevision
           || existing.kind !== normalizedKind || existing.event_type !== eventType) {
         return { status: "conflict", error: "telemetry_receipt_identity_conflict" };
       }
-      return { status: "duplicate", record: rowDetail(existing), receiptKey: normalizedIdempotencyKey };
+      const record = rowDetail(existing);
+      if (existing.device_id !== text(deviceId, 160)) {
+        const original = record?.envelope;
+        if (!original || text(original.installationId, 200) !== text(sanitizedEnvelope.installationId, 200)
+            || text(original.characterId, 200) !== text(sanitizedEnvelope.characterId, 200)
+            || !isDeepStrictEqual(original.payload, sanitizedEnvelope.payload)) {
+          return { status: "conflict", error: "telemetry_receipt_identity_conflict" };
+        }
+        return { status: "duplicate", record, receiptKey: normalizedIdempotencyKey, replacementDeviceReceipt: true };
+      }
+      return { status: "duplicate", record, receiptKey: normalizedIdempotencyKey };
     }
 
     // A device whose revision counter was reset (its SavedVariables were
