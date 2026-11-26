@@ -52,6 +52,16 @@ test("held exports traverse all hourly rows in key order and preserve nonfinal m
     if (cursor) assert.equal(normalizeArchiveQuery({ dataset: "market-daily", market, holdId, cursor }), null);
   } while (cursor);
   assert.deepEqual(rows.map(row => row.hour), Array.from({ length: 1500 }, (_, index) => index + 1));
+  assert.equal(normalizeArchiveQuery({ dataset: "market-current", market, bulk: true }), null);
+  assert.equal(normalizeArchiveQuery({ dataset: "market-hourly", market, holdId, bulk: "true" }), null);
+  const bulk = readArchiveBatch({ dataset: "market-hourly", market, holdId, bulk: true });
+  assert.equal(bulk.batch.rows.length, 1500);
+  assert.equal(bulk.batch.nextCursor, null);
+  assert.ok(Buffer.byteLength(JSON.stringify(bulk)) < 1024 * 1024);
+  const firstPage = readArchiveBatch({ dataset: "market-hourly", market, holdId }).batch;
+  assert.ok(firstPage.nextCursor);
+  const resumed = readArchiveBatch({ dataset: "market-hourly", market, holdId, cursor: firstPage.nextCursor, bulk: true }).batch;
+  assert.deepEqual([...firstPage.rows, ...resumed.rows].map(row => row.hour), rows.map(row => row.hour));
   assert.equal(readArchiveBatch({ dataset: "market-monthly-all", market, holdId }).batch.rows.length, 1);
   assert.equal(readArchiveBatch({ dataset: "market-monthly", market }).batch.rows.length, 0);
   for (const dataset of ["market-daily", "market-weekly", "market-current"]) assert.equal(readArchiveBatch({ dataset, market, holdId }).batch.nextCursor, null);
