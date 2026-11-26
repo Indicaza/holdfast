@@ -118,6 +118,7 @@ function IngestionControls() {
 }
 
 function ArchiveDevices() {
+  const [hold, setHold] = useState(undefined)
   const [devices, setDevices] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -128,6 +129,7 @@ function ArchiveDevices() {
     try {
       const result = await apiJson('/api/admin/guildweaver/archive/devices')
       setDevices(result.devices)
+      setHold((await apiJson('/api/admin/guildweaver/archive/hold')).hold)
     } catch {
       setError('Could not load archive devices.')
     } finally {
@@ -152,6 +154,19 @@ function ArchiveDevices() {
     } finally {
       setBusy(false)
     }
+  }
+
+  async function changeHold(enabled) {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await apiJson('/api/admin/guildweaver/archive/hold', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      })
+      setHold(result.hold)
+    } catch {
+      setError('Archive hold could not be changed. Pause and save both ingestion sources first; retry once current market work finishes.')
+    } finally { setBusy(false) }
   }
 
   return (
@@ -179,6 +194,12 @@ function ArchiveDevices() {
           ))}
         </div>
       )}
+      <div className="admin-ingestion__health">
+        <h3>Archive hold</h3>
+        <p>{hold === undefined ? 'Loading…' : hold ? 'History protected from scheduled retention. Keep this enabled until local verification is complete.' : 'Pause both ingestion sources, then protect history before exporting.'}</p>
+        {hold && <p><strong>Hold ID:</strong> <code>{hold.id}</code></p>}
+        <button type="button" className="gw-admin-refresh" disabled={busy || hold === undefined} onClick={() => changeHold(!hold)}>{hold ? 'Release archive hold' : 'Start archive hold'}</button>
+      </div>
       <p>Enabling a device is permission only. Run an explicit archive command on that computer to export a batch.</p>
     </section>
   )
