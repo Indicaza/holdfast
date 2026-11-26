@@ -20,7 +20,7 @@ export function syncAuctionScans(page, { deviceName = 'AH PC', realm = 'Normal',
       const observedAt = now - scan.ago
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${device.deviceToken}`, 'Idempotency-Key': `e2e-${scanId}` },
+        headers: { Authorization: `Bearer ${device.deviceToken}`, 'Idempotency-Key': `e2e-${device.deviceId}-${scanId}` },
         body: JSON.stringify({
           streamKey: `auction_scan:e2e-char:${scanId}`,
           kind: 'event',
@@ -58,7 +58,7 @@ export function syncItemDefinitions(page, { deviceName = 'Catalog PC', items = [
     for (const item of items) {
       await json('/api/bridge/telemetry', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${device.deviceToken}`, 'Idempotency-Key': `e2e-item-${deviceName.replace(/\W/g, '')}-${item.itemId}` },
+        headers: { Authorization: `Bearer ${device.deviceToken}`, 'Idempotency-Key': `e2e-item-${device.deviceId}-${item.itemId}` },
         body: JSON.stringify({
           streamKey: `game_item_definition:${item.itemId}`,
           kind: 'state',
