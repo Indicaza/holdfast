@@ -34,9 +34,11 @@ export function setMarketArchiveHold(enabled, actor) {
     const row = db.prepare("SELECT value FROM app_meta WHERE key = 'market_ingestion_controls'").get();
     let controls;
     try { controls = JSON.parse(row?.value || "null"); } catch {}
-    if (controls?.blizzard !== false || controls?.addon !== false) return { status: "ingestion_not_paused" };
+    const defaultPaused = !row && process.env.NODE_ENV === "production";
+    if (!defaultPaused && (controls?.blizzard !== false || controls?.addon !== false)) return { status: "ingestion_not_paused" };
     if (writers > 0) return { status: "market_busy" };
     const hold = { id: randomUUID(), startedAt: new Date().toISOString(), actor: String(actor || "").slice(0, 160) };
+    if (defaultPaused) db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)").run("market_ingestion_controls", JSON.stringify({ blizzard: false, addon: false, updatedBy: hold.actor }), hold.startedAt);
     db.prepare("INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, ?)").run(KEY, JSON.stringify(hold), hold.startedAt);
     return { status: "ok", hold };
   });
