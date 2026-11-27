@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { signInReturnTo } from '../../Auth/returnTo.js'
+
 import { useSession } from '../../Auth/sessionContext.js'
 import { guildFeaturesEnabled } from '../../Features/guildFeatures.js'
 import { useGuild } from '../../Guild/guildContext.js'
@@ -16,6 +15,7 @@ import {
   signInNavigationLabel,
 } from '../../navigation.js'
 import { HOLDFAST_SLUG, guildHref, guildNameFromSlug } from '../../routing.js'
+import DevPersonaChooser from '../DevPersonaChooser/DevPersonaChooser.jsx'
 import './Navbar.css'
 
 // The guild's crest and name, home to its pages. Holdfast keeps its rook.
@@ -244,6 +244,8 @@ function Navbar({ variant = 'platform' }) {
             ) : null}
           </nav>
 
+          <DevPersonaChooser />
+
           <div className="navbar__actions">
             {status === 'loading' ? (
               // Holds the avatar's place so nothing shifts when the session
@@ -282,6 +284,10 @@ function Navbar({ variant = 'platform' }) {
           className={`navbar__mobile ${menuOpen ? 'navbar__mobile--open' : ''}`}
           aria-label="Mobile navigation"
         >
+          <div className="navbar__mobile-dev-persona">
+            <DevPersonaChooser />
+          </div>
+
           {links.map((link) => (
             <a
               key={link.href}
